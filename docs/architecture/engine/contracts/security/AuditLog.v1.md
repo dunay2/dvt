@@ -2,7 +2,8 @@
 
 **Version**: 1.0  
 **Status**: NORMATIVE (Required Contract)  
-**Phase**: Phase 1 (documentation), Phase 3 (implementation)
+**Phase**: Phase 1 (documentation), Phase 3 (implementation)  
+**Versioning**: See [VERSIONING.md](../../../VERSIONING.md) for contract evolution policy
 
 ---
 
@@ -409,6 +410,14 @@ WHERE signature != HMAC_SHA256(event_data, secret)
 - SOC2 Trust Services Criteria: https://www.aicpa.org/interestareas/informationsystemssecurity/pages/trust-services-criteria.aspx
 - HIPAA Security Rule: https://www.hhs.gov/hipaa/for-professionals/security/index.html
 - GDPR Article 5: https://gdpr-info.eu/art-5-gdpr/
+
+---
+
+## Change Log
+
+| Version | Date       | Change                                           |
+|---------|------------|--------------------------------------------------|
+| 1.0     | 2026-02-11 | Initial normative contract for audit logging     |
 
 ---
 
