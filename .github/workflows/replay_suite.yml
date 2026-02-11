@@ -1,0 +1,58 @@
+name: Replay Suite
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  replay-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK (for WorkflowReplayer)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build workflows
+        run: |
+          # build your workflow code/artifacts so the replayer can load classes
+          npm ci || true
+          npm run build || true
+      - name: Run replay suite
+        run: |
+          set -e
+          if [ ! -d test/fixtures/histories ]; then
+            echo "No histories found (test/fixtures/histories) — skipping replay-suite"
+            exit 0
+          fi
+          for h in test/fixtures/histories/*.json; do
+            echo "Replaying $h"
+            # Placeholder: replace with your replayer CLI invocation
+            # Example (Java replayer): java -jar tools/temporal-replayer.jar --history $h --workflowClassPath dist/workflows
+            ./scripts/run-replayer.sh "$h"
+          done
+
+  determinism-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Run determinism linter
+        run: |
+          npm ci || true
+          npm run lint:determinism || exit 1
+
+  versioning-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run versioning check (warn on missing getVersion guards)
+        run: |
+          npm ci || true
+          npm run versioning-check || true

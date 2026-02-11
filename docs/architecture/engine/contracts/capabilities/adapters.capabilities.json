@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Adapter Capability Matrix",
+  "description": "Declares which capabilities each adapter implements. Source of truth for capability validation.",
+  "type": "object",
+  "properties": {
+    "temporal": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "const": "temporal" },
+        "version": { "type": "string", "enum": ["1.0+", "1.5+", "1.26+"] },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of capability identifiers this adapter supports",
+          "uniqueItems": true,
+          "default": [
+            "signal.pause.native",
+            "cancel.cooperative",
+            "workflow.child.workflows",
+            "workflow.fan.dynamic",
+            "workflow.fan.parallel",
+            "query.workflow.state",
+            "replay.full",
+            "workflow.continue.as.new",
+            "signals.rate.limit",
+            "signals.concurrent"
+          ]
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "maxSignalSizeBytes": { "type": "integer", "default": 64000 },
+            "maxSignalsPerRunPerMinute": { "type": "integer", "default": 60 },
+            "maxHistoryEventBytes": { "type": "integer", "default": 50000000 },
+            "maxSignalDeferralMinutes": { "type": "integer", "default": 1440 }
+          }
+        }
+      },
+      "required": ["name", "version", "capabilities"]
+    },
+    "conductor": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "const": "conductor" },
+        "version": { "type": "string", "enum": ["3.0+", "3.15+"] },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of capability identifiers this adapter supports",
+          "uniqueItems": true,
+          "default": [
+            "signal.pause.emulated",
+            "cancel.forced",
+            "workflow.fan.parallel",
+            "query.task.state",
+            "replay.task",
+            "signals.rate.limit"
+          ]
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "maxTaskInputBytes": { "type": "integer", "default": 32000 },
+            "maxTaskOutputBytes": { "type": "integer", "default": 32000 },
+            "maxWorkflowDefinitionBytes": { "type": "integer", "default": 1000000 }
+          }
+        }
+      },
+      "required": ["name", "version", "capabilities"]
+    }
+  },
+  "required": ["temporal", "conductor"]
+}

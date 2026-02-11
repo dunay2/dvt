@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ValidationReport",
+  "description": "Report generated when engine validates plan against target adapter capabilities.",
+  "type": "object",
+  "properties": {
+    "planId": { "type": "string" },
+    "planVersion": { "type": "string" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "targetAdapter": { "type": "string", "enum": ["temporal", "conductor", "auto"] },
+    "adapterVersion": { "type": "string" },
+    "adapterCapabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "description": "Capabilities supported by target adapter"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["VALID", "WARNINGS", "ERRORS"],
+      "description": "Overall validation status"
+    },
+    "capabilityChecks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "capability": { "type": "string" },
+          "supported": { "type": "boolean" },
+          "adapterSupport": {
+            "type": "string",
+            "enum": ["native", "emulated", "degraded"],
+            "description": "How the capability is supported (or not)"
+          },
+          "recommendation": { "type": "string" }
+        },
+        "required": ["capability", "supported"]
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "CAPABILITY_NOT_SUPPORTED",
+              "PLUGIN_TRUST_TIER_MISSING",
+              "INVALID_TARGET_ADAPTER",
+              "SCHEMA_VERSION_UNKNOWN"
+            ]
+          },
+          "capability": { "type": "string" },
+          "message": { "type": "string" }
+        },
+        "required": ["code", "message"]
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "CAPABILITY_EMULATED",
+              "CAPABILITY_DEGRADED",
+              "LATENCY_EXPECTED",
+              "PERFORMANCE_IMPACT"
+            ]
+          },
+          "message": { "type": "string" }
+        },
+        "required": ["code", "message"]
+      }
+    },
+    "remediation": {
+      "type": "object",
+      "properties": {
+        "suggestedFallbackBehavior": {
+          "type": "string",
+          "enum": ["reject", "emulate", "degrade"]
+        },
+        "suggestedCapabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Subset of requiresCapabilities that are supported"
+        },
+        "suggestedTargetAdapter": { "type": "string" }
+      }
+    }
+  },
+  "required": ["planId", "planVersion", "generatedAt", "targetAdapter", "status", "capabilityChecks", "errors", "warnings"]
+}
