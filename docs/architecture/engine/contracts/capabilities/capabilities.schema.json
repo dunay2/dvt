@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Capability Enum",
+  "description": "Universal enum of capabilities across adapters. This is source-of-truth for capability validation.",
+  "type": "object",
+  "properties": {
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "signaling": {
+          "type": "object",
+          "properties": {
+            "PAUSE_NATIVE": {
+              "type": "string",
+              "const": "signal.pause.native",
+              "description": "Native pause via workflow signal (Temporal)"
+            },
+            "PAUSE_EMULATED": {
+              "type": "string",
+              "const": "signal.pause.emulated",
+              "description": "Pause via polling/callbacks (Conductor)"
+            }
+          }
+        },
+        "cancellation": {
+          "type": "object",
+          "properties": {
+            "CANCEL_COOPERATIVE": {
+              "type": "string",
+              "const": "cancel.cooperative",
+              "description": "Graceful cancellation (Activity cancellation token, Temporal)"
+            },
+            "CANCEL_FORCED": {
+              "type": "string",
+              "const": "cancel.forced",
+              "description": "Force-kill only (Conductor)"
+            }
+          }
+        },
+        "workflows": {
+          "type": "object",
+          "properties": {
+            "CHILD_WORKFLOWS": {
+              "type": "string",
+              "const": "workflow.child.workflows",
+              "description": "Native child workflows (Temporal ChildWorkflowOptions)"
+            },
+            "DYNAMIC_FAN_OUT": {
+              "type": "string",
+              "const": "workflow.fan.dynamic",
+              "description": "Dynamic parallel groups"
+            },
+            "PARALLEL_GROUPS": {
+              "type": "string",
+              "const": "workflow.fan.parallel",
+              "description": "Static fan-out / fan-in"
+            }
+          }
+        },
+        "introspection": {
+          "type": "object",
+          "properties": {
+            "QUERY_WORKFLOW_STATE": {
+              "type": "string",
+              "const": "query.workflow.state",
+              "description": "Full workflow state query (Temporal getWorkflowHandle)"
+            },
+            "QUERY_TASK_STATE": {
+              "type": "string",
+              "const": "query.task.state",
+              "description": "Task-level state query (Conductor)"
+            }
+          }
+        },
+        "determinism": {
+          "type": "object",
+          "properties": {
+            "DETERMINISTIC_REPLAY_FULL": {
+              "type": "string",
+              "const": "replay.full",
+              "description": "Full workflow replay support (Temporal)"
+            },
+            "DETERMINISTIC_REPLAY_TASK": {
+              "type": "string",
+              "const": "replay.task",
+              "description": "Task-level replay only (Conductor)"
+            }
+          }
+        },
+        "advanced": {
+          "type": "object",
+          "properties": {
+            "CONTINUE_AS_NEW": {
+              "type": "string",
+              "const": "workflow.continue.as.new",
+              "description": "Workflow history rotation (Temporal)"
+            },
+            "SIGNALS_RATE_LIMIT": {
+              "type": "string",
+              "const": "signals.rate.limit",
+              "description": "Rate limiting support (both adapters)"
+            },
+            "MULTI_SIGNAL_HANDLING": {
+              "type": "string",
+              "const": "signals.concurrent",
+              "description": "Concurrent signal handling"
+            },
+            "HISTORY_ROTATION_CONTINUE_AS_NEW": {
+              "type": "string",
+              "const": "history.rotation",
+              "description": "Workflow history rotation via continueAsNew (Temporal)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["capabilities"]
+}
