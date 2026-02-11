@@ -42,18 +42,20 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 ### 2. Testing
 
-#### Jest
+#### Vitest
 
-- **Config**: [jest.config.js](jest.config.js)
+- **Config**: [vitest.config.ts](vitest.config.ts)
 - **Coverage Requirements**: 80%+ (lines, statements, functions, branches)
 - **Features**:
-  - TypeScript support via ts-jest
+  - Native TypeScript and ESM support
+  - Fast execution with Vite-powered transforms
   - Mock Temporal SDK for determinism tests
-  - Coverage reports (HTML, LCOV, JSON)
+  - Coverage reports (HTML, LCOV, JSON) via v8 provider
 - **Run**:
-  - `npm test` - Run all tests
-  - `npm run test:coverage` - With coverage
-  - `npm run test:watch` - Watch mode
+  - `pnpm test` - Run all tests
+  - `pnpm test:coverage` - With coverage
+  - `pnpm test:watch` - Watch mode
+  - `pnpm test:determinism` - Run only determinism tests
 
 ### 3. Type Safety
 
@@ -119,7 +121,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 | Workflow                                                           | Purpose                  | Triggers             | Key Checks                                   |
 | ------------------------------------------------------------------ | ------------------------ | -------------------- | -------------------------------------------- |
-| [test.yml](.github/workflows/test.yml)                             | Run test suite           | PR, push to main     | Jest tests, coverage (Node 18 & 20)          |
+| [test.yml](.github/workflows/test.yml)                             | Run test suite           | PR, push to main     | Vitest tests, coverage (Node 18 & 20)        |
 | [code-quality.yml](.github/workflows/code-quality.yml)             | Code quality checks      | PR, push to main     | ESLint, Prettier, TypeScript, security audit |
 | [markdown_lint.yml](.github/workflows/markdown_lint.yml)           | Documentation validation | PR, push to main     | Markdown linting                             |
 | [determinism.yml](.github/workflows/determinism.yml)               | Determinism checks       | PR, push to main     | Forbidden patterns (Date.now, Math.random)   |

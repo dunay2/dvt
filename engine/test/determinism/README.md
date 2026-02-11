@@ -12,11 +12,12 @@ Goals:
 Local run (recommended):
 
 - Start Temporal dev server (or use the included docker-compose if available)
-- Run tests with `npm test` or `pnpm test` in the project root
+- Run tests with `pnpm test` or `pnpm test:watch` in the project root
+- Run only determinism tests: `pnpm test:determinism`
 
 Files:
 
-- `sample_determinism.test.ts` — example Jest test skeleton using Temporal test env
+- `sample_determinism.test.ts` — example Vitest test skeleton using Temporal test env
 - `fuzz_cases/` — place to store generated artifact snapshots for fuzz inputs
 
 CI integration:
@@ -25,4 +26,6 @@ CI integration:
 
 Notes:
 
-- This README is a template. Implement concrete tests using your project test framework (Jest/Mocha) and Temporal test harness.
+- This README is a template. Implement concrete tests using Vitest and Temporal test harness.
+- Tests use Vitest with global APIs (`describe`, `it`, `expect`, `beforeEach`, etc.)
+- Configuration is in `vitest.config.ts` at project root

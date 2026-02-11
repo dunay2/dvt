@@ -5,8 +5,6 @@
  * Note: Use of Date is intentional for data structures, not in Temporal workflows
  */
 
-/* eslint-disable no-restricted-globals */
-
 /**
  * Outbox event structure for external event delivery
  * Consumers must deduplicate using idempotencyKey (upsert semantics)

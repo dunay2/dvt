@@ -1,15 +1,15 @@
-// Test setup file for Jest
-import '@testing-library/jest-dom';
+// Test setup file for Vitest
+import { vi, beforeEach } from 'vitest';
 
 // Global test utilities
 global.console = {
   ...console,
   // Suppress console.log in tests unless explicitly needed
-  log: jest.fn(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  log: vi.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 };
 
 // Mock Temporal SDK for determinism tests (when Temporal is added)
@@ -17,9 +17,9 @@ global.console = {
 
 // Setup test environment
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });

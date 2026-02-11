@@ -8,7 +8,6 @@
  */
 
 /* eslint-disable no-restricted-globals */
-/* eslint-disable @typescript-eslint/require-await */
 
 import { IOutboxStorage } from '../../core/interfaces/IOutboxStorage';
 import { OutboxEvent } from '../../core/types';
