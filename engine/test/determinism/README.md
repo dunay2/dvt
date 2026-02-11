@@ -16,7 +16,7 @@ Local run (recommended):
 
 Files:
 
-- `sample_determinism.test.ts` — example Jest test skeleton using Temporal test env
+- `sample_determinism.test.ts` — example Vitest test skeleton using Temporal test env
 - `fuzz_cases/` — place to store generated artifact snapshots for fuzz inputs
 
 CI integration:
@@ -25,4 +25,4 @@ CI integration:
 
 Notes:
 
-- This README is a template. Implement concrete tests using your project test framework (Jest/Mocha) and Temporal test harness.
+- This README is a template. Implement concrete tests using the standard test runner (Vitest). If Jest is truly required, isolate it in a dedicated workspace to avoid tooling drift.
