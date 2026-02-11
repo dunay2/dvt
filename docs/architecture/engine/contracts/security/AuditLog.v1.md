@@ -415,9 +415,9 @@ WHERE signature != HMAC_SHA256(event_data, secret)
 
 ## Change Log
 
-| Version | Date       | Change                                           |
-|---------|------------|--------------------------------------------------|
-| 1.0     | 2026-02-11 | Initial normative contract for audit logging     |
+| Version | Date       | Change                                       |
+| ------- | ---------- | -------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial normative contract for audit logging |
 
 ---
 
