@@ -4,7 +4,8 @@ on:
   pull_request:
   push:
     paths:
-      - 'contracts/**'
+      - 'docs/architecture/engine/contracts/**'
+      - 'engine/src/contracts/**'
 
 jobs:
   validate-schemas:
@@ -21,9 +22,9 @@ jobs:
           # Install ajv-cli temporarily
           npm install -g ajv@8 ajv-cli
           shopt -s nullglob
-          files=(contracts/**/*.schema.json)
+          files=(docs/architecture/engine/contracts/**/*.schema.json)
           if [ ${#files[@]} -eq 0 ]; then
-            echo "No schema files found in contracts/ — skipping"
+            echo "No schema files found in docs/architecture/engine/contracts/ — skipping"
             exit 0
           fi
           for f in "${files[@]}"; do
