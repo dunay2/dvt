@@ -93,7 +93,7 @@ State is derived by reducing **append-only events** in order. No field is ever u
 | `RunFailed` | Engine | `status := FAILED` |
 | `RunCancelled` | Engine | `status := CANCELLED` |
 
-**State Transition Diagram**:
+#### State Transition Diagram
 
 ```mermaid
 stateDiagram-v2
@@ -210,7 +210,7 @@ interface SnapshotProjector {
 }
 ```
 
-**Projector Flow Diagram**:
+#### Projector Flow Diagram
 
 ```mermaid
 sequenceDiagram
@@ -361,7 +361,7 @@ Secondary path for downstream consumers (Planner audits, UI updates, webhooks).
 - Retry policy: exponential backoff + jitter.
 - After N failures → DLQ with alert.
 
-**Outbox Pattern Flow Diagram**:
+### Outbox Pattern Flow Diagram
 
 ```mermaid
 sequenceDiagram
@@ -461,7 +461,7 @@ Execution engines (Temporal, Conductor, etc.) have platform-specific constraints
 
 Conductor does NOT support pause/resume natively. If the target adapter is Conductor, the PAUSE operation has the following constraints:
 
-**PAUSE (Draining) Flow Diagram**:
+### PAUSE (Draining) Flow Diagram
 
 ```mermaid
 sequenceDiagram
