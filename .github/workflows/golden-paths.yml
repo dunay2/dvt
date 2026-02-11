@@ -1,8 +1,8 @@
 name: Golden Paths Validation
 
 on:
-  # pull_request:
-  #   paths:
+  pull_request:
+    paths:
   #     - 'examples/**'
   #     - 'docs/architecture/engine/contracts/**'
   #     - '.github/workflows/golden-paths.yml'
