@@ -1,7 +1,7 @@
 # Contract Versioning Policy
 
 **Audience:** Architecture reviewers, SDK implementers, contract authors  
-**Stability:** NORMATIVE (v1.0)  
+**Stability:** NORMATIVE (v1.0, patched to v1.0.1)  
 **Effective Date:** February 11, 2026
 
 ---
@@ -139,7 +139,7 @@ Month 2 (Stabilization):
 └─ Timeline: 4 weeks for stabilization
 
 Month 3 (Release):
-├─ v2.0 released ("STABLE", v1.0 marked "DEPRECATED")
+├─ v2.0 tagged as STABLE (e.g., `engine/IWorkflowEngine@v2.0.0`); v1.0 marked DEPRECATED; deprecation clock starts
 ├─ v1.0 tagged with deprecation notice
 ├─ CHANGELOG entry: "v2.0 released; v1.0 sunset: Month 6"
 └─ Implementations have 3-month grace period
@@ -312,7 +312,7 @@ Impact: BREAKING - old code using StatusUpdate breaks
 **Timeline:**
 - **Week 1**: RFC approved (3+ reviewers)
 - **Weeks 2-4**: v2.0-DRAFT available, adapters tested
-- **Week 5**: v2.0 released to main (v1.0 marked DEPRECATED)
+- **Week 5**: v2.0 tagged as STABLE (`engine/IWorkflowEngine@v2.0.0`); v1.0 marked DEPRECATED; deprecation clock starts
 - **Weeks 5-8**: 90-day grace period (implementations can still use v1.0)
 - **Week 13+**: v1.0 removed from HEAD, archived
 
@@ -365,7 +365,7 @@ Contracts consist of multiple surfaces, each with compatibility rules:
 | **Event Envelopes** | RunStateUpdate (bus/StateStore format) | MAJOR bump if event schema breaks consumers |
 | **Schemas** | PlanRef, capabilities.schema.json, payloads | MAJOR bump if required fields added/removed |
 | **Error Model** | Error codes, categories, retryability flags | MAJOR bump if codes reinterpreted or removed |
-| **Capability Matrix** | Temporal vs Conductor feature parity | MINOR if columns added; MAJOR if parity downgraded |
+| **Capability Matrix** | Temporal vs Conductor feature parity | MINOR when adding new capabilities/columns; MAJOR only if a capability's normative meaning/guarantee changes for a supported adapter baseline (otherwise handled as adapter release notes) |
 
 **Rule**: A MAJOR bump in **any one surface** bumps the contract **MAJOR** (synchronized).
 
@@ -397,6 +397,10 @@ compat-tests/
 - [ ] Producers emitting new format → consumers accept
 
 Translators (v1 ↔ v2 adapters) are **optional** if format is self-documenting; **tests are mandatory**.
+
+**By surface type**:
+- **Event envelopes / Schemas**: Backward + forward parsing **required** (or provide explicit translator)
+- **Interfaces**: Require (a) SDK shim plan for bridging old SDK clients → new API, and (b) tests proving old SDK clients still work during grace period
 
 ---
 
@@ -465,5 +469,5 @@ Only in cases of:
 | Date | Version | Change |
 |------|---------|--------|
 | 2026-02-11 | v1.0 | Initial versioning policy |
-| 2026-02-11 | v1.1 | Add surface taxonomy, mandatory compat tests, capability flags, deprecation clock trigger clarification |
+ 2026-02-11 | v1.0.1 | Add surface taxonomy, mandatory compat tests, capability flags, deprecation trigger clarification (non-normative guidance; no behavioral guarantees changed) |
 
