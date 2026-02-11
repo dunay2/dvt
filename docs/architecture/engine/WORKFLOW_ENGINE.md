@@ -99,8 +99,10 @@ Lifecycle events:
 - `onRunCancelled`
 
 Contract notes:
-- Events **MUST** include `runId + stepId + attemptId` (where applicable).
-- Events **MUST** include `idempotencyKey` for safe upserts.
+- Events **MUST** include `runId + stepId + engineAttemptId + logicalAttemptId` (where applicable).
+  - `engineAttemptId`: Infrastructure-level (Temporal/Conductor platform assigned).
+  - `logicalAttemptId`: Business-level (assigned by Engine for Planner logic).
+- Events **MUST** include `idempotencyKey` for safe upserts (based on `logicalAttemptId`, Section 4.2).
 
 ### 2.3 Supported Signals Catalog (SignalType)
 Signals are **operator actions** routed to the engine, always enforced by `IAuthorization` (RBAC + tenant scoping).  
@@ -227,6 +229,127 @@ async function pauseWorkflow(signal: PauseSignal, inFlightActivities: ActivityHa
 
 ---
 
+## 2.4 Authorization & Signal Decision Records (SOC2/GDPR normative)
+
+Every signal (Section 2.3) MUST generate a **SignalDecisionRecord** BEFORE the engine processes it. This record is the authoritative audit trail for RBAC decisions and is MANDATORY for compliance (SOC2, GDPR, regulatory audit).
+
+### 2.4.1 Signal Decision Record schema (mandatory, always persisted)
+
+```ts
+interface SignalDecisionRecord {
+  // Audit identity
+  signalDecisionId: string;       // UUID v4 (unique per decision)
+  signalId: string;               // Client-supplied idempotent signal ID
+  
+  // Enforcement decision
+  decision: "ACCEPTED" | "REJECTED" | "REVISION_REQUIRED";
+  reason?: string;                // Rejection reason (e.g., "tenantId mismatch", "insufficient role")
+  policyDecisionId: string;       // Reference to IAuthorization policy engine decision
+  
+  // Actor & context
+  audit: {
+    actorId: string;              // user_xxx or service_xxx
+    actorRole: string;            // "Operator", "Engineer", "Admin", "System"
+    tenantId: string;              // Explicit tenant scope validation
+    projectId?: string;            // Optional, for project-scoped signals
+    environmentId?: string;        // Operational environment
+    timestamp: string;             // ISO 8601 UTC
+    
+    // Mandatory for destructive signals (EMERGENCY_STOP, UPDATE_TARGET, INJECT_OVERRIDE)
+    reason?: string;               // REQUIRED reason field (free-form operator note)
+    
+    // For audit trail
+    sourceIp?: string;             // Client IP (if available via API gateway)
+    userAgent?: string;            // Client user-agent (if available)
+  };
+  
+  // Signal details
+  signalType: SignalType;
+  signalPayload: Record<string, any>;  // Redacted if sensitive (e.g., secrets removed)
+  
+  // Engine response
+  engineProcessedAt?: string;     // When the engine applied the signal (ISO 8601)
+  engineResult?: {
+    status: "success" | "failure";
+    errorCode?: string;
+    errorMessage?: string;
+  };
+  
+  // Compliance fields
+  approvalRequired?: boolean;     // If true, signal held pending manual approval
+  approvedBy?: string;            // userid of approver (if applicable)
+  approvalTimestamp?: string;     // ISO 8601
+}
+```
+
+### 2.4.2 Signal acceptance rules (per SignalType)
+
+| SignalType | RBAC Role | Requires Reason? | Requires Approval? | Tenant Scope Check |
+|---|---|---|---|---|
+| `PAUSE` | Operator | Optional | No | REQUIRED |
+| `RESUME` | Operator | No | No | REQUIRED |
+| `RETRY_STEP` | Engineer | Optional | No | REQUIRED |
+| `UPDATE_PARAMS` | Admin | **REQUIRED** | Yes (configurable) | REQUIRED |
+| `INJECT_OVERRIDE` | Admin | **REQUIRED** | Yes (configurable) | REQUIRED |
+| `ESCALATE_ALERT` | System | Optional | No | REQUIRED |
+| `SKIP_STEP` | Engineer | Optional | No | REQUIRED |
+| `UPDATE_TARGET` | Admin | **REQUIRED** | Yes (always) | REQUIRED |
+| `EMERGENCY_STOP` | Admin | **REQUIRED** | Recommended | REQUIRED |
+
+### 2.4.3 IAuthorization enforcement (engine-side contract)
+
+The engine MUST call `IAuthorization.evaluateSignal()` synchronously before accepting any signal:
+
+```ts
+interface IAuthorization {
+  evaluateSignal(request: {
+    actor: { userId: string; serviceId?: string; roles: string[] };
+    signal: { type: SignalType; payload: Record<string, any> };
+    tenantId: string;
+    projectId?: string;
+    runId: string;
+  }): Promise<SignalAuthorizationDecision>;
+}
+
+interface SignalAuthorizationDecision {
+  allowed: boolean;
+  reason?: string;                  // Why rejected (sent to client)
+  requiresApproval?: boolean;       // If true, hold signal pending manual review
+  approvalGroups?: string[];        // Teams that can approve this signal
+  policyDecisionId: string;         // Audit reference
+}
+```
+
+### 2.4.4 Storage & audit trail
+
+**Storage location**: SignalDecisionRecord MUST be persisted in the same database as `IRunStateStore` (same transaction if possible).
+
+**Retention policy** (configurable, default):
+- Keep all decision records for minimum 7 years (regulatory requirement).
+- Index by: `(tenantId, runId, timestamp)` for fast audit queries.
+- Archive to immutable storage (e.g., cold S3 + Glacier) after 90 days.
+
+**Compliance query APIs** (optional, for audit/SOC2 compliance):
+```ts
+interface AuditQueryAPI {
+  // Retrieve all signal decisions for a run
+  getRunSignalAudit(runId: string): Promise<SignalDecisionRecord[]>;
+  
+  // Retrieve all signal decisions by actor
+  getActorSignalHistory(actorId: string, fromDate: string, toDate: string): Promise<SignalDecisionRecord[]>;
+  
+  // Retrieve all decisions for a tenant in date range
+  getTenantSignalAudit(tenantId: string, fromDate: string, toDate: string): Promise<SignalDecisionRecord[]>;
+}
+```
+
+**Alerts (operational)**:
+- Alert on `REJECTED` signal rate > 10/hour (possible attack or misconfiguration).
+- Alert on `UPDATE_TARGET` or `INJECT_OVERRIDE` without reason field.
+- Alert on signals from inactive/revoked actors.
+
+---
+
 ## 3) ExecutionPlan model (engine-facing)
 
 ### 3.1 Plan transport: avoid Temporal payload limits
@@ -319,16 +442,45 @@ await Promise.all(readySteps.map(s => scheduleActivityForStep(s)));
 - Cancellation: workflow cancellation propagates to activities; persist cancellation state
 - Signals: supports `SignalType` catalog (pause/resume/retry/etc.), strict RBAC
 
-### 4.2 Idempotency & State
+### 4.2 Idempotency & Dual Attempt Strategy
 Temporal activities are **at-least-once**; StateStore writes must be idempotent.
 
-Recommended idempotency key:
-- `idempotencyKey = sha256(runId + stepId + attemptId + eventType + planVersion)`
+**Idempotency Key (NORMATIVE)**:
+- Idempotency MUST be based on `logicalAttemptId`, NOT `engineAttemptId`.
+- Recommended: `idempotencyKey = sha256(runId + '|' + stepId + '|' + logicalAttemptId + '|' + eventType + '|' + planVersion)`
 
 Canonicalization:
 - Concatenate as UTF-8 with `|` separators.
 - Lowercase `eventType`.
-- `attemptId` is per-activity-attempt (Temporal retry attempt), not per-run.
+- **CRITICAL**: Use `logicalAttemptId` (business-level), not `engineAttemptId` (infra-level).
+
+**Dual Attempt IDs (NORMATIVE, replaces single "attemptId")**:
+
+Every step execution MUST populate BOTH fields (Section 6.0.3 defines these formally):
+
+1. **`engineAttemptId`** (infrastructure-level):
+   - Assigned by Temporal (Activity attempt number) or Conductor (task attempt count).
+   - Visible to SRE for debugging platform-level retries and backoff.
+   - NOT used by Planner for dependency resolution or cost calculations.
+   - Increments on any retry triggered by the platform (network glitch, timeout, etc.).
+   - Example: `engineAttemptId=3` means Temporal SDK retried the activity twice.
+
+2. **`logicalAttemptId`** (business-level):
+   - Assigned by Engine, increments only when:
+     - Operator issues RETRY_STEP signal, OR
+     - Planner policy dictates a retry (e.g., max backoff exceeded, fallback policy).
+   - Used by Planner for dependency resolution (`runId + stepId + logicalAttemptId` is the unique key).
+   - Visible to UI as "Retry #1", "Retry #2", etc.
+   - Example: `logicalAttemptId=2` means operator issued RETRY_STEP once.
+
+**Idempotency implications**:
+- If an Activity is retried by Temporal (`engineAttemptId` increments) but succeeds on a later attempt, only ONE StepCompleted event is emitted (with the successful engineAttemptId, but same logicalAttemptId).
+- If an Activity fails and operator issues RETRY_STEP, a new Activity is spawned with a fresh `engineAttemptId=1` but incremented `logicalAttemptId`.
+
+**Instrumentation**:
+- Metric: `step_logical_attempts_total{tenant, step_class}` to track runaway retries.
+- Metric: `step_engine_attempts_total{tenant, step_type}` to track platform-level instability.
+- Alert: If `engineAttemptId > 5` for a single logical attempt, investigate Activity logs or platform health.
 
 ### 4.3 Namespace Strategy (Temporal)
 **Operational complexity warning**: Per-tenant namespaces can explode quota management, retention, visibility, and platform limits.
@@ -451,96 +603,353 @@ steps:
       taskQueue: tq-control-prod   # Consistent naming with environment suffix
 ```
 
-### 4.6 TemporalAdapter vs ConductorAdapter: Capability Matrix
-**Problem**: Temporal and Conductor have different execution models. Unless we define a "lowest common semantics", the ExecutionPlan will slowly become "Temporal-shaped" and unmigrateable to Conductor.
+### 4.6 Capability Matrix & Validation Schema (EXECUTABLE)
 
-**Solution**: Define a capability matrix to enforce cross-adapter compatibility.
+**Problem**: Temporal and Conductor have different execution models. Unless we define a "lowest common semantics", the ExecutionPlan will slowly become "Temporal-shaped" and unmigrateable to Conductor. Moreover, the capability matrix MUST be enforced at validation time (reject plan if target adapter lacks required capabilities), not merely documented.
 
-| Feature | Temporal | Conductor | Planner Impact |
-|---------|----------|-----------|----------------|
-| **Signals** (pause/resume/update) | ✅ Full | ⚠️ Partial (task callbacks only) | Temporal: native. Conductor: emulate via callback webhooks + polling. |
-| **Pause semantics** | ✅ Native (signal) | ⚠️ Emulated (stop workers + resume) | Temporal pauses in-flight activities. Conductor requires task restart. |
-| **Parallel groups** (fan-out/fan-in) | ✅ Native | ✅ Native (dynamic tasks) | Both support. Conduct via JSON/YAML task graphs. |
-| **Query status** (list children) | ✅ Native (getWorkflowHandle) | ⚠️ Partial (task list only) | Temporal exposes full workflow state. Conductor exposes task state. |
-| **Child workflows** | ✅ Native (ChildWorkflowOptions) | ⚠️ Emulated (inline task) | Temporal uses handles. Conductor flattens to single DAG. |
-| **Deterministic replay** | ✅ Full (SDK support) | ⚠️ Task-level only | Temporal: replay-suite gates changes. Conductor: task testing. |
-| **Cancellation tokens** | ✅ Native (cooperative cancel) | ⚠️ None (force-kill task) | Temporal: graceful. Conductor: abrupt termination. |
-| **Retries + backoff** | ✅ Policy-driven (SDK) | ✅ Policy-driven (task config) | Both support natively. |
+**Solution**: Define a capability matrix as executable JSON Schema + ValidationReport that gates plan execution.
 
-**Planner rules (ensure cross-adapter compatibility):**
+#### 4.6.1 Capabilities Enum (Normative)
 
-1. **Default mode**: Emit constructs supported by **both adapters** (the common denominator).
-2. **Adapter-specific mode**: Mark constructs with `adapterCapabilities` hints if they require adaptation.
-3. **Fallback strategy**: If unsupported on target adapter, either emulate or reject plan.
+```ts
+enum Capability {
+  // Signaling and pause
+  "PAUSE_NATIVE" = "pause.native",           // Native signal support (Temporal)
+  "PAUSE_EMULATED" = "pause.emulated",       // Emulated pause (Conductor via polling)
+  
+  // Cancellation
+  "CANCEL_COOPERATIVE" = "cancel.cooperative",  // Graceful cancellation (Temporal)
+  "CANCEL_FORCED" = "cancel.forced",         // Force-kill only (Conductor)
+  
+  // Child/parallel workflows
+  "CHILD_WORKFLOWS" = "child.workflows",     // Native child workflows (Temporal)
+  "DYNAMIC_FAN_OUT" = "fan.dynamic",         // Dynamic parallel groups
+  "PARALLEL_GROUPS" = "fan.parallel",        // Static fan-out / fan-in
+  
+  // Introspection
+  "QUERY_WORKFLOW_STATE" = "query.workflow.state",   // Full workflow state query (Temporal)
+  "QUERY_TASK_STATE" = "query.task.state",          // Task-level state query (Conductor)
+  
+  // Determinism
+  "DETERMINISTIC_REPLAY_FULL" = "replay.full",      // Full workflow replay (Temporal)
+  "DETERMINISTIC_REPLAY_TASK" = "replay.task",      // Task-level replay only (Conductor)
+  
+  // Advanced
+  "CONTINUE_AS_NEW" = "workflow.continue.as.new",   // History rotation (Temporal)
+  "SIGNALS_RATE_LIMIT" = "signals.rate.limit",      // Rate limiting (both)
+  "MULTI_SIGNAL_HANDLING" = "signals.concurrent",   // Concurrent signal handling
+}
+```
 
-**Example (Pause signal in Conductor with emulation):**
+#### 4.6.2 Adapter Capability Matrix (Reference Data)
+
 ```json
 {
-  "signal": "PAUSE",
-  "adapterCapabilities": {
-    "temporal": { "support": "native", "minVersion": "1.0" },
-    "conductor": { "support": "emulated", "strategy": "poll-task-status-and-pause-next-dispatch", "estimatedLatencyMs": 5000 }
-  },
-  "metadata": {
-    "supportedAdapters": ["temporal", "conductor"],
-    "fallbackBehavior": "emulate_on_conductor"
+  "adapters": {
+    "temporal": {
+      "version": "1.0+",
+      "capabilities": [
+        "PAUSE_NATIVE",
+        "CANCEL_COOPERATIVE",
+        "CHILD_WORKFLOWS",
+        "DYNAMIC_FAN_OUT",
+        "PARALLEL_GROUPS",
+        "QUERY_WORKFLOW_STATE",
+        "DETERMINISTIC_REPLAY_FULL",
+        "CONTINUE_AS_NEW",
+        "SIGNALS_RATE_LIMIT",
+        "MULTI_SIGNAL_HANDLING"
+      ],
+      "limits": {
+        "maxSignalSizeBytes": 64000,
+        "maxSignalsPerRunPerMinute": 60,
+        "maxHistoryEventBytes": 50_000_000,
+        "maxSignalDeferralMinutes": 1440
+      }
+    },
+    "conductor": {
+      "version": "3.0+",
+      "capabilities": [
+        "PAUSE_EMULATED",
+        "CANCEL_FORCED",
+        "PARALLEL_GROUPS",
+        "QUERY_TASK_STATE",
+        "DETERMINISTIC_REPLAY_TASK",
+        "SIGNALS_RATE_LIMIT"
+      ],
+      "limits": {
+        "maxTaskInputBytes": 32000,
+        "maxTaskOutputBytes": 32000,
+        "maxWorkflowDefinitionBytes": 1_000_000
+      }
+    }
   }
 }
 ```
 
-**ExecutionPlan validation (Planner responsibility):**
-- Before emitting plan, check target adapter's capability matrix.
-- Mark unsupported constructs and emit warnings or reject if `fallbackBehavior: "reject"`.
-- Document in `plan.metadata.adapterConstraints` which adapter(s) the plan is optimized for.
+#### 4.6.3 ExecutionPlan Capability Declarations
 
-Reference (Conductor docs): https://conductor.netflix.com/ (terminate, tasks, workflow definition model)
-      runtime: node
-      resourceClass: light
+The planner MUST declare which capabilities a plan requires:
+
+```ts
+interface ExecutionPlanMetadata {
+  // Adapter targeting
+  targetAdapter: "temporal" | "conductor" | "any";   // Declare target(s)
+  minAdapterVersion?: string;                        // e.g., "1.5" for Temporal
+  
+  // Capability requirements
+  requiresCapabilities: Capability[];                // e.g., ["PAUSE_NATIVE", "CANCEL_COOPERATIVE"]
+  
+  // Fallback behavior
+  fallbackBehavior: "reject" | "emulate" | "degrade";
+  // - "reject": Engine MUST reject if unsupported
+  // - "emulate": Engine may emulate (e.g., PAUSE_EMULATED on Conductor)
+  // - "degrade": Engine may remove feature (e.g., CANCEL_COOPERATIVE → CANCEL_FORCED)
+  
+  // Plugin trust tier (new, replaces ad-hoc plugin classification)
+  pluginTrustTier: "trusted" | "partner" | "untrusted";
+}
+
+// Example
+const planMetadata = {
+  targetAdapter: "temporal",
+  minAdapterVersion: "1.5",
+  requiresCapabilities: [
+    "PAUSE_NATIVE",
+    "CANCEL_COOPERATIVE",
+    "CONTINUE_AS_NEW"
+  ],
+  fallbackBehavior: "reject"
+};
 ```
 
-If `dispatch.taskQueue` is not provided:
-- Use adapter default by environment (e.g. `tq-control-prod`, `tq-data-prod`, `tq-control-staging`).
+#### 4.6.4 ValidationReport (mandatory, enforced at engine input)
 
-### 4.5.1 Worker topology implementation (concrete)
-**Control Plane Workers:**
-- Task Queue: `tq-control-{env}`
-- Responsibilities:
-  - Plan fetch/validation
-  - StateStore writes
-  - Light HTTP/API steps
-  - Signal processing
-- Resources: Low CPU/memory (e.g., 0.5 CPU / 1Gi)
-- Scale: 2–10 pods (CPU-based HPA)
+Before `startRun()`, the engine MUST:
+1. Extract `plan.metadata.requiresCapabilities`.
+2. Query the adapter's capability matrix.
+3. Generate a `ValidationReport`.
+4. Reject the plan if unsupported capabilities exist and `fallbackBehavior === "reject"`.
 
-**Data Plane Workers:**
-- Task Queue: `tq-data-{env}`
-- Responsibilities:
-  - `DBT_RUN`, heavy computation steps
-- Resources: High CPU/memory (GPU optional)
-- Isolation: Docker/Kubernetes per tenant when required (enterprise tiers)
-
-**Isolation Plane Workers (optional / enterprise):**
-- Task Queue: `tq-isolation-{tenant}-{env}`
-- Responsibilities:
-  - Tenant-isolated steps (security/regulatory)
-- Resources: Dedicated per tenant (fixed or tenant-managed)
-
-**Routing logic**
 ```ts
-function getTaskQueue(step: Step, env: string): string {
-  return (
-    step.dispatch?.taskQueue ??
-    (step.type.includes("DBT") ? `tq-data-${env}` : `tq-control-${env}`)
-  );
+interface ValidationReport {
+  planId: string;
+  planVersion: string;
+  generatedAt: string;           // ISO 8601
+  
+  // Validation metadata
+  targetAdapter: string;
+  adapterVersion: string;
+  adapterCapabilities: Capability[];
+  
+  // Validation results
+  status: "VALID" | "WARNINGS" | "ERRORS";
+  
+  // Granular results
+  capabilityChecks: {
+    capability: Capability;
+    supported: boolean;
+    adapterSupport?: "native" | "emulated" | "degraded";
+    recommendation?: string;
+  }[];
+  
+  // Errors
+  errors: {
+    code: string;
+    capability: Capability;
+    message: string;           // e.g. "PAUSE_NATIVE not supported by Conductor; set fallbackBehavior=emulate"
+  }[];
+  
+  // Warnings
+  warnings: {
+    code: string;
+    message: string;
+  }[];
+  
+  // Remediation
+  remediation?: {
+    suggestedFallbackBehavior?: string;
+    suggestedCapabilities?: Capability[];   // "Supported subset of requiresCapabilities"
+  };
 }
 ```
 
-// Task queue naming examples (consistent pattern):
-- Task Queue: `tq-control-{env}`      # e.g. `tq-control-prod`
-- Task Queue: `tq-data-{env}`         # e.g. `tq-data-prod`
-- Task Queue: `tq-isolation-{tenant}-{env}`  # e.g. `tq-isolation-acme-prod`
+#### 4.6.5 Engine Validation Logic (Normative)
 
-### 4.6 Workflow code versioning (Temporal `getVersion`)
+```ts
+async function validatePlan(
+  plan: ExecutionPlan,
+  targetAdapterName: string,
+  adapterCapabilityMatrix: CapabilityMatrix
+): Promise<ValidationReport> {
+  const report: ValidationReport = {
+    planId: plan.planId,
+    planVersion: plan.planVersion,
+    generatedAt: new Date().toISOString(),
+    targetAdapter: targetAdapterName,
+    adapterVersion: adapterCapabilityMatrix[targetAdapterName].version,
+    adapterCapabilities: adapterCapabilityMatrix[targetAdapterName].capabilities,
+    status: "VALID",
+    capabilityChecks: [],
+    errors: [],
+    warnings: []
+  };
+
+  const adapterCaps = new Set(adapterCapabilityMatrix[targetAdapterName].capabilities);
+  const requiredCaps = plan.metadata.requiresCapabilities || [];
+
+  for (const requiredCap of requiredCaps) {
+    const isSupported = adapterCaps.has(requiredCap);
+    
+    report.capabilityChecks.push({
+      capability: requiredCap,
+      supported: isSupported,
+      adapterSupport: isSupported ? "native" : undefined,
+      recommendation: !isSupported ? `Plan requires ${requiredCap}, which is not supported by ${targetAdapterName}` : undefined
+    });
+
+    if (!isSupported) {
+      if (plan.metadata.fallbackBehavior === "reject") {
+        report.errors.push({
+          code: "CAPABILITY_NOT_SUPPORTED",
+          capability: requiredCap,
+          message: `Required capability ${requiredCap} not supported by ${targetAdapterName}; fallbackBehavior=reject mandates plan rejection.`
+        });
+      } else if (plan.metadata.fallbackBehavior === "emulate") {
+        report.warnings.push({
+          code: "CAPABILITY_EMULATED",
+          message: `Capability ${requiredCap} will be emulated on ${targetAdapterName}; latency/behavior may differ.`
+        });
+      }
+    }
+  }
+
+  report.status = report.errors.length > 0 ? "ERRORS" : report.warnings.length > 0 ? "WARNINGS" : "VALID";
+
+  if (report.status === "ERRORS" && plan.metadata.fallbackBehavior === "reject") {
+    throw new PlanValidationError("Plan rejected due to unsupported adapter capabilities", report);
+  }
+
+  return report;
+}
+
+// Usage in startRun()
+async function startRun(plan: ExecutionPlan, context: RunContext): Promise<EngineRunRef> {
+  const validationReport = await validatePlan(
+    plan,
+    context.targetAdapter,
+    ADAPTER_CAPABILITY_MATRIX
+  );
+
+  if (validationReport.status === "ERRORS") {
+    // Reject plan
+    await stateStore.emit({
+      eventType: "RunValidationFailed",
+      runId: context.runId,
+      validationReport,
+      idempotencyKey: `val-${context.runId}-${plan.planVersion}`
+    });
+    throw new PlanValidationError("Plan validation failed", validationReport);
+  }
+
+  // Proceed with execution
+  return await adapter.startRun(plan, context);
+}
+```
+
+#### 4.6.6 Plugin Trust Tier & Sandbox Rules (NEW - Normative)
+
+The plan's `pluginTrustTier` gates plugin execution sandbox and network access:
+
+```ts
+enum PluginTrustTier {
+  "trusted" = "trusted",        // Internal/first-party plugins
+  "partner" = "partner",        // Vetted third-party
+  "untrusted" = "untrusted"     // External/unvetted
+}
+
+interface PluginSandboxPolicy {
+  trustTier: PluginTrustTier;
+  
+  // Network access rules
+  networkMode: "none" | "tenant-network" | "public";
+  // - "none": No network access (default for untrusted)
+  // - "tenant-network": Access to tenant VPC (partner only)
+  // - "public": Public internet (trusted only, requires explicit approval)
+  
+  allowedNetworks?: string[];   // CIDRs (for partner tier)
+  
+  // Environment isolation
+  processEnv: "inherited" | "minimal" | "none";
+  // - "inherited": Full process.env (trusted only)
+  // - "minimal": Whitelisted vars (partner)
+  // - "none": No env vars (untrusted, default)
+  
+  // Subprocess controls
+  spawnProcesses: boolean;      // Default false for untrusted; true only if allowSpawnProcesses=true
+  allowList?: string[];         // If spawnProcesses=true, allowed commands (partner/trusted only)
+  
+  // Filesystem
+  fsAccess: "read-write" | "read-only" | "none";
+  
+  // Execution runtime
+  runtime: "vm2-forbidden" | "isolated-vm" | "gvisor" | "docker";
+  // CRITICAL: vm2 must be forbidden (deprecated, security issues)
+  // Recommend: gvisor > isolated-vm > docker > (vm2 forbidden)
+}
+
+// Enforcement in Plugin Dispatch
+async function executePlugin(
+  plugin: PluginDispatch,
+  plan: ExecutionPlan,
+  ctx: RunContext
+): Promise<StepOutput> {
+  const trustTier = plan.metadata.pluginTrustTier || "untrusted";
+  const policy = PLUGIN_SANDBOX_POLICY[trustTier];
+
+  // Validate sandbox constraints
+  if (trustTier === "untrusted") {
+    // Force maximum restrictions
+    policy.networkMode = "none";
+    policy.processEnv = "none";
+    policy.spawnProcesses = false;
+    policy.fsAccess = "read-only";
+    policy.runtime = "gvisor";
+  }
+
+  // Reject vm2 unconditionally
+  if (policy.runtime === "vm2" || policy.runtime === "vm2-forbidden") {
+    throw new Error(`Plugin ${plugin.pluginId}: vm2 is forbidden (deprecated, security issues). Use isolated-vm, gVisor, or Docker.`);
+  }
+
+  // Execute within sandbox
+  return await sandboxRuntime[policy.runtime].execute(plugin, policy);
+}
+```
+
+**Planner rules**:
+- All plans MUST declare `pluginTrustTier`.
+- `untrusted` tier → auto-enforced `networkMode="none"`, `processEnv="none"`, `spawnProcesses=false`.
+- Engine MUST validate these constraints pre-execution.
+- Alert on unconstrained `trusted` plugins with full network access.
+
+---
+
+### 4.6.7 Planner strategies (example)
+
+**Default (conservative)**: Match common denominator (supported by both Temporal and Conductor).
+- `targetAdapter: "any"`, `requiresCapabilities: ["PARALLEL_GROUPS", "SIGNALS_RATE_LIMIT"]`, `fallbackBehavior: "degrade"`.
+
+**Temporal-optimized**: Assume Temporal will execute; use advanced features.
+- `targetAdapter: "temporal"`, `requiresCapabilities: ["CONTINUE_AS_NEW", "PAUSE_NATIVE"]`, `fallbackBehavior: "reject"`.
+
+**Cross-adapter resilience**: Plan for both; emulate if needed.
+- `targetAdapter: "any"`, `requiresCapabilities: ["PAUSE_NATIVE"]`, `fallbackBehavior: "emulate"`.
+- Engine on Conductor will emulate PAUSE via polling.
+
+---
+
+### 4.7 Workflow code versioning (Temporal `getVersion`)
 The plan can be stable while engine code evolves. To avoid breaking determinism for in-flight runs:
 - Use Temporal workflow versioning (`getVersion`) around behavioral changes in the interpreter.
 - Gate new logic behind version checks so old runs replay safely.
@@ -571,6 +980,335 @@ Notes:
 ## 6) Runtime Execution Semantics (NORMATIVE)
 
 This section defines the concrete, normative execution-time behavior of the engine. Implementations MUST follow these semantics: they specify how Activities resolve secrets, what Activities must return, how dynamic dependencies expand, how plugin versions are declared and guarded, and the engine's runtime response to backpressure. These rules are part of the normative engine contract and MUST be implemented by any adapter.
+
+### 6.0 Normative StateStore & Event Model (Source of Truth)
+
+The StateStore is the authoritative, persistent record of execution. Its integrity is fundamental to replay, audit, and multi-tenant fairness. This section defines the canonical data model and invariants.
+
+#### 6.0.1 Monotonic Sequence & Ordering Invariant
+
+Every event persisted to the StateStore MUST include a monotonically increasing `runSeq` (per `runId`). This sequence is the canonical ordering for the UI, API consumers, and reconcilers.
+
+```ts
+interface CanonicalEngineEvent {
+  // Identity
+  runId: string;
+  eventId: string;              // UUID v4
+  runSeq: number;               // MONOTONIC per runId; generated by database
+  
+  // Causality
+  stepId?: string;
+  engineAttemptId: string;      // Temporal activity attempt (infra-level)
+  logicalAttemptId: string;     // Logical retry (business-level, may differ from engineAttemptId)
+  
+  // Event payload
+  eventType: string;            // "StepStarted", "StepCompleted", "StepFailed", "RunApproved", etc.
+  eventData: Record<string, any>;
+  
+  // Idempotency
+  idempotencyKey: string;       // Derived from: SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
+  
+  // Timestamps
+  emittedAt: string;            // ISO 8601 UTC (when Activity emitted event)
+  persistedAt: string;          // ISO 8601 UTC (when StateStore durably persisted; may differ from emittedAt)
+  
+  // Integrity
+  adapterVersion: string;       // e.g. "temporal:1.0.0" or "conductor:2.1.0"
+  engineRunRef: EngineRunRef;   // Ref to underlying Temporal/Conductor execution
+  
+  // Audit trail
+  causedBySignalId?: string;    // If event resulted from a signal, reference it
+  parentEventId?: string;       // For causality chains (e.g., RunApproved → StepStarted)
+}
+```
+
+**Database schema (pseudocode)**:
+```sql
+CREATE TABLE run_events (
+  runId VARCHAR(255),
+  runSeq BIGINT,                -- AUTO-GENERATED per runId (IDENTITY or SEQUENCE)
+  eventId UUID PRIMARY KEY,
+  stepId VARCHAR(255),
+  engineAttemptId VARCHAR(255),
+  logicalAttemptId VARCHAR(255),
+  eventType VARCHAR(64),
+  eventData JSONB,
+  idempotencyKey CHAR(64),      -- SHA256 hex
+  emittedAt TIMESTAMP,
+  persistedAt TIMESTAMP DEFAULT NOW(),
+  adapterVersion VARCHAR(40),
+  engineRunRef JSONB,
+  causedBySignalId UUID,
+  parentEventId UUID,
+  
+  PRIMARY KEY (runId, runSeq),
+  UNIQUE (runId, idempotencyKey),  -- Prevent duplicate event per run
+  INDEX (runId),
+  INDEX (eventType, persistedAt)
+) PARTITION BY RANGE (persistedAt);  -- Partitioned for archival
+
+-- Step Snapshots (derived from run_events, cached for fast queries)
+CREATE TABLE step_snapshots (
+  runId VARCHAR(255) NOT NULL,
+  stepId VARCHAR(255) NOT NULL,
+  logicalAttemptId VARCHAR(255) NOT NULL,
+  
+  status VARCHAR(32),                    -- "PENDING", "RUNNING", "SUCCESS", "FAILED", "SKIPPED"
+  engineAttemptId VARCHAR(255),
+  startedAt TIMESTAMP,
+  completedAt TIMESTAMP,
+  artifacts JSONB,                       -- ArtifactRef[]
+  error JSONB,                           -- { code, message, retryable }
+  
+  lastUpdateSeq BIGINT,                  -- High-water mark of run_events.runSeq
+  projectedAt TIMESTAMP DEFAULT NOW(),
+  
+  PRIMARY KEY (runId, stepId, logicalAttemptId),
+  INDEX (runId, status),
+  INDEX (stepId, status),
+  CONSTRAINT fk_run_snapshot FOREIGN KEY (runId) REFERENCES run_snapshots(runId) ON DELETE CASCADE
+);
+```
+
+**UI Consumption Rule**: UI polls or receives events ordered by `runSeq`. If UI observes a gap (e.g., expected `runSeq=10` but receives `runSeq=12`), the UI MUST:
+1. Mark run state as `STALE`.
+2. Refetch entire run snapshot or force resync.
+3. Resume consuming events from the next `runSeq` after the gap closes.
+
+#### 6.0.2 Append-Only Event Model (Canonical)
+
+The StateStore operates under **append-only event-sourcing semantics**: the current state of a run is derived by reducing all persisted events in order. No field is ever "updated in-place"; all state changes are captured as new events.
+
+**Canonical event types**:
+
+| Event Type | Emitted By | Persisted When | Effect on State |
+|---|---|---|---|
+| `RunApproved` | Planner | Before engine starts | `status := APPROVED` |
+| `RunStarted` | Engine (Adapter) | Immediately after startRun() | `status := RUNNING`, `engineRunRef` recorded |
+| `StepStarted` | Activity | When activity begins execution | Step status := `RUNNING` |
+| `StepCompleted` | Activity | When activity succeeds | Step status := `SUCCESS`, artifacts recorded |
+| `StepFailed` | Activity | When activity fails | Step status := `FAILED`, error recorded, backoff policy applied |
+| `StepSkipped` | Engine | On signal SKIP_STEP or auto-skip | Step status := `SKIPPED`, reason recorded |
+| `RunPaused` | Engine | On signal PAUSE accepted | `status := PAUSED` |
+| `RunResumed` | Engine | On signal RESUME accepted | `status := RUNNING` |
+| `SignalAccepted` | IAuthorization | After signal auth check | Signal decision recorded, causedBy populated |
+| `SignalRejected` | IAuthorization | On signal RBAC fail | Signal denied, reason recorded |
+| `RunCompleted` | Engine | When all steps done | `status := COMPLETED`, final artifacts aggregated |
+| `RunFailed` | Engine | When unrecoverable error | `status := FAILED`, root cause recorded |
+| `RunCancelled` | Engine | On cancelRun() or EMERGENCY_STOP | `status := CANCELLED` |
+
+**Projection (derived state)**:
+
+Two views are derived from the append-only log:
+
+1. **RunSnapshot** (cached, queryable):
+   ```ts
+   interface RunSnapshot {
+     runId: string;
+     status: "PENDING" | "APPROVED" | "RUNNING" | "PAUSED" | "COMPLETED" | "FAILED" | "CANCELLED";
+     engineRunRef: EngineRunRef;
+     startedAt?: string;
+     completedAt?: string;
+     totalSteps: number;
+     completedSteps: number;
+     failedSteps: number;
+     totalDurationMs?: number;
+     
+     steps: StepSnapshot[];
+     artifacts: ArtifactRef[];
+     lastEventSeq: number;        // High-water mark for UI sync
+   }
+   
+   interface StepSnapshot {
+     stepId: string;
+     status: "PENDING" | "RUNNING" | "SUCCESS" | "FAILED" | "SKIPPED";
+     logicalAttemptId: string;
+     engineAttemptId?: string;    // May differ, visible for SRE/debugging
+     startedAt?: string;
+     completedAt?: string;
+     artifacts: ArtifactRef[];
+     error?: { code: string; message: string; retryable: boolean };
+   }
+   ```
+
+2. **Audit Trail** (read-only, immutable once derived):
+   - Retention: 7 years minimum (SOC2/GDPR).
+   - Contains all SignalDecisionRecords + related events.
+   - Indexed for compliance queries.
+
+#### 6.0.3 Dual Attempt Strategy (Temporal vs Logical)
+
+The `attemptId` field is ambiguous if not decomposed. We enforce two distinct fields:
+
+- **`engineAttemptId`** (infrastructure-level): Temporal Activity Attempt ID or Conductor task attempt count.
+  - Assigned by the platform (Temporal SDK, Conductor runtime).
+  - Visible to SRE for debugging retries, backoff policies, platform limits.
+  - NOT used for Planner logic (dependencies, skip, cost decisions).
+  - Stored in events for observability; NOT part of step identity.
+
+- **`logicalAttemptId`** (business-level): Incremented when a RETRY_STEP signal is issued or when Planner policy dictates a retry.
+  - Assigned by the Engine (monotonic per `stepId` per `runId`).
+  - Used by Planner for dependency resolution, artifact caching, cost accrual.
+  - Part of the immutable step identity: `(runId, stepId, logicalAttemptId)`.
+  - Visible to UI as "Retry #N".
+
+**Event cardinality**:
+
+An activity may be retried by Temporal (e.g., network glitch) → `engineAttemptId` increments, but `logicalAttemptId` stays the same (Activity succeeded eventually on retry).
+
+A step may be manually retried via RETRY_STEP signal → `logicalAttemptId` increments, and a new Activity is spawned with a fresh `engineAttemptId=1`.
+
+**Schema**:
+```sql
+-- In run_events table, add:
+-- engineAttemptId VARCHAR(255),       -- Temporal/Conductor assigned
+-- logicalAttemptId VARCHAR(255),      -- Business-level, engine assigned
+
+-- In step_snapshot table, add:
+-- UNIQUE (runId, stepId, logicalAttemptId)
+
+-- Idempotency key MUST include logicalAttemptId:
+-- idempotencyKey = sha256(runId || '|' || stepId || '|' || logicalAttemptId || '|' || eventType || '|' || planVersion)
+```
+
+**Metrics & debugging**:
+- Alert if `engineAttemptId` > 5 for a single step/run (possible flaky activity or platform issue).
+- Track: `step_logical_attempts_total{tenant, step_class}` to detect runaway logical retries.
+- UI shows "Retry #1", "Retry #2" etc. based on `logicalAttemptId`, not `engineAttemptId`.
+
+#### 6.0.4 Consistency & Failure Modes
+
+**Write-ahead logging (WAL)**:
+- Events are written to StateStore's WAL with `persistedAt` timestamp.
+- After durably persisted, events are immediately queryable by runId/runSeq order.
+- No out-of-order writes; any skipped sequence triggers alarms.
+
+**Transactional guarantees**:
+- Single event write is atomic (ACID).
+- Multi-event transactions (e.g., RunStarted + StepStarted + StepCompleted) are NOT guaranteed to be atomic; use idempotency keys for safe retries.
+- RunSnapshot projection is EVENTUALLY CONSISTENT; lag is expected to be < 1s in normal operation.
+
+**Recovery**:
+- On StateStore reconnect/failover, Activities resume from the last persisted `idempotencyKey`.
+- If an Activity re-emits an event already persisted (same `idempotencyKey`), the StateStore upsert is a no-op.
+- Projector consumes events in `runSeq` order and rebuilds snapshots; no stale snapshots are served until projector catches up.
+
+#### 6.0.5 Snapshot Projection Rules (Normative)
+
+Snapshots are **derived state**, not source of truth. The Projector is a background process that consumes events from `run_events` and maintains cached snapshots in `run_snapshots` and `step_snapshots` for fast UI queries.
+
+**Projector contract**:
+
+```ts
+interface SnapshotProjector {
+  // Consume all events for a run in runSeq order and produce a fresh snapshot
+  projectRun(runId: string, events: CanonicalEngineEvent[]): Promise<RunSnapshot>;
+  
+  // Incrementally project: apply new events to an existing snapshot
+  incrementalProject(snapshot: RunSnapshot, newEvents: CanonicalEngineEvent[]): Promise<RunSnapshot>;
+  
+  // Reconcile: detect gaps, halt until closed, resume
+  detectGaps(lastSeq: number, nextSeq: number): Promise<{ hasGap: boolean; gapStart: number; gapEnd: number }>;
+}
+```
+
+**Normative rules**:
+
+1. **Monotonic ordering**:
+   - Projector MUST consume events in strictly increasing `runSeq` order.
+   - If a gap is detected (e.g., expected `runSeq=42` but received `runSeq=44`), Projector MUST halt and wait until gap closes.
+   - No out-of-order processing; no skipping gaps.
+
+2. **Snapshot consistency**:
+   - Each projection produces a **new immutable snapshot**; never update in-place.
+   - `RunSnapshot.lastEventSeq` = highest `runSeq` applied in projection.
+   - UI consumes snapshots ONLY when `lastEventSeq >= lastRequestedSeq`.
+
+3. **Event reduction rules** (idempotent state machine):
+   - `RunApproved` event → `status := APPROVED`
+   - `RunStarted` event → `status := RUNNING`, `engineRunRef` recorded, `startedAt` set
+   - `StepStarted` event → create/update step in `steps[]`, set step `status := RUNNING`, `startedAt`
+   - `StepCompleted` event → update step `status := SUCCESS`, `completedAt`, `artifacts`
+   - `StepFailed` event → update step `status := FAILED`, `error`, compute `completedSteps`, re-apply backoff policy
+   - `SignalAccepted` event → logged to audit trail, does NOT change run status
+   - `RunPaused` event → `status := PAUSED`
+   - `RunResumed` event → `status := RUNNING` (if was PAUSED)
+   - `RunCompleted` event → `status := COMPLETED`, `completedAt`, final artifact aggregation
+   - `RunFailed` event → `status := FAILED`, root cause recorded
+   - `RunCancelled` event → `status := CANCELLED`
+
+4. **Failure recovery**:
+   - If Projector crashes mid-projection, it resumes from `lastUpdateSeq` in the snapshot (watermark).
+   - Reprocessing events idempotently (same event processed twice → same snapshot) is safe.
+
+5. **UI lag SLA**:
+   - Normal operation: snapshot lag ≤ 1 second behind latest event.
+   - If Projector lag > 5 seconds, emit alert `PROJECTOR_LAG_HIGH`.
+   - If gap detected, emit alert `PROJECTOR_GAP_DETECTED` and hold snapshot updates until gap closes.
+
+**Example: Incremental Projection (pseudocode)**
+
+```ts
+async function incrementalProject(
+  snapshot: RunSnapshot,
+  newEvents: CanonicalEngineEvent[]
+): Promise<RunSnapshot> {
+  // Validate: newEvents must start at snapshot.lastEventSeq + 1
+  const firstSeq = newEvents[0]?.runSeq;
+  if (firstSeq !== snapshot.lastEventSeq + 1) {
+    throw new GapError(`Expected runSeq=${snapshot.lastEventSeq + 1}, but got ${firstSeq}`);
+  }
+
+  // Clone snapshot (immutable)
+  let result = JSON.parse(JSON.stringify(snapshot));
+
+  // Reduce events in order
+  for (const event of newEvents) {
+    const step = result.steps.find(s => s.stepId === event.stepId);
+    
+    if (event.eventType === "StepStarted") {
+      if (!step) {
+        result.steps.push({
+          stepId: event.stepId,
+          status: "RUNNING",
+          logicalAttemptId: event.logicalAttemptId,
+          engineAttemptId: event.engineAttemptId,
+          startedAt: event.emittedAt
+        });
+      } else {
+        step.status = "RUNNING";
+        step.startedAt = event.emittedAt;
+      }
+    } else if (event.eventType === "StepCompleted") {
+      step!.status = "SUCCESS";
+      step!.completedAt = event.emittedAt;
+      step!.artifacts = event.eventData.artifactRefs || [];
+      result.completedSteps++;
+    } else if (event.eventType === "StepFailed") {
+      step!.status = "FAILED";
+      step!.completedAt = event.emittedAt;
+      step!.error = event.eventData.error;
+      result.failedSteps++;
+    }
+    
+    // ... other event types
+    
+    result.lastEventSeq = event.runSeq;
+  }
+
+  result.projectedAt = new Date().toISOString();
+  return result;
+}
+```
+
+**Instrumentation**:
+- Metric: `projector_lag_ms{runId}` (snapshot age)
+- Metric: `projector_gaps_total` (count of detected gaps)
+- Metric: `projector_events_processed_total{event_type}` (throughput)
+- Alert: `projector_lag_ms > 5000` → P2
+- Alert: `projector_gaps_total` increasing → P1 (data integrity risk)
+
+---
 
 ### 6.1 Runtime secrets resolution (engine responsibility; no secrets in plan)
 The plan MUST contain only references to secrets (never values). At execution time, Activity code resolves secrets via `ISecretsProvider`.
