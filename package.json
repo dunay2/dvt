@@ -1,0 +1,18 @@
+{
+  "name": "dvt",
+  "version": "1.0.0",
+  "description": "DVT - Workflow Engine Documentation and Code",
+  "scripts": {
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.git\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dunay2/dvt.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "markdownlint-cli2": "^0.12.1"
+  }
+}
