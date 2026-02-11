@@ -4,7 +4,7 @@
 **Version**: 1.0  
 **Stability**: Adapter specification — breaking changes require version bump  
 **Target**: Temporal 1.0+ (TypeScript SDK)  
-**References**: [IWorkflowEngine Contract](../contracts/engine/IWorkflowEngine.v1.md), [Temporal SDK](https://docs.temporal.io/develop/typescript), [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
+**References**: [IWorkflowEngine Contract](../../contracts/engine/IWorkflowEngine.v1.md), [Temporal SDK](https://docs.temporal.io/develop/typescript), [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
 
 ---
 

@@ -457,10 +457,10 @@ Only in cases of:
 
 ## Related Documents
 
-- [IWorkflowEngine.v1.0.md](./contracts/engine/IWorkflowEngine.v1.0.md) — First normative contract
-- [ExecutionSemantics.v1.0.md](./contracts/engine/ExecutionSemantics.v1.0.md) — Execution guarantees contract
-- [docs/runbooks/engine-migration-*.md](../runbooks/) — Migration guides (created per major release)
-- [CHANGELOG.md](../../CHANGELOG.md) — Cumulative log of all contract changes
+- [IWorkflowEngine.v1.md](./contracts/engine/IWorkflowEngine.v1.md) — First normative contract
+- [ExecutionSemantics.v1.md](./contracts/engine/ExecutionSemantics.v1.md) — Execution guarantees contract
+- [docs/runbooks/](../../runbooks/) — Operational runbooks
+<!-- - [CHANGELOG.md](../../CHANGELOG.md) — Cumulative log (planned) -->
 
 ---
 
