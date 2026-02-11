@@ -15,7 +15,7 @@ global.console = {
 // Mock Temporal SDK for determinism tests (when Temporal is added)
 jest.mock('@temporalio/workflow', () => ({
   workflow: {
-    now: jest.fn(() => new Date('2026-02-11T10:00:00.000Z')),
+    now: jest.fn(() => 1707641600000), // Timestamp equivalent to 2026-02-11T10:00:00.000Z
     sleep: jest.fn(),
     getVersion: jest.fn(),
   },
