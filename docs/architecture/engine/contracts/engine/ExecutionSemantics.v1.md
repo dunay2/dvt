@@ -93,6 +93,41 @@ State is derived by reducing **append-only events** in order. No field is ever u
 | `RunFailed` | Engine | `status := FAILED` |
 | `RunCancelled` | Engine | `status := CANCELLED` |
 
+#### State Transition Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: Run created
+    PENDING --> APPROVED: RunApproved event
+    APPROVED --> RUNNING: RunStarted event
+    RUNNING --> PAUSED: PAUSE signal
+    PAUSED --> RUNNING: RESUME signal
+    RUNNING --> COMPLETED: RunCompleted event
+    RUNNING --> FAILED: RunFailed event
+    RUNNING --> CANCELLED: CANCEL signal
+    PAUSED --> CANCELLED: CANCEL signal
+    COMPLETED --> [*]
+    FAILED --> [*]
+    CANCELLED --> [*]
+    
+    note right of RUNNING
+        Steps execute in parallel/sequence
+        based on plan dependencies
+    end note
+    
+    note right of PAUSED
+        Engine stops scheduling new tasks
+        (see § 6 for Conductor draining behavior)
+    end note
+```
+
+**Diagram Notes**:
+
+- State transitions are triggered by events or signals (see table above for event emitters)
+- `RUNNING` state allows concurrent step execution based on plan dependencies
+- `PAUSED` state behavior varies by adapter (Temporal: immediate; Conductor: draining)
+- Terminal states (`COMPLETED`, `FAILED`, `CANCELLED`) are immutable
+
 ---
 
 ### 1.3 Dual Attempt Strategy (CRITICAL INVARIANT)
@@ -174,6 +209,51 @@ interface SnapshotProjector {
   detectNonContiguous(lastSeq: number, nextSeq: number): Promise<{ observedNonContiguous: boolean }>;
 }
 ```
+
+#### Projector Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant SS as StateStore
+    participant P as Projector
+    participant UI as UI/Consumer
+    
+    Note over P: Incremental projection loop
+    
+    P->>SS: Poll new events (from lastEventSeq watermark)
+    SS-->>P: Return events [runSeq: 10, 11, 13]
+    
+    P->>P: detectNonContiguous(11, 13)
+    
+    alt Gap detected (non-contiguous)
+        P->>P: Mark run as STALE
+        P->>SS: Request full resync (snapshot + delta)
+        SS-->>P: Return complete event log
+        P->>P: Rebuild snapshot from scratch
+        P->>P: Update lastEventSeq = 13
+    else Contiguous sequence
+        P->>P: Apply events to snapshot (immutable)
+        P->>P: Update lastEventSeq = 13
+    end
+    
+    P->>UI: Publish updated snapshot
+    
+    alt Projection fails
+        P->>P: Log error
+        P->>P: Retry from lastEventSeq watermark
+        Note over P: Reprocessing is idempotent
+    end
+    
+    Note over P: Unknown events advance\nwatermark without state changes
+```
+
+**Diagram Notes**:
+
+- **Transformation**: `(previousSnapshot, newEvents[]) → newSnapshot` (immutable projection)
+- **Watermark-based**: `lastEventSeq` tracks highest applied event, enabling crash recovery
+- **Gap handling**: Non-contiguous sequences trigger resync (not failure) due to eventual consistency
+- **Error recovery**: Projector can safely reprocess events from watermark after crashes
+- **Forward compatibility**: Unknown event types advance watermark but don't mutate state
 
 **Normative rules**:
 
@@ -281,6 +361,65 @@ Secondary path for downstream consumers (Planner audits, UI updates, webhooks).
 - Retry policy: exponential backoff + jitter.
 - After N failures → DLQ with alert.
 
+### Outbox Pattern Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant E as Engine
+    participant SS as StateStore
+    participant O as Outbox Worker
+    participant EB as EventBus
+    participant DLQ as Dead Letter Queue
+    
+    Note over E,SS: Primary write (synchronous)
+    E->>SS: appendEvent(event) [transactional]
+    SS-->>E: event persisted (source of truth)
+    
+    Note over E,EB: Secondary publish (async)
+    E->>EB: publish(event)
+    
+    alt EventBus healthy
+        EB-->>E: ACK
+    else EventBus unavailable
+        EB--xE: Publish failed
+        E->>SS: enqueueToOutbox(event)
+        SS-->>E: Queued for retry
+    end
+    
+    Note over O: Background retry worker
+    
+    loop Retry with exponential backoff
+        O->>SS: Poll outbox (pending events)
+        SS-->>O: Return events to retry
+        O->>EB: Republish(event)
+        
+        alt Success
+            EB-->>O: ACK
+            O->>SS: Mark event as delivered
+        else Still failing
+            EB--xO: Publish failed
+            O->>O: Increment retry count
+            Note over O: Apply backoff + jitter
+        end
+    end
+    
+    alt Max retries exceeded
+        O->>DLQ: Move event to DLQ
+        O->>O: Emit alert (P1)
+        Note over DLQ: Manual intervention required
+    end
+    
+    Note over SS,EB: At-least-once delivery guaranteed\nvia transactional outbox
+```
+
+**Diagram Notes**:
+
+- **At-least-once semantics**: Events may be delivered multiple times if retry succeeds after a previous timeout (consumers must be idempotent)
+- **Transactional outbox**: Event persisted to StateStore and queued atomically, ensuring no event loss
+- **Decoupled resilience**: EventBus downtime does not block Engine execution (events queued for later delivery)
+- **Backpressure handling**: Retry worker applies exponential backoff to avoid overwhelming EventBus during recovery
+- **Monitoring**: Alert `EVENT_BUS_DELIVERY_FAILED` (P1) emitted when events move to DLQ
+
 ---
 
 ## 5) StateStore Write Model & Latency Budget (Operational)
@@ -322,6 +461,60 @@ Execution engines (Temporal, Conductor, etc.) have platform-specific constraints
 
 Conductor does NOT support pause/resume natively. If the target adapter is Conductor, the PAUSE operation has the following constraints:
 
+### PAUSE (Draining) Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant C as Client/Operator
+    participant E as Engine (Conductor)
+    participant SS as StateStore
+    participant W as Workflow Tasks
+    
+    Note over E,W: Initial state: RUNNING (tasks executing)
+    
+    C->>E: Send PAUSE signal
+    
+    E->>SS: appendEvent(RunPaused)
+    SS-->>E: Status = PAUSED persisted
+    
+    E->>E: Set internal state = DRAINING
+    Note over E: Stop scheduling new tasks
+    
+    Note over W: In-flight tasks continue\n(cannot be cancelled in Conductor)
+    
+    W->>E: Task 1 completes
+    W->>E: Task 2 completes
+    W->>E: Task 3 completes
+    
+    alt All tasks drained within timeout
+        E->>E: Internal state = PAUSED (fully drained)
+        E->>SS: Update substatus metadata
+        SS-->>C: Status response: PAUSED
+    else Timeout exceeded (default: 5 min)
+        E->>E: Log warning + emit alert
+        E->>E: Force transition to PAUSED
+        Note over E: Orphaned tasks may complete\nasynchronously (not tracked)
+    end
+    
+    C->>E: Send RESUME signal
+    
+    E->>SS: appendEvent(RunResumed)
+    SS-->>E: Status = RUNNING
+    
+    E->>E: Resume scheduling tasks
+    Note over E: Previously completed tasks\nare NOT re-executed
+    
+    E->>W: Schedule remaining tasks
+```
+
+**Diagram Notes**:
+
+- **State transitions**: `RUNNING → PAUSED (StateStore)` + `RUNNING → DRAINING → PAUSED (Engine internal)`
+- **Graceful draining**: Engine stops scheduling new tasks but allows in-flight tasks to complete naturally
+- **No cancellation**: Conductor lacks cancellation tokens (unlike Temporal), so tasks must complete or timeout
+- **Substatus visibility**: UI must display `DRAINING` substatus to manage user expectations during the transition period
+- **Timeout handling**: Configurable drain timeout (default: 5 minutes) prevents indefinite waiting
+
 1. **PAUSE semantics**: When a `PAUSE` signal is issued, the adapter MUST:
    - Set run status to `PAUSED` in StateStore
    - Mark the workflow as "draining" (no new tasks scheduled)
@@ -339,6 +532,7 @@ Conductor does NOT support pause/resume natively. If the target adapter is Condu
    - Previously completed tasks (before PAUSE) are NOT re-executed
 
 5. **UI/API Contract**: API responses and UI MUST indicate when a run is in `PAUSED` state with `DRAINING` substatus to manage user expectations. Example:
+
    ```json
    {
      "status": "PAUSED",
