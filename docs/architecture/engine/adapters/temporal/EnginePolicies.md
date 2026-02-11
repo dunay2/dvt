@@ -3,13 +3,13 @@
 **Status**: Implementation Guide  
 **Version**: 1.0  
 **Engine**: Temporal  
-**Contract**: [ExecutionSemantics.v1.md](../../../contracts/engine/ExecutionSemantics.v1.md)  
+**Contract**: [ExecutionSemantics.v1.md](../../contracts/engine/ExecutionSemantics.v1.md)  
 
 ---
 
 ## Purpose
 
-This document specifies **Temporal-specific policies** required to implement the [Execution Semantics Contract](../../../contracts/engine/ExecutionSemantics.v1.md).
+This document specifies **Temporal-specific policies** required to implement the [Execution Semantics Contract](../../contracts/engine/ExecutionSemantics.v1.md).
 
 These policies address Temporal platform constraints and best practices:
 - **History size limits** (50MB hard limit per workflow)

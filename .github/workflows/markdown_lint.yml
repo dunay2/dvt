@@ -196,13 +196,13 @@ jobs:
             echo ""
             echo "Checking: $contract"
             
-            # Check for required headers
-            if ! grep -q "^**Status**:" "$contract"; then
+            # Check for required headers (using -F for fixed string match to avoid regex issues with **)
+            if ! grep -qF "**Status**:" "$contract"; then
               echo "  ❌ Missing **Status** field"
               ERROR_COUNT=$((ERROR_COUNT + 1))
             fi
             
-            if ! grep -q "^**Version**:" "$contract"; then
+            if ! grep -qF "**Version**:" "$contract"; then
               echo "  ❌ Missing **Version** field"
               ERROR_COUNT=$((ERROR_COUNT + 1))
             fi
