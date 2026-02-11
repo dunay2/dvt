@@ -9,12 +9,14 @@
 ## Overview
 
 This directory contains minimal, executable plan examples that:
+
 - **Validate core engine semantics** (parallel execution, pause/resume, etc.)
 - **Serve as contract test fixtures** in CI/CD pipelines
 - **Document the happy path** for plan authors
 - **Enable reproducible testing** against any compliant engine implementation
 
 Each golden path includes:
+
 - `plan.v1.1.json` - A valid execution plan conforming to plan schema v1.1
 - `validation-report.json` - Expected validation output from the engine
 - `expected-events.jsonl` - Expected event log (order-independent where applicable)
@@ -29,6 +31,7 @@ Each golden path includes:
 **Purpose**: "Hello World" for the DVT engine
 
 **What it does**:
+
 - Single step that executes a simple echo task
 - Minimal dependencies and configuration
 - Completes in < 5 seconds
@@ -44,6 +47,7 @@ Each golden path includes:
 **Purpose**: Validate parallel scheduling semantics
 
 **What it does**:
+
 - 3 independent steps execute in parallel
 - 1 final step merges results (fan-in pattern)
 - Tests concurrent execution and dependency resolution
@@ -59,6 +63,7 @@ Each golden path includes:
 **Purpose**: Validate pause/resume signal semantics
 
 **What it does**:
+
 - 5 sequential steps
 - PAUSE signal sent after step 3 completes
 - RESUME signal sent to continue execution
@@ -88,6 +93,7 @@ bash examples/test-runner.sh
 ```
 
 This script will:
+
 1. Validate each plan against the schema
 2. Execute the plan using the engine
 3. Compare actual events against expected events
@@ -135,6 +141,7 @@ npm run test:contracts:validate
 ### Event Log Validation
 
 Expected events are specified in `expected-events.jsonl`. The validation compares:
+
 - Event types
 - Event ordering (strict for sequential steps, order-independent for parallel)
 - Critical fields (runId, stepId, status)
@@ -150,6 +157,7 @@ Golden paths are executed on every pull request via GitHub Actions.
 **Workflow**: [`.github/workflows/golden-paths.yml`](../.github/workflows/golden-paths.yml)
 
 **Jobs**:
+
 1. **validate-plans**: Validate JSON against schema
 2. **execute-plans**: Run all golden paths
 3. **compare-events**: Compare actual vs expected events

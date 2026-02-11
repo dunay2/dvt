@@ -11,6 +11,7 @@
 This plan validates the engine's ability to pause a running workflow and resume it later.
 
 **What it does**:
+
 - Executes 5 sequential steps
 - After step 3 completes, a PAUSE signal is sent
 - The workflow enters PAUSED state
@@ -163,6 +164,7 @@ Status: COMPLETED
 ## Contract Test Usage
 
 This plan is used in CI/CD pipelines to validate:
+
 - Engine correctly handles PAUSE signal
 - Workflow stops executing new steps while PAUSED
 - Engine correctly handles RESUME signal

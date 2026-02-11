@@ -11,6 +11,7 @@
 This is the simplest possible execution plan that validates basic engine functionality without complexity.
 
 **What it does**:
+
 - Executes a single "echo" step
 - Outputs "Hello, DVT Engine!"
 - Completes in < 5 seconds
@@ -53,6 +54,7 @@ This is the simplest possible execution plan that validates basic engine functio
 See [`expected-events.jsonl`](./expected-events.jsonl) for the complete event log.
 
 **Key assertions**:
+
 - 5 total events emitted
 - `runSeq` values are sequential (0, 1, 2, 3, 4)
 - All events have valid `idempotencyKey`
@@ -116,6 +118,7 @@ Status: COMPLETED
 ## Contract Test Usage
 
 This plan is used in CI/CD pipelines to validate:
+
 - Engine can parse and validate v1.1 plans
 - Engine correctly emits lifecycle events
 - Event sequencing is correct

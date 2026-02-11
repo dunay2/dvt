@@ -11,6 +11,7 @@
 This plan validates the engine's ability to execute tasks in parallel and merge results (fan-in pattern).
 
 **What it does**:
+
 - Executes 3 independent steps in parallel (no dependencies between them)
 - Waits for all 3 parallel steps to complete
 - Executes a final "merge" step that depends on all 3 parallel steps
@@ -62,10 +63,12 @@ step-parallel-3 ─┘
 ### Event Ordering Constraints
 
 **Order-independent events**:
+
 - The 3 `STEP_STARTED` events for parallel steps may occur in any order
 - The 3 `STEP_COMPLETED` events for parallel steps may occur in any order
 
 **Order-dependent events**:
+
 - `STEP_STARTED` (step-merge) MUST occur **after** all 3 parallel steps are `STEP_COMPLETED`
 - `STEP_COMPLETED` (step-merge) MUST occur **after** `STEP_STARTED` (step-merge)
 - `RUN_COMPLETED` MUST be the final event
@@ -136,6 +139,7 @@ Status: COMPLETED
 ## Contract Test Usage
 
 This plan is used in CI/CD pipelines to validate:
+
 - Engine correctly schedules parallel tasks
 - Dependencies are respected (step-merge waits for all 3 parallel steps)
 - Event ordering is correct for parallel vs sequential execution
