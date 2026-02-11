@@ -5,23 +5,29 @@ This directory contains **executable, schema-validated** capability declarations
 ## Files
 
 ### `capabilities.schema.json`
+
 Universal capability enum. Defines all possible capabilities across all adapters.
 
-**Usage**: 
+**Usage**:
+
 - Typescript: Import and use as enum type (via JSON Schema → TypeScript generator).
 - Validation: Capabilities referenced in ExecutionPlan MUST exist in this enum.
 
 ### `adapters.capabilities.json`
+
 Capability matrix: declares which capabilities each adapter implements.
 
 **Usage**:
+
 - Engine validation: Query this file to check if `plan.requiresCapabilities` are supported by `targetAdapter`.
 - Example: If `targetAdapter="conductor"` and plan requires `["PAUSE_NATIVE"]`, validation fails (Conductor only has `PAUSE_EMULATED`).
 
 ### `validation-report.schema.json`
+
 Schema for ValidationReport emitted by engine's `validatePlan()`.
 
 **Usage**:
+
 - Code generation: Generate TypeScript interfaces from this schema.
 - Validation: Reports MUST conform to this schema before persisting to StateStore.
 

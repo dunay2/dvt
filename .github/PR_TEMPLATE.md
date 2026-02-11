@@ -10,10 +10,12 @@
 ## 📋 Summary
 
 This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 modular, versioned documents** organized by concern:
+
 - **9 core documents** (contracts, adapters, ops, dev, roadmap)
 - **4 new adapter documents** (State Store Contract + Snowflake/Postgres/Temporal implementations)
 
 **Key improvements**:
+
 - ✅ **51% size reduction** (3,227 → 1,571 lines in largest doc)
 - ✅ **Separation of concerns**: Core semantics (storage/engine-agnostic) vs implementations (adapter-specific)
 - ✅ **CI/CD quality gates**: Markdown linting, TypeScript validation, link checking, contract structure validation
@@ -65,23 +67,28 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 ### Added (17 files)
 
 **Normative Contracts (3)**:
+
 - `docs/architecture/engine/contracts/state-store/README.md` (State Store Contract v1.0)
 - `docs/architecture/engine/VERSIONING.md` (v1.0.1 - Contract versioning policy)
 - `docs/CONTRIBUTING.md` (Contributor guide)
 
 **Adapters - State Store (2)**:
+
 - `docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md` (v1.0)
 - `docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md` (v1.0)
 
 **Adapters - Temporal (1)**:
+
 - `docs/architecture/engine/adapters/temporal/EnginePolicies.md` (v1.0 - continue-as-new, limits, determinism)
 
 **CI/CD & Governance (3)**:
+
 - `.github/CODEOWNERS` (Architecture team assignments)
 - `.github/workflows/markdown_lint.yml` (4 quality gates)
 - `docs/CONTRIBUTING.md` (See above)
 
 **Previously Added (Phase 1 - for reference, already in main)**:
+
 - `docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md`
 - `docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md` (refactored in this PR)
 - `docs/architecture/engine/contracts/capabilities/` (4 files)
@@ -127,6 +134,7 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 ### Problem Statement
 
 **Before this PR**:
+
 1. ❌ **WORKFLOW_ENGINE.md (3,227 lines)**: Too large to navigate, edit conflicts common
 2. ❌ **Mixed concerns**: Core semantics + Snowflake DDL + Temporal continue-as-new policies in same document
 3. ❌ **No Postgres support**: Implicitly Snowflake-only (DDL hardcoded in ExecutionSemantics)
@@ -134,6 +142,7 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 5. ❌ **No Code Owners**: Architecture team not auto-assigned on contract changes
 
 **After this PR**:
+
 1. ✅ **13 modular documents**: Largest is 562 lines (engine-phases.md), avg 280 lines
 2. ✅ **Separation of concerns**: Core contracts (agnostic) vs adapters (backend-specific)
 3. ✅ **Multi-backend support**: Snowflake + Postgres (explicit adapters), DynamoDB-ready
@@ -143,11 +152,13 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 ### Design Principles
 
 **Modularization**:
+
 - **Core contracts** (MUST be storage/engine-agnostic): [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md), [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md), [State Store Contract](docs/architecture/engine/contracts/state-store/README.md)
 - **Adapter contracts** (MAY reference specific backends): [Snowflake](docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md), [Postgres](docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md), [Temporal](docs/architecture/engine/adapters/temporal/EnginePolicies.md)
 - **Operations** (evolving, not normative): [observability.md](docs/architecture/engine/ops/observability.md), [runbooks](docs/architecture/engine/ops/runbooks/)
 
 **Versioning**:
+
 - All normative contracts follow [Semantic Versioning](docs/architecture/engine/VERSIONING.md)
 - File naming: `IWorkflowEngine.v1.md` = v1.x series, `IWorkflowEngine.v1.1.md` = MINOR bump
 - Patch updates: edit in place + git tag (e.g., `engine/ExecutionSemantics@v1.1.1`)
@@ -179,12 +190,14 @@ grep -r '\[.*\](.*\.md' docs/architecture/engine/ | wc -l
 ### 3. Cross-Reference Validation (19 critical links)
 
 **Forward references** (contract → adapter):
+
 - ExecutionSemantics.v1.md § 1.1 → State Store Contract ✅
 - State Store Contract § 3 → Snowflake Adapter ✅
 - State Store Contract § 3 → Postgres Adapter ✅
 - ExecutionSemantics.v1.md § 6 → Temporal EnginePolicies ✅
 
 **Backward references** (adapter → contract):
+
 - Snowflake Adapter → State Store Contract ✅
 - Postgres Adapter → State Store Contract ✅
 - Temporal EnginePolicies → ExecutionSemantics.v1.md ✅
@@ -218,11 +231,13 @@ bash .github/scripts/validate_contracts.sh
 ### For SDK Implementers (Breaking: Link Changes Only)
 
 **Old bookmarks** (pre-PR):
+
 ```
 ❌ docs/architecture/engine/WORKFLOW_ENGINE.md#state-store-model
 ```
 
 **New bookmarks** (post-PR):
+
 ```
 ✅ docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md#1-source-of-truth-statestore-model
 ✅ docs/architecture/engine/contracts/state-store/README.md (storage-agnostic interface)
@@ -230,6 +245,7 @@ bash .github/scripts/validate_contracts.sh
 ```
 
 **Action required**:
+
 1. Update internal documentation links to point to INDEX.md
 2. Choose storage backend: read [Snowflake Adapter](docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md) OR [Postgres Adapter](docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)
 3. For Temporal users: read [EnginePolicies.md](docs/architecture/engine/adapters/temporal/EnginePolicies.md) (continue-as-new moved here)
@@ -243,11 +259,13 @@ Capability validation logic unchanged. Plans remain compatible.
 ### For SREs (Bookmark Update)
 
 **Old**:
+
 ```
 ❌ docs/architecture/engine/WORKFLOW_ENGINE.md#observability
 ```
 
 **New**:
+
 ```
 ✅ docs/architecture/engine/ops/observability.md
 ✅ docs/architecture/engine/ops/runbooks/incident_response.md
@@ -260,12 +278,14 @@ Capability validation logic unchanged. Plans remain compatible.
 If critical issues arise post-merge:
 
 1. **Revert this PR**:
+
    ```bash
    git revert <commit-sha>
    git push origin main
    ```
 
 2. **Restore WORKFLOW_ENGINE.md** (remove deprecation banner):
+
    ```bash
    git checkout <previous-commit> -- docs/architecture/engine/WORKFLOW_ENGINE.md
    git commit -m "rollback: restore WORKFLOW_ENGINE.md"
@@ -319,10 +339,10 @@ If critical issues arise post-merge:
 ### Week 1 (Communication)
 
 1. **Announce in Slack** (#engineering, #architecture):
-   > "📚 Engine docs refactored! New structure: https://github.com/.../docs/architecture/engine/INDEX.md
-   > 
+   > "📚 Engine docs refactored! New structure: <https://github.com/.../docs/architecture/engine/INDEX.md>
+   >
    > **Action required**: Update bookmarks to INDEX.md (not WORKFLOW_ENGINE.md)
-   > 
+   >
    > **WORKFLOW_ENGINE.md deprecated** (90-day grace period → removal: 2026-05-12)"
 
 2. **Update Confluence** (if applicable):
@@ -342,6 +362,7 @@ If critical issues arise post-merge:
 ### Week 12 (90-day mark - 2026-05-12)
 
 1. **Remove WORKFLOW_ENGINE.md**:
+
    ```bash
    git rm docs/architecture/engine/WORKFLOW_ENGINE.md
    git commit -m "chore: remove deprecated WORKFLOW_ENGINE.md (90-day grace period ended)"
@@ -380,6 +401,7 @@ If critical issues arise post-merge:
 This refactor consolidates work from Phase 1 partition (9 docs) + Phase 2 adapter separation (4 new docs) + governance layer (CI/CD, Code Owners, CONTRIBUTING.md).
 
 **Total stats**:
+
 - **Lines added**: ~2,500 (new adapters + governance)
 - **Lines removed**: ~150 (dedupe, moved content)
 - **Net change**: +2,350 lines (but -51% longest doc size)

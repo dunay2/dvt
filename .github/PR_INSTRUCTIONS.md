@@ -28,7 +28,7 @@ gh pr create \
 
 ### 2. Or Create PR via GitHub Web UI
 
-1. Go to: https://github.com/your-org/your-repo/compare
+1. Go to: <https://github.com/your-org/your-repo/compare>
 2. Select your branch
 3. Click "Create pull request"
 4. Copy content from [.github/PR_BODY.md](.github/PR_BODY.md)
@@ -66,31 +66,40 @@ gh pr create \
 Before creating PR, verify:
 
 ### Code Quality
+
 - [ ] All files committed and pushed
 - [ ] No merge conflicts with `main`
 - [ ] Markdown linting passed locally:
+
   ```bash
   markdownlint-cli2 "docs/**/*.md"
   ```
+
 - [ ] Internal links validated:
+
   ```bash
   markdown-link-check docs/architecture/engine/INDEX.md
   ```
+
 - [ ] TypeScript blocks validated (if added code):
+
   ```bash
   # Extract TS blocks and validate with tsc --noEmit
   ```
 
 ### Documentation
+
 - [ ] PR_BODY.md reviewed (copy to PR description)
 - [ ] MIGRATION_GUIDE.md reviewed (link in PR)
 - [ ] ROLLBACK.md reviewed (emergency procedures documented)
 - [ ] File manifest generated:
+
   ```bash
   bash .github/scripts/generate_pr_manifest.sh > /tmp/pr_manifest.md
   ```
 
 ### Stakeholders
+
 - [ ] Architecture team notified (Slack #architecture)
 - [ ] DevOps team notified (CI/CD changes)
 - [ ] SDK team notified (link migration impacts implementation guides)
@@ -145,6 +154,7 @@ Before creating PR, verify:
 ### Pre-Merge (Announce Intent)
 
 **Slack (#architecture, #engineering)**:
+
 ```
 📢 **Heads up**: Partition WORKFLOW_ENGINE.md PR ready for review
 
@@ -162,6 +172,7 @@ Before creating PR, verify:
 ### Post-Merge (Announce Completion)
 
 **Slack (#engineering, #architecture)**:
+
 ```
 ✅ **MERGED**: Partition WORKFLOW_ENGINE.md
 
@@ -188,6 +199,7 @@ Before creating PR, verify:
 **症状**: GitHub Actions failing with Markdown lint errors
 
 **Solution**:
+
 ```bash
 # Run locally to reproduce
 markdownlint-cli2 "docs/**/*.md"
@@ -204,6 +216,7 @@ markdownlint-cli2 "docs/**/*.md"
 **症状**: "This branch has conflicts that must be resolved"
 
 **Solution**:
+
 ```bash
 git checkout <your-partition-branch>
 git fetch origin main
@@ -222,6 +235,7 @@ git push origin <your-partition-branch>
 **症状**: "Changes requested" status blocking merge
 
 **Solution**:
+
 1. Address feedback in new commits (don't force-push, preserves review history)
 2. Reply to review comments with commit SHAs
 3. Re-request review: Click "Re-request review" button
@@ -247,6 +261,7 @@ git push origin <your-partition-branch>
 Once merged, celebrate the team effort!
 
 **Metrics to Share**:
+
 - 📊 **3,227 lines** → **13 modular docs** (avg 280 lines)
 - 🎯 **51% reduction** in longest doc size
 - ✅ **107 internal links** validated
@@ -254,6 +269,7 @@ Once merged, celebrate the team effort!
 - 📚 **2,500+ lines** of new adapter documentation
 
 **Thank contributors**:
+
 - Architecture team (contract design)
 - DevOps team (CI/CD setup)
 - Documentation team (migration guide)
@@ -262,6 +278,7 @@ Once merged, celebrate the team effort!
 ---
 
 **Ready to create the PR? Run**:
+
 ```bash
 gh pr create --body-file .github/PR_BODY.md --title "refactor: partition WORKFLOW_ENGINE.md + separate storage/engine adapters" --base main --label "refactor,documentation,phase-1"
 ```

@@ -85,11 +85,13 @@
 **Action required**: Update implementation guide bookmarks
 
 **Old workflow**:
+
 1. Read `WORKFLOW_ENGINE.md` (3,227 lines)
 2. Extract relevant sections manually
 3. Guess storage backend from Snowflake DDL
 
 **New workflow**:
+
 1. Start at [INDEX.md](../docs/architecture/engine/INDEX.md)
 2. Read [IWorkflowEngine.v1.md](../docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) (interface)
 3. Read [ExecutionSemantics.v1.md](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) (core semantics, agnostic)
@@ -110,9 +112,11 @@
 **Action required**: Update internal docs with new links
 
 **Old workflow**:
+
 1. Read `WORKFLOW_ENGINE.md#determinism`
 
 **New workflow**:
+
 1. Start at [INDEX.md](../docs/architecture/engine/INDEX.md)
 2. Read [determinism-tooling.md](../docs/architecture/engine/dev/determinism-tooling.md)
 3. Read [capabilities/README.md](../docs/architecture/engine/contracts/capabilities/README.md)
@@ -126,10 +130,12 @@
 **Action required**: Update runbook bookmarks
 
 **Old workflow**:
+
 1. Read `WORKFLOW_ENGINE.md#observability`
 2. Read `WORKFLOW_ENGINE.md#runbooks`
 
 **New workflow**:
+
 1. Start at [INDEX.md](../docs/architecture/engine/INDEX.md)
 2. Read [observability.md](../docs/architecture/engine/ops/observability.md)
 3. Read [runbooks/incident_response.md](../docs/architecture/engine/ops/runbooks/incident_response.md)
@@ -143,22 +149,27 @@
 **Action required**: Update contribution workflow
 
 **Old workflow**:
+
 1. Edit `WORKFLOW_ENGINE.md` (risk of merge conflicts, 3,227 lines)
 2. Manual Markdown linting
 3. No Code Owners (manual reviewer assignment)
 
 **New workflow**:
+
 1. Read [CONTRIBUTING.md](../docs/CONTRIBUTING.md) (full guide)
 2. Edit relevant modular document (avg 280 lines)
 3. Run pre-commit checks:
+
    ```bash
    markdownlint-cli2 "docs/**/*.md"
    markdown-link-check docs/architecture/engine/INDEX.md
    ```
+
 4. Push → CI runs 4 quality gates automatically
 5. Code Owners auto-assign reviewers by file path
 
 **New requirements**:
+
 - Normative contracts require architecture team approval (see [CODEOWNERS](../.github/CODEOWNERS))
 - Follow [VERSIONING.md](../docs/architecture/engine/VERSIONING.md) for contract changes (MAJOR/MINOR/PATCH)
 
@@ -194,12 +205,14 @@ New: adapters/temporal/EnginePolicies.md#1-continue-as-new-policy-normative
 ### For Code Comments
 
 **Before**:
+
 ```typescript
 // See WORKFLOW_ENGINE.md#dual-attempt for idempotency key structure
 const idempotencyKey = generateKey(runId, stepId, logicalAttemptId, ...);
 ```
 
 **After**:
+
 ```typescript
 // See ExecutionSemantics.v1.md § 1.3 for idempotency key structure
 const idempotencyKey = generateKey(runId, stepId, logicalAttemptId, ...);
@@ -208,6 +221,7 @@ const idempotencyKey = generateKey(runId, stepId, logicalAttemptId, ...);
 ### For README.md / Getting Started Guides
 
 **Before**:
+
 ```markdown
 ## Architecture
 
@@ -215,6 +229,7 @@ See [WORKFLOW_ENGINE.md](docs/architecture/engine/WORKFLOW_ENGINE.md) for comple
 ```
 
 **After**:
+
 ```markdown
 ## Architecture
 
@@ -246,11 +261,14 @@ See [Engine Architecture Index](docs/architecture/engine/INDEX.md) for navigatio
 **Impact**: External sites linking to `WORKFLOW_ENGINE.md` will get 404 after removal (2026-05-12)
 
 **Mitigation**:
+
 - 90-day grace period (deprecation banner with redirect)
 - GitHub Pages 301 redirect (if applicable):
+
   ```nginx
   /docs/architecture/engine/WORKFLOW_ENGINE.md → /docs/architecture/engine/INDEX.md
   ```
+
 - Monitor web analytics for 404s, proactive outreach
 
 ### 2. Internal Bookmarks (Low Severity)
@@ -258,6 +276,7 @@ See [Engine Architecture Index](docs/architecture/engine/INDEX.md) for navigatio
 **Impact**: Team members' browser bookmarks will break
 
 **Mitigation**:
+
 - Slack announcement with "Update your bookmarks" call-to-action
 - Deprecation banner in `WORKFLOW_ENGINE.md` with prominent link to INDEX.md
 
@@ -266,10 +285,13 @@ See [Engine Architecture Index](docs/architecture/engine/INDEX.md) for navigatio
 **Impact**: Build scripts referencing `WORKFLOW_ENGINE.md` may fail
 
 **Mitigation**:
+
 - Search codebase for hardcoded paths:
+
   ```bash
   grep -r "WORKFLOW_ENGINE.md" . --exclude-dir={node_modules,.git}
   ```
+
 - Update to `INDEX.md` or modular doc paths
 
 ---
@@ -297,30 +319,34 @@ A: Yes, for 90 days. After 2026-05-12, use git history: `git show <commit>:docs/
 
 - **Slack**: #architecture, #documentation
 - **GitHub**: File issue tagged `documentation`, `migration`
-- **Email**: architecture-team@yourorg.com (if applicable)
+- **Email**: <architecture-team@yourorg.com> (if applicable)
 
 ---
 
 ## ✅ Checklist for Teams
 
 ### SDK Team
+
 - [ ] Update internal implementation guides (links to INDEX.md)
 - [ ] Review [State Store Contract](../docs/architecture/engine/contracts/state-store/README.md)
 - [ ] Choose storage backend: Read [Snowflake](../docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md) OR [Postgres](../docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md) adapter
 - [ ] Review [Temporal EnginePolicies](../docs/architecture/engine/adapters/temporal/EnginePolicies.md) (if using Temporal)
 
 ### Documentation Team
+
 - [ ] Update Confluence pages (mark WORKFLOW_ENGINE references as deprecated)
 - [ ] Search & replace in all docs: `WORKFLOW_ENGINE.md` → `INDEX.md`
 - [ ] Add link to [CONTRIBUTING.md](../docs/CONTRIBUTING.md) in team wiki
 - [ ] Review [VERSIONING.md](../docs/architecture/engine/VERSIONING.md) for contract evolution policy
 
 ### SRE Team
+
 - [ ] Update runbook bookmarks
 - [ ] Review [observability.md](../docs/architecture/engine/ops/observability.md) (unchanged, but new location)
 - [ ] Review [incident_response.md](../docs/architecture/engine/ops/runbooks/incident_response.md)
 
 ### Architecture Team
+
 - [ ] Review [CODEOWNERS](../.github/CODEOWNERS) (architecture team auto-assigned)
 - [ ] Review [VERSIONING.md](../docs/architecture/engine/VERSIONING.md) (contract evolution policy)
 - [ ] Monitor CI gate false positive rate (Weeks 2-4)

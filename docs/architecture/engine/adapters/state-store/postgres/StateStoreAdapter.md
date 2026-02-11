@@ -12,6 +12,7 @@
 This document specifies how to implement the [State Store Contract](../../../contracts/state-store/README.md) using **PostgreSQL** as the persistence backend.
 
 **Key design decisions**:
+
 - ✅ Use `SERIAL` or `SEQUENCE` for runSeq assignment (native atomic increment)
 - ✅ Enforce `UNIQUE` constraints at database level (vs Snowflake logical-only)
 - ✅ Use `JSONB` for flexible event schema evolution
@@ -160,6 +161,7 @@ SELECT nextval(get_run_sequence('run-12345'));  -- Returns: 1, 2, 3, ...
 ```
 
 **Trade-off**:
+
 - ✅ True atomic increment (no locks needed)
 - ❌ Sequence proliferation (1 sequence per run, could be millions)
 - ⚠️ Cleanup required (drop sequences for archived runs)

@@ -6,11 +6,13 @@ Severity: P1
 Goal: Quarantine a plugin version that causes runtime failures, route runs to fallback, and restore safe operation.
 
 Preconditions:
+
 - Plugin registry access (artifact storage + metadata)
 - Planner access to update selection policies
 - Monitoring for plugin error rate (ex: `plugin_errors_total{pluginId,pluginVersion}`)
 
 Steps:
+
 1. Detect and assess
    - Alert: `plugin_errors_total` spike or `PluginQuarantined` events
    - Confirm failure pattern: reproducible crash, OOM, or security violation
@@ -33,4 +35,5 @@ Steps:
    - Monitor metrics closely for regression
 
 Notes:
+
 - Plugin artifacts must be signed; registry SHOULD validate digest before allowing activation.

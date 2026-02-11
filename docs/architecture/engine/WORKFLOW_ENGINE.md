@@ -11,7 +11,7 @@
 
 This monolithic 3,227-line document has been **partitioned into 9 focused documents** organized by stability and consumer.
 
-### í´´ Where to Find Each Section
+### ï¿½ï¿½ï¿½ Where to Find Each Section
 
 | Original Section | Content | New Home | Status |
 |------------------|---------|----------|--------|
@@ -35,26 +35,31 @@ This monolithic 3,227-line document has been **partitioned into 9 focused docume
 
 **What is my role?** Click below:
 
-### í±¨â€í²» SDK Implementer
+### ï¿½ï¿½ï¿½â€ï¿½ï¿½ï¿½ SDK Implementer
+
 1. [IWorkflowEngine.v1.md](./contracts/engine/IWorkflowEngine.v1.md) â€” Interface + signals
 2. [ExecutionSemantics.v1.md](./contracts/engine/ExecutionSemantics.v1.md) â€” State model
 3. [TemporalAdapter.spec.md](./adapters/temporal/TemporalAdapter.spec.md) â€” Temporal-specific details
 
-### í³‹ Plan Author
+### ï¿½ï¿½ï¿½ Plan Author
+
 1. [dev/determinism-tooling.md](./dev/determinism-tooling.md) â€” Writing deterministic plans
 2. [contracts/capabilities/README.md](./contracts/capabilities/README.md) â€” Capability validation
 3. [contracts/capabilities/adapters.capabilities.json](./contracts/capabilities/adapters.capabilities.json) â€” What your adapter supports
 
-### íº¨ SRE / On-Call
+### ï¿½ï¿½ï¿½ SRE / On-Call
+
 1. [ops/observability.md](./ops/observability.md) â€” Metrics, dashboards, SLOs
 2. [ops/runbooks/incident_response.md](./ops/runbooks/incident_response.md) â€” Incident playbooks
 3. [roadmap/engine-phases.md](./roadmap/engine-phases.md) â€” Phase status for capacity planning
 
-### í±” Executive / Product
+### ï¿½ï¿½ï¿½ Executive / Product
+
 1. [roadmap/engine-phases.md](./roadmap/engine-phases.md) â€” Phases, timeline, risks
 2. [ops/observability.md Â§ 7](./ops/observability.md#section-7-slos-service-level-objectives) â€” SLOs & success metrics
 
-### í¿—ï¸ Architecture Review
+### ï¿½ï¿½ï¿½ï¸ Architecture Review
+
 1. [INDEX.md](./INDEX.md) â€” Full architecture overview
 2. Start with contracts (section "Normative Contracts")
 
@@ -63,18 +68,21 @@ This monolithic 3,227-line document has been **partitioned into 9 focused docume
 ## Appendix: Why This Partition?
 
 ### Problem with Monolithic Document
+
 - âœ— 3,227 lines in single file â†’ hard to review (PRs touch everything)
 - âœ— Normative (MUST semantics) mixed with informative (how-tos, roadmap)
 - âœ— Prose capabilities matrix â†’ ambiguous, not executable
 - âœ— Operator runbooks hidden in 3K lines â†’ hard to find at 3am incident
 
 ### Solution: Modular Contracts
+
 - âœ… Contracts <500 lines each â†’ reviewable, versionable (v1.0, v1.1, v2.0)
 - âœ… Separated: normative (MUST, immutable) vs informative (evolve rÃ¡pido)
 - âœ… Capabilities as executable JSON schemas â†’ code-gen ready
 - âœ… Operators can find playbooks in dedicated docs
 
 ### Timeline
+
 - **Feb 11**: Partition complete (this deprecation notice)
 - **Feb 18**: All internal links migrated to new docs
 - **Mar 11**: WORKFLOW_ENGINE.md removed
@@ -85,17 +93,21 @@ This monolithic 3,227-line document has been **partitioned into 9 focused docume
 ## How to Use This Guide
 
 ### If you have an old link to WORKFLOW_ENGINE.md
+
 1. Find your section in the **"Where to Find Each Section"** table above
 2. Click the new link
 3. Update your bookmark / internal links
 
 ### If you're starting fresh
+
 1. Go to [INDEX.md](./INDEX.md) â€” central navigation hub
 2. Choose your role (SDK dev, SRE, PM, etc.)
 3. Follow the recommended path
 
 ### If you need the raw text
+
 This file is kept for 90 days as a redirect. After May 11, 2026:
+
 - Git history still contains full WORKFLOW_ENGINE.md (run `git log` to see it)
 - Links to new documents are permanent
 

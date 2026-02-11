@@ -12,6 +12,7 @@
 This document specifies how to implement the [State Store Contract](../../../contracts/state-store/README.md) using **Snowflake** as the persistence backend.
 
 **Key design decisions**:
+
 - ✅ Leverage `VARIANT` for flexible event schema evolution
 - ✅ Use `MERGE` for idempotent appends (upsert pattern)
 - ✅ Cluster by `(RUN_ID, PERSISTED_AT)` for polling/projection queries
@@ -65,6 +66,7 @@ COMMENT ON COLUMN RUN_EVENTS.IDEMPOTENCY_KEY IS 'SHA256(runId | stepId | logical
 ```
 
 **Logical constraints** (NOT enforced by Snowflake, must be enforced by application logic):
+
 - **Unique key**: `(RUN_ID, RUN_SEQ)`
 - **Uniqueness**: `(RUN_ID, IDEMPOTENCY_KEY)`
 
@@ -163,6 +165,7 @@ $$;
 ```
 
 **Usage**:
+
 ```sql
 CALL APPEND_EVENT(
   p_runId => 'run-12345',
@@ -227,6 +230,7 @@ async function appendEvent(event: CanonicalEngineEvent): Promise<AppendResult> {
 ```
 
 **Trade-offs**:
+
 - ✅ More flexible (easier to add business logic)
 - ⚠️ Requires distributed lock (Redis, ZooKeeper, etc.)
 - ⚠️ More network round-trips vs stored procedure
@@ -308,6 +312,7 @@ WHERE RUN_ID = :runId;
 ```
 
 **`PROJECT_SNAPSHOT` UDF** (JavaScript in Snowflake or application-side):
+
 ```javascript
 // Snowflake JavaScript UDF (example)
 CREATE OR REPLACE FUNCTION PROJECT_SNAPSHOT(events ARRAY)
@@ -389,6 +394,7 @@ ALTER TABLE RUN_EVENTS CLUSTER BY (RUN_ID, PERSISTED_AT);
 ```
 
 **Rationale**:
+
 - ✅ Co-locates all events for a run (single micro-partition scan for projection)
 - ✅ Time-ordering enables efficient watermark queries (`RUN_SEQ > lastSeq`)
 - ⚠️ Automatic clustering maintenance (Snowflake reclusters periodically)
@@ -437,11 +443,13 @@ WHERE RUN_ID IN (SELECT RUN_ID FROM RUN_EVENTS_ARCHIVE);
 ### 8.1 From Postgres
 
 **Key differences**:
+
 - Postgres `SERIAL` → Snowflake stored procedure with `MAX + 1`
 - Postgres `ON CONFLICT` → Snowflake `MERGE`
 - Postgres transactions → Snowflake stored procedure (implicit transaction per statement)
 
 **Migration script**:
+
 ```sql
 -- Export from Postgres
 COPY (SELECT * FROM run_events) TO '/tmp/run_events.csv' WITH CSV HEADER;

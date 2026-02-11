@@ -12,10 +12,12 @@
 **Why DRAFT?**
 
 ConductorAdapter is scheduled for **Phase 2** (post-MVP Temporal launch).
+
 - MVP (Phase 1): Temporal only. Conductor prep work (POC, task routing).
 - Phase 2: Conductor production. Expect breaking changes to this spec.
 
 **Current status:**
+
 - ✅ Task-oriented model documented.
 - ✅ Capability gaps vs Temporal identified.
 - ⚠️ Determinism strategy OPEN (replay semantics differ from Temporal).
@@ -37,6 +39,7 @@ ConductorAdapter is scheduled for **Phase 2** (post-MVP Temporal launch).
 | **Determinism** | **STRONG** (code-based, replay) | **WEAK** (task execution external, non-deterministic timing) |
 
 **Parity gaps:**
+
 - ❌ No native deterministic replay (task execution is external).
 - ❌ No reliable pause/cancel (webhook-based resume is eventual).
 - ❌ No parallel subworkflows (PARALLEL_GROUPS cap emulated).
@@ -105,6 +108,7 @@ Conductor uses JSON-based workflow definitions. The adapter **wraps** plans as C
 ```
 
 **Notes**:
+
 - Tasks reference **plan steps** (not inline Activities).
 - HTTP/USER_DEFINED tasks dispatch to workers on named domains.
 - LOOP construct **not deterministic** (iterations depend on external task results).
@@ -131,6 +135,7 @@ conductor:
 ```
 
 **Worker polling**:
+
 - Worker polls `GET /tasks?domain=tq-control&count=10`.
 - Executes task synchronously.
 - Reports result via `POST /tasks/{taskId}/result` (≤30s window by default).
@@ -156,6 +161,7 @@ conductor:
 ```
 
 When engine needs to pause:
+
 1. Emit event `pause_{runId}` to Conductor via API.
 2. If workflow is waiting, event unblocks the task.
 3. Workflow checks signal payload for action (PAUSE, RESUME, RETRY).
@@ -236,11 +242,13 @@ async function cancelRun(workflowId: string, signal: CancelSignal) {
 **Problem**: Conductor has NO deterministic replay mechanism.
 
 **Current approach** (OPEN):
+
 1. Plan steps reference immutable URIs (same as Temporal).
 2. Activities are deterministic (code-based).
 3. But **task execution is external** — no replay guarantee.
 
 **Proposed strategy** (Post-Phase-2):
+
 - Option A: Accept non-determinism (activities are deterministic, but scheduling order may vary).
 - Option B: Implement custom replay by saving task inputs + outputs per attempt.
 - Option C: Restrict to subset of plans that don't depend on history replay.
@@ -342,6 +350,7 @@ client.start()
 ## 11) Success Criteria (Phase 2 Roadmap)
 
 **MVP completion**:
+
 - [ ] Workflow definition generation (DSL → JSON).
 - [ ] Task routing (control/data/isolation domains).
 - [ ] Event listener integration (status callbacks).
@@ -349,12 +358,14 @@ client.start()
 - [ ] Integration tests: 10 end-to-end workflows (simple → complex).
 
 **Beta readiness**:
+
 - [ ] Multi-language SDK task workers working.
 - [ ] Determinism strategy decided (Option A/B/C above).
 - [ ] Observed SLA ≤5s pause latency (event propagation).
 - [ ] Runbooks: incident response, task recovery, history cleanup.
 
 **Production readiness**:
+
 - [ ] Durability testing (failure injection, chaos).
 - [ ] Capacity planning (worker scaling, queue management).
 - [ ] Upgrade path (zero-downtime workflow version transitions).

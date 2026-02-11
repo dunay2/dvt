@@ -6,6 +6,7 @@
 **Consumers**: Engine, Adapters, Projector  
 
 **References**:
+
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md) — defines WHAT (semantics)
 - [StateStore Adapters](../../adapters/state-store/) — defines HOW (implementations)
 - [Contract Versioning Policy](../../VERSIONING.md)
@@ -15,11 +16,13 @@
 ## Purpose
 
 This contract defines the **storage-agnostic interface** for State Store implementations. It specifies:
+
 - **Logical constraints** (uniqueness, ordering, idempotency)
 - **Core operations** (append events, fetch events, project snapshots)
 - **Invariants** (append-only, monotonicity, idempotency)
 
 It does **NOT** specify:
+
 - Physical schemas (DDLs, indexes, clustering)
 - Storage engine tuning (Snowflake vs Postgres vs DynamoDB)
 - Concurrency control mechanisms (locks, transactions, optimistic concurrency)
@@ -142,6 +145,7 @@ const result2 = await store.appendEvent(event2);
 ```
 
 **Adapter implementations**:
+
 - Snowflake: `MERGE` with idempotencyKey match → return existing runSeq
 - Postgres: `INSERT ... ON CONFLICT (runId, idempotencyKey) DO NOTHING` + `SELECT runSeq`
 - DynamoDB: Conditional put + atomic counter
@@ -183,6 +187,7 @@ Fetch 3: runSeq = [4, 7, 8]        (gap filled + new events, watermark = 8)
 ```
 
 **Projector response** (normative):
+
 1. Detect non-contiguous observation (5 > 3+1)
 2. Mark run as `STALE`
 3. Trigger resync (refetch snapshot + delta)
@@ -216,11 +221,13 @@ Fetch 3: runSeq = [4, 7, 8]        (gap filled + new events, watermark = 8)
 Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../../VERSIONING.md)):
 
 **MINOR Bump (v1.0 → v1.1)**: Backward-compatible additions
+
 - New optional field in `CanonicalEngineEvent`
 - New optional parameter in `fetchEvents()`
 - New event type (consumers ignore unknown types per [ExecutionSemantics.v1.md § 1.5 rule 6](../engine/ExecutionSemantics.v1.md))
 
 **MAJOR Bump (v1.0 → v2.0)**: Breaking changes
+
 - Remove required field from `CanonicalEngineEvent`
 - Change `runSeq` assignment semantics (e.g., switch to UUIDv7)
 - Change idempotency key structure

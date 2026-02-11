@@ -11,6 +11,7 @@
 ## 1) Engine Boundary: MUST / MUST NOT
 
 ### MUST
+
 - Accept a **versioned** `ExecutionPlan` and execute its steps reliably.
 - Emit **run/step lifecycle events** (persisted into `IRunStateStore`).
 - Support retries/backoff as specified by Planner policy (engine-agnostic rules).
@@ -19,6 +20,7 @@
 - Provide correlation identifiers: `tenantId`, `projectId`, `environmentId`, `runId`, `engineAttemptId`, `logicalAttemptId`.
 
 ### MUST NOT
+
 - Perform planning (ordering/skip/cost decisions belong to `IExecutionPlanner`).
 - Become the source of truth for state (`IRunStateStore` is the source of truth).
 - Store secrets (`ISecretsProvider` handles that).
@@ -66,6 +68,7 @@ type EngineRunRef =
 ```
 
 **Invariants**:
+
 - `namespace` (Temporal) or `conductorUrl` (Conductor) MUST be present.
 - `runId` SHOULD be present for cancellation/query operations.
 - For debugging, include `taskQueue` (Temporal) to trace worker routing.
@@ -77,6 +80,7 @@ type EngineRunRef =
 Events are written to `IRunStateStore` (synchronous primary path, source of truth).
 
 **Lifecycle events** (MUST be emitted):
+
 - `onRunStarted`
 - `onStepStarted`
 - `onStepCompleted`
@@ -86,6 +90,7 @@ Events are written to `IRunStateStore` (synchronous primary path, source of trut
 - `onRunCancelled`
 
 **Event contract**:
+
 - Events **MUST** include: `runId`, `stepId` (if applicable), `engineAttemptId`, `logicalAttemptId`, `runSeq`, `idempotencyKey`.
 - Events **MUST** be idempotent: same event replayed → same state.
 - Idempotency key: `SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)`.
@@ -109,6 +114,7 @@ Signals are **operator actions** routed to the engine, **ALWAYS enforced by `IAu
 | `EMERGENCY_STOP` | `{ reason: string, forceKill?: boolean }` | Admin | **YES** | Immediate termination | ⏳ Phase 3 |
 
 **Idempotency rule**:
+
 - `signalId` is client-supplied UUID.
 - Engine stores handling result via StateStore upsert; repeated `signalId` delivery is a no-op.
 
@@ -168,6 +174,7 @@ interface IAuthorization {
 ```
 
 **Storage**:
+
 - SignalDecisionRecords MUST be persisted (same database as StateStore, same transaction if possible).
 - Retention: **minimum 7 years** (SOC2/GDPR).
 - Index by: `(tenantId, runId, timestamp)`.
@@ -194,6 +201,7 @@ type PlanRef = {
 ```
 
 **Versioning rule**:
+
 - `schemaVersion` MANDATORY.
 - Engine MUST reject plans with unknown `schemaVersion`.
 - BACKWARD compatibility: Engine supports ≤3 minor versions back.
@@ -227,6 +235,7 @@ async function startRun(plan: ExecutionPlan, ctx: RunContext): Promise<EngineRun
 ```
 
 **Capability declarations**:
+
 - `plan.metadata.requiresCapabilities: Capability[]`
 - `plan.metadata.fallbackBehavior: "reject" | "emulate" | "degrade"`
 - `plan.metadata.targetAdapter: "temporal" | "conductor" | "any"`
@@ -237,9 +246,9 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 
 ## 5) References
 
-- **Temporal SDK**: https://docs.temporal.io/develop/typescript
-- **Temporal Signals**: https://docs.temporal.io/
-- **Conductor**: https://conductor.netflix.com/
+- **Temporal SDK**: <https://docs.temporal.io/develop/typescript>
+- **Temporal Signals**: <https://docs.temporal.io/>
+- **Conductor**: <https://conductor.netflix.com/>
 - **Execution Semantics**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 - **Capabilities**: [capabilities/](../capabilities/)
 - **Plugin Sandbox (Extension)**: [extensions/PluginSandbox.v1.0.md](../extensions/PluginSandbox.v1.0.md)

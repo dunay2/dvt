@@ -32,6 +32,7 @@ Execute rollback if **ANY** of the following occur within 7 days post-merge:
 ### Criteria for Keeping Changes (No Rollback)
 
 Do NOT rollback if:
+
 - ✅ Individual broken links (fixable with 301 redirects)
 - ✅ Minor CI gate tuning needed (adjust `.markdownlint.json`)
 - ✅ <5 support tickets (document confusion expected during transition)
@@ -47,12 +48,14 @@ Do NOT rollback if:
 **Steps**:
 
 1. **Identify merge commit**:
+
    ```bash
    git log --oneline --grep="Partition WORKFLOW_ENGINE" -n 1
    # Output: abc1234 Partition WORKFLOW_ENGINE.md + Separate Storage/Engine Adapters
    ```
 
 2. **Create revert branch**:
+
    ```bash
    git checkout main
    git pull origin main
@@ -60,11 +63,13 @@ Do NOT rollback if:
    ```
 
 3. **Revert commit**:
+
    ```bash
    git revert abc1234 --no-edit
    ```
 
 4. **Verify revert**:
+
    ```bash
    # Check WORKFLOW_ENGINE.md restored
    ls -lh docs/architecture/engine/WORKFLOW_ENGINE.md
@@ -78,6 +83,7 @@ Do NOT rollback if:
    ```
 
 5. **Test locally**:
+
    ```bash
    # Validate Markdown
    markdownlint-cli2 "docs/**/*.md"
@@ -90,6 +96,7 @@ Do NOT rollback if:
    ```
 
 6. **Push and create PR**:
+
    ```bash
    git push origin rollback/partition-pr
    gh pr create --title "Rollback: Partition WORKFLOW_ENGINE.md" \
@@ -118,12 +125,14 @@ Do NOT rollback if:
 **Steps**:
 
 1. **Identify problematic component**:
+
    ```bash
    # Example: CI gate false positives
    git log --oneline .github/workflows/markdown_lint.yml
    ```
 
 2. **Revert specific file(s)**:
+
    ```bash
    git checkout main
    git pull origin main
@@ -137,11 +146,13 @@ Do NOT rollback if:
    ```
 
 3. **Test fix**:
+
    ```bash
    bash .github/workflows/markdown_lint.yml
    ```
 
 4. **Push and merge**:
+
    ```bash
    git add .github/workflows/markdown_lint.yml
    git commit -m "fix: tune CI gate Markdown linting (reduce false positives)"
@@ -158,6 +169,7 @@ Do NOT rollback if:
 **Steps**:
 
 1. **Identify specific issue**:
+
    ```bash
    # Example: Broken link in INDEX.md
    markdown-link-check docs/architecture/engine/INDEX.md
@@ -165,6 +177,7 @@ Do NOT rollback if:
    ```
 
 2. **Fix directly**:
+
    ```bash
    git checkout -b fix/broken-link-state-store
    
@@ -176,6 +189,7 @@ Do NOT rollback if:
    ```
 
 3. **Push and merge**:
+
    ```bash
    git add docs/architecture/engine/INDEX.md
    git commit -m "fix: correct State Store Contract link in INDEX.md"
@@ -190,6 +204,7 @@ Do NOT rollback if:
 After executing rollback, verify:
 
 ### 1. File Structure Restored
+
 ```bash
 # Check WORKFLOW_ENGINE.md present
 [ -f docs/architecture/engine/WORKFLOW_ENGINE.md ] && echo "✅ WORKFLOW_ENGINE.md restored"
@@ -203,6 +218,7 @@ grep "^**Version**:" docs/architecture/engine/contracts/engine/ExecutionSemantic
 ```
 
 ### 2. Links Working
+
 ```bash
 # Test WORKFLOW_ENGINE.md links
 markdown-link-check docs/architecture/engine/WORKFLOW_ENGINE.md
@@ -212,6 +228,7 @@ markdown-link-check README.md
 ```
 
 ### 3. CI Passing
+
 ```bash
 # Run CI locally
 bash .github/workflows/validate_contracts.yml  # If exists
@@ -219,6 +236,7 @@ bash .github/workflows/markdown_lint.yml       # If added in partition PR
 ```
 
 ### 4. No Merge Conflicts
+
 ```bash
 # Check open PRs for conflicts
 gh pr list --state open --json number,title,mergeable
@@ -327,23 +345,28 @@ Track these after rollback to inform re-introduction:
 **Issue**: [Brief description]
 
 **Timeline**:
+
 - 2026-02-11 10:00 UTC: PR merged
 - 2026-02-11 14:00 UTC: First report of [issue]
 - 2026-02-11 16:00 UTC: Rollback executed
 
 **Root Cause**:
+
 - [Primary cause]
 - [Contributing factors]
 
 **Why Not Caught Pre-Merge**:
+
 - [Gap in testing]
 - [Environment difference]
 
 **Preventive Measures**:
+
 1. [Action item 1]
 2. [Action item 2]
 
 **Re-Introduction Plan**:
+
 - Target date: [Date]
 - Changes: [What will be different]
 - Validation: [Enhanced testing plan]
@@ -353,12 +376,14 @@ Track these after rollback to inform re-introduction:
 ## ✅ Rollback Checklist
 
 ### Pre-Rollback
+
 - [ ] Confirm rollback criteria met (see "When to Rollback")
 - [ ] Notify stakeholders (Slack announcement)
 - [ ] Identify merge commit SHA
 - [ ] Choose rollback option (Full / Partial / Forward Fix)
 
 ### During Rollback
+
 - [ ] Create rollback branch
 - [ ] Execute revert/fix
 - [ ] Verify locally (Markdown lint, link check, CI)
@@ -367,6 +392,7 @@ Track these after rollback to inform re-introduction:
 - [ ] Merge rollback PR
 
 ### Post-Rollback
+
 - [ ] Verify file structure restored
 - [ ] Verify links working
 - [ ] Verify CI passing
@@ -376,6 +402,7 @@ Track these after rollback to inform re-introduction:
 - [ ] Update rollback metrics table
 
 ### Follow-Up
+
 - [ ] Root cause analysis (24h)
 - [ ] Document lessons learned
 - [ ] Plan re-introduction (1 week)
@@ -384,6 +411,7 @@ Track these after rollback to inform re-introduction:
 ---
 
 **Rollback Owner Contacts**:
-- **DevOps Team**: devops@yourorg.com, #devops Slack
-- **Architecture Team**: architecture@yourorg.com, #architecture Slack
+
+- **DevOps Team**: <devops@yourorg.com>, #devops Slack
+- **Architecture Team**: <architecture@yourorg.com>, #architecture Slack
 - **Emergency**: Page on-call via PagerDuty

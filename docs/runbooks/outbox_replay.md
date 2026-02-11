@@ -6,11 +6,13 @@ Severity: P1
 Goal: Recover and replay events from StateStore `outbox` table to the external EventBus without duplicating state or losing ordering for a given runId.
 
 Preconditions:
+
 - Access to StateStore (read/write)
 - Access to EventBus publisher credentials
 - Maintenance window or operator approval for high-impact replays
 
 Steps:
+
 1. Identify symptom and scope
    - Alert: `eventbus_publish_failures_total` or DLQ entries
    - Query: `SELECT count(*) FROM outbox WHERE status IN ('pending','retry')` to estimate work
@@ -37,8 +39,10 @@ Steps:
    - Create postmortem if > X% events failed
 
 Rollback / stop criteria
+
 - Stop if DLQ grows or `eventbus_publish_failures_total` increases
 
 Notes:
+
 - Always prefer incremental replays and avoid time-order changes per `runId`.
 - If schema mismatches are common, halt replay and fix producer or migration.

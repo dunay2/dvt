@@ -6,11 +6,13 @@ Severity: P1
 Goal: Quickly rollback an engine release and validate safe resumption of operations.
 
 Prerequisites:
+
 - Access to Kubernetes cluster and image registry
 - Access to StateStore and PITR snapshots
 - Known-good image tag
 
 Steps:
+
 1. Decide rollback
    - Gather acceptance: failing critical tests, increased error rates, irrecoverable state
 
@@ -31,5 +33,6 @@ Steps:
    - Keep rollback state until stable 30m
 
 Notes:
+
 - Do not delete broken image tags until fully investigated.
 - Always create a postmortem for rollbacks affecting >1% of runs.

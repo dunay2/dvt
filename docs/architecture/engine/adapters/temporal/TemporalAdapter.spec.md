@@ -34,6 +34,7 @@ type PlanRef = {
 ```
 
 **Versioning rules**:
+
 - `schemaVersion` MANDATORY.
 - Engine MUST reject plans with unknown `schemaVersion`.
 - BACKWARD compatibility: Adapter supports ≤3 minor versions back.
@@ -122,6 +123,7 @@ temporal:
 ```
 
 **Rationale**:
+
 - Few namespaces → reduced quota/retention/upgrade burden.
 - Search attributes → fast tenant-level queries without namespace sprawl.
 - Task queue isolation → enforces per-tenant concurrency limits (Section 4.1).
@@ -130,6 +132,7 @@ temporal:
 ### 3.1 Namespace Cleanup Automation
 
 **Ephemeral environment namespaces** (e.g., PR #123):
+
 - Planner may request: `getNamespace(..., ephemeralTag: "pr-123")`.
 - Cron job: detect namespace with 0 active workflows + 0 new starts for 7 days → archive + delete.
 - Before deletion: export history to `s3://archive/namespaces/pr-123-{timestamp}.tar.gz`.
@@ -191,6 +194,7 @@ export async function interpreterWorkflow(planRef: PlanRef, context: RunContext)
 ```
 
 **Best practices**:
+
 - Version ANY change to: control flow, activity scheduling order, retries, branching, error handling.
 - Old runs replay deterministically (SDK replays old branch).
 - New runs take new branch.
@@ -251,6 +255,7 @@ async function executeStepActivity(step: Step, ctx: ActivityContext): Promise<St
 ```
 
 **Retry strategy** (Temporal SDK):
+
 - Temporal retries up to `maxAttempts` (default 3).
 - Each retry increments `engineAttemptId`.
 - If Activity succeeds on retry, only ONE `StepCompleted` event emitted (same `logicalAttemptId`).
@@ -345,11 +350,13 @@ if (stepsSinceContinue >= CONFIG.CONTINUE_STEPS || historySizeEstimate >= CONFIG
 ```
 
 **State persisted across continuation** (MINIMAL):
+
 - `PlanRef` (reference only, not full plan)
 - `cursor` (compacted: step IDs + artifact pointers)
 - No logs, expanded lists, or large errors
 
 **Limits** (enforced at signal handler):
+
 - `maxSignalSizeBytes = 64KB`.
 - `maxSignalsPerRunPerMinute = 60`.
 - Excess signals → reject or queue.

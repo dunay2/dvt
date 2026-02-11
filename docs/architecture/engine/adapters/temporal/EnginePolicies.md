@@ -12,12 +12,14 @@
 This document specifies **Temporal-specific policies** required to implement the [Execution Semantics Contract](../../contracts/engine/ExecutionSemantics.v1.md).
 
 These policies address Temporal platform constraints and best practices:
+
 - **History size limits** (50MB hard limit per workflow)
 - **Continue-as-new** rotation strategy
 - **Signal limits** (rate and size)
 - **Activity timeout policies**
 
 **References**:
+
 - [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
 - [Continue-as-new Best Practices](https://docs.temporal.io/workflows#continue-as-new)
 
@@ -35,6 +37,7 @@ Workflow MUST call `continueAsNew()` when **EITHER** condition is met:
 | **Estimated history size** | 1 MB | Safety margin (hard limit is 50MB, but performance degrades above 10MB) |
 
 **Implementation**:
+
 ```typescript
 class WorkflowEngine {
   private stepsSinceLastContinue = 0;
@@ -79,18 +82,21 @@ class WorkflowEngine {
 ### 1.2 State Persisted Across Continuation
 
 **MUST persist (minimal state)**:
+
 - `PlanRef` (reference to plan in StateStore, NOT full plan JSON)
 - `cursor` (compacted: completed step ranges `[[0,10],[15,20]]` or bitmap)
 - `ArtifactRef[]` (pointers to S3/GCS, NOT binary payloads)
 - Minimal counters (totalSteps, failedSteps, retriedSteps)
 
 **MUST NOT persist**:
+
 - Full plan JSON (retrieve from StateStore on continuation)
 - Step logs (retrieve from StateStore if needed)
 - Expanded lists (compress to ranges or bitmaps)
 - Large error blobs (store in StateStore, reference by eventId)
 
 **Compaction example**:
+
 ```typescript
 interface CompactedState {
   planRef: PlanRef;                      // 100 bytes
@@ -129,10 +135,12 @@ Temporal enforces platform limits on signals (see [docs](https://docs.temporal.i
 ### 2.1 Size Limits
 
 **MUST enforce**:
+
 - `maxSignalSizeBytes = 64 KB` per signal
 - Total signal payload per workflow ≤ 2 MB (before continue-as-new)
 
 **Implementation**:
+
 ```typescript
 const MAX_SIGNAL_SIZE_BYTES = 64 * 1024; // 64 KB
 
@@ -151,6 +159,7 @@ async function sendSignal(signal: Signal): Promise<void> {
 ```
 
 **Mitigation for large signals**:
+
 ```typescript
 // BAD: Inline large payload in signal
 await workflow.signal('deploySnapshot', { snapshot: largeJSON }); // 500KB payload
@@ -168,9 +177,11 @@ await workflow.signal('deploySnapshot', { snapshotRef: snapshotRef.uri }); // 10
 ### 2.2 Rate Limits
 
 **MUST enforce**:
+
 - `maxSignalsPerRunPerMinute = 60` (configurable, default conservative)
 
 **Implementation**:
+
 ```typescript
 class SignalRateLimiter {
   private signalTimestamps: number[] = [];
@@ -399,6 +410,7 @@ const correctKey = generateIdempotencyKey(
 Temporal workflows MUST be deterministic (see [Temporal docs](https://docs.temporal.io/workflows#deterministic-constraints)).
 
 **FORBIDDEN** (will fail replay):
+
 - ❌ `Math.random()`, `Date.now()`, `new Date()`
 - ❌ Non-deterministic loops (`while (Math.random() > 0.5)`)
 - ❌ Direct network calls (`fetch()`, `axios.get()`)
@@ -406,6 +418,7 @@ Temporal workflows MUST be deterministic (see [Temporal docs](https://docs.tempo
 - ❌ Global state mutations
 
 **ALLOWED**:
+
 - ✅ `workflow.uuid()` (deterministic UUID via workflow context)
 - ✅ `workflow.now()` (deterministic timestamp)
 - ✅ Activities (encapsulate non-deterministic operations)
@@ -442,6 +455,7 @@ Use ESLint plugin: `@temporalio/eslint-plugin`
 | Webhook callback | Signal | Temporal signal more reliable |
 
 **Migration checklist**:
+
 - [ ] Replace `wait` tasks with `workflow.sleep()`
 - [ ] Replace webhook callbacks with signals
 - [ ] Add continue-as-new logic (Conductor has no history limit)

@@ -413,4 +413,3 @@ Alert threshold: If 50% of budget consumed before 50% of period elapsed.
 - [Grafana Dashboarding Guide](https://grafana.com/docs/grafana/latest/dashboards/)
 - [Jaeger Sampling Strategies](https://www.jaegertracing.io/docs/features/#adaptive-sampling-strategies)
 - [Runbooks Directory](./runbooks/)
-

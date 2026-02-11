@@ -60,9 +60,11 @@ Changes to different documentation areas require specific team approvals:
 
 1. Edit `.github/CODEOWNERS`
 2. Replace `@your-org/architecture-team` with individual GitHub handles:
+
    ```
    /docs/architecture/engine/contracts/   @alice @bob @charlie
    ```
+
 3. Commit and push
 
 **For established orgs**:
@@ -81,12 +83,14 @@ Every PR goes through **4 automated validation stages** before merge:
 **Tool**: `markdownlint-cli2`  
 **Workflow**: `.github/workflows/markdown_lint.yml`  
 **Checks**:
+
 - Table formatting
 - Heading structure
 - Consistent list indentation
 - Link syntax
 
 **Fix failures**:
+
 ```bash
 # Install markdownlint CLI
 npm install -g markdownlint-cli2
@@ -100,11 +104,13 @@ markdownlint-cli2 "docs/**/*.md"
 **Tool**: `tsc` (TypeScript compiler)  
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-typescript-blocks`)  
 **Checks**:
+
 - Extracts all `\`\`\`ts` and `\`\`\`typescript` blocks from Markdown
 - Compiles each with `tsc --noEmit --skipLibCheck`
 - Validates syntax (catches typos, missing brackets, etc.)
 
 **Fix failures**:
+
 ```bash
 # Extract TypeScript blocks manually
 sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md | sed '1d;$d' > /tmp/test.ts
@@ -118,10 +124,12 @@ npx tsc --noEmit --skipLibCheck /tmp/test.ts
 **Tool**: `markdown-link-check`  
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-internal-links`)  
 **Checks**:
+
 - All `[text](relative/path.md)` links resolve to existing files
 - Anchor links (e.g., `#section-heading`) exist in target files
 
 **Fix failures**:
+
 ```bash
 # Check links locally
 npm install -g markdown-link-check
@@ -129,6 +137,7 @@ markdown-link-check docs/architecture/engine/INDEX.md
 ```
 
 **Common causes**:
+
 - Typo in filename: `IWorkflowEngine.v1.md` vs `IWorkflowEngine.v1.0.md`
 - Incorrect relative path: `../contracts/` vs `../../contracts/`
 - Broken anchor: `#section-1` but heading is actually `## Section 1.0`
@@ -138,6 +147,7 @@ markdown-link-check docs/architecture/engine/INDEX.md
 **Tool**: Custom Bash script  
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-normative-contracts`)  
 **Checks** (for files matching `*.v[0-9]*.md`):
+
 - ✅ Has `**Status**:` field
 - ✅ Has `**Version**:` field
 - ✅ Has `## Change Log` section
@@ -155,12 +165,14 @@ See [Normative Contract Template](#normative-contract-template) below.
 ### What is a Normative Contract?
 
 A **normative contract** is a binding specification that:
+
 - Uses RFC 2119 keywords (`MUST`, `SHOULD`, `MAY`)
 - Defines invariants, APIs, or behavior that implementations MUST conform to
 - Has an explicit version number (e.g., `v1.0`, `v2.1`)
 - Tracks changes via a `## Change Log` section
 
 **Examples**:
+
 - ✅ `IWorkflowEngine.v1.md` — defines SDK interface
 - ✅ `ExecutionSemantics.v1.md` — defines StateStore model
 - ❌ `observability.md` — operational guide (informative, not normative)
@@ -233,6 +245,7 @@ See **[VERSIONING.md](architecture/engine/VERSIONING.md)** for the complete poli
 | Rename method | MAJOR | v1.0 → v2.0 | Create `MyContract.v2.md`, deprecate v1.0 |
 
 **Deprecation policy**:
+
 - 90-day grace period (clock starts at release tag, not merge to main)
 - Add deprecation notice to old version file
 - Update `INDEX.md` to point to new version
@@ -302,6 +315,7 @@ Install these for real-time validation:
 ### Q: I need to fix a typo in a normative contract. Do I create a new file?
 
 **A**: No. Typos are **patch updates**:
+
 1. Edit in place
 2. Update `**Version**:` field (e.g., `1.0` → `1.0.1`)
 3. Add entry to `## Change Log`
@@ -310,6 +324,7 @@ Install these for real-time validation:
 ### Q: I want to add a new optional method to `IWorkflowEngine.v1.md`. Is that a patch or MINOR?
 
 **A**: **MINOR bump** (backward-compatible addition).
+
 1. Create new file: `IWorkflowEngine.v1.1.md`
 2. Copy content from `v1.md`
 3. Add new method
@@ -320,12 +335,15 @@ Install these for real-time validation:
 ### Q: How do I deprecate an old contract version?
 
 **A**: See [VERSIONING.md § Deprecation Process](architecture/engine/VERSIONING.md#deprecation-process):
+
 1. Add deprecation banner to old file:
+
    ```markdown
    > **⚠️ DEPRECATED**: This contract is deprecated as of 2026-02-01.
    > Use [MyContract.v2.md](./MyContract.v2.md) instead.
    > Support ends: 2026-05-01 (90 days after release tag).
    ```
+
 2. Create git tag: `engine/MyContract@v2.0`
 3. Grace period: 90 days from tag date
 4. After grace period: Remove old file, keep migration guide
@@ -333,6 +351,7 @@ Install these for real-time validation:
 ### Q: CI failed with "Missing **Version** field". How do I fix?
 
 **A**: Your contract file is missing required metadata. Add:
+
 ```markdown
 **Status**: Normative (MUST / MUST NOT)  
 **Version**: 1.0  
@@ -340,9 +359,10 @@ Install these for real-time validation:
 **Consumers**: Engine, StateStore, Projector
 ```
 
-### Q: CI failed with "TypeScript validation failed". But it's pseudocode!
+### Q: CI failed with "TypeScript validation failed". But it's pseudocode
 
 **A**: Use a different code block type:
+
 - ❌ `\`\`\`ts` or `\`\`\`typescript` — will be validated by tsc
 - ✅ `\`\`\`text` — skipped by validator
 - ✅ `\`\`\`pseudo` — skipped by validator

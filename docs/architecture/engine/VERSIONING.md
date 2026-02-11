@@ -40,6 +40,7 @@ v1.0.0
 - **Auditability**: Each patch tag corresponds to a commit; revert/audit trails are clear in git history
 
 **Example**:
+
 ```
 File name (series):   IWorkflowEngine.v1.0.md
 Release tags:         engine/IWorkflowEngine@v1.0.0  (initial release)
@@ -54,12 +55,14 @@ Release tags:         engine/IWorkflowEngine@v1.0.0  (initial release)
 ### Backward Compatibility Definition
 
 A change is considered **MINOR** (backward compatible) only if it is backward compatible for:
+
 - **Producers** of the contract (they can continue emitting/sending old shapes without modification)
 - **Consumers** of the contract (they can continue accepting/handling old shapes without modification)
 
 **If either side can break without modification → the change is MAJOR.**
 
 Examples:
+
 - ✅ **MINOR**: Add optional field (producers ignore, consumers accept both old and new)
 - ❌ **MAJOR**: Remove field from required set (consumers might assume it exists; contract semantic changes)
 - ❌ **MAJOR**: Narrow enum or add pattern constraint (producers constrained tighter; silent breakage risk)
@@ -72,23 +75,27 @@ Examples:
 ✅ **Allowed breaking change: NONE** — minor versions are backward compatible.
 
 **Acceptable additions:**
+
 - New optional field in JSON schema (`required: []` unchanged, no default-value semantics change)
 - New optional method/procedure (existing code ignores it)
 - Clarifications and documentation improvements (no normative change)
 - Field constraint relaxation (e.g., wider valid range, relaxed pattern, expanded enum)
 
 **Explicitly BANNED (these are MAJOR)**:
+
 - Adding `minLength`, `pattern`, new enum constraints, or reducing numeric range
 - Changing default semantics or interpreting an existing field's meaning
 - Removing or renaming a field (even if optional)
 - Any change that requires producer or consumer code modification
 
 **Examples:**
+
 - Add `TimeoutPolicy` as optional field to ExecutionRequest
 - Add `onRetry` as optional callback in WorkflowHook
 - Clarify error message wording for `InvalidTransitionError`
 
 **Process:**
+
 1. Draft changes in PR with title prefix `docs: (minor)`
 2. Request review from contract author + 1 other maintainer
 3. Update CHANGELOG: "Minor update to IWorkflowEngine (v1.0 → v1.1)"
@@ -96,6 +103,7 @@ Examples:
 5. No deprecation window needed
 
 **Backward Compatibility Guarantee:**
+
 ```
 INVARIANT: Code consuming v1.0 works unmodified with v1.1
 - Old implementations ignore new optional fields
@@ -110,6 +118,7 @@ INVARIANT: Code consuming v1.0 works unmodified with v1.1
 ⚠️ **Breaking changes allowed — requires deprecation window.**
 
 **Examples of breaking changes:**
+
 - Remove field from required set
 - Rename field or method
 - Change type of field (e.g., string → object)
@@ -118,6 +127,7 @@ INVARIANT: Code consuming v1.0 works unmodified with v1.1
 - Modify execution guarantee (e.g., at-least-once → at-most-once)
 
 **Examples:**
+
 - Rename `StatusUpdate` → `ExecutionUpdate` in event schema
 - Add mandatory `correlationId` field to execution request
 - Change `ErrorCode.TIMEOUT` enum value
@@ -157,6 +167,7 @@ Month 6+ (Removal):
 ```
 
 **Superseding Guarantees:**
+
 ```
 INVARIANT: v2.0 can coexist with v1.0 briefly during grace period
 - SDK may accept both v1.0 and v2.0 implementations
@@ -177,6 +188,7 @@ INVARIANT: v2.0 can coexist with v1.0 briefly during grace period
 ### Notifications
 
 **In contract file header** (all three versions):
+
 ```markdown
 # IWorkflowEngine.v1.0.md
 **Status**: DEPRECATED (EOL: May 11, 2026)
@@ -185,6 +197,7 @@ INVARIANT: v2.0 can coexist with v1.0 briefly during grace period
 ```
 
 **In SDK release notes**:
+
 ```
 ✋ DEPRECATION NOTICE
 IWorkflowEngine v1.0 will reach end-of-life on May 11, 2026.
@@ -194,6 +207,7 @@ Support: GitHub Discussions #tag:engine-migration
 ```
 
 **In runbooks** (`docs/runbooks/engine-migration-v1.0-to-v2.0.md`):
+
 ```markdown
 # Migrating from IWorkflowEngine v1.0 to v2.0
 
@@ -238,6 +252,7 @@ File created             v2.0 released         v1.0 removed
 ### Status Markers in Filenames
 
 **Standard naming**:
+
 ```
 IWorkflowEngine.v1.0.md          (STABLE, current default)
 IWorkflowEngine.v2.0-DRAFT.md    (proposal / pre-release for v2.0)
@@ -247,6 +262,7 @@ IWorkflowEngine.v2.0.md          (STABLE, new default after release)
 **File naming rule**: Draft for vX.Y is named `vX.Y-DRAFT.md` (matches the target version: v2.0-DRAFT is the draft of v2.0)
 
 **Status field in frontmatter:**
+
 ```yaml
 ---
 title: IWorkflowEngine
@@ -262,11 +278,13 @@ replacement: ./IWorkflowEngine.v2.0.md
 ## Review & Approval Gates
 
 ### Minor Update (v1.0 → v1.1) Gate
+
 - **Required approvals**: 2 (contract author + 1 peer)
 - **Review time**: 1 business day target
 - **Merge path**: Direct to main (no release cycle)
 
 ### Major Update (v1.0 → v2.0) Gate
+
 - **Required approvals**: 3+ (architecture + SDK lead + operations)
 - **Review time**: 1 week target for RFC
 - **Merge path**: Feature branch → release candidate → tagged release
@@ -280,6 +298,7 @@ replacement: ./IWorkflowEngine.v2.0.md
 ### Example 1: Adding Optional Field (Minor)
 
 **Proposal:**
+
 ```
 Title: docs: add optional TimeoutPolicy field to ExecutionRequest
 
@@ -298,6 +317,7 @@ Impact: Backward compatible (old implementations ignore field)
 ### Example 2: Renaming Field (Major)
 
 **Proposal:**
+
 ```
 Title: refactor: (major) IWorkflowEngine v1.0 → v2.0 rename StatusUpdate
 
@@ -310,6 +330,7 @@ Impact: BREAKING - old code using StatusUpdate breaks
 ```
 
 **Timeline:**
+
 - **Week 1**: RFC approved (3+ reviewers)
 - **Weeks 2-4**: v2.0-DRAFT available, adapters tested
 - **Week 5**: v2.0 tagged as STABLE (`engine/IWorkflowEngine@v2.0.0`); v1.0 marked DEPRECATED; deprecation clock starts
@@ -321,6 +342,7 @@ Impact: BREAKING - old code using StatusUpdate breaks
 ### Example 3: Adding Required Field (Major)
 
 **Proposal:**
+
 ```
 Title: refactor: (major) IWorkflowEngine v1.0 → v2.0 add correlationId
 
@@ -376,6 +398,7 @@ Contracts consist of multiple surfaces, each with compatibility rules:
 Every MAJOR version bump must include:
 
 **Deliverable**: `compat-tests/<contract>/v1_to_v2/`
+
 ```
 compat-tests/
 ├── IWorkflowEngine/
@@ -391,6 +414,7 @@ compat-tests/
 ```
 
 **Test requirements**:
+
 - [ ] Old consumer code can parse new-version output (forward compat)
 - [ ] New consumer code can parse old-version output (backward compat)
 - [ ] Producers emitting old format → consumers accept
@@ -399,6 +423,7 @@ compat-tests/
 Translators (v1 ↔ v2 adapters) are **optional** if format is self-documenting; **tests are mandatory**.
 
 **By surface type**:
+
 - **Event envelopes / Schemas**: Backward + forward parsing **required** (or provide explicit translator)
 - **Interfaces**: Require (a) SDK shim plan for bridging old SDK clients → new API, and (b) tests proving old SDK clients still work during grace period
 
@@ -407,6 +432,7 @@ Translators (v1 ↔ v2 adapters) are **optional** if format is self-documenting;
 ### 3.3 Feature Negotiation & Capability Flags
 
 New behavior introduced in a MINOR version must be guarded by one of:
+
 - **Capability flag**: Runtime feature discovery (e.g., `supports("CorrelationIdPropagation")`)
 - **No-op default**: New field ignored if absent
 - **Safe degradation**: Graceful fallback if feature not present
@@ -414,6 +440,7 @@ New behavior introduced in a MINOR version must be guarded by one of:
 **Rule**: Runtime must **not assume a capability flag exists**; unknown flags must be safely ignored.
 
 **Example** (v1.1 adds optional correlation ID tracking):
+
 ```json
 {
   "version": "v1.1",
@@ -432,6 +459,7 @@ The deprecation 90-day clock starts when the tag is created, not when code lands
 **Why**: main evolves; release tags are immutable. Consumers must have a clear, fixed end-date tied to a release artifact.
 
 **Procedure**:
+
 1. v2.0 code lands in main (feature branch)
 2. Tag created: `engine/IWorkflowEngine@v2.0.0` (← **deprecation clock starts here**)
 3. Release notes published with EOL date (tag date + 90 days)
@@ -444,11 +472,13 @@ The deprecation 90-day clock starts when the tag is created, not when code lands
 **When can we skip the 90-day deprecation window?**
 
 Only in cases of:
+
 - **Security vulnerability** in v1.0 (immediate removal)
 - **Critical bug** preventing any honest implementation (rare)
 - **Legal/compliance requirement** (immediate sunset)
 
 **Process:**
+
 1. File issue with label `#version-exception-request`
 2. Requires architecture team vote (unanimous approval)
 3. Document rationale in git commit message
@@ -470,4 +500,3 @@ Only in cases of:
 |------|---------|--------|
 | 2026-02-11 | v1.0 | Initial versioning policy |
 | 2026-02-11 | v1.0.1 | Add surface taxonomy, mandatory compat tests, capability flags, deprecation trigger clarification (non-normative guidance; no behavioral guarantees changed) |
-

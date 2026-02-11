@@ -127,9 +127,11 @@ docs/architecture/engine/
 ### Phase 1 MVP (Temporal Only)
 
 **For contract authors & reviewers**:
+
 1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
 
 **For SDK implementers**:
+
 1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
 2. Read [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (interface)
 3. Read [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (core semantics, storage-agnostic)
@@ -143,12 +145,14 @@ docs/architecture/engine/
 9. Implement interpreter workflow (DAG walker, activity dispatch)
 
 **For plan authors**:
+
 1. Read [dev/determinism-tooling.md](dev/determinism-tooling.md) (writing deterministic plans)
 2. Read [contracts/capabilities/README.md](contracts/capabilities/README.md) (capability validation)
 3. Author plan in plan schema v1.1
 4. Run determinism CI gate (pre-commit)
 
 **For SREs**:
+
 1. Read [ops/observability.md](ops/observability.md) (metrics, dashboards)
 2. Read [ops/runbooks/incident_response.md](ops/runbooks/incident_response.md) (incident playbooks)
 3. Deploy Prometheus + Grafana
@@ -157,6 +161,7 @@ docs/architecture/engine/
 ### Phase 2 (Conductor Adapter)
 
 **Additions**:
+
 1. Read [ConductorAdapter.spec.md](adapters/conductor/ConductorAdapter.spec.md) (DRAFT)
 2. Implement DSL generator (plan → Conductor JSON)
 3. Deploy Conductor cluster + task workers
@@ -170,30 +175,39 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 ## ❓ Finding What You Need
 
 ### "What is the contract versioning policy?"
+
 → [VERSIONING.md](./VERSIONING.md)
 
 ### "How do I implement the engine interface?"
+
 → [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Section 2)
 
 ### "What is the StateStore model?"
+
 → [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (Section 1)
 
 ### "What capabilities does Temporal support?"
+
 → [contracts/capabilities/adapters.capabilities.json](contracts/capabilities/adapters.capabilities.json)
 
 ### "How do I write a deterministic plan?"
+
 → [dev/determinism-tooling.md](dev/determinism-tooling.md) (Section 7)
 
 ### "How do I respond to a production incident?"
+
 → [ops/runbooks/incident_response.md](ops/runbooks/incident_response.md)
 
 ### "What's the product roadmap?"
+
 → [roadmap/engine-phases.md](roadmap/engine-phases.md)
 
 ### "How do I interpret the dual attempt IDs?"
+
 → [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (Section 1.3)
 
 ### "How do I handle signals (PAUSE, CANCEL, etc.)?"
+
 → [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Sections 2.2-2.4)
 
 ---
@@ -247,6 +261,7 @@ engine-phases.md
 - **Examples included**: Code snippets, schemas, pseudocode.
 
 **How to version**:
+
 - Bug fix or clarification → v1.1 (minor bump)
 - New optional capability → v1.2 (minor bump)
 - Breaking change → v2.0 (major bump, multi-month deprecation window)
@@ -258,6 +273,7 @@ engine-phases.md
 - **Limits documented**: Timeouts, payload sizes, concurrency
 
 **How to extend**:
+
 - New feature (e.g., custom task queue) → update spec, version bump
 - Limitation discovered → document, update parity matrix, consider emulation
 
@@ -268,6 +284,7 @@ engine-phases.md
 - **Stability**: Evolve freely (no versioning needed)
 
 **Maintenance**:
+
 - Update based on incident learnings
 - Refresh metrics/dashboards quarterly
 
@@ -290,16 +307,19 @@ All internal references use **relative markdown links** (portable, versionable).
 ## ✅ Checklist: Document Maintenance
 
 **Monthly**:
+
 - [ ] Review incident postmortems; update runbooks (ops/)
 - [ ] Check Temporal + Conductor version updates; update adapter specs if needed
 - [ ] Verify observability dashboards still functional
 
 **Quarterly**:
+
 - [ ] Performance analysis; update SLOs if needed (ops/observability.md)
 - [ ] Roadmap review; update roadmap/engine-phases.md with progress
 - [ ] Capability matrix review; any new adapters or platforms?
 
 **Annually**:
+
 - [ ] Full contract review (contracts/); any deprecated features to retire?
 - [ ] Determinism rulebase review (dev/); add rules discovered from incidents?
 - [ ] Deprecation timeline; any v1.x contracts approaching v2.0?
@@ -358,4 +378,3 @@ All internal references use **relative markdown links** (portable, versionable).
 | 0.1 | 2026-02-11 | Partition WORKFLOW_ENGINE.md into 8 modular documents |
 | 1.0 | 2026-02-11 | First stable index (Phase 1 MVP complete) |
 | 1.1 | 2026-02-11 | Add VERSIONING.md (contract versioning policy) |
-

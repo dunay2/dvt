@@ -36,6 +36,7 @@ WHERE status = 'IN_FLIGHT';"
 ### 1.2 Diagnosis (2-5 minutes)
 
 **If cluster is reachable**:
+
 ```bash
 # Check worker registration
 tctl --namespace production namespace describe
@@ -48,6 +49,7 @@ kubectl rollout restart deployment/dvt-workers-control -n production
 ```
 
 **If cluster is unreachable**:
+
 ```bash
 # Check infrastructure
 kubectl get nodes
@@ -361,6 +363,7 @@ kubectl logs deployment/dvt-workers-control -n production \
 ### 4.2 Investigation Path
 
 **If activity is running**:
+
 ```bash
 # Activity may be legitimately slow (DBT, large compute)
 # Check:
@@ -373,6 +376,7 @@ watch -n 10 'psql production -c "SELECT NOW() - lastEventAt as quiet_duration FR
 ```
 
 **If activity is stuck (no heartbeat)**:
+
 ```bash
 # 1. Check Temporal activity details
 tctl --namespace production activity describe \
@@ -452,6 +456,7 @@ psql production -c "SELECT * FROM pg_stat_replication;"
 ### 5.3 Mitigation (5-15 minutes)
 
 **If database is slow**:
+
 ```bash
 # Scale read replicas
 kubectl scale deployment postgres-replica --replicas=5 -n production
@@ -461,6 +466,7 @@ psql production -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE
 ```
 
 **If disk is full**:
+
 ```bash
 # Archive old events (if safe)
 psql production -c "
@@ -588,4 +594,3 @@ For **all P1 incidents**: Create postmortem within 24 hours.
 ## Owner
 @platform-eng (due by 2026-02-13)
 ```
-

@@ -33,11 +33,13 @@ The engine is documented as **modular, versioned contracts** (not a monolith):
 ### Documentation Changes
 
 See **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** for:
+
 - Code Owners review process (normative contracts require architecture team approval)
 - CI/CD quality gates (Markdown linting, TypeScript validation, link checking)
 - Versioning policy (MAJOR/MINOR/PATCH bumps, deprecation process)
 
 **Quick pre-commit checks**:
+
 ```bash
 # Lint Markdown
 markdownlint-cli2 "docs/**/*.md"
