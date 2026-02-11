@@ -1,19 +1,19 @@
 /**
  * OutboxWorker - Outbox Delivery Worker
- * 
+ *
  * Implements the transactional outbox pattern for at-least-once event delivery
  * Based on ROADMAP.md - Anchor Decision: Outbox Semantics
- * 
+ *
  * Features:
  * - Poll loop: Query undelivered events every 100ms (configurable)
  * - Batch delivery: Up to 100 events per batch (configurable)
  * - Retry forever: Exponential backoff with max 30s delay
  * - Monitoring: Emit metrics (delivery_lag_seconds, delivery_rate)
  * - Circuit breaker: Alert if lag > 5s (configurable)
- * 
+ *
  * Note: This is a standalone worker, not a Temporal workflow.
  * Use of Date and setTimeout is intentional and safe here.
- * 
+ *
  * @see https://microservices.io/patterns/data/transactional-outbox.html
  */
 
@@ -39,11 +39,7 @@ export class OutboxWorker {
   private lastCircuitBreakerCheck = 0;
   private readonly circuitBreakerCheckIntervalMs = 1000; // Check every 1s
 
-  constructor(
-    storage: IOutboxStorage,
-    eventBus: IEventBus,
-    config: OutboxWorkerConfig = {}
-  ) {
+  constructor(storage: IOutboxStorage, eventBus: IEventBus, config: OutboxWorkerConfig = {}) {
     this.storage = storage;
     this.eventBus = eventBus;
     this.config = {
@@ -97,7 +93,7 @@ export class OutboxWorker {
 
   /**
    * Get current metrics
-   * 
+   *
    * Note: This method queries storage and should be called periodically (not on every poll)
    */
   async getMetrics(): Promise<OutboxMetrics> {
@@ -212,19 +208,18 @@ export class OutboxWorker {
    */
   private async checkCircuitBreaker(): Promise<void> {
     const now = Date.now();
-    
+
     // Throttle circuit breaker checks to once per second
     if (now - this.lastCircuitBreakerCheck < this.circuitBreakerCheckIntervalMs) {
       return;
     }
-    
+
     this.lastCircuitBreakerCheck = now;
-    
+
     const metrics = await this.computeMetrics(false);
 
     const wasOpen = this.circuitBreakerOpen;
-    this.circuitBreakerOpen =
-      metrics.deliveryLagSeconds > this.config.circuitBreakerLagSeconds;
+    this.circuitBreakerOpen = metrics.deliveryLagSeconds > this.config.circuitBreakerLagSeconds;
 
     // Emit alert when circuit breaker opens
     if (this.circuitBreakerOpen && !wasOpen) {

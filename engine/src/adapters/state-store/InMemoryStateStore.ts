@@ -1,9 +1,9 @@
 /**
  * InMemoryStateStore - Mock implementation for testing
- * 
+ *
  * Simple in-memory implementation of IOutboxStorage for unit tests
  * NOT for production use
- * 
+ *
  * Note: Use of Date is intentional for testing infrastructure
  */
 

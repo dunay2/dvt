@@ -1,6 +1,6 @@
 /**
  * OutboxWorker Integration Tests
- * 
+ *
  * Tests the outbox delivery worker implementation based on requirements from Issue #16
  */
 
