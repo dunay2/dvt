@@ -7,6 +7,9 @@
 // Core types
 export * from './core/types';
 
+// Engine contract types (IWorkflowEngine, State Store, Artifacts)
+export * from './types';
+
 // Interfaces
 export * from './core/interfaces/IOutboxStorage';
 export * from './core/interfaces/IEventBus';
