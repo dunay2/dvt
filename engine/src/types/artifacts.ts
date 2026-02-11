@@ -20,7 +20,8 @@ export interface ArtifactRef {
   sha256?: string;
   /** Size in bytes (optional) */
   sizeBytes?: number;
-  /** Expiration timestamp for retention policy (ISO 8601, optional) */
+  /** Expiration timestamp for retention policy (ISO 8601, optional)
+   * Indicates when the artifact should be deleted according to storage retention rules */
   expiresAt?: string;
 }
 

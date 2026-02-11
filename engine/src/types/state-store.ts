@@ -59,6 +59,8 @@ export interface CanonicalEngineEvent {
 
 /**
  * Step status in snapshot projection
+ * Note: This is separate from RunStatus because steps have different lifecycle states.
+ * Steps can be PENDING (waiting for dependencies) while the run is RUNNING.
  * @see ExecutionSemantics.v1.md § 1.4 - Snapshot Projections
  */
 export type StepStatus = 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'SKIPPED';
@@ -115,7 +117,9 @@ export interface RunSnapshot {
 }
 
 /**
- * Workflow state (alias for RunSnapshot for compatibility)
+ * Workflow state (alias for RunSnapshot)
+ * This alias exists for backward compatibility with existing code that references WorkflowState.
+ * New code should prefer using RunSnapshot directly.
  * @see State Store Contract
  */
 export type WorkflowState = RunSnapshot;
