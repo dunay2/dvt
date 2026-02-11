@@ -244,7 +244,7 @@ sequenceDiagram
         Note over P: Reprocessing is idempotent
     end
     
-    Note over P: Unknown events advance<br/>watermark without state changes
+    Note over P: Unknown events advance\nwatermark without state changes
 ```
 
 **Diagram Notes**:
@@ -409,7 +409,7 @@ sequenceDiagram
         Note over DLQ: Manual intervention required
     end
     
-    Note over SS,EB: At-least-once delivery guaranteed<br/>via transactional outbox
+    Note over SS,EB: At-least-once delivery guaranteed\nvia transactional outbox
 ```
 
 **Diagram Notes**:
@@ -480,7 +480,7 @@ sequenceDiagram
     E->>E: Set internal state = DRAINING
     Note over E: Stop scheduling new tasks
     
-    Note over W: In-flight tasks continue<br/>(cannot be cancelled in Conductor)
+    Note over W: In-flight tasks continue\n(cannot be cancelled in Conductor)
     
     W->>E: Task 1 completes
     W->>E: Task 2 completes
@@ -493,7 +493,7 @@ sequenceDiagram
     else Timeout exceeded (default: 5 min)
         E->>E: Log warning + emit alert
         E->>E: Force transition to PAUSED
-        Note over E: Orphaned tasks may complete<br/>asynchronously (not tracked)
+        Note over E: Orphaned tasks may complete\nasynchronously (not tracked)
     end
     
     C->>E: Send RESUME signal
@@ -502,7 +502,7 @@ sequenceDiagram
     SS-->>E: Status = RUNNING
     
     E->>E: Resume scheduling tasks
-    Note over E: Previously completed tasks<br/>are NOT re-executed
+    Note over E: Previously completed tasks\nare NOT re-executed
     
     E->>W: Schedule remaining tasks
 ```
