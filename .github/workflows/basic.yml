@@ -1,5 +1,6 @@
 name: Basic CI
 
+# Trigger on pull requests, pushes, and manual dispatch
 on:
   pull_request:
     branches: [main]
@@ -10,6 +11,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - run: echo "✅ Workflow runs"
       - run: echo "✅ All steps executed successfully"
