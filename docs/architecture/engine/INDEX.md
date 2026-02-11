@@ -15,7 +15,8 @@ These documents define the **engine boundary, semantics, and invariants**. Viola
 | Document | Purpose | Scope | Version |
 |----------|---------|-------|---------|
 | [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) | Engine interface + signal catalog | Boundary contract | 1.0 |
-| [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | StateStore model, events, dual attempts, snapshots | State machine | 1.0 |
+| [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic) | State machine | 1.1 |
+| [State Store Contract](contracts/state-store/README.md) | Storage-agnostic interface for event log + snapshots | Persistence layer | 1.0 |
 | [VERSIONING.md](./VERSIONING.md) | Policy for versioning contracts (major/minor bumps, deprecation) | Governance | 1.0 |
 
 ### 🟢 Capability Specifications (Executable, JSON)
@@ -31,12 +32,22 @@ Validation contracts replaced with code-generatable schemas.
 
 ### 🔵 Adapter Specifications (Normative, Adapter-Specific)
 
-Implementation contracts for orchestration platform adapters.
+Implementation contracts for orchestration platform adapters and storage backends.
+
+**Execution Engine Adapters**:
 
 | Document | Adapter | Status | Target |
 |----------|---------|--------|--------|
 | [TemporalAdapter.spec.md](adapters/temporal/TemporalAdapter.spec.md) | Temporal | NORMATIVE | Temporal 1.0+ |
+| [Temporal Engine Policies](adapters/temporal/EnginePolicies.md) | Temporal-specific policies (continue-as-new, limits) | NORMATIVE | Temporal 1.0+ |
 | [ConductorAdapter.spec.md](adapters/conductor/ConductorAdapter.spec.md) | Conductor | DRAFT | Conductor 3.0+, Phase 2 |
+
+**State Store Adapters**:
+
+| Document | Backend | Status | Features |
+|----------|---------|--------|----------|
+| [Snowflake StateStoreAdapter](adapters/state-store/snowflake/StateStoreAdapter.md) | Snowflake | NORMATIVE | DDL, MERGE patterns, clustering, stored procedures |
+| [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md) | PostgreSQL 14+ | NORMATIVE | SERIAL, ON CONFLICT, JSONB, partitioning |
 
 ### 🟠 Operations & Incident Response (Informative, Evolving)
 
@@ -72,7 +83,9 @@ docs/architecture/engine/
 ├── contracts/                             # Normative contracts (versionable)
 │   ├── engine/
 │   │   ├── IWorkflowEngine.v1.md         # [NORMATIVE] Interface + signals
-│   │   └── ExecutionSemantics.v1.md      # [NORMATIVE] State machine
+│   │   └── ExecutionSemantics.v1.md      # [NORMATIVE] Core execution semantics (agnostic)
+│   ├── state-store/
+│   │   └── README.md                      # [NORMATIVE] Storage-agnostic State Store contract
 │   └── capabilities/
 │       ├── capabilities.schema.json       # [EXECUTABLE] Capability enum
 │       ├── adapters.capabilities.json     # [EXECUTABLE] Adapter matrix
@@ -81,9 +94,15 @@ docs/architecture/engine/
 │
 ├── adapters/                              # Adapter-specific specs (normative)
 │   ├── temporal/
-│   │   └── TemporalAdapter.spec.md       # [NORMATIVE] Temporal adapter
-│   └── conductor/
-│       └── ConductorAdapter.spec.md       # [DRAFT] Conductor adapter (Phase 2)
+│   │   ├── TemporalAdapter.spec.md       # [NORMATIVE] Temporal adapter
+│   │   └── EnginePolicies.md             # [NORMATIVE] Temporal-specific policies (continue-as-new, limits)
+│   ├── conductor/
+│   │   └── ConductorAdapter.spec.md       # [DRAFT] Conductor adapter (Phase 2)
+│   └── state-store/
+│       ├── snowflake/
+│       │   └── StateStoreAdapter.md       # [NORMATIVE] Snowflake implementation (DDL, MERGE, clustering)
+│       └── postgres/
+│           └── StateStoreAdapter.md       # [NORMATIVE] Postgres implementation (SERIAL, ON CONFLICT)
 │
 ├── ops/                                   # Operations (informative, evolving)
 │   ├── observability.md                   # Metrics, traces, logs, SLOs
@@ -111,11 +130,17 @@ docs/architecture/engine/
 1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
 
 **For SDK implementers**:
-1. Read [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (interface)
-2. Read [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (state model)
-3. Read [TemporalAdapter.spec.md](adapters/temporal/TemporalAdapter.spec.md) (adapter details)
-4. Implement `IWorkflowEngine` interface
-5. Implement interpreter workflow (DAG walker, activity dispatch)
+1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
+2. Read [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (interface)
+3. Read [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (core semantics, storage-agnostic)
+4. Read [State Store Contract](contracts/state-store/README.md) (persistence layer interface)
+5. Choose storage backend:
+   - [Snowflake StateStoreAdapter](adapters/state-store/snowflake/StateStoreAdapter.md) (DDL, MERGE patterns)
+   - [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md) (SERIAL, ON CONFLICT)
+6. Read [TemporalAdapter.spec.md](adapters/temporal/TemporalAdapter.spec.md) (adapter details)
+7. Read [Temporal Engine Policies](adapters/temporal/EnginePolicies.md) (continue-as-new, limits)
+8. Implement `IWorkflowEngine` interface
+9. Implement interpreter workflow (DAG walker, activity dispatch)
 
 **For plan authors**:
 1. Read [dev/determinism-tooling.md](dev/determinism-tooling.md) (writing deterministic plans)
