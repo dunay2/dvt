@@ -1,0 +1,43 @@
+{
+  "planId": "plan-parallel",
+  "planVersion": "1.0",
+  "generatedAt": "2026-02-11T17:00:00.000Z",
+  "targetAdapter": "temporal",
+  "adapterVersion": "1.0.0",
+  "adapterCapabilities": [
+    "basic-execution",
+    "signal.pause.native",
+    "cancel.cooperative",
+    "workflow.child.workflows",
+    "workflow.fan.dynamic",
+    "workflow.fan.parallel",
+    "query.workflow.state",
+    "replay.full",
+    "workflow.continue.as.new",
+    "signals.rate.limit",
+    "signals.concurrent",
+    "history.rotation"
+  ],
+  "status": "VALID",
+  "capabilityChecks": [
+    {
+      "capability": "basic-execution",
+      "supported": true,
+      "adapterSupport": "native",
+      "recommendation": "Plan can execute without modifications"
+    },
+    {
+      "capability": "workflow.fan.parallel",
+      "supported": true,
+      "adapterSupport": "native",
+      "recommendation": "Temporal supports native parallel execution"
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "remediation": {
+    "suggestedFallbackBehavior": "reject",
+    "suggestedCapabilities": ["basic-execution", "workflow.fan.parallel"],
+    "suggestedTargetAdapter": "temporal"
+  }
+}

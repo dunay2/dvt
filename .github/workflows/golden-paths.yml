@@ -1,0 +1,227 @@
+name: Golden Paths Validation
+
+on:
+  pull_request:
+    paths:
+      - 'examples/**'
+      - 'docs/architecture/engine/contracts/**'
+      - '.github/workflows/golden-paths.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'examples/**'
+      - 'docs/architecture/engine/contracts/**'
+      - '.github/workflows/golden-paths.yml'
+  workflow_dispatch:
+
+jobs:
+  validate-plans:
+    name: Validate Golden Path Plans
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Validate plan JSON files
+        run: |
+          echo "Validating plan JSON files..."
+          for plan_dir in examples/plan-*/; do
+            plan_file="${plan_dir}plan.v1.1.json"
+            if [ -f "$plan_file" ]; then
+              echo "Validating: $plan_file"
+              python3 -m json.tool "$plan_file" > /dev/null
+              echo "✓ Valid JSON: $plan_file"
+            fi
+          done
+      
+      - name: Validate validation-report JSON files
+        run: |
+          echo "Validating validation-report JSON files..."
+          for report_file in examples/plan-*/validation-report.json; do
+            if [ -f "$report_file" ]; then
+              echo "Validating: $report_file"
+              python3 -m json.tool "$report_file" > /dev/null
+              echo "✓ Valid JSON: $report_file"
+            fi
+          done
+      
+      - name: Validate expected-events JSONL files
+        run: |
+          echo "Validating expected-events JSONL files..."
+          for events_file in examples/plan-*/expected-events.jsonl; do
+            if [ -f "$events_file" ]; then
+              echo "Validating: $events_file"
+              line_num=0
+              while IFS= read -r line; do
+                line_num=$((line_num + 1))
+                if [ -n "$line" ]; then
+                  echo "$line" | python3 -m json.tool > /dev/null || {
+                    echo "✗ Invalid JSON at line $line_num in $events_file"
+                    exit 1
+                  }
+                fi
+              done < "$events_file"
+              echo "✓ Valid JSONL: $events_file ($line_num lines)"
+            fi
+          done
+
+  run-test-runner:
+    name: Run Golden Paths Test Runner
+    runs-on: ubuntu-latest
+    needs: validate-plans
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Run test-runner.sh
+        run: |
+          cd examples
+          bash test-runner.sh
+        env:
+          SKIP_EXECUTION: "true"
+      
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-paths-validation-results
+          path: examples/
+          retention-days: 7
+
+  check-documentation:
+    name: Check Golden Paths Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check README files exist
+        run: |
+          echo "Checking README files..."
+          for plan_dir in examples/plan-*/; do
+            readme_file="${plan_dir}README.md"
+            if [ ! -f "$readme_file" ]; then
+              echo "✗ Missing README.md in $plan_dir"
+              exit 1
+            fi
+            echo "✓ Found: $readme_file"
+          done
+      
+      - name: Check examples/README.md exists
+        run: |
+          if [ ! -f "examples/README.md" ]; then
+            echo "✗ Missing examples/README.md"
+            exit 1
+          fi
+          echo "✓ Found: examples/README.md"
+      
+      - name: Verify required sections in README files
+        run: |
+          echo "Verifying README structure..."
+          for readme_file in examples/plan-*/README.md; do
+            echo "Checking: $readme_file"
+            
+            # Check for required sections
+            grep -q "## Overview" "$readme_file" || {
+              echo "✗ Missing '## Overview' section in $readme_file"
+              exit 1
+            }
+            
+            grep -q "## Expected Behavior" "$readme_file" || {
+              echo "✗ Missing '## Expected Behavior' section in $readme_file"
+              exit 1
+            }
+            
+            grep -q "## Validation Report" "$readme_file" || {
+              echo "✗ Missing '## Validation Report' section in $readme_file"
+              exit 1
+            }
+            
+            echo "✓ All required sections present in $readme_file"
+          done
+
+  verify-schema-versions:
+    name: Verify Schema Versions
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check plan schema versions
+        run: |
+          echo "Checking plan schema versions..."
+          for plan_file in examples/plan-*/plan.v1.1.json; do
+            schema_version=$(python3 -c "import json; print(json.load(open('$plan_file'))['schemaVersion'])")
+            echo "Schema version in $plan_file: $schema_version"
+            
+            if [ "$schema_version" != "v1.1" ]; then
+              echo "✗ Invalid schema version in $plan_file: $schema_version (expected: v1.1)"
+              exit 1
+            fi
+            
+            echo "✓ Valid schema version: $schema_version"
+          done
+      
+      - name: Check validation report status
+        run: |
+          echo "Checking validation report status..."
+          for report_file in examples/plan-*/validation-report.json; do
+            status=$(python3 -c "import json; print(json.load(open('$report_file'))['status'])")
+            echo "Validation status in $report_file: $status"
+            
+            if [ "$status" != "VALID" ]; then
+              echo "✗ Invalid validation status in $report_file: $status (expected: VALID)"
+              exit 1
+            fi
+            
+            echo "✓ Valid status: $status"
+          done
+
+  summary:
+    name: Golden Paths Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-plans, run-test-runner, check-documentation, verify-schema-versions]
+    if: always()
+    
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "Golden Paths Validation Summary"
+          echo "================================"
+          echo ""
+          echo "Job Results:"
+          echo "  - validate-plans: ${{ needs.validate-plans.result }}"
+          echo "  - run-test-runner: ${{ needs.run-test-runner.result }}"
+          echo "  - check-documentation: ${{ needs.check-documentation.result }}"
+          echo "  - verify-schema-versions: ${{ needs.verify-schema-versions.result }}"
+          echo ""
+          
+          if [ "${{ needs.validate-plans.result }}" != "success" ] || \
+             [ "${{ needs.run-test-runner.result }}" != "success" ] || \
+             [ "${{ needs.check-documentation.result }}" != "success" ] || \
+             [ "${{ needs.verify-schema-versions.result }}" != "success" ]; then
+            echo "❌ Golden Paths validation failed"
+            exit 1
+          fi
+          
+          echo "✅ All Golden Paths validation checks passed!"

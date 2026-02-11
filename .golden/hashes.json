@@ -1,28 +1,64 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Baseline snapshot hashes for golden path contract tests",
-  "generated": "2026-02-11T16:14:10.446Z",
+  "generated": "2026-02-11T17:23:00.000Z",
   "paths": {
-    "hello-world": {
-      "description": "3 steps linear plan completes in < 30s",
+    "plan-minimal": {
+      "description": "Single step echo task - simplest possible plan",
       "hash": "pending",
-      "status": "not-implemented",
+      "status": "implemented",
+      "location": "examples/plan-minimal/",
+      "metadata": {
+        "steps": 1,
+        "expectedDuration": "< 5s",
+        "capabilities": ["basic-execution"]
+      }
+    },
+    "plan-parallel": {
+      "description": "3 parallel steps with fan-in merge",
+      "hash": "pending",
+      "status": "implemented",
+      "location": "examples/plan-parallel/",
+      "metadata": {
+        "steps": 4,
+        "expectedDuration": "< 15s",
+        "capabilities": ["basic-execution", "workflow.fan.parallel"]
+      }
+    },
+    "plan-cancel-and-resume": {
+      "description": "5 sequential steps with PAUSE/RESUME signals",
+      "hash": "pending",
+      "status": "implemented",
+      "location": "examples/plan-cancel-and-resume/",
+      "metadata": {
+        "steps": 5,
+        "pauseAfterStep": 3,
+        "resumeExpected": true,
+        "capabilities": ["basic-execution", "signal.pause.native"]
+      }
+    },
+    "hello-world": {
+      "description": "(DEPRECATED) Replaced by plan-minimal",
+      "hash": "pending",
+      "status": "deprecated",
+      "replacedBy": "plan-minimal",
       "metadata": {
         "steps": 3,
         "expectedDuration": "< 30s"
       }
     },
     "pause-resume": {
-      "description": "Pause after step 1, resume, same final snapshot hash",
+      "description": "(DEPRECATED) Replaced by plan-cancel-and-resume",
       "hash": "pending",
-      "status": "not-implemented",
+      "status": "deprecated",
+      "replacedBy": "plan-cancel-and-resume",
       "metadata": {
         "pauseAfterStep": 1,
         "resumeExpected": true
       }
     },
     "retry": {
-      "description": "Fail step 2 once, retry, same snapshot hash",
+      "description": "(DEPRECATED) Future: Retry with failure injection",
       "hash": "pending",
       "status": "not-implemented",
       "metadata": {
@@ -32,9 +68,10 @@
     }
   },
   "notes": [
-    "This file is maintained manually until issue #10 (Golden Paths) is completed",
-    "Hash values will be updated when actual golden path implementations are available",
-    "Status 'pending' indicates golden path is not yet implemented",
-    "CI will pass with pending status but will validate once implemented"
+    "Golden paths are now implemented in examples/ directory (issue #10)",
+    "Hash values will be populated when actual engine execution is available (blocked by issues #5, #6)",
+    "Status 'implemented' indicates golden path files exist and are valid",
+    "Status 'deprecated' indicates golden path has been replaced by a newer version",
+    "CI validates JSON structure and schema versions for implemented golden paths"
   ]
 }
