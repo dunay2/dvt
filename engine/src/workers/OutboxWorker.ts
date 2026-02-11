@@ -36,6 +36,8 @@ export class OutboxWorker {
   private lastDeliveredCount = 0;
   private lastMetricsTime = Date.now();
   private circuitBreakerOpen = false;
+  private lastCircuitBreakerCheck = 0;
+  private readonly circuitBreakerCheckIntervalMs = 1000; // Check every 1s
 
   constructor(
     storage: IOutboxStorage,
@@ -95,9 +97,15 @@ export class OutboxWorker {
 
   /**
    * Get current metrics
+   * 
+   * Note: This method queries storage and should be called periodically (not on every poll)
    */
   async getMetrics(): Promise<OutboxMetrics> {
+    // Pull one event to check lag and existence
     const undeliveredEvents = await this.storage.pullUndelivered(1);
+    
+    // For undeliveredCount, we only check if there are any undelivered events
+    // A full count would require a separate query which could be expensive
     const undeliveredCount = undeliveredEvents.length;
 
     // Calculate delivery lag (oldest undelivered event age)
@@ -137,6 +145,7 @@ export class OutboxWorker {
 
   /**
    * Schedule the next poll
+   * Ensures polls don't overlap by only scheduling after current poll completes
    */
   private async schedulePoll(): Promise<void> {
     if (!this.running) {
@@ -148,6 +157,7 @@ export class OutboxWorker {
 
     this.pollTimer = setTimeout(async () => {
       await this.poll();
+      // Only schedule next poll after current poll completes
       await this.schedulePoll();
     }, delay);
   }
@@ -230,8 +240,18 @@ export class OutboxWorker {
 
   /**
    * Check circuit breaker and emit alerts if needed
+   * Throttled to avoid excessive storage queries (checks at most once per second)
    */
   private async checkCircuitBreaker(): Promise<void> {
+    const now = Date.now();
+    
+    // Throttle circuit breaker checks to once per second
+    if (now - this.lastCircuitBreakerCheck < this.circuitBreakerCheckIntervalMs) {
+      return;
+    }
+    
+    this.lastCircuitBreakerCheck = now;
+    
     const metrics = await this.getMetrics();
 
     const wasOpen = this.circuitBreakerOpen;

@@ -283,7 +283,8 @@ describe('OutboxWorker', () => {
 
       const metrics = await worker.getMetrics();
 
-      expect(metrics.undeliveredCount).toBe(1); // Only checks first event
+      // Note: pullUndelivered(1) only fetches first undelivered event to check if any exist
+      expect(metrics.undeliveredCount).toBe(1);
     });
   });
 
