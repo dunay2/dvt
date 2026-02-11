@@ -1,16 +1,20 @@
 # Execution Semantics Contract (Normative v1.0)
 
 **Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.0.1  
+**Version**: 1.1  
 **Stability**: Core semantics — breaking changes require version bump  
 **Consumers**: Engine, StateStore, Projector  
 
 **References**:
- [IWorkflowEngine Contract](./IWorkflowEngine.v1.md)
- [Contract Versioning Policy](../../VERSIONING.md) — how this contract evolves (minor/major bumps, deprecation)
- [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
- NOTE (Diagrams): Mermaid diagrams are illustrative unless explicitly marked as NORMATIVE.
- In case of conflict, the normative text rules win.
+ [IWorkflowEngine Contract](./IWorkflowEngine.v1.md)  
+ [Contract Versioning Policy](../../VERSIONING.md) — how this contract evolves (minor/major bumps, deprecation)  
+ [State Store Contract](../state-store/README.md) — storage-agnostic interface  
+ [State Store Adapters](../../adapters/state-store/) — backend-specific implementations (Snowflake, Postgres, etc.)  
+ [Temporal Engine Policies](../../adapters/temporal/EnginePolicies.md) — Temporal-specific policies (continue-as-new, limits)  
+
+**NOTE**: This document defines **core, storage/engine-agnostic semantics**. Physical schemas (DDLs), clustering strategies, and platform-specific policies (e.g., Temporal continue-as-new) are documented in adapter guides.
+
+**Diagram Note**: Mermaid diagrams are illustrative unless explicitly marked as NORMATIVE. In case of conflict, the normative text rules win.
 ---
 
 ## 1) Source of Truth: StateStore Model
@@ -35,52 +39,29 @@
 
 ---
 
-### 1.1 Monotonic Sequence Invariant
+### 1.1 Monotonic Sequence Invariant (Storage-Agnostic)
 
 Every event persisted to StateStore MUST include a **strictly increasing** `runSeq` (per `runId`).
-`runSeq` MUST be monotonic, but it is **NOT required to be contiguous** (i.e., gaps are allowed).
 
+**NORMATIVE invariants**:
+- `runSeq` MUST be **monotonic** (strictly increasing per `runId`)
+- `runSeq` is **NOT required to be contiguous** (gaps are allowed and natural)
+- `runSeq` MUST be assigned by the **Append Authority** (see [State Store Contract § 3](../state-store/README.md#3-append-authority-pattern))
 
- IMPORTANT: `runSeq` MUST be assigned by the **StateStore write path** (or a dedicated sequencer)
- in a way that guarantees monotonicity per `runId`. Do NOT rely on "AUTO-INCREMENT per runId"
- unless your chosen storage supports it correctly.
+**Logical constraints** (MUST be enforced by all StateStore adapters):
+- **Unique key**: `(runId, runSeq)` — no duplicate sequence numbers within a run
+- **Uniqueness**: `(runId, idempotencyKey)` — same idempotency key cannot produce multiple events
 
-```sql
--- Snowflake-oriented physical schema (logical constraints are documented; Snowflake does not enforce PK/UNIQUE).
-CREATE TABLE IF NOT EXISTS RUN_EVENTS (
-  RUN_ID             STRING,
-  RUN_SEQ            NUMBER(38,0),         -- assigned by writer/sequencer (monotonic per RUN_ID)
-  EVENT_ID           STRING,               -- UUID as string
-  STEP_ID            STRING,
-  ENGINE_ATTEMPT_ID  STRING,               -- platform-level retry counter/id
-  LOGICAL_ATTEMPT_ID STRING,               -- business-level retry counter/id
-  EVENT_TYPE         STRING,
-  EVENT_DATA         VARIANT,
-  IDEMPOTENCY_KEY    STRING,               -- SHA256 hex
-  EMITTED_AT         TIMESTAMP_NTZ,
-  PERSISTED_AT       TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
-  ADAPTER_VERSION    STRING,
-  ENGINE_RUN_REF     VARIANT,
-  CAUSED_BY_SIGNAL_ID STRING,              -- UUID as string
-  PARENT_EVENT_ID    STRING                -- UUID as string
-);
+**Physical implementation**: See backend-specific adapters:
+- [Snowflake StateStore Adapter](../../adapters/state-store/snowflake/StateStoreAdapter.md) — DDL, MERGE patterns, clustering
+- [Postgres StateStore Adapter](../../adapters/state-store/postgres/StateStoreAdapter.md) — SERIAL, ON CONFLICT, sequences
 
--- Recommended (performance): cluster by run + time for polling/projection.
-ALTER TABLE RUN_EVENTS CLUSTER BY (RUN_ID, PERSISTED_AT);
-```
+**UI consumption rule** (watermark-based polling):
 
-**Logical constraints (NORMATIVE, storage-agnostic):**
-- Unique key: `(runId, runSeq)`
-- Uniqueness: `(runId, idempotencyKey)`
-
-
-**UI consumption rule**:
-- UI polls events ordered by `runSeq`.
-If a non-contiguous fetch is observed (e.g., last seen `runSeq=10`, next fetched `runSeq=12`), it MUST be treated as **eventual consistency** (not corruption):
+UI polls events ordered by `runSeq`. If a non-contiguous fetch is observed (e.g., last seen `runSeq=10`, next fetched `runSeq=12`), it MUST be treated as **eventual consistency** (not corruption):
   1. Mark run as `STALE`.
   2. Trigger resync (refetch snapshot and/or refetch events from `lastEventSeq` watermark).
   3. Resume once resync completes successfully AND `lastEventSeq` watermark advances beyond the previously observed non-contiguous range.
-
 
 ---
 
@@ -304,22 +285,22 @@ stateStore:
 
 ---
 
-## 6) Continue-As-New Policy (Temporal)
+## 6) Engine-Specific Policies
 
-Workflow MUST call `continueAsNew()` to rotate history when EITHER:
+Execution engines (Temporal, Conductor, etc.) have platform-specific constraints that affect implementation:
 
-- `stepsSinceLastContinue >= CONTINUE_STEPS` (default: 50), OR
-- `estimatedHistoryBytes >= HISTORY_BYTES_THRESHOLD` (default: 1MB).
+**Temporal**:
+- History size limits (50MB hard limit) → requires **continue-as-new** rotation
+- Signal size/rate limits
+- Determinism constraints
+- See [Temporal Engine Policies](../../adapters/temporal/EnginePolicies.md) for details
 
-**State persisted across continuation** (minimal):
-- `PlanRef` (reference, not full plan)
-- `cursor` (compacted: completed step ranges or bitmap)
-- `ArtifactRef[]` (pointers only)
-- Minimal counters
+**Conductor**:
+- No native pause support → signal-based emulation required
+- Different timeout semantics
+- See [Conductor Engine Policies](../../adapters/conductor/EnginePolicies.md) (TBD)
 
-**Never persist**: step logs, expanded lists, large error blobs.
-
-**Limits**: Enforce `maxSignalSizeBytes=64KB`, `maxSignalsPerRunPerMinute=60`.
+**Storage-agnostic principle**: Core execution semantics (this document) remain independent of engine choice. Adapters bridge the gap.
 
 ---
 
@@ -354,5 +335,6 @@ Producers MUST emit events compatible with the contract version. Consumers MUST 
 
 | Version | Date | Change |
 |---------|------|--------|
+| 1.1 | 2026-02-11 | **Minor**: Extracted storage/engine-specific content to adapters (Snowflake DDL → StateStoreAdapter.md, continue-as-new → Temporal EnginePolicies.md). Core semantics now fully agnostic. |
 | 1.0.1 | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility) |
 | 1.0 | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection) |
