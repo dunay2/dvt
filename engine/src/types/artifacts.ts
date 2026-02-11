@@ -2,7 +2,7 @@
  * Artifact Types (v1.0)
  *
  * TypeScript types for artifact references and step outputs
- * @see {@link /home/runner/work/dvt/dvt/docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md} § 2 - Secrets & Artifacts
+ * @see {@link docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md} § 2 - Secrets & Artifacts
  */
 
 /**

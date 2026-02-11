@@ -2,7 +2,7 @@
  * IWorkflowEngine Contract Types (v1.0)
  *
  * TypeScript types extracted from IWorkflowEngine.v1.md
- * @see {@link /home/runner/work/dvt/dvt/docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md}
+ * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md}
  */
 
 /**

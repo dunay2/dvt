@@ -2,8 +2,8 @@
  * State Store Contract Types (v1.0)
  *
  * TypeScript types for State Store adapters and operations
- * @see {@link /home/runner/work/dvt/dvt/docs/architecture/engine/contracts/state-store/README.md}
- * @see {@link /home/runner/work/dvt/dvt/docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md}
+ * @see {@link docs/architecture/engine/contracts/state-store/README.md}
+ * @see {@link docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md}
  */
 
 import { AppendResult, OutboxEvent } from '../core/types';
