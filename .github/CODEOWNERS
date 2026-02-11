@@ -1,0 +1,70 @@
+# Code Owners for DVT Workflow Engine
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ==============================================================================
+# NORMATIVE CONTRACTS (Require Architecture Team Review)
+# ==============================================================================
+
+# All normative contracts in engine/contracts/ require senior architect review
+/docs/architecture/engine/contracts/             @your-org/architecture-team
+
+# Versioning policy (breaking change implications across all contracts)
+/docs/VERSIONING.md                              @your-org/architecture-team
+
+# Core execution semantics (changes affect StateStore, Projector, Engine)
+/docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md    @your-org/architecture-team @your-org/engine-leads
+
+# Engine interface contracts (SDK-facing, breaking changes affect customers)
+/docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md       @your-org/architecture-team @your-org/sdk-team
+
+# Adapter contracts (multi-platform compatibility requirements)
+/docs/architecture/engine/contracts/adapters/    @your-org/architecture-team @your-org/platform-integrations
+
+# ==============================================================================
+# OPERATIONAL RUNBOOKS (Require SRE + Architecture Review)
+# ==============================================================================
+
+/docs/runbooks/                                  @your-org/sre-team @your-org/architecture-team
+
+# ==============================================================================
+# ROADMAP & DECISION RECORDS (Require Product + Engineering Leadership)
+# ==============================================================================
+
+/docs/roadmap/                                   @your-org/product-leads @your-org/engineering-leads
+/docs/decisions/                                 @your-org/architecture-team
+
+# ==============================================================================
+# ENGINE IMPLEMENTATION (Require Engine Team Review)
+# ==============================================================================
+
+/engine/                                         @your-org/engine-team
+
+# Determinism-critical code (additional architecture review for changes)
+/engine/src/core/determinism/                    @your-org/engine-team @your-org/architecture-team
+/engine/test/determinism/                        @your-org/engine-team @your-org/architecture-team
+
+# ==============================================================================
+# CI/CD & QUALITY GATES
+# ==============================================================================
+
+/.github/workflows/                              @your-org/devops-team
+/.github/CODEOWNERS                              @your-org/architecture-team @your-org/devops-team
+
+# ==============================================================================
+# NOTES
+# ==============================================================================
+# 
+# Team handles (replace with your org's actual teams):
+#   @your-org/architecture-team       - Senior architects (normative contract changes)
+#   @your-org/engine-leads            - Engine tech leads
+#   @your-org/sdk-team                - SDK developers (customer-facing APIs)
+#   @your-org/platform-integrations   - Temporal/Conductor adapter maintainers
+#   @your-org/sre-team                - Site reliability engineers
+#   @your-org/product-leads           - Product management
+#   @your-org/engineering-leads       - Engineering leadership
+#   @your-org/engine-team             - Engine implementation team
+#   @your-org/devops-team             - DevOps/CI maintainers
+#
+# Individual reviewers (for early-stage repos without org teams):
+#   Use GitHub handles: @username1 @username2
+#
