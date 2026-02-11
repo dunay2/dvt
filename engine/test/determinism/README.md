@@ -1,6 +1,7 @@
 # Determinism Test Suite (engine)
 
-Purpose: provide a reproducible, automated suite that verifies Temporal workflow determinism for interpreter changes, dynamic fan-out, and artifact-derived expansion.
+Purpose: provide a reproducible, automated suite that verifies Temporal workflow determinism for
+interpreter changes, dynamic fan-out, and artifact-derived expansion.
 
 Goals:
 

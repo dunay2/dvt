@@ -10,7 +10,9 @@ Data Value Transform — Multi-adapter orchestration engine.
 
 The engine is documented as **modular, versioned contracts** (not a monolith):
 
-- **Normative contracts** (small, stable, MUST): [IWorkflowEngine](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md), [ExecutionSemantics](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)
+- **Normative contracts** (small, stable, MUST):
+  [IWorkflowEngine](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md),
+  [ExecutionSemantics](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)
 - **Adapter specs**: [Temporal](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Conductor](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md)
 - **Capability specs** (executable JSON): [capabilities](docs/architecture/engine/contracts/capabilities/)
 - **Operations**: [observability](docs/architecture/engine/ops/observability.md), [incident runbooks](docs/architecture/engine/ops/runbooks/)

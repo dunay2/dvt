@@ -3,7 +3,8 @@
 Owner: TBD (SRE)
 Severity: P1
 
-Goal: Recover and replay events from StateStore `outbox` table to the external EventBus without duplicating state or losing ordering for a given runId.
+Goal: Recover and replay events from StateStore `outbox` table to the external EventBus without
+duplicating state or losing ordering for a given runId.
 
 Preconditions:
 

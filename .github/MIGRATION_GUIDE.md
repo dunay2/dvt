@@ -94,14 +94,16 @@
 
 1. Start at [INDEX.md](../docs/architecture/engine/INDEX.md)
 2. Read [IWorkflowEngine.v1.md](../docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) (interface)
-3. Read [ExecutionSemantics.v1.md](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) (core semantics, agnostic)
+3. Read [ExecutionSemantics.v1.md](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)
+   (core semantics, agnostic)
 4. Read [State Store Contract](../docs/architecture/engine/contracts/state-store/README.md) (persistence interface)
 5. **Choose storage backend**:
    - Snowflake: Read [Snowflake StateStoreAdapter](../docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md)
    - Postgres: Read [Postgres StateStoreAdapter](../docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)
 6. **Choose execution engine**:
    - Temporal: Read [TemporalAdapter.spec.md](../docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md) + [EnginePolicies.md](../docs/architecture/engine/adapters/temporal/EnginePolicies.md)
-   - Conductor: Read [ConductorAdapter.spec.md](../docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md) (DRAFT)
+   - Conductor: Read [ConductorAdapter.spec.md]
+     (../docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md) (DRAFT)
 
 **Code changes**: None (semantics unchanged)
 

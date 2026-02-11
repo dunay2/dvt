@@ -18,7 +18,8 @@ Steps:
    - Confirm failure pattern: reproducible crash, OOM, or security violation
 
 2. Quarantine action (fast)
-   - Mark plugin version `vX` as quarantined in StateStore plugin registry: `{ pluginId, pluginVersion: vX, status: "quarantined", reason: "..." }`
+   - Mark plugin version `vX` as quarantined in StateStore plugin registry:
+     `{ pluginId, pluginVersion: vX, status: "quarantined", reason: "..." }`
    - Update planner policy to exclude `vX` and select `fallback_version`
    - Emit `PluginQuarantined` event for audit
 
