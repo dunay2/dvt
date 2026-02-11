@@ -1,53 +1,91 @@
-# Code Owners for DVT Workflow Engine
-# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# CODEOWNERS - Auto-assign reviewers based on file paths
+# Learn more: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-# ==============================================================================
-# NORMATIVE CONTRACTS (Require Architecture Team Review)
-# ==============================================================================
+# Default owners for everything (unless overridden below)
+* @dunay2
 
-# All normative contracts in engine/contracts/ require senior architect review
-/docs/architecture/engine/contracts/             @your-org/architecture-team
+# === Core Architecture & Contracts (Highest Scrutiny) ===
+# Requires anchor decision validation and cross-adapter compatibility review
 
-# Versioning policy (breaking change implications across all contracts)
-/docs/VERSIONING.md                              @your-org/architecture-team
+# Engine contracts (IWorkflowEngine, ExecutionSemantics)
+/docs/architecture/engine/contracts/engine/ @dunay2
+/contracts/engine/ @dunay2
 
-# Core execution semantics (changes affect StateStore, Projector, Engine)
-/docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md    @your-org/architecture-team @your-org/engine-leads
+# State Store contracts
+/docs/architecture/engine/contracts/state-store/ @dunay2
+/contracts/state-store/ @dunay2
 
-# Engine interface contracts (SDK-facing, breaking changes affect customers)
-/docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md       @your-org/architecture-team @your-org/sdk-team
+# Glossary and Event Catalog (normative contracts)
+/docs/architecture/engine/contracts/GLOSSARY*.md @dunay2
+/docs/architecture/engine/contracts/RunEventCatalog*.md @dunay2
 
-# Adapter contracts (multi-platform compatibility requirements)
-/docs/architecture/engine/contracts/adapters/    @your-org/architecture-team @your-org/platform-integrations
+# Anchor decisions (requires review from tech lead)
+/docs/architecture/engine/roadmap/engine-phases.md @dunay2
+/ROADMAP.md @dunay2
 
-# ==============================================================================
-# OPERATIONAL RUNBOOKS (Require SRE + Architecture Review)
-# ==============================================================================
+# === Engine Implementation ===
 
-/docs/runbooks/                                  @your-org/sre-team @your-org/architecture-team
+# Engine core (determinism-critical)
+/engine/core/ @dunay2
+/engine/src/ @dunay2
 
-# ==============================================================================
-# ROADMAP & DECISION RECORDS (Require Product + Engineering Leadership)
-# ==============================================================================
+# Adapters (Temporal, Postgres - multi-platform impact)
+/engine/adapters/temporal/ @dunay2
+/engine/adapters/state-store/ @dunay2
 
-/docs/roadmap/                                   @your-org/product-leads @your-org/engineering-leads
-/docs/decisions/                                 @your-org/architecture-team
+# Outbox delivery worker (at-least-once delivery guarantee)
+/engine/outbox/ @dunay2
 
-# ==============================================================================
-# ENGINE IMPLEMENTATION (Require Engine Team Review)
-# ==============================================================================
+# === Contract Tests & Golden Paths ===
+# Validates determinism and cross-adapter compatibility
 
-/engine/                                         @your-org/engine-team
+/.golden/ @dunay2
+/test/contracts/ @dunay2
+/test/golden-paths/ @dunay2
+/test/idempotency/ @dunay2
 
-# Determinism-critical code (additional architecture review for changes)
-/engine/src/core/determinism/                    @your-org/engine-team @your-org/architecture-team
-/engine/test/determinism/                        @your-org/engine-team @your-org/architecture-team
+# === Determinism Tooling ===
 
-# ==============================================================================
-# CI/CD & QUALITY GATES
-# ==============================================================================
+# Linting rules for determinism
+/eslint-plugin-determinism/ @dunay2
+/linting/ @dunay2
 
-/.github/workflows/                              @your-org/devops-team
+# Determinism-specific tests
+/test/determinism/ @dunay2
+
+# === CI/CD & Infrastructure ===
+
+# GitHub Actions workflows (contract, lint, determinism gates)
+/.github/workflows/ @dunay2
+
+# Database migrations (schema changes affect StateStore contract)
+/migrations/ @dunay2
+
+# === Documentation ===
+
+# Roadmap and architecture docs
+/docs/architecture/ @dunay2
+/docs/roadmap/ @dunay2
+
+# Operational runbooks
+/docs/runbooks/ @dunay2
+
+# === Configuration Files ===
+
+# Package dependencies (security review)
+/package.json @dunay2
+/pnpm-lock.yaml @dunay2
+
+# TypeScript config (affects type safety and determinism)
+/tsconfig*.json @dunay2
+
+# ESLint config (affects determinism checks)
+/.eslintrc* @dunay2
+/eslint.config.js @dunay2
+
+# GitHub config
+/.github/ISSUE_TEMPLATE/ @dunay2
+/.github/CODEOWNERS @dunay2
 /.github/CODEOWNERS                              @your-org/architecture-team @your-org/devops-team
 
 # ==============================================================================

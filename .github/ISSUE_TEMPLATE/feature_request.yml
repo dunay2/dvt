@@ -1,0 +1,99 @@
+name: Feature Request
+description: Propose a new feature or enhancement for the DVT Engine
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing a new feature! Please fill out the sections below to help us understand your request.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component does this feature relate to?
+      options:
+        - Engine Core
+        - TypeScript Types
+        - TemporalAdapter
+        - PostgresStateStoreAdapter
+        - Determinism Tooling
+        - Documentation
+        - CI/CD
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      description: Which roadmap phase is this feature for?
+      options:
+        - Phase 1 (MVP)
+        - Phase 1.5 (Hardening)
+        - Phase 2 (Advanced Tooling)
+        - Future
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Who benefits from it?
+      placeholder: "As a [user type], I need [capability] so that [benefit]."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your proposed solution. Include technical details if relevant.
+      placeholder: |
+        - Technical approach
+        - API changes (if any)
+        - Breaking changes (if any)
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other solutions did you consider? Why is your proposal better?
+      placeholder: "Alternative 1: ...\nAlternative 2: ..."
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know this feature is complete?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: breaking
+    attributes:
+      label: Breaking Change Assessment
+      description: Does this feature introduce breaking changes?
+      options:
+        - label: This feature introduces breaking changes to existing contracts
+        - label: This feature requires migration guidance
+        - label: This feature affects determinism guarantees
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Links to related issues, docs, or external resources
+      placeholder: |
+        - Related issue: #123
+        - Documentation: [link]
+        - External reference: [link]

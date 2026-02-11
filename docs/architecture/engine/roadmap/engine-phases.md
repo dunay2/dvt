@@ -13,7 +13,8 @@
 
 **Timeline**:
 
-- **Phase 1 (MVP)**: Temporal-only, core engine semantics, determinism gating (Q1 2026).
+- **Phase 1 (MVP)**: Temporal-only, core engine semantics, determinism gating (Q1 2026 - Target: March 31).
+- **Phase 1.5 (Hardening)**: Load testing, operational correctness, security baseline (April-May 2026).
 - **Phase 2**: Conductor adapter, parity matrix, multi-language SDKs (Q2-Q3 2026).
 - **Phase 3**: Cost attribution, observability automation, custom plugins (Q3-Q4 2026).
 - **Phase 4**: Enterprise features (RBAC, audit compliance, disaster recovery) (2027).
@@ -38,8 +39,8 @@
 
 **Success Criteria**:
 
-- [ ] All 3 contracts reviewed + signed off by engineering leads
-- [ ] Zero ambiguity in event models, dual attempt semantics
+- [ ] All contracts reviewed + signed off by engineering leads
+- [ ] Contract tests: golden JSON fixtures + schema validation + backward compatibility tests in CI
 - [ ] Temporal 1.0+ compatibility verified
 
 ### 1.2 Core Engine Implementation
@@ -53,6 +54,9 @@
 - [ ] PlanFetcher + validator (schema versioning, capability checks)
 - [ ] Authorization enforcement (API-boundary RBAC; engine consumes pre-authorized commands; emits auditable SignalDecisionRecord to StateStore)
 - [ ] StateStore retention baseline (event archival after 90 days to cold storage; latest-status denormalized index for queries)
+- [ ] Plugin permission schema (capabilities + scopes; design in Phase 1, implement Phase 3)
+- [ ] Plugin sandbox strategy decision (isolated-vm / gVisor / separate process boundary)
+- [ ] Audit events schema for plugin invocations
 
 **Success Criteria**:
 
@@ -61,8 +65,8 @@
 - [ ] E2E test: retry failed step, same artifacts produced
 - [ ] E2E test: cancel run gracefully, in-flight tasks timeout
 - [ ] All StateStore writes idempotent under at-least-once delivery (upsert semantics verified)
-- [ ] StateStore write latency p99 < 10ms
-- [ ] Projection lag < 50 events (SLA < 1s)
+- [ ] StateStore write latency p99 < 10ms (constraints: single-region, SSD storage, connection pool ≥50, batched writes where possible)
+- [ ] Projection lag p99 < 1s (time-based SLO); backpressure triggers at 100 events behind
 - [ ] getRunStatus used for debugging only; StateStore remains primary truth
 
 ### 1.3 Temporal Interpreter Workflow
@@ -100,7 +104,7 @@
 
 - [ ] Dashboard shows: runs/min, completion latency, error rate, projection lag
 - [ ] Alert "ProjectionGapDetected" fires correctly
-- [ ] SRE can find root cause of any P2 issue within 5 minutes
+- [ ] MTTR drill: 3 game-days completed; p50 time-to-identify culprit component < 5 min
 
 ### 1.5 Determinism Tooling & CI Gating
 
@@ -138,6 +142,60 @@
 
 ---
 
+## Phase 1.5: Hardening & Operational Readiness — Target: May 31, 2026
+
+**Scope**: Load testing, operational correctness validation, security baseline.
+
+**Rationale**: March 31 MVP gate + immediate Phase 2 (Conductor) creates slip risk. Dedicate 8 weeks to hardening before multi-adapter complexity.
+
+### 1.7 Load Testing
+
+**Deliverables**:
+
+- [ ] Steady-state benchmarks: 1000 runs/min, 10K steps/min
+- [ ] Stress tests: signal storms (100 PAUSE signals/sec), worker failure scenarios
+- [ ] Chaos engineering: DB failover, network partition, adapter restart
+- [ ] Resource saturation: connection pool exhaustion, disk I/O limits
+
+**Success Criteria**:
+
+- [ ] Sustained 1000 runs/min for 4 hours without degradation
+- [ ] Zero data corruption during DB failover
+- [ ] Recovery from worker loss < 30s (new worker picks up tasks)
+
+### 1.8 Operational Correctness Suite
+
+**Deliverables**:
+
+- [ ] Idempotency torture test: duplicate events, out-of-order delivery, retry storms
+- [ ] Projector rebuild from zero: time-to-rebuild < 10 min for 100K events
+- [ ] State consistency verification: snapshot checksum matches event log replay
+
+**Success Criteria**:
+
+- [ ] 1M duplicate events processed without state corruption
+- [ ] Projector rebuild completes in < 10 min (100K events)
+- [ ] Zero divergence between projector and manual replay
+
+### 1.9 Security Baseline
+
+**Deliverables**:
+
+- [ ] Authn/z enforcement at API boundary (even if RBAC is stubbed)
+- [ ] Audit trail retention: 90 days hot, 7 years cold (policy + automation)
+- [ ] PII scrubbing policy: credentials, tokens never appear in logs
+- [ ] Threat model document (finalizing #13 from backlog)
+
+**Success Criteria**:
+
+- [ ] Penetration test: no API bypass, no SQL injection
+- [ ] Audit log tamper-proof (append-only, cryptographic signatures)
+- [ ] PII regex scan: zero credentials in logs (automated check)
+
+**Target Date**: May 31, 2026
+
+---
+
 ## Phase 2: Conductor Adapter & Multi-Language SDKs — Target: September 30, 2026
 
 **Scope**: Conductor support (Phase 2 DRAFT), Python/Go SDKs, plan schema v1.2.
@@ -147,10 +205,11 @@
 **Deliverables**:
 
 - ✅ ConductorAdapter.spec.md (limitations, emulation strategy)
-- [ ] **Determinism parity definition** (anchored decision):
-  - *Temporal*: Strong workflow replay semantics (engine replays deterministically)
-  - *Conductor*: Emulate determinism via StateStore as canonical replay surface (projector + immutable artifacts); tasks idempotent; state transitions validated
-  - *Guarantee*: "Plan → state transitions" deterministic across adapters (not necessarily engine replay determinism)
+- [ ] **Determinism parity definition** (anchored decision - see Anchor Decision A below):
+  - *Guarantee*: For a given ExecutionPlan vN, the allowed state transitions and final snapshot are deterministic (same inputs/artifacts → same outcome), regardless of adapter
+  - *Non-goal*: Identical replay semantics across engines (Temporal replay ≠ Conductor runtime)
+  - *Mechanism*: StateStore + immutable artifacts are canonical replay surface; adapter behavior validated against it
+- [ ] Determinism parity test suite: cross-adapter validation (10+ plans, verified identical state transitions)
 - [ ] Workflow DSL generator (plan → Conductor JSON)
 - [ ] Event listener (async status callbacks)
 - [ ] Pause/cancel emulation (WAIT_FOR_EXTERNAL_EVENT)
@@ -365,7 +424,7 @@ By end of 2027 (Phases 1 + 2 + 3):
 
 ## Decision Gates (Red/Yellow/Green)
 
-### Phase 1 → Phase 2 Gate (March 31, 2026)
+### Phase 1 → Phase 1.5 Gate (March 31, 2026)
 
 **Green Criteria** (ALL required):
 
@@ -376,6 +435,31 @@ By end of 2027 (Phases 1 + 2 + 3):
   - State update → UI update p99 < 1s ✅
   - PAUSE signal latency p99 < 1s ✅
 - [ ] External beta users report positive feedback (survey NPS > 50)
+
+**Yellow Criteria** (assess):
+
+- [ ] 1 P1 incident in 2-week window → post-mortem required
+- [ ] 85-94% test pass rate → root cause analysis
+- [ ] Any control-plane SLA target exceeded → optimization plan required
+
+**Red Criteria** (BLOCK):
+
+- [ ] > 1 P1 incident / week
+- [ ] < 85% test pass rate
+- [ ] Control-plane latency targets missed by >50% → root cause investigation required
+- [ ] Any security vulnerability (audit trail, idempotency, plugin sandbox)
+
+**Decision Maker**: VP Engineering + Product Lead
+
+### Phase 1.5 → Phase 2 Gate (May 31, 2026)
+
+**Green Criteria** (ALL required):
+
+- [ ] Load test targets met: 1000 runs/min sustained for 4 hours
+- [ ] Idempotency torture test passed: 1M duplicate events, zero corruption
+- [ ] Projector rebuild < 10 min for 100K events
+- [ ] Security baseline: penetration test passed, PII scan clean
+- [ ] Operational readiness: 3 game-days completed, MTTR p50 < 5 min
 
 **Yellow Criteria** (assess):
 
@@ -412,10 +496,10 @@ Q1 2026 (Phase 1)
   Week 5-6:  Determinism tooling + CI gating
   Week 7-8:  MVP release; 5 beta customers
   
-Q2 2026 (Phase 2 start)
-  Week 1-4:  Conductor POC + DSL generator
-  Week 5-8:  Multi-language SDK (Python, Go)
-  Week 9-12: Integration tests; parity matrix validated
+Q2 2026 (Phase 1.5 + Phase 2 start)
+  Week 1-4:  Load testing; operational correctness suite
+  Week 5-8:  Security baseline; hardening complete
+  Week 9-12: Conductor POC + DSL generator; determinism parity test suite
   
 Q3 2026 (Phase 2 finish, Phase 3 start)
   Week 1-4:  Phase 2 release candidate
@@ -430,6 +514,65 @@ Q4 2026 / Early 2027 (Phase 3)
 
 ---
 
+## Anchor Decisions
+
+### Anchor Decision A: Conductor Determinism Parity (NORMATIVE)
+
+**Decision Date**: 2026-02-11
+
+**Guarantee**: For a given `ExecutionPlan vN`, the allowed state transitions and final snapshot are deterministic (given the same inputs/artifacts), regardless of adapter.
+
+**Non-goal**: Identical replay semantics across engines (Temporal replay ≠ Conductor runtime).
+
+**Mechanism**: StateStore + immutable artifacts are the canonical replay surface; adapter behavior must be validated against it.
+
+**Validation**:
+- Cross-adapter test suite: same plan executed on Temporal and Conductor must produce identical state transitions (event log comparison).
+- Test coverage: 10+ golden paths (minimal, parallel, cancel-resume, retry, branching).
+- Acceptance: Zero divergence in final snapshot checksums.
+
+**References**:
+- DVT Product Definition: "engine executes, store is truth"
+- Engine boundary: https://github.com/dunay2/dvt/blob/main/docs/architecture/engine/design_principles.md
+
+### Anchor Decision B: StateStore Indexing & Retention (OPERATIONAL CONTRACT)
+
+**Decision Date**: 2026-02-11
+
+**Hot vs Cold Storage**:
+- **Hot (PostgreSQL)**: Latest status index (runId → latestStatus, updatedAt); 90 days retention; optimized for queries: "show run status", "list active runs".
+- **Cold (S3/GCS)**: Append-only event log; 7 years retention; optimized for compliance + disaster recovery.
+
+**Projector Rebuild Path**:
+- Rebuild mechanism: replay all events from cold storage + recompute snapshots.
+- Time budget: 10 min for 100K events (Phase 1.5 load test target).
+- Triggers: data corruption, schema migration, disaster recovery.
+
+**Retention Enforcement**:
+- Automated archival: events older than 90 days moved to cold storage (daily cron job).
+- Hot storage indexes: runId (primary key), tenantId+createdAt (tenant queries), status+updatedAt (active runs dashboard).
+- Cold storage format: partitioned Parquet files (year/month/day), compressed.
+
+**Query Patterns (Hot)**:
+- "Get run status": SELECT latestStatus FROM runs WHERE runId = ?
+- "List active runs for tenant": SELECT * FROM runs WHERE tenantId = ? AND status IN ('RUNNING', 'PAUSED') ORDER BY updatedAt DESC
+- "Count runs by status": SELECT status, COUNT(*) FROM runs WHERE tenantId = ? GROUP BY status
+
+**Query Patterns (Cold)**:
+- "Audit log for run": SELECT * FROM events WHERE runId = ? ORDER BY timestamp (S3 Select or Athena)
+- "Compliance export": SELECT * FROM events WHERE tenantId = ? AND timestamp BETWEEN ? AND ?
+
+**Constraints**:
+- Single-region deployment (Phase 1); cross-region replication deferred to Phase 4.
+- SSD storage class (PostgreSQL); connection pool ≥50 (avoid saturation at 1000 runs/min).
+- Batched writes where possible (projector buffers 10 events before commit).
+
+**References**:
+- Temporal history limits: https://docs.temporal.io/encyclopedia/temporal-platform-limits
+- OpenTelemetry for traces: https://opentelemetry.io/
+
+---
+
 ## References
 
 - [IWorkflowEngine Contract](../contracts/engine/IWorkflowEngine.v1.md)
@@ -437,3 +580,6 @@ Q4 2026 / Early 2027 (Phase 3)
 - [TemporalAdapter Spec](../adapters/temporal/TemporalAdapter.spec.md)
 - [Observability Guide](../ops/observability.md)
 - [Incident Response Runbook](../ops/runbooks/incident_response.md)
+- [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
+- [Conductor (Netflix/Orkes)](https://conductor.netflix.com/)
+- [OpenTelemetry](https://opentelemetry.io/)

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/dunay2/dvt/discussions
+    about: For questions, ideas, and general discussions
+  - name: 📚 Documentation
+    url: https://github.com/dunay2/dvt/tree/main/docs
+    about: Read the architecture docs and roadmap

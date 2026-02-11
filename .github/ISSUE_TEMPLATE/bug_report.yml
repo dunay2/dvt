@@ -1,0 +1,128 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in the DVT Engine
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please provide detailed information to help us reproduce and fix the issue.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - Engine Core
+        - TypeScript Types
+        - TemporalAdapter
+        - PostgresStateStoreAdapter
+        - Outbox Delivery Worker
+        - Determinism Tooling
+        - Documentation
+        - CI/CD
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical (System unusable, data loss)
+        - High (Major feature broken, no workaround)
+        - Medium (Feature degraded, workaround exists)
+        - Low (Cosmetic, minor inconvenience)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of the bug
+      placeholder: "What went wrong?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: "The engine should..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: "Instead, the engine..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal steps to reproduce the bug
+      placeholder: |
+        1. Configure engine with...
+        2. Submit workflow plan...
+        3. Observe error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: System and version information
+      placeholder: |
+        - DVT Engine version:
+        - Node.js version:
+        - Temporal.io version (if applicable):
+        - PostgreSQL version (if applicable):
+        - OS:
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Any relevant error messages or logs
+      render: shell
+      placeholder: |
+        Paste error logs here...
+
+  - type: checkboxes
+    id: determinism
+    attributes:
+      label: Determinism Impact
+      description: Does this bug affect determinism guarantees?
+      options:
+        - label: This bug produces non-deterministic behavior (different results on replay)
+        - label: This bug causes state corruption
+        - label: This bug affects idempotency guarantees
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Is there a temporary workaround?
+      placeholder: "Temporarily, you can..."
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Screenshots, related issues, or other relevant information
+      placeholder: |
+        - Related issue: #123
+        - Screenshot: [attach]
