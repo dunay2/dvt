@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0](https://github.com/dunay2/dvt/compare/v2.0.1...v2.1.0) (2026-02-11)
+
+
+### ✨ Features
+
+* implement outbox delivery worker with comprehensive tests ([45a7f78](https://github.com/dunay2/dvt/commit/45a7f78b5592c0aae5269648e80aa63c79d21975))
+
+
+### 📝 Documentation
+
+* add comprehensive implementation notes for outbox worker ([1f991be](https://github.com/dunay2/dvt/commit/1f991be88d74b6db2f157df739aaeb4ebfde5706))
+* add comprehensive README and index exports for outbox worker ([d9434fc](https://github.com/dunay2/dvt/commit/d9434fc26f19452f1f5ddaf2ede39fcc83f62b68))
+
+
+### 🐛 Bug Fixes
+
+* address code review feedback ([9c81f2b](https://github.com/dunay2/dvt/commit/9c81f2b08f27569175c444c059bcf082d34a62fa))
+* **outbox:** accurate metrics + ordering ([412dbc3](https://github.com/dunay2/dvt/commit/412dbc39647eb2002438325e67a465f50c450350))
+
 ### [2.0.1](https://github.com/dunay2/dvt/compare/v2.0.0...v2.0.1) (2026-02-11)
 
 ## 2.0.0 (2026-02-11)
