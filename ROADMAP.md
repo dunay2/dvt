@@ -55,9 +55,9 @@ gantt
 | [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples | 🔴 High | Open | #5, #6 | ⚠️ **CRITICAL** |
 | [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline | 🔴 High | Open | #10 | ⚠️ **CRITICAL** |
 | [#3](https://github.com/dunay2/dvt/issues/3) | Mermaid diagrams ExecutionSemantics | 🟡 Medium | Open | - | Parallel |
-| [#13](https://github.com/dunay2/dvt/issues/13) | Security docs (design only) | 🔴 High | Open | - | Parallel |
+| [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High | Open | - | Parallel |
 
-**Why this order?** IDs + naming policies (Glossary) → event envelope fields (RunEventCatalog) → type definitions → engine core (IWorkflowEngine + Temporal Interpreter) → adapter implementations + outbox → contract test fixtures (Golden Paths) → CI validation.
+**Why this order?** IDs + naming policies (Glossary) → event envelope fields (RunEventCatalog) → type definitions → engine core (IWorkflowEngine + Temporal Interpreter) → adapter implementations + outbox → contract test fixtures (Golden Paths) → CI validation. Security docs are parallel (design, not blocking implementation).
 
 ### Deliverables
 
@@ -72,7 +72,7 @@ gantt
 - ⏳ **Golden Paths**: Executable example plans for contract testing (issue #10)
 - ⏳ **CI Contract Testing Pipeline**: GitHub Actions workflow for golden path validation (issue #17)
 - ⏳ **Visual Documentation**: Sequence and state diagrams for critical flows (issue #3)
-- ⏳ **Security Design**: Threat model, RBAC contracts, audit log schema (issue #13, design only)
+- ⏳ **Security Design**: Threat model, authorization contract, audit log schema for compliance (issue #19, design only)
 
 ### Success Criteria
 
@@ -188,12 +188,12 @@ gantt
 ## 📊 Progress Metrics
 
 ### Phase 1: MVP
-- **Progress**: 0/12 issues completed (0%)
+- **Progress**: 0/13 issues completed (0%)
 - **Deadline**: 2026-03-31
 - **Status**: 🟡 On track (7 weeks remaining)
 - **Critical Path**: #8 → #9 → #2 → #14 → #15 → #5,#6 → #16 → #10 → #17 (enforce strict order)
 - **Risk**: Integration testing window = 2 weeks only (Mar 17-31), now includes golden paths AND outbox worker
-- **New issues**: #14-#17 implementation epics added (IWorkflowEngine, Temporal Interpreter, Outbox worker, CI pipeline)
+- **New issues**: #14-#17 implementation epics + #19 security docs (documentación y architecture-critical)
 
 ### Phase 1.5: Hardening
 - **Progress**: 0/3 focus areas completed (0%)
@@ -314,7 +314,13 @@ interface IOutboxStorage {
 - ✅ 3 GitHub issue templates created (Feature request, Bug report, Contract proposal)
 - ✅ 3 GitHub Actions workflows created (contracts.yml, lint.yml, determinism.yml)
 - ✅ CODEOWNERS file configured (auto-assign reviewers by path)
-- ✅ ROADMAP.md updated with all 18 issues and progress metrics
+- ✅ ROADMAP.md updated with all 18+ issues and progress metrics
+
+### 2026-02-11: Security Architecture Documentation
+- ✅ THREAT_MODEL.md created: 5 threat actors, 8 threat scenarios, 4 security boundaries, compliance requirements
+- ✅ IAuthorization.v1.md created: normative contract for API boundary authorization (5 RBAC roles, 5 invariants)
+- ✅ AuditLog.v1.md created: normative audit log schema (append-only, tamper-proof HMAC, 3-tier retention for SOC2/HIPAA/GDPR)
+- ✅ Issue #19 created: Security documentation (design Phase 1, implementation Phase 3-4)
 
 ---
 
