@@ -1,4 +1,4 @@
-name: Contract Tests
+name: Contracts & Determinism
 
 on:
   pull_request:
@@ -8,6 +8,103 @@ on:
   workflow_dispatch:
 
 jobs:
+  validate-json-schemas:
+    name: Validate JSON Schemas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate JSON schemas
+        run: |
+          set -e
+          pnpm install -g ajv@8 ajv-cli
+          shopt -s nullglob
+          files=(docs/architecture/engine/contracts/**/*.schema.json)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No schema files found — skipping"
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            echo "Validating $f"
+            npx ajv compile -s "$f"
+          done
+
+  determinism-checks:
+    name: Determinism Pattern Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run determinism linting
+        run: pnpm lint:determinism
+
+      - name: Check for Date.now()
+        run: |
+          echo "🔍 Scanning for Date.now() in engine workflows..."
+          if grep -r "Date\.now()" engine/ \
+            --exclude-dir=test \
+            --exclude-dir=node_modules \
+            --exclude=OutboxWorker.ts; then
+            echo "❌ Found Date.now() calls (use workflow.now() in Temporal workflows)"
+            exit 1
+          else
+            echo "✅ No Date.now() calls found"
+          fi
+
+      - name: Check for Math.random()
+        run: |
+          echo "🔍 Scanning for Math.random() in engine workflows..."
+          if grep -r "Math\.random()" engine/ \
+            --exclude-dir=test \
+            --exclude-dir=node_modules \
+            --exclude=OutboxWorker.ts; then
+            echo "❌ Found Math.random() calls (use workflow-seeded RNG)"
+            exit 1
+          else
+            echo "✅ No Math.random() calls found"
+          fi
+
+      - name: Check for crypto.randomBytes()
+        run: |
+          echo "🔍 Scanning for crypto.randomBytes() in engine workflows..."
+          if grep -r "crypto\.randomBytes" engine/ \
+            --exclude-dir=test \
+            --exclude-dir=node_modules \
+            --exclude=OutboxWorker.ts; then
+            echo "❌ Found crypto.randomBytes() calls (use deterministic UUID generation)"
+            exit 1
+          else
+            echo "✅ No crypto.randomBytes() calls found"
+          fi
+
   contract-compile:
     name: Compile TypeScript Contracts
     runs-on: ubuntu-latest
@@ -165,7 +262,7 @@ jobs:
           # Check if this is a critical path issue
           if [[ " ${CRITICAL_PATH[@]} " =~ " ${ISSUE} " ]]; then
             echo "✅ Issue #$ISSUE is in critical path"
-            
+
             # TODO: Check if prerequisite issues are closed
             # This requires GitHub CLI or API access
             echo "⚠️ Manual review required: Verify prerequisite issues are closed"
