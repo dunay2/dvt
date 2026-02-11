@@ -59,12 +59,12 @@ The determinism linter enforces the following rules to ensure Temporal workflow 
 
 ### Exclusions
 
-The following directories are excluded from determinism checks as they contain non-workflow code:
+The following patterns are excluded from determinism checks as they contain non-workflow code (defined in `.eslintrc.temporal.json` ignorePatterns):
 
-- `**/test/**/*.ts` - Test files
-- `**/tests/**/*.ts` - Test files
 - `**/*.test.ts` - Test files
 - `**/*.spec.ts` - Test files
+- `**/test/**/*.ts` - Test directories
+- `**/tests/**/*.ts` - Test directories
 - `**/workers/**/*.ts` - Worker implementations (not Temporal workflows)
 - `**/adapters/**/*.ts` - Adapter implementations (not Temporal workflows)
 

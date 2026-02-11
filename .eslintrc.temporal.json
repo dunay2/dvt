@@ -17,6 +17,14 @@
     "node": true,
     "es2022": true
   },
+  "ignorePatterns": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/test/**/*.ts",
+    "**/tests/**/*.ts",
+    "**/workers/**/*.ts",
+    "**/adapters/**/*.ts"
+  ],
   "rules": {
     "no-restricted-globals": ["error",
       {
@@ -64,23 +72,6 @@
         "message": "new Date() without arguments is non-deterministic. Use workflow.now() instead"
       }
     ]
-  },
-  "overrides": [
-    {
-      "files": ["**/*.test.ts", "**/*.spec.ts", "**/test/**/*.ts", "**/tests/**/*.ts"],
-      "rules": {
-        "no-restricted-globals": "off",
-        "no-restricted-properties": "off",
-        "no-restricted-syntax": "off"
-      }
-    },
-    {
-      "files": ["**/workers/**/*.ts", "**/adapters/**/*.ts"],
-      "rules": {
-        "no-restricted-globals": "off",
-        "no-restricted-properties": "off",
-        "no-restricted-syntax": "off"
-      }
-    }
-  ]
+  }
 }
+
