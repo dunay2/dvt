@@ -67,8 +67,8 @@ gantt
 - ⏳ **IWorkflowEngine + SnapshotProjector**: Core engine orchestration and event sourcing (issue #14)
 - ⏳ **Temporal Interpreter Workflow**: DAG walker and activity dispatch (issue #15)
 - ⏳ **TemporalAdapter**: Integration with Temporal.io for distributed execution (issue #5)
-- ⏳ **PostgresStateStoreAdapter**: Postgres implementation with transactions, outbox, and projections (issue #6)
-- ⏳ **Outbox Delivery Worker**: At-least-once event delivery to external systems (issue #16)
+- ⏳ **PostgresStateStoreAdapter**: Postgres implementation with transactions, outbox storage, and projections (issue #6)
+- ⏳ **Outbox Delivery Worker**: At-least-once event delivery (adapter-agnostic interface, Postgres polling in outbox-semantics.md) (issue #16)
 - ⏳ **Golden Paths**: Executable example plans for contract testing (issue #10)
 - ⏳ **CI Contract Testing Pipeline**: GitHub Actions workflow for golden path validation (issue #17)
 - ⏳ **Visual Documentation**: Sequence and state diagrams for critical flows (issue #3)
@@ -120,14 +120,15 @@ gantt
 
 **Load Testing** (tooling: [k6](https://k6.io/docs/))
 - **Target**: 500 events/sec sustained (4K runs/hour @ 8 steps/run, 2 events/step average)
-- **Metrics**: DB write p99 < 10ms, projection delay p99 < 1s, zero dropped events
-- **Chaos**: DB failover, network partition, worker crash (recovery < 30s)
-- **Environment**: 4-core DB instance, 16GB RAM, SSD, connection pool = 50
+- **Metrics**: State write latency p99 < 10ms, projection delay p99 < 1s, zero dropped events
+- **Chaos**: StateStore failover, network partition, worker crash (recovery < 30s)
+- **Environment**: 4-core instance, 16GB RAM, SSD, connection pool configured per adapter
+- **Adapter-specific details**: See individual adapter documentation (adapters/postgres/load-testing.md, etc.)
 
 **Operational Correctness**
 - **Idempotency torture**: 1M duplicate events (out-of-order, retries) → zero state corruption
-- **Projector rebuild**: 100K events → rebuild < 10 min (parallelism: partition by runId, 8 workers)
-- **Backpressure**: projection lag > 100 events → throttle API writes (circuit breaker)
+- **Projector rebuild**: State projector replays 100K events → consistent snapshot (timing per adapter: see adapters/postgres/projector-rebuild.md)
+- **Backpressure**: projection delay > 5s → trigger BACKPRESSURE_ON signal (no circuit breaker, consumer-driven)
 
 **Security Baseline**
 - **Authn/z**: API boundary enforcement (even if RBAC stubbed)
@@ -136,13 +137,14 @@ gantt
 
 ### Success Criteria
 
-- [ ] Load test: 500 events/sec sustained for 4 hours → DB write p99 < 10ms, projection p99 < 1s
-- [ ] Chaos: DB failover during load → recovery < 30s, zero data loss
+- [ ] Load test: 500 events/sec sustained for 4 hours → latency p99 < 10ms, projection p99 < 1s
+- [ ] Chaos: StateStore failover during load → recovery < 30s, zero data loss
 - [ ] Idempotency: 1M duplicate events → zero state corruption (hash compare)
-- [ ] Projector rebuild: 100K events → < 10 min (4-core DB, 8 workers, documented)
-- [ ] Backpressure: projection lag > 100 events → API throttles correctly (circuit breaker)
+- [ ] Projector rebuild: 100K events → consistent snapshot (timing per adapter documentation)
+- [ ] Backpressure: projection delay > 5s → BACKPRESSURE_ON signal emitted (consumable by external systems)
 - [ ] Security: penetration test passed, PII scan clean (zero credentials in logs)
 - [ ] Operational readiness: 3 game-days completed → MTTR p50 < 5 min
+- [ ] Adapter performance: Meet timing targets for chosen adapter (see adapters/*/load-testing.md)
 
 ---
 
@@ -237,53 +239,58 @@ gantt
 
 ## 🎯 Anchor Decisions
 
-### Anchor Decision: Outbox Semantics (OPERATIONAL CONTRACT)
+### Anchor Decision: Outbox Semantics (CORE - ADAPTER-AGNOSTIC)
 
 **Decision Date**: 2026-02-11
 
-**Guarantee**: Outbox is the **only** way the engine emits events to external consumers (UI, analytics, alerts).
+**Core Principle**: Engine emits all external events via Outbox (no direct side effects). This is an **architectural invariant**, not an implementation detail.
 
 **Delivery Model**: At-least-once (consumers must handle duplicates).
 
-**Idempotency Key Enforcement**:
-- Engine writes: `idempotencyKey = eventType + runId + stepId + attemptId`
-- Consumer responsibility: deduplicate using idempotency key (e.g., upsert in consumer DB)
-- Replay safety: replaying events from outbox produces identical consumer state
-
-**Backpressure Rule**:
-- If projection lag > 100 events (or > 5s delay): trigger circuit breaker
-- Action: API returns 503 (Service Unavailable), retry-after header = 10s
-- Recovery: when lag < 50 events, circuit closes
-
-**Outbox Table Schema** (Postgres):
-```sql
-CREATE TABLE outbox_events (
-  event_id UUID PRIMARY KEY,
-  run_id UUID NOT NULL,
-  event_type VARCHAR(50) NOT NULL,
-  idempotency_key VARCHAR(255) UNIQUE NOT NULL,
-  payload JSONB NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  delivered_at TIMESTAMPTZ,
-  INDEX idx_undelivered (delivered_at) WHERE delivered_at IS NULL
-);
+**Idempotency Key (Agnóstic)**: 
 ```
+idempotencyKey = tenantId + contractVersion + eventType + runId + stepId + attemptId
+```
+- **Consumer responsibility**: Deduplicate using idempotency key (e.g., upsert by key in consumer DB)
+- **Replay safety**: Replaying events from outbox produces identical consumer state
 
-**Delivery Worker**:
-- Poll undelivered events (delivered_at IS NULL) every 100ms
-- Batch delivery (up to 100 events/batch)
-- Mark delivered_at on success
-- Retry forever with exponential backoff (max 30s)
+**Backpressure Signal (Agnóstic)**:
+- **Trigger condition**: Projection delay p99 > 5 seconds (or adapter-defined threshold)
+- **Signal**: Engine emits `BACKPRESSURE_ON` (auditable, not circuit breaker)
+- **Recovery**: When delay < 2 seconds, emit `BACKPRESSURE_OFF`
+- **Consumer action**: Pause consuming OR reduce request rate (adapter-specific implementation)
 
 **Consumer Contract**:
-- Consumers receive events via EventBus (Kafka/RabbitMQ/etc.)
-- Must implement idempotent handling (upsert by idempotency_key)
+- Consumers receive events via EventBus (Kafka/RabbitMQ/etc. - adapter choice)
+- **MUST** implement idempotent handling (upsert by idempotency_key)
+- **MUST** tolerate duplicates, out-of-order delivery, and retries
 - UI polling pattern: query StateStore latest-status index (not outbox directly)
+
+**Outbox Storage Interface** (Abstract - Implemented by Adapter):
+```typescript
+// All outbox implementations must support:
+interface IOutboxStorage {
+  appendOutbox(event: OutboxEvent): Promise<void>;
+  markDelivered(eventId: string): Promise<void>;
+  pullUndelivered(limit: number): Promise<OutboxEvent[]>;
+}
+```
+
+| Operation | Guarantee |
+|-----------|-----------|
+| `appendOutbox(event)` | Transactional with state change (consistency) |
+| `markDelivered(eventId)` | Idempotent (can safely retry) |
+| `pullUndelivered(limit)` | Consistent read (no duplicates within batch) |
+
+**Adapter Responsibility**:
+- **PostgreSQL adapter**: DDL, indices, polling frequency (100ms), batch size (100 events), locks, etc.
+  - See: [adapters/postgres/outbox-semantics.md](adapters/postgres/outbox-semantics.md)
+- **Other adapters** (future): Each defines storage, polling, delivery semantics **within the above constraints**
 
 **References**:
 - [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html)
 - [engine-phases.md Anchor Decision B](docs/architecture/engine/roadmap/engine-phases.md) - StateStore retention
-- Product Definition: "StateStore is primary truth, engine executes"
+- Product Definition: "StateStore is primary truth, engine executes via outbox"
 
 ---
 
