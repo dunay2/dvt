@@ -1,0 +1,86 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "env": {
+    "node": true,
+    "es2022": true
+  },
+  "rules": {
+    "no-restricted-globals": ["error",
+      {
+        "name": "Date",
+        "message": "Use workflow.now() instead of Date constructor in Temporal workflows for determinism"
+      },
+      {
+        "name": "setTimeout",
+        "message": "Use workflow.sleep() instead of setTimeout in Temporal workflows"
+      },
+      {
+        "name": "setInterval",
+        "message": "setInterval is not allowed in Temporal workflows (non-deterministic)"
+      },
+      {
+        "name": "setImmediate",
+        "message": "setImmediate is not allowed in Temporal workflows (non-deterministic)"
+      }
+    ],
+    "no-restricted-properties": ["error",
+      {
+        "object": "Math",
+        "property": "random",
+        "message": "Math.random() is non-deterministic. Use workflow-seeded random number generation instead"
+      },
+      {
+        "object": "Date",
+        "property": "now",
+        "message": "Date.now() is non-deterministic. Use workflow.now() instead"
+      },
+      {
+        "object": "crypto",
+        "property": "randomBytes",
+        "message": "crypto.randomBytes() is non-deterministic. Use workflow-seeded UUID generation instead"
+      },
+      {
+        "object": "crypto",
+        "property": "randomUUID",
+        "message": "crypto.randomUUID() is non-deterministic. Use workflow.uuid4() or workflow-seeded UUID generation instead"
+      }
+    ],
+    "no-restricted-syntax": ["error",
+      {
+        "selector": "NewExpression[callee.name='Date'][arguments.length=0]",
+        "message": "new Date() without arguments is non-deterministic. Use workflow.now() instead"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts", "**/test/**/*.ts", "**/tests/**/*.ts"],
+      "rules": {
+        "no-restricted-globals": "off",
+        "no-restricted-properties": "off",
+        "no-restricted-syntax": "off"
+      }
+    },
+    {
+      "files": ["**/workers/**/*.ts", "**/adapters/**/*.ts"],
+      "rules": {
+        "no-restricted-globals": "off",
+        "no-restricted-properties": "off",
+        "no-restricted-syntax": "off"
+      }
+    }
+  ]
+}

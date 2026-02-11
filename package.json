@@ -8,7 +8,7 @@
     "lint": "eslint 'engine/**/*.ts' --max-warnings 0",
     "lint:fix": "eslint 'engine/**/*.ts' --fix",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.git\"",
-    "lint:determinism": "npm run lint -- --rule 'no-restricted-globals: error' --rule 'no-restricted-properties: error'",
+    "lint:determinism": "eslint 'engine/src/**/*.ts' --config .eslintrc.temporal.json --max-warnings 0",
     "format": "prettier --write '**/*.{ts,js,json,md,yml,yaml}'",
     "format:check": "prettier --check '**/*.{ts,js,json,md,yml,yaml}'",
     "type-check": "tsc --noEmit",
