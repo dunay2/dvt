@@ -14,7 +14,7 @@
  * - Searchable: Supports querying projected state by workflow/step/status
  */
 
-import { TenantId, RunId, StepId, EventId } from './../../contracts/types'
+import { TenantId, RunId, StepId, EventId } from './../../contracts/types';
 
 /**
  * Projected state resulting from event processing.
@@ -25,25 +25,25 @@ import { TenantId, RunId, StepId, EventId } from './../../contracts/types'
  * - AuditLog: Immutable record of all mutations
  */
 export interface ProjectedState {
-  tenantId: TenantId
-  runId: RunId
-  eventId: EventId
-  projectedAt: number // Timestamp when projection occurred
-  data: Record<string, unknown> // Adapter-specific materialized state
+  tenantId: TenantId;
+  runId: RunId;
+  eventId: EventId;
+  projectedAt: number; // Timestamp when projection occurred
+  data: Record<string, unknown>; // Adapter-specific materialized state
 }
 
 /**
  * Event that needs to be projected into materialized state.
  */
 export interface ProjectionEvent {
-  eventId: EventId
-  tenantId: TenantId
-  runId: RunId
-  stepId?: StepId
-  eventType: string
-  eventData: Record<string, unknown>
-  sequence: number // Global event order for causality
-  occurredAt: number
+  eventId: EventId;
+  tenantId: TenantId;
+  runId: RunId;
+  stepId?: StepId;
+  eventType: string;
+  eventData: Record<string, unknown>;
+  sequence: number; // Global event order for causality
+  occurredAt: number;
 }
 
 /**
@@ -55,12 +55,12 @@ export interface ProjectionEvent {
  * - Custom fields in projectedState.data
  */
 export interface ProjectionQuery {
-  tenantId: TenantId
-  runId?: RunId
-  stepId?: StepId
-  filter?: Record<string, unknown>
-  limit?: number
-  offset?: number
+  tenantId: TenantId;
+  runId?: RunId;
+  stepId?: StepId;
+  filter?: Record<string, unknown>;
+  limit?: number;
+  offset?: number;
 }
 
 /**
@@ -94,7 +94,7 @@ export interface IProjectorAdapter {
    *   ...
    * })
    */
-  projectEvent(event: ProjectionEvent): Promise<ProjectedState>
+  projectEvent(event: ProjectionEvent): Promise<ProjectedState>;
 
   /**
    * Project multiple events in batch (efficiently).
@@ -107,7 +107,7 @@ export interface IProjectorAdapter {
    * - Must apply all or none (atomicity per batch)
    * - More efficient than individual projectEvent calls
    */
-  projectBatch(events: ProjectionEvent[]): Promise<ProjectedState[]>
+  projectBatch(events: ProjectionEvent[]): Promise<ProjectedState[]>;
 
   /**
    * Query projected state.
@@ -128,7 +128,7 @@ export interface IProjectorAdapter {
    *   limit: 100
    * })
    */
-  queryProjectedState(query: ProjectionQuery): Promise<ProjectedState[]>
+  queryProjectedState(query: ProjectionQuery): Promise<ProjectedState[]>;
 
   /**
    * Get current projected state for a single workflow run.
@@ -142,7 +142,7 @@ export interface IProjectorAdapter {
    * - Must return undefined if workflow run not found
    * - Should be fast (cached if possible)
    */
-  getWorkflowStateSnapshot(tenantId: TenantId, runId: RunId): Promise<ProjectedState | undefined>
+  getWorkflowStateSnapshot(tenantId: TenantId, runId: RunId): Promise<ProjectedState | undefined>;
 
   /**
    * Rebuild projected state from event log (e.g., after corruption).
@@ -161,7 +161,7 @@ export interface IProjectorAdapter {
     tenantId: TenantId,
     runId: RunId,
     events: ProjectionEvent[]
-  ): Promise<ProjectedState>
+  ): Promise<ProjectedState>;
 
   /**
    * Clear projected state (e.g., for test cleanup or archival).
@@ -174,7 +174,7 @@ export interface IProjectorAdapter {
    * - Must be idempotent (no error if doesn't exist)
    * - Should not delete event log itself (only projections)
    */
-  clearProjection(tenantId: TenantId, runId: RunId): Promise<void>
+  clearProjection(tenantId: TenantId, runId: RunId): Promise<void>;
 
   /**
    * Health check for projector availability.
@@ -186,7 +186,7 @@ export interface IProjectorAdapter {
    * - Should verify write/read capability
    * - Message should explain any issues
    */
-  health(): Promise<{ healthy: boolean; message?: string }>
+  health(): Promise<{ healthy: boolean; message?: string }>;
 
   /**
    * Graceful shutdown.
@@ -196,7 +196,7 @@ export interface IProjectorAdapter {
    * - Must release connections/resources
    * - Should timeout after reasonable duration
    */
-  close(): Promise<void>
+  close(): Promise<void>;
 }
 
 /**

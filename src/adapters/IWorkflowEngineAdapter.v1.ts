@@ -17,53 +17,61 @@
  * - Fairness: No single workflow monopolizes execution
  */
 
-import { TenantId, PlanId, RunId, StepId, IdempotencyKey, RunState, StepState } from './../../contracts/types'
+import {
+  TenantId,
+  PlanId,
+  RunId,
+  StepId,
+  IdempotencyKey,
+  RunState,
+  StepState,
+} from './../../contracts/types';
 
 /**
  * Request to execute a workflow step.
  */
 export interface ExecuteStepRequest {
-  tenantId: TenantId
-  planId: PlanId
-  runId: RunId
-  stepId: StepId
-  stepType: string
-  stepData: Record<string, unknown>
-  idempotencyKey?: IdempotencyKey // For idempotency guarantee
-  timeout?: number // Max execution time in milliseconds
+  tenantId: TenantId;
+  planId: PlanId;
+  runId: RunId;
+  stepId: StepId;
+  stepType: string;
+  stepData: Record<string, unknown>;
+  idempotencyKey?: IdempotencyKey; // For idempotency guarantee
+  timeout?: number; // Max execution time in milliseconds
 }
 
 /**
  * Result after step execution.
  */
 export interface ExecuteStepResult {
-  runId: RunId
-  stepId: StepId
-  status: StepState
-  output?: Record<string, unknown>
+  runId: RunId;
+  stepId: StepId;
+  status: StepState;
+  output?: Record<string, unknown>;
   error?: {
-    code: string
-    message: string
-    retryable: boolean
-  }
-  duration: number
-  executedAt: number
+    code: string;
+    message: string;
+    retryable: boolean;
+  };
+  duration: number;
+  executedAt: number;
 }
 
 /**
  * Workflow run state for inspection/recovery.
  */
 export interface WorkflowRunState {
-  tenantId: TenantId
-  planId: PlanId
-  runId: RunId
-  status: RunState
-  currentStep?: StepId
-  completedSteps: Map<StepId, StepState>
-  failedSteps: Map<StepId, string> // stepId -> error reason
-  startedAt: number
-  completedAt?: number
-  totalDuration?: number
+  tenantId: TenantId;
+  planId: PlanId;
+  runId: RunId;
+  status: RunState;
+  currentStep?: StepId;
+  completedSteps: Map<StepId, StepState>;
+  failedSteps: Map<StepId, string>; // stepId -> error reason
+  startedAt: number;
+  completedAt?: number;
+  totalDuration?: number;
 }
 
 /**
@@ -96,7 +104,7 @@ export interface IWorkflowEngineAdapter {
     tenantId: TenantId,
     planId: PlanId,
     planData: Record<string, unknown>
-  ): Promise<WorkflowRunState>
+  ): Promise<WorkflowRunState>;
 
   /**
    * Start execution of a workflow run.
@@ -111,7 +119,7 @@ export interface IWorkflowEngineAdapter {
    * - Records start event
    * - Routes first step for execution
    */
-  startRun(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState>
+  startRun(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState>;
 
   /**
    * Execute a single workflow step.
@@ -136,7 +144,7 @@ export interface IWorkflowEngineAdapter {
    *   stepData: { method: 'GET', url: 'https://...' }
    * })
    */
-  executeStep(request: ExecuteStepRequest): Promise<ExecuteStepResult>
+  executeStep(request: ExecuteStepRequest): Promise<ExecuteStepResult>;
 
   /**
    * Execute multiple steps (batch).
@@ -151,7 +159,7 @@ export interface IWorkflowEngineAdapter {
    * - Coordinate dependencies (if step A depends on B, wait for B)
    * - Apply same idempotency/durability as individual executeStep
    */
-  executeStepBatch(requests: ExecuteStepRequest[]): Promise<ExecuteStepResult[]>
+  executeStepBatch(requests: ExecuteStepRequest[]): Promise<ExecuteStepResult[]>;
 
   /**
    * Pause a running workflow.
@@ -170,7 +178,7 @@ export interface IWorkflowEngineAdapter {
    * Note: Conductor has limitation - cannot cancel in-flight steps,
    *       only prevent new ones. Same here.
    */
-  pauseRun(tenantId: TenantId, runId: RunId, reason: string): Promise<WorkflowRunState>
+  pauseRun(tenantId: TenantId, runId: RunId, reason: string): Promise<WorkflowRunState>;
 
   /**
    * Resume a paused workflow.
@@ -184,7 +192,7 @@ export interface IWorkflowEngineAdapter {
    * - Routes next pending step
    * - Records resume event
    */
-  resumeRun(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState>
+  resumeRun(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState>;
 
   /**
    * Terminate a workflow run (final failure).
@@ -200,7 +208,7 @@ export interface IWorkflowEngineAdapter {
    * - Records termination event
    * - Status should be CANCELLED if user requested, FAILED if error
    */
-  terminateRun(tenantId: TenantId, runId: RunId, reason: string): Promise<WorkflowRunState>
+  terminateRun(tenantId: TenantId, runId: RunId, reason: string): Promise<WorkflowRunState>;
 
   /**
    * Get current run state.
@@ -215,7 +223,7 @@ export interface IWorkflowEngineAdapter {
    * - Returns undefined if run not found
    * - Should be fast (cached allowed)
    */
-  getRunState(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState | undefined>
+  getRunState(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState | undefined>;
 
   /**
    * Get run state for recovery/replay.
@@ -234,16 +242,19 @@ export interface IWorkflowEngineAdapter {
   getRunStateWithHistory(
     tenantId: TenantId,
     runId: RunId
-  ): Promise<{
-    state: WorkflowRunState
-    events: Array<{
-      eventId: string
-      type: string
-      data: Record<string, unknown>
-      sequence: number
-      timestamp: number
-    }>
-  } | undefined>
+  ): Promise<
+    | {
+        state: WorkflowRunState;
+        events: Array<{
+          eventId: string;
+          type: string;
+          data: Record<string, unknown>;
+          sequence: number;
+          timestamp: number;
+        }>;
+      }
+    | undefined
+  >;
 
   /**
    * Replay a workflow from events for determinism verification.
@@ -258,7 +269,7 @@ export interface IWorkflowEngineAdapter {
    * - No external calls allowed (pure determinism)
    * - Used for correctness verification
    */
-  replayRun(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState>
+  replayRun(tenantId: TenantId, runId: RunId): Promise<WorkflowRunState>;
 
   /**
    * Archive a completed workflow run.
@@ -272,7 +283,7 @@ export interface IWorkflowEngineAdapter {
    * - Moves from hot to cold storage
    * - Event log still available for audit
    */
-  archiveRun(tenantId: TenantId, runId: RunId): Promise<void>
+  archiveRun(tenantId: TenantId, runId: RunId): Promise<void>;
 
   /**
    * Health check for engine availability.
@@ -285,10 +296,10 @@ export interface IWorkflowEngineAdapter {
    * - Components object details each adapter health
    */
   health(): Promise<{
-    healthy: boolean
-    message?: string
-    components: Record<string, { healthy: boolean; message?: string }>
-  }>
+    healthy: boolean;
+    message?: string;
+    components: Record<string, { healthy: boolean; message?: string }>;
+  }>;
 
   /**
    * Graceful shutdown.
@@ -298,7 +309,7 @@ export interface IWorkflowEngineAdapter {
    * - Must flush outbox
    * - Timeout after reasonable duration (e.g., 30 seconds)
    */
-  close(): Promise<void>
+  close(): Promise<void>;
 }
 
 /**
