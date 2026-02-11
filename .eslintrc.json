@@ -97,6 +97,9 @@
     },
     {
       "files": ["**/*.test.ts", "**/*.spec.ts"],
+      "parserOptions": {
+        "project": "./tsconfig.test.json"
+      },
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
         "no-restricted-globals": "off"
