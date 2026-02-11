@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.1.2](https://github.com/dunay2/dvt/compare/v2.1.1...v2.1.2) (2026-02-11)
+
+
+### 📝 Documentation
+
+* fix markdown lint errors in golden paths ([3a551f0](https://github.com/dunay2/dvt/commit/3a551f01ace7632dbc8a96c7826accbe695e9bf1))
+* implement golden paths examples with executable plans ([e6a8a91](https://github.com/dunay2/dvt/commit/e6a8a9137e04d74df88391cf0f803d7ee824af2f))
+
+
+### 🐛 Bug Fixes
+
+* add .eslintignore to exclude test files from type-aware linting ([33b3c23](https://github.com/dunay2/dvt/commit/33b3c232a6f9e1564eeccd445a191cfe5782c01c))
+
+
+### 🏗️ Build System
+
+* add pnpm-lock.yaml for CI reproducible builds ([8c99ba8](https://github.com/dunay2/dvt/commit/8c99ba8e219bedf0b87b36d98a313e4fb0879f27))
+
 ### [2.1.1](https://github.com/dunay2/dvt/compare/v2.1.0...v2.1.1) (2026-02-11)
 
 ## [2.1.0](https://github.com/dunay2/dvt/compare/v2.0.1...v2.1.0) (2026-02-11)

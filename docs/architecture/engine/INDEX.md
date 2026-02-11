@@ -146,10 +146,14 @@ docs/architecture/engine/
 
 **For plan authors**:
 
-1. Read [dev/determinism-tooling.md](dev/determinism-tooling.md) (writing deterministic plans)
-2. Read [contracts/capabilities/README.md](contracts/capabilities/README.md) (capability validation)
-3. Author plan in plan schema v1.1
-4. Run determinism CI gate (pre-commit)
+1. **Explore [Golden Paths Examples](../../../examples/)** (executable plan examples - start here!)
+   - [plan-minimal](../../../examples/plan-minimal/) - "Hello World" for the engine
+   - [plan-parallel](../../../examples/plan-parallel/) - Parallel execution and fan-in pattern
+   - [plan-cancel-and-resume](../../../examples/plan-cancel-and-resume/) - Pause/resume signal handling
+2. Read [dev/determinism-tooling.md](dev/determinism-tooling.md) (writing deterministic plans)
+3. Read [contracts/capabilities/README.md](contracts/capabilities/README.md) (capability validation)
+4. Author plan in plan schema v1.1
+5. Run determinism CI gate (pre-commit)
 
 **For SREs**:
 

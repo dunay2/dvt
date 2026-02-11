@@ -2,7 +2,7 @@
 node_modules/
 /.pnp
 .pnp.js
-pnpm-lock.yaml
+# pnpm-lock.yaml - Required for CI reproducible builds
 package-lock.json
 yarn.lock
 
