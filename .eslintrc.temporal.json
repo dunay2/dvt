@@ -6,13 +6,8 @@
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
+  "plugins": ["@typescript-eslint"],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   "env": {
     "node": true,
     "es2022": true
@@ -26,7 +21,8 @@
     "**/adapters/**/*.ts"
   ],
   "rules": {
-    "no-restricted-globals": ["error",
+    "no-restricted-globals": [
+      "error",
       {
         "name": "Date",
         "message": "Use workflow.now() instead of Date constructor in Temporal workflows for determinism"
@@ -44,7 +40,8 @@
         "message": "setImmediate is not allowed in Temporal workflows (non-deterministic)"
       }
     ],
-    "no-restricted-properties": ["error",
+    "no-restricted-properties": [
+      "error",
       {
         "object": "Math",
         "property": "random",
@@ -66,7 +63,8 @@
         "message": "crypto.randomUUID() is non-deterministic. Use workflow.uuid4() or workflow-seeded UUID generation instead"
       }
     ],
-    "no-restricted-syntax": ["error",
+    "no-restricted-syntax": [
+      "error",
       {
         "selector": "NewExpression[callee.name='Date'][arguments.length=0]",
         "message": "new Date() without arguments is non-deterministic. Use workflow.now() instead"
