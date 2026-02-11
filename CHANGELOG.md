@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0](https://github.com/dunay2/dvt/compare/v2.1.2...v2.2.0) (2026-02-11)
+
+
+### ✨ Features
+
+* implement TypeScript types for engine contracts ([090be4e](https://github.com/dunay2/dvt/commit/090be4e9cd97f50b76827f09db71ba58c3534ae0))
+
+
+### 📝 Documentation
+
+* improve JSDoc clarity in type definitions ([4029760](https://github.com/dunay2/dvt/commit/402976025a7d803c856353821df5ba0062ab6c05))
+
+
+### 🐛 Bug Fixes
+
+* align spacing in .golden/README.md with main branch ([0e68a10](https://github.com/dunay2/dvt/commit/0e68a1047f298ad1f0014b17e2370f58c3202f6f))
+* apply Prettier formatting to all files ([97b0e5d](https://github.com/dunay2/dvt/commit/97b0e5d56d51ed963005981bec51aacfb6cb9821))
+* resolve merge conflict in .golden/README.md ([db41a99](https://github.com/dunay2/dvt/commit/db41a990bc173c8ed57be095300fb81ee1619bc4))
+* update pnpm version to 9 in all workflow files ([04de73b](https://github.com/dunay2/dvt/commit/04de73bf3ac4b4571c14ae9916080b58845709eb))
+* use relative paths in JSDoc references ([e5c2996](https://github.com/dunay2/dvt/commit/e5c29960d05716ce5261782122d8e3ecc00d3118))
+
 ### [2.1.2](https://github.com/dunay2/dvt/compare/v2.1.1...v2.1.2) (2026-02-11)
 
 
