@@ -1,13 +1,13 @@
 name: Contract Proposal
 description: Propose changes to engine contracts, interfaces, or types
-title: "[Contract]: "
-labels: ["types", "priority: high"]
+title: '[Contract]: '
+labels: ['types', 'priority: high']
 body:
   - type: markdown
     attributes:
       value: |
         ## ⚠️ Contract Change Process
-        
+
         Contract changes are **high-impact** and require careful review. Please ensure:
         1. You've read the GLOSSARY.v1.md and RunEventCatalog.v1.md
         2. You've validated against anchor decisions (see engine-phases.md)
@@ -49,7 +49,7 @@ body:
         Current contract has limitation:
         - Problem 1: ...
         - Problem 2: ...
-        
+
         This blocks: [use case]
     validations:
       required: true
@@ -92,7 +92,7 @@ body:
         - TemporalAdapter: needs update to...
         - PostgresStateStoreAdapter: needs migration...
         - Golden Paths: 2 fixtures need update
-        
+
         **Migration path**:
         1. Step 1: ...
         2. Step 2: ...
@@ -105,11 +105,11 @@ body:
       label: Anchor Decision Compliance
       description: Have you validated against anchor decisions?
       options:
-        - label: "Complies with Anchor Decision A: Conductor Determinism Parity"
+        - label: 'Complies with Anchor Decision A: Conductor Determinism Parity'
           required: true
-        - label: "Complies with Anchor Decision B: StateStore Indexing & Retention"
+        - label: 'Complies with Anchor Decision B: StateStore Indexing & Retention'
           required: true
-        - label: "Complies with Outbox Semantics anchor decision"
+        - label: 'Complies with Outbox Semantics anchor decision'
           required: true
 
   - type: checkboxes

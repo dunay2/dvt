@@ -26,12 +26,12 @@ The engine is documented as **modular, versioned contracts** (not a monolith):
 
 ### Quick Links
 
-| Role | Start Here | Next Steps |
-|------|-----------|-----------|
+| Role            | Start Here                                                                               | Next Steps                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | SDK implementer | [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) | [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md) |
-| Plan author | [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md) | [capabilities](docs/architecture/engine/contracts/capabilities/) |
-| SRE / On-call | [observability.md](docs/architecture/engine/ops/observability.md) | [incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md) |
-| Executive / PM | [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md) | [observability.md](docs/architecture/engine/ops/observability.md) (success metrics) |
+| Plan author     | [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)            | [capabilities](docs/architecture/engine/contracts/capabilities/)                              |
+| SRE / On-call   | [observability.md](docs/architecture/engine/ops/observability.md)                        | [incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md)            |
+| Executive / PM  | [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md)                    | [observability.md](docs/architecture/engine/ops/observability.md) (success metrics)           |
 
 ---
 
@@ -43,6 +43,7 @@ The engine is documented as **modular, versioned contracts** (not a monolith):
 - npm 9+
 
 ### Installation, determinism checks)
+
 - Versioning policy (MAJOR/MINOR/PATCH bumps, deprecation process)
 - Git workflow and branch protection rules
 
@@ -89,23 +90,28 @@ ISC
 ## 🙏 Acknowledgments
 
 Built with best practices from Temporal, Conductor, and event-sourced systems.
-npm run lint:md           # Lint Markdown files
+npm run lint:md # Lint Markdown files
 
 # Formatting
-npm run format            # Format all files with Prettier
-npm run format:check      # Check if files are formatted
+
+npm run format # Format all files with Prettier
+npm run format:check # Check if files are formatted
 
 # Testing
-npm test                  # Run all tests
-npm run test:watch        # Run tests in watch mode
-npm run test:coverage     # Generate coverage report
+
+npm test # Run all tests
+npm run test:watch # Run tests in watch mode
+npm run test:coverage # Generate coverage report
 
 # Type Checking
-npm run type-check        # Run TypeScript compiler
+
+npm run type-check # Run TypeScript compiler
 
 # Build
-npm run build             # Build the project
-```
+
+npm run build # Build the project
+
+````
 
 ### Code Quality Standards
 
@@ -131,7 +137,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for semantic
 feat(engine): add new feature
 fix(temporal): correct bug
 docs(architecture): update documentation
-```
+````
 
 See [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for full guidelines.
 

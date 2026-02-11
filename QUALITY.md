@@ -13,6 +13,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 ### 1. Code Quality & Linting
 
 #### ESLint
+
 - **Config**: [.eslintrc.json](.eslintrc.json)
 - **Purpose**: TypeScript code quality and determinism enforcement
 - **Key Rules**:
@@ -24,6 +25,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 - **Run**: `npm run lint`
 
 #### Prettier
+
 - **Config**: [.prettierrc.json](.prettierrc.json)
 - **Purpose**: Consistent code formatting
 - **Features**:
@@ -33,6 +35,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 - **Run**: `npm run format`
 
 #### Markdownlint
+
 - **Config**: [.markdownlint.json](.markdownlint.json)
 - **Purpose**: Documentation quality
 - **Run**: `npm run lint:md`
@@ -40,13 +43,14 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 ### 2. Testing
 
 #### Jest
+
 - **Config**: [jest.config.js](jest.config.js)
 - **Coverage Requirements**: 80%+ (lines, statements, functions, branches)
 - **Features**:
   - TypeScript support via ts-jest
   - Mock Temporal SDK for determinism tests
   - Coverage reports (HTML, LCOV, JSON)
-- **Run**: 
+- **Run**:
   - `npm test` - Run all tests
   - `npm run test:coverage` - With coverage
   - `npm run test:watch` - Watch mode
@@ -54,6 +58,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 ### 3. Type Safety
 
 #### TypeScript
+
 - **Config**: [tsconfig.json](tsconfig.json)
 - **Settings**:
   - Strict mode enabled
@@ -64,15 +69,18 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 ### 4. Git Workflow
 
 #### Husky (Git Hooks)
+
 - **Pre-commit**: Runs lint-staged (ESLint + Prettier)
 - **Commit-msg**: Validates conventional commit format
 - **Config**: [.husky/](.husky/)
 
 #### Lint-Staged
+
 - **Auto-fixes** TypeScript and formats files before commit
 - **Config**: [package.json](package.json) `lint-staged` section
 
 #### Commitlint
+
 - **Config**: [commitlint.config.js](commitlint.config.js)
 - **Enforces**: Conventional Commits format
 - **Valid types**: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
@@ -80,6 +88,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 ### 5. Versioning & Releases
 
 #### Standard-Version
+
 - **Config**: [.versionrc.json](.versionrc.json)
 - **Features**:
   - Automated semantic versioning
@@ -94,6 +103,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 ### 6. Dependency Management
 
 #### Dependabot
+
 - **Config**: [.github/dependabot.yml](.github/dependabot.yml)
 - **Features**:
   - Weekly automated dependency updates
@@ -107,15 +117,15 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 ### Workflows
 
-| Workflow | Purpose | Triggers | Key Checks |
-|----------|---------|----------|------------|
-| [test.yml](.github/workflows/test.yml) | Run test suite | PR, push to main | Jest tests, coverage (Node 18 & 20) |
-| [code-quality.yml](.github/workflows/code-quality.yml) | Code quality checks | PR, push to main | ESLint, Prettier, TypeScript, security audit |
-| [markdown_lint.yml](.github/workflows/markdown_lint.yml) | Documentation validation | PR, push to main | Markdown linting |
-| [determinism.yml](.github/workflows/determinism.yml) | Determinism checks | PR, push to main | Forbidden patterns (Date.now, Math.random) |
-| [validate_contracts.yml](.github/workflows/validate_contracts.yml) | Contract validation | PR, push to main | JSON Schema validation |
-| [pr-quality-gate.yml](.github/workflows/pr-quality-gate.yml) | PR quality gate | PR opened/updated | PR title, size, description |
-| [release.yml](.github/workflows/release.yml) | Create releases | Push to main, manual | Version bump, changelog, GitHub release |
+| Workflow                                                           | Purpose                  | Triggers             | Key Checks                                   |
+| ------------------------------------------------------------------ | ------------------------ | -------------------- | -------------------------------------------- |
+| [test.yml](.github/workflows/test.yml)                             | Run test suite           | PR, push to main     | Jest tests, coverage (Node 18 & 20)          |
+| [code-quality.yml](.github/workflows/code-quality.yml)             | Code quality checks      | PR, push to main     | ESLint, Prettier, TypeScript, security audit |
+| [markdown_lint.yml](.github/workflows/markdown_lint.yml)           | Documentation validation | PR, push to main     | Markdown linting                             |
+| [determinism.yml](.github/workflows/determinism.yml)               | Determinism checks       | PR, push to main     | Forbidden patterns (Date.now, Math.random)   |
+| [validate_contracts.yml](.github/workflows/validate_contracts.yml) | Contract validation      | PR, push to main     | JSON Schema validation                       |
+| [pr-quality-gate.yml](.github/workflows/pr-quality-gate.yml)       | PR quality gate          | PR opened/updated    | PR title, size, description                  |
+| [release.yml](.github/workflows/release.yml)                       | Create releases          | Push to main, manual | Version bump, changelog, GitHub release      |
 
 ### Branch Protection (Recommended Setup)
 
@@ -147,12 +157,12 @@ Configure in GitHub Settings → Branches → Add rule:
 
 ### Coverage Requirements
 
-| Metric | Threshold | Current |
-|--------|-----------|---------|
-| Lines | 80% | TBD (run `npm run test:coverage`) |
-| Statements | 80% | TBD |
-| Functions | 80% | TBD |
-| Branches | 80% | TBD |
+| Metric     | Threshold | Current                           |
+| ---------- | --------- | --------------------------------- |
+| Lines      | 80%       | TBD (run `npm run test:coverage`) |
+| Statements | 80%       | TBD                               |
+| Functions  | 80%       | TBD                               |
+| Branches   | 80%       | TBD                               |
 
 ### PR Size Guidelines
 

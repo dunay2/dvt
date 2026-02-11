@@ -35,13 +35,6 @@
       "@dvt/adapters/*": ["engine/adapters/*"]
     }
   },
-  "include": [
-    "engine/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "**/*.test.ts"
-  ]
+  "include": ["engine/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }

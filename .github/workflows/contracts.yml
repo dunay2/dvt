@@ -30,7 +30,7 @@ jobs:
 
       - name: Compile contracts
         run: pnpm test:contracts:compile
-        
+
       - name: Check for 'any' types
         run: |
           echo "Checking for TypeScript 'any' types in contracts..."
@@ -82,10 +82,7 @@ jobs:
           POSTGRES_PASSWORD: dvt_test
           POSTGRES_DB: dvt_test
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
           - 5432:5432
 
@@ -121,7 +118,7 @@ jobs:
         run: |
           echo "Comparing snapshot hashes..."
           pnpm test:contracts:hash-compare
-          
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v6
@@ -145,7 +142,7 @@ jobs:
         run: |
           BRANCH_NAME="${{ github.head_ref }}"
           echo "Branch name: $BRANCH_NAME"
-          
+
           # Extract issue number from branch name (e.g., feat/8-glossary)
           if [[ $BRANCH_NAME =~ ^[^/]+/([0-9]+)- ]]; then
             ISSUE_NUM="${BASH_REMATCH[1]}"
@@ -162,9 +159,9 @@ jobs:
           # Critical path order: 8 → 9 → 2 → 5,6 → 10
           CRITICAL_PATH=(8 9 2 5 6 10 14 15 16 17)
           ISSUE=${{ env.ISSUE_NUM }}
-          
+
           echo "Checking if issue #$ISSUE follows critical path..."
-          
+
           # Check if this is a critical path issue
           if [[ " ${CRITICAL_PATH[@]} " =~ " ${ISSUE} " ]]; then
             echo "✅ Issue #$ISSUE is in critical path"

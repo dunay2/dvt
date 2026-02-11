@@ -19,16 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Create markdownlint config
         run: |
           cat > .markdownlint.json << 'EOF'
@@ -42,7 +42,7 @@ jobs:
             "MD041": false
           }
           EOF
-      
+
       - name: Lint Markdown files
         run: |
           npx markdownlint-cli2 "**/*.md" "#node_modules" "#.git"
@@ -54,41 +54,41 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v4
-  #     
+  #
   #     - name: Setup Node.js
   #       uses: actions/setup-node@v4
   #       with:
   #         node-version: '20'
-  #     
+  #
   #     - name: Install TypeScript
   #       run: npm install -g typescript
-  #     
+  #
   #     - name: Extract and validate TypeScript blocks
   #       run: |
   #         set -e
-  #         
+  #
   #         # Find all .md files with TypeScript code blocks
   #         MD_FILES=$(find docs -name "*.md" -type f)
-  #         
+  #
   #         if [ -z "$MD_FILES" ]; then
   #           echo "No markdown files found in docs/"
   #           exit 0
   #         fi
-  #         
+  #
   #         BLOCK_COUNT=0
   #         ERROR_COUNT=0
-  #         
+  #
   #         for md_file in $MD_FILES; do
   #           echo "Processing: $md_file"
-  #           
+  #
   #           # Extract TypeScript blocks (```ts or ```typescript)
   #           # This sed command extracts content between ```ts/```typescript and ```
   #           sed -n '/```\(ts\|typescript\)/,/```/p' "$md_file" | \
   #             sed '1d;$d' > "/tmp/extracted_${BLOCK_COUNT}.ts" 2>/dev/null || true
-  #           
+  #
   #           if [ -s "/tmp/extracted_${BLOCK_COUNT}.ts" ]; then
   #             echo "  Found TypeScript block #${BLOCK_COUNT}"
-  #             
+  #
   #             # Validate with tsc (allow TS features, no lib/dom checks)
   #             if ! tsc --noEmit --skipLibCheck --allowJs \
   #                  --target ES2020 --module commonjs \
@@ -98,14 +98,14 @@ jobs:
   #             else
   #               echo "  ✅ TypeScript block valid"
   #             fi
-  #             
+  #
   #             BLOCK_COUNT=$((BLOCK_COUNT + 1))
   #           fi
   #         done
-  #         
+  #
   #         echo ""
   #         echo "Summary: Validated $BLOCK_COUNT TypeScript blocks"
-  #         
+  #
   #         if [ $ERROR_COUNT -gt 0 ]; then
   #           echo "❌ $ERROR_COUNT blocks failed validation"
   #           exit 1
@@ -118,19 +118,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install markdown-link-check
         run: npm install -g markdown-link-check
-      
+
       - name: Check internal links
         run: |
           set -e
-          
+
           # Config to only check relative links (skip external URLs to avoid rate limits)
           cat > /tmp/mlc_config.json << 'EOF'
           {
@@ -143,24 +143,24 @@ jobs:
             "retryOn429": false
           }
           EOF
-          
+
           # Find all markdown files
           MD_FILES=$(find docs -name "*.md" -type f)
-          
+
           if [ -z "$MD_FILES" ]; then
             echo "No markdown files found"
             exit 0
           fi
-          
+
           ERROR_COUNT=0
-          
+
           for file in $MD_FILES; do
             echo "Checking links in: $file"
             if ! markdown-link-check --config /tmp/mlc_config.json "$file"; then
               ERROR_COUNT=$((ERROR_COUNT + 1))
             fi
           done
-          
+
           if [ $ERROR_COUNT -gt 0 ]; then
             echo ""
             echo "❌ Found broken links in $ERROR_COUNT file(s)"
@@ -175,23 +175,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check normative contract requirements
         run: |
           set -e
-          
+
           echo "Validating normative contracts in docs/architecture/engine/contracts/"
-          
+
           # Find all .md files with version numbers (e.g., ExecutionSemantics.v1.md)
           CONTRACTS=$(find docs/architecture/engine/contracts -name "*.v[0-9]*.md" -type f 2>/dev/null || true)
-          
+
           if [ -z "$CONTRACTS" ]; then
             echo "No versioned contracts found — skipping"
             exit 0
           fi
-          
+
           ERROR_COUNT=0
-          
+
           for contract in $CONTRACTS; do
             echo ""
             echo "Checking: $contract"
@@ -228,7 +228,7 @@ jobs:
               echo "  ✅ Contract structure valid"
             fi
           done
-          
+
           if [ $ERROR_COUNT -gt 0 ]; then
             echo ""
             echo "❌ Found $ERROR_COUNT validation error(s)"

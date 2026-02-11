@@ -7,7 +7,10 @@
     "planId": { "type": "string" },
     "planVersion": { "type": "string" },
     "generatedAt": { "type": "string", "format": "date-time" },
-    "targetAdapter": { "type": "string", "enum": ["temporal", "conductor", "auto"] },
+    "targetAdapter": {
+      "type": "string",
+      "enum": ["temporal", "conductor", "auto"]
+    },
     "adapterVersion": { "type": "string" },
     "adapterCapabilities": {
       "type": "array",
@@ -92,5 +95,14 @@
       }
     }
   },
-  "required": ["planId", "planVersion", "generatedAt", "targetAdapter", "status", "capabilityChecks", "errors", "warnings"]
+  "required": [
+    "planId",
+    "planVersion",
+    "generatedAt",
+    "targetAdapter",
+    "status",
+    "capabilityChecks",
+    "errors",
+    "warnings"
+  ]
 }

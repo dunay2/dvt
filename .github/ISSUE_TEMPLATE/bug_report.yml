@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug or unexpected behavior in the DVT Engine
-title: "[Bug]: "
-labels: ["bug"]
+title: '[Bug]: '
+labels: ['bug']
 body:
   - type: markdown
     attributes:
@@ -44,7 +44,7 @@ body:
     attributes:
       label: Bug Description
       description: Clear and concise description of the bug
-      placeholder: "What went wrong?"
+      placeholder: 'What went wrong?'
     validations:
       required: true
 
@@ -53,7 +53,7 @@ body:
     attributes:
       label: Expected Behavior
       description: What did you expect to happen?
-      placeholder: "The engine should..."
+      placeholder: 'The engine should...'
     validations:
       required: true
 
@@ -62,7 +62,7 @@ body:
     attributes:
       label: Actual Behavior
       description: What actually happened?
-      placeholder: "Instead, the engine..."
+      placeholder: 'Instead, the engine...'
     validations:
       required: true
 
@@ -116,7 +116,7 @@ body:
     attributes:
       label: Workaround
       description: Is there a temporary workaround?
-      placeholder: "Temporarily, you can..."
+      placeholder: 'Temporarily, you can...'
 
   - type: textarea
     id: additional
