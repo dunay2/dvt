@@ -36,12 +36,11 @@
     }
   },
   "include": [
-    "engine/**/*.ts"
+    "engine/src/**/*.ts",
+    "engine/test/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "**/*.test.ts"
+    "dist"
   ]
 }

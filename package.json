@@ -63,9 +63,11 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^18.4.4",
+    "@temporalio/testing": "^1.14.1",
     "@testing-library/jest-dom": "^6.1.5",
     "@types/jest": "^29.5.11",
     "@types/node": "^25.2.3",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
     "eslint": "^8.56.0",
@@ -83,5 +85,10 @@
     "ts-jest": "^29.1.1",
     "typescript": "^5.3.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@temporalio/client": "^1.14.1",
+    "@temporalio/worker": "^1.14.1",
+    "@temporalio/workflow": "^1.14.1",
+    "uuid": "^13.0.0"
+  }
 }
