@@ -41,8 +41,9 @@ The DVT Engine is a multi-tenant workflow orchestration platform. This threat mo
 ### 3. Compromised Plugin
 - **Goal**: Steal secrets, escape sandbox, DoS engine, exfiltrate data
 - **Capabilities**: Execute code within plugin runtime, access plan secrets, call external APIs
-- **Attack surface**: Plugin marketplace (supply chain), plugin code execution
-- **Likelihood**: Low | **Impact**: High
+- **Attack surface**: Plugin marketplace (supply chain), unsigned or unverified plugin bundles, plugin code execution
+- **Likelihood**: Medium (unsigned plugins) / Low (signed but compromised) | **Impact**: Critical
+- **Key Mitigation**: Cryptographic signature verification (INV-10), reject unsigned/unknown provenance, SBOM + vulnerability scanning (T13)
 
 ### 4. Insider Threat
 - **Goal**: Excessive access to sensitive data, audit log tampering
