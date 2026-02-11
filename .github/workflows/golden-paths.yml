@@ -15,10 +15,15 @@ on:
       - '.github/workflows/golden-paths.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   validate-plans:
     name: Validate Golden Path Plans
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout repository
@@ -76,6 +81,8 @@ jobs:
     name: Run Golden Paths Test Runner
     runs-on: ubuntu-latest
     needs: validate-plans
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout repository
@@ -104,6 +111,8 @@ jobs:
   check-documentation:
     name: Check Golden Paths Documentation
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout repository
@@ -157,6 +166,8 @@ jobs:
   verify-schema-versions:
     name: Verify Schema Versions
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout repository
@@ -202,6 +213,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [validate-plans, run-test-runner, check-documentation, verify-schema-versions]
     if: always()
+    permissions:
+      contents: read
     
     steps:
       - name: Check all jobs status
