@@ -17,8 +17,8 @@ The `hashes.json` file serves as a determinism verification baseline:
   "version": "1.1.0",
   "paths": {
     "plan-minimal": {
-      "hash": "pending", // SHA256 of final StateStore snapshot
-      "status": "implemented", // implemented | not-implemented | deprecated
+      "hash": "pending",           // SHA256 of final StateStore snapshot
+      "status": "implemented",     // implemented | not-implemented | deprecated
       "location": "examples/plan-minimal/",
       "metadata": { ... }
     }
@@ -74,8 +74,8 @@ When actual engine execution becomes available (after issues #5, #6 are resolved
 
 ```bash
 # Example workflow (not yet functional)
-npm run test:contracts:hashes # Execute golden paths, generate hashes
-npm run test:contracts:hash-compare # Compare against baseline
+npm run test:contracts:hashes        # Execute golden paths, generate hashes
+npm run test:contracts:hash-compare  # Compare against baseline
 ```
 
 ## CI Integration
