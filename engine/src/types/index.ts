@@ -33,13 +33,7 @@ export type {
 } from './contracts';
 
 // Artifact types
-export type {
-  ArtifactRef,
-  StepOutput,
-  StepError,
-  SecretRef,
-  ISecretsProvider,
-} from './artifacts';
+export type { ArtifactRef, StepOutput, StepError, SecretRef, ISecretsProvider } from './artifacts';
 
 // State Store types
 export type {

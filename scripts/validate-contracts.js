@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Validate Golden JSON Fixtures Against Schemas
- * 
+ *
  * This script validates that golden JSON fixtures conform to their schemas.
  * Currently a stub until issue #10 (Golden Paths) provides actual fixtures.
  */
@@ -33,8 +33,8 @@ async function validateContracts() {
   }
 
   // Validate any existing fixtures
-  const files = fs.readdirSync(FIXTURES_DIR).filter(f => f.endsWith('.json'));
-  
+  const files = fs.readdirSync(FIXTURES_DIR).filter((f) => f.endsWith('.json'));
+
   if (files.length === 0) {
     console.log('⚠️  No fixtures found (expected until issue #10 is completed)');
     console.log('✅ Validation passed (stub mode)');
@@ -42,13 +42,13 @@ async function validateContracts() {
   }
 
   console.log(`📄 Found ${files.length} fixture file(s):`);
-  
+
   for (const file of files) {
     const fixturePath = path.join(FIXTURES_DIR, file);
     try {
       const content = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
       console.log(`  ✓ ${file} - valid JSON`);
-      
+
       // TODO: Add schema validation when schemas are available (issue #2)
       // For now, just validate that it's valid JSON
     } catch (error) {
@@ -61,7 +61,7 @@ async function validateContracts() {
 }
 
 // Run validation
-validateContracts().catch(error => {
+validateContracts().catch((error) => {
   console.error('\n❌ Validation failed:', error.message);
   process.exit(1);
 });

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Database Migration Script
- * 
+ *
  * Runs database migrations for contract testing.
  * Currently a stub until issue #6 (PostgresStateStoreAdapter) provides schema.
  */
@@ -13,7 +13,7 @@ async function runMigrations() {
   console.log('🗄️  Running database migrations...\n');
 
   const dbUrl = process.env.DATABASE_URL;
-  
+
   if (!dbUrl) {
     console.log('⚠️  DATABASE_URL not set');
     console.log('📝 Skipping migrations - no database configured\n');
@@ -22,10 +22,10 @@ async function runMigrations() {
   }
 
   console.log('📍 Database URL:', dbUrl.replace(/:[^:@]+@/, ':***@'));
-  
+
   // TODO: Add actual migration logic when schema is available (issue #6)
   // For now, just verify connection parameters are valid
-  
+
   const url = new URL(dbUrl);
   console.log(`   Protocol: ${url.protocol}`);
   console.log(`   Host: ${url.hostname}:${url.port}`);
@@ -41,7 +41,7 @@ async function runMigrations() {
 }
 
 // Run migrations
-runMigrations().catch(error => {
+runMigrations().catch((error) => {
   console.error('\n❌ Migration failed:', error.message);
   process.exit(1);
 });

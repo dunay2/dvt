@@ -9,6 +9,7 @@ This directory contains scripts for validating contract tests and golden paths a
 Validates that golden JSON fixtures conform to their schemas.
 
 **Usage:**
+
 ```bash
 npm run test:contracts:validate
 ```
@@ -18,16 +19,19 @@ npm run test:contracts:validate
 ### `run-golden-paths.js`
 
 Executes the 3 required golden paths from ROADMAP.md:
+
 1. **Hello-world plan**: 3 steps linear → completes in < 30s
 2. **Pause/resume plan**: pause after step 1 → resume → same final snapshot hash
 3. **Retry plan**: fail step 2 once → retry → same snapshot hash
 
 **Usage:**
+
 ```bash
 npm run test:contracts:hashes
 ```
 
 **Environment Variables:**
+
 - `DATABASE_URL`: PostgreSQL connection string (optional until issue #6)
 
 **Output:** Saves execution results to `test/contracts/results/golden-paths-run.json`
@@ -40,6 +44,7 @@ Compares current execution hashes against baseline in `.golden/hashes.json`.
 Fails if hashes mismatch (indicates non-determinism).
 
 **Usage:**
+
 ```bash
 npm run test:contracts:hash-compare
 ```
@@ -53,11 +58,13 @@ npm run test:contracts:hash-compare
 Runs database migrations for contract testing.
 
 **Usage:**
+
 ```bash
 npm run db:migrate
 ```
 
 **Environment Variables:**
+
 - `DATABASE_URL`: PostgreSQL connection string (required)
 
 **Status:** Stub implementation until issue #6 (PostgresStateStoreAdapter) provides schema.
@@ -67,6 +74,7 @@ npm run db:migrate
 These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions workflow.
 
 **Workflow Jobs:**
+
 1. `contract-compile`: Validates types compile (`tsc --noEmit`)
 2. `contract-validate`: Validates golden JSON fixtures against schemas
 3. `contract-hashes`: Runs golden paths, compares snapshot hashes

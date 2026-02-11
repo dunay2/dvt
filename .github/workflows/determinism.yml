@@ -89,10 +89,7 @@ jobs:
           POSTGRES_PASSWORD: dvt_test
           POSTGRES_DB: dvt_test
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
           - 5432:5432
 
@@ -128,7 +125,7 @@ jobs:
         run: |
           echo "🔍 Validating that replay produces identical hashes..."
           pnpm test:idempotency:validate-hashes
-          
+
       - name: Upload idempotency test results
         if: always()
         uses: actions/upload-artifact@v6

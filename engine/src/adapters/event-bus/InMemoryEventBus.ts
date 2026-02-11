@@ -1,6 +1,6 @@
 /**
  * InMemoryEventBus - Mock implementation for testing
- * 
+ *
  * Simple in-memory implementation of IEventBus for unit tests
  * NOT for production use
  */
@@ -66,7 +66,7 @@ export class InMemoryEventBus implements IEventBus {
 
   /**
    * Simulate failures for testing
-   * 
+   *
    * @param maxFailures - Maximum number of failures to simulate (0 = fail forever)
    */
   simulateFailures(maxFailures = 0): void {

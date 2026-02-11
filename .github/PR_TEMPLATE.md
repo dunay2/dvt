@@ -3,7 +3,7 @@
 **Type**: Refactor (breaking links, non-breaking semantics)  
 **Target**: `main`  
 **Milestone**: Phase 1.1 - Documentation Modularization  
-**Estimated Review Time**: 90 minutes  
+**Estimated Review Time**: 90 minutes
 
 ---
 
@@ -22,7 +22,7 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 - ✅ **Code Owners**: Automated review routing by file path
 
 **Breaking changes**: None (semantics unchanged, only document structure)  
-**Deprecation period**: 90 days for old `WORKFLOW_ENGINE.md` (clock starts at merge)  
+**Deprecation period**: 90 days for old `WORKFLOW_ENGINE.md` (clock starts at merge)
 
 ---
 
@@ -30,35 +30,35 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 
 ### Phase 1: Core Partition (Previously Completed)
 
-| Old Section (WORKFLOW_ENGINE.md) | New Location | Size | Status |
-|-----------------------------------|--------------|------|--------|
-| Interface + Signals | [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) | 245 lines | ✅ |
-| State Model + Events | [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) | 280 lines | ✅ Refactored |
-| Capabilities | [capabilities/](docs/architecture/engine/contracts/capabilities/) | 4 JSON files | ✅ |
-| Temporal Adapter | [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md) | 312 lines | ✅ |
-| Conductor Adapter | [ConductorAdapter.spec.md](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md) | 156 lines (DRAFT) | ✅ |
-| Observability | [observability.md](docs/architecture/engine/ops/observability.md) | 428 lines | ✅ |
-| Incident Runbooks | [runbooks/incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md) | 387 lines | ✅ |
-| Determinism Tooling | [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md) | 412 lines | ✅ |
-| Roadmap | [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md) | 562 lines | ✅ |
+| Old Section (WORKFLOW_ENGINE.md) | New Location                                                                                     | Size              | Status        |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------- | ------------- |
+| Interface + Signals              | [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md)         | 245 lines         | ✅            |
+| State Model + Events             | [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)   | 280 lines         | ✅ Refactored |
+| Capabilities                     | [capabilities/](docs/architecture/engine/contracts/capabilities/)                                | 4 JSON files      | ✅            |
+| Temporal Adapter                 | [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md)    | 312 lines         | ✅            |
+| Conductor Adapter                | [ConductorAdapter.spec.md](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md) | 156 lines (DRAFT) | ✅            |
+| Observability                    | [observability.md](docs/architecture/engine/ops/observability.md)                                | 428 lines         | ✅            |
+| Incident Runbooks                | [runbooks/incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md)      | 387 lines         | ✅            |
+| Determinism Tooling              | [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)                    | 412 lines         | ✅            |
+| Roadmap                          | [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md)                            | 562 lines         | ✅            |
 
 ### Phase 2: Adapter Separation (This PR - NEW)
 
-| Concern | Old Location | New Location | Size | Type |
-|---------|--------------|--------------|------|------|
-| **Storage-agnostic contract** | ExecutionSemantics.v1.md § 1.1 (DDL mixed) | [contracts/state-store/README.md](docs/architecture/engine/contracts/state-store/README.md) | 180 lines | 🆕 Contract |
-| **Snowflake implementation** | ExecutionSemantics.v1.md § 1.1 (DDL inline) | [adapters/state-store/snowflake/StateStoreAdapter.md](docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md) | 350 lines | 🆕 Adapter |
-| **Postgres implementation** | N/A (not documented) | [adapters/state-store/postgres/StateStoreAdapter.md](docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md) | 240 lines | 🆕 Adapter |
-| **Temporal policies** | ExecutionSemantics.v1.md § 6 (continue-as-new mixed) | [adapters/temporal/EnginePolicies.md](docs/architecture/engine/adapters/temporal/EnginePolicies.md) | 310 lines | 🆕 Adapter |
+| Concern                       | Old Location                                         | New Location                                                                                                                        | Size      | Type        |
+| ----------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- | ----------- |
+| **Storage-agnostic contract** | ExecutionSemantics.v1.md § 1.1 (DDL mixed)           | [contracts/state-store/README.md](docs/architecture/engine/contracts/state-store/README.md)                                         | 180 lines | 🆕 Contract |
+| **Snowflake implementation**  | ExecutionSemantics.v1.md § 1.1 (DDL inline)          | [adapters/state-store/snowflake/StateStoreAdapter.md](docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md) | 350 lines | 🆕 Adapter  |
+| **Postgres implementation**   | N/A (not documented)                                 | [adapters/state-store/postgres/StateStoreAdapter.md](docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)   | 240 lines | 🆕 Adapter  |
+| **Temporal policies**         | ExecutionSemantics.v1.md § 6 (continue-as-new mixed) | [adapters/temporal/EnginePolicies.md](docs/architecture/engine/adapters/temporal/EnginePolicies.md)                                 | 310 lines | 🆕 Adapter  |
 
 ### Governance & Quality (NEW)
 
-| Document | Purpose | Size | Type |
-|----------|---------|------|------|
-| [VERSIONING.md](docs/architecture/engine/VERSIONING.md) | Contract evolution policy (MAJOR/MINOR/PATCH, deprecation) | 469 lines | 🆕 Policy |
-| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guide (Code Owners, CI gates, normative contract template) | 13 KB | 🆕 Guide |
-| [.github/CODEOWNERS](.github/CODEOWNERS) | Automated review assignments by file path | 4 KB | 🆕 Config |
-| [.github/workflows/markdown_lint.yml](.github/workflows/markdown_lint.yml) | 4 CI gates (Markdown lint, TypeScript validation, link check, contract structure) | 7.3 KB | 🆕 CI |
+| Document                                                                   | Purpose                                                                           | Size      | Type      |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------- | --------- |
+| [VERSIONING.md](docs/architecture/engine/VERSIONING.md)                    | Contract evolution policy (MAJOR/MINOR/PATCH, deprecation)                        | 469 lines | 🆕 Policy |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md)                                    | Contribution guide (Code Owners, CI gates, normative contract template)           | 13 KB     | 🆕 Guide  |
+| [.github/CODEOWNERS](.github/CODEOWNERS)                                   | Automated review assignments by file path                                         | 4 KB      | 🆕 Config |
+| [.github/workflows/markdown_lint.yml](.github/workflows/markdown_lint.yml) | 4 CI gates (Markdown lint, TypeScript validation, link check, contract structure) | 7.3 KB    | 🆕 CI     |
 
 ---
 
@@ -181,11 +181,11 @@ grep -r '\[.*\](.*\.md' docs/architecture/engine/ | wc -l
 
 ### 2. Navigation Path Testing (3 roles)
 
-| Role | Path | Status |
-|------|------|--------|
-| SDK Dev | README → INDEX → IWorkflowEngine.v1.md → ExecutionSemantics.v1.md → State Store Contract → Snowflake Adapter | ✅ 5/5 |
-| Plan Author | README → INDEX → determinism-tooling.md → capabilities/README.md | ✅ 3/3 |
-| SRE | README → INDEX → observability.md → incident_response.md | ✅ 3/3 |
+| Role        | Path                                                                                                         | Status |
+| ----------- | ------------------------------------------------------------------------------------------------------------ | ------ |
+| SDK Dev     | README → INDEX → IWorkflowEngine.v1.md → ExecutionSemantics.v1.md → State Store Contract → Snowflake Adapter | ✅ 5/5 |
+| Plan Author | README → INDEX → determinism-tooling.md → capabilities/README.md                                             | ✅ 3/3 |
+| SRE         | README → INDEX → observability.md → incident_response.md                                                     | ✅ 3/3 |
 
 ### 3. Cross-Reference Validation (19 critical links)
 
@@ -311,11 +311,11 @@ If critical issues arise post-merge:
 
 ### Potential Risks (Mitigated)
 
-| Risk | Severity | Mitigation | Status |
-|------|----------|-----------|--------|
-| Broken external links (blogs, docs) | P2 | 90-day grace period, deprecation banner with redirect | ✅ Mitigated |
-| Consumer confusion | P3 | Migration guide, INDEX.md navigation hub | ✅ Mitigated |
-| CI gate false positives | P2 | Manual testing completed, config tuned (.markdownlint.json) | ✅ Mitigated |
+| Risk                                | Severity | Mitigation                                                  | Status       |
+| ----------------------------------- | -------- | ----------------------------------------------------------- | ------------ |
+| Broken external links (blogs, docs) | P2       | 90-day grace period, deprecation banner with redirect       | ✅ Mitigated |
+| Consumer confusion                  | P3       | Migration guide, INDEX.md navigation hub                    | ✅ Mitigated |
+| CI gate false positives             | P2       | Manual testing completed, config tuned (.markdownlint.json) | ✅ Mitigated |
 
 ---
 
@@ -339,6 +339,7 @@ If critical issues arise post-merge:
 ### Week 1 (Communication)
 
 1. **Announce in Slack** (#engineering, #architecture):
+
    > "📚 Engine docs refactored! New structure: <https://github.com/.../docs/architecture/engine/INDEX.md>
    >
    > **Action required**: Update bookmarks to INDEX.md (not WORKFLOW_ENGINE.md)

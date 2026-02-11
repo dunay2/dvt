@@ -271,10 +271,7 @@ export interface IWorkflowEngine {
    * @param context - Run context (tenant, project, environment, etc.)
    * @returns Engine run reference for tracking and operations
    */
-  startRun(
-    executionPlan: ExecutionPlan,
-    context: RunContext
-  ): Promise<EngineRunRef>;
+  startRun(executionPlan: ExecutionPlan, context: RunContext): Promise<EngineRunRef>;
 
   /**
    * Cancel a running workflow

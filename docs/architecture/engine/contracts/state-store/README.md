@@ -3,7 +3,7 @@
 **Status**: Normative (MUST / MUST NOT)  
 **Version**: 1.0  
 **Stability**: Core semantics — breaking changes require version bump  
-**Consumers**: Engine, Adapters, Projector  
+**Consumers**: Engine, Adapters, Projector
 
 **References**:
 
@@ -37,45 +37,45 @@ See [adapters/state-store/](../../adapters/state-store/) for backend-specific im
 interface IRunStateStore {
   // Append new event (idempotent via idempotencyKey)
   appendEvent(event: CanonicalEngineEvent): Promise<AppendResult>;
-  
+
   // Fetch events for projection (ordered by runSeq)
   fetchEvents(
     runId: string,
     options: {
-      afterSeq?: number;      // Fetch events with runSeq > afterSeq (watermark-based)
-      limit?: number;         // Pagination (default: 1000)
+      afterSeq?: number; // Fetch events with runSeq > afterSeq (watermark-based)
+      limit?: number; // Pagination (default: 1000)
     }
   ): Promise<CanonicalEngineEvent[]>;
-  
+
   // Get latest snapshot (cached/materialized view)
   getSnapshot(runId: string): Promise<RunSnapshot | null>;
-  
+
   // Project snapshot from event log (on-demand)
   projectSnapshot(runId: string): Promise<RunSnapshot>;
 }
 
 interface AppendResult {
-  runSeq: number;           // Assigned by Append Authority
-  idempotent: boolean;      // true if duplicate (same idempotencyKey)
-  persisted: boolean;       // true if new event written
+  runSeq: number; // Assigned by Append Authority
+  idempotent: boolean; // true if duplicate (same idempotencyKey)
+  persisted: boolean; // true if new event written
 }
 
 interface CanonicalEngineEvent {
   runId: string;
-  runSeq: number;           // Assigned by Append Authority (monotonic per runId)
-  eventId: string;          // UUID
+  runSeq: number; // Assigned by Append Authority (monotonic per runId)
+  eventId: string; // UUID
   stepId?: string;
   engineAttemptId?: string; // Platform-level retry counter
-  logicalAttemptId?: string;// Business-level retry counter
-  eventType: string;        // "RunStarted", "StepCompleted", etc.
-  eventData: unknown;       // Event-specific payload
-  idempotencyKey: string;   // SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
-  emittedAt: string;        // ISO 8601 timestamp (when activity emitted)
-  persistedAt?: string;     // ISO 8601 timestamp (when StateStore persisted)
+  logicalAttemptId?: string; // Business-level retry counter
+  eventType: string; // "RunStarted", "StepCompleted", etc.
+  eventData: unknown; // Event-specific payload
+  idempotencyKey: string; // SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
+  emittedAt: string; // ISO 8601 timestamp (when activity emitted)
+  persistedAt?: string; // ISO 8601 timestamp (when StateStore persisted)
   adapterVersion?: string;
-  engineRunRef?: unknown;   // Temporal WorkflowId, Conductor executionId, etc.
-  causedBySignalId?: string;// UUID of signal that caused this event
-  parentEventId?: string;   // UUID of parent event (for causality tracking)
+  engineRunRef?: unknown; // Temporal WorkflowId, Conductor executionId, etc.
+  causedBySignalId?: string; // UUID of signal that caused this event
+  parentEventId?: string; // UUID of parent event (for causality tracking)
 }
 ```
 
@@ -119,12 +119,12 @@ These constraints MUST be enforced by ALL State Store adapters, regardless of ba
 
 ### 3.1 Implementation Strategies (Adapter-Specific)
 
-| Backend | Append Authority Strategy | Trade-offs |
-|---------|---------------------------|------------|
-| **Snowflake** | Stored procedure with `MAX(runSeq) + 1` | ✅ No global sequencer<br>⚠️ Requires transaction serialization per runId |
-| **Postgres** | Database sequence per runId | ✅ Native support<br>❌ Sequence proliferation (1 seq per run) |
-| **Postgres** | Application-managed (Redis atomic increment) | ✅ Horizontal scaling<br>⚠️ External dependency (Redis) |
-| **DynamoDB** | Conditional write with version counter | ✅ Fully managed<br>⚠️ Higher latency for conflicts |
+| Backend       | Append Authority Strategy                    | Trade-offs                                                                |
+| ------------- | -------------------------------------------- | ------------------------------------------------------------------------- |
+| **Snowflake** | Stored procedure with `MAX(runSeq) + 1`      | ✅ No global sequencer<br>⚠️ Requires transaction serialization per runId |
+| **Postgres**  | Database sequence per runId                  | ✅ Native support<br>❌ Sequence proliferation (1 seq per run)            |
+| **Postgres**  | Application-managed (Redis atomic increment) | ✅ Horizontal scaling<br>⚠️ External dependency (Redis)                   |
+| **DynamoDB**  | Conditional write with version counter       | ✅ Fully managed<br>⚠️ Higher latency for conflicts                       |
 
 See [adapters/state-store/{backend}/](../../adapters/state-store/) for detailed implementation patterns.
 
@@ -165,12 +165,12 @@ let watermark = 0;
 
 while (true) {
   const events = await store.fetchEvents(runId, { afterSeq: watermark, limit: 100 });
-  
+
   if (events.length === 0) {
     await sleep(1000); // Polling interval
     continue;
   }
-  
+
   await projector.apply(events);
   watermark = events[events.length - 1].runSeq; // Advance watermark
 }
@@ -201,11 +201,11 @@ Fetch 3: runSeq = [4, 7, 8]        (gap filled + new events, watermark = 8)
 
 ### 5.1 Snapshot Sources (Adapter-Specific)
 
-| Source | Strategy | Use Case |
-|--------|----------|----------|
-| **On-demand projection** | Replay events from offset 0 | Cold start, debugging |
-| **Materialized view** | Incremental update on new events | High-frequency reads (UI) |
-| **Cache layer** | Redis/Memcached with TTL | p99 latency SLA |
+| Source                   | Strategy                         | Use Case                  |
+| ------------------------ | -------------------------------- | ------------------------- |
+| **On-demand projection** | Replay events from offset 0      | Cold start, debugging     |
+| **Materialized view**    | Incremental update on new events | High-frequency reads (UI) |
+| **Cache layer**          | Redis/Memcached with TTL         | p99 latency SLA           |
 
 ### 5.2 Snapshot Staleness SLA
 
@@ -236,6 +236,6 @@ Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial State Store contract (extracted from ExecutionSemantics.v1.md) |
+| Version | Date       | Change                                                                 |
+| ------- | ---------- | ---------------------------------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial State Store contract (extracted from ExecutionSemantics.v1.md) |

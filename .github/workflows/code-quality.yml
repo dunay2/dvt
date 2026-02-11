@@ -32,8 +32,8 @@ jobs:
         uses: ataylorme/eslint-annotate-action@v2
         if: failure()
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          report-json: "eslint-report.json"
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
+          report-json: 'eslint-report.json'
 
   prettier:
     name: Prettier Format Check

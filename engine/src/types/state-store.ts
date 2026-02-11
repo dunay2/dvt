@@ -146,10 +146,7 @@ export interface SnapshotProjector {
    * @param events - Ordered array of canonical engine events
    * @returns Projected run snapshot
    */
-  projectRun(
-    runId: string,
-    events: CanonicalEngineEvent[]
-  ): Promise<RunSnapshot>;
+  projectRun(runId: string, events: CanonicalEngineEvent[]): Promise<RunSnapshot>;
 
   /**
    * Incrementally update a snapshot with new events
@@ -193,10 +190,7 @@ export interface IRunStateStore {
    * @param options - Fetch options (watermark, limit)
    * @returns Ordered array of events
    */
-  fetchEvents(
-    runId: string,
-    options: FetchEventsOptions
-  ): Promise<CanonicalEngineEvent[]>;
+  fetchEvents(runId: string, options: FetchEventsOptions): Promise<CanonicalEngineEvent[]>;
 
   /**
    * Get latest snapshot (cached/materialized view)

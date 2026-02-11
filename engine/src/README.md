@@ -55,6 +55,7 @@ The Outbox Delivery Worker implements the [Transactional Outbox Pattern](https:/
 ### Worker (`engine/src/workers/OutboxWorker.ts`)
 
 Main implementation of the outbox delivery worker with:
+
 - Configurable polling and batch size
 - Exponential backoff retry logic
 - Circuit breaker for lag detection
@@ -102,12 +103,12 @@ await worker.stop();
 
 ```typescript
 const worker = new OutboxWorker(stateStore, eventBus, {
-  pollIntervalMs: 50,          // Poll every 50ms
-  batchSize: 200,              // Process 200 events per batch
-  initialRetryDelayMs: 100,    // Start retry delay at 100ms
-  maxRetryDelayMs: 60000,      // Max retry delay 60s
+  pollIntervalMs: 50, // Poll every 50ms
+  batchSize: 200, // Process 200 events per batch
+  initialRetryDelayMs: 100, // Start retry delay at 100ms
+  maxRetryDelayMs: 60000, // Max retry delay 60s
   circuitBreakerLagSeconds: 10, // Alert at 10s lag
-  backoffMultiplier: 2,        // Double delay each retry
+  backoffMultiplier: 2, // Double delay each retry
 });
 ```
 
@@ -158,10 +159,10 @@ The worker provides metrics via `getMetrics()`:
 
 ```typescript
 interface OutboxMetrics {
-  deliveryLagSeconds: number;  // Age of oldest undelivered event
-  deliveryRate: number;        // Events delivered per second
-  undeliveredCount: number;    // Total undelivered events
-  timestamp: Date;             // When metrics were collected
+  deliveryLagSeconds: number; // Age of oldest undelivered event
+  deliveryRate: number; // Events delivered per second
+  undeliveredCount: number; // Total undelivered events
+  timestamp: Date; // When metrics were collected
 }
 ```
 

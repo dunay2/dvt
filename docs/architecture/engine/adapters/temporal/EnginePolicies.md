@@ -3,7 +3,7 @@
 **Status**: Implementation Guide  
 **Version**: 1.0  
 **Engine**: Temporal  
-**Contract**: [ExecutionSemantics.v1.md](../../contracts/engine/ExecutionSemantics.v1.md)  
+**Contract**: [ExecutionSemantics.v1.md](../../contracts/engine/ExecutionSemantics.v1.md)
 
 ---
 
@@ -31,10 +31,10 @@ These policies address Temporal platform constraints and best practices:
 
 Workflow MUST call `continueAsNew()` when **EITHER** condition is met:
 
-| Condition | Threshold | Rationale |
-|-----------|-----------|-----------|
-| **Steps executed** | 50 steps | Prevent history bloat (50 steps ≈ 200-500 events) |
-| **Estimated history size** | 1 MB | Safety margin (hard limit is 50MB, but performance degrades above 10MB) |
+| Condition                  | Threshold | Rationale                                                               |
+| -------------------------- | --------- | ----------------------------------------------------------------------- |
+| **Steps executed**         | 50 steps  | Prevent history bloat (50 steps ≈ 200-500 events)                       |
+| **Estimated history size** | 1 MB      | Safety margin (hard limit is 50MB, but performance degrades above 10MB) |
 
 **Implementation**:
 
@@ -47,10 +47,10 @@ class WorkflowEngine {
 
   async executeStep(step: Step): Promise<void> {
     // ... step execution logic
-    
+
     this.stepsSinceLastContinue++;
     this.estimatedHistoryBytes += estimateEventSize(step);
-    
+
     // Check continue-as-new triggers
     if (
       this.stepsSinceLastContinue >= this.CONTINUE_STEPS ||
@@ -59,21 +59,21 @@ class WorkflowEngine {
       await this.continueAsNew();
     }
   }
-  
+
   private async continueAsNew(): Promise<void> {
     // Compact state before continuation
     const compactedState = this.compactState();
-    
+
     // Continue workflow in new run
     workflow.continueAsNew({
-      planRef: this.planRef,           // Reference only (not full plan)
-      cursor: compactedState.cursor,   // Compacted: completed step ranges or bitmap
+      planRef: this.planRef, // Reference only (not full plan)
+      cursor: compactedState.cursor, // Compacted: completed step ranges or bitmap
       artifacts: compactedState.artifacts, // ArtifactRef[] pointers only
       counters: {
         totalSteps: this.totalStepsExecuted,
         failedSteps: this.failedStepCount,
         // ... other minimal counters
-      }
+      },
     });
   }
 }
@@ -99,9 +99,9 @@ class WorkflowEngine {
 
 ```typescript
 interface CompactedState {
-  planRef: PlanRef;                      // 100 bytes
+  planRef: PlanRef; // 100 bytes
   cursor: { start: number; end: number }[]; // O(log N) ranges
-  artifacts: ArtifactRef[];              // 50-200 bytes per artifact
+  artifacts: ArtifactRef[]; // 50-200 bytes per artifact
   counters: {
     totalSteps: number;
     failedSteps: number;
@@ -112,7 +112,7 @@ interface CompactedState {
 function compactState(): CompactedState {
   // Compress completed steps: [1,2,3,5,6,7,10,11,12] → [[1,3],[5,7],[10,12]]
   const ranges = compressRanges(this.completedStepIds);
-  
+
   return {
     planRef: { planId: this.planId, version: this.planVersion },
     cursor: ranges,
@@ -121,7 +121,7 @@ function compactState(): CompactedState {
       totalSteps: this.totalStepsExecuted,
       failedSteps: this.failedStepCount,
       retriedSteps: this.retriedStepCount,
-    }
+    },
   };
 }
 ```
@@ -146,14 +146,14 @@ const MAX_SIGNAL_SIZE_BYTES = 64 * 1024; // 64 KB
 
 async function sendSignal(signal: Signal): Promise<void> {
   const payload = JSON.stringify(signal);
-  
+
   if (Buffer.byteLength(payload, 'utf8') > MAX_SIGNAL_SIZE_BYTES) {
     throw new Error(
       `Signal exceeds size limit: ${Buffer.byteLength(payload)} > ${MAX_SIGNAL_SIZE_BYTES} bytes. ` +
-      `Use artifact storage for large payloads.`
+        `Use artifact storage for large payloads.`
     );
   }
-  
+
   await workflow.signal('handleSignal', signal);
 }
 ```
@@ -168,7 +168,7 @@ await workflow.signal('deploySnapshot', { snapshot: largeJSON }); // 500KB paylo
 const snapshotRef = await stateStore.storeArtifact({
   kind: 'snapshot',
   data: largeJSON,
-  runId: workflow.info().workflowId
+  runId: workflow.info().workflowId,
 });
 
 await workflow.signal('deploySnapshot', { snapshotRef: snapshotRef.uri }); // 100 bytes
@@ -186,21 +186,21 @@ await workflow.signal('deploySnapshot', { snapshotRef: snapshotRef.uri }); // 10
 class SignalRateLimiter {
   private signalTimestamps: number[] = [];
   private readonly MAX_SIGNALS_PER_MINUTE = 60;
-  
+
   async checkRateLimit(): Promise<void> {
     const now = Date.now();
     const oneMinuteAgo = now - 60_000;
-    
+
     // Prune old timestamps
-    this.signalTimestamps = this.signalTimestamps.filter(ts => ts > oneMinuteAgo);
-    
+    this.signalTimestamps = this.signalTimestamps.filter((ts) => ts > oneMinuteAgo);
+
     if (this.signalTimestamps.length >= this.MAX_SIGNALS_PER_MINUTE) {
       throw new Error(
         `Signal rate limit exceeded: ${this.signalTimestamps.length} signals in last 60s ` +
-        `(max: ${this.MAX_SIGNALS_PER_MINUTE})`
+          `(max: ${this.MAX_SIGNALS_PER_MINUTE})`
       );
     }
-    
+
     this.signalTimestamps.push(now);
   }
 }
@@ -218,24 +218,24 @@ class SignalRateLimiter {
 const defaultActivityOptions: ActivityOptions = {
   // Start-to-close: total time allowed (including retries)
   startToCloseTimeout: '30m',
-  
+
   // Schedule-to-start: max queue time before activity starts
   scheduleToStartTimeout: '5m',
-  
+
   // Schedule-to-close: total time from schedule to completion
   scheduleToCloseTimeout: '35m',
-  
+
   // Heartbeat: activity must heartbeat every N seconds
   heartbeatTimeout: '60s',
-  
+
   // Retry policy
   retry: {
     initialInterval: '1s',
     maximumInterval: '60s',
     backoffCoefficient: 2.0,
     maximumAttempts: 5,
-    nonRetryableErrorTypes: ['AuthorizationError', 'ValidationError']
-  }
+    nonRetryableErrorTypes: ['AuthorizationError', 'ValidationError'],
+  },
 };
 ```
 
@@ -249,19 +249,19 @@ const activityOptionsPerStepType: Record<string, Partial<ActivityOptions>> = {
     scheduleToCloseTimeout: '5h',
     heartbeatTimeout: '5m', // Heartbeat every 5 min
   },
-  
+
   // Quick healthchecks
-  'healthcheck': {
+  healthcheck: {
     startToCloseTimeout: '10s',
     scheduleToCloseTimeout: '15s',
     retry: { maximumAttempts: 1 }, // No retries
   },
-  
+
   // Warehouse queries (variable time)
   'warehouse-query': {
     startToCloseTimeout: '15m',
     heartbeatTimeout: '30s',
-  }
+  },
 };
 ```
 
@@ -277,14 +277,14 @@ function estimateEventSize(step: Step): number {
   const EVENT_SIZE_ESTIMATES = {
     ActivityScheduled: 500,
     ActivityStarted: 200,
-    ActivityCompleted: 1000,  // Includes result payload
+    ActivityCompleted: 1000, // Includes result payload
     ActivityFailed: 800,
     TimerStarted: 300,
     TimerFired: 200,
     SignalReceived: 400,
     MarkerRecorded: 600,
   };
-  
+
   // Estimate: 4 events per step (scheduled, started, completed, marker)
   return (
     EVENT_SIZE_ESTIMATES.ActivityScheduled +
@@ -301,11 +301,11 @@ function estimateEventSize(step: Step): number {
 async function getHistorySizeBytes(workflowId: string): Promise<number> {
   const client = new WorkflowClient();
   const handle = client.getHandle(workflowId);
-  
+
   // Fetch history (paginated)
   let totalBytes = 0;
   let nextPageToken: Uint8Array | undefined;
-  
+
   do {
     const response = await handle.fetchHistory({ nextPageToken });
     totalBytes += response.history.events.reduce((sum, event) => {
@@ -313,7 +313,7 @@ async function getHistorySizeBytes(workflowId: string): Promise<number> {
     }, 0);
     nextPageToken = response.nextPageToken;
   } while (nextPageToken);
-  
+
   return totalBytes;
 }
 ```
@@ -329,7 +329,7 @@ Temporal workflows can be **paused** via signals, but NOT via native platform fe
 ```typescript
 class WorkflowEngine {
   private isPaused = false;
-  
+
   @workflow.defineSignal('pause')
   async handlePauseSignal(): Promise<void> {
     this.isPaused = true;
@@ -340,7 +340,7 @@ class WorkflowEngine {
       idempotencyKey: generateIdempotencyKey('RunPaused', ...),
     });
   }
-  
+
   @workflow.defineSignal('resume')
   async handleResumeSignal(): Promise<void> {
     this.isPaused = false;
@@ -351,14 +351,14 @@ class WorkflowEngine {
       idempotencyKey: generateIdempotencyKey('RunResumed', ...),
     });
   }
-  
+
   async executeStep(step: Step): Promise<void> {
     // Check pause state before each step
     if (this.isPaused) {
       // Block until resumed (with timeout)
       await workflow.condition(() => !this.isPaused, '24h');
     }
-    
+
     // ... execute step
   }
 }
@@ -446,13 +446,13 @@ Use ESLint plugin: `@temporalio/eslint-plugin`
 
 ### 8.1 Conductor → Temporal
 
-| Conductor Concept | Temporal Equivalent | Notes |
-|-------------------|---------------------|-------|
-| Task | Activity | Similar semantics |
-| Wait task | Timer (`workflow.sleep()`) | Temporal more flexible |
-| Switch task | Workflow branching (`if/else`) | Native in Temporal |
-| Sub-workflow | Child workflow (`workflow.executeChild()`) | Temporal has better lifecycle mgmt |
-| Webhook callback | Signal | Temporal signal more reliable |
+| Conductor Concept | Temporal Equivalent                        | Notes                              |
+| ----------------- | ------------------------------------------ | ---------------------------------- |
+| Task              | Activity                                   | Similar semantics                  |
+| Wait task         | Timer (`workflow.sleep()`)                 | Temporal more flexible             |
+| Switch task       | Workflow branching (`if/else`)             | Native in Temporal                 |
+| Sub-workflow      | Child workflow (`workflow.executeChild()`) | Temporal has better lifecycle mgmt |
+| Webhook callback  | Signal                                     | Temporal signal more reliable      |
 
 **Migration checklist**:
 
@@ -465,6 +465,6 @@ Use ESLint plugin: `@temporalio/eslint-plugin`
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial Temporal engine policies (extracted from ExecutionSemantics.v1.md) |
+| Version | Date       | Change                                                                     |
+| ------- | ---------- | -------------------------------------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial Temporal engine policies (extracted from ExecutionSemantics.v1.md) |
