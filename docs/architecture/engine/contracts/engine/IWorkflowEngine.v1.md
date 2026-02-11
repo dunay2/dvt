@@ -207,6 +207,22 @@ type PlanRef = {
 - BACKWARD compatibility: Engine supports ≤3 minor versions back.
 - FORWARD compatibility: Define deprecation policy (e.g., "v1.0 deprecated after 2026-Q3").
 
+**Integrity Validation (NORMATIVE)**:
+
+When the Engine's Worker fetches a plan via `fetchPlan(PlanRef)` Activity:
+
+1. The Worker MUST download the plan from `PlanRef.uri`.
+2. The Worker MUST compute the SHA256 hash of the downloaded content.
+3. If the computed SHA256 does **NOT match** `PlanRef.sha256`, the Activity MUST:
+   - Fail immediately with error code `PLAN_INTEGRITY_VALIDATION_FAILED`
+   - NOT proceed with workflow execution
+   - Emit a critical alert (P1) to operations/security
+   - Log both expected and actual hash values for audit
+
+**Rationale**: This prevents execution of plans that have been modified after approval (e.g., cache poisoning, storage corruption, or malicious tampering).
+
+**See**: [TemporalAdapter § 2.1](../adapters/temporal/TemporalAdapter.spec.md#21-fetchplan-activity-normative-validation) for reference implementation.
+
 ---
 
 ## 4) Cross-Adapter Capability Validation

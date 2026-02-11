@@ -1,0 +1,66 @@
+# Automatic PR labeling based on file paths
+# Reference: https://github.com/actions/labeler
+
+# Documentation changes
+'documentation':
+  - changed-files:
+    - any-glob-to-any-file: 'docs/**/*.md'
+    - any-glob-to-any-file: '*.md'
+
+# Engine core changes
+'engine:core':
+  - changed-files:
+    - any-glob-to-any-file: 'engine/core/**/*'
+    - any-glob-to-any-file: 'engine/src/**/*'
+
+# Adapter changes
+'engine:adapters':
+  - changed-files:
+    - any-glob-to-any-file: 'engine/adapters/**/*'
+
+# Temporal adapter
+'engine:temporal':
+  - changed-files:
+    - any-glob-to-any-file: 'engine/adapters/temporal/**/*'
+    - any-glob-to-any-file: 'docs/architecture/engine/adapters/temporal/**/*'
+
+# State Store
+'engine:state-store':
+  - changed-files:
+    - any-glob-to-any-file: 'engine/adapters/state-store/**/*'
+    - any-glob-to-any-file: 'docs/architecture/engine/contracts/state-store/**/*'
+
+# Contracts (high scrutiny)
+'contracts':
+  - changed-files:
+    - any-glob-to-any-file: 'docs/architecture/engine/contracts/**/*'
+    - any-glob-to-any-file: 'contracts/**/*'
+
+# Tests
+'tests':
+  - changed-files:
+    - any-glob-to-any-file: '**/*.test.ts'
+    - any-glob-to-any-file: '**/*.spec.ts'
+    - any-glob-to-any-file: 'engine/test/**/*'
+
+# CI/CD
+'ci/cd':
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**/*'
+    - any-glob-to-any-file: '.github/actions/**/*'
+
+# Dependencies
+'dependencies':
+  - changed-files:
+    - any-glob-to-any-file: 'package.json'
+    - any-glob-to-any-file: 'package-lock.json'
+    - any-glob-to-any-file: 'pnpm-lock.yaml'
+
+# Configuration
+'configuration':
+  - changed-files:
+    - any-glob-to-any-file: '*.config.js'
+    - any-glob-to-any-file: '*.config.ts'
+    - any-glob-to-any-file: 'tsconfig*.json'
+    - any-glob-to-any-file: '.eslintrc*'
+    - any-glob-to-any-file: '.prettierrc*'

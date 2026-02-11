@@ -87,7 +87,7 @@ State is derived by reducing **append-only events** in order. No field is ever u
 | `StepSkipped` | Engine | Step `status := SKIPPED`, reason recorded |
 | `SignalAccepted` | IAuthorization | Decision recorded, does NOT change run status |
 | `SignalRejected` | IAuthorization | Signal denied |
-| `RunPaused` | Engine | `status := PAUSED` |
+| `RunPaused` | Engine | `status := PAUSED` (see § 6 for Conductor limitations) |
 | `RunResumed` | Engine | `status := RUNNING` |
 | `RunCompleted` | Engine | `status := COMPLETED` |
 | `RunFailed` | Engine | `status := FAILED` |
@@ -318,6 +318,42 @@ Execution engines (Temporal, Conductor, etc.) have platform-specific constraints
 - Different timeout semantics
 <!-- - See [Conductor Engine Policies](../../adapters/conductor/EnginePolicies.md) (Planned: future document for Conductor-specific policies) -->
 
+**NORMATIVE: PAUSE Limitations in Conductor**
+
+Conductor does NOT support pause/resume natively. If the target adapter is Conductor, the PAUSE operation has the following constraints:
+
+1. **PAUSE semantics**: When a `PAUSE` signal is issued, the adapter MUST:
+   - Set run status to `PAUSED` in StateStore
+   - Mark the workflow as "draining" (no new tasks scheduled)
+   - **NOT attempt to cancel or interrupt tasks already in-flight**
+
+2. **In-flight task behavior**: Tasks that are currently executing WILL continue to completion. The adapter MUST NOT attempt to cancel them (Conductor lacks an equivalent to Temporal's cancellation tokens).
+
+3. **Status transition**: After PAUSE is issued:
+   - Status transitions to `PAUSED` immediately in StateStore
+   - Engine internal state transitions to `DRAINING` until all in-flight tasks complete
+   - Once all tasks complete, status remains `PAUSED`
+
+4. **RESUME semantics**: When a `RESUME` signal is issued:
+   - Engine resumes scheduling new tasks according to the plan
+   - Previously completed tasks (before PAUSE) are NOT re-executed
+
+5. **UI/API Contract**: API responses and UI MUST indicate when a run is in `PAUSED` state with `DRAINING` substatus to manage user expectations. Example:
+   ```json
+   {
+     "status": "PAUSED",
+     "substatus": "DRAINING",
+     "message": "Workflow paused. Waiting for 3 in-flight tasks to complete."
+   }
+   ```
+
+6. **Timeout Policy**: If in-flight tasks do not complete within a configurable timeout (default: 5 minutes), the adapter MUST:
+   - Log a warning
+   - Transition to `PAUSED` (with alert `PAUSE_DRAIN_TIMEOUT`)
+   - Allow RESUME to proceed (orphaned tasks may complete asynchronously)
+
+**Implementation Note**: This is a known limitation of Conductor. For use cases requiring immediate cancellation of in-flight work, Temporal is the recommended adapter.
+
 **Storage-agnostic principle**: Core execution semantics (this document) remain independent of engine choice. Adapters bridge the gap.
 
 ---
@@ -359,3 +395,144 @@ Producers MUST emit events compatible with the contract version. Consumers MUST 
 | 1.1 | 2026-02-11 | **Minor**: Extracted storage/engine-specific content to adapters (Snowflake DDL → StateStoreAdapter.md, continue-as-new → Temporal EnginePolicies.md). Core semantics now fully agnostic. |
 | 1.0.1 | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility) |
 | 1.0 | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection) |
+
+---
+
+## Appendix A: Canonical Event Schemas (Normative)
+
+**Source of Truth**: JSON Schema files are the authoritative source for event structure validation. This appendix provides human-readable examples and normative field descriptions.
+
+**Schema Location**: `docs/architecture/engine/contracts/engine/events/*.schema.json` (planned)
+
+---
+
+### A.1 RunStarted Event
+
+Emitted by the Engine when a workflow execution begins in the target orchestrator (Temporal, Conductor, etc.).
+
+**JSON Schema Reference**: `RunStarted.schema.json` (planned)
+
+**Normative Fields**:
+
+```ts
+interface RunStartedEvent {
+  // Event envelope (common to all events)
+  eventType: "RunStarted";
+  eventId: string;                   // UUID v4
+  runId: string;                     // Workflow run identifier
+  runSeq: number;                    // Monotonic sequence (per runId)
+  idempotencyKey: string;            // SHA256(runId | eventType | planVersion)
+  emittedAt: string;                 // ISO 8601 timestamp (UTC)
+  emittedBy: string;                 // e.g., "engine", "planner", "activity-worker"
+  
+  // Event payload (specific to RunStarted)
+  status: "RUNNING";                 // Run status transition
+  engineRunRef: string;              // Engine-specific identifier (e.g., Temporal workflowId/runId, Conductor executionId)
+  engineType: "temporal" | "conductor" | "mock";
+  planRef: {
+    uri: string;                     // e.g., s3://bucket/plans/{planId}.json
+    sha256: string;                  // Integrity hash
+    schemaVersion: string;           // e.g., "v1.2"
+    planId: string;
+    planVersion: string;
+  };
+  context: {
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    triggeredBy?: string;            // User ID or "system"
+    triggerSource?: "manual" | "schedule" | "webhook" | "api";
+  };
+  startedAt: string;                 // ISO 8601 timestamp (when engine execution began)
+}
+```
+
+**State Transition Rule** (NORMATIVE):
+
+When a `RunStarted` event is applied to a snapshot projection:
+
+1. `RunSnapshot.status` MUST transition to `"RUNNING"`.
+2. `RunSnapshot.engineRunRef` MUST be set to `engineRunRef` from event payload.
+3. `RunSnapshot.startedAt` MUST be set to `startedAt` from event payload.
+4. `RunSnapshot.lastEventSeq` MUST be updated to the `runSeq` of this event.
+
+**Idempotency Guarantee**:
+
+- If a `RunStarted` event with the same `idempotencyKey` is received multiple times, only the first application MUST take effect.
+- Subsequent duplicate events MUST be ignored (no-op) but still advance `lastEventSeq`.
+
+**Example Payload**:
+
+```json
+{
+  "eventType": "RunStarted",
+  "eventId": "01234567-89ab-cdef-0123-456789abcdef",
+  "runId": "run_2026-02-11_abc123",
+  "runSeq": 2,
+  "idempotencyKey": "d2a84f4b8b650937ec8f73cd8be2c74add5a911ba64df27458ed8229da804a26",
+  "emittedAt": "2026-02-11T10:30:00.000Z",
+  "emittedBy": "engine",
+  "status": "RUNNING",
+  "engineRunRef": "temporal://default/interpreter-workflow/run_2026-02-11_abc123/f47ac10b",
+  "engineType": "temporal",
+  "planRef": {
+    "uri": "s3://dvt-plans/prod/plan_xyz_v1.2.json",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "schemaVersion": "v1.2",
+    "planId": "plan_xyz",
+    "planVersion": "1.2"
+  },
+  "context": {
+    "tenantId": "tenant_acme",
+    "projectId": "proj_marketing",
+    "environmentId": "prod",
+    "triggeredBy": "user_jane",
+    "triggerSource": "manual"
+  },
+  "startedAt": "2026-02-11T10:30:00.000Z"
+}
+```
+
+---
+
+### A.2 Additional Event Schemas
+
+For complete event schema specifications, see:
+
+- **RunQueued**: Section 3 (Backpressure & Run Queue)
+- **RunApproved**: Emitted by Planner (approval gate passed)
+- **StepStarted**: Activity begins execution
+- **StepCompleted**: Activity execution succeeded
+- **StepFailed**: Activity execution failed
+- **StepSkipped**: Activity skipped due to dependency failure or conditional logic
+- **StepDelayed**: Activity execution delayed due to throttling or backpressure
+- **RunPaused**: Workflow paused (via PAUSE signal)
+- **RunResumed**: Workflow resumed (via RESUME signal)
+- **RunCompleted**: All steps completed successfully
+- **RunFailed**: Workflow failed (unrecoverable error)
+- **RunCancelled**: Workflow cancelled (via user or system signal)
+- **SignalAccepted**: External signal received and validated
+- **SignalRejected**: External signal rejected (authorization or validation failure)
+
+**JSON Schema Files** (planned):
+
+```
+docs/architecture/engine/contracts/engine/events/
+  RunStarted.schema.json
+  RunQueued.schema.json
+  StepStarted.schema.json
+  StepCompleted.schema.json
+  StepFailed.schema.json
+  StepDelayed.schema.json
+  RunPaused.schema.json
+  RunResumed.schema.json
+  RunCompleted.schema.json
+  RunFailed.schema.json
+  RunCancelled.schema.json
+  SignalAccepted.schema.json
+  SignalRejected.schema.json
+```
+
+**Validation Rule** (NORMATIVE):
+
+All events emitted by the Engine, Planner, or Activity Workers MUST validate against their respective JSON Schema before being persisted to the StateStore. Invalid events MUST be rejected with a `SCHEMA_VALIDATION_FAILED` error and MUST NOT be persisted.

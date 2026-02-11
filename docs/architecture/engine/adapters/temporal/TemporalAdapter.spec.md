@@ -93,6 +93,140 @@ export async function interpreterWorkflow(planRef: PlanRef, context: RunContext)
 
 ---
 
+## 2.1) fetchPlan Activity (Normative Validation)
+
+The `fetchPlan` Activity MUST implement strict integrity validation to prevent execution of tampered or mismatched plans.
+
+**Activity Signature**:
+
+```ts
+interface FetchPlanActivity {
+  fetchPlan(planRef: PlanRef): Promise<ExecutionPlan>;
+}
+```
+
+**NORMATIVE Requirements**:
+
+1. **Download Plan**: Fetch the plan from `planRef.uri` (e.g., from S3, GCS, Azure Blob, or HTTP endpoint).
+
+2. **Compute SHA256**: Calculate the SHA256 hash of the downloaded plan content (after decompression if `planRef.compression` is set).
+
+3. **Strict Hash Validation** (CRITICAL):
+   - If the computed SHA256 does **NOT** match `planRef.sha256`, the Activity MUST:
+     - **Fail immediately** with error code `PLAN_INTEGRITY_VALIDATION_FAILED`
+     - **NOT proceed with execution**
+     - Emit a critical alert (P1) to operations/security team
+     - Record the mismatch in audit logs with both expected and actual hash values
+   
+4. **Error Response Structure**:
+   ```ts
+   {
+     category: "VALIDATION_ERROR",
+     code: "PLAN_INTEGRITY_VALIDATION_FAILED",
+     message: "Plan hash mismatch: expected sha256 does not match downloaded content",
+     retryable: false,
+     details: {
+       expectedSha256: planRef.sha256,
+       actualSha256: computedSha256,
+       planUri: planRef.uri,
+       planId: planRef.planId,
+       planVersion: planRef.planVersion
+     }
+   }
+   ```
+
+5. **Retry Policy**: This error is **NOT retryable**. The workflow MUST transition to `FAILED` status immediately.
+
+6. **Security Rationale**: 
+   - Prevents execution of plans that have been modified after approval
+   - Detects cache poisoning, man-in-the-middle attacks, or storage corruption
+   - Ensures audit trail integrity (executed plan matches approved plan)
+
+**Implementation Example** (TypeScript):
+
+```ts
+import { createHash } from 'crypto';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { ungzip } from 'node:zlib';
+import { promisify } from 'node:util';
+
+const ungzipAsync = promisify(ungzip);
+
+export async function fetchPlan(planRef: PlanRef): Promise<ExecutionPlan> {
+  // 1. Download plan
+  const s3 = new S3Client({});
+  const command = new GetObjectCommand({
+    Bucket: extractBucket(planRef.uri),
+    Key: extractKey(planRef.uri)
+  });
+  
+  const response = await s3.send(command);
+  let content = await response.Body!.transformToByteArray();
+  
+  // 2. Decompress if needed
+  if (planRef.compression === 'gzip') {
+    content = await ungzipAsync(Buffer.from(content));
+  }
+  
+  // 3. Compute SHA256
+  const computedSha256 = createHash('sha256').update(content).digest('hex');
+  
+  // 4. STRICT VALIDATION (NORMATIVE)
+  if (computedSha256 !== planRef.sha256) {
+    throw new PlanIntegrityError({
+      category: 'VALIDATION_ERROR',
+      code: 'PLAN_INTEGRITY_VALIDATION_FAILED',
+      message: 'Plan hash mismatch: expected sha256 does not match downloaded content',
+      retryable: false,
+      details: {
+        expectedSha256: planRef.sha256,
+        actualSha256: computedSha256,
+        planUri: planRef.uri,
+        planId: planRef.planId,
+        planVersion: planRef.planVersion
+      }
+    });
+  }
+  
+  // 5. Parse and return
+  const plan = JSON.parse(content.toString('utf-8')) as ExecutionPlan;
+  
+  // 6. Schema version validation (bonus)
+  if (!isSupportedSchemaVersion(plan.schemaVersion, planRef.schemaVersion)) {
+    throw new PlanSchemaError({
+      category: 'VALIDATION_ERROR',
+      code: 'PLAN_SCHEMA_VERSION_MISMATCH',
+      message: `Plan schema version ${plan.schemaVersion} does not match PlanRef ${planRef.schemaVersion}`,
+      retryable: false
+    });
+  }
+  
+  return plan;
+}
+
+function isSupportedSchemaVersion(planVersion: string, refVersion: string): boolean {
+  // Support exact match or backward compatible versions (e.g., v1.2 plan can run with v1.2 or v1.3 ref)
+  return planVersion === refVersion; // Simplified; implement semver logic as needed
+}
+```
+
+**Operational Monitoring**:
+
+- Alert: `PLAN_INTEGRITY_VALIDATION_FAILED` (P1, critical)
+- Metrics: 
+  - `plan_fetch_integrity_failure_count` (counter)
+  - `plan_fetch_duration_ms` (histogram)
+  - `plan_fetch_size_bytes` (histogram)
+
+**Testing Requirements**:
+
+- Unit test: Tampered plan content (modified after hashing) → MUST fail
+- Unit test: Correct plan → MUST succeed
+- Unit test: Network-corrupted download → MUST fail with integrity error (not generic network error)
+- Integration test: End-to-end workflow with mismatched hash → workflow transitions to FAILED
+
+---
+
 ## 3) Namespace Strategy (Temporal)
 
 **Recommendation**: FEW namespaces, **NOT per-tenant**.
