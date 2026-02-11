@@ -26,6 +26,10 @@ export class InMemoryStateStore implements IOutboxStorage {
       return;
     }
 
+    if (this.events.has(event.eventId)) {
+      return;
+    }
+
     this.events.set(event.eventId, { ...event });
     this.idempotencyKeys.add(event.idempotencyKey);
   }
@@ -45,20 +49,11 @@ export class InMemoryStateStore implements IOutboxStorage {
    * Pull undelivered events from the outbox
    */
   async pullUndelivered(limit: number): Promise<OutboxEvent[]> {
-    const undelivered: OutboxEvent[] = [];
-
-    for (const event of this.events.values()) {
-      if (event.deliveredAt === null) {
-        undelivered.push({ ...event });
-
-        if (undelivered.length >= limit) {
-          break;
-        }
-      }
-    }
-
-    // Sort by createdAt to return oldest first
-    undelivered.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    const undelivered = Array.from(this.events.values())
+      .filter((event) => event.deliveredAt === null)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .slice(0, limit)
+      .map((event) => ({ ...event }));
 
     return undelivered;
   }
@@ -74,6 +69,13 @@ export class InMemoryStateStore implements IOutboxStorage {
    * Get count of undelivered events (for testing)
    */
   async getUndeliveredCount(): Promise<number> {
+    return this.countUndelivered();
+  }
+
+  /**
+   * Get count of undelivered events (for testing)
+   */
+  async countUndelivered(): Promise<number> {
     let count = 0;
     for (const event of this.events.values()) {
       if (event.deliveredAt === null) {

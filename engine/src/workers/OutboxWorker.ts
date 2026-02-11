@@ -101,39 +101,7 @@ export class OutboxWorker {
    * Note: This method queries storage and should be called periodically (not on every poll)
    */
   async getMetrics(): Promise<OutboxMetrics> {
-    // Pull one event to check lag and existence
-    const undeliveredEvents = await this.storage.pullUndelivered(1);
-    
-    // For undeliveredCount, we only check if there are any undelivered events
-    // A full count would require a separate query which could be expensive
-    const undeliveredCount = undeliveredEvents.length;
-
-    // Calculate delivery lag (oldest undelivered event age)
-    let deliveryLagSeconds = 0;
-    if (undeliveredEvents.length > 0) {
-      const oldestEvent = undeliveredEvents[0];
-      if (oldestEvent) {
-        const ageMs = Date.now() - oldestEvent.createdAt.getTime();
-        deliveryLagSeconds = ageMs / 1000;
-      }
-    }
-
-    // Calculate delivery rate
-    const now = Date.now();
-    const timeSinceLastMetrics = (now - this.lastMetricsTime) / 1000;
-    const deliveryRate =
-      timeSinceLastMetrics > 0 ? this.lastDeliveredCount / timeSinceLastMetrics : 0;
-
-    // Reset counters
-    this.lastDeliveredCount = 0;
-    this.lastMetricsTime = now;
-
-    return {
-      deliveryLagSeconds,
-      deliveryRate,
-      undeliveredCount,
-      timestamp: new Date(),
-    };
+    return this.computeMetrics(true);
   }
 
   /**
@@ -252,7 +220,7 @@ export class OutboxWorker {
     
     this.lastCircuitBreakerCheck = now;
     
-    const metrics = await this.getMetrics();
+    const metrics = await this.computeMetrics(false);
 
     const wasOpen = this.circuitBreakerOpen;
     this.circuitBreakerOpen =
@@ -272,5 +240,38 @@ export class OutboxWorker {
         `Circuit breaker CLOSED: delivery lag ${metrics.deliveryLagSeconds}s is below threshold ${this.config.circuitBreakerLagSeconds}s`
       );
     }
+  }
+
+  private async computeMetrics(resetCounters: boolean): Promise<OutboxMetrics> {
+    const [undeliveredEvents, undeliveredCount] = await Promise.all([
+      this.storage.pullUndelivered(1),
+      this.storage.countUndelivered(),
+    ]);
+
+    let deliveryLagSeconds = 0;
+    if (undeliveredEvents.length > 0) {
+      const oldestEvent = undeliveredEvents[0];
+      if (oldestEvent) {
+        const ageMs = Date.now() - oldestEvent.createdAt.getTime();
+        deliveryLagSeconds = ageMs / 1000;
+      }
+    }
+
+    const now = Date.now();
+    const timeSinceLastMetrics = (now - this.lastMetricsTime) / 1000;
+    const deliveryRate =
+      timeSinceLastMetrics > 0 ? this.lastDeliveredCount / timeSinceLastMetrics : 0;
+
+    if (resetCounters) {
+      this.lastDeliveredCount = 0;
+      this.lastMetricsTime = now;
+    }
+
+    return {
+      deliveryLagSeconds,
+      deliveryRate,
+      undeliveredCount,
+      timestamp: new Date(),
+    };
   }
 }
