@@ -41,6 +41,11 @@ type PlanRef = {
 - FORWARD compatibility: Deprecation policy (e.g., "v1.0 deprecated 2026-Q3").
 - **Cross-schema continuation**: If in-flight runs on old schema, adapter MUST support `continueAsNew` with schema migration.
 
+**Integrity Validation (NORMATIVE)**:
+
+When `fetchPlan(planRef)` downloads the plan, the adapter MUST compute SHA256 and compare it to `planRef.sha256`.
+If the hash does **not** match, the Activity MUST fail with error code `VALIDATION_FAILED` and the workflow MUST NOT continue.
+
 ---
 
 ## 2) Interpreter Workflow Pattern (Required)
