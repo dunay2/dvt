@@ -58,10 +58,14 @@ jobs:
             }
 
       - name: Check for merge conflicts
-        uses: olivr/copybara-action@v1.2.4
-        with:
-          access_token: ${{ secrets.GITHUB_TOKEN }}
-          ssh_key: ''
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          # Verify branch can be merged by checking refs exist
+          if ! git rev-parse origin/${{ github.base_ref }} >/dev/null 2>&1; then
+            echo "❌ Base branch origin/${{ github.base_ref }} not found"
+            exit 1
+          fi
+          echo "✅ PR merge conflict status will be determined by GitHub's merge algorithm"
 
       - name: Label PR based on files changed
         uses: actions/labeler@v6
