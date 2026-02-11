@@ -1,12 +1,13 @@
 name: Setup Repository Labels
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/setup-labels.yml'
+  # Disabled during testing
+  # workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - '.github/workflows/setup-labels.yml'
 
 jobs:
   setup-labels:
