@@ -1,0 +1,40 @@
+{
+  "version": "1.0.0",
+  "description": "Baseline snapshot hashes for golden path contract tests",
+  "generated": "2026-02-11T16:14:10.446Z",
+  "paths": {
+    "hello-world": {
+      "description": "3 steps linear plan completes in < 30s",
+      "hash": "pending",
+      "status": "not-implemented",
+      "metadata": {
+        "steps": 3,
+        "expectedDuration": "< 30s"
+      }
+    },
+    "pause-resume": {
+      "description": "Pause after step 1, resume, same final snapshot hash",
+      "hash": "pending",
+      "status": "not-implemented",
+      "metadata": {
+        "pauseAfterStep": 1,
+        "resumeExpected": true
+      }
+    },
+    "retry": {
+      "description": "Fail step 2 once, retry, same snapshot hash",
+      "hash": "pending",
+      "status": "not-implemented",
+      "metadata": {
+        "failStep": 2,
+        "retryExpected": true
+      }
+    }
+  },
+  "notes": [
+    "This file is maintained manually until issue #10 (Golden Paths) is completed",
+    "Hash values will be updated when actual golden path implementations are available",
+    "Status 'pending' indicates golden path is not yet implemented",
+    "CI will pass with pending status but will validate once implemented"
+  ]
+}
