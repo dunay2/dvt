@@ -58,7 +58,7 @@ jobs:
             }
 
       - name: Check for merge conflicts
-        uses: olivr/copybara-action@v1.2.4
+        uses: olivr/copybara-action@v1.2.5
         with:
           access_token: ${{ secrets.GITHUB_TOKEN }}
           ssh_key: ''
