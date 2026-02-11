@@ -25,14 +25,26 @@ export class DeterminismViolationError extends DVTError {
 
 export class InvalidStateTransitionError extends DVTError {
   constructor(currentState: string, attemptedState: string, context?: Record<string, unknown>) {
-    super('INVALID_STATE_TRANSITION', `Cannot transition from ${currentState} to ${attemptedState}`, { currentState, attemptedState, ...context });
+    super(
+      'INVALID_STATE_TRANSITION',
+      `Cannot transition from ${currentState} to ${attemptedState}`,
+      { currentState, attemptedState, ...context }
+    );
     Object.setPrototypeOf(this, InvalidStateTransitionError.prototype);
   }
 }
 
 export class TenantIsolationViolationError extends DVTError {
-  constructor(requestTenantId: string, accessedTenantId: string, context?: Record<string, unknown>) {
-    super('TENANT_ISOLATION_VIOLATION', `Attempted to access tenant ${accessedTenantId} from context of ${requestTenantId}`, { requestTenantId, accessedTenantId, ...context });
+  constructor(
+    requestTenantId: string,
+    accessedTenantId: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      'TENANT_ISOLATION_VIOLATION',
+      `Attempted to access tenant ${accessedTenantId} from context of ${requestTenantId}`,
+      { requestTenantId, accessedTenantId, ...context }
+    );
     Object.setPrototypeOf(this, TenantIsolationViolationError.prototype);
   }
 }

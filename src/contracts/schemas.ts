@@ -22,4 +22,7 @@ export const WorkflowEventSchema = z.object({
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
 });
 
-export const IdempotencyKeySchema = z.string().min(32).regex(/^[a-f0-9]{32,}$/);
+export const IdempotencyKeySchema = z
+  .string()
+  .min(32)
+  .regex(/^[a-f0-9]{32,}$/);

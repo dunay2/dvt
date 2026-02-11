@@ -18,7 +18,7 @@ export function createSeededPRNG(): PRNGService {
     next(): number {
       state = (state * 1103515245 + 12345) % 2147483648;
       return state / 2147483648;
-    }
+    },
   };
 }
 

@@ -13,7 +13,13 @@ export interface OutboxEventRecord {
 }
 
 export interface IOutboxStorageAdapter {
-  appendOutbox(tenantId: TenantId, eventId: EventId, eventData: unknown, targetSystem: string, idempotencyKey: IdempotencyKey): Promise<OutboxEventRecord>;
+  appendOutbox(
+    tenantId: TenantId,
+    eventId: EventId,
+    eventData: unknown,
+    targetSystem: string,
+    idempotencyKey: IdempotencyKey
+  ): Promise<OutboxEventRecord>;
   pullUndelivered(tenantId: TenantId, maxEvents: number): Promise<OutboxEventRecord[]>;
   markDelivered(outboxId: string): Promise<OutboxEventRecord>;
   health(): Promise<boolean>;

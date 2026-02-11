@@ -1,6 +1,6 @@
 /**
  * DVT Engine - Outbox Delivery Worker Module
- * 
+ *
  * Export main components for outbox pattern implementation
  */
 
