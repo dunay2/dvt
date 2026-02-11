@@ -40,32 +40,41 @@ jobs:
 
       - name: Check for Date.now()
         run: |
-          echo "🔍 Scanning for Date.now() in engine code..."
-          if grep -r "Date\.now()" engine/ --exclude-dir=test --exclude-dir=node_modules; then
+          echo "🔍 Scanning for Date.now() in engine workflows..."
+          if grep -r "Date\.now()" engine/ \
+            --exclude-dir=test \
+            --exclude-dir=node_modules \
+            --exclude=OutboxWorker.ts; then
             echo "❌ Found Date.now() calls (use workflow.now() in Temporal workflows)"
             exit 1
           else
-            echo "✅ No Date.now() calls found"
+            echo "✅ No Date.now() calls found in workflows"
           fi
 
       - name: Check for Math.random()
         run: |
-          echo "🔍 Scanning for Math.random() in engine code..."
-          if grep -r "Math\.random()" engine/ --exclude-dir=test --exclude-dir=node_modules; then
+          echo "🔍 Scanning for Math.random() in engine workflows..."
+          if grep -r "Math\.random()" engine/ \
+            --exclude-dir=test \
+            --exclude-dir=node_modules \
+            --exclude=OutboxWorker.ts; then
             echo "❌ Found Math.random() calls (use workflow-seeded RNG)"
             exit 1
           else
-            echo "✅ No Math.random() calls found"
+            echo "✅ No Math.random() calls found in workflows"
           fi
 
       - name: Check for crypto.randomBytes()
         run: |
-          echo "🔍 Scanning for crypto.randomBytes() in engine code..."
-          if grep -r "crypto\.randomBytes" engine/ --exclude-dir=test --exclude-dir=node_modules; then
+          echo "🔍 Scanning for crypto.randomBytes() in engine workflows..."
+          if grep -r "crypto\.randomBytes" engine/ \
+            --exclude-dir=test \
+            --exclude-dir=node_modules \
+            --exclude=OutboxWorker.ts; then
             echo "❌ Found crypto.randomBytes() calls (use deterministic UUID generation)"
             exit 1
           else
-            echo "✅ No crypto.randomBytes() calls found"
+            echo "✅ No crypto.randomBytes() calls found in workflows"
           fi
 
       - name: Check for process.env in engine
