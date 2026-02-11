@@ -34,11 +34,16 @@ jobs:
       - name: Check for 'any' types
         run: |
           echo "Checking for TypeScript 'any' types in contracts..."
-          if grep -r ":\s*any" contracts/; then
-            echo "❌ Found 'any' types in contracts (violates strict mode)"
-            exit 1
+          if [ -d "contracts" ]; then
+            if grep -r ":\s*any" contracts/ 2>/dev/null; then
+              echo "❌ Found 'any' types in contracts (violates strict mode)"
+              exit 1
+            else
+              echo "✅ No 'any' types found"
+            fi
           else
-            echo "✅ No 'any' types found"
+            echo "⚠️  contracts/ directory not yet created (awaiting issue #2)"
+            echo "✅ Check passed (stub mode)"
           fi
 
   contract-validate:
