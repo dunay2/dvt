@@ -1,6 +1,7 @@
 # Contributing to DVT Engine Documentation
 
-This guide explains how to contribute to the DVT Workflow Engine documentation, including normative contracts, runbooks, and architectural decisions.
+This guide explains how to contribute to the DVT Workflow Engine documentation,
+including normative contracts, runbooks, and architectural decisions.
 
 ---
 
@@ -16,7 +17,7 @@ This guide explains how to contribute to the DVT Workflow Engine documentation, 
 
 ## Documentation Structure
 
-```
+```text
 docs/
 ├── architecture/engine/
 │   ├── INDEX.md                    # Navigation hub
@@ -45,10 +46,10 @@ Changes to different documentation areas require specific team approvals:
 
 | Path | Required Reviewers | Rationale |
 |------|-------------------|-----------|
-| `docs/architecture/engine/contracts/` | `@your-org/architecture-team` | Normative contracts (breaking changes affect SDK consumers) |
-| `docs/VERSIONING.md` | `@your-org/architecture-team` | Contract evolution policy (affects all downstream systems) |
+| `docs/architecture/engine/contracts/` | `@your-org/architecture-team` | Normative contracts |
+| `docs/VERSIONING.md` | `@your-org/architecture-team` | Contract evolution policy |
 | `docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md` | `@your-org/architecture-team`<br>`@your-org/engine-leads` | Core execution semantics |
-| `docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md` | `@your-org/architecture-team`<br>`@your-org/sdk-team` | Customer-facing SDK interface |
+| `docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md` | `@your-org/architecture-team`<br>`@your-org/sdk-team` | SDK interface |
 | `docs/architecture/engine/contracts/adapters/` | `@your-org/architecture-team`<br>`@your-org/platform-integrations` | Multi-platform compatibility |
 | `docs/runbooks/` | `@your-org/sre-team`<br>`@your-org/architecture-team` | Operational procedures |
 | `docs/roadmap/` | `@your-org/product-leads`<br>`@your-org/engineering-leads` | Strategic planning |

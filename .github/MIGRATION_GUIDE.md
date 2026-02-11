@@ -23,7 +23,7 @@
 
 ---
 
-## 🗺️ Link Migration Table
+## Link Migration Table
 
 ### Core Contracts
 
@@ -332,7 +332,9 @@ A: Yes, for 90 days. After 2026-05-12, use git history: `git show <commit>:docs/
 
 - [ ] Update internal implementation guides (links to INDEX.md)
 - [ ] Review [State Store Contract](../docs/architecture/engine/contracts/state-store/README.md)
-- [ ] Choose storage backend: Read [Snowflake](../docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md) OR [Postgres](../docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md) adapter
+- [ ] Choose storage backend:
+  - Read [Snowflake StateStoreAdapter](../docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md)
+  - OR [Postgres StateStoreAdapter](../docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)
 - [ ] Review [Temporal EnginePolicies](../docs/architecture/engine/adapters/temporal/EnginePolicies.md) (if using Temporal)
 
 ### Documentation Team
