@@ -16,6 +16,7 @@ These documents define the **engine boundary, semantics, and invariants**. Viola
 |----------|---------|-------|---------|
 | [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) | Engine interface + signal catalog | Boundary contract | 1.0 |
 | [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | StateStore model, events, dual attempts, snapshots | State machine | 1.0 |
+| [VERSIONING.md](./VERSIONING.md) | Policy for versioning contracts (major/minor bumps, deprecation) | Governance | 1.0 |
 
 ### 🟢 Capability Specifications (Executable, JSON)
 
@@ -95,6 +96,8 @@ docs/architecture/engine/
 ├── roadmap/                               # Roadmap (informative, forward-looking)
 │   └── engine-phases.md                   # Phases 1-4, milestones, risks
 │
+├── VERSIONING.md                          # [NORMATIVE] Contract versioning policy
+│
 └── INDEX.md                               # ← You are here
 ```
 
@@ -103,6 +106,9 @@ docs/architecture/engine/
 ## 🚀 Getting Started
 
 ### Phase 1 MVP (Temporal Only)
+
+**For contract authors & reviewers**:
+1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
 
 **For SDK implementers**:
 1. Read [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (interface)
@@ -137,6 +143,9 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 ---
 
 ## ❓ Finding What You Need
+
+### "What is the contract versioning policy?"
+→ [VERSIONING.md](./VERSIONING.md)
 
 ### "How do I implement the engine interface?"
 → [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Section 2)
@@ -278,6 +287,7 @@ All internal references use **relative markdown links** (portable, versionable).
 |----------|------|------|-----------|----------|
 | IWorkflowEngine.v1.md | 120 lines | Contract | HIGH | SDK devs |
 | ExecutionSemantics.v1.md | 280 lines | Contract | HIGH | Engine impl |
+| VERSIONING.md | 320 lines | Policy | HIGH | Contract authors |
 | TemporalAdapter.spec.md | 300 lines | Adapter | HIGH | Temporal SDK |
 | ConductorAdapter.spec.md | 220 lines | Adapter | MEDIUM (DRAFT) | Conductor SDK |
 | observability.md | 280 lines | Guide | MEDIUM | SRE |
@@ -285,7 +295,7 @@ All internal references use **relative markdown links** (portable, versionable).
 | determinism-tooling.md | 320 lines | Guide | LOW | Plan authors |
 | engine-phases.md | 350 lines | Roadmap | LOW | Execs |
 | capabilities/ (4 files) | 400 lines | Schemas | HIGH | Validation |
-| **TOTAL** | **~2,400 lines** | Mixed | - | - |
+| **TOTAL** | **~2,720 lines** | Mixed | - | - |
 
 **Previous monolith (WORKFLOW_ENGINE.md)**: 3,227 lines (51% reduction ✅)
 
@@ -306,6 +316,7 @@ All internal references use **relative markdown links** (portable, versionable).
 |----------|-------|---------------|-------------|
 | IWorkflowEngine.v1.md | @engine-lead | 2026-02-11 | 2026-05-11 |
 | ExecutionSemantics.v1.md | @engine-lead | 2026-02-11 | 2026-05-11 |
+| VERSIONING.md | @architecture-lead | 2026-02-11 | 2026-12-11 |
 | TemporalAdapter.spec.md | @temporal-lead | 2026-02-11 | 2026-05-11 |
 | ConductorAdapter.spec.md | @conductor-lead | 2026-02-11 | 2026-06-11 |
 | observability.md | @sre-lead | 2026-02-11 | 2026-03-11 |
@@ -321,4 +332,5 @@ All internal references use **relative markdown links** (portable, versionable).
 |---------|------|--------|
 | 0.1 | 2026-02-11 | Partition WORKFLOW_ENGINE.md into 8 modular documents |
 | 1.0 | 2026-02-11 | First stable index (Phase 1 MVP complete) |
+| 1.1 | 2026-02-11 | Add VERSIONING.md (contract versioning policy) |
 

@@ -29,6 +29,8 @@
 - ✅ IWorkflowEngine.v1.md (interface + signal catalog)
 - ✅ ExecutionSemantics.v1.md (StateStore model, dual attempts, snapshots)
 - ✅ TemporalAdapter.spec.md (interpreter, namespace, workers, determinism)
+- ✅ RunStateUpdate.v1.md (event schema, envelope, versioning, consumer compatibility)
+- ✅ Idempotency.v1.md (key spec: eventType+runId+stepId+attemptId, upsert semantics)
 - ✅ PlanRef versioning & schema evolution
 - ✅ Capability matrix (executable JSON schemas)
 
@@ -40,20 +42,23 @@
 ### 1.2 Core Engine Implementation
 
 **Deliverables**:
-- [ ] IWorkflowEngine interface (startRun, cancelRun, getRunStatus, signal)
-- [ ] RunStateStore impl (PostgreSQL + append-only events)
-- [ ] SnapshotProjector (event replay, state derivation)
+- [ ] IWorkflowEngine interface (startRun, cancelRun, getRunStatus [debug-only], signal)
+- [ ] RunStateStore impl (PostgreSQL, append-only events, idempotent writes)
+- [ ] SnapshotProjector (event replay, state derivation, immutable artifacts)
 - [ ] Signal handler (PAUSE, RESUME, RETRY_STEP, CANCEL, custom signals)
 - [ ] PlanFetcher + validator (schema versioning, capability checks)
-- [ ] AuthorizationEngine (RBAC + SignalDecisionRecord audit)
+- [ ] Authorization enforcement (API-boundary RBAC; engine consumes pre-authorized commands; emits auditable SignalDecisionRecord to StateStore)
+- [ ] StateStore retention baseline (event archival after 90 days to cold storage; latest-status denormalized index for queries)
 
 **Success Criteria**:
 - [ ] E2E test: run deterministic plan from start to completion
 - [ ] E2E test: pause + resume workflow mid-execution
 - [ ] E2E test: retry failed step, same artifacts produced
 - [ ] E2E test: cancel run gracefully, in-flight tasks timeout
+- [ ] All StateStore writes idempotent under at-least-once delivery (upsert semantics verified)
 - [ ] StateStore write latency p99 < 10ms
 - [ ] Projection lag < 50 events (SLA < 1s)
+- [ ] getRunStatus used for debugging only; StateStore remains primary truth
 
 ### 1.3 Temporal Interpreter Workflow
 
@@ -63,12 +68,14 @@
 - [ ] Determinism enforcement (Temporal getVersion gates)
 - [ ] continueAsNew logic (50 steps OR 1MB history threshold)
 - [ ] Pause signal handler (cancel in-flight activities, StateStore sync)
+- [ ] StateStore retention + archival baseline policy (archive after 90 days to cold storage; index strategy for latest-status queries)
 
 **Success Criteria**:
 - [ ] Large plan (200+ steps): completes without continueAsNew OR continues correctly
-- [ ] Pause signal latency p99 < 1s
+- [ ] Pause signal latency p99 < 1s (engine responsiveness)
 - [ ] Activity retries increment engineAttemptId correctly
 - [ ] Determinism verified (replay produces identical snapshots)
+- [ ] Archive/query strategy documented and tested
 
 ### 1.4 Observability & Monitoring
 
@@ -126,15 +133,19 @@
 
 **Deliverables**:
 - ✅ ConductorAdapter.spec.md (limitations, emulation strategy)
+- [ ] **Determinism parity definition** (anchored decision):
+  - *Temporal*: Strong workflow replay semantics (engine replays deterministically)
+  - *Conductor*: Emulate determinism via StateStore as canonical replay surface (projector + immutable artifacts); tasks idempotent; state transitions validated
+  - *Guarantee*: "Plan → state transitions" deterministic across adapters (not necessarily engine replay determinism)
 - [ ] Workflow DSL generator (plan → Conductor JSON)
 - [ ] Event listener (async status callbacks)
 - [ ] Pause/cancel emulation (WAIT_FOR_EXTERNAL_EVENT)
-- [ ] Determinism strategy decision (Option A/B/C)
 
 **Success Criteria**:
 - [ ] 10 end-to-end Conductor workflows (simple → complex)
-- [ ] Pause latency p99 < 5s (eventual, not native)
+- [ ] Pause latency p99 < 5s (eventual, not native Temporal-speed)
 - [ ] Capability matrix validated (6 supported, 4 emulated, 2 degraded)
+- [ ] Determinism parity definition approved by engineering leads
 - [ ] POC integration tests passing
 
 ### 2.2 Multi-Language SDKs
@@ -260,23 +271,34 @@ March 31, 2027
 
 By end of 2026 (Phases 1 + 2):
 
-| Metric | Target | Current (Feb 2026) |
-|--------|--------|-------------------|
-| Runs completed / day | 50,000+ | 0 (pre-MVP) |
-| Tenant count | 50+ | 0 |
-| Error rate | < 0.1% | N/A |
-| Completion SLA p99 | < 5s | N/A |
-| Availability | 99.5% | N/A |
-| Cost per run | < $0.01 | TBD |
+| Metric | Target | Notes |
+|--------|--------|-------|
+| **Control-plane latency** | | |
+| RunRequest → plan persisted | p99 < 300ms | API validation + planner + StateStore |
+| State update → UI refresh | p99 < 1s | Projection latency |
+| **Engine responsiveness** | | |
+| PAUSE signal → no new activities scheduled | p99 < 1s | Temporal-native, immediate |
+| State mutation → projector updates StateStore | p99 < 10ms | Write latency |
+| **Data-plane (step execution)** | Varies by step type | Measured per warehouse size |
+| dbt step (small model: <1K rows) | p99 < 30s | Data warehouse, not engine |
+| dbt step (medium model: 1-100K rows) | p99 < 2m | Warehouse-dependent |
+| Spark job execution | p99 < 5m | Cluster size, not engine |
+| **System-level SLOs** | | |
+| Availability (control plane) | 99.5% | Excludes data warehouse |
+| Error rate (engine) | < 0.1% | Excludes user-code errors in tasks |
+| Cost per run | < $0.01 | Compute + storage, TBD |
+| Runs completed / day | 50,000+ | Phase 1 baseline |
+| Tenant count | 50+ | Beta phase |
 
 By end of 2027 (Phases 1 + 2 + 3):
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Runs completed / day | 500,000+ | 0 (pre-MVP) |
-| Tenant count | 500+ | 0 |
-| Plugins in registry | 100+ | 0 |
-| Multi-region deployments | 3+ | 0 |
+| Metric | Target |
+|--------|--------|
+| Runs completed / day | 500,000+ |
+| Tenant count | 500+ |
+| Plugins in registry | 100+ |
+| Multi-region deployments | 3+ |
+| Control-plane SLA compliance | 99.5% availability |
 
 ---
 
@@ -319,28 +341,32 @@ By end of 2027 (Phases 1 + 2 + 3):
 **Green Criteria** (ALL required):
 - [ ] Zero P1 incidents in production (2-week window)
 - [ ] 95%+ test pass rate
-- [ ] SLA p99 completion latency < 5s (verified via synthetic benchmarks)
+- [ ] SLA targets verified via synthetic benchmarks:
+  - Control-plane latency (RunRequest → plan persisted) p99 < 300ms ✅
+  - State update → UI update p99 < 1s ✅
+  - PAUSE signal latency p99 < 1s ✅
 - [ ] External beta users report positive feedback (survey NPS > 50)
 
 **Yellow Criteria** (assess):
 - [ ] 1 P1 incident in 2-week window → post-mortem required
 - [ ] 85-94% test pass rate → root cause analysis
-- [ ] p99 latency 5-10s → optimization plan required
+- [ ] Any control-plane SLA target exceeded → optimization plan required
 
 **Red Criteria** (BLOCK):
 - [ ] > 1 P1 incident / week
 - [ ] < 85% test pass rate
-- [ ] p99 latency > 10s
-- [ ] Any security vulnerability (audit trail, plugin sandbox)
+- [ ] Control-plane latency targets missed by >50% → root cause investigation required
+- [ ] Any security vulnerability (audit trail, idempotency, plugin sandbox)
 
 **Decision Maker**: VP Engineering + Product Lead
 
 ### Phase 2 → Phase 3 Gate (Sept 30, 2026)
 
-Same criteria as Phase 1, PLUS:
-- [ ] Conductor adapter passes POC validation
-- [ ] Multi-language SDK (≥2 languages) mature
+Same criteria as Phase 1 → Phase 2 gate, PLUS:
+- [ ] Conductor adapter passes POC validation (parity definition honored)
+- [ ] Multi-language SDK (≥2 languages) mature and tested
 - [ ] Cost model approved by finance
+- [ ] Determinism parity implemented and verified across adapters
 
 ---
 
