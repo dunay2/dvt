@@ -4,7 +4,7 @@ This guide explains how to contribute to the DVT Workflow Engine documentation, 
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Documentation Structure](#documentation-structure)
 2. [Code Owners & Review Process](#code-owners--review-process)
@@ -14,7 +14,7 @@ This guide explains how to contribute to the DVT Workflow Engine documentation, 
 
 ---
 
-## 📁 Documentation Structure
+## Documentation Structure
 
 ```
 docs/
@@ -37,7 +37,7 @@ docs/
 
 ---
 
-## 👥 Code Owners & Review Process
+## Code Owners & Review Process
 
 ### Required Reviewers (Automated via `.github/CODEOWNERS`)
 
@@ -74,11 +74,9 @@ Changes to different documentation areas require specific team approvals:
 
 ---
 
-## 🤖 CI/CD Quality Gates
+## CI/CD Quality Gates
 
 Every PR goes through **4 automated validation stages** before merge:
-
-### 1️⃣ Markdown Syntax Validation
 
 **Tool**: `markdownlint-cli2`  
 **Workflow**: `.github/workflows/markdown_lint.yml`  
@@ -152,7 +150,7 @@ See [Normative Contract Template](#normative-contract-template) below.
 
 ---
 
-## 📜 Normative Contract Guidelines
+## Normative Contract Guidelines
 
 ### What is a Normative Contract?
 
@@ -225,7 +223,7 @@ Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../
 
 ### When to Create a New Version
 
-See **[VERSIONING.md](VERSIONING.md)** for the complete policy. Quick reference:
+See **[VERSIONING.md](architecture/engine/VERSIONING.md)** for the complete policy. Quick reference:
 
 | Change Type | Version Bump | Example | File Action |
 |-------------|--------------|---------|-------------|
@@ -241,9 +239,9 @@ See **[VERSIONING.md](VERSIONING.md)** for the complete policy. Quick reference:
 
 ---
 
-## 📐 Versioning Policy
+## Versioning Policy
 
-**Critical reading**: [VERSIONING.md](VERSIONING.md)
+**Critical reading**: [VERSIONING.md](architecture/engine/VERSIONING.md)
 
 ### File Naming Convention
 
@@ -269,7 +267,7 @@ This keeps file proliferation low while preserving patch history via git tags.
 
 ---
 
-## 🛠️ Local Development Workflow
+## Local Development Workflow
 
 ### Pre-commit Checklist
 
@@ -299,7 +297,7 @@ Install these for real-time validation:
 
 ---
 
-## ❓ FAQ
+## FAQ
 
 ### Q: I need to fix a typo in a normative contract. Do I create a new file?
 
@@ -321,7 +319,7 @@ Install these for real-time validation:
 
 ### Q: How do I deprecate an old contract version?
 
-**A**: See [VERSIONING.md § Deprecation Process](VERSIONING.md#deprecation-process):
+**A**: See [VERSIONING.md § Deprecation Process](architecture/engine/VERSIONING.md#deprecation-process):
 1. Add deprecation banner to old file:
    ```markdown
    > **⚠️ DEPRECATED**: This contract is deprecated as of 2026-02-01.
@@ -352,7 +350,7 @@ Install these for real-time validation:
 
 ---
 
-## 📞 Support
+## Support
 
 - **Questions on versioning policy**: Ping `@architecture-team` in GitHub PR
 - **CI/CD issues**: Open issue tagged `ci/cd`
@@ -360,9 +358,9 @@ Install these for real-time validation:
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
-- [VERSIONING.md](VERSIONING.md) — Complete contract evolution policy
+- [VERSIONING.md](architecture/engine/VERSIONING.md) — Complete contract evolution policy
 - [INDEX.md](architecture/engine/INDEX.md) — Navigation hub for all engine docs
 - [GitHub CODEOWNERS docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
 - [RFC 2119 (Normative keywords)](https://www.ietf.org/rfc/rfc2119.txt)
