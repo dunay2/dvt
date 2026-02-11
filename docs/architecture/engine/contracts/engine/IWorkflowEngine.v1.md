@@ -118,6 +118,10 @@ Signals are **operator actions** routed to the engine, **ALWAYS enforced by `IAu
 - `signalId` is client-supplied UUID.
 - Engine stores handling result via StateStore upsert; repeated `signalId` delivery is a no-op.
 
+**NORMATIVE: Conductor PAUSE limitation**
+
+If the target adapter is **Conductor**, `PAUSE` ONLY guarantees that **no new tasks are scheduled**. In-flight tasks MUST be allowed to complete (no cancellation token equivalent). UI/API MUST show `PAUSED` with `DRAINING` substatus until all running tasks finish.
+
 ---
 
 ## 2.4 Authorization & Signal Decision Records (MANDATORY)
@@ -214,10 +218,10 @@ When the Engine's Worker fetches a plan via `fetchPlan(PlanRef)` Activity:
 1. The Worker MUST download the plan from `PlanRef.uri`.
 2. The Worker MUST compute the SHA256 hash of the downloaded content.
 3. If the computed SHA256 does **NOT match** `PlanRef.sha256`, the Activity MUST:
-   - Fail immediately with error code `PLAN_INTEGRITY_VALIDATION_FAILED`
-   - NOT proceed with workflow execution
-   - Emit a critical alert (P1) to operations/security
-   - Log both expected and actual hash values for audit
+  - Fail immediately with error code `VALIDATION_FAILED`
+  - NOT proceed with workflow execution
+  - Emit a critical alert (P1) to operations/security
+  - Log both expected and actual hash values for audit
 
 **Rationale**: This prevents execution of plans that have been modified after approval (e.g., cache poisoning, storage corruption, or malicious tampering).
 
