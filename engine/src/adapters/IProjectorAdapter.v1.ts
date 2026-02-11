@@ -14,7 +14,7 @@
  * - Searchable: Supports querying projected state by workflow/step/status
  */
 
-import { TenantId, RunId, StepId, EventId } from './../../contracts/types';
+import { TenantId, RunId, StepId, EventId } from '../contracts/types';
 
 /**
  * Projected state resulting from event processing.

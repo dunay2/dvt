@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "lint": "eslint 'engine/**/*.ts' --max-warnings 0",
-    "lint:fix": "eslint 'engine/**/*.ts' --fix",
+    "lint": "eslint engine --ext .ts --max-warnings 0",
+    "lint:fix": "eslint engine --ext .ts --fix",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.git\"",
     "lint:determinism": "npm run lint -- --rule 'no-restricted-globals: error' --rule 'no-restricted-properties: error'",
     "format": "prettier --write '**/*.{ts,js,json,md,yml,yaml}'",

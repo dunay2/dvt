@@ -25,7 +25,7 @@ import {
   IdempotencyKey,
   RunState,
   StepState,
-} from './../../contracts/types';
+} from '../contracts/types';
 
 /**
  * Request to execute a workflow step.
