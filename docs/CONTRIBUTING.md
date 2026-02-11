@@ -47,7 +47,7 @@ Changes to different documentation areas require specific team approvals:
 |------|-------------------|-----------|
 | `docs/architecture/engine/contracts/` | `@your-org/architecture-team` | Normative contracts (breaking changes affect SDK consumers) |
 | `docs/VERSIONING.md` | `@your-org/architecture-team` | Contract evolution policy (affects all downstream systems) |
-| `docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md` | `@your-org/architecture-team`<br>`@your-org/engine-leads` | Core execution semantics (StateStore, Projector, Engine) |
+| `docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md` | `@your-org/architecture-team`<br>`@your-org/engine-leads` | Core execution semantics |
 | `docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md` | `@your-org/architecture-team`<br>`@your-org/sdk-team` | Customer-facing SDK interface |
 | `docs/architecture/engine/contracts/adapters/` | `@your-org/architecture-team`<br>`@your-org/platform-integrations` | Multi-platform compatibility |
 | `docs/runbooks/` | `@your-org/sre-team`<br>`@your-org/architecture-team` | Operational procedures |
@@ -61,7 +61,7 @@ Changes to different documentation areas require specific team approvals:
 1. Edit `.github/CODEOWNERS`
 2. Replace `@your-org/architecture-team` with individual GitHub handles:
 
-   ```
+   ```text
    /docs/architecture/engine/contracts/   @alice @bob @charlie
    ```
 

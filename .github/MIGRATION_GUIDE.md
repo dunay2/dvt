@@ -183,7 +183,7 @@
 
 **Search & replace** (across all pages):
 
-```
+```text
 Old: docs/architecture/engine/WORKFLOW_ENGINE.md
 New: docs/architecture/engine/INDEX.md
 ```
@@ -309,7 +309,8 @@ A: No. This is a documentation-only refactor. Semantics unchanged.
 A: 2026-05-12 (90 days after merge). Deprecation banner includes countdown.
 
 **Q: I maintain external docs linking to WORKFLOW_ENGINE.md. What should I do?**  
-A: Update links to [INDEX.md](../docs/architecture/engine/INDEX.md) before 2026-05-12. See [Link Migration Table](#link-migration-table) above.
+A: Update links to [INDEX.md](../docs/architecture/engine/INDEX.md) before 2026-05-12.
+See [Link Migration Table](#link-migration-table) above.
 
 **Q: Where do I report broken links?**  
 A: File GitHub issue tagged `documentation` or ping `#architecture` in Slack.
