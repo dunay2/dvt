@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * Compare Snapshot Hashes Against Baseline
- * 
+ *
  * Compares current execution hashes against baseline in .golden/hashes.json.
  * Fails if hashes mismatch (indicates non-determinism).
- * 
+ *
  * Currently lenient for 'pending' hashes until issue #10 is completed.
  */
 
@@ -42,7 +42,7 @@ async function compareHashes() {
   // Compare each path
   for (const [pathName, pathConfig] of Object.entries(baseline.paths)) {
     const result = results.paths[pathName];
-    
+
     if (!result) {
       console.error(`❌ ${pathName}: No result found`);
       mismatches++;
@@ -100,7 +100,7 @@ async function compareHashes() {
 }
 
 // Run comparison
-compareHashes().catch(error => {
+compareHashes().catch((error) => {
   console.error('\n❌ Comparison failed:', error.message);
   process.exit(1);
 });

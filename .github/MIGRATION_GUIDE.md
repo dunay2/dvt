@@ -3,7 +3,7 @@
 **Effective Date**: 2026-02-11 (merge date)  
 **Deprecation Period**: 90 days  
 **WORKFLOW_ENGINE.md Removal Date**: 2026-05-12  
-**Target Audience**: SDK implementers, Plan authors, SREs, Documentation maintainers  
+**Target Audience**: SDK implementers, Plan authors, SREs, Documentation maintainers
 
 ---
 
@@ -27,53 +27,53 @@
 
 ### Core Contracts
 
-| Old Link (DEPRECATED) | New Link |
-|----------------------|----------|
-| `WORKFLOW_ENGINE.md#interface` | [IWorkflowEngine.v1.md](../docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) |
-| `WORKFLOW_ENGINE.md#state-store-model` | [ExecutionSemantics.v1.md § 1](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) |
-| `WORKFLOW_ENGINE.md#events` | [ExecutionSemantics.v1.md § 1.2](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md#12-append-only-event-model) |
-| `WORKFLOW_ENGINE.md#dual-attempt` | [ExecutionSemantics.v1.md § 1.3](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md#13-dual-attempt-strategy-critical-invariant) |
-| `WORKFLOW_ENGINE.md#snapshots` | [ExecutionSemantics.v1.md § 1.4](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md#14-snapshot-projections-derived-state) |
+| Old Link (DEPRECATED)                  | New Link                                                                                                                                            |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WORKFLOW_ENGINE.md#interface`         | [IWorkflowEngine.v1.md](../docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md)                                                         |
+| `WORKFLOW_ENGINE.md#state-store-model` | [ExecutionSemantics.v1.md § 1](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)                                               |
+| `WORKFLOW_ENGINE.md#events`            | [ExecutionSemantics.v1.md § 1.2](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md#12-append-only-event-model)                  |
+| `WORKFLOW_ENGINE.md#dual-attempt`      | [ExecutionSemantics.v1.md § 1.3](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md#13-dual-attempt-strategy-critical-invariant) |
+| `WORKFLOW_ENGINE.md#snapshots`         | [ExecutionSemantics.v1.md § 1.4](../docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md#14-snapshot-projections-derived-state)       |
 
 ### Storage Layer (NEW)
 
-| Old Link | New Link | Notes |
-|----------|----------|-------|
-| N/A (DDL was inline) | [State Store Contract](../docs/architecture/engine/contracts/state-store/README.md) | Storage-agnostic interface |
+| Old Link                       | New Link                                                                                                       | Notes                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| N/A (DDL was inline)           | [State Store Contract](../docs/architecture/engine/contracts/state-store/README.md)                            | Storage-agnostic interface             |
 | ExecutionSemantics § 1.1 (DDL) | [Snowflake StateStoreAdapter](../docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md) | Snowflake-specific DDL, MERGE patterns |
-| N/A (not documented) | [Postgres StateStoreAdapter](../docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md) | Postgres-specific DDL, ON CONFLICT |
+| N/A (not documented)           | [Postgres StateStoreAdapter](../docs/architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)   | Postgres-specific DDL, ON CONFLICT     |
 
 ### Engine Policies (NEW)
 
-| Old Link | New Link | Notes |
-|----------|----------|-------|
+| Old Link                                 | New Link                                                                                      | Notes                                         |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | ExecutionSemantics § 6 (continue-as-new) | [Temporal EnginePolicies.md](../docs/architecture/engine/adapters/temporal/EnginePolicies.md) | Temporal limits, continue-as-new, determinism |
-| N/A (not documented) | Conductor EnginePolicies.md (TBD) | Phase 2 |
+| N/A (not documented)                     | Conductor EnginePolicies.md (TBD)                                                             | Phase 2                                       |
 
 ### Capabilities
 
-| Old Link | New Link |
-|----------|----------|
-| `WORKFLOW_ENGINE.md#capabilities` | [capabilities/README.md](../docs/architecture/engine/contracts/capabilities/README.md) |
-| N/A (was scattered) | [capabilities.schema.json](../docs/architecture/engine/contracts/capabilities/capabilities.schema.json) |
+| Old Link                          | New Link                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `WORKFLOW_ENGINE.md#capabilities` | [capabilities/README.md](../docs/architecture/engine/contracts/capabilities/README.md)                  |
+| N/A (was scattered)               | [capabilities.schema.json](../docs/architecture/engine/contracts/capabilities/capabilities.schema.json) |
 
 ### Operations
 
-| Old Link | New Link |
-|----------|----------|
-| `WORKFLOW_ENGINE.md#observability` | [observability.md](../docs/architecture/engine/ops/observability.md) |
-| `WORKFLOW_ENGINE.md#runbooks` | [runbooks/incident_response.md](../docs/architecture/engine/ops/runbooks/incident_response.md) |
+| Old Link                           | New Link                                                                                       |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `WORKFLOW_ENGINE.md#observability` | [observability.md](../docs/architecture/engine/ops/observability.md)                           |
+| `WORKFLOW_ENGINE.md#runbooks`      | [runbooks/incident_response.md](../docs/architecture/engine/ops/runbooks/incident_response.md) |
 
 ### Developer Tooling
 
-| Old Link | New Link |
-|----------|----------|
+| Old Link                         | New Link                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------- |
 | `WORKFLOW_ENGINE.md#determinism` | [determinism-tooling.md](../docs/architecture/engine/dev/determinism-tooling.md) |
 
 ### Roadmap
 
-| Old Link | New Link |
-|----------|----------|
+| Old Link                     | New Link                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------ |
 | `WORKFLOW_ENGINE.md#roadmap` | [engine-phases.md](../docs/architecture/engine/roadmap/engine-phases.md) |
 
 ---
@@ -236,6 +236,7 @@ See [WORKFLOW_ENGINE.md](docs/architecture/engine/WORKFLOW_ENGINE.md) for comple
 ## Architecture
 
 See [Engine Architecture Index](docs/architecture/engine/INDEX.md) for navigation hub:
+
 - [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) - Interface
 - [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) - Core semantics
 - [State Store Contract](docs/architecture/engine/contracts/state-store/README.md) - Persistence layer
@@ -246,13 +247,13 @@ See [Engine Architecture Index](docs/architecture/engine/INDEX.md) for navigatio
 
 ## 📅 Timeline & Deprecation Schedule
 
-| Date | Event |
-|------|-------|
+| Date           | Event                                                                 |
+| -------------- | --------------------------------------------------------------------- |
 | **2026-02-11** | PR merged, WORKFLOW_ENGINE.md deprecated (90-day grace period starts) |
-| **2026-02-18** | Week 1: Slack announcement, Confluence updates |
-| **2026-02-25** | Week 2: Monitor 404s, proactive outreach for high-traffic pages |
-| **2026-03-11** | Week 4: CI gate tuning based on false positive rate |
-| **2026-05-12** | **90-day mark**: WORKFLOW_ENGINE.md removed from repo |
+| **2026-02-18** | Week 1: Slack announcement, Confluence updates                        |
+| **2026-02-25** | Week 2: Monitor 404s, proactive outreach for high-traffic pages       |
+| **2026-03-11** | Week 4: CI gate tuning based on false positive rate                   |
+| **2026-05-12** | **90-day mark**: WORKFLOW_ENGINE.md removed from repo                 |
 
 ---
 

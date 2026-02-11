@@ -14,21 +14,21 @@ The adapter receives a **plan reference**, not the full plan (Temporal payload l
 
 ```ts
 type PlanRef = {
-  uri: string;                          // e.g., s3://bucket/plans/{planId}.json
-  sha256: string;                       // integrity hash
-  schemaVersion: string;                // MANDATORY, e.g., "v1.2"
+  uri: string; // e.g., s3://bucket/plans/{planId}.json
+  sha256: string; // integrity hash
+  schemaVersion: string; // MANDATORY, e.g., "v1.2"
   planId: string;
   planVersion: string;
-  
+
   sizeBytes?: number;
-  compression?: "gzip" | "none";
-  expiresAt?: string;                  // cache invalidation hint
-  
-  schemaEvolutionPath?: string;        // e.g., "v1 → v1.1 → v1.2"
+  compression?: 'gzip' | 'none';
+  expiresAt?: string; // cache invalidation hint
+
+  schemaEvolutionPath?: string; // e.g., "v1 → v1.1 → v1.2"
   migrationHint?: {
     sourceVersion: string;
     targetVersion: string;
-    transformScript?: string;           // URI to artifact (dbt macro, SQL, etc.)
+    transformScript?: string; // URI to artifact (dbt macro, SQL, etc.)
   };
 };
 ```
@@ -57,10 +57,13 @@ Temporal is code-first. The adapter MUST implement a **generic interpreter workf
 **Interpreter workflow signature** (TypeScript):
 
 ```ts
-export async function interpreterWorkflow(planRef: PlanRef, context: RunContext): Promise<RunSnapshot> {
+export async function interpreterWorkflow(
+  planRef: PlanRef,
+  context: RunContext
+): Promise<RunSnapshot> {
   // 1. Fetch plan
   const plan = await workflow.executeActivity('fetchPlan', planRef);
-  
+
   // 2. Validate capabilities (check against adapterCapabilities.json)
   const validationReport = await workflow.executeActivity('validatePlan', plan);
   if (validationReport.status === 'ERRORS') {
@@ -117,8 +120,8 @@ interface FetchPlanActivity {
      - **NOT proceed with execution**
      - Emit a critical alert (P1) to operations/security team
      - Record the mismatch in audit logs with both expected and actual hash values
-   
 4. **Error Response Structure**:
+
    ```ts
    {
      category: "VALIDATION_ERROR",
@@ -137,7 +140,7 @@ interface FetchPlanActivity {
 
 5. **Retry Policy**: This error is **NOT retryable**. The workflow MUST transition to `FAILED` status immediately.
 
-6. **Security Rationale**: 
+6. **Security Rationale**:
    - Prevents execution of plans that have been modified after approval
    - Detects cache poisoning, man-in-the-middle attacks, or storage corruption
    - Ensures audit trail integrity (executed plan matches approved plan)
@@ -157,20 +160,20 @@ export async function fetchPlan(planRef: PlanRef): Promise<ExecutionPlan> {
   const s3 = new S3Client({});
   const command = new GetObjectCommand({
     Bucket: extractBucket(planRef.uri),
-    Key: extractKey(planRef.uri)
+    Key: extractKey(planRef.uri),
   });
-  
+
   const response = await s3.send(command);
   let content = await response.Body!.transformToByteArray();
-  
+
   // 2. Decompress if needed
   if (planRef.compression === 'gzip') {
     content = await ungzipAsync(Buffer.from(content));
   }
-  
+
   // 3. Compute SHA256
   const computedSha256 = createHash('sha256').update(content).digest('hex');
-  
+
   // 4. STRICT VALIDATION (NORMATIVE)
   if (computedSha256 !== planRef.sha256) {
     throw new PlanIntegrityError({
@@ -183,24 +186,24 @@ export async function fetchPlan(planRef: PlanRef): Promise<ExecutionPlan> {
         actualSha256: computedSha256,
         planUri: planRef.uri,
         planId: planRef.planId,
-        planVersion: planRef.planVersion
-      }
+        planVersion: planRef.planVersion,
+      },
     });
   }
-  
+
   // 5. Parse and return
   const plan = JSON.parse(content.toString('utf-8')) as ExecutionPlan;
-  
+
   // 6. Schema version validation (bonus)
   if (!isSupportedSchemaVersion(plan.schemaVersion, planRef.schemaVersion)) {
     throw new PlanSchemaError({
       category: 'VALIDATION_ERROR',
       code: 'PLAN_SCHEMA_VERSION_MISMATCH',
       message: `Plan schema version ${plan.schemaVersion} does not match PlanRef ${planRef.schemaVersion}`,
-      retryable: false
+      retryable: false,
     });
   }
-  
+
   return plan;
 }
 
@@ -213,7 +216,7 @@ function isSupportedSchemaVersion(planVersion: string, refVersion: string): bool
 **Operational Monitoring**:
 
 - Alert: `PLAN_INTEGRITY_VALIDATION_FAILED` (P1, critical)
-- Metrics: 
+- Metrics:
   - `plan_fetch_integrity_failure_count` (counter)
   - `plan_fetch_duration_ms` (histogram)
   - `plan_fetch_size_bytes` (histogram)
@@ -234,26 +237,26 @@ function isSupportedSchemaVersion(planVersion: string, refVersion: string): bool
 ```yaml
 temporal:
   namespaces:
-    production: "prod"                 # Shared across tenants
-    staging: "staging"
-    development: "dev"
-    production-regulated: "prod-hipaa" # ONLY if actual regulatory requirement
-  
+    production: 'prod' # Shared across tenants
+    staging: 'staging'
+    development: 'dev'
+    production-regulated: 'prod-hipaa' # ONLY if actual regulatory requirement
+
   retention:
     productionDays: 90
     stagingDays: 30
     developmentDays: 7
-  
+
   searchAttributes:
-    - tenantId       # Query: tenantId = 'tenant-123'
+    - tenantId # Query: tenantId = 'tenant-123'
     - projectId
     - environmentId
     - regulatoryTier # 'HIPAA', 'PCI-DSS', 'PUBLIC'
-  
+
   taskQueues:
-    production: "tq-prod"
-    staging: "tq-staging"
-    development: "tq-dev"
+    production: 'tq-prod'
+    staging: 'tq-staging'
+    development: 'tq-dev'
 ```
 
 **Rationale**:
@@ -277,11 +280,11 @@ temporal:
 
 **Worker classes**:
 
-| Class | Task Queue | Responsibilities | Resources |
-|-------|-----------|----------------------------------------|-----------|
-| **Control** | `tq-control-{env}` | Plan fetch/validation, StateStore writes, light HTTP steps, signal processing | 0.5 CPU, 1Gi RAM, 2-10 pods |
-| **Data** | `tq-data-{env}` | `DBT_RUN`, heavy computation steps | High CPU/memory, GPU optional |
-| **Isolation** | `tq-isolation-{tenant}-{env}` | Tenant-isolated steps (security/regulatory) | Dedicated per tenant |
+| Class         | Task Queue                    | Responsibilities                                                              | Resources                     |
+| ------------- | ----------------------------- | ----------------------------------------------------------------------------- | ----------------------------- |
+| **Control**   | `tq-control-{env}`            | Plan fetch/validation, StateStore writes, light HTTP steps, signal processing | 0.5 CPU, 1Gi RAM, 2-10 pods   |
+| **Data**      | `tq-data-{env}`               | `DBT_RUN`, heavy computation steps                                            | High CPU/memory, GPU optional |
+| **Isolation** | `tq-isolation-{tenant}-{env}` | Tenant-isolated steps (security/regulatory)                                   | Dedicated per tenant          |
 
 **Routing logic** (in step dispatch):
 
@@ -290,10 +293,10 @@ function getTaskQueue(step: Step, env: string, tenantId: string): string {
   if (step.dispatch?.taskQueue) {
     return step.dispatch.taskQueue;
   }
-  if (step.class === "isolation") {
+  if (step.class === 'isolation') {
     return `tq-isolation-${tenantId}-${env}`;
   }
-  if (step.type.includes("DBT")) {
+  if (step.type.includes('DBT')) {
     return `tq-data-${env}`;
   }
   return `tq-control-${env}`;
@@ -315,7 +318,7 @@ export async function interpreterWorkflow(planRef: PlanRef, context: RunContext)
   for (const step of planWalker.walk(plan, cursor)) {
     // Gate new logic behind versioning
     const versionUntil = workflow.getVersion('executeStepLogic', 0, 1);
-    
+
     if (versionUntil <= 0) {
       // Old logic (for replaying old runs)
       await executeStepLegacy(step, context);
@@ -348,8 +351,8 @@ interface ActivityContext {
   environmentId: string;
   runId: string;
   stepId: string;
-  engineAttemptId: string;                    // Temporal SDK provides
-  logicalAttemptId: string;                   // Engine-assigned
+  engineAttemptId: string; // Temporal SDK provides
+  logicalAttemptId: string; // Engine-assigned
   secrets: Record<string, string>;
 }
 
@@ -358,7 +361,7 @@ async function executeStepActivity(step: Step, ctx: ActivityContext): Promise<St
     // 1. Resolve secrets
     const secrets = await secretsProvider.resolve(step.secretRefs, {
       tenantId: ctx.tenantId,
-      environmentId: ctx.environmentId
+      environmentId: ctx.environmentId,
     });
 
     // 2. Execute step (plugin/built-in)
@@ -371,7 +374,7 @@ async function executeStepActivity(step: Step, ctx: ActivityContext): Promise<St
     return {
       status: 'SUCCESS',
       artifactRefs: artifacts,
-      metrics: result.metrics
+      metrics: result.metrics,
     };
   } catch (error) {
     // Emit StepFailed event with retryability info
@@ -381,8 +384,8 @@ async function executeStepActivity(step: Step, ctx: ActivityContext): Promise<St
         category: error.category,
         code: error.code,
         message: error.message,
-        retryable: isRetryable(error)
-      }
+        retryable: isRetryable(error),
+      },
     };
   }
 }
@@ -405,10 +408,10 @@ export async function pauseWorkflow(signal: PauseSignal, inFlightActivities: Act
   logger.info(`[PAUSE] ${signal.runId}: allowCancelOnPause=${CONFIG.allowCancelOnPause}`);
 
   const cancelTasks = inFlightActivities
-    .filter(h => h.cancellable && CONFIG.allowCancelOnPause)
-    .map(h => {
+    .filter((h) => h.cancellable && CONFIG.allowCancelOnPause)
+    .map((h) => {
       logger.info(`Requesting cancel for ${h.stepId}`);
-      h.cancel();  // Activity receives cancellation token
+      h.cancel(); // Activity receives cancellation token
       return h;
     });
 
@@ -422,7 +425,7 @@ export async function pauseWorkflow(signal: PauseSignal, inFlightActivities: Act
     runId: signal.runId,
     draining: false,
     emittedAt: new Date().toISOString(),
-    idempotencyKey: `pause-${signal.runId}`
+    idempotencyKey: `pause-${signal.runId}`,
   });
 }
 ```
@@ -470,15 +473,18 @@ Workflow MUST call `continueAsNew()` when EITHER:
 - `workflow.workflowInfo.historySizeEstimate >= HISTORY_BYTES_THRESHOLD` (default 1MB).
 
 ```ts
-if (stepsSinceContinue >= CONFIG.CONTINUE_STEPS || historySizeEstimate >= CONFIG.HISTORY_BYTES_THRESHOLD) {
+if (
+  stepsSinceContinue >= CONFIG.CONTINUE_STEPS ||
+  historySizeEstimate >= CONFIG.HISTORY_BYTES_THRESHOLD
+) {
   logger.info(`[CONTINUE_AS_NEW] steps=${stepsSinceContinue}, historySize=${historySizeEstimate}`);
-  
+
   // Persist only minimal state
   const minimalCursor = {
     completedStepIds: Array.from(cursor.completedStepIds),
-    artifacts: cursor.artifacts.map(a => ({ uri: a.uri, sha256: a.sha256 }))
+    artifacts: cursor.artifacts.map((a) => ({ uri: a.uri, sha256: a.sha256 })),
   };
-  
+
   await workflow.continueAsNew({ planRef, cursor: minimalCursor });
 }
 ```
@@ -499,6 +505,6 @@ if (stepsSinceContinue >= CONFIG.CONTINUE_STEPS || historySizeEstimate >= CONFIG
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial TemporalAdapter specification |
+| Version | Date       | Change                                |
+| ------- | ---------- | ------------------------------------- |
+| 1.0     | 2026-02-11 | Initial TemporalAdapter specification |

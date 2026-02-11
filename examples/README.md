@@ -190,6 +190,6 @@ To add a new golden path:
 
 ## Version History
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial golden paths: minimal, parallel, cancel-and-resume |
+| Version | Date       | Change                                                     |
+| ------- | ---------- | ---------------------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial golden paths: minimal, parallel, cancel-and-resume |

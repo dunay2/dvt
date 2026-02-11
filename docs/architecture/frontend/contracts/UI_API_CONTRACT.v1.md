@@ -12,10 +12,11 @@
 This contract defines the **REST API** (or BFF if used) between frontend and backend backend must expose these endpoints with the specified request/response shapes, error codes, and paginationversioning strategy.
 
 **Key Principles**:
-- **Versioned**: Breaking changes → new version (v2)  
-- **Standard errors**: Consistent error shape across all endpoints  
-- **Pagination**: Cursor-based (not offset) for performance  
-- **Idempotency**: POST/PUT with idempotency keys where needed  
+
+- **Versioned**: Breaking changes → new version (v2)
+- **Standard errors**: Consistent error shape across all endpoints
+- **Pagination**: Cursor-based (not offset) for performance
+- **Idempotency**: POST/PUT with idempotency keys where needed
 
 ---
 
@@ -27,6 +28,7 @@ Versioning: URL path (/v1, /v2, ...)
 ```
 
 **Version negotiation**:
+
 - Frontend sends `Accept: application/json; version=1` header
 - Backend responds with `API-Version: 1` header
 - Breaking changes require new version number
@@ -42,6 +44,7 @@ Authorization: Bearer <jwt-token>
 ```
 
 **Token payload** (minimum):
+
 ```json
 {
   "sub": "user-uuid",
@@ -58,28 +61,28 @@ Authorization: Bearer <jwt-token>
 ```typescript
 interface APIError {
   error: {
-    code: string;           // Machine-readable: "UNAUTHORIZED", "PLAN_NOT_FOUND"
-    message: string;        // Human-readable: "Insufficient permissions"
-    requestId: string;      // For support/debugging
-    details?: unknown;      // Optional context (validation errors, etc.)
+    code: string; // Machine-readable: "UNAUTHORIZED", "PLAN_NOT_FOUND"
+    message: string; // Human-readable: "Insufficient permissions"
+    requestId: string; // For support/debugging
+    details?: unknown; // Optional context (validation errors, etc.)
   };
 }
 ```
 
 ### HTTP Status Codes
 
-| Code | Meaning | Example |
-|------|---------|---------|
-| 200 | Success | Plan retrieved |
-| 201 | Created | Plan created |
-| 400 | Bad Request | Invalid JSON, missing required field |
-| 401 | Unauthenticated | Missing/expired JWT |
-| 403 | Unauthorized | User lacks permission (RBAC denial) |
-| 404 | Not Found | Plan ID doesn't exist **OR** user has no access (no leak) |
-| 409 | Conflict | Optimistic lock failure, plan already published |
-| 429 | Rate Limited | Too many requests |
-| 500 | Internal Error | Unhandled exception |
-| 503 | Service Unavailable | Backpressure, circuit breaker open |
+| Code | Meaning             | Example                                                   |
+| ---- | ------------------- | --------------------------------------------------------- |
+| 200  | Success             | Plan retrieved                                            |
+| 201  | Created             | Plan created                                              |
+| 400  | Bad Request         | Invalid JSON, missing required field                      |
+| 401  | Unauthenticated     | Missing/expired JWT                                       |
+| 403  | Unauthorized        | User lacks permission (RBAC denial)                       |
+| 404  | Not Found           | Plan ID doesn't exist **OR** user has no access (no leak) |
+| 409  | Conflict            | Optimistic lock failure, plan already published           |
+| 429  | Rate Limited        | Too many requests                                         |
+| 500  | Internal Error      | Unhandled exception                                       |
+| 503  | Service Unavailable | Backpressure, circuit breaker open                        |
 
 **Security note**: `404` MUST NOT leak resource existence. Use `404` for both "doesn't exist" and "no access".
 
@@ -94,6 +97,7 @@ interface APIError {
 List plans in current tenant/project.
 
 **Query Parameters**:
+
 ```typescript
 {
   projectId?: string;       // Filter by project
@@ -104,6 +108,7 @@ List plans in current tenant/project.
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "data": [
@@ -121,7 +126,7 @@ List plans in current tenant/project.
     }
   ],
   "pagination": {
-    "nextCursor": "eyJwbGFuSWQiOiJwbGFuLXh5eiJ9",  // Opaque cursor
+    "nextCursor": "eyJwbGFuSWQiOiJwbGFuLXh5eiJ9", // Opaque cursor
     "hasMore": true
   }
 }
@@ -134,6 +139,7 @@ List plans in current tenant/project.
 Get plan details + graph definition.
 
 **Response** (200 OK):
+
 ```json
 {
   "planId": "plan-abc",
@@ -149,9 +155,7 @@ Get plan details + graph definition.
         "position": { "x": 100, "y": 200 }
       }
     ],
-    "edges": [
-      { "source": "node-1", "target": "node-2" }
-    ]
+    "edges": [{ "source": "node-1", "target": "node-2" }]
   },
   "metadata": {
     "createdAt": "2026-02-01T10:00:00Z",
@@ -168,6 +172,7 @@ Get plan details + graph definition.
 Create new plan (draft).
 
 **Request Body**:
+
 ```json
 {
   "name": "my_new_plan",
@@ -177,11 +182,13 @@ Create new plan (draft).
 ```
 
 **Headers**:
+
 ```
 Idempotency-Key: <uuid>  // Optional but recommended
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "planId": "plan-new",
@@ -198,23 +205,28 @@ Idempotency-Key: <uuid>  // Optional but recommended
 Update plan (draft only, no published edits).
 
 **Request Body**:
+
 ```json
 {
   "name": "updated_name",
-  "graph": { /* updated graph */ },
-  "version": 2  // Optimistic locking
+  "graph": {
+    /* updated graph */
+  },
+  "version": 2 // Optimistic locking
 }
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "planId": "plan-abc",
-  "version": 3  // Incremented
+  "version": 3 // Incremented
 }
 ```
 
 **Error** (409 Conflict if version mismatch):
+
 ```json
 {
   "error": {
@@ -235,6 +247,7 @@ Update plan (draft only, no published edits).
 List runs.
 
 **Query Parameters**:
+
 ```typescript
 {
   planId?: string;
@@ -245,6 +258,7 @@ List runs.
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "data": [
@@ -268,6 +282,7 @@ List runs.
 Start new run.
 
 **Request Body**:
+
 ```json
 {
   "planId": "plan-abc",
@@ -277,11 +292,13 @@ Start new run.
 ```
 
 **Headers**:
+
 ```
 Idempotency-Key: <uuid>  // Prevent duplicate runs
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "runId": "run-new",
@@ -297,14 +314,16 @@ Idempotency-Key: <uuid>  // Prevent duplicate runs
 Send signal (PAUSE, RESUME, CANCEL, custom).
 
 **Request Body**:
+
 ```json
 {
   "signal": "PAUSE",
-  "reason": "Deploy in progress"  // Optional justification (Decision Record)
+  "reason": "Deploy in progress" // Optional justification (Decision Record)
 }
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "signalId": "sig-123",
@@ -321,6 +340,7 @@ Send signal (PAUSE, RESUME, CANCEL, custom).
 List artifacts produced by run.
 
 **Response** (200 OK):
+
 ```json
 {
   "data": [
@@ -343,6 +363,7 @@ List artifacts produced by run.
 Query audit logs (auditor role required).
 
 **Query Parameters**:
+
 ```typescript
 {
   actorId?: string;
@@ -356,6 +377,7 @@ Query audit logs (auditor role required).
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "data": [
@@ -380,9 +402,11 @@ Query audit logs (auditor role required).
 
 ```json
 {
-  "data": [ /* items */ ],
+  "data": [
+    /* items */
+  ],
   "pagination": {
-    "nextCursor": "eyJpZCI6MTIzfQ==",  // Opaque base64 cursor
+    "nextCursor": "eyJpZCI6MTIzfQ==", // Opaque base64 cursor
     "hasMore": true
   }
 }
@@ -391,6 +415,7 @@ Query audit logs (auditor role required).
 **Why cursor?** Offset pagination breaks with concurrent inserts. Cursor encodes last item ID.
 
 **Client usage**:
+
 ```http
 GET /v1/plans?cursor=eyJpZCI6MTIzfQ==&limit=20
 ```
@@ -400,6 +425,7 @@ GET /v1/plans?cursor=eyJpZCI6MTIzfQ==&limit=20
 ## Rate Limiting
 
 **Headers** (per-tenant):
+
 ```
 X-RateLimit-Limit: 1000        # Requests per hour
 X-RateLimit-Remaining: 975
@@ -407,6 +433,7 @@ X-RateLimit-Reset: 1707651600  # Unix timestamp
 ```
 
 **Response** (429 Too Many Requests):
+
 ```json
 {
   "error": {
@@ -428,7 +455,7 @@ X-RateLimit-Reset: 1707651600  # Unix timestamp
 describe('UI_API_CONTRACT.v1', () => {
   it('GET /v1/plans returns standard shape', async () => {
     const response = await api.get('/v1/plans');
-    
+
     expect(response.status).toBe(200);
     expect(response.data).toHaveProperty('data');
     expect(response.data).toHaveProperty('pagination');
@@ -438,15 +465,15 @@ describe('UI_API_CONTRACT.v1', () => {
 
   it('POST /v1/plans with idempotency', async () => {
     const key = uuidv4();
-    
+
     const resp1 = await api.post('/v1/plans', body, {
-      headers: { 'Idempotency-Key': key }
+      headers: { 'Idempotency-Key': key },
     });
-    
+
     const resp2 = await api.post('/v1/plans', body, {
-      headers: { 'Idempotency-Key': key }
+      headers: { 'Idempotency-Key': key },
     });
-    
+
     // Should return same planId (not create duplicate)
     expect(resp1.data.planId).toBe(resp2.data.planId);
   });

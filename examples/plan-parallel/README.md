@@ -31,7 +31,10 @@ This plan validates the engine's ability to execute tasks in parallel and merge 
     { "stepId": "step-parallel-1", "dependencies": [] },
     { "stepId": "step-parallel-2", "dependencies": [] },
     { "stepId": "step-parallel-3", "dependencies": [] },
-    { "stepId": "step-merge", "dependencies": ["step-parallel-1", "step-parallel-2", "step-parallel-3"] }
+    {
+      "stepId": "step-merge",
+      "dependencies": ["step-parallel-1", "step-parallel-2", "step-parallel-3"]
+    }
   ]
 }
 ```

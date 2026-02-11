@@ -3,7 +3,7 @@
 **Status**: Implementation Guide  
 **Version**: 1.0  
 **Backend**: PostgreSQL 14+  
-**Contract**: [State Store Contract](../../../contracts/state-store/README.md)  
+**Contract**: [State Store Contract](../../../contracts/state-store/README.md)
 
 ---
 
@@ -32,29 +32,29 @@ CREATE TABLE IF NOT EXISTS run_events (
   run_id             TEXT          NOT NULL,
   run_seq            BIGINT        NOT NULL,  -- Assigned by sequence or app logic
   event_id           UUID          NOT NULL DEFAULT gen_random_uuid(),
-  
+
   -- Step context
   step_id            TEXT,
   engine_attempt_id  TEXT,
   logical_attempt_id TEXT,
-  
+
   -- Event payload
   event_type         TEXT          NOT NULL,
   event_data         JSONB,
-  
+
   -- Idempotency & causality
   idempotency_key    TEXT          NOT NULL,
   caused_by_signal_id UUID,
   parent_event_id    UUID,
-  
+
   -- Timestamps
   emitted_at         TIMESTAMPTZ   NOT NULL,
   persisted_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-  
+
   -- Metadata
   adapter_version    TEXT,
   engine_run_ref     JSONB,
-  
+
   -- Constraints
   PRIMARY KEY (run_id, run_seq),
   UNIQUE (run_id, idempotency_key)
@@ -84,26 +84,26 @@ async function appendEvent(event: CanonicalEngineEvent): Promise<AppendResult> {
   return await db.transaction(async (tx) => {
     // Check idempotency
     const existing = await tx.oneOrNone<{ run_seq: number }>(
-      `SELECT run_seq FROM run_events 
+      `SELECT run_seq FROM run_events
        WHERE run_id = $1 AND idempotency_key = $2`,
       [event.runId, event.idempotencyKey]
     );
-    
+
     if (existing) {
       return { runSeq: existing.run_seq, idempotent: true, persisted: false };
     }
-    
+
     // Get next runSeq
     const { max_seq } = await tx.one<{ max_seq: number }>(
-      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq 
-       FROM run_events 
-       WHERE run_id = $1 
+      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq
+       FROM run_events
+       WHERE run_id = $1
        FOR UPDATE`,  -- Lock to prevent race conditions
       [event.runId]
     );
-    
+
     const newSeq = max_seq + 1;
-    
+
     // Insert
     await tx.none(
       `INSERT INTO run_events (
@@ -113,7 +113,7 @@ async function appendEvent(event: CanonicalEngineEvent): Promise<AppendResult> {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
       [event.runId, newSeq, event.eventId, ...]
     );
-    
+
     return { runSeq: newSeq, idempotent: false, persisted: true };
   });
 }
@@ -142,16 +142,16 @@ BEGIN
   SELECT seq_name INTO v_seq_name
   FROM run_sequence_registry
   WHERE run_id = p_run_id;
-  
+
   IF v_seq_name IS NULL THEN
     -- Create new sequence
     v_seq_name := 'run_seq_' || REPLACE(p_run_id, '-', '_');
     EXECUTE format('CREATE SEQUENCE IF NOT EXISTS %I', v_seq_name);
-    
+
     INSERT INTO run_sequence_registry (run_id, seq_name)
     VALUES (p_run_id, v_seq_name);
   END IF;
-  
+
   RETURN v_seq_name;
 END;
 $$ LANGUAGE plpgsql;
@@ -173,7 +173,7 @@ SELECT nextval(get_run_sequence('run-12345'));  -- Returns: 1, 2, 3, ...
 ```sql
 -- Insert with idempotency (ON CONFLICT DO NOTHING)
 WITH new_event AS (
-  SELECT 
+  SELECT
     $1::TEXT AS run_id,
     COALESCE((SELECT MAX(run_seq) FROM run_events WHERE run_id = $1), 0) + 1 AS run_seq,
     $2::UUID AS event_id,
@@ -198,7 +198,7 @@ WHERE run_id = $1 AND idempotency_key = $2;
 
 ```sql
 -- Fetch events for projection (paginated, watermark-based)
-SELECT 
+SELECT
   run_id,
   run_seq,
   event_id,
@@ -231,17 +231,17 @@ LIMIT $3;
 
 ```sql
 CREATE MATERIALIZED VIEW run_snapshots AS
-SELECT 
+SELECT
   run_id,
   MAX(run_seq) AS last_event_seq,
   jsonb_build_object(
     'runId', run_id,
     'status', (
-      SELECT event_data->>'status' 
-      FROM run_events e2 
-      WHERE e2.run_id = e1.run_id 
+      SELECT event_data->>'status'
+      FROM run_events e2
+      WHERE e2.run_id = e1.run_id
         AND event_type IN ('RunStarted', 'RunCompleted', 'RunFailed')
-      ORDER BY run_seq DESC 
+      ORDER BY run_seq DESC
       LIMIT 1
     ),
     'steps', (
@@ -281,7 +281,7 @@ BEGIN
     snapshot_data = project_snapshot(NEW.run_id),
     projected_at = NOW(),
     version = run_snapshots.version + 1;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -324,16 +324,16 @@ CREATE INDEX idx_run_events_event_data_gin ON run_events USING GIN(event_data);
 
 ## 7) Limitations & Trade-offs
 
-| Aspect | Limitation | Mitigation |
-|--------|-----------|------------|
-| **Sequence per run** | Not natively supported | Use application-side `MAX + 1` OR sequence registry |
-| **Contention on MAX(run_seq)** | High-frequency writers may conflict | Use `FOR UPDATE` lock + retry logic |
-| **JSONB vs VARIANT** | Less flexible than Snowflake VARIANT | Use jsonb_set() for schema evolution |
+| Aspect                         | Limitation                           | Mitigation                                          |
+| ------------------------------ | ------------------------------------ | --------------------------------------------------- |
+| **Sequence per run**           | Not natively supported               | Use application-side `MAX + 1` OR sequence registry |
+| **Contention on MAX(run_seq)** | High-frequency writers may conflict  | Use `FOR UPDATE` lock + retry logic                 |
+| **JSONB vs VARIANT**           | Less flexible than Snowflake VARIANT | Use jsonb_set() for schema evolution                |
 
 ---
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial Postgres adapter (parallel to Snowflake adapter) |
+| Version | Date       | Change                                                   |
+| ------- | ---------- | -------------------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial Postgres adapter (parallel to Snowflake adapter) |

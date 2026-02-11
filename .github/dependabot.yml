@@ -2,69 +2,69 @@ version: 2
 
 updates:
   # NPM dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "UTC"
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
     open-pull-requests-limit: 5
     reviewers:
-      - "dunay2"
+      - 'dunay2'
     labels:
-      - "dependencies"
-      - "automated"
+      - 'dependencies'
+      - 'automated'
     commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
+      prefix: 'chore(deps)'
+      include: 'scope'
     groups:
       # Group TypeScript-related updates
       typescript:
         patterns:
-          - "typescript"
-          - "@types/*"
-          - "ts-*"
+          - 'typescript'
+          - '@types/*'
+          - 'ts-*'
       # Group testing dependencies
       testing:
         patterns:
-          - "jest"
-          - "@testing-library/*"
-          - "@jest/*"
-          - "ts-jest"
+          - 'jest'
+          - '@testing-library/*'
+          - '@jest/*'
+          - 'ts-jest'
       # Group linting tools
       linting:
         patterns:
-          - "eslint"
-          - "@typescript-eslint/*"
-          - "prettier"
-          - "markdownlint*"
+          - 'eslint'
+          - '@typescript-eslint/*'
+          - 'prettier'
+          - 'markdownlint*'
       # Group Temporal dependencies
       temporal:
         patterns:
-          - "@temporalio/*"
+          - '@temporalio/*'
     ignore:
       # Ignore major version updates for critical dependencies (manual review)
-      - dependency-name: "@temporalio/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '@temporalio/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
 
   # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "UTC"
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
     open-pull-requests-limit: 3
     reviewers:
-      - "dunay2"
+      - 'dunay2'
     labels:
-      - "ci/cd"
-      - "dependencies"
-      - "automated"
+      - 'ci/cd'
+      - 'dependencies'
+      - 'automated'
     commit-message:
-      prefix: "chore(ci)"
-      include: "scope"
+      prefix: 'chore(ci)'
+      include: 'scope'

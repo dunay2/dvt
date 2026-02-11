@@ -30,7 +30,7 @@ jobs:
 
       - name: Run ESLint
         run: pnpm lint
-        
+
       - name: Check for lint warnings
         run: pnpm lint --max-warnings=0
 

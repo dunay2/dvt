@@ -28,15 +28,15 @@ ConductorAdapter is scheduled for **Phase 2** (post-MVP Temporal launch).
 
 ## 2) Architecture Differences from Temporal
 
-| Aspect | Temporal | Conductor |
-|--------|----------|-----------|
-| **Model** | Workflow API (durable execution, replay) | Workflow definition (JSON-DSL, imperative) |
-| **Tasks** | Activities (async, cancellable) | Tasks (webhooks, polls, 30s timeout default) |
-| **History** | Full (Temporal storage) | Event log + Task history |
-| **Signals** | Workflow signals (native) | Event callbacks (external events) |
-| **State** | Deterministic replay | Stateless (external state via input/output) |
-| **Scaling** | Scale-out workers (polling) | Scale-out task executors (dispatch order) |
-| **Determinism** | **STRONG** (code-based, replay) | **WEAK** (task execution external, non-deterministic timing) |
+| Aspect          | Temporal                                 | Conductor                                                    |
+| --------------- | ---------------------------------------- | ------------------------------------------------------------ |
+| **Model**       | Workflow API (durable execution, replay) | Workflow definition (JSON-DSL, imperative)                   |
+| **Tasks**       | Activities (async, cancellable)          | Tasks (webhooks, polls, 30s timeout default)                 |
+| **History**     | Full (Temporal storage)                  | Event log + Task history                                     |
+| **Signals**     | Workflow signals (native)                | Event callbacks (external events)                            |
+| **State**       | Deterministic replay                     | Stateless (external state via input/output)                  |
+| **Scaling**     | Scale-out workers (polling)              | Scale-out task executors (dispatch order)                    |
+| **Determinism** | **STRONG** (code-based, replay)          | **WEAK** (task execution external, non-deterministic timing) |
 
 **Parity gaps:**
 
@@ -59,20 +59,20 @@ Conductor uses JSON-based workflow definitions. The adapter **wraps** plans as C
   "name": "dvt-workflow-{planId}-{planVersion}",
   "description": "Plan: {planName} (schema: {schemaVersion})",
   "version": 1,
-  
+
   "input": {
     "planRef": "string",
     "runContext": "object",
     "tenantId": "string"
   },
-  
+
   "output": {
     "runId": "string",
     "status": "SUCCESS|FAILURE|CANCELLED",
     "artifactRefs": "array",
     "metrics": "object"
   },
-  
+
   "tasks": [
     {
       "taskReferenceName": "fetch_plan",
@@ -102,7 +102,7 @@ Conductor uses JSON-based workflow definitions. The adapter **wraps** plans as C
       ]
     }
   ],
-  
+
   "workflowStatusListenerAddress": "https://state-store-service/webhooks/workflow-status"
 }
 ```
@@ -179,15 +179,15 @@ When engine needs to pause:
 // Workflow: handle event-based pause
 async function pauseViaEvent(workflowId: string, signal: PauseSignal) {
   const conductor = new ConductorClient();
-  
+
   // Send external event (workflow must have WAIT_FOR_EXTERNAL_EVENT)
   await conductor.sengPublishEvent({
     workflow: workflowId,
     task: 'signal-handler',
     event: {
       eventName: `pause_${signal.runId}`,
-      data: { action: 'PAUSE', reason: signal.reason }
-    }
+      data: { action: 'PAUSE', reason: signal.reason },
+    },
   });
 
   // In-flight tasks complete naturally; new tasks don't start
@@ -202,11 +202,11 @@ async function pauseViaEvent(workflowId: string, signal: PauseSignal) {
 ```typescript
 async function cancelRun(workflowId: string, signal: CancelSignal) {
   const conductor = new ConductorClient();
-  
+
   // Terminate workflow forcefully (no graceful shutdown)
   await conductor.terminateWorkflow(workflowId, {
     reason: signal.reason,
-    terminationStatus: 'TERMINATED'
+    terminationStatus: 'TERMINATED',
   });
 
   // In-flight tasks receive no signal; they complete independently
@@ -308,10 +308,10 @@ def execute_step_task(input_data):
     """Conductor task worker."""
     step = input_data['step']
     secrets = input_data['secrets']
-    
+
     # Execute step (plugin/built-in)
     result = step_executor.execute(step, secrets)
-    
+
     return {
         'status': 'COMPLETED',
         'output': {
@@ -336,14 +336,14 @@ client.start()
 
 ## 10) Limitations & Workarounds
 
-| Limitation | Impact | Workaround |
-|-----------|--------|-----------|
-| 30s task timeout | Time-intensive steps fail | Increase timeout via task def; break into sub-tasks |
-| 32KB task output | Large artifact metadata | Use references only; store full metadata in external DB |
-| No native pause | Eventual pause (event-driven) | WAIT_FOR_EXTERNAL_EVENT + polling |
-| No reliable cancel | In-flight tasks not terminated | Document on error reporting; operator cleanup script |
-| No deterministic replay | Scheduling non-deterministic | Restrict plans to avoid history-dependent logic |
-| Eventual consistency | Workflow status may lag | Poll via external event loop; 5-10s SLA expected |
+| Limitation              | Impact                         | Workaround                                              |
+| ----------------------- | ------------------------------ | ------------------------------------------------------- |
+| 30s task timeout        | Time-intensive steps fail      | Increase timeout via task def; break into sub-tasks     |
+| 32KB task output        | Large artifact metadata        | Use references only; store full metadata in external DB |
+| No native pause         | Eventual pause (event-driven)  | WAIT_FOR_EXTERNAL_EVENT + polling                       |
+| No reliable cancel      | In-flight tasks not terminated | Document on error reporting; operator cleanup script    |
+| No deterministic replay | Scheduling non-deterministic   | Restrict plans to avoid history-dependent logic         |
+| Eventual consistency    | Workflow status may lag        | Poll via external event loop; 5-10s SLA expected        |
 
 ---
 
@@ -374,6 +374,6 @@ client.start()
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 0.8 | 2026-02-11 | DRAFT: Phase 2 spec, capability emulation strategy, limitations enumerated |
+| Version | Date       | Change                                                                     |
+| ------- | ---------- | -------------------------------------------------------------------------- |
+| 0.8     | 2026-02-11 | DRAFT: Phase 2 spec, capability emulation strategy, limitations enumerated |

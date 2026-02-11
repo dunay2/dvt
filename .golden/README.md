@@ -99,7 +99,7 @@ The `.github/workflows/golden-paths.yml` workflow:
 
 ## Version History
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0.0 | 2026-02-11 | Initial hashes file with 3 not-implemented paths |
-| 1.1.0 | 2026-02-11 | Added 3 implemented golden paths (issue #10 completed) |
+| Version | Date       | Change                                                 |
+| ------- | ---------- | ------------------------------------------------------ |
+| 1.0.0   | 2026-02-11 | Initial hashes file with 3 not-implemented paths       |
+| 1.1.0   | 2026-02-11 | Added 3 implemented golden paths (issue #10 completed) |

@@ -24,16 +24,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Validate plan JSON files
         run: |
           echo "Validating plan JSON files..."
@@ -45,7 +45,7 @@ jobs:
               echo "✓ Valid JSON: $plan_file"
             fi
           done
-      
+
       - name: Validate validation-report JSON files
         run: |
           echo "Validating validation-report JSON files..."
@@ -56,7 +56,7 @@ jobs:
               echo "✓ Valid JSON: $report_file"
             fi
           done
-      
+
       - name: Validate expected-events JSONL files
         run: |
           echo "Validating expected-events JSONL files..."
@@ -83,23 +83,23 @@ jobs:
     needs: validate-plans
     permissions:
       contents: read
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Run test-runner.sh
         run: |
           cd examples
           bash test-runner.sh
         env:
-          SKIP_EXECUTION: "true"
-      
+          SKIP_EXECUTION: 'true'
+
       - name: Upload validation results
         if: always()
         uses: actions/upload-artifact@v4
@@ -113,11 +113,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Check README files exist
         run: |
           echo "Checking README files..."
@@ -129,7 +129,7 @@ jobs:
             fi
             echo "✓ Found: $readme_file"
           done
-      
+
       - name: Check examples/README.md exists
         run: |
           if [ ! -f "examples/README.md" ]; then
@@ -137,7 +137,7 @@ jobs:
             exit 1
           fi
           echo "✓ Found: examples/README.md"
-      
+
       - name: Verify required sections in README files
         run: |
           echo "Verifying README structure..."
@@ -168,16 +168,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Check plan schema versions
         run: |
           echo "Checking plan schema versions..."
@@ -192,7 +192,7 @@ jobs:
             
             echo "✓ Valid schema version: $schema_version"
           done
-      
+
       - name: Check validation report status
         run: |
           echo "Checking validation report status..."
@@ -215,7 +215,7 @@ jobs:
     if: always()
     permissions:
       contents: read
-    
+
     steps:
       - name: Check all jobs status
         run: |
@@ -228,7 +228,7 @@ jobs:
           echo "  - check-documentation: ${{ needs.check-documentation.result }}"
           echo "  - verify-schema-versions: ${{ needs.verify-schema-versions.result }}"
           echo ""
-          
+
           if [ "${{ needs.validate-plans.result }}" != "success" ] || \
              [ "${{ needs.run-test-runner.result }}" != "success" ] || \
              [ "${{ needs.check-documentation.result }}" != "success" ] || \
@@ -236,5 +236,5 @@ jobs:
             echo "❌ Golden Paths validation failed"
             exit 1
           fi
-          
+
           echo "✅ All Golden Paths validation checks passed!"

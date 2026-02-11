@@ -41,23 +41,23 @@ gh pr create \
 
 ### Core PR Materials
 
-| File | Purpose | Use Case |
-|------|---------|----------|
-| [.github/PR_BODY.md](.github/PR_BODY.md) | Short PR description (copy into GitHub PR body) | Initial PR creation |
-| [.github/PR_TEMPLATE.md](.github/PR_TEMPLATE.md) | Detailed PR description (reference doc, 90+ min read) | Reviewer deep-dive |
-| [.github/MIGRATION_GUIDE.md](.github/MIGRATION_GUIDE.md) | Consumer migration guide (role-based) | Team onboarding |
-| [.github/ROLLBACK.md](.github/ROLLBACK.md) | Rollback procedures (3 options) | Emergency response |
-| `/tmp/pr_manifest.md` | Auto-generated file manifest | PR description attachment |
+| File                                                     | Purpose                                               | Use Case                  |
+| -------------------------------------------------------- | ----------------------------------------------------- | ------------------------- |
+| [.github/PR_BODY.md](.github/PR_BODY.md)                 | Short PR description (copy into GitHub PR body)       | Initial PR creation       |
+| [.github/PR_TEMPLATE.md](.github/PR_TEMPLATE.md)         | Detailed PR description (reference doc, 90+ min read) | Reviewer deep-dive        |
+| [.github/MIGRATION_GUIDE.md](.github/MIGRATION_GUIDE.md) | Consumer migration guide (role-based)                 | Team onboarding           |
+| [.github/ROLLBACK.md](.github/ROLLBACK.md)               | Rollback procedures (3 options)                       | Emergency response        |
+| `/tmp/pr_manifest.md`                                    | Auto-generated file manifest                          | PR description attachment |
 
 ### Supporting Materials (Already Committed)
 
-| File | Purpose |
-|------|---------|
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guide (Code Owners, CI gates, templates) |
-| [docs/architecture/engine/VERSIONING.md](docs/architecture/engine/VERSIONING.md) | Contract versioning policy |
-| [.github/CODEOWNERS](.github/CODEOWNERS) | Automated review routing |
-| [.github/workflows/markdown_lint.yml](.github/workflows/markdown_lint.yml) | 4 CI quality gates |
-| [.github/scripts/generate_pr_manifest.sh](.github/scripts/generate_pr_manifest.sh) | Manifest generator script |
+| File                                                                               | Purpose                                               |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)                                       | Contribution guide (Code Owners, CI gates, templates) |
+| [docs/architecture/engine/VERSIONING.md](docs/architecture/engine/VERSIONING.md)   | Contract versioning policy                            |
+| [.github/CODEOWNERS](.github/CODEOWNERS)                                           | Automated review routing                              |
+| [.github/workflows/markdown_lint.yml](.github/workflows/markdown_lint.yml)         | 4 CI quality gates                                    |
+| [.github/scripts/generate_pr_manifest.sh](.github/scripts/generate_pr_manifest.sh) | Manifest generator script                             |
 
 ---
 
@@ -139,13 +139,13 @@ Before creating PR, verify:
 
 ## 🎯 Expected Review Timeline
 
-| Stage | Duration | Reviewers | Actions |
-|-------|----------|-----------|---------|
+| Stage              | Duration  | Reviewers              | Actions                               |
+| ------------------ | --------- | ---------------------- | ------------------------------------- |
 | **Initial Review** | 2-4 hours | @architecture-team (2) | Review structure, contracts, adapters |
-| **CI/CD Review** | 1-2 hours | @devops-team (1) | Review workflows, CODEOWNERS |
-| **Revisions** | 1-2 days | Author | Address feedback |
-| **Final Approval** | 1 hour | All reviewers | Approve + merge |
-| **Total** | 2-3 days | - | - |
+| **CI/CD Review**   | 1-2 hours | @devops-team (1)       | Review workflows, CODEOWNERS          |
+| **Revisions**      | 1-2 days  | Author                 | Address feedback                      |
+| **Final Approval** | 1 hour    | All reviewers          | Approve + merge                       |
+| **Total**          | 2-3 days  | -                      | -                                     |
 
 ---
 
@@ -245,14 +245,14 @@ git push origin <your-partition-branch>
 
 ## 📊 Success Metrics (Track Post-Merge)
 
-| Metric | Target | How to Measure |
-|--------|--------|----------------|
-| **Merge time** | <3 days | GitHub PR timeline |
-| **Revisions** | <3 cycles | Count of "Changes requested" → "Approved" cycles |
-| **CI failures** | 0 | GitHub Actions status |
-| **Broken links (Week 1)** | <5 reports | Slack/email support tickets |
-| **Team adoption** | 100% by Week 4 | Survey: "Using INDEX.md instead of WORKFLOW_ENGINE.md?" |
-| **404 rate increase** | <5% | Web analytics (if public docs) |
+| Metric                    | Target         | How to Measure                                          |
+| ------------------------- | -------------- | ------------------------------------------------------- |
+| **Merge time**            | <3 days        | GitHub PR timeline                                      |
+| **Revisions**             | <3 cycles      | Count of "Changes requested" → "Approved" cycles        |
+| **CI failures**           | 0              | GitHub Actions status                                   |
+| **Broken links (Week 1)** | <5 reports     | Slack/email support tickets                             |
+| **Team adoption**         | 100% by Week 4 | Survey: "Using INDEX.md instead of WORKFLOW_ENGINE.md?" |
+| **404 rate increase**     | <5%            | Web analytics (if public docs)                          |
 
 ---
 
