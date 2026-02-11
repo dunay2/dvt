@@ -229,7 +229,6 @@ async function startRun(plan: ExecutionPlan, ctx: RunContext): Promise<EngineRun
 **Capability declarations**:
 - `plan.metadata.requiresCapabilities: Capability[]`
 - `plan.metadata.fallbackBehavior: "reject" | "emulate" | "degrade"`
-- `plan.metadata.pluginTrustTier: "trusted" | "partner" | "untrusted"`
 - `plan.metadata.targetAdapter: "temporal" | "conductor" | "any"`
 
 See: [capabilities/](./capabilities/) for executable enum + adapter matrix.
@@ -243,6 +242,7 @@ See: [capabilities/](./capabilities/) for executable enum + adapter matrix.
 - **Conductor**: https://conductor.netflix.com/
 - **Execution Semantics**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 - **Capabilities**: [capabilities/](./capabilities/)
+- **Plugin Sandbox (Extension)**: [extensions/PluginSandbox.v1.0.md](./extensions/PluginSandbox.v1.0.md)
 - **TemporalAdapter spec**: [../../adapters/temporal/TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
 
 ---

@@ -469,5 +469,5 @@ Only in cases of:
 | Date | Version | Change |
 |------|---------|--------|
 | 2026-02-11 | v1.0 | Initial versioning policy |
- 2026-02-11 | v1.0.1 | Add surface taxonomy, mandatory compat tests, capability flags, deprecation trigger clarification (non-normative guidance; no behavioral guarantees changed) |
+| 2026-02-11 | v1.0.1 | Add surface taxonomy, mandatory compat tests, capability flags, deprecation trigger clarification (non-normative guidance; no behavioral guarantees changed) |
 
