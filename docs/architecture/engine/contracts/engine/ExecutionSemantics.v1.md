@@ -298,7 +298,7 @@ Execution engines (Temporal, Conductor, etc.) have platform-specific constraints
 **Conductor**:
 - No native pause support → signal-based emulation required
 - Different timeout semantics
-- See [Conductor Engine Policies](../../adapters/conductor/EnginePolicies.md) (TBD)
+<!-- - See [Conductor Engine Policies](../../adapters/conductor/EnginePolicies.md) (Planned: future document for Conductor-specific policies) -->
 
 **Storage-agnostic principle**: Core execution semantics (this document) remain independent of engine choice. Adapters bridge the gap.
 
