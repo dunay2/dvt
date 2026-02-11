@@ -9,6 +9,14 @@ Phase 2 establishes two critical normative contracts that drive workflow executi
 
 These contracts separate concerns between event sourcing (state store + outbox) and execution logic (engine + projection).
 
+## Versioning
+
+**Specification Version**: 1.0.0  
+**Release Date**: 2026-02-11  
+**Status**: Normative (MUST implement as specified)
+
+This document follows the versioning policy defined in [VERSIONING.md](../../../VERSIONING.md).
+
 ## Architecture Pattern
 
 ```
@@ -39,9 +47,9 @@ Transform raw workflow events into queryable, materialized state.
 ### Design Principles
 
 - **Idempotent**: Same event → same state (safe to replay)
-- **Ordered**: Events applied in sequence (causality)
-- **Durable**: Surviving failures
-- **Searchable**: Support queries by workflow/step/status
+- **Ordered**: Events MUST be applied in sequence to maintain causality
+- **Durable**: Projected state MUST survive failures
+- **Searchable**: Implementation MUST support queries by workflow/step/status
 
 ### Example Implementations
 
@@ -253,3 +261,33 @@ All use same IProjectorAdapter + IWorkflowEngineAdapter contracts.
 - Implement Postgres adapters (primary)
 - Define step execution context (for plugins)
 - Implement plugin framework
+
+---
+
+## Change Log
+
+### Version 1.0.0 (2026-02-11)
+
+**Initial Release**
+
+#### IProjectorAdapter.v1
+
+- MUST transform events into queryable materialized state
+- MUST idempotently apply same event multiple times
+- MUST preserve event causality (sequence order)
+- Methods: projectEvent(), projectBatch(), queryProjectedState(), getWorkflowStateSnapshot(), rebuildProjection(), clearProjection()
+
+#### IWorkflowEngineAdapter.v1
+
+- MUST orchestrate workflow execution through defined state machine
+- MUST guarantee determinism (same inputs → same outputs)
+- MUST ensure idempotency via idempotencyKey caching
+- MUST use atomic state transitions with outbox pattern
+- Methods: createRun(), startRun(), executeStep(), executeStepBatch(), pauseRun(), resumeRun(), terminateRun(), getRunState(), replayRun(), archiveRun()
+
+#### Key Features
+
+- Multi-adapter support (Temporal, Postgres, DynamoDB, Kafka, In-Memory)
+- Determinism verification via golden path testing
+- Event-driven consistency model
+- Proper separation of normative contracts vs implementation details
