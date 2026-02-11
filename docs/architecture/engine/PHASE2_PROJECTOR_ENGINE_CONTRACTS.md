@@ -31,11 +31,11 @@ Events → Outbox → Delivery Worker
 
 ## IProjectorAdapter
 
-### Purpose
+### Purpose - IProjectorAdapter
 
 Transform raw workflow events into queryable, materialized state.
 
-### Key Methods
+### Key Methods - IProjectorAdapter
 
 - **projectEvent()**: Apply single event to state
 - **projectBatch()**: Efficient batch processing
@@ -51,7 +51,7 @@ Transform raw workflow events into queryable, materialized state.
 - **Durable**: Projected state MUST survive failures
 - **Searchable**: Implementation MUST support queries by workflow/step/status
 
-### Example Implementations
+### Example Implementations - IProjectorAdapter
 
 - **Postgres**: Denormalized tables (workflow_snapshots, step_summaries)
 - **DynamoDB**: GSI for workflow queries, event versioning
@@ -62,11 +62,11 @@ Transform raw workflow events into queryable, materialized state.
 
 ## IWorkflowEngineAdapter
 
-### Purpose
+### Purpose - IWorkflowEngineAdapter
 
 Drive workflow execution through state transitions, step coordination, and failure recovery.
 
-### Key Methods
+### Key Methods - IWorkflowEngineAdapter
 
 - **createRun()**: Initialize workflow
 - **startRun()**: Begin execution
@@ -116,7 +116,7 @@ All state transitions are atomic with outbox:
 3. Write state + append outbox event (single transaction)
 4. Return result (outbox guarantees delivery)
 
-### Example Implementations
+### Example Implementations - IWorkflowEngineAdapter
 
 - **Temporal**: Native Temporal workflow + activities
 - **Conductor**: Conductor workflow engine adaptation

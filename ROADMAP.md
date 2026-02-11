@@ -74,7 +74,7 @@ gantt
 - ⏳ **Visual Documentation**: Sequence and state diagrams for critical flows (issue #3)
 - ⏳ **Security Design**: Threat model, authorization contract, audit log schema for compliance (issue #19, design only)
 
-### Success Criteria
+### Success Criteria - Phase 1 MVP
 
 **Compile & Type Safety**
 
@@ -159,7 +159,7 @@ gantt
 
 **Objective**: Add development tools to ensure determinism and code quality. Start Conductor adapter development.
 
-### Issues
+### Issues - Phase 2
 
 | #                                              | Title                        | Priority  | Status | Blocked By |
 | ---------------------------------------------- | ---------------------------- | --------- | ------ | ---------- |
@@ -168,7 +168,7 @@ gantt
 | [#11](https://github.com/dunay2/dvt/issues/11) | Capability versioning policy | 🟡 Medium | Open   | -          |
 | [#12](https://github.com/dunay2/dvt/issues/12) | SLOs and severity matrix     | 🟡 Medium | Open   | Phase 1.5  |
 
-### Deliverables
+### Deliverables - Phase 2
 
 - ⏳ **Linting Rules**: Custom ESLint rules to detect non-deterministic code (issue #4)
 - ⏳ **Pre-commit Hooks**: Husky hooks to run lint + tests before commit (issue #7)
@@ -177,7 +177,7 @@ gantt
 - ⏳ **SLOs**: Per-subsystem SLOs and error budget policy (issue #12)
 - ⏳ **Conductor Adapter POC**: Cross-adapter determinism parity validation (Phase 2)
 
-### Success Criteria
+### Success Criteria - Phase 2
 
 - [ ] Linting rules detect non-deterministic patterns
 - [ ] Husky blocks commits that fail linting
@@ -206,12 +206,6 @@ gantt
 ### Phase 1.5: Hardening
 
 - **Progress**: 0/3 focus areas completed (0%)
-- **Deadline**: 2026-05-31
-- **Status**: 🟢 Scheduled after Phase 1
-
-### Phase 1.5: Hardening
-
-- **Progress**: 0/1 epic completed (0%)
 - **Deadline**: 2026-05-31
 - **Status**: 🟢 Scheduled after Phase 1
 - **Epic**: Issue #18 (Load Testing + Chaos Suite) validates performance targets

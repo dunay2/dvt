@@ -201,7 +201,7 @@ test('GP-02: Create plan → add nodes → execute', async ({ page }) => {
    - Page requires `auditor` role (403 if unauthorized)
 
 2. **Search by actor**
-   - Enter user email: "alice@example.com"
+   - Enter user email: `alice@example.com`
    - Click "Search"
    - Results show all actions by Alice in last 30 days
 

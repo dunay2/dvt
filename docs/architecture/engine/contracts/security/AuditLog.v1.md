@@ -407,9 +407,9 @@ WHERE signature != HMAC_SHA256(event_data, secret)
 - [THREAT_MODEL.md](../THREAT_MODEL.md) - Threat scenarios (T4: audit tampering)
 - [IAuthorization.v1.md](IAuthorization.v1.md) - Auth decision source
 - [ExecutionSemantics.v1.md](../../../contracts/engine/ExecutionSemantics.v1.md) - State mutation source
-- SOC2 Trust Services Criteria: https://www.aicpa.org/interestareas/informationsystemssecurity/pages/trust-services-criteria.aspx
-- HIPAA Security Rule: https://www.hhs.gov/hipaa/for-professionals/security/index.html
-- GDPR Article 5: https://gdpr-info.eu/art-5-gdpr/
+- SOC2 Trust Services Criteria: <https://www.aicpa.org/interestareas/informationsystemssecurity/pages/trust-services-criteria.aspx>
+- HIPAA Security Rule: <https://www.hhs.gov/hipaa/for-professionals/security/index.html>
+- GDPR Article 5: <https://gdpr-info.eu/art-5-gdpr/>
 
 ---
 
