@@ -1,69 +1,105 @@
-# Golden Paths Baseline Hashes
+# Golden Hashes for Contract Tests
 
 This directory contains baseline snapshot hashes for golden path contract tests.
 
-## Files
+## Purpose
 
-### `hashes.json`
+The `hashes.json` file serves as a determinism verification baseline:
 
-Baseline snapshot hashes for the 3 required golden paths from ROADMAP.md:
+- **Contract testing**: CI compares execution hashes against baseline to detect non-determinism
+- **Version tracking**: Documents which golden paths are implemented vs planned
+- **Regression detection**: Hash mismatches indicate changes in execution semantics
 
-1. **hello-world**: 3 steps linear plan completes in < 30s
-2. **pause-resume**: Pause after step 1, resume, same final snapshot hash  
-3. **retry**: Fail step 2 once, retry, same snapshot hash
+## Structure
 
-**Format:**
 ```json
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "paths": {
-    "hello-world": {
-      "description": "...",
-      "hash": "pending | <sha256-hash>",
-      "status": "not-implemented | implemented",
+    "plan-minimal": {
+      "hash": "pending",           // SHA256 of final StateStore snapshot
+      "status": "implemented",     // implemented | not-implemented | deprecated
+      "location": "examples/plan-minimal/",
       "metadata": { ... }
     }
   }
 }
 ```
 
-**Status Values:**
-- `not-implemented`: Golden path not yet created (blocked by issue #10)
-- `implemented`: Golden path exists and hash is valid
+## Status Values
 
-**Hash Values:**
-- `pending`: Placeholder until golden path implementation is complete
-- `<sha256-hash>`: 16-character hex string from snapshot hash
+- **implemented**: Golden path exists in `examples/` directory with valid JSON files
+- **not-implemented**: Golden path is planned but not yet created
+- **deprecated**: Golden path has been replaced by a newer version
+
+## Golden Paths (v1.1)
+
+### Active Golden Paths
+
+1. **plan-minimal** (`examples/plan-minimal/`)
+   - Single echo step
+   - Validates basic engine execution
+   - Duration: < 5s
+   - **Status**: ✅ Implemented
+
+2. **plan-parallel** (`examples/plan-parallel/`)
+   - 3 parallel steps + 1 fan-in merge
+   - Validates parallel scheduling
+   - Duration: < 15s
+   - **Status**: ✅ Implemented
+
+3. **plan-cancel-and-resume** (`examples/plan-cancel-and-resume/`)
+   - 5 sequential steps with PAUSE/RESUME signals
+   - Validates signal handling
+   - Duration: Variable (depends on pause duration)
+   - **Status**: ✅ Implemented
+
+### Deprecated Golden Paths
+
+- **hello-world**: Replaced by `plan-minimal`
+- **pause-resume**: Replaced by `plan-cancel-and-resume`
+
+### Future Golden Paths
+
+- **retry**: Retry with failure injection (not yet implemented)
 
 ## Updating Hashes
 
-When golden path implementations are added (issue #10):
+When actual engine execution becomes available (after issues #5, #6 are resolved):
 
-1. Run the golden path: `npm run test:contracts:hashes`
-2. Inspect the generated hash in `test/contracts/results/golden-paths-run.json`
-3. Update `hashes.json` with the new baseline hash
-4. Change status from `not-implemented` to `implemented`
-5. Commit the updated `hashes.json` to the repository
+1. **Run golden paths**: Execute each plan against the engine
+2. **Capture snapshot hash**: Hash the final StateStore projection
+3. **Update hashes.json**: Replace "pending" with actual hash values
+4. **Commit baseline**: Commit updated hashes.json to establish baseline
 
-**Important:** Once a hash is set to a real value (not "pending"), the CI will fail if:
-- The hash changes (indicates non-determinism)
-- The golden path execution fails
+```bash
+# Example workflow (not yet functional)
+npm run test:contracts:hashes        # Execute golden paths, generate hashes
+npm run test:contracts:hash-compare  # Compare against baseline
+```
 
-## CI Behavior
+## CI Integration
 
-### Stub Mode (Current)
-- Status: `not-implemented`
-- Hash: `pending`
-- CI Result: ✅ PASS (lenient mode)
+The `.github/workflows/golden-paths.yml` workflow:
 
-### Production Mode (After issue #10)
-- Status: `implemented`
-- Hash: `<actual-hash>`
-- CI Result: ✅ PASS if hash matches, ❌ FAIL if mismatch
+1. Validates JSON structure of all golden path files
+2. Verifies schema versions (v1.1)
+3. Checks that validation reports show "VALID" status
+4. (Future) Executes plans and compares hashes against baseline
+
+**Current CI behavior**: Validates file structure only (execution skipped until engine MVP is available)
 
 ## References
 
-- [ROADMAP.md](../ROADMAP.md) - Golden Path Success Criteria
-- [Issue #10](https://github.com/dunay2/dvt/issues/10) - Golden Paths examples
-- [Issue #17](https://github.com/dunay2/dvt/issues/17) - CI contract testing pipeline
-- [scripts/README.md](../scripts/README.md) - Script documentation
+- [examples/](../examples/) - Golden path implementations
+- [scripts/run-golden-paths.js](../scripts/run-golden-paths.js) - Execution script
+- [scripts/compare-hashes.js](../scripts/compare-hashes.js) - Hash comparison script
+- [Issue #10](https://github.com/dunay2/dvt/issues/10) - Golden Paths implementation (completed)
+- [ROADMAP.md](../ROADMAP.md) - Phase 1 MVP success criteria
+
+## Version History
+
+| Version | Date       | Change                                                 |
+| ------- | ---------- | ------------------------------------------------------ |
+| 1.0.0   | 2026-02-11 | Initial hashes file with 3 not-implemented paths       |
+| 1.1.0   | 2026-02-11 | Added 3 implemented golden paths (issue #10 completed) |

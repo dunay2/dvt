@@ -1,0 +1,78 @@
+{
+  "$schema": "https://dvt.dev/schemas/plan.v1.1.json",
+  "planId": "plan-parallel",
+  "planVersion": "1.0",
+  "schemaVersion": "v1.1",
+  "metadata": {
+    "name": "Parallel Execution Plan",
+    "description": "Validates parallel task execution and fan-in pattern",
+    "author": "DVT Team",
+    "createdAt": "2026-02-11T17:00:00.000Z",
+    "tags": ["golden-path", "parallel", "fan-in", "concurrency"],
+    "requiresCapabilities": ["basic-execution", "workflow.fan.parallel"],
+    "fallbackBehavior": "reject"
+  },
+  "steps": [
+    {
+      "stepId": "step-parallel-1",
+      "name": "Parallel Task 1",
+      "type": "echo",
+      "config": {
+        "message": "Parallel task 1 executing"
+      },
+      "dependencies": [],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    },
+    {
+      "stepId": "step-parallel-2",
+      "name": "Parallel Task 2",
+      "type": "echo",
+      "config": {
+        "message": "Parallel task 2 executing"
+      },
+      "dependencies": [],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    },
+    {
+      "stepId": "step-parallel-3",
+      "name": "Parallel Task 3",
+      "type": "echo",
+      "config": {
+        "message": "Parallel task 3 executing"
+      },
+      "dependencies": [],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    },
+    {
+      "stepId": "step-merge",
+      "name": "Merge Results",
+      "type": "merge",
+      "config": {
+        "message": "All parallel tasks completed successfully"
+      },
+      "dependencies": ["step-parallel-1", "step-parallel-2", "step-parallel-3"],
+      "timeout": "5s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    }
+  ],
+  "triggers": {
+    "manual": true,
+    "schedule": null,
+    "webhook": null
+  }
+}

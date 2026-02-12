@@ -4,7 +4,6 @@ about: Track security improvements and threat model updates
 title: 'security: Update THREAT_MODEL.md to v1.4 with enhanced security controls'
 labels: security, documentation, contracts
 assignees: dunay2
-
 ---
 
 ## 📋 Overview
@@ -36,6 +35,7 @@ Update the DVT Engine Threat Model to version 1.4 with comprehensive security en
 ## 📊 Changes Summary
 
 ### New Sections
+
 - ✅ Security Invariants (testable)
 - ✅ Visual trust boundary diagram (Mermaid)
 - ✅ Plugin Trust Tiers (1-3) with isolation levels
@@ -44,12 +44,14 @@ Update the DVT Engine Threat Model to version 1.4 with comprehensive security en
 - ✅ PR Review Checklist for security changes
 
 ### Enhanced Sections
+
 - ✅ StateStore boundary (RLS + TenantScope enforcement)
 - ✅ Audit boundary (Decision Records v1.9)
 - ✅ Compliance (HIPAA retention, GDPR erasure)
 - ✅ Threat scenarios (updated for v1.9)
 
 ### Split Contracts (separate normative docs)
+
 - `IAuthorization.v1.md`
 - `AuditLog.v1.md`
 - `ISecretsProvider.v1.md` (v1.9)
@@ -106,10 +108,10 @@ graph LR
 
 ## 📚 References
 
-- HIPAA Security Rule: https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164
-- GDPR Right to Erasure: https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/
-- SLSA v1.2: https://slsa.dev/spec/v1.2/
-- Sigstore: https://docs.sigstore.dev/
+- HIPAA Security Rule: <https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164>
+- GDPR Right to Erasure: <https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/>
+- SLSA v1.2: <https://slsa.dev/spec/v1.2/>
+- Sigstore: <https://docs.sigstore.dev/>
 
 ---
 

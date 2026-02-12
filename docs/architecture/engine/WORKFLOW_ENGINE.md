@@ -13,21 +13,21 @@ This monolithic 3,227-line document has been **partitioned into 9 focused docume
 
 ### ��� Where to Find Each Section
 
-| Original Section | Content | New Home | Status |
-|------------------|---------|----------|--------|
-| **Section 1** | Engine Boundary (MUST/MUST NOT) | [IWorkflowEngine.v1.md § 1](./contracts/engine/IWorkflowEngine.v1.md#1-engine-requirements-must-contracts) | ✅ Extracted |
-| **Section 2** | IWorkflowEngine Interface | [IWorkflowEngine.v1.md § 2](./contracts/engine/IWorkflowEngine.v1.md#2-iworkflowengine-interface) | ✅ Extracted |
-| **Section 3** | PlanRef Versioning | [TemporalAdapter.spec.md § 1](./adapters/temporal/TemporalAdapter.spec.md#1-plan-transport-planref-versioning) | ✅ Extracted |
-| **Section 4** | Temporal Mapping (Interpreter, Namespace, Workers) | [TemporalAdapter.spec.md § 2-5](./adapters/temporal/TemporalAdapter.spec.md) | ✅ Extracted |
-| **Section 4.6** | Capability Matrix (Temporal vs Conductor) | [contracts/capabilities/adapters.capabilities.json](./contracts/capabilities/adapters.capabilities.json) | ✅ Extracted (JSON) |
-| **Section 5** | Conductor Mapping (Phase 2) | [ConductorAdapter.spec.md](./adapters/conductor/ConductorAdapter.spec.md) | ✅ Extracted (DRAFT) |
-| **Section 6** | ExecutionSemantics (StateStore, Events, Snapshots) | [ExecutionSemantics.v1.md](./contracts/engine/ExecutionSemantics.v1.md) | ✅ Extracted |
-| **Section 6.0.5** | Snapshot Projection Rules | [ExecutionSemantics.v1.md § 1.5](./contracts/engine/ExecutionSemantics.v1.md#15-snapshot-projector-contract) | ✅ Extracted |
-| **Section 8** | Observability (Metrics, Traces, Logs, SLOs) | [ops/observability.md](./ops/observability.md) | ✅ Extracted |
-| **Section 8.5** | Alerting & SLA Violations | [ops/observability.md § 4-5](./ops/observability.md#section-4) | ✅ Extracted |
-| **Section 20** | Incident Response | [ops/runbooks/incident_response.md](./ops/runbooks/incident_response.md) | ✅ Extracted |
-| **Section 21.3** | Determinism Tooling (Pre-commit, Replay Tests) | [dev/determinism-tooling.md](./dev/determinism-tooling.md) | ✅ Extracted |
-| **Appendix H** | Roadmap (Phases 1-4) | [roadmap/engine-phases.md](./roadmap/engine-phases.md) | ✅ Extracted |
+| Original Section  | Content                                            | New Home                                                                                                       | Status               |
+| ----------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------- |
+| **Section 1**     | Engine Boundary (MUST/MUST NOT)                    | [IWorkflowEngine.v1.md § 1](./contracts/engine/IWorkflowEngine.v1.md#1-engine-requirements-must-contracts)     | ✅ Extracted         |
+| **Section 2**     | IWorkflowEngine Interface                          | [IWorkflowEngine.v1.md § 2](./contracts/engine/IWorkflowEngine.v1.md#2-iworkflowengine-interface)              | ✅ Extracted         |
+| **Section 3**     | PlanRef Versioning                                 | [TemporalAdapter.spec.md § 1](./adapters/temporal/TemporalAdapter.spec.md#1-plan-transport-planref-versioning) | ✅ Extracted         |
+| **Section 4**     | Temporal Mapping (Interpreter, Namespace, Workers) | [TemporalAdapter.spec.md § 2-5](./adapters/temporal/TemporalAdapter.spec.md)                                   | ✅ Extracted         |
+| **Section 4.6**   | Capability Matrix (Temporal vs Conductor)          | [contracts/capabilities/adapters.capabilities.json](./contracts/capabilities/adapters.capabilities.json)       | ✅ Extracted (JSON)  |
+| **Section 5**     | Conductor Mapping (Phase 2)                        | [ConductorAdapter.spec.md](./adapters/conductor/ConductorAdapter.spec.md)                                      | ✅ Extracted (DRAFT) |
+| **Section 6**     | ExecutionSemantics (StateStore, Events, Snapshots) | [ExecutionSemantics.v1.md](./contracts/engine/ExecutionSemantics.v1.md)                                        | ✅ Extracted         |
+| **Section 6.0.5** | Snapshot Projection Rules                          | [ExecutionSemantics.v1.md § 1.5](./contracts/engine/ExecutionSemantics.v1.md#15-snapshot-projector-contract)   | ✅ Extracted         |
+| **Section 8**     | Observability (Metrics, Traces, Logs, SLOs)        | [ops/observability.md](./ops/observability.md)                                                                 | ✅ Extracted         |
+| **Section 8.5**   | Alerting & SLA Violations                          | [ops/observability.md § 4-5](./ops/observability.md#section-4)                                                 | ✅ Extracted         |
+| **Section 20**    | Incident Response                                  | [ops/runbooks/incident_response.md](./ops/runbooks/incident_response.md)                                       | ✅ Extracted         |
+| **Section 21.3**  | Determinism Tooling (Pre-commit, Replay Tests)     | [dev/determinism-tooling.md](./dev/determinism-tooling.md)                                                     | ✅ Extracted         |
+| **Appendix H**    | Roadmap (Phases 1-4)                               | [roadmap/engine-phases.md](./roadmap/engine-phases.md)                                                         | ✅ Extracted         |
 
 ---
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Execute Golden Paths and Generate Snapshot Hashes
- * 
+ *
  * Runs the 3 required golden paths from ROADMAP.md:
  * 1. Hello-world plan: 3 steps linear → completes in < 30s
  * 2. Pause/resume plan: pause after step 1 → resume → same final snapshot hash
  * 3. Retry plan: fail step 2 once → retry → same snapshot hash
- * 
+ *
  * Currently a stub until issue #10 (Golden Paths) provides implementations.
  */
 
@@ -37,7 +37,7 @@ async function runGoldenPaths() {
   const results = {
     timestamp: new Date().toISOString(),
     database: process.env.DATABASE_URL ? 'connected' : 'not-configured',
-    paths: {}
+    paths: {},
   };
 
   // Check each golden path
@@ -51,7 +51,7 @@ async function runGoldenPaths() {
       results.paths[pathName] = {
         status: 'skipped',
         reason: 'not-implemented',
-        hash: pathConfig.hash
+        hash: pathConfig.hash,
       };
       continue;
     }
@@ -59,27 +59,27 @@ async function runGoldenPaths() {
     // TODO: Execute actual golden path when implementations are available
     // For now, simulate execution
     const startTime = Date.now();
-    
+
     try {
       // Placeholder for actual execution
       await simulateGoldenPath(pathName, pathConfig);
-      
+
       const duration = Date.now() - startTime;
       const hash = generatePlaceholderHash(pathName);
-      
+
       console.log(`   ✅ Completed in ${duration}ms`);
       console.log(`   🔑 Hash: ${hash}`);
-      
+
       results.paths[pathName] = {
         status: 'success',
         duration,
-        hash
+        hash,
       };
     } catch (error) {
       console.error(`   ❌ Failed: ${error.message}`);
       results.paths[pathName] = {
         status: 'failed',
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -91,9 +91,9 @@ async function runGoldenPaths() {
 
   // Summary
   const total = Object.keys(results.paths).length;
-  const skipped = Object.values(results.paths).filter(p => p.status === 'skipped').length;
-  const success = Object.values(results.paths).filter(p => p.status === 'success').length;
-  const failed = Object.values(results.paths).filter(p => p.status === 'failed').length;
+  const skipped = Object.values(results.paths).filter((p) => p.status === 'skipped').length;
+  const success = Object.values(results.paths).filter((p) => p.status === 'success').length;
+  const failed = Object.values(results.paths).filter((p) => p.status === 'failed').length;
 
   console.log('\n📊 Summary:');
   console.log(`   Total paths: ${total}`);
@@ -111,7 +111,7 @@ async function runGoldenPaths() {
 
 async function simulateGoldenPath(pathName, config) {
   // Placeholder simulation - will be replaced with actual execution
-  return new Promise(resolve => setTimeout(resolve, 10));
+  return new Promise((resolve) => setTimeout(resolve, 10));
 }
 
 function generatePlaceholderHash(pathName) {
@@ -120,7 +120,7 @@ function generatePlaceholderHash(pathName) {
 }
 
 // Run golden paths
-runGoldenPaths().catch(error => {
+runGoldenPaths().catch((error) => {
   console.error('\n❌ Execution failed:', error.message);
   console.error(error.stack);
   process.exit(1);
