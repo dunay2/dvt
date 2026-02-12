@@ -758,7 +758,18 @@ This applies to:
 
 **Source of Truth**: JSON Schema files are the authoritative source for event structure validation. This appendix provides human-readable examples and normative field descriptions.
 
-**Schema Location**: `docs/architecture/engine/contracts/engine/events/*.schema.json` (planned)
+**Schema Location**: `docs/architecture/engine/contracts/engine/events/*.schema.json`
+
+**Implemented Schemas** (JSON Schema Draft 2020-12):
+
+- [RunStarted.schema.json](./events/RunStarted.schema.json) ✅
+- [StepStarted.schema.json](./events/StepStarted.schema.json) ✅
+- [StepCompleted.schema.json](./events/StepCompleted.schema.json) ✅
+- [StepFailed.schema.json](./events/StepFailed.schema.json) ✅
+
+**Planned Schemas** (remaining events):
+
+- RunQueued, RunApproved, StepSkipped, StepDelayed, RunPaused, RunResumed, RunCompleted, RunFailed, RunCancelled, SignalAccepted, SignalRejected
 
 ---
 
@@ -766,7 +777,7 @@ This applies to:
 
 Emitted by the Engine when a workflow execution begins in the target orchestrator (Temporal, Conductor, etc.).
 
-**JSON Schema Reference**: `RunStarted.schema.json` (planned)
+**JSON Schema Reference**: [RunStarted.schema.json](./events/RunStarted.schema.json) ✅
 
 **Normative Fields**:
 
@@ -855,11 +866,17 @@ When a `RunStarted` event is applied to a snapshot projection:
 
 For complete event schema specifications, see:
 
+**Implemented Schemas**:
+
+- **RunStarted** ✅: [RunStarted.schema.json](./events/RunStarted.schema.json) — Engine starts workflow execution
+- **StepStarted** ✅: [StepStarted.schema.json](./events/StepStarted.schema.json) — Activity begins execution
+- **StepCompleted** ✅: [StepCompleted.schema.json](./events/StepCompleted.schema.json) — Activity execution succeeded
+- **StepFailed** ✅: [StepFailed.schema.json](./events/StepFailed.schema.json) — Activity execution failed
+
+**Planned Schemas** (remaining events):
+
 - **RunQueued**: Section 3 (Backpressure & Run Queue)
 - **RunApproved**: Emitted by Planner (approval gate passed)
-- **StepStarted**: Activity begins execution
-- **StepCompleted**: Activity execution succeeded
-- **StepFailed**: Activity execution failed
 - **StepSkipped**: Activity skipped due to dependency failure or conditional logic
 - **StepDelayed**: Activity execution delayed due to throttling or backpressure
 - **RunPaused**: Workflow paused (via PAUSE signal)
@@ -869,25 +886,6 @@ For complete event schema specifications, see:
 - **RunCancelled**: Workflow cancelled (via user or system signal)
 - **SignalAccepted**: External signal received and validated
 - **SignalRejected**: External signal rejected (authorization or validation failure)
-
-**JSON Schema Files** (planned):
-
-```
-docs/architecture/engine/contracts/engine/events/
-  RunStarted.schema.json
-  RunQueued.schema.json
-  StepStarted.schema.json
-  StepCompleted.schema.json
-  StepFailed.schema.json
-  StepDelayed.schema.json
-  RunPaused.schema.json
-  RunResumed.schema.json
-  RunCompleted.schema.json
-  RunFailed.schema.json
-  RunCancelled.schema.json
-  SignalAccepted.schema.json
-  SignalRejected.schema.json
-```
 
 **Validation Rule** (NORMATIVE):
 

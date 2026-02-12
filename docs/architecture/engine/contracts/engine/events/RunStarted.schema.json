@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/RunStarted.schema.json",
+  "title": "RunStarted Event",
+  "description": "Emitted by the Engine when a workflow execution begins in the target orchestrator (Temporal, Conductor, etc.)",
+  "type": "object",
+  "required": [
+    "eventType",
+    "eventId",
+    "runId",
+    "runSeq",
+    "idempotencyKey",
+    "occurredAt",
+    "emittedBy",
+    "status",
+    "engineRunRef",
+    "engineType",
+    "planRef",
+    "context",
+    "startedAt"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "const": "RunStarted",
+      "description": "Event type discriminator"
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier (UUID v4)"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^run_[a-zA-Z0-9_-]+$",
+      "description": "Workflow run identifier"
+    },
+    "runSeq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic sequence number (per runId, assigned by Append Authority)"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 hash: SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planVersion)"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event occurred"
+    },
+    "emittedBy": {
+      "type": "string",
+      "enum": ["engine", "planner", "activity-worker", "system"],
+      "description": "Component that emitted the event"
+    },
+    "status": {
+      "type": "string",
+      "const": "RUNNING",
+      "description": "Run status transition (always RUNNING for RunStarted)"
+    },
+    "engineRunRef": {
+      "type": "string",
+      "description": "Engine-specific identifier (e.g., Temporal workflowId/runId, Conductor executionId)"
+    },
+    "engineType": {
+      "type": "string",
+      "enum": ["temporal", "conductor", "mock"],
+      "description": "Target execution engine type"
+    },
+    "planRef": {
+      "type": "object",
+      "required": ["uri", "sha256", "schemaVersion", "planId", "planVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Storage-agnostic URI (s3://, gs://, azure://, file://)"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Integrity hash of plan content"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^v\\d+\\.\\d+$",
+          "description": "Plan schema version (e.g., v1.2)"
+        },
+        "planId": {
+          "type": "string",
+          "description": "Plan identifier"
+        },
+        "planVersion": {
+          "type": "string",
+          "description": "Plan version"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["tenantId", "projectId", "environmentId"],
+      "additionalProperties": false,
+      "properties": {
+        "tenantId": {
+          "type": "string",
+          "description": "Multi-tenant isolation identifier"
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Project identifier"
+        },
+        "environmentId": {
+          "type": "string",
+          "description": "Environment identifier (prod, staging, dev, etc.)"
+        },
+        "triggeredBy": {
+          "type": "string",
+          "description": "User ID or 'system' if automated"
+        },
+        "triggerSource": {
+          "type": "string",
+          "enum": ["manual", "schedule", "webhook", "api"],
+          "description": "Source that triggered the run"
+        }
+      }
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when engine execution began"
+    }
+  },
+  "examples": [
+    {
+      "eventType": "RunStarted",
+      "eventId": "01234567-89ab-cdef-0123-456789abcdef",
+      "runId": "run_2026-02-11_abc123",
+      "runSeq": 2,
+      "idempotencyKey": "d2a84f4b8b650937ec8f73cd8be2c74add5a911ba64df27458ed8229da804a26",
+      "occurredAt": "2026-02-11T10:30:00.000Z",
+      "emittedBy": "engine",
+      "status": "RUNNING",
+      "engineRunRef": "temporal://default/interpreter-workflow/run_2026-02-11_abc123/f47ac10b",
+      "engineType": "temporal",
+      "planRef": {
+        "uri": "s3://dvt-plans/prod/plan_xyz_v1.2.json",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "schemaVersion": "v1.2",
+        "planId": "plan_xyz",
+        "planVersion": "1.2"
+      },
+      "context": {
+        "tenantId": "tenant_acme",
+        "projectId": "proj_marketing",
+        "environmentId": "prod",
+        "triggeredBy": "user_jane",
+        "triggerSource": "manual"
+      },
+      "startedAt": "2026-02-11T10:30:00.000Z"
+    }
+  ]
+}
