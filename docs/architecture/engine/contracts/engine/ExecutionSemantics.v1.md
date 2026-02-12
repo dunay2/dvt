@@ -1,7 +1,7 @@
-# Execution Semantics Contract (Normative v1.1)
+# Execution Semantics Contract (Normative v1.1.1)
 
 **Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.1  
+**Version**: 1.1.1  
 **Stability**: Core semantics — breaking changes require version bump  
 **Consumers**: Engine, StateStore, Projector
 
@@ -193,12 +193,17 @@ SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
 For **run-level events** (RunStarted, RunPaused, RunCancelled):
 
 ```
-// Normalize absent stepId to '__run__' for idempotency key calculation
+// Normalize absent fields for idempotency key calculation
 stepIdNormalized = stepId ?? '__run__'
-SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planVersion)
+logicalAttemptIdNormalized = logicalAttemptId ?? 1
+SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planVersion)
 ```
 
+**Rationale**: Run-level events don't have natural "attempts" (no retry semantics). Normalizing to `1` avoids serialization ambiguity (`undefined` vs `null` vs absent) across languages.
+
 NOT `engineAttemptId`. Same logical attempt retried by platform → same idempotency key.
+
+**Reference**: Idempotency patterns and retry safety — [AWS Builders Library: Making retries safe with idempotent APIs](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-apis/)
 
 ---
 
@@ -746,11 +751,12 @@ This applies to:
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                                                                                                         |
-| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1.1     | 2026-02-12 | **Minor (NORMATIVE)**: Fix attempt types (logicalAttemptId/engineAttemptId: string → number); define run-level idempotency normalization (stepId → '**run**'); strengthen resync completion rule (watermark MUST advance); rename CanonicalEngineEvent → RunEvent for clarity. |
-| 1.0.1   | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility)                                                                                 |
-| 1.0     | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection)                                                                                                                                                                                                     |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                               |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1.1   | 2026-02-12 | **Patch**: Unify event envelope timestamps (emittedAt REQUIRED, occurredAt optional); normalize `logicalAttemptId` for run-level events (`?? 1`); remove `StepDelayed` from planned schemas (not canonical); add normative rules for timestamp usage (ordering by runSeq, durations use occurredAt). |
+| 1.1     | 2026-02-12 | **Minor (NORMATIVE)**: Fix attempt types (logicalAttemptId/engineAttemptId: string → number); define run-level idempotency normalization (stepId → '**run**'); strengthen resync completion rule (watermark MUST advance); rename CanonicalEngineEvent → RunEvent for clarity.                       |
+| 1.0.1   | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility)                                                                                                       |
+| 1.0     | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection)                                                                                                                                                                                                                           |
 
 ---
 
@@ -769,7 +775,9 @@ This applies to:
 
 **Planned Schemas** (remaining events):
 
-- RunQueued, RunApproved, StepSkipped, StepDelayed, RunPaused, RunResumed, RunCompleted, RunFailed, RunCancelled, SignalAccepted, SignalRejected
+- RunQueued, RunApproved, StepSkipped, RunPaused, RunResumed, RunCompleted, RunFailed, RunCancelled, SignalAccepted, SignalRejected
+
+**Note**: `StepDelayed` removed — not canonical until backpressure semantics are finalized (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for contract hygiene patterns).
 
 ---
 
@@ -788,9 +796,10 @@ interface RunStartedEvent {
   eventId: string; // UUID v4
   runId: string; // Workflow run identifier
   runSeq: number; // Monotonic sequence (per runId)
-  idempotencyKey: string; // SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planVersion)
-  occurredAt: string; // ISO 8601 timestamp (UTC) — when event occurred
+  idempotencyKey: string; // SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planVersion)
+  emittedAt: string; // ISO 8601 timestamp (UTC) — when event was persisted to StateStore
   emittedBy: string; // e.g., "engine", "planner", "activity-worker"
+  occurredAt?: string; // ISO 8601 timestamp (UTC) — when event actually occurred (if different from emittedAt)
 
   // Event payload (specific to RunStarted)
   status: 'RUNNING'; // Run status transition
@@ -813,6 +822,21 @@ interface RunStartedEvent {
   startedAt: string; // ISO 8601 timestamp (when engine execution began)
 }
 ```
+
+**Event Timestamp Semantics** (NORMATIVE):
+
+- **`emittedAt`** (REQUIRED): Processing time — when event was persisted to StateStore ("append time").
+- **`occurredAt`** (OPTIONAL): Event time — when event actually occurred at source (if measurably different).
+
+**Usage rules**:
+
+- **Ordering**: Events MUST be ordered by `runSeq` only (NOT by `emittedAt` or `occurredAt`).
+- **Durations / UX**: Use `occurredAt` (if present) for calculating durations; fall back to `emittedAt` if absent.
+- **Projector watermarks**: Track progress by `runSeq` (monotonic), not by timestamps.
+
+**Reference**: Event-time vs processing-time — [Apache Flink: Notions of Time](https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/)
+
+---
 
 **State Transition Rule** (NORMATIVE):
 
@@ -878,7 +902,6 @@ For complete event schema specifications, see:
 - **RunQueued**: Section 3 (Backpressure & Run Queue)
 - **RunApproved**: Emitted by Planner (approval gate passed)
 - **StepSkipped**: Activity skipped due to dependency failure or conditional logic
-- **StepDelayed**: Activity execution delayed due to throttling or backpressure
 - **RunPaused**: Workflow paused (via PAUSE signal)
 - **RunResumed**: Workflow resumed (via RESUME signal)
 - **RunCompleted**: All steps completed successfully
@@ -886,6 +909,8 @@ For complete event schema specifications, see:
 - **RunCancelled**: Workflow cancelled (via user or system signal)
 - **SignalAccepted**: External signal received and validated
 - **SignalRejected**: External signal rejected (authorization or validation failure)
+
+**Note**: `StepDelayed` removed — not yet canonical in §1.2 event table. Will be reintroduced in future version if backpressure semantics require it (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for event catalog hygiene).
 
 **Validation Rule** (NORMATIVE):
 

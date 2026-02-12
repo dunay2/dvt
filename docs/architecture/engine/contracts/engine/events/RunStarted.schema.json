@@ -10,7 +10,7 @@
     "runId",
     "runSeq",
     "idempotencyKey",
-    "occurredAt",
+    "emittedAt",
     "emittedBy",
     "status",
     "engineRunRef",
@@ -44,17 +44,22 @@
     "idempotencyKey": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$",
-      "description": "SHA256 hash: SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planVersion)"
+      "description": "SHA256 hash: SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planVersion)"
     },
-    "occurredAt": {
+    "emittedAt": {
       "type": "string",
       "format": "date-time",
-      "description": "ISO 8601 timestamp (UTC) when event occurred"
+      "description": "ISO 8601 timestamp (UTC) when event was persisted to StateStore (processing time)"
     },
     "emittedBy": {
       "type": "string",
       "enum": ["engine", "planner", "activity-worker", "system"],
       "description": "Component that emitted the event"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event actually occurred at source (optional, event time)"
     },
     "status": {
       "type": "string",
