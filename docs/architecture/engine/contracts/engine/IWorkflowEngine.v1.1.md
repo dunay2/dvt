@@ -1,11 +1,11 @@
-# IWorkflowEngine Contract (Normative v1.1)
+# IWorkflowEngine Contract (Normative v1.1.1)
 
 **Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.1  
+**Version**: 1.1.1  
 **Stability**: Contracts — breaking changes require version bump  
 **Consumers**: Planner, State, UI  
 **Sub-Contracts**: [RunEvents.v1.1.md](./RunEvents.v1.1.md), [SignalsAndAuth.v1.1.md](./SignalsAndAuth.v1.1.md)  
-**References**: [Temporal SDK](https://docs.temporal.io/develop/typescript), [Conductor API](https://conductor.netflix.com/)
+**References**: [Temporal SDK](https://docs.temporal.io/develop/typescript), [Conductor API](https://github.com/netflix/conductor/wiki)
 
 ---
 
@@ -17,7 +17,7 @@
 - Emit **run/step lifecycle events** (persisted into `IRunStateStore`).
 - Support retries/backoff as specified by Planner policy (engine-agnostic rules).
 - Support cancellation and "stop" semantics.
-- Support **resuming / continuing** after transient failures (see [ExecutionSemantics.v1.md § 2](./ExecutionSemantics.v1.md) for resume semantics: PAUSE/RESUME signals, step replay rules, at-least-once vs exactly-once guarantees).
+- Support **resuming / continuing** after transient failures (see [ExecutionSemantics.v1.1.md § 2](./ExecutionSemantics.v1.md#2-resume-semantics) for resume semantics: PAUSE/RESUME signals, step replay rules, at-least-once vs exactly-once guarantees).
 - Provide correlation identifiers: `tenantId`, `projectId`, `environmentId`, `runId`, `engineAttemptId`, `logicalAttemptId`.
 
 ### MUST NOT
@@ -25,6 +25,7 @@
 - Perform planning (ordering/skip/cost decisions belong to `IExecutionPlanner`).
 - Become the source of truth for state (`IRunStateStore` is the source of truth).
 - Store secrets (`ISecretsProvider` handles that).
+- Persist secrets or plan bodies (use `PlanRef` for storage-agnostic retrieval). Engine MAY persist minimal run metadata needed to resolve correlation IDs for non-start operations (cancel/status/signal).
 
 ---
 
@@ -44,9 +45,12 @@ interface RunContext {
   tenantId: string;
   projectId: string;
   environmentId: string;
-  runId: string;
-  targetAdapter: 'temporal' | 'conductor' | 'auto';
+  runId: string; // MUST be globally unique; UUID v4 RECOMMENDED
+  targetAdapter: 'temporal' | 'conductor';
 }
+
+// Adapter selection MUST be resolved before invoking startRun()
+// (e.g., by a higher-level coordinator using deployment config and/or plan.metadata.targetAdapter)
 ```
 
 ### 2.1.1 EngineRunRef (Structured, Adapter-Polymorphic)
@@ -80,17 +84,32 @@ type EngineRunRef =
 ### 2.1.2 RunStatusSnapshot (Status Query Result)
 
 ```ts
+type RunSubstatus =
+  | 'DRAINING' // Pause in progress (Conductor)
+  | 'RETRYING' // Step retry in progress
+  | 'CONTINUE_AS_NEW' // Temporal history rotation
+  | 'WAITING_APPROVAL' // Blocked on planner approval
+  | 'RECOVERING'; // After worker crash / worker recovery
+
+type AdapterScopedSubstatus = `${'temporal' | 'conductor' | 'mock'}/${string}`;
+
 interface RunStatusSnapshot {
   runId: string;
   status: RunStatus; // 'PENDING' | 'APPROVED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
-  substatus?: string; // e.g., "DRAINING" during pause, "RETRYING" during retry
+  substatus?: RunSubstatus | AdapterScopedSubstatus;
   message?: string; // Human-readable status message
   startedAt?: string; // ISO 8601 UTC
   completedAt?: string; // ISO 8601 UTC (only when status is terminal)
 }
 ```
 
-**Status enum** (see [ExecutionSemantics.v1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
+**Substatus rules**:
+
+- Adapters MUST use canonical `RunSubstatus` values when applicable.
+- If an adapter needs a custom substatus, it MUST use the adapter-scoped format: `<adapter>/<VALUE>` (e.g., `temporal/WORKFLOW_TASK_BACKLOG`).
+- UI MUST treat unknown substatus values as opaque and display them verbatim.
+
+**Status enum** (see [ExecutionSemantics.v1.1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
 
 - `PENDING`: Run created, awaiting approval
 - `APPROVED`: Approved by planner, ready to start
@@ -107,7 +126,7 @@ All operations and events MUST include these identifiers for traceability:
 - **`tenantId`**: Tenant isolation boundary (MUST be validated for every operation)
 - **`projectId`**: Project scope within tenant
 - **`environmentId`**: Environment (dev/staging/prod) for config/secrets isolation
-- **`runId`**: Unique identifier for this workflow run (UUID v4)
+- **`runId`**: Unique identifier for this workflow run (MUST be globally unique; UUID v4 RECOMMENDED)
 - **`engineAttemptId`**: Physical attempt counter (engine/worker restarts, infra retries)
   - Increments on: workflow restart, worker crash recovery, continue-as-new
   - Used for: debugging, infra failure detection, cost attribution
@@ -120,7 +139,20 @@ All operations and events MUST include these identifiers for traceability:
 - `engineAttemptId` = "how many times did the infrastructure restart this?"
 - `logicalAttemptId` = "how many times did the user/policy retry this step?"
 
-Both MUST be included in event idempotency keys and audit logs.
+**Idempotency rule (NORMATIVE)**:
+
+- Event `idempotencyKey` MUST be derived from `logicalAttemptId`, NOT `engineAttemptId`.
+- `engineAttemptId` MUST be present in events/audit logs for debugging, but MUST NOT affect idempotency.
+- Rationale: Infrastructure retries (network blips, worker restarts) → same logical attempt → same idempotency key. This prevents false duplicates or collisions during infra retries.
+
+**Correlation ID resolution mechanism**:
+
+The resolution mechanism is adapter-specific. Each adapter MUST implement correlation-id resolution from its native identifiers.
+
+- `runId` is the universal lookup key and MUST be resolvable for all providers.
+- StateStore MUST support queries by:
+  - `runId` (universal), and
+  - `(provider, workflowId, providerRunId)` (adapter-specific), where applicable.
 
 **Resolution for operations without explicit RunContext**:
 
@@ -142,6 +174,11 @@ Both MUST be included in event idempotency keys and audit logs.
 - Events MUST include: `runId`, `stepId` (if applicable), `engineAttemptId`, `logicalAttemptId`, `runSeq`, `idempotencyKey`
 - Event naming: PascalCase without `on` prefix (e.g., `RunStarted`, not `onRunStarted`)
 - StateStore assigns `runSeq` during write; engine receives assigned seq in write response
+
+**RunQueued ownership**:
+
+- `RunQueued` is emitted by the Run Queue / Admission Control component (see [ExecutionSemantics.v1.1.md § 3](./ExecutionSemantics.v1.md#3-backpressure-and-admission-control)).
+- If admission control is implemented inside the Engine adapter, the adapter MUST emit `RunQueued` using the same event schema; otherwise, the external queue component emits it.
 
 ---
 
@@ -197,6 +234,16 @@ When the Engine's Worker fetches a plan via `fetchPlan(PlanRef)` Activity:
 
 **See**: [TemporalAdapter § 2.1](../adapters/temporal/TemporalAdapter.spec.md#21-fetchplan-activity-normative-validation) for reference implementation.
 
+#### 3.1.1 PlanRef URI Allowlist (Security - NORMATIVE)
+
+The Engine MUST validate that `PlanRef.uri` matches a configured allowlist of approved schemes and approved locations (domains/buckets/accounts/containers).
+
+- URIs that do not match the allowlist MUST be rejected with error code `PLAN_URI_NOT_ALLOWED`.
+- The Engine MUST explicitly reject dangerous/local schemes such as: `file://`, `ftp://`, `gopher://`, and link-local / metadata endpoints (cloud instance metadata).
+- The allowlist MUST be enforced before any fetch attempt.
+
+**Operational note (non-normative)**: This mitigates SSRF and internal network exfiltration if an attacker injects a malicious PlanRef.
+
 ### 3.2 ExecutionPlan (Full Plan Structure)
 
 **Usage**: Internal only (after fetching via `PlanRef.uri`). NOT passed to `startRun()` directly except in local/test environments.
@@ -218,6 +265,11 @@ interface ExecutionPlan {
 ```
 
 **Note**: Full plan schema is defined by Planner contract (out of scope for this doc). Engine validates `metadata.requiresCapabilities` only.
+
+**Adapter narrowing rule (NORMATIVE)**:
+
+- Adapters MUST validate and narrow step payload types (`steps[].unknown` fields) before execution.
+- Unrecognized fields MUST be rejected with error code `INVALID_STEP_SCHEMA`.
 
 ---
 
@@ -246,6 +298,12 @@ async function startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef
     throw new PlanValidationError('Plan validation failed', report);
   }
 
+  // For emulate/degrade: Engine MUST emit RunStarted with warnings
+  if (report.status === 'WARNINGS' && plan.metadata.fallbackBehavior !== 'reject') {
+    // Include ValidationReport reference in artifacts/metadata
+    // Emit RunStarted with degraded mode indicator
+  }
+
   // Step 3: Execute
   return await adapter.startRun(plan, ctx);
 }
@@ -265,20 +323,34 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 
 - **Temporal SDK**: <https://docs.temporal.io/develop/typescript>
 - **Temporal Signals**: <https://docs.temporal.io/workflows>
-- **Conductor**: <https://conductor.netflix.com/>
+- **Conductor**: <https://github.com/netflix/conductor/wiki>
 - **Sub-Contracts**:
   - [RunEvents.v1.1.md](./RunEvents.v1.1.md) — Event schema, idempotency, state transitions
   - [SignalsAndAuth.v1.1.md](./SignalsAndAuth.v1.1.md) — Signal catalog, authorization, audit
-- **Execution Semantics**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
+- **Execution Semantics**: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md)
 - **Capabilities**: [capabilities/](../capabilities/)
 - **Plugin Sandbox (Extension)**: [extensions/PluginSandbox.v1.0.md](../extensions/PluginSandbox.v1.0.md)
 - **TemporalAdapter spec**: [../../adapters/temporal/TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
 
 ---
 
+## Terminology Consistency
+
+**Event envelope timestamp field**:
+
+- Event envelope time field MUST be named `emittedAt` across all event schemas and examples.
+- `occurredAt` is reserved (if ever introduced) for domain/business timestamps and MUST NOT replace `emittedAt` without a major version bump.
+
+**Event naming convention**:
+
+- Event names MUST be PascalCase (e.g., `RunStarted`). `onRunStarted`-style names MUST NOT appear in normative docs.
+
+---
+
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove `any`. **PARTITION**: Extract RunEvents.v1.1.md and SignalsAndAuth.v1.1.md to reduce churn. **Fix EngineRunRef.runId**: Make REQUIRED for signal idempotency. |
-| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1.1   | 2026-02-12 | **PATCH**: Fix idempotency key contradiction (derived from logicalAttemptId only, NOT engineAttemptId). Update references to ExecutionSemantics v1.1.1. Add substatus enum (RunSubstatus + adapter-scoped format). Remove targetAdapter 'auto' (resolved before startRun). Add PlanRef URI allowlist security rule (SSRF/RCE mitigation). Add ExecutionPlan narrowing rule. Define emulate/degrade validation outcomes. Add terminology consistency note (emittedAt, PascalCase events). Add RunQueued ownership clarification. Update Conductor reference link. Clarify engine persistence boundary and correlation ID resolution mechanism. Fix runId type (globally unique, UUID v4 RECOMMENDED). |
+| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove `any`. **PARTITION**: Extract RunEvents.v1.1.md and SignalsAndAuth.v1.1.md to reduce churn. **Fix EngineRunRef.runId**: Make REQUIRED for signal idempotency.                                                                                                                                                                                                                   |
+| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
