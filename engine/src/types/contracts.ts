@@ -1,8 +1,14 @@
 /**
- * IWorkflowEngine Contract Types (v1.0)
+ * IWorkflowEngine Contract Types (v1.1)
  *
  * TypeScript types extracted from IWorkflowEngine.v1.md
  * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md}
+ *
+ * Version 1.1 changes:
+ * - startRun() now accepts PlanRef (not ExecutionPlan directly)
+ * - signal() now accepts SignalRequest (includes signalId for idempotency)
+ * - ConductorEngineRunRef.conductorUrl is REQUIRED (was optional)
+ * - Added RunStatusSnapshot, correlation identifier semantics
  */
 
 /**
@@ -275,11 +281,14 @@ export interface IAuthorization {
 export interface IWorkflowEngine {
   /**
    * Start a new workflow run
-   * @param executionPlan - The execution plan to run
+   * @param planRef - Reference to the execution plan (fetched from storage via Activity)
    * @param context - Run context (tenant, project, environment, etc.)
    * @returns Engine run reference for tracking and operations
+   *
+   * Note: Engine receives PlanRef, not full ExecutionPlan (respects payload limits).
+   * Full plan is fetched via Activity from planRef.uri.
    */
-  startRun(executionPlan: ExecutionPlan, context: RunContext): Promise<EngineRunRef>;
+  startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
 
   /**
    * Cancel a running workflow
@@ -297,17 +306,12 @@ export interface IWorkflowEngine {
   /**
    * Send a signal to a running workflow
    * @param engineRunRef - Reference to the running workflow
-   * @param signalType - Type of signal to send
-   * @param payload - Signal payload
+   * @param request - Signal request including signalId (for idempotency), signalType, and payload
    *
-   * Note: Normative contract specifies `Record<string, any>`.
-   * Implementation uses `unknown` for type safety; adapters MUST validate/decode payload.
+   * Note: Normative contract v1.1 changed signature from (ref, signalType, payload) to (ref, SignalRequest)
+   * to enforce idempotency via signalId.
    */
-  signal(
-    engineRunRef: EngineRunRef,
-    signalType: SignalType,
-    payload: Record<string, unknown>
-  ): Promise<void>;
+  signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>;
 }
 
 /**

@@ -1,7 +1,7 @@
-# IWorkflowEngine Contract (Normative v1.0)
+# IWorkflowEngine Contract (Normative v1.1)
 
 **Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.0  
+**Version**: 1.1  
 **Stability**: Contracts — breaking changes require version bump  
 **Consumers**: Planner, State, UI  
 **References**: [Temporal SDK](https://docs.temporal.io/develop/typescript), [Conductor API](https://conductor.netflix.com/)
@@ -16,7 +16,7 @@
 - Emit **run/step lifecycle events** (persisted into `IRunStateStore`).
 - Support retries/backoff as specified by Planner policy (engine-agnostic rules).
 - Support cancellation and "stop" semantics.
-- Support **resuming / continuing** after transient failures.
+- Support **resuming / continuing** after transient failures (see [ExecutionSemantics.v1.md § 2](./ExecutionSemantics.v1.md) for resume semantics: PAUSE/RESUME signals, step replay rules, at-least-once vs exactly-once guarantees).
 - Provide correlation identifiers: `tenantId`, `projectId`, `environmentId`, `runId`, `engineAttemptId`, `logicalAttemptId`.
 
 ### MUST NOT
@@ -33,14 +33,10 @@
 
 ```ts
 interface IWorkflowEngine {
-  startRun(executionPlan: ExecutionPlan, context: RunContext): Promise<EngineRunRef>;
+  startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
   cancelRun(engineRunRef: EngineRunRef): Promise<void>;
   getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot>;
-  signal(
-    engineRunRef: EngineRunRef,
-    signalType: SignalType,
-    payload: Record<string, any>
-  ): Promise<void>;
+  signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>;
 }
 
 interface RunContext {
@@ -67,15 +63,63 @@ type EngineRunRef =
       provider: 'conductor';
       workflowId: string;
       runId?: string;
-      conductorUrl?: string;
+      conductorUrl: string; // REQUIRED per invariant below
     };
 ```
 
 **Invariants**:
 
-- `namespace` (Temporal) or `conductorUrl` (Conductor) MUST be present.
+- `namespace` (Temporal) MUST be present for Temporal provider.
+- `conductorUrl` (Conductor) MUST be present for Conductor provider.
 - `runId` SHOULD be present for cancellation/query operations.
 - For debugging, include `taskQueue` (Temporal) to trace worker routing.
+
+---
+
+### 2.1.2 RunStatusSnapshot (Status Query Result)
+
+```ts
+interface RunStatusSnapshot {
+  runId: string;
+  status: RunStatus; // 'PENDING' | 'APPROVED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  substatus?: string; // e.g., "DRAINING" during pause, "RETRYING" during retry
+  message?: string; // Human-readable status message
+  startedAt?: string; // ISO 8601 UTC
+  completedAt?: string; // ISO 8601 UTC (only when status is terminal)
+}
+```
+
+**Status enum** (see [ExecutionSemantics.v1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
+
+- `PENDING`: Run created, awaiting approval
+- `APPROVED`: Approved by planner, ready to start
+- `RUNNING`: Currently executing steps
+- `PAUSED`: Paused by operator signal
+- `COMPLETED`: Successfully finished all steps
+- `FAILED`: Terminated due to step failure
+- `CANCELLED`: Terminated by operator cancellation
+
+### 2.1.3 Correlation Identifiers (REQUIRED)
+
+All operations and events MUST include these identifiers for traceability:
+
+- **`tenantId`**: Tenant isolation boundary (MUST be validated for every operation)
+- **`projectId`**: Project scope within tenant
+- **`environmentId`**: Environment (dev/staging/prod) for config/secrets isolation
+- **`runId`**: Unique identifier for this workflow run (UUID v4)
+- **`engineAttemptId`**: Physical attempt counter (engine/worker restarts, infra retries)
+  - Increments on: workflow restart, worker crash recovery, continue-as-new
+  - Used for: debugging, infra failure detection, cost attribution
+- **`logicalAttemptId`**: Logical attempt counter (step/run retries per planner policy)
+  - Increments on: explicit RETRY_STEP signal, automatic retry per plan policy
+  - Used for: deterministic replay, idempotency key generation, user-visible attempt count
+
+**Semantic difference**:
+
+- `engineAttemptId` = "how many times did the infrastructure restart this?"
+- `logicalAttemptId` = "how many times did the user/policy retry this step?"
+
+Both MUST be included in event idempotency keys and audit logs.
 
 ---
 
@@ -98,6 +142,26 @@ Events are written to `IRunStateStore` (synchronous primary path, source of trut
 - Events **MUST** include: `runId`, `stepId` (if applicable), `engineAttemptId`, `logicalAttemptId`, `runSeq`, `idempotencyKey`.
 - Events **MUST** be idempotent: same event replayed → same state.
 - Idempotency key: `SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)`.
+- `runSeq` MUST be **monotonically increasing per runId** (StateStore assigns, gaps allowed).
+
+**Event schema** (base structure, see [ExecutionSemantics.v1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model) for full RunEventBase):
+
+```ts
+interface RunEventBase {
+  eventType: 'RunStarted' | 'StepStarted' | 'StepCompleted' | 'StepFailed' | /*...*/;
+  occurredAt: string; // ISO 8601 UTC
+  runId: string;
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  engineAttemptId: number;
+  logicalAttemptId: number;
+  runSeq: number; // Assigned by StateStore (monotonic, gaps allowed)
+  idempotencyKey: string; // SHA256 hash
+  stepId?: string; // Present for step-level events
+  payload?: Record<string, unknown>; // Event-specific data
+}
+```
 
 ---
 
@@ -117,10 +181,21 @@ Signals are **operator actions** routed to the engine, **ALWAYS enforced by `IAu
 | `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**          | Changes target schema/db       | ⏳ Phase 2 |
 | `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**          | Immediate termination          | ⏳ Phase 3 |
 
+**SignalRequest schema** (REQUIRED for idempotency):
+
+```ts
+interface SignalRequest {
+  signalId: string; // Client-supplied UUID v4 (idempotency key)
+  signalType: SignalType;
+  payload: Record<string, unknown>; // Signal-specific payload (varies by type)
+}
+```
+
 **Idempotency rule**:
 
-- `signalId` is client-supplied UUID.
+- `signalId` is client-supplied UUID v4.
 - Engine stores handling result via StateStore upsert; repeated `signalId` delivery is a no-op.
+- Method signature: `signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>`.
 
 ---
 
@@ -185,11 +260,15 @@ interface IAuthorization {
 
 ---
 
-## 3) Execution Plan Minimal Contract
+## 3) Execution Plan Contract
 
-### 3.1 PlanRef (Transport Layer)
+### 3.1 PlanRef (Transport Layer) — PRIMARY INPUT
 
-The engine receives a **plan reference**, not the full plan (Temporal payload limits).
+**Normative rule**: `startRun()` accepts **PlanRef**, not `ExecutionPlan` directly.
+
+**Rationale**: Workflow engines (Temporal, Conductor) have strict payload size limits (typically 2MB for Temporal). Full execution plans can exceed this. The engine fetches the full plan from storage via an Activity.
+
+The engine receives a **plan reference** pointing to the full plan stored externally:
 
 ```ts
 type PlanRef = {
@@ -227,6 +306,28 @@ When the Engine's Worker fetches a plan via `fetchPlan(PlanRef)` Activity:
 
 **See**: [TemporalAdapter § 2.1](../adapters/temporal/TemporalAdapter.spec.md#21-fetchplan-activity-normative-validation) for reference implementation.
 
+### 3.2 ExecutionPlan (Full Plan Structure)
+
+**Usage**: Internal only (after fetching via `PlanRef.uri`). NOT passed to `startRun()` directly except in local/test environments.
+
+```ts
+interface ExecutionPlan {
+  metadata: {
+    planId: string;
+    planVersion: string;
+    requiresCapabilities?: string[];
+    fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
+    targetAdapter?: 'temporal' | 'conductor' | 'any';
+  };
+  steps: Array<{
+    stepId: string;
+    [key: string]: unknown; // Step-specific fields (adapter-dependent)
+  }>;
+}
+```
+
+**Note**: Full plan schema is defined by Planner contract (out of scope for this doc). Engine validates `metadata.requiresCapabilities` only.
+
 ---
 
 ## 4) Cross-Adapter Capability Validation
@@ -243,13 +344,18 @@ interface ValidationReport {
   warnings: { code: string; message: string }[];
 }
 
-async function startRun(plan: ExecutionPlan, ctx: RunContext): Promise<EngineRunRef> {
+async function startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
+  // Step 1: Fetch plan from planRef.uri (via Activity)
+  const plan = await fetchPlan(planRef);
+
+  // Step 2: Validate capabilities
   const report = await validatePlan(plan, ctx.targetAdapter);
 
   if (report.status === 'ERRORS' && plan.metadata.fallbackBehavior === 'reject') {
     throw new PlanValidationError('Plan validation failed', report);
   }
 
+  // Step 3: Execute
   return await adapter.startRun(plan, ctx);
 }
 ```
@@ -278,6 +384,7 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 
 ## Change Log
 
-| Version | Date       | Change                                            |
-| ------- | ---------- | ------------------------------------------------- |
-| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor) |
+| Version | Date       | Change                                                                                                                                                                                                              |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics, RunEventBase structure. |
+| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                   |
