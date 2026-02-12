@@ -57,6 +57,9 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
   - `pnpm test:watch` - Watch mode
   - `pnpm test:determinism` - Run only determinism tests
 
+**Exception policy**:
+- If a package truly requires Jest, isolate it in its own workspace to avoid duplicated config and tooling drift.
+
 ### 3. Type Safety
 
 #### TypeScript
