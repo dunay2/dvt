@@ -108,6 +108,7 @@ interface RunStatusSnapshot {
 - Adapters MUST use canonical `RunSubstatus` values when applicable.
 - If an adapter needs a custom substatus, it MUST use the adapter-scoped format: `<adapter>/<VALUE>` (e.g., `temporal/WORKFLOW_TASK_BACKLOG`).
 - UI MUST treat unknown substatus values as opaque and display them verbatim.
+- **Conductor PAUSE (NORMATIVE)**: `PAUSED` reflects that Conductor stops scheduling _new_ tasks. In-flight tasks **MUST be allowed to finish** because Conductor lacks cancellation tokens. While those tasks drain, adapters MUST emit `substatus = 'DRAINING'`. UI/API MUST expose both `PAUSED` status and `DRAINING` substatus until all running tasks complete.
 
 **Status enum** (see [ExecutionSemantics.v1.1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
 

@@ -1,0 +1,69 @@
+import { ZodError } from 'zod';
+
+export type ValidationIssue = {
+  path: string; // canonical: a.b[0].c
+  code: string;
+  message: string;
+};
+
+export type ValidationErrorResponse = {
+  errorCode: string;
+  message: string;
+  issues: ValidationIssue[];
+  requestId?: string;
+};
+
+export function formatZodPath(path: ReadonlyArray<PropertyKey>): string {
+  let out = '';
+  for (const segment of path) {
+    if (typeof segment === 'number') {
+      out += `[${segment}]`;
+      continue;
+    }
+    if (typeof segment === 'string') {
+      if (out.length > 0) out += '.';
+      out += segment;
+      continue;
+    }
+    // segment is symbol → ignore
+  }
+  return out;
+}
+
+export function toValidationErrorResponse(
+  err: ZodError,
+  requestId?: string,
+  errorCode = 'VALIDATION_ERROR',
+  message = 'Invalid request payload'
+): ValidationErrorResponse {
+  const issues = err.issues.map((i) => ({
+    path: formatZodPath(i.path),
+    code: i.code,
+    message: i.message,
+  }));
+
+  return {
+    errorCode,
+    message,
+    issues,
+    requestId,
+  };
+}
+
+export class ValidationException extends Error {
+  response: ValidationErrorResponse;
+  constructor(response: ValidationErrorResponse) {
+    super(response.message);
+    this.name = 'ValidationException';
+    this.response = response;
+  }
+
+  static fromZodError(
+    err: ZodError,
+    requestId?: string,
+    errorCode = 'VALIDATION_ERROR',
+    message = 'Invalid request payload'
+  ): ValidationException {
+    return new ValidationException(toValidationErrorResponse(err, requestId, errorCode, message));
+  }
+}

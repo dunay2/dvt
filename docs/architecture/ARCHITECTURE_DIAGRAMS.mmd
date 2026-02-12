@@ -1,0 +1,126 @@
+```mermaid
+graph TD
+    subgraph "🔴 ESTRUCTURA ACTUAL - Problemas"
+        A[dvt/]
+        A --> B[engine/src/]
+        B --> B1[adapters/ ⚠️ Interfaces + Impl]
+        B --> B2[contracts/]
+        B --> B3[core/]
+        B --> B4[types/ ⚠️ Confuso]
+        B --> B5[workers/]
+
+        A --> C[adapters/ ⚠️ Solo Postgres]
+        A --> D[scripts/ ⚠️ Mezclado]
+        A --> E[test/ ⚠️ Duplicado]
+        B --> F[engine/test/ ⚠️ Duplicado]
+
+        style B1 fill:#ffcccc
+        style B4 fill:#ffcccc
+        style C fill:#ffcccc
+        style D fill:#ffcccc
+        style E fill:#ffcccc
+        style F fill:#ffcccc
+    end
+
+    subgraph "✅ ESTRUCTURA PROPUESTA - Monorepo"
+        ROOT[dvt/]
+        ROOT --> PKG[packages/]
+
+        PKG --> PKG1["📦 @dvt/contracts<br/>Interfaces puras"]
+        PKG --> PKG2["📦 @dvt/engine<br/>Core business logic"]
+        PKG --> PKG3["📦 @dvt/adapter-postgres<br/>DB implementation"]
+        PKG --> PKG4["📦 @dvt/adapter-temporal<br/>Workflow engine"]
+        PKG --> PKG5["📦 @dvt/cli<br/>Tooling scripts"]
+
+        PKG1 -.->|"depende de"| PKG2
+        PKG2 -.->|"depende de"| PKG3
+        PKG2 -.->|"depende de"| PKG4
+        PKG5 -.->|"usa"| PKG2
+
+        style PKG1 fill:#ccffcc
+        style PKG2 fill:#ccffcc
+        style PKG3 fill:#ccffcc
+        style PKG4 fill:#ccffcc
+        style PKG5 fill:#ccffcc
+    end
+```
+
+```mermaid
+graph LR
+    subgraph "Clean Architecture Layers"
+        direction TB
+
+        subgraph "Domain Layer (No dependencies)"
+            D1[Entities]
+            D2[Value Objects]
+            D3[Domain Services]
+        end
+
+        subgraph "Application Layer"
+            A1[Use Cases]
+            A2[Ports/Interfaces]
+        end
+
+        subgraph "Infrastructure Layer"
+            I1[PostgresAdapter]
+            I2[TemporalAdapter]
+            I3[InMemoryAdapter]
+        end
+
+        A1 --> D1
+        A1 --> A2
+        I1 -.->|implements| A2
+        I2 -.->|implements| A2
+        I3 -.->|implements| A2
+
+        style D1 fill:#e1f5fe
+        style D2 fill:#e1f5fe
+        style D3 fill:#e1f5fe
+        style A1 fill:#fff9c4
+        style A2 fill:#fff9c4
+        style I1 fill:#f3e5f5
+        style I2 fill:#f3e5f5
+        style I3 fill:#f3e5f5
+    end
+```
+
+```mermaid
+%%{init: {'theme':'neutral'}}%%
+graph TD
+    subgraph "Dependency Flow - ACTUAL ❌"
+        AC[Contracts]
+        AE[Engine]
+        AA[Adapters]
+        AS[Scripts]
+
+        AC <-->|circular| AE
+        AE <-->|circular| AA
+        AS --> AE
+        AS --> AA
+
+        style AC fill:#ffcccc
+        style AE fill:#ffcccc
+        style AA fill:#ffcccc
+    end
+
+    subgraph "Dependency Flow - PROPUESTO ✅"
+        PC["@dvt/contracts"]
+        PE["@dvt/engine"]
+        PA1["@dvt/adapter-postgres"]
+        PA2["@dvt/adapter-temporal"]
+        PCLI["@dvt/cli"]
+
+        PE -->|depends on| PC
+        PA1 -->|depends on| PC
+        PA1 -->|depends on| PE
+        PA2 -->|depends on| PC
+        PCLI -->|uses| PE
+        PCLI -->|uses| PA1
+
+        style PC fill:#ccffcc
+        style PE fill:#ccffcc
+        style PA1 fill:#ccffcc
+        style PA2 fill:#ccffcc
+        style PCLI fill:#ccffcc
+    end
+```
