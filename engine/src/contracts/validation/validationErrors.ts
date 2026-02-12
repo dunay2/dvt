@@ -13,16 +13,19 @@ export type ValidationErrorResponse = {
   requestId?: string;
 };
 
-export function formatZodPath(path: Array<string | number>): string {
-  // Convert zod path array into canonical string: a.b[0].c
+export function formatZodPath(path: ReadonlyArray<PropertyKey>): string {
   let out = '';
-  for (const p of path) {
-    if (typeof p === 'number') {
-      out += `[${p}]`;
-    } else {
-      if (out.length > 0 && !out.endsWith(']')) out += '.';
-      out += p;
+  for (const segment of path) {
+    if (typeof segment === 'number') {
+      out += `[${segment}]`;
+      continue;
     }
+    if (typeof segment === 'string') {
+      if (out.length > 0) out += '.';
+      out += segment;
+      continue;
+    }
+    // segment is symbol → ignore
   }
   return out;
 }
@@ -34,9 +37,7 @@ export function toValidationErrorResponse(
   message = 'Invalid request payload'
 ): ValidationErrorResponse {
   const issues = err.issues.map((i) => ({
-    path: formatZodPath(
-      i.path.filter((p): p is string | number => typeof p === 'string' || typeof p === 'number')
-    ),
+    path: formatZodPath(i.path),
     code: i.code,
     message: i.message,
   }));
