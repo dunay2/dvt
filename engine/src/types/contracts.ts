@@ -240,8 +240,8 @@ export interface SignalDecisionRecord {
  * Authorization interface for signal evaluation
  * @see IWorkflowEngine.v1.md § 2.4 - Authorization & Signal Decision Records
  *
- * Note: Normative contract uses `Record<string, any>` for payloads.
- * Implementation uses `unknown` for type safety; implementations MUST validate at runtime.
+ * Note: Contract v1.1 uses `Record<string, unknown>` for type safety.
+ * Implementations MUST validate/decode payload at runtime.
  */
 export interface IAuthorization {
   /**

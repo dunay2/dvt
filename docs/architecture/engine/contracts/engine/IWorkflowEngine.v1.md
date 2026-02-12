@@ -121,6 +121,14 @@ All operations and events MUST include these identifiers for traceability:
 
 Both MUST be included in event idempotency keys and audit logs.
 
+**Resolution for operations without explicit RunContext**:
+
+- `startRun(planRef, context)`: context explicitly includes all correlation IDs ✅
+- `cancelRun(engineRunRef)` / `getRunStatus(engineRunRef)` / `signal(engineRunRef, request)`:
+  - Engine MUST resolve `tenantId`, `projectId`, `environmentId` from stored run metadata in StateStore using `engineRunRef.runId` or `engineRunRef.workflowId`.
+  - Engine MUST validate tenant authorization before processing (RBAC check against resolved `tenantId`).
+  - All emitted events/audit logs MUST include resolved correlation IDs.
+
 ---
 
 ## 2.2 Event Emission Contract
@@ -129,26 +137,48 @@ Events are written to `IRunStateStore` (synchronous primary path, source of trut
 
 **Lifecycle events** (MUST be emitted):
 
-- `onRunStarted`
-- `onStepStarted`
-- `onStepCompleted`
-- `onStepFailed`
-- `onRunCompleted`
-- `onRunFailed`
-- `onRunCancelled`
+- `RunStarted`
+- `StepStarted`
+- `StepCompleted`
+- `StepFailed`
+- `RunCompleted`
+- `RunFailed`
+- `RunCancelled`
+
+**Event naming convention**: Use PascalCase without `on` prefix (e.g., `RunStarted`, not `onRunStarted`).
 
 **Event contract**:
 
 - Events **MUST** include: `runId`, `stepId` (if applicable), `engineAttemptId`, `logicalAttemptId`, `runSeq`, `idempotencyKey`.
 - Events **MUST** be idempotent: same event replayed → same state.
 - Idempotency key: `SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)`.
-- `runSeq` MUST be **monotonically increasing per runId** (StateStore assigns, gaps allowed).
+- `runSeq` MUST be **monotonically increasing per runId** (StateStore assigns during write; engine receives assigned seq in write response or reads back).
+
+**State transition mapping** (normative):
+
+| Event          | Status Transition | Notes                                      |
+| -------------- | ----------------- | ------------------------------------------ |
+| `RunStarted`   | → `RUNNING`       | Workflow execution begins                  |
+| `RunPaused`    | → `PAUSED`        | After PAUSE signal acknowledgment          |
+| `RunResumed`   | → `RUNNING`       | After RESUME signal acknowledgment         |
+| `RunCompleted` | → `COMPLETED`     | All steps succeeded                        |
+| `RunFailed`    | → `FAILED`        | Terminal failure (step exhausted retries)  |
+| `RunCancelled` | → `CANCELLED`     | After cancelRun() or EMERGENCY_STOP signal |
 
 **Event schema** (base structure, see [ExecutionSemantics.v1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model) for full RunEventBase):
 
 ```ts
 interface RunEventBase {
-  eventType: 'RunStarted' | 'StepStarted' | 'StepCompleted' | 'StepFailed' | /*...*/;
+  eventType:
+    | 'RunStarted'
+    | 'StepStarted'
+    | 'StepCompleted'
+    | 'StepFailed'
+    | 'RunPaused'
+    | 'RunResumed'
+    | 'RunCompleted'
+    | 'RunFailed'
+    | 'RunCancelled';
   occurredAt: string; // ISO 8601 UTC
   runId: string;
   tenantId: string;
@@ -223,7 +253,7 @@ interface SignalDecisionRecord {
   };
 
   signalType: SignalType;
-  signalPayload: Record<string, any>;
+  signalPayload: Record<string, unknown>; // Validated by policy/runtime
 
   engineProcessedAt?: string;
   engineResult?: { status: 'success' | 'failure'; errorCode?: string };
@@ -240,7 +270,7 @@ interface SignalDecisionRecord {
 interface IAuthorization {
   evaluateSignal(request: {
     actor: { userId: string; roles: string[] };
-    signal: { type: SignalType; payload: Record<string, any> };
+    signal: { type: SignalType; payload: Record<string, unknown> }; // Validated by policy
     tenantId: string;
     runId: string;
   }): Promise<{
@@ -272,7 +302,7 @@ The engine receives a **plan reference** pointing to the full plan stored extern
 
 ```ts
 type PlanRef = {
-  uri: string; // e.g., s3://bucket/plans/{planId}.json
+  uri: string; // Opaque URI: https://..., s3://..., gs://..., azure://..., etc.
   sha256: string; // integrity hash
   schemaVersion: string; // MANDATORY, e.g., "v1.2"
   planId: string;
@@ -384,7 +414,7 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                                              |
-| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics, RunEventBase structure. |
-| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                   |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                              |
+| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics, RunEventBase structure. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove `any`. |
+| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                                                                                                                                                   |
