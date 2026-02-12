@@ -1,38 +1,54 @@
 import { ZodError } from 'zod';
 
-import { parseExecutionPlan, parseValidationReport } from '../schemas';
+import {
+  parseExecutionPlan,
+  parseValidationReport,
+  type ExecutionPlan,
+  type ValidationReport,
+} from '../schemas';
 
-import { ValidationException, toValidationErrorResponse } from './validationErrors';
+import { ValidationException } from './validationErrors';
 
 // Note: schemas exports are expected to provide parseExecutionPlan and parseValidationReport
 
-export function validateExecutionPlan(input: unknown, requestId?: string) {
+export function validateExecutionPlan(input: unknown, requestId?: string): ExecutionPlan {
   try {
     return parseExecutionPlan(input);
   } catch (err) {
     if (err instanceof ZodError) {
-      throw new ValidationException(toValidationErrorResponse(err, requestId));
+      throw ValidationException.fromZodError(
+        err,
+        requestId,
+        'PLAN_INTEGRITY_VALIDATION_FAILED',
+        'Invalid execution plan payload'
+      );
     }
     throw err;
   }
 }
 
-export function validateValidationReport(input: unknown, requestId?: string) {
+export function validateValidationReport(input: unknown, requestId?: string): ValidationReport {
   try {
     return parseValidationReport(input);
   } catch (err) {
     if (err instanceof ZodError) {
-      throw new ValidationException(toValidationErrorResponse(err, requestId));
+      throw ValidationException.fromZodError(
+        err,
+        requestId,
+        'VALIDATION_ERROR',
+        'Invalid validation report payload'
+      );
     }
     throw err;
   }
 }
 
 // Helper to wrap adapter methods that accept an ExecutionPlan-like unknown input
-export function withExecutionPlanValidation<Fn extends (plan: any, ...args: any[]) => any>(fn: Fn) {
-  return function (plan: unknown, ...args: any[]) {
+export function withExecutionPlanValidation<Rest extends unknown[], R>(
+  fn: (plan: ExecutionPlan, ...args: Rest) => R
+) {
+  return (plan: unknown, ...args: Rest): R => {
     const validated = validateExecutionPlan(plan);
-    // @ts-expect-error allow forwarding typed value
     return fn(validated, ...args);
-  } as unknown as Fn;
+  };
 }

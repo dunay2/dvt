@@ -30,7 +30,8 @@ export function formatZodPath(path: Array<string | number>): string {
 export function toValidationErrorResponse(
   err: ZodError,
   requestId?: string,
-  errorCode = 'VALIDATION_ERROR'
+  errorCode = 'VALIDATION_ERROR',
+  message = 'Invalid request payload'
 ): ValidationErrorResponse {
   const issues = err.issues.map((i) => ({
     path: formatZodPath(i.path),
@@ -40,7 +41,7 @@ export function toValidationErrorResponse(
 
   return {
     errorCode,
-    message: 'Invalid request payload',
+    message,
     issues,
     requestId,
   };
@@ -52,5 +53,14 @@ export class ValidationException extends Error {
     super(response.message);
     this.name = 'ValidationException';
     this.response = response;
+  }
+
+  static fromZodError(
+    err: ZodError,
+    requestId?: string,
+    errorCode = 'VALIDATION_ERROR',
+    message?: string
+  ): ValidationException {
+    return new ValidationException(toValidationErrorResponse(err, requestId, errorCode, message));
   }
 }

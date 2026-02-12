@@ -1,44 +1,59 @@
-import { ZodError } from 'zod';
+import { validateExecutionPlan } from '../contracts/validation/withValidation';
 
-import { parseExecutionPlan } from '../contracts/schemas';
-import {
-  ValidationException,
-  toValidationErrorResponse,
-} from '../contracts/validation/validationErrors';
+import type { IWorkflowEngineAdapter } from './IWorkflowEngineAdapter.v1';
 
-import type { IWorkflowEngineAdapter, EngineRunRef } from './IWorkflowEngineAdapter.v1';
+export class ValidatingAdapter implements IWorkflowEngineAdapter {
+  private readonly inner: IWorkflowEngineAdapter;
 
-export type ValidatingAdapterOptions = {
-  warnOnValidation?: boolean;
-  logger?: { warn: (msg: string) => void };
-};
+  constructor(inner: IWorkflowEngineAdapter) {
+    this.inner = inner;
+  }
 
-export function createValidatingAdapter(
-  adapter: IWorkflowEngineAdapter,
-  opts?: ValidatingAdapterOptions
-): IWorkflowEngineAdapter {
-  const logger = opts?.logger ?? console;
+  async createRun(...args: Parameters<IWorkflowEngineAdapter['createRun']>) {
+    const [tenantId, planId, planData] = args;
+    const validatedPlan = validateExecutionPlan(planData);
+    return this.inner.createRun(tenantId, planId, validatedPlan);
+  }
 
-  // Create shallow wrapper that delegates to the underlying adapter
-  const wrapper: Partial<IWorkflowEngineAdapter> = { ...adapter } as any;
+  // Delegate all other methods
+  startRun(...args: Parameters<IWorkflowEngineAdapter['startRun']>) {
+    return this.inner.startRun(...args);
+  }
+  executeStep(...args: Parameters<IWorkflowEngineAdapter['executeStep']>) {
+    return this.inner.executeStep(...args);
+  }
+  executeStepBatch(...args: Parameters<IWorkflowEngineAdapter['executeStepBatch']>) {
+    return this.inner.executeStepBatch(...args);
+  }
+  pauseRun(...args: Parameters<IWorkflowEngineAdapter['pauseRun']>) {
+    return this.inner.pauseRun(...args);
+  }
+  resumeRun(...args: Parameters<IWorkflowEngineAdapter['resumeRun']>) {
+    return this.inner.resumeRun(...args);
+  }
+  terminateRun(...args: Parameters<IWorkflowEngineAdapter['terminateRun']>) {
+    return this.inner.terminateRun(...args);
+  }
+  getRunState(...args: Parameters<IWorkflowEngineAdapter['getRunState']>) {
+    return this.inner.getRunState(...args);
+  }
+  getRunStateWithHistory(...args: Parameters<IWorkflowEngineAdapter['getRunStateWithHistory']>) {
+    return this.inner.getRunStateWithHistory(...args);
+  }
+  replayRun(...args: Parameters<IWorkflowEngineAdapter['replayRun']>) {
+    return this.inner.replayRun(...args);
+  }
+  archiveRun(...args: Parameters<IWorkflowEngineAdapter['archiveRun']>) {
+    return this.inner.archiveRun(...args);
+  }
+  health(...args: Parameters<IWorkflowEngineAdapter['health']>) {
+    return this.inner.health(...args);
+  }
+  close(...args: Parameters<IWorkflowEngineAdapter['close']>) {
+    return this.inner.close(...args);
+  }
+}
 
-  // Wrap startRun: call parseExecutionPlan (throws ZodError), convert to ValidationException
-  wrapper.startRun = async function (plan: unknown): Promise<EngineRunRef> {
-    try {
-      const validated = parseExecutionPlan(plan);
-      return await adapter.startRun(validated as any);
-    } catch (err) {
-      if (err instanceof ZodError) {
-        const resp = toValidationErrorResponse(err, undefined, 'PLAN_INTEGRITY_VALIDATION_FAILED');
-        if (opts?.warnOnValidation) {
-          logger.warn?.(`Validation failed: ${JSON.stringify(resp)}`);
-        }
-        throw new ValidationException(resp);
-      }
-      // Pass through other errors
-      throw err;
-    }
-  };
-
-  return wrapper as IWorkflowEngineAdapter;
+export function createValidatingAdapter(adapter: IWorkflowEngineAdapter): IWorkflowEngineAdapter {
+  return new ValidatingAdapter(adapter);
 }

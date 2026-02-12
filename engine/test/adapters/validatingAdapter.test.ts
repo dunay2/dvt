@@ -1,72 +1,66 @@
+// Helpers to create branded types for tests
+const asTenantId = (s: string) => s as import('../../src/contracts/types').TenantId;
+const asPlanId = (s: string) => s as import('../../src/contracts/types').PlanId;
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ZodError, type ZodIssue } from 'zod';
 
-vi.mock('../../src/contracts/schemas', () => ({
-  parseExecutionPlan: vi.fn(),
+vi.mock('../../src/contracts/validation/withValidation', () => ({
+  validateExecutionPlan: vi.fn(),
 }));
 
+import type { IWorkflowEngineAdapter } from '../../src/adapters/IWorkflowEngineAdapter.v1';
 import { createValidatingAdapter } from '../../src/adapters/validatingAdapter';
-import { parseExecutionPlan } from '../../src/contracts/schemas';
 import { ValidationException } from '../../src/contracts/validation/validationErrors';
+import { validateExecutionPlan } from '../../src/contracts/validation/withValidation';
 
 describe('ValidatingAdapter (MVP)', () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
-  it('delegates to underlying adapter when validation succeeds', async () => {
+  it('delegates a valid plan to underlying adapter when validation succeeds', async () => {
     const rawPlan: unknown = { something: 'raw' };
     const validatedPlan = { something: 'validated' };
 
-    // @ts-ignore
-    (parseExecutionPlan as any).mockImplementationOnce(() => validatedPlan);
+    const mockedValidate = vi.mocked(validateExecutionPlan);
+    mockedValidate.mockImplementationOnce(() => validatedPlan as never);
 
-    type EngineRunRef = { runId: string; status: string };
-    interface AdapterLike {
-      startRun(plan: unknown): Promise<EngineRunRef>;
-    }
-
-    const mockAdapter: AdapterLike = {
-      startRun: vi.fn(async (_plan: unknown) => ({ runId: 'r1', status: 'started' })),
+    const mockAdapter: Pick<IWorkflowEngineAdapter, 'createRun'> = {
+      createRun: vi.fn(async () => ({ runId: 'r1', status: 'started' }) as never),
     };
 
-    const adapter = createValidatingAdapter(mockAdapter as any);
+    const adapter = createValidatingAdapter(mockAdapter as unknown as IWorkflowEngineAdapter);
 
-    const res = await adapter.startRun(rawPlan);
+    const res = await adapter.createRun(asTenantId('tenant'), asPlanId('planId'), rawPlan);
 
-    expect(mockAdapter.startRun as any).toHaveBeenCalledTimes(1);
-    expect(mockAdapter.startRun as any).toHaveBeenCalledWith(validatedPlan);
+    expect(mockedValidate).toHaveBeenCalledWith(rawPlan);
+    expect(mockAdapter.createRun).toHaveBeenCalledTimes(1);
+    expect(mockAdapter.createRun).toHaveBeenCalledWith('tenant', 'planId', validatedPlan);
     expect(res).toHaveProperty('runId', 'r1');
   });
 
   it('throws ValidationException and does not call adapter on invalid plan', async () => {
     const rawPlan: unknown = { bad: true };
 
-    const issues: ZodIssue[] = [
-      {
-        code: 'invalid_type',
-        path: ['steps', 0, 'id'],
-        message: 'Required',
-      } as unknown as ZodIssue,
-    ];
-
-    // @ts-ignore
-    (parseExecutionPlan as any).mockImplementationOnce(() => {
-      throw new ZodError(issues as any);
+    const mockedValidate = vi.mocked(validateExecutionPlan);
+    mockedValidate.mockImplementationOnce(() => {
+      throw new ValidationException({
+        errorCode: 'PLAN_INTEGRITY_VALIDATION_FAILED',
+        message: 'Invalid execution plan payload',
+        issues: [],
+      });
     });
 
-    type EngineRunRef = { runId: string; status: string };
-    interface AdapterLike {
-      startRun(plan: unknown): Promise<EngineRunRef>;
-    }
-
-    const mockAdapter: AdapterLike = {
-      startRun: vi.fn(async (_plan: unknown) => ({ runId: 'should-not', status: 'started' })),
+    const mockAdapter: Pick<IWorkflowEngineAdapter, 'createRun'> = {
+      createRun: vi.fn(async () => ({ runId: 'should-not', status: 'started' }) as never),
     };
 
-    const adapter = createValidatingAdapter(mockAdapter as any);
+    const adapter = createValidatingAdapter(mockAdapter as unknown as IWorkflowEngineAdapter);
 
-    await expect(adapter.startRun(rawPlan)).rejects.toBeInstanceOf(ValidationException);
-    expect(mockAdapter.startRun as any).not.toHaveBeenCalled();
+    await expect(
+      adapter.createRun(asTenantId('tenant'), asPlanId('planId'), rawPlan)
+    ).rejects.toBeInstanceOf(ValidationException);
+
+    expect(mockedValidate).toHaveBeenCalledWith(rawPlan);
+    expect(mockAdapter.createRun).not.toHaveBeenCalled();
   });
 });
