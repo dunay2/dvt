@@ -86,7 +86,7 @@ export type EngineRunRef = TemporalEngineRunRef | ConductorEngineRunRef;
  * @see IWorkflowEngine.v1.md § 3.1 - PlanRef (Transport Layer)
  */
 export interface PlanRef {
-  /** URI to the plan (e.g., s3://bucket/plans/{planId}.json) */
+  /** Opaque URI to the plan (e.g., https://..., s3://..., gs://..., azure://...) */
   uri: string;
   /** SHA256 integrity hash */
   sha256: string;
