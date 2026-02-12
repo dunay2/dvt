@@ -3,15 +3,17 @@ name: Golden Paths Validation
 on:
   pull_request:
     paths:
-  #     - 'examples/**'
-  #     - 'docs/architecture/engine/contracts/**'
-  #     - '.github/workflows/golden-paths.yml'
+      - 'test/contracts/**'
+      - 'docs/architecture/engine/contracts/**'
+      - 'scripts/validate-contracts.cjs'
+      - '.github/workflows/golden-paths.yml'
   push:
     branches:
       - main
     paths:
-      - 'examples/**'
+      - 'test/contracts/**'
       - 'docs/architecture/engine/contracts/**'
+      - 'scripts/validate-contracts.cjs'
       - '.github/workflows/golden-paths.yml'
   workflow_dispatch:
 
@@ -34,15 +36,21 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run test-runner.sh
-        run: bash examples/test-runner.sh
-        env:
-          SKIP_EXECUTION: 'true'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate contract fixtures
+        run: pnpm validate:contracts
 
       - name: Upload validation results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: golden-paths-validation-results
-          path: examples/
+          path: test/contracts/results/
           retention-days: 7
