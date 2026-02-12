@@ -1,18 +1,31 @@
 /**
- * IWorkflowEngine Contract Types (v1.0)
+ * IWorkflowEngine Contract Types (v1.1.1)
  *
- * TypeScript types extracted from IWorkflowEngine.v1.md
- * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md}
+ * TypeScript types extracted from IWorkflowEngine.v1.1.md
+ * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md}
+ *
+ * Version 1.1 changes:
+ * - startRun() now accepts PlanRef (not ExecutionPlan directly)
+ * - signal() now accepts SignalRequest (includes signalId for idempotency)
+ * - ConductorEngineRunRef.conductorUrl is REQUIRED (was optional)
+ * - Added RunStatusSnapshot, correlation identifier semantics
+ *
+ * Version 1.1.1 changes:
+ * - Added CANCEL and RETRY_RUN to SignalType
+ * - Removed 'auto' from RunContext.targetAdapter (resolved before startRun)
+ * - Added RunSubstatus type for substatus field
  */
 
 /**
  * Signal types supported by the workflow engine
- * @see IWorkflowEngine.v1.md § 2.3 - Supported Signals Catalog
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
  */
 export type SignalType =
   | 'PAUSE'
   | 'RESUME'
+  | 'CANCEL'
   | 'RETRY_STEP'
+  | 'RETRY_RUN'
   | 'UPDATE_PARAMS'
   | 'INJECT_OVERRIDE'
   | 'ESCALATE_ALERT'
@@ -22,7 +35,9 @@ export type SignalType =
 
 /**
  * Context information for a workflow run
- * @see IWorkflowEngine.v1.md § 2.1 - Operations
+ * @see IWorkflowEngine.v1.1.md § 2.1 - Operations
+ *
+ * Note: targetAdapter MUST be resolved before startRun() (no 'auto' value per v1.1.1)
  */
 export interface RunContext {
   /** Tenant identifier */
@@ -31,15 +46,15 @@ export interface RunContext {
   projectId: string;
   /** Environment identifier (e.g., "dev", "staging", "prod") */
   environmentId: string;
-  /** Unique run identifier */
+  /** Unique run identifier (MUST be globally unique; UUID v4 RECOMMENDED) */
   runId: string;
-  /** Target adapter to use for execution */
-  targetAdapter: 'temporal' | 'conductor' | 'auto';
+  /** Target adapter to use for execution (resolved before startRun) */
+  targetAdapter: 'temporal' | 'conductor';
 }
 
 /**
  * Temporal-specific engine run reference
- * @see IWorkflowEngine.v1.md § 2.1.1 - EngineRunRef
+ * @see IWorkflowEngine.v1.1.md § 2.1.1 - EngineRunRef
  */
 export interface TemporalEngineRunRef {
   provider: 'temporal';
@@ -47,38 +62,40 @@ export interface TemporalEngineRunRef {
   namespace: string;
   /** Workflow identifier */
   workflowId: string;
-  /** Run identifier (optional) */
-  runId?: string;
+  /** Run identifier (REQUIRED; used in signal idempotency key) */
+  runId: string;
   /** Task queue name (optional, for debugging) */
   taskQueue?: string;
 }
 
 /**
  * Conductor-specific engine run reference
- * @see IWorkflowEngine.v1.md § 2.1.1 - EngineRunRef
+ * @see IWorkflowEngine.v1.1.md § 2.1.1 - EngineRunRef
+ *
+ * Invariant: conductorUrl MUST be present (per normative contract § 2.1.1)
  */
 export interface ConductorEngineRunRef {
   provider: 'conductor';
   /** Workflow identifier */
   workflowId: string;
-  /** Run identifier (optional) */
-  runId?: string;
-  /** Conductor API URL (optional) */
-  conductorUrl?: string;
+  /** Run identifier (REQUIRED; used in signal idempotency key) */
+  runId: string;
+  /** Conductor API URL (REQUIRED per normative invariant) */
+  conductorUrl: string;
 }
 
 /**
  * Polymorphic reference to a running workflow in any engine adapter
- * @see IWorkflowEngine.v1.md § 2.1.1 - EngineRunRef
+ * @see IWorkflowEngine.v1.1.md § 2.1.1 - EngineRunRef
  */
 export type EngineRunRef = TemporalEngineRunRef | ConductorEngineRunRef;
 
 /**
  * Plan reference for transport layer (not full plan due to size limits)
- * @see IWorkflowEngine.v1.md § 3.1 - PlanRef (Transport Layer)
+ * @see IWorkflowEngine.v1.1.md § 3.1 - PlanRef (Transport Layer)
  */
 export interface PlanRef {
-  /** URI to the plan (e.g., s3://bucket/plans/{planId}.json) */
+  /** Opaque URI to the plan (e.g., https://..., s3://..., gs://..., azure://...) */
   uri: string;
   /** SHA256 integrity hash */
   sha256: string;
@@ -97,7 +114,7 @@ export interface PlanRef {
 /**
  * Execution plan structure (minimal contract)
  * Referenced by IWorkflowEngine.startRun
- * @see IWorkflowEngine.v1.md § 3 - Execution Plan Minimal Contract
+ * @see IWorkflowEngine.v1.1.md § 3 - Execution Plan Minimal Contract
  */
 export interface ExecutionPlan {
   /** Plan metadata */
@@ -122,7 +139,9 @@ export interface ExecutionPlan {
 
 /**
  * Signal request payload
- * @see IWorkflowEngine.v1.md § 2.3 - Supported Signals Catalog
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
+ *
+ * Note: Implementation uses `unknown` for type safety; adapters MUST validate/decode payload at runtime.
  */
 export interface SignalRequest {
   /** Client-supplied signal identifier (UUID v4) */
@@ -146,6 +165,7 @@ export interface QueryRequest {
 
 /**
  * Run status returned by getRunStatus
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
  * @see ExecutionSemantics.v1.md § 1.2 - Append-Only Event Model
  */
 export type RunStatus =
@@ -158,8 +178,25 @@ export type RunStatus =
   | 'CANCELLED';
 
 /**
+ * Run substatus for additional status context
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
+ */
+export type RunSubstatus =
+  | 'DRAINING' // Pause in progress (Conductor)
+  | 'RETRYING' // Step retry in progress
+  | 'CONTINUE_AS_NEW' // Temporal history rotation
+  | 'WAITING_APPROVAL' // Blocked on planner approval
+  | 'RECOVERING'; // After worker crash / worker recovery
+
+/**
+ * Adapter-scoped substatus format for adapter-specific substatus values
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
+ */
+export type AdapterScopedSubstatus = `${'temporal' | 'conductor' | 'mock'}/${string}`;
+
+/**
  * Snapshot of run status
- * @see IWorkflowEngine.v1.md § 2.1 - Operations
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
  */
 export interface RunStatusSnapshot {
   /** Run identifier */
@@ -167,7 +204,7 @@ export interface RunStatusSnapshot {
   /** Current status */
   status: RunStatus;
   /** Substatus (e.g., "DRAINING" during pause) */
-  substatus?: string;
+  substatus?: RunSubstatus | AdapterScopedSubstatus;
   /** Human-readable message */
   message?: string;
   /** Start timestamp (ISO 8601) */
@@ -178,7 +215,7 @@ export interface RunStatusSnapshot {
 
 /**
  * Signal decision record for authorization and audit
- * @see IWorkflowEngine.v1.md § 2.4 - Authorization & Signal Decision Records
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
  */
 export interface SignalDecisionRecord {
   /** Unique signal decision identifier (UUID v4) */
@@ -227,7 +264,10 @@ export interface SignalDecisionRecord {
 
 /**
  * Authorization interface for signal evaluation
- * @see IWorkflowEngine.v1.md § 2.4 - Authorization & Signal Decision Records
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
+ *
+ * Note: Contract v1.1 uses `Record<string, unknown>` for type safety.
+ * Implementations MUST validate/decode payload at runtime.
  */
 export interface IAuthorization {
   /**
@@ -262,16 +302,19 @@ export interface IAuthorization {
 
 /**
  * Main workflow engine interface
- * @see IWorkflowEngine.v1.md § 2.1 - Operations
+ * @see IWorkflowEngine.v1.1.md § 2.1 - Operations
  */
 export interface IWorkflowEngine {
   /**
    * Start a new workflow run
-   * @param executionPlan - The execution plan to run
+   * @param planRef - Reference to the execution plan (fetched from storage via Activity)
    * @param context - Run context (tenant, project, environment, etc.)
    * @returns Engine run reference for tracking and operations
+   *
+   * Note: Engine receives PlanRef, not full ExecutionPlan (respects payload limits).
+   * Full plan is fetched via Activity from planRef.uri.
    */
-  startRun(executionPlan: ExecutionPlan, context: RunContext): Promise<EngineRunRef>;
+  startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
 
   /**
    * Cancel a running workflow
@@ -289,19 +332,17 @@ export interface IWorkflowEngine {
   /**
    * Send a signal to a running workflow
    * @param engineRunRef - Reference to the running workflow
-   * @param signalType - Type of signal to send
-   * @param payload - Signal payload
+   * @param request - Signal request including signalId (for idempotency), signalType, and payload
+   *
+   * Note: Normative contract v1.1 changed signature from (ref, signalType, payload) to (ref, SignalRequest)
+   * to enforce idempotency via signalId.
    */
-  signal(
-    engineRunRef: EngineRunRef,
-    signalType: SignalType,
-    payload: Record<string, unknown>
-  ): Promise<void>;
+  signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>;
 }
 
 /**
  * Validation report for plan capability checks
- * @see IWorkflowEngine.v1.md § 4 - Cross-Adapter Capability Validation
+ * @see IWorkflowEngine.v1.1.md § 4 - Cross-Adapter Capability Validation
  */
 export interface ValidationReport {
   /** Plan identifier */

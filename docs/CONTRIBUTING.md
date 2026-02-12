@@ -24,7 +24,7 @@ docs/
 │   ├── VERSIONING.md               # Contract evolution policy (MUST READ)
 │   ├── contracts/                  # Normative contracts
 │   │   ├── engine/
-│   │   │   ├── IWorkflowEngine.v1.md
+│   │   │   ├── IWorkflowEngine.v1.1.md
 │   │   │   └── ExecutionSemantics.v1.md
 │   │   ├── adapters/
 │   │   └── capabilities/
@@ -114,7 +114,7 @@ markdownlint-cli2 "docs/**/*.md"
 
 ````bash
 # Extract TypeScript blocks manually
-sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md | sed '1d;$d' > /tmp/test.ts
+sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md | sed '1d;$d' > /tmp/test.ts
 
 # Validate with tsc
 npx tsc --noEmit --skipLibCheck /tmp/test.ts
@@ -139,7 +139,7 @@ markdown-link-check docs/architecture/engine/INDEX.md
 
 **Common causes**:
 
-- Typo in filename: `IWorkflowEngine.v1.md` vs `IWorkflowEngine.v1.0.md`
+- Typo in filename: `IWorkflowEngine.v1.1.md` vs `IWorkflowEngine.v1.0.md`
 - Incorrect relative path: `../contracts/` vs `../../contracts/`
 - Broken anchor: `#section-1` but heading is actually `## Section 1.0`
 
@@ -174,7 +174,7 @@ A **normative contract** is a binding specification that:
 
 **Examples**:
 
-- ✅ `IWorkflowEngine.v1.md` — defines SDK interface
+- ✅ `IWorkflowEngine.v1.1.md` — defines SDK interface
 - ✅ `ExecutionSemantics.v1.md` — defines StateStore model
 - ❌ `observability.md` — operational guide (informative, not normative)
 
@@ -264,7 +264,7 @@ See **[VERSIONING.md](architecture/engine/VERSIONING.md)** for the complete poli
 
 | Filename                        | Meaning                                    |
 | ------------------------------- | ------------------------------------------ |
-| `IWorkflowEngine.v1.md`         | MAJOR.MINOR series (v1 = v1.x)             |
+| `IWorkflowEngine.v1.1.md`       | MAJOR.MINOR series (v1 = v1.x)             |
 | `IWorkflowEngine.v1.1.md`       | MINOR bump (backward-compatible additions) |
 | `IWorkflowEngine.v2.md`         | MAJOR bump (breaking changes)              |
 | `IWorkflowEngine.v2.0-DRAFT.md` | Draft (targets v2.0 release)               |
@@ -325,7 +325,7 @@ Install these for real-time validation:
 3. Add entry to `## Change Log`
 4. Git tag: `engine/MyContract@v1.0.1`
 
-### Q: I want to add a new optional method to `IWorkflowEngine.v1.md`. Is that a patch or MINOR?
+### Q: I want to add a new optional method to `IWorkflowEngine.v1.1.md`. Is that a patch or MINOR?
 
 **A**: **MINOR bump** (backward-compatible addition).
 

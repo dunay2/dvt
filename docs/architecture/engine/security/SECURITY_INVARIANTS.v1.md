@@ -134,7 +134,7 @@ Invariants are organized by scope using namespace prefixes:
 
 **References**:
 
-- [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) - Tenant scope requirements
+- [IWorkflowEngine.v1.1.md](../contracts/engine/IWorkflowEngine.v1.1.md) - Tenant scope requirements
 - [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - StateStore scope enforcement
 - [DVT Product Principle](../../DVT_Product_Definition_V0.md) - "State Store persists reality" with scope immutability
 
@@ -984,7 +984,7 @@ This document references several contracts and supporting documents. Status:
 
 ### REQUIRED (MUST exist for enforcement)
 
-- ✅ **[IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md)** - Tenant scope requirements (INV-SCOPE-01)
+- ✅ **[IWorkflowEngine.v1.1.md](../contracts/engine/IWorkflowEngine.v1.1.md)** - Tenant scope requirements (INV-SCOPE-01)
 - ✅ **[IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md)** - Scope parameter + encryption (INV-SCOPE-02, INV-CRYPTO-01)
 - ✅ **[IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md)** - Authorization interface (INV-AUTHZ-01/02)
 - ✅ **[ISecretsProvider.v1.md](../contracts/security/ISecretsProvider.v1.md)** - Secrets resolution (INV-SECRETS-01)
@@ -1145,7 +1145,7 @@ Use this checklist during code review to validate invariant implementation:
 - [DecisionRecord.v1.md](../contracts/operations/DecisionRecord.v1.md) - Operator justification schema (INV-AUDIT-02)
 - [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md) - Trust Tiers + permissions (INV-PLUGIN-02/03/04, INV-AUTHZ-03)
 - [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - Scope enforcement + encryption (INV-SCOPE-02, INV-CRYPTO-01, INV-RET-02)
-- [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) - Tenant scope requirements (INV-SCOPE-01)
+- [IWorkflowEngine.v1.1.md](../contracts/engine/IWorkflowEngine.v1.1.md) - Tenant scope requirements (INV-SCOPE-01)
 
 ### Product & Architecture Principles
 

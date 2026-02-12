@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/signal/Resume.v1.json",
+  "title": "Resume Signal Payload",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

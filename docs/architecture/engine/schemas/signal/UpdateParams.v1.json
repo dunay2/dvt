@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/signal/UpdateParams.v1.json",
+  "title": "UpdateParams Signal Payload",
+  "type": "object",
+  "properties": {
+    "params": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "required": ["params"]
+}

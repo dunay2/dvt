@@ -7,6 +7,28 @@
 
 Data Value Transform — Multi-adapter orchestration engine.
 
+---
+
+## 🚀 Acción Inmediata - Primeros Pasos
+
+**¿Nuevo en el proyecto?** Instala las herramientas prioritarias para desbloquear Issues #2, #6 y #10:
+
+```powershell
+# Windows
+.\scripts\setup-immediate-tools.ps1
+
+# Linux/macOS
+bash scripts/setup-immediate-tools.sh
+```
+
+**Luego sigue**: [docs/IMMEDIATE_ACTION_PLAN.md](docs/IMMEDIATE_ACTION_PLAN.md) para completar el setup inicial.
+
+**Herramientas instaladas**: Zod (validación de contratos), Prisma (DB migrations), Docker Compose (dev environment).
+
+→ **Tiempo estimado**: 2-3 horas para tener un entorno de desarrollo completamente funcional.
+
+---
+
 ## 📚 Documentation
 
 ### Architecture & Contracts

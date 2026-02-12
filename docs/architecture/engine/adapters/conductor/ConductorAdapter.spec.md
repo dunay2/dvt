@@ -3,7 +3,7 @@
 **Status**: DRAFT (Phase 2, not production)  
 **Version**: 0.8  
 **Target**: Conductor 3.0+  
-**References**: [IWorkflowEngine Contract](../../contracts/engine/IWorkflowEngine.v1.md), [Conductor Docs](https://conductor.netflix.com/), [Parity Matrix](../../contracts/capabilities/adapters.capabilities.json)
+**References**: [IWorkflowEngine Contract](../../contracts/engine/IWorkflowEngine.v1.1.md), [Conductor Docs](https://conductor.netflix.com/), [Parity Matrix](../../contracts/capabilities/adapters.capabilities.json)
 
 ---
 

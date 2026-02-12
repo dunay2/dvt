@@ -148,7 +148,7 @@ When adding a new capability:
 
 ## References
 
-- [IWorkflowEngine.v1.md](../engine/IWorkflowEngine.v1.md)
+- [IWorkflowEngine.v1.1.md](../engine/IWorkflowEngine.v1.1.md)
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
 - [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
 - [Temporal Capabilities](https://docs.temporal.io/)

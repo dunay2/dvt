@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/signal/RetryStep.v1.json",
+  "title": "RetryStep Signal Payload",
+  "type": "object",
+  "properties": {
+    "stepId": {
+      "type": "string"
+    },
+    "force": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false,
+  "required": ["stepId"]
+}

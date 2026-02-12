@@ -1,12 +1,12 @@
-# Execution Semantics Contract (Normative v1.0)
+# Execution Semantics Contract (Normative v1.1.1)
 
 **Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.1  
+**Version**: 1.1.1  
 **Stability**: Core semantics — breaking changes require version bump  
 **Consumers**: Engine, StateStore, Projector
 
 **References**:
-[IWorkflowEngine Contract](./IWorkflowEngine.v1.md)  
+[IWorkflowEngine Contract](./IWorkflowEngine.v1.1.md)  
  [Contract Versioning Policy](../../VERSIONING.md) — how this contract evolves (minor/major bumps, deprecation)  
  [State Store Contract](../state-store/README.md) — storage-agnostic interface  
  [State Store Adapters](../../adapters/state-store/) — backend-specific implementations (Snowflake, Postgres, etc.)  
@@ -40,6 +40,25 @@
 
 ---
 
+### 1.0.1 Causality Preservation (Best Effort)
+
+**NORMATIVE**: The Append Authority SHOULD assign `runSeq` such that the sequence reflects causal order of events.
+
+**Known limitation**: With distributed writers, a later-causal event MAY receive a lower `runSeq` if an earlier-causal write is delayed (network partition, backpressure, write skew).
+
+**Projector responsibility**:
+
+- If the projector detects a dependency inversion (e.g., step B appears satisfied before step A where A → B), it MUST NOT assume corruption.
+- The projector SHOULD apply events strictly in `runSeq` order.
+- Downstream consumers MAY observe temporary inconsistency; it resolves when delayed events arrive.
+
+**Monitoring**:
+
+- Emit alert `PROJECTOR_CAUSAL_VIOLATION` (P3) when an inversion is detected (indicates network instability, backpressure, or write skew).
+- Alert is informational; does NOT require immediate action unless persistent.
+
+---
+
 ### 1.1 Monotonic Sequence Invariant (Storage-Agnostic)
 
 Every event persisted to StateStore MUST include a **strictly increasing** `runSeq` (per `runId`).
@@ -54,6 +73,15 @@ Every event persisted to StateStore MUST include a **strictly increasing** `runS
 
 - **Unique key**: `(runId, runSeq)` — no duplicate sequence numbers within a run
 - **Uniqueness**: `(runId, idempotencyKey)` — same idempotency key cannot produce multiple events
+
+**Idempotency key collision handling** (NORMATIVE):
+
+If an event already exists with `(runId, idempotencyKey) = (R, K)` and `runSeq = N`, a subsequent attempt to persist an event with the same `(R, K)` MUST:
+
+1. **Reject** with error code `IDEMPOTENCY_KEY_EXISTS`, OR
+2. **Succeed** and return the existing event metadata (no duplicate insert).
+
+The adapter MUST NOT overwrite or create a second event. The chosen behavior MUST be documented in the adapter contract.
 
 **Physical implementation**: See backend-specific adapters:
 
@@ -133,17 +161,10 @@ stateDiagram-v2
 
 `attemptId` is decomposed into two distinct, required fields:
 
-**`engineAttemptId` (infrastructure-level)**:
-
-- Assigned by platform (Temporal SDK, Conductor runtime).
-- Increments on ANY platform-level retry (network glitch, timeout, etc.).
-- NOT used by Planner for dependencies, cost, or skip decisions.
-- Visible to SRE for debugging.
-- Example: `engineAttemptId=3` = Temporal retried activity 2 times before succeeding.
-
 **`logicalAttemptId` (business-level)**:
 
 - Assigned by Engine (monotonic per `stepId` per `runId`).
+- Type: **`number`** (counter, not string).
 - Increments ONLY when:
   - Operator issues `RETRY_STEP` signal, OR
   - Planner policy dictates retry (e.g., backoff exhausted).
@@ -151,13 +172,72 @@ stateDiagram-v2
 - Visible to UI as "Retry #1", "Retry #2", etc.
 - Example: `logicalAttemptId=2` = operator/planner issued 1 retry signal.
 
+**`engineAttemptId` (infrastructure-level)**:
+
+- Type: **`number | undefined`** (counter, optional).
+- Platform-assigned value for debugging infrastructure retries.
+- Assigned by platform (Temporal SDK, Conductor runtime).
+- Increments on ANY platform-level retry (network glitch, timeout, etc.).
+- NOT used by Planner for dependencies, cost, or skip decisions.
+- Visible to SRE for debugging.
+- Example: `engineAttemptId=3` = Temporal retried activity 2 times before succeeding.
+
 **Idempotency key (NORMATIVE)**:
+
+For **step-level events** (StepStarted, StepCompleted, StepFailed):
 
 ```
 SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
 ```
 
+For **run-level events** (RunStarted, RunPaused, RunCancelled):
+
+```
+// Normalize absent fields for idempotency key calculation
+stepIdNormalized = stepId ?? '__run__'
+logicalAttemptIdNormalized = logicalAttemptId ?? 1
+SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planVersion)
+```
+
+**Rationale**: Run-level events don't have natural "attempts" (no retry semantics). Normalizing to `1` avoids serialization ambiguity (`undefined` vs `null` vs absent) across languages.
+
 NOT `engineAttemptId`. Same logical attempt retried by platform → same idempotency key.
+
+**Reference**: Idempotency patterns and retry safety — [AWS Builders Library: Making retries safe with idempotent APIs](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-apis/)
+
+---
+
+### 1.3.1 Step Attempt State Machine (NORMATIVE)
+
+Each `(stepId, logicalAttemptId)` follows this state machine:
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: Step defined in plan
+    PENDING --> RUNNING: StepStarted
+    RUNNING --> SUCCESS: StepCompleted
+    RUNNING --> FAILED: StepFailed
+    PENDING --> SKIPPED: StepSkipped
+    FAILED --> PENDING: RETRY_STEP signal\n(increments logicalAttemptId)
+
+    note right of FAILED
+        Failed attempts remain immutable
+        in the log and snapshots
+    end note
+
+    note right of PENDING
+        RETRY_STEP creates a NEW
+        logical attempt (new logicalAttemptId)
+    end note
+```
+
+**NORMATIVE rules**:
+
+1. A step attempt MUST be in `PENDING` state before its first `StepStarted` event.
+2. `StepCompleted` / `StepFailed` events MUST NOT be emitted unless the attempt is in `RUNNING` state.
+3. `RETRY_STEP` signal creates a NEW logical attempt (increments `logicalAttemptId`); it does NOT mutate the failed attempt.
+4. Failed attempts remain **immutable** in the log and snapshots (audit trail).
+5. `StepSkipped` MAY transition from `PENDING` state (conditional logic, dependency failure, or operator signal).
 
 ---
 
@@ -180,8 +260,8 @@ interface RunSnapshot {
 interface StepSnapshot {
   stepId: string;
   status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'SKIPPED';
-  logicalAttemptId: string;
-  engineAttemptId?: string;
+  logicalAttemptId: number;
+  engineAttemptId?: number;
   startedAt?: string;
   completedAt?: string;
   artifacts: ArtifactRef[];
@@ -203,11 +283,8 @@ interface StepSnapshot {
 
 ```ts
 interface SnapshotProjector {
-  projectRun(runId: string, events: CanonicalEngineEvent[]): Promise<RunSnapshot>;
-  incrementalProject(
-    snapshot: RunSnapshot,
-    newEvents: CanonicalEngineEvent[]
-  ): Promise<RunSnapshot>;
+  projectRun(runId: string, events: RunEvent[]): Promise<RunSnapshot>;
+  incrementalProject(snapshot: RunSnapshot, newEvents: RunEvent[]): Promise<RunSnapshot>;
   detectNonContiguous(
     lastSeq: number,
     nextSeq: number
@@ -264,7 +341,8 @@ sequenceDiagram
 
 1. **Monotonic ordering**: Consume events in strictly increasing `runSeq` order.
    - If a non-contiguous observation is detected, the projector MUST NOT assume data loss.
-   - The projector MUST pause incremental projection, request a resync (snapshot + delta), and resume once resync completes successfully AND the watermark (`lastEventSeq`) advances.
+   - The projector MUST pause incremental projection, request a resync (snapshot + delta), and resume once resync completes successfully.
+   - **Resync completion criterion**: Resync is considered complete ONLY if `postResyncLastEventSeq > preResyncLastEventSeq` (watermark MUST advance).
    - The projector MUST NOT "invent" missing sequences and MUST NOT reorder beyond `runSeq`.
 
 2. **Immutability**: Each projection is a new snapshot. No in-place updates. `lastEventSeq` = highest `runSeq` applied.
@@ -289,6 +367,48 @@ sequenceDiagram
    - non-contiguous fetch observed: alert P2 `PROJECTOR_NON_CONTIGUOUS_FETCH_DETECTED` (investigate consistency; resync may be needed)
 
 6. **Unknown event types** (forward compatibility): Unknown `eventType` values MUST NOT fail projection. The projector MUST advance `lastEventSeq` for unknown events (to maintain watermark progress) but MUST NOT apply state transitions. Unknown events MAY be logged for audit purposes.
+
+---
+
+### 1.5.1 Resync Request Semantics (NORMATIVE)
+
+When the Projector detects non-contiguous `runSeq` or needs to rebuild state, it MUST request a resync using one of these modes:
+
+**Mode 1: Full rebuild**
+
+```ts
+{
+  mode: 'FULL',
+  runId: string
+}
+```
+
+**Semantics**: StateStore returns all events for the run from the beginning (`runSeq=1` to `lastEventSeq`).
+
+**Use case**: Corruption detected, schema migration, or first-time projection.
+
+**Mode 2: Snapshot + catch-up**
+
+```ts
+{
+  mode: 'FROM_SNAPSHOT',
+  runId: string,
+  snapshotSeq: number
+}
+```
+
+**Semantics**: StateStore returns:
+
+1. Latest snapshot (if available and `runSeq <= snapshotSeq`)
+2. Delta events where `runSeq > snapshotSeq`
+
+**Use case**: Projector has a cached snapshot but needs to catch up on recent events.
+
+**Adapter requirement**: Adapters MUST support both modes. If snapshots are unavailable, the adapter MUST fall back to `FULL` mode.
+
+**Resync completion criterion (NORMATIVE)**:
+
+Projector MUST verify `postResyncLastEventSeq > preResyncLastEventSeq` before resuming incremental projection. A "successful resync" with no watermark advancement indicates a gap in event delivery (not completion).
 
 ---
 
@@ -362,6 +482,16 @@ Secondary path for downstream consumers (Planner audits, UI updates, webhooks).
 - **Primary**: StateStore (synchronous, source of truth).
 - **Secondary**: EventBus (asynchronous, eventually consistent, may be down).
 - **Ordering**: per-runId guaranteed in StateStore; best-effort in EventBus.
+
+**Consumer idempotency requirement** (NORMATIVE):
+
+EventBus consumers MUST be idempotent by `(runId, runSeq)` or `eventId`. The transactional outbox pattern provides **at-least-once** delivery semantics, meaning the same event MAY be delivered multiple times if:
+
+- Retry succeeds after a previous timeout
+- Consumer crashes after processing but before ACK
+- Network partition causes duplicate delivery
+
+Consumers MUST NOT assume exactly-once delivery. Idempotent processing is mandatory for correctness.
 
 **Failure handling**:
 
@@ -554,6 +684,18 @@ sequenceDiagram
    - Transition to `PAUSED` (with alert `PAUSE_DRAIN_TIMEOUT`)
    - Allow RESUME to proceed (orphaned tasks may complete asynchronously)
 
+7. **Orphaned task completion policy** (NORMATIVE):
+
+   If tasks complete **after** the drain timeout expires, the adapter MUST choose one of:
+   - **Option A (accept + apply)**: Accept the completion event, apply state changes, emit `StepCompleted`/`StepFailed` as normal.
+   - **Option B (reject + audit)**: Reject the completion with error code `ORPHANED_TASK`, emit audit event, do NOT apply state changes.
+
+   The chosen policy MUST be documented in the adapter contract. Rationale:
+   - **Option A** preserves work but may violate operator expectations (task runs after PAUSE).
+   - **Option B** prevents surprise execution but discards work.
+
+   Recommended default: **Option A** (accept + apply) to avoid data loss.
+
 **Implementation Note**: This is a known limitation of Conductor. For use cases requiring immediate cancellation of in-flight work, Temporal is the recommended adapter.
 
 **Storage-agnostic principle**: Core execution semantics (this document) remain independent of engine choice. Adapters bridge the gap.
@@ -588,15 +730,33 @@ Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../
 **Consumer compatibility note**:
 Producers MUST emit events compatible with the contract version. Consumers MUST accept both old and new event shapes during grace periods (see VERSIONING.md for deprecation timelines).
 
+**Direct consumer forward compatibility** (NORMATIVE):
+
+Consumers reading from StateStore directly (not via Projector) MUST follow the same forward-compatibility rules:
+
+1. **Unknown `eventType`**: MUST NOT fail; consumers MAY ignore, log, or store opaque.
+2. **Unknown fields**: MUST ignore fields they don't recognize.
+3. **Enum extensibility**: MUST tolerate new enum values (`status`, `engineType`, etc.).
+
+This applies to:
+
+- Analytics ETL pipelines
+- Audit exporters
+- Custom reporting dashboards
+- Backup/restore tooling
+
+**Failure mode**: Consumers that fail hard on unknown schemas are **non-compliant** and create operational fragility during rolling deployments.
+
 ---
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                         |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1     | 2026-02-11 | **Minor**: Extracted storage/engine-specific content to adapters (Snowflake DDL → StateStoreAdapter.md, continue-as-new → Temporal EnginePolicies.md). Core semantics now fully agnostic.      |
-| 1.0.1   | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility) |
-| 1.0     | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection)                                                                                                                     |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                               |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1.1   | 2026-02-12 | **Patch**: Unify event envelope timestamps (emittedAt REQUIRED, occurredAt optional); normalize `logicalAttemptId` for run-level events (`?? 1`); remove `StepDelayed` from planned schemas (not canonical); add normative rules for timestamp usage (ordering by runSeq, durations use occurredAt). |
+| 1.1     | 2026-02-12 | **Minor (NORMATIVE)**: Fix attempt types (logicalAttemptId/engineAttemptId: string → number); define run-level idempotency normalization (stepId → '**run**'); strengthen resync completion rule (watermark MUST advance); rename CanonicalEngineEvent → RunEvent for clarity.                       |
+| 1.0.1   | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility)                                                                                                       |
+| 1.0     | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection)                                                                                                                                                                                                                           |
 
 ---
 
@@ -604,7 +764,20 @@ Producers MUST emit events compatible with the contract version. Consumers MUST 
 
 **Source of Truth**: JSON Schema files are the authoritative source for event structure validation. This appendix provides human-readable examples and normative field descriptions.
 
-**Schema Location**: `docs/architecture/engine/contracts/engine/events/*.schema.json` (planned)
+**Schema Location**: `docs/architecture/engine/contracts/engine/events/*.schema.json`
+
+**Implemented Schemas** (JSON Schema Draft 2020-12):
+
+- [RunStarted.schema.json](./events/RunStarted.schema.json) ✅
+- [StepStarted.schema.json](./events/StepStarted.schema.json) ✅
+- [StepCompleted.schema.json](./events/StepCompleted.schema.json) ✅
+- [StepFailed.schema.json](./events/StepFailed.schema.json) ✅
+
+**Planned Schemas** (remaining events):
+
+- RunQueued, RunApproved, StepSkipped, RunPaused, RunResumed, RunCompleted, RunFailed, RunCancelled, SignalAccepted, SignalRejected
+
+**Note**: `StepDelayed` removed — not canonical until backpressure semantics are finalized (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for contract hygiene patterns).
 
 ---
 
@@ -612,7 +785,7 @@ Producers MUST emit events compatible with the contract version. Consumers MUST 
 
 Emitted by the Engine when a workflow execution begins in the target orchestrator (Temporal, Conductor, etc.).
 
-**JSON Schema Reference**: `RunStarted.schema.json` (planned)
+**JSON Schema Reference**: [RunStarted.schema.json](./events/RunStarted.schema.json) ✅
 
 **Normative Fields**:
 
@@ -623,9 +796,10 @@ interface RunStartedEvent {
   eventId: string; // UUID v4
   runId: string; // Workflow run identifier
   runSeq: number; // Monotonic sequence (per runId)
-  idempotencyKey: string; // SHA256(runId | eventType | planVersion)
-  emittedAt: string; // ISO 8601 timestamp (UTC)
+  idempotencyKey: string; // SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planVersion)
+  emittedAt: string; // ISO 8601 timestamp (UTC) — when event was persisted to StateStore
   emittedBy: string; // e.g., "engine", "planner", "activity-worker"
+  occurredAt?: string; // ISO 8601 timestamp (UTC) — when event actually occurred (if different from emittedAt)
 
   // Event payload (specific to RunStarted)
   status: 'RUNNING'; // Run status transition
@@ -648,6 +822,21 @@ interface RunStartedEvent {
   startedAt: string; // ISO 8601 timestamp (when engine execution began)
 }
 ```
+
+**Event Timestamp Semantics** (NORMATIVE):
+
+- **`emittedAt`** (REQUIRED): Processing time — when event was persisted to StateStore ("append time").
+- **`occurredAt`** (OPTIONAL): Event time — when event actually occurred at source (if measurably different).
+
+**Usage rules**:
+
+- **Ordering**: Events MUST be ordered by `runSeq` only (NOT by `emittedAt` or `occurredAt`).
+- **Durations / UX**: Use `occurredAt` (if present) for calculating durations; fall back to `emittedAt` if absent.
+- **Projector watermarks**: Track progress by `runSeq` (monotonic), not by timestamps.
+
+**Reference**: Event-time vs processing-time — [Apache Flink: Notions of Time](https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/)
+
+---
 
 **State Transition Rule** (NORMATIVE):
 
@@ -701,13 +890,18 @@ When a `RunStarted` event is applied to a snapshot projection:
 
 For complete event schema specifications, see:
 
+**Implemented Schemas**:
+
+- **RunStarted** ✅: [RunStarted.schema.json](./events/RunStarted.schema.json) — Engine starts workflow execution
+- **StepStarted** ✅: [StepStarted.schema.json](./events/StepStarted.schema.json) — Activity begins execution
+- **StepCompleted** ✅: [StepCompleted.schema.json](./events/StepCompleted.schema.json) — Activity execution succeeded
+- **StepFailed** ✅: [StepFailed.schema.json](./events/StepFailed.schema.json) — Activity execution failed
+
+**Planned Schemas** (remaining events):
+
 - **RunQueued**: Section 3 (Backpressure & Run Queue)
 - **RunApproved**: Emitted by Planner (approval gate passed)
-- **StepStarted**: Activity begins execution
-- **StepCompleted**: Activity execution succeeded
-- **StepFailed**: Activity execution failed
 - **StepSkipped**: Activity skipped due to dependency failure or conditional logic
-- **StepDelayed**: Activity execution delayed due to throttling or backpressure
 - **RunPaused**: Workflow paused (via PAUSE signal)
 - **RunResumed**: Workflow resumed (via RESUME signal)
 - **RunCompleted**: All steps completed successfully
@@ -716,24 +910,7 @@ For complete event schema specifications, see:
 - **SignalAccepted**: External signal received and validated
 - **SignalRejected**: External signal rejected (authorization or validation failure)
 
-**JSON Schema Files** (planned):
-
-```
-docs/architecture/engine/contracts/engine/events/
-  RunStarted.schema.json
-  RunQueued.schema.json
-  StepStarted.schema.json
-  StepCompleted.schema.json
-  StepFailed.schema.json
-  StepDelayed.schema.json
-  RunPaused.schema.json
-  RunResumed.schema.json
-  RunCompleted.schema.json
-  RunFailed.schema.json
-  RunCancelled.schema.json
-  SignalAccepted.schema.json
-  SignalRejected.schema.json
-```
+**Note**: `StepDelayed` removed — not yet canonical in §1.2 event table. Will be reintroduced in future version if backpressure semantics require it (see [Martin Fowler: Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html) for event catalog hygiene).
 
 **Validation Rule** (NORMATIVE):
 

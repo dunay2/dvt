@@ -7,7 +7,7 @@
 **Scope**: Applies only when an ExecutionPlan references plugins or extension code.  
 **References**:
 
-- [IWorkflowEngine.v1.md](../engine/IWorkflowEngine.v1.md)
+- [IWorkflowEngine.v1.1.md](../engine/IWorkflowEngine.v1.1.md)
 - Node.js security guidance: <https://nodejs.org/en/learn/security/>
 - gVisor: <https://gvisor.dev/>
 - isolated-vm: <https://www.npmjs.com/package/isolated-vm>

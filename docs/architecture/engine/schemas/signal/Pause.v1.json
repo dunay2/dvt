@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/signal/Pause.v1.json",
+  "title": "Pause Signal Payload",
+  "type": "object",
+  "properties": {
+    "reason": {
+      "type": "string",
+      "maxLength": 500
+    }
+  },
+  "additionalProperties": false
+}

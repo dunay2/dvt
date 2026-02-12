@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/StepStarted.schema.json",
+  "title": "StepStarted Event",
+  "description": "Emitted by Activity when step execution begins",
+  "type": "object",
+  "required": [
+    "eventType",
+    "eventId",
+    "runId",
+    "runSeq",
+    "idempotencyKey",
+    "emittedAt",
+    "emittedBy",
+    "stepId",
+    "logicalAttemptId",
+    "startedAt"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "const": "StepStarted",
+      "description": "Event type discriminator"
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier (UUID v4)"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^run_[a-zA-Z0-9_-]+$",
+      "description": "Workflow run identifier"
+    },
+    "runSeq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic sequence number (per runId, assigned by Append Authority)"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 hash: SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)"
+    },
+    "emittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event was persisted to StateStore (processing time)"
+    },
+    "emittedBy": {
+      "type": "string",
+      "enum": ["engine", "planner", "activity-worker", "system"],
+      "description": "Component that emitted the event"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event actually occurred at source (optional, event time)"
+    },
+    "stepId": {
+      "type": "string",
+      "description": "Step identifier from plan"
+    },
+    "logicalAttemptId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Business-level attempt counter (increments on RETRY_STEP signal)"
+    },
+    "engineAttemptId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Infrastructure-level attempt counter (platform retries)"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when step execution began"
+    },
+    "planVersion": {
+      "type": "string",
+      "description": "Plan version for idempotency key calculation"
+    }
+  },
+  "examples": [
+    {
+      "eventType": "StepStarted",
+      "eventId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "runId": "run_2026-02-11_abc123",
+      "runSeq": 5,
+      "idempotencyKey": "a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890",
+      "occurredAt": "2026-02-11T10:30:15.000Z",
+      "emittedBy": "activity-worker",
+      "stepId": "extract_data",
+      "logicalAttemptId": 1,
+      "engineAttemptId": 1,
+      "startedAt": "2026-02-11T10:30:15.000Z",
+      "planVersion": "1.2"
+    }
+  ]
+}

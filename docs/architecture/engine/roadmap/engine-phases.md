@@ -29,7 +29,7 @@
 
 **Deliverables**:
 
-- ✅ IWorkflowEngine.v1.md (interface + signal catalog)
+- ✅ IWorkflowEngine.v1.1.md (interface + signal catalog)
 - ✅ ExecutionSemantics.v1.md (StateStore model, dual attempts, snapshots)
 - ✅ TemporalAdapter.spec.md (interpreter, namespace, workers, determinism)
 - ✅ RunStateUpdate.v1.md (event schema, envelope, versioning, consumer compatibility)
@@ -584,7 +584,7 @@ Q4 2026 / Early 2027 (Phase 3)
 
 ## References
 
-- [IWorkflowEngine Contract](../contracts/engine/IWorkflowEngine.v1.md)
+- [IWorkflowEngine Contract](../contracts/engine/IWorkflowEngine.v1.1.md)
 - [ExecutionSemantics Contract](../contracts/engine/ExecutionSemantics.v1.md)
 - [TemporalAdapter Spec](../adapters/temporal/TemporalAdapter.spec.md)
 - [Observability Guide](../ops/observability.md)
