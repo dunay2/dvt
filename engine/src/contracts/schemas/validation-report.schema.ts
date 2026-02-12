@@ -7,7 +7,7 @@
  * @see IWorkflowEngine.v1.1.md § 4 - Cross-Adapter Capability Validation
  */
 
-import { z, SafeParseReturnType } from 'zod';
+import { z } from 'zod';
 
 /**
  * Validation error codes
@@ -143,6 +143,6 @@ export function parseValidationReport(data: unknown): ValidationReport {
  */
 export function safeParseValidationReport(
   data: unknown
-): SafeParseReturnType<unknown, ValidationReport> {
+): ReturnType<typeof ValidationReportSchema.safeParse> {
   return ValidationReportSchema.safeParse(data);
 }
