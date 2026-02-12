@@ -119,7 +119,7 @@ This project enforces high code quality through:
 
 - ✅ **ESLint** - TypeScript linting with determinism rules
 - ✅ **Prettier** - Consistent code formatting
-- ✅ **Vitest** - Unit and integration testing (80%+ coverage required)
+- ✅ **Vitest** - Standard unit and integration testing (80%+ coverage required)
 - ✅ **Conventional Commits** - Semantic versioning automation
 - ✅ **Pre-commit hooks** - Automatic linting and formatting
 - ✅ **GitHub Actions** - Comprehensive CI/CD pipelines
