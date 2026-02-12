@@ -7,7 +7,7 @@
  * @see IWorkflowEngine.v1.1.md § 3 - Execution Plan Minimal Contract
  */
 
-import { z } from 'zod';
+import { z, SafeParseReturnType } from 'zod';
 
 /**
  * Execution Plan Metadata
@@ -79,8 +79,6 @@ export function parseExecutionPlan(data: unknown): ExecutionPlan {
 /**
  * Safe validation without throwing
  */
-export function safeParseExecutionPlan(
-  data: unknown
-): z.SafeParseReturnType<unknown, ExecutionPlan> {
+export function safeParseExecutionPlan(data: unknown): SafeParseReturnType<unknown, ExecutionPlan> {
   return ExecutionPlanSchema.safeParse(data);
 }
