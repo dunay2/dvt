@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0](https://github.com/dunay2/dvt/compare/v2.3.0...v2.4.0) (2026-02-12)
+
+
+### ✨ Features
+
+* Phase 2 - Projector and Engine adapter contracts ([#56](https://github.com/dunay2/dvt/issues/56)) ([81bfec8](https://github.com/dunay2/dvt/commit/81bfec85d59eb1b20be88fecd805dcbb75c44ebd))
+
+
+### 📝 Documentation
+
+* clarify determinism test README ([#43](https://github.com/dunay2/dvt/issues/43)) ([957f9f0](https://github.com/dunay2/dvt/commit/957f9f0a232646fbacd35128908453ffa34a004e))
+* refresh root README ([#42](https://github.com/dunay2/dvt/issues/42)) ([3397514](https://github.com/dunay2/dvt/commit/3397514155393df3fd365454ccab72f2dbb907f2))
+
 ## [2.3.0](https://github.com/dunay2/dvt/compare/v2.2.0...v2.3.0) (2026-02-11)
 
 ### ✨ Features
