@@ -30,7 +30,24 @@ Validation contracts replaced with code-generatable schemas.
 | [validation-report.schema.json](contracts/capabilities/validation-report.schema.json) | Validation report schema            | StartRun output                     | SDK code-gen                |
 | [capabilities/README.md](contracts/capabilities/README.md)                            | Integration guide                   | validatePlan() pseudocode           | Developer reference         |
 
-### 🔵 Adapter Specifications (Normative, Adapter-Specific)
+### � Security (Normative + Informative)
+
+Security-by-design documentation: threat model, authorization contracts, and audit requirements.
+
+| Document                                                        | Purpose                                        | Scope       | Version |
+| --------------------------------------------------------------- | ---------------------------------------------- | ----------- | ------- |
+| [THREAT_MODEL.md](security/THREAT_MODEL.md)                     | Threat actors, attack scenarios, mitigations   | Informative | 1.4     |
+| [IAuthorization.v1.md](contracts/security/IAuthorization.v1.md) | Authorization interface (API boundary)         | NORMATIVE   | 1.0     |
+| [AuditLog.v1.md](contracts/security/AuditLog.v1.md)             | Audit log schema, retention policy, compliance | NORMATIVE   | 1.0     |
+
+**Key invariants**:
+
+- **INV-SEC-1**: Authorization checks MUST happen at API boundary (never in engine)
+- **INV-SEC-2**: Every authorization decision (grant/deny) MUST be audited
+- **INV-SEC-3**: tenantId MUST be in every resource identifier
+- **INV-SEC-4**: Audit logs are append-only, tamper-proof (7-year retention for compliance)
+
+### �🔵 Adapter Specifications (Normative, Adapter-Specific)
 
 Implementation contracts for orchestration platform adapters and storage backends.
 
@@ -86,11 +103,14 @@ docs/architecture/engine/
 │   │   └── ExecutionSemantics.v1.md      # [NORMATIVE] Core execution semantics (agnostic)
 │   ├── state-store/
 │   │   └── README.md                      # [NORMATIVE] Storage-agnostic State Store contract
-│   └── capabilities/
-│       ├── capabilities.schema.json       # [EXECUTABLE] Capability enum
-│       ├── adapters.capabilities.json     # [EXECUTABLE] Adapter matrix
-│       ├── validation-report.schema.json  # [EXECUTABLE] Report schema
-│       └── README.md                      # Integration guide
+│   ├── capabilities/
+│   │   ├── capabilities.schema.json       # [EXECUTABLE] Capability enum
+│   │   ├── adapters.capabilities.json     # [EXECUTABLE] Adapter matrix
+│   │   ├── validation-report.schema.json  # [EXECUTABLE] Report schema
+│   │   └── README.md                      # Integration guide
+│   └── security/
+│       ├── IAuthorization.v1.md          # [NORMATIVE] Authorization interface
+│       └── AuditLog.v1.md                # [NORMATIVE] Audit log schema & retention
 │
 ├── adapters/                              # Adapter-specific specs (normative)
 │   ├── temporal/
@@ -103,6 +123,9 @@ docs/architecture/engine/
 │       │   └── StateStoreAdapter.md       # [NORMATIVE] Snowflake implementation (DDL, MERGE, clustering)
 │       └── postgres/
 │           └── StateStoreAdapter.md       # [NORMATIVE] Postgres implementation (SERIAL, ON CONFLICT)
+│
+├── security/                              # Security (informative + normative)
+│   └── THREAT_MODEL.md                    # [INFORMATIVE] Threat actors, attack scenarios, mitigations
 │
 ├── ops/                                   # Operations (informative, evolving)
 │   ├── observability.md                   # Metrics, traces, logs, SLOs
@@ -197,6 +220,12 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 ### "How do I write a deterministic plan?"
 
 → [dev/determinism-tooling.md](dev/determinism-tooling.md) (Section 7)
+
+### "What are the security requirements?"
+
+→ [security/THREAT_MODEL.md](security/THREAT_MODEL.md) (threat scenarios, mitigations)  
+→ [contracts/security/IAuthorization.v1.md](contracts/security/IAuthorization.v1.md) (authorization interface)  
+→ [contracts/security/AuditLog.v1.md](contracts/security/AuditLog.v1.md) (audit log schema, compliance)
 
 ### "How do I respond to a production incident?"
 
@@ -346,9 +375,12 @@ All internal references use **relative markdown links** (portable, versionable).
 | determinism-tooling.md   | 320 lines        | Guide    | LOW            | Plan authors     |
 | engine-phases.md         | 350 lines        | Roadmap  | LOW            | Execs            |
 | capabilities/ (4 files)  | 400 lines        | Schemas  | HIGH           | Validation       |
-| **TOTAL**                | **~2,720 lines** | Mixed    | -              | -                |
+| THREAT_MODEL.md          | 517 lines        | Guide    | MEDIUM         | Security eng     |
+| IAuthorization.v1.md     | 359 lines        | Contract | HIGH           | API devs         |
+| AuditLog.v1.md           | 425 lines        | Contract | HIGH           | Compliance       |
+| **TOTAL**                | **~4,741 lines** | Mixed    | -              | -                |
 
-**Previous monolith (WORKFLOW_ENGINE.md)**: 3,227 lines (51% reduction ✅)
+**Previous monolith (WORKFLOW_ENGINE.md)**: 3,227 lines (47% expansion for security + clarity ✅)
 
 ---
 
@@ -374,13 +406,17 @@ All internal references use **relative markdown links** (portable, versionable).
 | incident_response.md     | @sre-oncall        | 2026-02-11    | 2026-02-18  |
 | determinism-tooling.md   | @qa-lead           | 2026-02-11    | 2026-04-11  |
 | engine-phases.md         | @pm-lead           | 2026-02-11    | 2026-05-11  |
+| THREAT_MODEL.md          | @security-lead     | 2026-02-11    | 2026-05-11  |
+| IAuthorization.v1.md     | @security-lead     | 2026-02-11    | 2026-08-11  |
+| AuditLog.v1.md           | @security-lead     | 2026-02-11    | 2026-08-11  |
 
 ---
 
 ## Version History
 
-| Version | Date       | Change                                                |
-| ------- | ---------- | ----------------------------------------------------- |
-| 0.1     | 2026-02-11 | Partition WORKFLOW_ENGINE.md into 8 modular documents |
-| 1.0     | 2026-02-11 | First stable index (Phase 1 MVP complete)             |
-| 1.1     | 2026-02-11 | Add VERSIONING.md (contract versioning policy)        |
+| Version | Date       | Change                                                        |
+| ------- | ---------- | ------------------------------------------------------------- |
+| 0.1     | 2026-02-11 | Partition WORKFLOW_ENGINE.md into 8 modular documents         |
+| 1.0     | 2026-02-11 | First stable index (Phase 1 MVP complete)                     |
+| 1.1     | 2026-02-11 | Add VERSIONING.md (contract versioning policy)                |
+| 1.2     | 2026-02-12 | Add Security section (THREAT_MODEL, IAuthorization, AuditLog) |
