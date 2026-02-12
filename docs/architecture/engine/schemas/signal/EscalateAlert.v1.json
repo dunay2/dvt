@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/signal/EscalateAlert.v1.json",
+  "title": "EscalateAlert Signal Payload",
+  "type": "object",
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": ["INFO", "WARNING", "CRITICAL", "P1"]
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "additionalProperties": false,
+  "required": ["level"]
+}
