@@ -1,5 +1,5 @@
 /**
- * IWorkflowEngine Contract Types (v1.1)
+ * IWorkflowEngine Contract Types (v1.1.1)
  *
  * TypeScript types extracted from IWorkflowEngine.v1.1.md
  * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md}
@@ -9,6 +9,11 @@
  * - signal() now accepts SignalRequest (includes signalId for idempotency)
  * - ConductorEngineRunRef.conductorUrl is REQUIRED (was optional)
  * - Added RunStatusSnapshot, correlation identifier semantics
+ *
+ * Version 1.1.1 changes:
+ * - Added CANCEL and RETRY_RUN to SignalType
+ * - Removed 'auto' from RunContext.targetAdapter (resolved before startRun)
+ * - Added RunSubstatus type for substatus field
  */
 
 /**
@@ -18,7 +23,9 @@
 export type SignalType =
   | 'PAUSE'
   | 'RESUME'
+  | 'CANCEL'
   | 'RETRY_STEP'
+  | 'RETRY_RUN'
   | 'UPDATE_PARAMS'
   | 'INJECT_OVERRIDE'
   | 'ESCALATE_ALERT'
@@ -28,7 +35,9 @@ export type SignalType =
 
 /**
  * Context information for a workflow run
- * @see IWorkflowEngine.v1.md § 2.1 - Operations
+ * @see IWorkflowEngine.v1.1.md § 2.1 - Operations
+ *
+ * Note: targetAdapter MUST be resolved before startRun() (no 'auto' value per v1.1.1)
  */
 export interface RunContext {
   /** Tenant identifier */
@@ -37,10 +46,10 @@ export interface RunContext {
   projectId: string;
   /** Environment identifier (e.g., "dev", "staging", "prod") */
   environmentId: string;
-  /** Unique run identifier */
+  /** Unique run identifier (MUST be globally unique; UUID v4 RECOMMENDED) */
   runId: string;
-  /** Target adapter to use for execution */
-  targetAdapter: 'temporal' | 'conductor' | 'auto';
+  /** Target adapter to use for execution (resolved before startRun) */
+  targetAdapter: 'temporal' | 'conductor';
 }
 
 /**
@@ -169,6 +178,23 @@ export type RunStatus =
   | 'CANCELLED';
 
 /**
+ * Run substatus for additional status context
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
+ */
+export type RunSubstatus =
+  | 'DRAINING' // Pause in progress (Conductor)
+  | 'RETRYING' // Step retry in progress
+  | 'CONTINUE_AS_NEW' // Temporal history rotation
+  | 'WAITING_APPROVAL' // Blocked on planner approval
+  | 'RECOVERING'; // After worker crash / worker recovery
+
+/**
+ * Adapter-scoped substatus format for adapter-specific substatus values
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
+ */
+export type AdapterScopedSubstatus = `${'temporal' | 'conductor' | 'mock'}/${string}`;
+
+/**
  * Snapshot of run status
  * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
  */
@@ -178,7 +204,7 @@ export interface RunStatusSnapshot {
   /** Current status */
   status: RunStatus;
   /** Substatus (e.g., "DRAINING" during pause) */
-  substatus?: string;
+  substatus?: RunSubstatus | AdapterScopedSubstatus;
   /** Human-readable message */
   message?: string;
   /** Start timestamp (ISO 8601) */

@@ -15,17 +15,19 @@ describe('IWorkflowEngine.v1.md Contract Validation', () => {
   describe('SignalType catalog synchronization', () => {
     /**
      * Validates that SignalType union matches the normative signal catalog
-     * from IWorkflowEngine.v1.md § 2.3
+     * from SignalsAndAuth.v1.1.md § 1.1
      *
      * If this test fails, either:
      * 1. Update contracts.ts to match the normative doc, OR
-     * 2. Update IWorkflowEngine.v1.md and bump contract version
+     * 2. Update SignalsAndAuth.v1.1.md and bump contract version
      */
-    it('should include all signals from normative table § 2.3', () => {
+    it('should include all signals from normative table § 1.1', () => {
       const NORMATIVE_SIGNALS: readonly SignalType[] = [
         'PAUSE',
         'RESUME',
+        'CANCEL',
         'RETRY_STEP',
+        'RETRY_RUN',
         'UPDATE_PARAMS',
         'INJECT_OVERRIDE',
         'ESCALATE_ALERT',
@@ -38,10 +40,12 @@ describe('IWorkflowEngine.v1.md Contract Validation', () => {
       const validateSignals: SignalType[] = [...NORMATIVE_SIGNALS];
 
       // Runtime assertion: ensures the canonical list matches expectations
-      expect(validateSignals).toHaveLength(9);
+      expect(validateSignals).toHaveLength(11);
       expect(NORMATIVE_SIGNALS).toContain('PAUSE');
       expect(NORMATIVE_SIGNALS).toContain('RESUME');
+      expect(NORMATIVE_SIGNALS).toContain('CANCEL');
       expect(NORMATIVE_SIGNALS).toContain('RETRY_STEP');
+      expect(NORMATIVE_SIGNALS).toContain('RETRY_RUN');
       expect(NORMATIVE_SIGNALS).toContain('UPDATE_PARAMS');
       expect(NORMATIVE_SIGNALS).toContain('INJECT_OVERRIDE');
       expect(NORMATIVE_SIGNALS).toContain('ESCALATE_ALERT');
@@ -50,12 +54,14 @@ describe('IWorkflowEngine.v1.md Contract Validation', () => {
       expect(NORMATIVE_SIGNALS).toContain('EMERGENCY_STOP');
     });
 
-    it('should have exactly 9 signal types (per normative count)', () => {
-      const signalCount = 9;
+    it('should have exactly 11 signal types (per normative count)', () => {
+      const signalCount = 11;
       const NORMATIVE_SIGNALS: readonly SignalType[] = [
         'PAUSE',
         'RESUME',
+        'CANCEL',
         'RETRY_STEP',
+        'RETRY_RUN',
         'UPDATE_PARAMS',
         'INJECT_OVERRIDE',
         'ESCALATE_ALERT',
