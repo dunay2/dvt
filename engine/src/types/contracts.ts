@@ -13,7 +13,7 @@
 
 /**
  * Signal types supported by the workflow engine
- * @see IWorkflowEngine.v1.md § 2.3 - Supported Signals Catalog
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
  */
 export type SignalType =
   | 'PAUSE'
@@ -130,10 +130,9 @@ export interface ExecutionPlan {
 
 /**
  * Signal request payload
- * @see IWorkflowEngine.v1.md § 2.3 - Supported Signals Catalog
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
  *
- * Note: Normative contract uses `Record<string, any>` for payload.
- * Implementation uses `unknown` for type safety; adapters MUST validate/decode payload at runtime.
+ * Note: Implementation uses `unknown` for type safety; adapters MUST validate/decode payload at runtime.
  */
 export interface SignalRequest {
   /** Client-supplied signal identifier (UUID v4) */
@@ -189,7 +188,7 @@ export interface RunStatusSnapshot {
 
 /**
  * Signal decision record for authorization and audit
- * @see IWorkflowEngine.v1.md § 2.4 - Authorization & Signal Decision Records
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
  */
 export interface SignalDecisionRecord {
   /** Unique signal decision identifier (UUID v4) */
@@ -238,7 +237,7 @@ export interface SignalDecisionRecord {
 
 /**
  * Authorization interface for signal evaluation
- * @see IWorkflowEngine.v1.md § 2.4 - Authorization & Signal Decision Records
+ * @see {@link docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md}
  *
  * Note: Contract v1.1 uses `Record<string, unknown>` for type safety.
  * Implementations MUST validate/decode payload at runtime.
