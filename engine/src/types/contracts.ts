@@ -56,6 +56,8 @@ export interface TemporalEngineRunRef {
 /**
  * Conductor-specific engine run reference
  * @see IWorkflowEngine.v1.md § 2.1.1 - EngineRunRef
+ *
+ * Invariant: conductorUrl MUST be present (per normative contract § 2.1.1)
  */
 export interface ConductorEngineRunRef {
   provider: 'conductor';
@@ -63,8 +65,8 @@ export interface ConductorEngineRunRef {
   workflowId: string;
   /** Run identifier (optional) */
   runId?: string;
-  /** Conductor API URL (optional) */
-  conductorUrl?: string;
+  /** Conductor API URL (REQUIRED per normative invariant) */
+  conductorUrl: string;
 }
 
 /**
@@ -123,6 +125,9 @@ export interface ExecutionPlan {
 /**
  * Signal request payload
  * @see IWorkflowEngine.v1.md § 2.3 - Supported Signals Catalog
+ *
+ * Note: Normative contract uses `Record<string, any>` for payload.
+ * Implementation uses `unknown` for type safety; adapters MUST validate/decode payload at runtime.
  */
 export interface SignalRequest {
   /** Client-supplied signal identifier (UUID v4) */
@@ -228,6 +233,9 @@ export interface SignalDecisionRecord {
 /**
  * Authorization interface for signal evaluation
  * @see IWorkflowEngine.v1.md § 2.4 - Authorization & Signal Decision Records
+ *
+ * Note: Normative contract uses `Record<string, any>` for payloads.
+ * Implementation uses `unknown` for type safety; implementations MUST validate at runtime.
  */
 export interface IAuthorization {
   /**
@@ -291,6 +299,9 @@ export interface IWorkflowEngine {
    * @param engineRunRef - Reference to the running workflow
    * @param signalType - Type of signal to send
    * @param payload - Signal payload
+   *
+   * Note: Normative contract specifies `Record<string, any>`.
+   * Implementation uses `unknown` for type safety; adapters MUST validate/decode payload.
    */
   signal(
     engineRunRef: EngineRunRef,
