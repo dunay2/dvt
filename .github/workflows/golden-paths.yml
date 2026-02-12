@@ -1,0 +1,48 @@
+name: Golden Paths Validation
+
+on:
+  pull_request:
+    paths:
+  #     - 'examples/**'
+  #     - 'docs/architecture/engine/contracts/**'
+  #     - '.github/workflows/golden-paths.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'examples/**'
+      - 'docs/architecture/engine/contracts/**'
+      - '.github/workflows/golden-paths.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-plans:
+    name: Validate Golden Path Plans
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run test-runner.sh
+        run: bash examples/test-runner.sh
+        env:
+          SKIP_EXECUTION: 'true'
+
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-paths-validation-results
+          path: examples/
+          retention-days: 7

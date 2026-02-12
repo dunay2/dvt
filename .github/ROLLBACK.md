@@ -3,7 +3,7 @@
 **Document Version**: 1.0  
 **Last Updated**: 2026-02-11  
 **Severity Level**: P3 (Low Risk - structural only, no semantic changes)  
-**Rollback Owner**: DevOps Team + Architecture Team  
+**Rollback Owner**: DevOps Team + Architecture Team
 
 ---
 
@@ -22,8 +22,8 @@ Execute rollback if **ANY** of the following occur within 7 days post-merge:
    - Performance degradation (CI jobs taking >10 min vs baseline 2 min)
 
 3. **Team productivity impact** (P2):
-   - >5 teams report inability to find documentation
-   - >10 support tickets filed related to migration in first week
+   - > 5 teams report inability to find documentation
+   - > 10 support tickets filed related to migration in first week
 
 4. **Unforeseen dependencies** (P1):
    - Build pipelines breaking due to undocumented `WORKFLOW_ENGINE.md` references
@@ -73,11 +73,11 @@ Do NOT rollback if:
    ```bash
    # Check WORKFLOW_ENGINE.md restored
    ls -lh docs/architecture/engine/WORKFLOW_ENGINE.md
-   
+
    # Check new files removed
    [ ! -f docs/architecture/engine/contracts/state-store/README.md ] && echo "✅ State Store Contract removed"
    [ ! -f docs/architecture/engine/adapters/temporal/EnginePolicies.md ] && echo "✅ Temporal EnginePolicies removed"
-   
+
    # Check ExecutionSemantics.v1.md reverted to v1.0.1
    grep "Version.*1.0.1" docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md && echo "✅ ExecutionSemantics restored"
    ```
@@ -87,10 +87,10 @@ Do NOT rollback if:
    ```bash
    # Validate Markdown
    markdownlint-cli2 "docs/**/*.md"
-   
+
    # Check links
    markdown-link-check docs/architecture/engine/WORKFLOW_ENGINE.md
-   
+
    # CI gate test (if workflows restored)
    bash .github/workflows/markdown_lint.yml || echo "⚠️ CI workflows reverted"
    ```
@@ -137,10 +137,10 @@ Do NOT rollback if:
    git checkout main
    git pull origin main
    git checkout -b fix/ci-gate-tuning
-   
+
    # Revert only CI workflow
    git checkout <previous-commit> -- .github/workflows/markdown_lint.yml
-   
+
    # OR: Adjust config
    vim .markdownlint.json  # Disable problematic rules
    ```
@@ -180,10 +180,10 @@ Do NOT rollback if:
 
    ```bash
    git checkout -b fix/broken-link-state-store
-   
+
    # Fix link
    vim docs/architecture/engine/INDEX.md
-   
+
    # Verify fix
    markdown-link-check docs/architecture/engine/INDEX.md
    ```
@@ -256,7 +256,7 @@ gh pr list --state open --json number,title,mergeable
 
 **Action taken**: Rolled back to pre-partition state. WORKFLOW_ENGINE.md restored.
 
-**Impact**: 
+**Impact**:
 - ✅ Partition structure reverted
 - ✅ WORKFLOW_ENGINE.md available again
 - ❌ New CI gates disabled (will be re-introduced after tuning)
@@ -279,16 +279,19 @@ gh pr list --state open --json number,title,mergeable
 **Reason**: [Specific reason, e.g., "CI gate Markdown linting false positive rate exceeded 20% threshold"]
 
 **Impact Assessment**:
+
 - Blocked PRs: 8
 - Teams affected: SDK team, SRE team
 - Severity: P2 (blocking work, but no production impact)
 
 **Root Cause** (preliminary):
+
 - `.markdownlint.json` config too strict
 - `MD013` (line-length) rule triggered on code blocks (false positive)
 - Did not reproduce in local testing (Windows/Linux environment difference)
 
 **Resolution Plan**:
+
 1. ✅ Rollback executed (this PR)
 2. 🔄 Tune `.markdownlint.json` offline (disable MD013 for code blocks)
 3. 🔄 Test on Windows/Linux/macOS before re-merge
@@ -330,13 +333,13 @@ Add to future large refactors:
 
 Track these after rollback to inform re-introduction:
 
-| Metric | Target | Actual (Post-Rollback) |
-|--------|--------|------------------------|
-| WORKFLOW_ENGINE.md 404 rate | 0% | [Fill after rollback] |
-| CI gate false positives | 0% | [Fill after rollback] |
-| Open PRs unblocked | All | [Fill after rollback] |
-| Team productivity restored | 100% | [Fill after rollback] |
-| Support tickets resolved | All | [Fill after rollback] |
+| Metric                      | Target | Actual (Post-Rollback) |
+| --------------------------- | ------ | ---------------------- |
+| WORKFLOW_ENGINE.md 404 rate | 0%     | [Fill after rollback]  |
+| CI gate false positives     | 0%     | [Fill after rollback]  |
+| Open PRs unblocked          | All    | [Fill after rollback]  |
+| Team productivity restored  | 100%   | [Fill after rollback]  |
+| Support tickets resolved    | All    | [Fill after rollback]  |
 
 ---
 

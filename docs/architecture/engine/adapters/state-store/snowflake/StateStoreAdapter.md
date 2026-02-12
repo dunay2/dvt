@@ -3,7 +3,7 @@
 **Status**: Implementation Guide  
 **Version**: 1.0  
 **Backend**: Snowflake  
-**Contract**: [State Store Contract](../../../contracts/state-store/README.md)  
+**Contract**: [State Store Contract](../../../contracts/state-store/README.md)
 
 ---
 
@@ -32,25 +32,25 @@ CREATE TABLE IF NOT EXISTS RUN_EVENTS (
   RUN_ID             STRING        NOT NULL,
   RUN_SEQ            NUMBER(38,0)  NOT NULL,  -- Assigned by Append Authority (monotonic per RUN_ID)
   EVENT_ID           STRING        NOT NULL,  -- UUID as string
-  
+
   -- Step context
   STEP_ID            STRING,                  -- NULL for run-level events
   ENGINE_ATTEMPT_ID  STRING,                  -- Platform-level retry counter (Temporal attemptNumber)
   LOGICAL_ATTEMPT_ID STRING,                  -- Business-level retry counter
-  
+
   -- Event payload
   EVENT_TYPE         STRING        NOT NULL,  -- "RunStarted", "StepCompleted", etc.
   EVENT_DATA         VARIANT,                 -- Event-specific payload (JSON)
-  
+
   -- Idempotency & causality
   IDEMPOTENCY_KEY    STRING        NOT NULL,  -- SHA256 hex (unique per runId)
   CAUSED_BY_SIGNAL_ID STRING,                 -- UUID as string
   PARENT_EVENT_ID    STRING,                  -- UUID as string
-  
+
   -- Timestamps
   EMITTED_AT         TIMESTAMP_NTZ NOT NULL,  -- When activity emitted
   PERSISTED_AT       TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
-  
+
   -- Metadata
   ADAPTER_VERSION    STRING,                  -- Engine adapter version (e.g., "temporal-v1.2.3")
   ENGINE_RUN_REF     VARIANT                  -- Platform-specific reference (Temporal WorkflowId, etc.)
@@ -78,15 +78,15 @@ CREATE TABLE IF NOT EXISTS RUN_SNAPSHOTS (
   RUN_ID             STRING        NOT NULL,
   STATUS             STRING        NOT NULL,  -- "PENDING", "RUNNING", "COMPLETED", etc.
   LAST_EVENT_SEQ     NUMBER(38,0)  NOT NULL,  -- High-water mark (projection watermark)
-  
+
   -- Snapshot payload
   SNAPSHOT_DATA      VARIANT       NOT NULL,  -- RunSnapshot JSON
-  
+
   -- Timestamps
   STARTED_AT         TIMESTAMP_NTZ,
   COMPLETED_AT       TIMESTAMP_NTZ,
   PROJECTED_AT       TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
-  
+
   -- Version control
   VERSION            NUMBER(38,0)  DEFAULT 0  -- Optimistic concurrency control
 );
@@ -137,17 +137,17 @@ BEGIN
   FROM RUN_EVENTS
   WHERE RUN_ID = :p_runId AND IDEMPOTENCY_KEY = :p_idempotencyKey
   LIMIT 1;
-  
+
   IF (:v_existingSeq IS NOT NULL) THEN
     -- Duplicate: return existing runSeq
     RETURN TABLE(SELECT :v_existingSeq AS RUN_SEQ, TRUE AS IDEMPOTENT, FALSE AS PERSISTED);
   END IF;
-  
+
   -- Assign new runSeq (monotonic: MAX + 1)
   SELECT COALESCE(MAX(RUN_SEQ), 0) + 1 INTO :v_newSeq
   FROM RUN_EVENTS
   WHERE RUN_ID = :p_runId;
-  
+
   -- Insert new event
   INSERT INTO RUN_EVENTS (
     RUN_ID, RUN_SEQ, EVENT_ID, STEP_ID, ENGINE_ATTEMPT_ID, LOGICAL_ATTEMPT_ID,
@@ -158,7 +158,7 @@ BEGIN
     :p_eventType, :p_eventData, :p_idempotencyKey, :p_causedBySignalId, :p_parentEventId,
     :p_emittedAt, :p_adapterVersion, :p_engineRunRef
   );
-  
+
   RETURN TABLE(SELECT :v_newSeq AS RUN_SEQ, FALSE AS IDEMPOTENT, TRUE AS PERSISTED);
 END;
 $$;
@@ -193,35 +193,35 @@ For lighter-weight implementations, assign `runSeq` in application code:
 async function appendEvent(event: CanonicalEngineEvent): Promise<AppendResult> {
   // Check for existing event (idempotency)
   const existing = await snowflake.query<{ RUN_SEQ: number }>(
-    `SELECT RUN_SEQ FROM RUN_EVENTS 
-     WHERE RUN_ID = ? AND IDEMPOTENCY_KEY = ? 
+    `SELECT RUN_SEQ FROM RUN_EVENTS
+     WHERE RUN_ID = ? AND IDEMPOTENCY_KEY = ?
      LIMIT 1`,
     [event.runId, event.idempotencyKey]
   );
-  
+
   if (existing.length > 0) {
     return { runSeq: existing[0].RUN_SEQ, idempotent: true, persisted: false };
   }
-  
+
   // Acquire lock (critical section per runId to prevent race conditions)
   await acquireLock(event.runId); // Redis lock, DB advisory lock, etc.
-  
+
   try {
     // Get next runSeq
     const maxSeqResult = await snowflake.query<{ MAX_SEQ: number }>(
-      `SELECT COALESCE(MAX(RUN_SEQ), 0) AS MAX_SEQ 
-       FROM RUN_EVENTS 
+      `SELECT COALESCE(MAX(RUN_SEQ), 0) AS MAX_SEQ
+       FROM RUN_EVENTS
        WHERE RUN_ID = ?`,
       [event.runId]
     );
     const newSeq = maxSeqResult[0].MAX_SEQ + 1;
-    
+
     // Insert
     await snowflake.execute(
       `INSERT INTO RUN_EVENTS (...) VALUES (?, ?, ...)`,
       [event.runId, newSeq, ...]
     );
-    
+
     return { runSeq: newSeq, idempotent: false, persisted: true };
   } finally {
     await releaseLock(event.runId);
@@ -241,7 +241,7 @@ async function appendEvent(event: CanonicalEngineEvent): Promise<AppendResult> {
 
 ```sql
 -- Fetch events for projection (paginated, watermark-based)
-SELECT 
+SELECT
   RUN_ID,
   RUN_SEQ,
   EVENT_ID,
@@ -277,7 +277,7 @@ LIMIT :limit;
 MERGE INTO RUN_SNAPSHOTS AS target
 USING (
   -- Aggregate new events since last projection
-  SELECT 
+  SELECT
     RUN_ID,
     MAX(RUN_SEQ) AS LAST_EVENT_SEQ,
     MAX(CASE WHEN EVENT_TYPE = 'RunCompleted' THEN PERSISTED_AT END) AS COMPLETED_AT,
@@ -320,10 +320,10 @@ RETURNS VARIANT
 LANGUAGE JAVASCRIPT
 AS $$
   let snapshot = { runId: null, status: "PENDING", steps: {}, artifacts: [] };
-  
+
   for (const evt of EVENTS) {
     snapshot.runId = evt.RUN_ID;
-    
+
     switch (evt.EVENT_TYPE) {
       case "RunStarted":
         snapshot.status = "RUNNING";
@@ -339,7 +339,7 @@ AS $$
         break;
     }
   }
-  
+
   return snapshot;
 $$;
 ```
@@ -354,7 +354,7 @@ $$;
 -- Idempotent append: MERGE ensures duplicate idempotencyKey returns existing runSeq
 MERGE INTO RUN_EVENTS AS target
 USING (
-  SELECT 
+  SELECT
     :runId AS RUN_ID,
     :idempotencyKey AS IDEMPOTENCY_KEY,
     :eventId AS EVENT_ID,
@@ -364,7 +364,7 @@ USING (
       0
     ) + 1 AS RUN_SEQ
 ) AS source
-ON target.RUN_ID = source.RUN_ID 
+ON target.RUN_ID = source.RUN_ID
    AND target.IDEMPOTENCY_KEY = source.IDEMPOTENCY_KEY
 WHEN NOT MATCHED THEN INSERT (
   RUN_ID, RUN_SEQ, EVENT_ID, IDEMPOTENCY_KEY, ...
@@ -373,7 +373,7 @@ WHEN NOT MATCHED THEN INSERT (
 );
 
 -- Return result (existing or new)
-SELECT RUN_SEQ, 
+SELECT RUN_SEQ,
        (PERSISTED_AT < CURRENT_TIMESTAMP() - INTERVAL '1 second') AS IDEMPOTENT
 FROM RUN_EVENTS
 WHERE RUN_ID = :runId AND IDEMPOTENCY_KEY = :idempotencyKey;
@@ -429,12 +429,12 @@ WHERE RUN_ID IN (SELECT RUN_ID FROM RUN_EVENTS_ARCHIVE);
 
 ## 7) Limitations & Trade-offs
 
-| Aspect | Limitation | Mitigation |
-|--------|-----------|------------|
-| **No PK enforcement** | Snowflake does NOT enforce uniqueness | Application logic + idempotency checks |
-| **runSeq assignment** | Requires `MAX(runSeq) + 1` (not atomic without lock) | Use stored procedure OR application-side lock |
-| **Concurrent writes** | Multiple writers can create gaps | Expected behavior (see [ExecutionSemantics.v1.md § 1.0](../../../contracts/engine/ExecutionSemantics.v1.md#10-runseq-design-decision)) |
-| **Cost** | Clustering maintenance incurs credits | Monitor with `SYSTEM$CLUSTERING_INFORMATION()` |
+| Aspect                | Limitation                                           | Mitigation                                                                                                                             |
+| --------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **No PK enforcement** | Snowflake does NOT enforce uniqueness                | Application logic + idempotency checks                                                                                                 |
+| **runSeq assignment** | Requires `MAX(runSeq) + 1` (not atomic without lock) | Use stored procedure OR application-side lock                                                                                          |
+| **Concurrent writes** | Multiple writers can create gaps                     | Expected behavior (see [ExecutionSemantics.v1.md § 1.0](../../../contracts/engine/ExecutionSemantics.v1.md#10-runseq-design-decision)) |
+| **Cost**              | Clustering maintenance incurs credits                | Monitor with `SYSTEM$CLUSTERING_INFORMATION()`                                                                                         |
 
 ---
 
@@ -463,6 +463,6 @@ COPY INTO RUN_EVENTS FROM @my_stage/run_events.csv.gz FILE_FORMAT = (TYPE = CSV 
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial Snowflake adapter (extracted from ExecutionSemantics.v1.md) |
+| Version | Date       | Change                                                              |
+| ------- | ---------- | ------------------------------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial Snowflake adapter (extracted from ExecutionSemantics.v1.md) |

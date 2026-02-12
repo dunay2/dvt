@@ -11,9 +11,9 @@
 
 **Golden paths** are critical user journeys that MUST work end-to-end. Each golden path has:
 
-- **Acceptance criteria** (what "works" means)  
-- **E2E test** (Playwright/Cypress)  
-- **Monitoring** (synthetic canary)  
+- **Acceptance criteria** (what "works" means)
+- **E2E test** (Playwright/Cypress)
+- **Monitoring** (synthetic canary)
 
 **Philosophy**: If a golden path breaks, the product is broken.
 
@@ -72,6 +72,7 @@
    - Timeline updates
 
 **Acceptance Criteria**:
+
 - ✅ DAG renders with >100 nodes in <2 seconds
 - ✅ Validation completes in <5 seconds
 - ✅ Run starts within 1 second of "Start Run" click
@@ -80,6 +81,7 @@
 - ✅ Retry button disabled if run is COMPLETED or CANCELLED
 
 **E2E Test** (Playwright):
+
 ```typescript
 test('GP-01: Import dbt project → validate → execute', async ({ page }) => {
   // 1. Import
@@ -89,25 +91,25 @@ test('GP-01: Import dbt project → validate → execute', async ({ page }) => {
   await page.selectOption('select[name="source"]', 'dbt');
   await page.fill('input[name="gitUrl"]', 'https://github.com/org/dbt-project');
   await page.click('button:has-text("Import")');
-  
+
   // 2. View DAG
   await page.waitForSelector('.react-flow__node', { timeout: 5000 });
   const nodeCount = await page.locator('.react-flow__node').count();
   expect(nodeCount).toBeGreaterThan(0);
-  
+
   // 3. Validate
   await page.click('button:has-text("Validate")');
   await page.waitForSelector('.validation-result:has-text("✅")', { timeout: 5000 });
-  
+
   // 4. Execute
   await page.click('button:has-text("Run")');
   await page.selectOption('select[name="environment"]', 'dev');
   await page.click('button:has-text("Start Run")');
-  
+
   // 5. Monitor
   await page.waitForURL(/\/runs\/.+/, { timeout: 2000 });
   await page.waitForSelector('.progress-bar', { timeout: 3000 });
-  
+
   // 6-7. Skipped in test (requires actual failure)
 });
 ```
@@ -152,6 +154,7 @@ test('GP-01: Import dbt project → validate → execute', async ({ page }) => {
    - All complete successfully
 
 **Acceptance Criteria**:
+
 - ✅ Node drag-and-drop performance: <100ms lag
 - ✅ Config panel opens in <500ms
 - ✅ Autosave triggers 2 seconds after last edit
@@ -159,27 +162,28 @@ test('GP-01: Import dbt project → validate → execute', async ({ page }) => {
 - ✅ Cannot edit published plan (button disabled)
 
 **E2E Test**:
+
 ```typescript
 test('GP-02: Create plan → add nodes → execute', async ({ page }) => {
   await page.goto('/plans');
   await page.click('button:has-text("New Plan")');
   await page.click('button:has-text("Blank Plan")');
-  
+
   // Add node
   await page.dragAndDrop('.palette-item[data-type="python-task"]', '.react-flow__pane', {
-    targetPosition: { x: 200, y: 200 }
+    targetPosition: { x: 200, y: 200 },
   });
-  
+
   // Configure node
   await page.dblclick('.react-flow__node');
   await page.fill('input[name="nodeName"]', 'Fetch Data');
   await page.fill('textarea[name="script"]', 'print("Hello")');
   await page.click('button:has-text("Save")');
-  
+
   // Publish
   await page.click('button:has-text("Publish")');
   await page.click('button:has-text("Confirm")');
-  
+
   await page.waitForSelector('.status-badge:has-text("PUBLISHED")');
 });
 ```
@@ -197,7 +201,7 @@ test('GP-02: Create plan → add nodes → execute', async ({ page }) => {
    - Page requires `auditor` role (403 if unauthorized)
 
 2. **Search by actor**
-   - Enter user email: "alice@example.com"
+   - Enter user email: `alice@example.com`
    - Click "Search"
    - Results show all actions by Alice in last 30 days
 
@@ -223,27 +227,29 @@ test('GP-02: Create plan → add nodes → execute', async ({ page }) => {
    - CSV includes audit ID, timestamp, actor, action, resource
 
 **Acceptance Criteria**:
+
 - ✅ Search returns results in <2 seconds (indexed queries)
 - ✅ PII (IP, email) redacted unless user has `view-pii` permission
 - ✅ Export limited to 10,000 rows (prevent DoS)
 - ✅ Decision records include mandatory justification field
 
 **E2E Test**:
+
 ```typescript
 test('GP-03: Audit trail review', async ({ page }) => {
   await page.goto('/audit');
-  
+
   // Search
   await page.fill('input[name="actor"]', 'alice@example.com');
   await page.click('button:has-text("Search")');
-  
+
   await page.waitForSelector('.audit-entry', { timeout: 2000 });
-  
+
   // Filter
   await page.selectOption('select[name="action"]', 'RUN_CANCEL');
   const filteredCount = await page.locator('.audit-entry').count();
   expect(filteredCount).toBeGreaterThan(0);
-  
+
   // View details
   await page.click('.audit-entry:first-child');
   await page.waitForSelector('.audit-detail-panel');
@@ -282,28 +288,30 @@ test('GP-03: Audit trail review', async ({ page }) => {
    - Timeline shows full history: start → pause → resume → complete
 
 **Acceptance Criteria**:
+
 - ✅ Pause completes within 5 seconds (graceful stop)
 - ✅ Resume button disabled if run is COMPLETED
 - ✅ Pause reason captured in Decision Record (audit log)
 - ✅ Timeline visually distinguishes pause markers
 
 **E2E Test**:
+
 ```typescript
 test('GP-04: Pause → resume → complete', async ({ page }) => {
   // Assume run already started
   await page.goto('/runs/run-xyz');
-  
+
   // Pause
   await page.click('button:has-text("Pause")');
   await page.fill('textarea[name="reason"]', 'Deploy in progress');
   await page.click('button:has-text("Confirm")');
-  
+
   await page.waitForSelector('.status-badge:has-text("PAUSED")', { timeout: 5000 });
-  
+
   // Resume
   await page.click('button:has-text("Resume")');
   await page.waitForSelector('.status-badge:has-text("RUNNING")', { timeout: 2000 });
-  
+
   // Verify timeline
   const markers = await page.locator('.timeline-marker[data-type="pause"]').count();
   expect(markers).toBeGreaterThan(0);
@@ -339,24 +347,26 @@ test('GP-04: Pause → resume → complete', async ({ page }) => {
    - CSV includes: nodeId, cost, duration, resources
 
 **Acceptance Criteria**:
+
 - ✅ Cost estimates available within 10 seconds of run completion
 - ✅ Breakdown sums to total (no rounding errors)
 - ✅ Export includes all cost line items
 
 **E2E Test**:
+
 ```typescript
 test('GP-05: View cost breakdown', async ({ page }) => {
   await page.goto('/runs/run-xyz');
-  
+
   // Verify cost visible
   await page.waitForSelector('.cost-panel');
   const totalCost = await page.textContent('.cost-panel .total');
   expect(totalCost).toMatch(/\$[\d.]+/);
-  
+
   // View breakdown
   await page.click('button:has-text("View Breakdown")');
   await page.waitForSelector('.cost-breakdown-modal');
-  
+
   // Check categories
   expect(await page.isVisible('text=Compute')).toBeTruthy();
   expect(await page.isVisible('text=Storage')).toBeTruthy();
@@ -375,17 +385,18 @@ import { test } from '@playwright/test';
 
 test('Canary: GP-01 smoke test', async ({ page }) => {
   await page.goto(process.env.APP_URL);
-  
+
   // Minimal smoke test (not full golden path)
   await page.click('button:has-text("New Project")');
   await page.waitForSelector('input[name="name"]', { timeout: 2000 });
-  
+
   // Report to monitoring
   console.log('✅ GP-01 smoke test passed');
 });
 ```
 
 **Monitoring alerts**:
+
 - Golden path failure → PagerDuty critical alert
 - 2 consecutive failures → Page oncall engineer
 - SLO: 99.9% golden path success rate

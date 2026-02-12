@@ -13,15 +13,15 @@
 metrics:
   backend: Prometheus + Grafana
   cardinality: ~2000 series (runId, stepId, tenantId, errorCode)
-  
+
 traces:
   backend: Jaeger
   sampling: 100% for errors; 10% for success (Phase 1)
-  
+
 logs:
   backend: ELK (Elasticsearch + Logstash + Kibana)
   retention: 30 days (ops), 90 days (audit trail)
-  
+
 slo:
   targets:
     completion-latency-p99: 5s (StateStore projection)
@@ -198,29 +198,29 @@ alerts:
     condition: dvt_projection_gaps_total > 0
     for: 1m
     severity: P1
-    message: "Projection gaps detected; StateStore may be diverged. Check reconciler."
-    runbook: "docs/ops/runbooks/projection_gap_recovery.md"
+    message: 'Projection gaps detected; StateStore may be diverged. Check reconciler.'
+    runbook: 'docs/ops/runbooks/projection_gap_recovery.md'
 
   - name: StateStoreWriteFailure
     condition: |
       rate(dvt_statestore_write_errors_total[5m]) > 0
     for: 2m
     severity: P1
-    message: "StateStore write failures; workflows may stall."
-    
+    message: 'StateStore write failures; workflows may stall.'
+
   - name: RunCompletionSLAViolation
     condition: |
       histogram_quantile(0.99, dvt_run_completion_duration_seconds) > 30
     for: 5m
     severity: P1
-    message: "Run completion p99 > 30s; investigate latency sources."
+    message: 'Run completion p99 > 30s; investigate latency sources.'
 
   - name: AdapterHeartbeatLost
     condition: |
       (time() - dvt_adapter_last_heartbeat_seconds{adapter="temporal"}) > 60
     for: 2m
     severity: P1
-    message: "Temporal adapter heartbeat lost; cluster may be down."
+    message: 'Temporal adapter heartbeat lost; cluster may be down.'
 ```
 
 ### 4.2 P2 Alerts (Slack Notification)
@@ -233,21 +233,21 @@ alerts:
        rate(dvt_runs_completed_total[10m])) > 0.05
     for: 10m
     severity: P2
-    message: "Error rate > 5% (10m window); check most-failing plans."
+    message: 'Error rate > 5% (10m window); check most-failing plans.'
 
   - name: ProjectionLag
     condition: |
       dvt_projection_lag_events > 100
     for: 5m
     severity: P2
-    message: "Snapshot projection lag > 100 events; reconciler may be slow."
+    message: 'Snapshot projection lag > 100 events; reconciler may be slow.'
 
   - name: DeferredSignalsQueueBuildup
     condition: |
       dvt_deferred_signals_queue_length > 1000
     for: 10m
     severity: P2
-    message: "Deferred signals queue > 1000; system may be rate-limited."
+    message: 'Deferred signals queue > 1000; system may be rate-limited.'
 
   - name: PluginRejectRate
     condition: |
@@ -255,7 +255,7 @@ alerts:
        rate(dvt_plugin_invocations_total[5m])) > 0.01
     for: 5m
     severity: P2
-    message: "Plugin permission denials > 1%; check sandbox policies."
+    message: 'Plugin permission denials > 1%; check sandbox policies.'
 ```
 
 ---
@@ -296,14 +296,14 @@ Span: engine.executeRun
     engineAttemptId: "temporal-attempt-42"
     logicalAttemptId: "log-attempt-1"
     adapter: "temporal"
-    
+
   Events:
     - name: "plan_fetched"
       attributes:
         sizeBytes: 125000
         sha256: "abc123..."
         cached: false
-        
+
     - name: "step_started"
       attributes:
         stepId: "dbt-run-1"
@@ -334,21 +334,21 @@ FATAL:  Adapter crash, StateStore unavailable, system-wide issue
   "level": "INFO",
   "component": "engine",
   "message": "Run started",
-  
+
   "runId": "run-abc123",
   "planId": "plan-dbt-01",
   "planVersion": "v2.1",
   "tenantId": "tenant-123",
   "environmentId": "prod",
   "adapter": "temporal",
-  
+
   "context": {
     "engineAttemptId": "temporal-attempt-42",
     "logicalAttemptId": "log-attempt-1",
     "sourceIP": "192.168.1.100",
     "requestId": "req-xyz789"
   },
-  
+
   "metrics": {
     "planFetchDurationMs": 125,
     "validationDurationMs": 45
@@ -362,13 +362,13 @@ FATAL:  Adapter crash, StateStore unavailable, system-wide issue
 
 ### 7.1 SLO Targets (Phase 1)
 
-| Objective | Target | Window | Alert Threshold |
-|-----------|--------|--------|-----------------|
-| **Completion Latency p99** | 5s | 30d | 30s (5m window) |
-| **Pause Latency p99** | 1s | 30d | 5s (5m window) |
-| **Availability** | 99.5% | 30d | <99% (4h window) |
-| **Error Rate** | <0.1% | 30d | >1% (10m window) |
-| **Projection Gap Detection** | 0 gaps | 30d | >0 (1m window) |
+| Objective                    | Target | Window | Alert Threshold  |
+| ---------------------------- | ------ | ------ | ---------------- |
+| **Completion Latency p99**   | 5s     | 30d    | 30s (5m window)  |
+| **Pause Latency p99**        | 1s     | 30d    | 5s (5m window)   |
+| **Availability**             | 99.5%  | 30d    | <99% (4h window) |
+| **Error Rate**               | <0.1%  | 30d    | >1% (10m window) |
+| **Projection Gap Detection** | 0 gaps | 30d    | >0 (1m window)   |
 
 ### 7.2 SLO Error Budget
 
@@ -376,12 +376,12 @@ FATAL:  Adapter crash, StateStore unavailable, system-wide issue
 Q1 2026 Availability Budget (99.5% target):
   Total minutes: 43,200
   Allowed downtime (0.5%): 216 minutes (3.6 hours)
-  
+
 Current consumption:
   [Week 1] Adapter upgrade: 12 minutes
   [Week 2] StateStore write issue: 8 minutes
   Remaining: 196 minutes
-  
+
 Burn rate (if continued at week 2 pace): ~0.9 hours/week
 Alert threshold: If 50% of budget consumed before 50% of period elapsed.
 ```
@@ -390,12 +390,12 @@ Alert threshold: If 50% of budget consumed before 50% of period elapsed.
 
 ## 8) On-Call Runbooks (Quick Reference)
 
-| Scenario | Detection | First Steps | Runbook |
-|----------|-----------|------------|---------|
-| **Adapter Down** | Heartbeat lost (P1) | Check Temporal cluster status; restart workers | `runbooks/adapter_recovery.md` |
-| **Projection Gap** | Projection gaps alert (P1) | Check reconciler logs; manually align snapshot | `runbooks/projection_gap_recovery.md` |
-| **High Error Rate** | Error rate > 5% (P2) | Identify failing plan; check step logs | `runbooks/investigation_framework.md` |
-| **Stuck Workflow** | In-flight > 30m + no progress | Check StateStore + Adapter; manual intervention | `runbooks/stuck_workflow_recovery.md` |
+| Scenario            | Detection                     | First Steps                                     | Runbook                               |
+| ------------------- | ----------------------------- | ----------------------------------------------- | ------------------------------------- |
+| **Adapter Down**    | Heartbeat lost (P1)           | Check Temporal cluster status; restart workers  | `runbooks/adapter_recovery.md`        |
+| **Projection Gap**  | Projection gaps alert (P1)    | Check reconciler logs; manually align snapshot  | `runbooks/projection_gap_recovery.md` |
+| **High Error Rate** | Error rate > 5% (P2)          | Identify failing plan; check step logs          | `runbooks/investigation_framework.md` |
+| **Stuck Workflow**  | In-flight > 30m + no progress | Check StateStore + Adapter; manual intervention | `runbooks/stuck_workflow_recovery.md` |
 
 ---
 

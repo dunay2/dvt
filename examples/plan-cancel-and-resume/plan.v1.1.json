@@ -1,0 +1,92 @@
+{
+  "$schema": "https://dvt.dev/schemas/plan.v1.1.json",
+  "planId": "plan-cancel-and-resume",
+  "planVersion": "1.0",
+  "schemaVersion": "v1.1",
+  "metadata": {
+    "name": "Pause and Resume Plan",
+    "description": "Validates PAUSE and RESUME signal handling",
+    "author": "DVT Team",
+    "createdAt": "2026-02-11T17:00:00.000Z",
+    "tags": ["golden-path", "signals", "pause", "resume", "lifecycle"],
+    "requiresCapabilities": ["basic-execution", "signal.pause.native"],
+    "fallbackBehavior": "reject"
+  },
+  "steps": [
+    {
+      "stepId": "step-1",
+      "name": "Step 1 - Pre-pause",
+      "type": "echo",
+      "config": {
+        "message": "Step 1: Executing before pause"
+      },
+      "dependencies": [],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    },
+    {
+      "stepId": "step-2",
+      "name": "Step 2 - Pre-pause",
+      "type": "echo",
+      "config": {
+        "message": "Step 2: Executing before pause"
+      },
+      "dependencies": ["step-1"],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    },
+    {
+      "stepId": "step-3",
+      "name": "Step 3 - Pre-pause",
+      "type": "echo",
+      "config": {
+        "message": "Step 3: Last step before pause"
+      },
+      "dependencies": ["step-2"],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    },
+    {
+      "stepId": "step-4",
+      "name": "Step 4 - Post-resume",
+      "type": "echo",
+      "config": {
+        "message": "Step 4: First step after resume"
+      },
+      "dependencies": ["step-3"],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    },
+    {
+      "stepId": "step-5",
+      "name": "Step 5 - Post-resume",
+      "type": "echo",
+      "config": {
+        "message": "Step 5: Final step after resume"
+      },
+      "dependencies": ["step-4"],
+      "timeout": "10s",
+      "retryPolicy": {
+        "maxAttempts": 1,
+        "backoff": "none"
+      }
+    }
+  ],
+  "triggers": {
+    "manual": true,
+    "schedule": null,
+    "webhook": null
+  }
+}

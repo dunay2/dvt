@@ -12,6 +12,7 @@
 The frontend MUST enforce UI-level authorization rules based on the user's **effective permissions** retrieved from the backend.
 
 **Philosophy**:
+
 - **Defense in depth**: Backend always enforces authoritative decisions (see [IAuthorization.v1.md](../../engine/contracts/security/IAuthorization.v1.md))
 - **Frontend responsibility**: Show/hide UI elements, disable buttons, prevent wasted API calls
 - **NO client-side filtering**: Never filter lists (runs, plans) in the browser—always use backend `?filter=` queries
@@ -49,16 +50,16 @@ The frontend receives a **permission set** from `GET /v1/auth/me`:
 
 ### 2.1 Plans
 
-| Permission | UI Rule |
-|------------|---------|
-| `plan:view:*` | Show "Plans" nav link |
-| NO `plan:view:*` | Hide "Plans" nav link |
-| `plan:edit:*` or `plan:edit:${teamId}` | Enable "Edit Plan" button |
-| NO edit permission | Disable "Edit Plan" button, show tooltip: "You don't have permission to edit this plan" |
-| `plan:delete:*` | Show "Delete Plan" button (with confirmation modal) |
-| NO delete permission | Hide "Delete Plan" button entirely |
-| `plan:create:*` | Show "New Plan" button |
-| NO create permission | Hide "New Plan" button |
+| Permission                             | UI Rule                                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------- |
+| `plan:view:*`                          | Show "Plans" nav link                                                                   |
+| NO `plan:view:*`                       | Hide "Plans" nav link                                                                   |
+| `plan:edit:*` or `plan:edit:${teamId}` | Enable "Edit Plan" button                                                               |
+| NO edit permission                     | Disable "Edit Plan" button, show tooltip: "You don't have permission to edit this plan" |
+| `plan:delete:*`                        | Show "Delete Plan" button (with confirmation modal)                                     |
+| NO delete permission                   | Hide "Delete Plan" button entirely                                                      |
+| `plan:create:*`                        | Show "New Plan" button                                                                  |
+| NO create permission                   | Hide "New Plan" button                                                                  |
 
 **Example React component**:
 
@@ -67,19 +68,15 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 function PlanDetailPage({ plan }) {
   const { can } = usePermissions();
-  
+
   return (
     <div>
       <h1>{plan.name}</h1>
-      
-      {can('plan:edit', plan.teamId) && (
-        <button onClick={handleEdit}>Edit Plan</button>
-      )}
-      
-      {can('plan:delete', plan.teamId) && (
-        <button onClick={handleDelete}>Delete Plan</button>
-      )}
-      
+
+      {can('plan:edit', plan.teamId) && <button onClick={handleEdit}>Edit Plan</button>}
+
+      {can('plan:delete', plan.teamId) && <button onClick={handleDelete}>Delete Plan</button>}
+
       {!can('plan:edit', plan.teamId) && (
         <Tooltip content="You don't have permission to edit this plan">
           <button disabled>Edit Plan</button>
@@ -94,26 +91,26 @@ function PlanDetailPage({ plan }) {
 
 ### 2.2 Runs
 
-| Permission | UI Rule |
-|------------|---------|
-| `run:start:*` | Enable "Run" button on plan detail page |
-| NO `run:start` | Disable "Run" button, show tooltip: "You don't have permission to start runs" |
-| `run:cancel:*` or `run:cancel:${teamId}` | Show "Cancel" button (only for RUNNING/PAUSED runs) |
-| NO cancel permission | Hide "Cancel" button |
-| `run:signal:*` | Show "Pause", "Resume", "Retry" buttons |
-| NO signal permission | Disable signal buttons |
-| `run:view:*` | Show "Runs" nav link, list all runs (via API) |
-| `run:view:self` | Show only user's own runs (backend filters via `?actor=self`) |
-| NO `run:view` | Hide "Runs" nav link |
+| Permission                               | UI Rule                                                                       |
+| ---------------------------------------- | ----------------------------------------------------------------------------- |
+| `run:start:*`                            | Enable "Run" button on plan detail page                                       |
+| NO `run:start`                           | Disable "Run" button, show tooltip: "You don't have permission to start runs" |
+| `run:cancel:*` or `run:cancel:${teamId}` | Show "Cancel" button (only for RUNNING/PAUSED runs)                           |
+| NO cancel permission                     | Hide "Cancel" button                                                          |
+| `run:signal:*`                           | Show "Pause", "Resume", "Retry" buttons                                       |
+| NO signal permission                     | Disable signal buttons                                                        |
+| `run:view:*`                             | Show "Runs" nav link, list all runs (via API)                                 |
+| `run:view:self`                          | Show only user's own runs (backend filters via `?actor=self`)                 |
+| NO `run:view`                            | Hide "Runs" nav link                                                          |
 
 **CRITICAL**: Never filter runs in the browser. Always use backend query:
 
 ```tsx
 // ❌ WRONG: Client-side filtering (leaks data)
-const visibleRuns = allRuns.filter(run => can('run:view', run.teamId));
+const visibleRuns = allRuns.filter((run) => can('run:view', run.teamId));
 
 // ✅ CORRECT: Backend filtering
-const { data: runs } = useQuery(['runs', scope], () => 
+const { data: runs } = useQuery(['runs', scope], () =>
   api.getRuns({ filter: scope === 'self' ? 'actor=self' : undefined })
 );
 ```
@@ -122,22 +119,22 @@ const { data: runs } = useQuery(['runs', scope], () =>
 
 ### 2.3 Audit Logs
 
-| Permission | UI Rule |
-|------------|---------|
-| `audit:view:*` | Show "Audit" nav link, all records visible |
-| `audit:view:self` | Show only user's own actions (backend filters) |
-| NO `audit:view` | Hide "Audit" nav link, return 403 if user navigates directly |
-| `audit:export:*` | Show "Export to CSV" button |
-| NO export permission | Hide export button |
-| `audit:view-pii:*` | Show IP addresses, emails in audit records |
-| NO view-pii permission | Redact PII: `1.2.3.4` → `•••.•••.•••.•••` |
+| Permission             | UI Rule                                                      |
+| ---------------------- | ------------------------------------------------------------ |
+| `audit:view:*`         | Show "Audit" nav link, all records visible                   |
+| `audit:view:self`      | Show only user's own actions (backend filters)               |
+| NO `audit:view`        | Hide "Audit" nav link, return 403 if user navigates directly |
+| `audit:export:*`       | Show "Export to CSV" button                                  |
+| NO export permission   | Hide export button                                           |
+| `audit:view-pii:*`     | Show IP addresses, emails in audit records                   |
+| NO view-pii permission | Redact PII: `1.2.3.4` → `•••.•••.•••.•••`                    |
 
 **Redaction example**:
 
 ```tsx
 function AuditEntry({ entry, canViewPII }) {
   const ip = canViewPII ? entry.ip : entry.ip.replace(/\d+/g, '•••');
-  
+
   return (
     <div>
       <span>IP: {ip}</span>
@@ -150,22 +147,22 @@ function AuditEntry({ entry, canViewPII }) {
 
 ### 2.4 Cost Data
 
-| Permission | UI Rule |
-|------------|---------|
-| `cost:view:*` | Show cost panel on run detail page |
-| `cost:view:team-123` | Show costs only for team-123 runs |
-| NO `cost:view` | Hide cost panel entirely, show message: "Cost data restricted" |
-| `cost:export:*` | Enable "Export Cost Breakdown" button |
+| Permission           | UI Rule                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `cost:view:*`        | Show cost panel on run detail page                             |
+| `cost:view:team-123` | Show costs only for team-123 runs                              |
+| NO `cost:view`       | Hide cost panel entirely, show message: "Cost data restricted" |
+| `cost:export:*`      | Enable "Export Cost Breakdown" button                          |
 
 ---
 
 ### 2.5 Admin Features
 
-| Permission | UI Rule |
-|------------|---------|
-| `admin:users:*` | Show "Admin" nav link → "Users" page |
-| `admin:roles:*` | Show "Roles & Permissions" page |
-| NO admin permissions | Hide "Admin" nav link |
+| Permission           | UI Rule                              |
+| -------------------- | ------------------------------------ |
+| `admin:users:*`      | Show "Admin" nav link → "Users" page |
+| `admin:roles:*`      | Show "Roles & Permissions" page      |
+| NO admin permissions | Hide "Admin" nav link                |
 
 ---
 
@@ -177,36 +174,36 @@ The frontend MUST dynamically render the navigation menu based on permissions.
 
 ```tsx
 const navItems = [
-  { 
-    label: 'Plans', 
-    path: '/plans', 
-    permission: 'plan:view:*' 
+  {
+    label: 'Plans',
+    path: '/plans',
+    permission: 'plan:view:*',
   },
-  { 
-    label: 'Runs', 
-    path: '/runs', 
-    permission: 'run:view:*' 
+  {
+    label: 'Runs',
+    path: '/runs',
+    permission: 'run:view:*',
   },
-  { 
-    label: 'Audit', 
-    path: '/audit', 
-    permission: 'audit:view:*' 
+  {
+    label: 'Audit',
+    path: '/audit',
+    permission: 'audit:view:*',
   },
-  { 
-    label: 'Admin', 
-    path: '/admin', 
-    permission: 'admin:users:*' 
+  {
+    label: 'Admin',
+    path: '/admin',
+    permission: 'admin:users:*',
   },
 ];
 
 function Navigation() {
   const { can } = usePermissions();
-  
+
   return (
     <nav>
       {navItems
-        .filter(item => can(item.permission))
-        .map(item => (
+        .filter((item) => can(item.permission))
+        .map((item) => (
           <NavLink key={item.path} to={item.path}>
             {item.label}
           </NavLink>
@@ -230,22 +227,22 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 function ProtectedRoute({ permission, children }) {
   const { can, isLoading } = usePermissions();
-  
+
   if (isLoading) return <Loading />;
   if (!can(permission)) return <Forbidden />;
-  
+
   return children;
 }
 
 // In router config
-<Route 
-  path="/admin" 
+<Route
+  path="/admin"
   element={
     <ProtectedRoute permission="admin:users:*">
       <AdminPage />
     </ProtectedRoute>
-  } 
-/>
+  }
+/>;
 ```
 
 ---
@@ -268,7 +265,7 @@ async function deleteRun(runId) {
     toast.error('You do not have permission to delete this run');
     return;
   }
-  
+
   await api.delete(`/v1/runs/${runId}`);
 }
 ```
@@ -288,23 +285,17 @@ Buttons MUST follow this priority:
 ```tsx
 function RunControls({ run }) {
   const { can } = usePermissions();
-  
+
   const canCancel = can('run:cancel', run.teamId);
   const isRunning = run.status === 'RUNNING';
-  
+
   // Hidden if no permission at all
   if (!canCancel) return null;
-  
+
   // Disabled if run is not running
   return (
-    <Tooltip 
-      content={!isRunning ? 'Run is not active' : ''}
-      disabled={isRunning}
-    >
-      <button 
-        disabled={!isRunning}
-        onClick={handleCancel}
-      >
+    <Tooltip content={!isRunning ? 'Run is not active' : ''} disabled={isRunning}>
+      <button disabled={!isRunning} onClick={handleCancel}>
         Cancel Run
       </button>
     </Tooltip>
@@ -355,29 +346,29 @@ import { PermissionsProvider } from '@/contexts/PermissionsContext';
 describe('PlanDetailPage', () => {
   it('hides delete button if user lacks plan:delete permission', () => {
     const mockPermissions = {
-      permissions: ['plan:view:*'] // No delete permission
+      permissions: ['plan:view:*'], // No delete permission
     };
-    
+
     render(
       <PermissionsProvider value={mockPermissions}>
         <PlanDetailPage plan={mockPlan} />
       </PermissionsProvider>
     );
-    
+
     expect(screen.queryByText('Delete Plan')).not.toBeInTheDocument();
   });
-  
+
   it('shows delete button if user has plan:delete permission', () => {
     const mockPermissions = {
-      permissions: ['plan:view:*', 'plan:delete:*']
+      permissions: ['plan:view:*', 'plan:delete:*'],
     };
-    
+
     render(
       <PermissionsProvider value={mockPermissions}>
         <PlanDetailPage plan={mockPlan} />
       </PermissionsProvider>
     );
-    
+
     expect(screen.getByText('Delete Plan')).toBeInTheDocument();
   });
 });
@@ -395,22 +386,22 @@ import { PermissionsContext } from '@/contexts/PermissionsContext';
 
 export function usePermissions() {
   const { permissions, isLoading } = useContext(PermissionsContext);
-  
+
   function can(action: string, scope?: string): boolean {
     // Check exact match
     if (permissions.includes(`${action}:${scope || '*'}`)) {
       return true;
     }
-    
+
     // Check wildcard
     const [resource, verb] = action.split(':');
     if (permissions.includes(`${resource}:${verb}:*`)) {
       return true;
     }
-    
+
     return false;
   }
-  
+
   return { can, isLoading };
 }
 ```
