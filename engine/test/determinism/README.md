@@ -12,7 +12,8 @@ Goals:
 Local run (recommended):
 
 - Start Temporal dev server (or use the included docker-compose if available)
-- Run tests with `npm test` or `pnpm test` in the project root
+- Run tests with `pnpm test` or `pnpm test:watch` in the project root
+- Run only determinism tests: `pnpm test:determinism`
 
 Files:
 
@@ -25,4 +26,6 @@ CI integration:
 
 Notes:
 
-- This README is a template. Implement concrete tests using the standard test runner (Vitest). If Jest is truly required, isolate it in a dedicated workspace to avoid tooling drift.
+- This README is a template. Implement concrete tests using Vitest and Temporal test harness.
+- Tests use Vitest with global APIs (`describe`, `it`, `expect`, `beforeEach`, etc.)
+- Configuration is in `vitest.config.ts` at project root

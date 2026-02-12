@@ -12,6 +12,7 @@
 The **Audit Viewer** is a critical security tool for investigating user actions, compliance reporting, and incident response.
 
 **Requirements**:
+
 - **Search & Filter**: By actor, action, resource, date range
 - **PII Redaction**: IP addresses, emails (unless user has `audit:view-pii` permission)
 - **Export**: CSV export for compliance (max 10,000 rows per export)
@@ -23,9 +24,11 @@ The **Audit Viewer** is a critical security tool for investigating user actions,
 ## 1. Page Layout
 
 ### 1.1 URL
+
 `/audit`
 
 **Route protection**:
+
 - Requires `audit:view:*` OR `audit:view:self` permission
 - Returns **403 Forbidden** page if user lacks permission
 - No direct link in nav menu if user lacks permission (see [RBAC_UI_RULES.v1.md](RBAC_UI_RULES.v1.md))
@@ -63,15 +66,18 @@ The **Audit Viewer** is a critical security tool for investigating user actions,
 **Type**: Text input with autocomplete
 
 **Behavior**:
+
 - User types email or user ID
 - Autocomplete suggests recently seen actors (client-side cache)
 - Backend query: `GET /v1/audit?actor=alice@example.com`
 
 **Permissions**:
+
 - If user has `audit:view:self`, default to own email (read-only)
 - If user has `audit:view:*`, allow searching any actor
 
 **Wireframe**:
+
 ```
 Actor: [alice@example.com               ] ▼
        ┌──────────────────────────────┐
@@ -88,6 +94,7 @@ Actor: [alice@example.com               ] ▼
 **Type**: Multi-select dropdown
 
 **Options**:
+
 - `RUN_START`
 - `RUN_CANCEL`
 - `RUN_SIGNAL` (pause, resume, retry)
@@ -100,6 +107,7 @@ Actor: [alice@example.com               ] ▼
 **Backend query**: `GET /v1/audit?action=RUN_CANCEL,PLAN_EDIT`
 
 **Wireframe**:
+
 ```
 Action: [Select actions...              ] ▼
         ┌──────────────────────────────┐
@@ -118,11 +126,13 @@ Action: [Select actions...              ] ▼
 **Type**: Text input
 
 **Behavior**:
+
 - User enters resource ID (e.g., `run-xyz`, `plan-abc`)
 - No autocomplete (resource space is too large)
 - Backend query: `GET /v1/audit?resource=run-xyz`
 
 **Wireframe**:
+
 ```
 Resource: [run-xyz                      ]
 ```
@@ -140,6 +150,7 @@ Resource: [run-xyz                      ]
 **Backend query**: `GET /v1/audit?startDate=2026-01-01&endDate=2026-01-31`
 
 **Wireframe**:
+
 ```
 Date Range: [2026-01-01] to [2026-01-31]
             ┌──────────────────────────────┐
@@ -157,11 +168,13 @@ Date Range: [2026-01-01] to [2026-01-31]
 ### 2.5 Search Button
 
 **Behavior**:
+
 - Triggers API call: `GET /v1/audit?actor=...&action=...&resource=...&startDate=...&endDate=...`
 - Shows loading spinner while fetching
 - Results appear in table below
 
 **Performance**:
+
 - Search MUST complete in <2 seconds
 - Backend uses indexed queries (actor, action, timestamp)
 - Pagination: 50 results per page
@@ -172,16 +185,17 @@ Date Range: [2026-01-01] to [2026-01-31]
 
 ### 3.1 Columns
 
-| Column | Description | Width |
-|--------|-------------|-------|
-| **Timestamp** | ISO8601 timestamp, formatted as "MMM DD, HH:mm" | 15% |
-| **Actor** | User email (redacted if no `view-pii` permission) | 25% |
-| **Action** | Action type (e.g., `RUN_CANCEL`) | 15% |
-| **Resource** | Resource ID (e.g., `run-xyz`) | 20% |
-| **Decision** | `GRANTED` or `DENIED` | 10% |
-| **Details** | Link to expand panel | 15% |
+| Column        | Description                                       | Width |
+| ------------- | ------------------------------------------------- | ----- |
+| **Timestamp** | ISO8601 timestamp, formatted as "MMM DD, HH:mm"   | 15%   |
+| **Actor**     | User email (redacted if no `view-pii` permission) | 25%   |
+| **Action**    | Action type (e.g., `RUN_CANCEL`)                  | 15%   |
+| **Resource**  | Resource ID (e.g., `run-xyz`)                     | 20%   |
+| **Decision**  | `GRANTED` or `DENIED`                             | 10%   |
+| **Details**   | Link to expand panel                              | 15%   |
 
 **Example row**:
+
 ```
 | 10:30 AM | alice@example.com | RUN_CANCEL | run-xyz | GRANTED | [View] |
 ```
@@ -192,16 +206,17 @@ Date Range: [2026-01-01] to [2026-01-31]
 
 If user lacks `audit:view-pii` permission:
 
-| Original | Redacted |
-|----------|----------|
+| Original            | Redacted            |
+| ------------------- | ------------------- |
 | `alice@example.com` | `a•••e@example.com` |
-| `1.2.3.4` | `•••.•••.•••.•••` |
+| `1.2.3.4`           | `•••.•••.•••.•••`   |
 
 **Implementation**:
+
 ```tsx
 function redactEmail(email: string, canViewPII: boolean): string {
   if (canViewPII) return email;
-  
+
   const [local, domain] = email.split('@');
   const redacted = `${local[0]}•••${local[local.length - 1]}`;
   return `${redacted}@${domain}`;
@@ -213,6 +228,7 @@ function redactEmail(email: string, canViewPII: boolean): string {
 ### 3.3 Row Click: Expand Details Panel
 
 **Behavior**:
+
 - Clicking a row expands a detail panel below it
 - Panel shows full Decision Record (see [AuditLog.v1.md](../../engine/contracts/security/AuditLog.v1.md))
 
@@ -241,21 +257,26 @@ function redactEmail(email: string, canViewPII: boolean): string {
 ### 3.4 Pagination
 
 **Behavior**:
+
 - 50 results per page
 - Page controls at bottom of table: `[< Prev] [1] [2] [3] [4] [5] [Next >]`
 - Cursor-based pagination (see [UI_API_CONTRACT.v1.md](../contracts/UI_API_CONTRACT.v1.md))
 
 **API calls**:
+
 ```http
 GET /v1/audit?cursor=abc123&limit=50
 ```
 
 **Response**:
+
 ```json
 {
-  "entries": [ /* 50 audit entries */ ],
+  "entries": [
+    /* 50 audit entries */
+  ],
   "cursor": {
-    "next": "def456", 
+    "next": "def456",
     "hasMore": true
   }
 }
@@ -270,6 +291,7 @@ GET /v1/audit?cursor=abc123&limit=50
 **Location**: Top-right corner of page
 
 **Behavior**:
+
 - Clicking "Export" opens modal
 - Modal shows:
   - "Export 250 results to CSV?"
@@ -277,6 +299,7 @@ GET /v1/audit?cursor=abc123&limit=50
   - Button: "Download CSV"
 
 **Permissions**:
+
 - Requires `audit:export:*` permission
 - Button hidden if user lacks permission
 
@@ -287,6 +310,7 @@ GET /v1/audit?cursor=abc123&limit=50
 **Filename**: `audit-log-2026-02-11.csv`
 
 **Columns**:
+
 ```csv
 audit_id,timestamp,actor,action,resource,decision,justification,ip_address
 audit-12345,2026-02-11T10:30:15Z,alice@example.com,RUN_CANCEL,run-xyz,GRANTED,"Deploy in progress",1.2.3.4
@@ -294,6 +318,7 @@ audit-12346,2026-02-11T10:25:00Z,bob@example.com,PLAN_EDIT,plan-abc,GRANTED,"Upd
 ```
 
 **PII handling**:
+
 - If user lacks `audit:view-pii`, redact email and IP in CSV
 - CSV includes redacted values (not original)
 
@@ -317,6 +342,7 @@ Content-Type: application/json
 ```
 
 **Response**:
+
 ```json
 {
   "downloadUrl": "https://s3.amazonaws.com/exports/audit-log-2026-02-11.csv?expires=...",
@@ -325,6 +351,7 @@ Content-Type: application/json
 ```
 
 **Frontend behavior**:
+
 - Show progress bar: "Generating export..."
 - Once `downloadUrl` received, automatically trigger browser download
 - Link expires in 1 hour (backend-enforced)
@@ -336,6 +363,7 @@ Content-Type: application/json
 ### 5.1 No Results
 
 **Display**:
+
 ```
 ┌───────────────────────────────────────────────────────┐
 │  No audit entries found for the selected filters.    │
@@ -348,6 +376,7 @@ Content-Type: application/json
 ### 5.2 Search Timeout
 
 If search takes >5 seconds, show:
+
 ```
 ┌───────────────────────────────────────────────────────┐
 │  ⚠ Search is taking longer than expected...           │
@@ -356,6 +385,7 @@ If search takes >5 seconds, show:
 ```
 
 If search times out (backend returns 504), show:
+
 ```
 ┌───────────────────────────────────────────────────────┐
 │  ❌ Search timed out. Try narrowing the date range.   │
@@ -367,6 +397,7 @@ If search times out (backend returns 504), show:
 ### 5.3 Export Limit Exceeded
 
 If user tries to export >10,000 rows:
+
 ```
 ┌───────────────────────────────────────────────────────┐
 │  ⚠ Export limit exceeded                              │
@@ -381,12 +412,12 @@ If user tries to export >10,000 rows:
 
 ## 6. Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
+| Shortcut       | Action             |
+| -------------- | ------------------ |
 | `Cmd/Ctrl + K` | Focus actor filter |
-| `Enter` | Trigger search |
-| `Cmd/Ctrl + E` | Open export modal |
-| `Esc` | Close detail panel |
+| `Enter`        | Trigger search     |
+| `Cmd/Ctrl + E` | Open export modal  |
+| `Esc`          | Close detail panel |
 
 ---
 
@@ -400,6 +431,7 @@ If user tries to export >10,000 rows:
 - Filters must have `aria-label` attributes
 
 **Example**:
+
 ```tsx
 <table role="table" aria-label="Audit log entries">
   <thead>
@@ -412,15 +444,13 @@ If user tries to export >10,000 rows:
     </tr>
   </thead>
   <tbody>
-    {entries.map(entry => (
+    {entries.map((entry) => (
       <tr key={entry.id} onClick={() => expand(entry)}>
         <td>{formatTimestamp(entry.timestamp)}</td>
         <td>{redactEmail(entry.actor)}</td>
         <td>{entry.action}</td>
         <td>{entry.resource}</td>
-        <td aria-label={entry.decision}>
-          {entry.decision === 'GRANTED' ? '✅' : '❌'}
-        </td>
+        <td aria-label={entry.decision}>{entry.decision === 'GRANTED' ? '✅' : '❌'}</td>
       </tr>
     ))}
   </tbody>
@@ -439,14 +469,15 @@ If user tries to export >10,000 rows:
 
 ## 8. Performance Requirements
 
-| Metric | Target |
-|--------|--------|
-| Search response time | <2 seconds (p95) |
-| Export generation (10k rows) | <10 seconds |
-| Page load time (audit viewer) | <1 second |
-| Detail panel expand | <100ms |
+| Metric                        | Target           |
+| ----------------------------- | ---------------- |
+| Search response time          | <2 seconds (p95) |
+| Export generation (10k rows)  | <10 seconds      |
+| Page load time (audit viewer) | <1 second        |
+| Detail panel expand           | <100ms           |
 
 **Optimizations**:
+
 - Backend uses indexed queries (actor, action, timestamp)
 - Pagination limits result size (50 per page)
 - No expensive JOINs in backend queries

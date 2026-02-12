@@ -1,31 +1,25 @@
-// Test setup file for Jest
-import '@testing-library/jest-dom';
+// Test setup file for Vitest
+import { vi, beforeEach } from 'vitest';
 
 // Global test utilities
 global.console = {
   ...console,
   // Suppress console.log in tests unless explicitly needed
-  log: jest.fn(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  log: vi.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 };
 
 // Mock Temporal SDK for determinism tests (when Temporal is added)
-jest.mock('@temporalio/workflow', () => ({
-  workflow: {
-    now: jest.fn(() => new Date('2026-02-11T10:00:00.000Z')),
-    sleep: jest.fn(),
-    getVersion: jest.fn(),
-  },
-}));
+// TODO: Add Temporal mocks when @temporalio/workflow is installed
 
 // Setup test environment
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });

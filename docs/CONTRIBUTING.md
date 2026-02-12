@@ -44,16 +44,16 @@ docs/
 
 Changes to different documentation areas require specific team approvals:
 
-| Path | Required Reviewers | Rationale |
-|------|-------------------|-----------|
-| `docs/architecture/engine/contracts/` | `@your-org/architecture-team` | Normative contracts |
-| `docs/VERSIONING.md` | `@your-org/architecture-team` | Contract evolution policy |
-| `docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md` | `@your-org/architecture-team`<br>`@your-org/engine-leads` | Core execution semantics |
-| `docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md` | `@your-org/architecture-team`<br>`@your-org/sdk-team` | SDK interface |
-| `docs/architecture/engine/contracts/adapters/` | `@your-org/architecture-team`<br>`@your-org/platform-integrations` | Multi-platform compatibility |
-| `docs/runbooks/` | `@your-org/sre-team`<br>`@your-org/architecture-team` | Operational procedures |
-| `docs/roadmap/` | `@your-org/product-leads`<br>`@your-org/engineering-leads` | Strategic planning |
-| `.github/workflows/` | `@your-org/devops-team` | CI/CD pipeline changes |
+| Path                                                                 | Required Reviewers                                                 | Rationale                    |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------- |
+| `docs/architecture/engine/contracts/`                                | `@your-org/architecture-team`                                      | Normative contracts          |
+| `docs/VERSIONING.md`                                                 | `@your-org/architecture-team`                                      | Contract evolution policy    |
+| `docs/architecture/engine/contracts/engine/ExecutionSemantics.v*.md` | `@your-org/architecture-team`<br>`@your-org/engine-leads`          | Core execution semantics     |
+| `docs/architecture/engine/contracts/engine/IWorkflowEngine.v*.md`    | `@your-org/architecture-team`<br>`@your-org/sdk-team`              | SDK interface                |
+| `docs/architecture/engine/contracts/adapters/`                       | `@your-org/architecture-team`<br>`@your-org/platform-integrations` | Multi-platform compatibility |
+| `docs/runbooks/`                                                     | `@your-org/sre-team`<br>`@your-org/architecture-team`              | Operational procedures       |
+| `docs/roadmap/`                                                      | `@your-org/product-leads`<br>`@your-org/engineering-leads`         | Strategic planning           |
+| `.github/workflows/`                                                 | `@your-org/devops-team`                                            | CI/CD pipeline changes       |
 
 ### Setting Up Code Owners
 
@@ -106,19 +106,19 @@ markdownlint-cli2 "docs/**/*.md"
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-typescript-blocks`)  
 **Checks**:
 
-- Extracts all `\`\`\`ts` and `\`\`\`typescript` blocks from Markdown
+- Extracts all `\`\`\`ts`and`\`\`\`typescript` blocks from Markdown
 - Compiles each with `tsc --noEmit --skipLibCheck`
 - Validates syntax (catches typos, missing brackets, etc.)
 
 **Fix failures**:
 
-```bash
+````bash
 # Extract TypeScript blocks manually
 sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md | sed '1d;$d' > /tmp/test.ts
 
 # Validate with tsc
 npx tsc --noEmit --skipLibCheck /tmp/test.ts
-```
+````
 
 ### 3️⃣ Internal Link Validation
 
@@ -191,7 +191,7 @@ When creating a new versioned contract (e.g., `MyContract.v1.md`):
 **Consumers**: [List who depends on this: Engine, SDK, Adapter, etc.]
 
 **References**:
- [Contract Versioning Policy](../../VERSIONING.md)  
+[Contract Versioning Policy](../../VERSIONING.md)  
  [Related Contract](./OtherContract.v1.md)
 
 ---
@@ -217,33 +217,36 @@ What problem does this contract solve?
 Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../../VERSIONING.md)):
 
 **MINOR Bump (v1.0 → v1.1)**: Backward-compatible additions
+
 - ...
 
 **MAJOR Bump (v1.0 → v2.0)**: Breaking changes
+
 - ...
 
 **Patch Update (v1.0.1, v1.0.2, etc.)**: Clarifications only
+
 - ...
 
 ---
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | YYYY-MM-DD | Initial normative contract |
+| Version | Date       | Change                     |
+| ------- | ---------- | -------------------------- |
+| 1.0     | YYYY-MM-DD | Initial normative contract |
 ```
 
 ### When to Create a New Version
 
 See **[VERSIONING.md](architecture/engine/VERSIONING.md)** for the complete policy. Quick reference:
 
-| Change Type | Version Bump | Example | File Action |
-|-------------|--------------|---------|-------------|
-| Add optional field/method | MINOR | v1.0 → v1.1 | Create `MyContract.v1.1.md` (keep v1.0) |
-| Clarify wording (no semantic change) | PATCH | v1.0 → v1.0.1 | Edit in place, update changelog, git tag |
-| Remove required field | MAJOR | v1.0 → v2.0 | Create `MyContract.v2.md`, deprecate v1.0 |
-| Rename method | MAJOR | v1.0 → v2.0 | Create `MyContract.v2.md`, deprecate v1.0 |
+| Change Type                          | Version Bump | Example       | File Action                               |
+| ------------------------------------ | ------------ | ------------- | ----------------------------------------- |
+| Add optional field/method            | MINOR        | v1.0 → v1.1   | Create `MyContract.v1.1.md` (keep v1.0)   |
+| Clarify wording (no semantic change) | PATCH        | v1.0 → v1.0.1 | Edit in place, update changelog, git tag  |
+| Remove required field                | MAJOR        | v1.0 → v2.0   | Create `MyContract.v2.md`, deprecate v1.0 |
+| Rename method                        | MAJOR        | v1.0 → v2.0   | Create `MyContract.v2.md`, deprecate v1.0 |
 
 **Deprecation policy**:
 
@@ -259,12 +262,12 @@ See **[VERSIONING.md](architecture/engine/VERSIONING.md)** for the complete poli
 
 ### File Naming Convention
 
-| Filename | Meaning |
-|----------|---------|
-| `IWorkflowEngine.v1.md` | MAJOR.MINOR series (v1 = v1.x) |
-| `IWorkflowEngine.v1.1.md` | MINOR bump (backward-compatible additions) |
-| `IWorkflowEngine.v2.md` | MAJOR bump (breaking changes) |
-| `IWorkflowEngine.v2.0-DRAFT.md` | Draft (targets v2.0 release) |
+| Filename                        | Meaning                                    |
+| ------------------------------- | ------------------------------------------ |
+| `IWorkflowEngine.v1.md`         | MAJOR.MINOR series (v1 = v1.x)             |
+| `IWorkflowEngine.v1.1.md`       | MINOR bump (backward-compatible additions) |
+| `IWorkflowEngine.v2.md`         | MAJOR bump (breaking changes)              |
+| `IWorkflowEngine.v2.0-DRAFT.md` | Draft (targets v2.0 release)               |
 
 ### Git Tagging for Patches
 
@@ -364,7 +367,7 @@ Install these for real-time validation:
 
 **A**: Use a different code block type:
 
-- ❌ `\`\`\`ts` or `\`\`\`typescript` — will be validated by tsc
+- ❌ `\`\`\`ts`or`\`\`\`typescript` — will be validated by tsc
 - ✅ `\`\`\`text` — skipped by validator
 - ✅ `\`\`\`pseudo` — skipped by validator
 - ✅ Add comment at top: `// @ts-nocheck pseudocode`

@@ -3,19 +3,18 @@
 **Status**: Normative (MUST / MUST NOT)  
 **Version**: 1.1  
 **Stability**: Core semantics — breaking changes require version bump  
-**Consumers**: Engine, StateStore, Projector  
+**Consumers**: Engine, StateStore, Projector
 
 **References**:
- [IWorkflowEngine Contract](./IWorkflowEngine.v1.md)  
+[IWorkflowEngine Contract](./IWorkflowEngine.v1.md)  
  [Contract Versioning Policy](../../VERSIONING.md) — how this contract evolves (minor/major bumps, deprecation)  
  [State Store Contract](../state-store/README.md) — storage-agnostic interface  
  [State Store Adapters](../../adapters/state-store/) — backend-specific implementations (Snowflake, Postgres, etc.)  
- [Temporal Engine Policies](../../adapters/temporal/EnginePolicies.md) — Temporal-specific policies (continue-as-new, limits)  
+ [Temporal Engine Policies](../../adapters/temporal/EnginePolicies.md) — Temporal-specific policies (continue-as-new, limits)
 
 **NOTE**: This document defines **core, storage/engine-agnostic semantics**. Physical schemas (DDLs), clustering strategies, and platform-specific policies (e.g., Temporal continue-as-new) are documented in adapter guides.
 
-**Diagram Note**: Mermaid diagrams are illustrative unless explicitly marked as NORMATIVE. In case of conflict, the normative text rules win
----
+## **Diagram Note**: Mermaid diagrams are illustrative unless explicitly marked as NORMATIVE. In case of conflict, the normative text rules win
 
 ## 1) Source of Truth: StateStore Model
 
@@ -65,9 +64,9 @@ Every event persisted to StateStore MUST include a **strictly increasing** `runS
 
 UI polls events ordered by `runSeq`. If a non-contiguous fetch is observed (e.g., last seen `runSeq=10`, next fetched `runSeq=12`), it MUST be treated as **eventual consistency** (not corruption):
 
-  1. Mark run as `STALE`.
-  2. Trigger resync (refetch snapshot and/or refetch events from `lastEventSeq` watermark).
-  3. Resume once resync completes successfully AND `lastEventSeq` watermark advances beyond the previously observed non-contiguous range.
+1. Mark run as `STALE`.
+2. Trigger resync (refetch snapshot and/or refetch events from `lastEventSeq` watermark).
+3. Resume once resync completes successfully AND `lastEventSeq` watermark advances beyond the previously observed non-contiguous range.
 
 ---
 
@@ -77,21 +76,21 @@ State is derived by reducing **append-only events** in order. No field is ever u
 
 **Canonical event types**:
 
-| Event | Emitted By | Effect |
-|-------|------------|--------|
-| `RunApproved` | Planner | `status := APPROVED` |
-| `RunStarted` | Engine | `status := RUNNING`, `engineRunRef` recorded |
-| `StepStarted` | Activity | Step `status := RUNNING` |
-| `StepCompleted` | Activity | Step `status := SUCCESS`, artifacts recorded |
-| `StepFailed` | Activity | Step `status := FAILED`, error recorded |
-| `StepSkipped` | Engine | Step `status := SKIPPED`, reason recorded |
-| `SignalAccepted` | IAuthorization | Decision recorded, does NOT change run status |
-| `SignalRejected` | IAuthorization | Signal denied |
-| `RunPaused` | Engine | `status := PAUSED` (see § 6 for Conductor limitations) |
-| `RunResumed` | Engine | `status := RUNNING` |
-| `RunCompleted` | Engine | `status := COMPLETED` |
-| `RunFailed` | Engine | `status := FAILED` |
-| `RunCancelled` | Engine | `status := CANCELLED` |
+| Event            | Emitted By     | Effect                                                 |
+| ---------------- | -------------- | ------------------------------------------------------ |
+| `RunApproved`    | Planner        | `status := APPROVED`                                   |
+| `RunStarted`     | Engine         | `status := RUNNING`, `engineRunRef` recorded           |
+| `StepStarted`    | Activity       | Step `status := RUNNING`                               |
+| `StepCompleted`  | Activity       | Step `status := SUCCESS`, artifacts recorded           |
+| `StepFailed`     | Activity       | Step `status := FAILED`, error recorded                |
+| `StepSkipped`    | Engine         | Step `status := SKIPPED`, reason recorded              |
+| `SignalAccepted` | IAuthorization | Decision recorded, does NOT change run status          |
+| `SignalRejected` | IAuthorization | Signal denied                                          |
+| `RunPaused`      | Engine         | `status := PAUSED` (see § 6 for Conductor limitations) |
+| `RunResumed`     | Engine         | `status := RUNNING`                                    |
+| `RunCompleted`   | Engine         | `status := COMPLETED`                                  |
+| `RunFailed`      | Engine         | `status := FAILED`                                     |
+| `RunCancelled`   | Engine         | `status := CANCELLED`                                  |
 
 #### State Transition Diagram
 
@@ -109,12 +108,12 @@ stateDiagram-v2
     COMPLETED --> [*]
     FAILED --> [*]
     CANCELLED --> [*]
-    
+
     note right of RUNNING
         Steps execute in parallel/sequence
         based on plan dependencies
     end note
-    
+
     note right of PAUSED
         Engine stops scheduling new tasks
         (see § 6 for Conductor draining behavior)
@@ -169,8 +168,8 @@ Two immutable views derived from append-only log:
 ```ts
 interface RunSnapshot {
   runId: string;
-  status: "PENDING" | "APPROVED" | "RUNNING" | "PAUSED" | "COMPLETED" | "FAILED" | "CANCELLED";
-  lastEventSeq: number;        // High-water mark for UI sync
+  status: 'PENDING' | 'APPROVED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  lastEventSeq: number; // High-water mark for UI sync
   steps: StepSnapshot[];
   artifacts: ArtifactRef[];
   startedAt?: string;
@@ -180,7 +179,7 @@ interface RunSnapshot {
 
 interface StepSnapshot {
   stepId: string;
-  status: "PENDING" | "RUNNING" | "SUCCESS" | "FAILED" | "SKIPPED";
+  status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'SKIPPED';
   logicalAttemptId: string;
   engineAttemptId?: string;
   startedAt?: string;
@@ -205,8 +204,14 @@ interface StepSnapshot {
 ```ts
 interface SnapshotProjector {
   projectRun(runId: string, events: CanonicalEngineEvent[]): Promise<RunSnapshot>;
-  incrementalProject(snapshot: RunSnapshot, newEvents: CanonicalEngineEvent[]): Promise<RunSnapshot>;
-  detectNonContiguous(lastSeq: number, nextSeq: number): Promise<{ observedNonContiguous: boolean }>;
+  incrementalProject(
+    snapshot: RunSnapshot,
+    newEvents: CanonicalEngineEvent[]
+  ): Promise<RunSnapshot>;
+  detectNonContiguous(
+    lastSeq: number,
+    nextSeq: number
+  ): Promise<{ observedNonContiguous: boolean }>;
 }
 ```
 
@@ -217,14 +222,14 @@ sequenceDiagram
     participant SS as StateStore
     participant P as Projector
     participant UI as UI/Consumer
-    
+
     Note over P: Incremental projection loop
-    
+
     P->>SS: Poll new events (from lastEventSeq watermark)
     SS-->>P: Return events [runSeq: 10, 11, 13]
-    
+
     P->>P: detectNonContiguous(11, 13)
-    
+
     alt Gap detected (non-contiguous)
         P->>P: Mark run as STALE
         P->>SS: Request full resync (snapshot + delta)
@@ -235,15 +240,15 @@ sequenceDiagram
         P->>P: Apply events to snapshot (immutable)
         P->>P: Update lastEventSeq = 13
     end
-    
+
     P->>UI: Publish updated snapshot
-    
+
     alt Projection fails
         P->>P: Log error
         P->>P: Retry from lastEventSeq watermark
         Note over P: Reprocessing is idempotent
     end
-    
+
     Note over P: Unknown events advance\nwatermark without state changes
 ```
 
@@ -280,7 +285,7 @@ sequenceDiagram
 
 5. **UI lag SLA**:
    - ≤1s: normal
-   - >5s: alert P2 `PROJECTOR_LAG_HIGH`
+   - > 5s: alert P2 `PROJECTOR_LAG_HIGH`
    - non-contiguous fetch observed: alert P2 `PROJECTOR_NON_CONTIGUOUS_FETCH_DETECTED` (investigate consistency; resync may be needed)
 
 6. **Unknown event types** (forward compatibility): Unknown `eventType` values MUST NOT fail projection. The projector MUST advance `lastEventSeq` for unknown events (to maintain watermark progress) but MUST NOT apply state transitions. Unknown events MAY be logged for audit purposes.
@@ -295,7 +300,10 @@ Plan MUST contain **only references** to secrets, never values.
 
 ```ts
 interface ISecretsProvider {
-  resolve(refs: SecretRef[], ctx: { tenantId: string; environmentId: string }): Promise<Record<string, string>>;
+  resolve(
+    refs: SecretRef[],
+    ctx: { tenantId: string; environmentId: string }
+  ): Promise<Record<string, string>>;
 }
 ```
 
@@ -303,15 +311,15 @@ interface ISecretsProvider {
 
 ```ts
 type ArtifactRef = {
-  uri: string;                 // s3://..., gs://..., azure://...
-  kind: string;                // "dbt-manifest", "dbt-run-results", "log-bundle", etc.
+  uri: string; // s3://..., gs://..., azure://...
+  kind: string; // "dbt-manifest", "dbt-run-results", "log-bundle", etc.
   sha256?: string;
   sizeBytes?: number;
-  expiresAt?: string;          // retention policy per kind
+  expiresAt?: string; // retention policy per kind
 };
 
 interface StepOutput {
-  status: "SUCCESS" | "FAILED" | "SKIPPED";
+  status: 'SUCCESS' | 'FAILED' | 'SKIPPED';
   artifactRefs: ArtifactRef[];
   error?: { category: string; code?: string; message: string; retryable?: boolean };
 }
@@ -333,7 +341,7 @@ Engine response to overload:
 
 ```ts
 interface IRunQueueReconciler {
-  dequeueAndStart(): Promise<{ runId: string; status: "STARTED" | "FAILED" | "SKIPPED" }[]>;
+  dequeueAndStart(): Promise<{ runId: string; status: 'STARTED' | 'FAILED' | 'SKIPPED' }[]>;
 }
 ```
 
@@ -370,14 +378,14 @@ sequenceDiagram
     participant O as Outbox Worker
     participant EB as EventBus
     participant DLQ as Dead Letter Queue
-    
+
     Note over E,SS: Primary write (synchronous)
     E->>SS: appendEvent(event) [transactional]
     SS-->>E: event persisted (source of truth)
-    
+
     Note over E,EB: Secondary publish (async)
     E->>EB: publish(event)
-    
+
     alt EventBus healthy
         EB-->>E: ACK
     else EventBus unavailable
@@ -385,14 +393,14 @@ sequenceDiagram
         E->>SS: enqueueToOutbox(event)
         SS-->>E: Queued for retry
     end
-    
+
     Note over O: Background retry worker
-    
+
     loop Retry with exponential backoff
         O->>SS: Poll outbox (pending events)
         SS-->>O: Return events to retry
         O->>EB: Republish(event)
-        
+
         alt Success
             EB-->>O: ACK
             O->>SS: Mark event as delivered
@@ -402,13 +410,13 @@ sequenceDiagram
             Note over O: Apply backoff + jitter
         end
     end
-    
+
     alt Max retries exceeded
         O->>DLQ: Move event to DLQ
         O->>O: Emit alert (P1)
         Note over DLQ: Manual intervention required
     end
-    
+
     Note over SS,EB: At-least-once delivery guaranteed\nvia transactional outbox
 ```
 
@@ -434,8 +442,8 @@ Activities emit events with bounded latency budget. If write budget exceeded:
 ```yaml
 stateStore:
   writeLatencyBudgetMs: 3000
-  failOpenForEventClass: ["StepStarted"]
-  neverFailOpen: ["StepCompleted", "StepFailed"]
+  failOpenForEventClass: ['StepStarted']
+  neverFailOpen: ['StepCompleted', 'StepFailed']
 ```
 
 ---
@@ -469,23 +477,23 @@ sequenceDiagram
     participant E as Engine (Conductor)
     participant SS as StateStore
     participant W as Workflow Tasks
-    
+
     Note over E,W: Initial state: RUNNING (tasks executing)
-    
+
     C->>E: Send PAUSE signal
-    
+
     E->>SS: appendEvent(RunPaused)
     SS-->>E: Status = PAUSED persisted
-    
+
     E->>E: Set internal state = DRAINING
     Note over E: Stop scheduling new tasks
-    
+
     Note over W: In-flight tasks continue\n(cannot be cancelled in Conductor)
-    
+
     W->>E: Task 1 completes
     W->>E: Task 2 completes
     W->>E: Task 3 completes
-    
+
     alt All tasks drained within timeout
         E->>E: Internal state = PAUSED (fully drained)
         E->>SS: Update substatus metadata
@@ -495,15 +503,15 @@ sequenceDiagram
         E->>E: Force transition to PAUSED
         Note over E: Orphaned tasks may complete\nasynchronously (not tracked)
     end
-    
+
     C->>E: Send RESUME signal
-    
+
     E->>SS: appendEvent(RunResumed)
     SS-->>E: Status = RUNNING
-    
+
     E->>E: Resume scheduling tasks
     Note over E: Previously completed tasks\nare NOT re-executed
-    
+
     E->>W: Schedule remaining tasks
 ```
 
@@ -584,11 +592,11 @@ Producers MUST emit events compatible with the contract version. Consumers MUST 
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.1 | 2026-02-11 | **Minor**: Extracted storage/engine-specific content to adapters (Snowflake DDL → StateStoreAdapter.md, continue-as-new → Temporal EnginePolicies.md). Core semantics now fully agnostic. |
-| 1.0.1 | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility) |
-| 1.0 | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection) |
+| Version | Date       | Change                                                                                                                                                                                         |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1     | 2026-02-11 | **Minor**: Extracted storage/engine-specific content to adapters (Snowflake DDL → StateStoreAdapter.md, continue-as-new → Temporal EnginePolicies.md). Core semantics now fully agnostic.      |
+| 1.0.1   | 2026-02-11 | **Patch**: Clarified non-contiguous semantics (resync exit condition uses watermark advancement, not gap closure); added normative rule for unknown eventType handling (forward compatibility) |
+| 1.0     | 2026-02-11 | Initial normative contract (StateStore, events, dual attempts, projection)                                                                                                                     |
 
 ---
 
@@ -611,22 +619,22 @@ Emitted by the Engine when a workflow execution begins in the target orchestrato
 ```ts
 interface RunStartedEvent {
   // Event envelope (common to all events)
-  eventType: "RunStarted";
-  eventId: string;                   // UUID v4
-  runId: string;                     // Workflow run identifier
-  runSeq: number;                    // Monotonic sequence (per runId)
-  idempotencyKey: string;            // SHA256(runId | eventType | planVersion)
-  emittedAt: string;                 // ISO 8601 timestamp (UTC)
-  emittedBy: string;                 // e.g., "engine", "planner", "activity-worker"
-  
+  eventType: 'RunStarted';
+  eventId: string; // UUID v4
+  runId: string; // Workflow run identifier
+  runSeq: number; // Monotonic sequence (per runId)
+  idempotencyKey: string; // SHA256(runId | eventType | planVersion)
+  emittedAt: string; // ISO 8601 timestamp (UTC)
+  emittedBy: string; // e.g., "engine", "planner", "activity-worker"
+
   // Event payload (specific to RunStarted)
-  status: "RUNNING";                 // Run status transition
-  engineRunRef: string;              // Engine-specific identifier (e.g., Temporal workflowId/runId, Conductor executionId)
-  engineType: "temporal" | "conductor" | "mock";
+  status: 'RUNNING'; // Run status transition
+  engineRunRef: string; // Engine-specific identifier (e.g., Temporal workflowId/runId, Conductor executionId)
+  engineType: 'temporal' | 'conductor' | 'mock';
   planRef: {
-    uri: string;                     // e.g., s3://bucket/plans/{planId}.json
-    sha256: string;                  // Integrity hash
-    schemaVersion: string;           // e.g., "v1.2"
+    uri: string; // e.g., s3://bucket/plans/{planId}.json
+    sha256: string; // Integrity hash
+    schemaVersion: string; // e.g., "v1.2"
     planId: string;
     planVersion: string;
   };
@@ -634,10 +642,10 @@ interface RunStartedEvent {
     tenantId: string;
     projectId: string;
     environmentId: string;
-    triggeredBy?: string;            // User ID or "system"
-    triggerSource?: "manual" | "schedule" | "webhook" | "api";
+    triggeredBy?: string; // User ID or "system"
+    triggerSource?: 'manual' | 'schedule' | 'webhook' | 'api';
   };
-  startedAt: string;                 // ISO 8601 timestamp (when engine execution began)
+  startedAt: string; // ISO 8601 timestamp (when engine execution began)
 }
 ```
 

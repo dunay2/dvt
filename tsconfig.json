@@ -27,21 +27,14 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./engine",
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "@dvt/engine/*": ["engine/src/*"],
-      "@dvt/contracts/*": ["engine/contracts/*"],
-      "@dvt/adapters/*": ["engine/adapters/*"]
+      "@dvt/contracts/*": ["src/contracts/*"],
+      "@dvt/adapters/*": ["src/adapters/*"]
     }
   },
-  "include": [
-    "engine/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "**/*.test.ts"
-  ]
+  "include": ["src/**/*.ts", "engine/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }

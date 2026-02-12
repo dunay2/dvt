@@ -42,20 +42,20 @@ gantt
 
 **Critical Path - Phase 1: MVP** (in order):
 
-| # | Title | Priority | Status | Blocked By | Critical Path |
-|---|-------|----------|--------|------------|---------------|
-| [#8](https://github.com/dunay2/dvt/issues/8) | GLOSSARY.v1.md normative contract | 🔴 High | Open | - | ⚠️ **START HERE** |
-| [#9](https://github.com/dunay2/dvt/issues/9) | RunEventCatalog.v1.md event taxonomy | 🔴 High | Open | #8 | ⚠️ **CRITICAL** |
-| [#2](https://github.com/dunay2/dvt/issues/2) | Implement TypeScript types | 🔴 High | Open | #9 | ⚠️ **CRITICAL** |
-| [#14](https://github.com/dunay2/dvt/issues/14) | IWorkflowEngine + SnapshotProjector | 🔴 High | Open | #2, #9 | ⚠️ **CRITICAL** |
-| [#15](https://github.com/dunay2/dvt/issues/15) | Temporal Interpreter Workflow | 🔴 High | Open | #14 | ⚠️ **CRITICAL** |
-| [#5](https://github.com/dunay2/dvt/issues/5) | TemporalAdapter MVP | 🔴 High | Open | #2, #15 | ⚠️ **CRITICAL** |
-| [#6](https://github.com/dunay2/dvt/issues/6) | PostgresStateStoreAdapter MVP | 🔴 High | Open | #2 | ⚠️ **CRITICAL** |
-| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker | 🔴 High | Open | #6 | ⚠️ **CRITICAL** |
-| [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples | 🔴 High | Open | #5, #6 | ⚠️ **CRITICAL** |
-| [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline | 🔴 High | Open | #10 | ⚠️ **CRITICAL** |
-| [#3](https://github.com/dunay2/dvt/issues/3) | Mermaid diagrams ExecutionSemantics | 🟡 Medium | Open | - | Parallel |
-| [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High | Open | - | Parallel |
+| #                                              | Title                                                          | Priority  | Status | Blocked By | Critical Path     |
+| ---------------------------------------------- | -------------------------------------------------------------- | --------- | ------ | ---------- | ----------------- |
+| [#8](https://github.com/dunay2/dvt/issues/8)   | GLOSSARY.v1.md normative contract                              | 🔴 High   | Open   | -          | ⚠️ **START HERE** |
+| [#9](https://github.com/dunay2/dvt/issues/9)   | RunEventCatalog.v1.md event taxonomy                           | 🔴 High   | Open   | #8         | ⚠️ **CRITICAL**   |
+| [#2](https://github.com/dunay2/dvt/issues/2)   | Implement TypeScript types                                     | 🔴 High   | Open   | #9         | ⚠️ **CRITICAL**   |
+| [#14](https://github.com/dunay2/dvt/issues/14) | IWorkflowEngine + SnapshotProjector                            | 🔴 High   | Open   | #2, #9     | ⚠️ **CRITICAL**   |
+| [#15](https://github.com/dunay2/dvt/issues/15) | Temporal Interpreter Workflow                                  | 🔴 High   | Open   | #14        | ⚠️ **CRITICAL**   |
+| [#5](https://github.com/dunay2/dvt/issues/5)   | TemporalAdapter MVP                                            | 🔴 High   | Open   | #2, #15    | ⚠️ **CRITICAL**   |
+| [#6](https://github.com/dunay2/dvt/issues/6)   | PostgresStateStoreAdapter MVP                                  | 🔴 High   | Open   | #2         | ⚠️ **CRITICAL**   |
+| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker                                         | 🔴 High   | Open   | #6         | ⚠️ **CRITICAL**   |
+| [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples                                          | 🔴 High   | Open   | #5, #6     | ⚠️ **CRITICAL**   |
+| [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline                                   | 🔴 High   | Open   | #10        | ⚠️ **CRITICAL**   |
+| [#3](https://github.com/dunay2/dvt/issues/3)   | Mermaid diagrams ExecutionSemantics                            | 🟡 Medium | Open   | -          | Parallel          |
+| [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High   | Open   | -          | Parallel          |
 
 **Why this order?** IDs + naming policies (Glossary) → event envelope fields (RunEventCatalog) → type definitions → engine core (IWorkflowEngine + Temporal Interpreter) → adapter implementations + outbox → contract test fixtures (Golden Paths) → CI validation. Security docs are parallel (design, not blocking implementation).
 
@@ -74,41 +74,45 @@ gantt
 - ⏳ **Visual Documentation**: Sequence and state diagrams for critical flows (issue #3)
 - ⏳ **Security Design**: Threat model, authorization contract, audit log schema for compliance (issue #19, design only)
 
-### Success Criteria
+### Success Criteria - Phase 1 MVP
 
 **Compile & Type Safety**
+
 - [ ] All types compile without errors (`tsc --noEmit`)
 - [ ] Contract compile gate: `pnpm test:contracts` validates golden JSON fixtures against Zod/JSONSchema + versioned envelopes
 - [ ] Zero TypeScript `any` types in contracts (strict mode)
 
 **Golden Path Execution** (3 required plans)
+
 - [ ] **Hello-world plan**: 3 steps linear → completes in < 30s
 - [ ] **Pause/resume plan**: pause after step 1 → resume → completes → same final snapshot hash
 - [ ] **Retry plan**: fail step 2 once → retry → completes → same snapshot hash as if step 2 succeeded first time
 
 **StateStore Correctness**
+
 - [ ] Projector rebuild: replay events from scratch → derived state hash matches live projection (idempotency proof)
 - [ ] Outbox delivery: all events delivered at-least-once to EventBus (no lost events)
 - [ ] Write latency p99 < 10ms (single-region, SSD, connection pool ≤50)
 
 **CI & Documentation**
+
 - [ ] CI passes (lint + type-check + unit tests + contract tests)
 - [ ] Diagrams render correctly on GitHub
 - [ ] Event catalog state machine validated against ExecutionSemantics (no illegal transitions)
 
 ### Risks
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Ambiguous terminology | Crit | **START HERE**: Complete GLOSSARY (#8) before types (#2) |
-| Type design errors | Crit | Review against normative contracts + RunEventCatalog before implementing adapters |
-| Engine core complexity | High | #14 blocks #15 (Temporal) and adapters - front-load design review |
-| Temporal.io learning curve | High | #15 isolated epic - start with simple DAG walker, add features incrementally |
-| Integration testing crunch | High | **Only 2 weeks for integration** (Mar 17-31): front-load Golden Paths (#10), run weekly smoke tests |
-| Database schema incompleteness | Medium | #6 StateStore must be complete before outbox worker (#16) |
-| Outbox delivery reliability | Medium | #16 must guarantee at-least-once delivery - load test with chaos (Phase 1.5) |
-| CI pipeline brittleness | Medium | #17 contract tests must be deterministic - validate against golden hashes |
-| Dependency chain breakage | Medium | Enforce critical path: #8 → #9 → #2 → #14 → #15 → #5,#6 → #16 → #10 → #17 (block PRs out of order) |
+| Risk                           | Impact | Mitigation                                                                                          |
+| ------------------------------ | ------ | --------------------------------------------------------------------------------------------------- |
+| Ambiguous terminology          | Crit   | **START HERE**: Complete GLOSSARY (#8) before types (#2)                                            |
+| Type design errors             | Crit   | Review against normative contracts + RunEventCatalog before implementing adapters                   |
+| Engine core complexity         | High   | #14 blocks #15 (Temporal) and adapters - front-load design review                                   |
+| Temporal.io learning curve     | High   | #15 isolated epic - start with simple DAG walker, add features incrementally                        |
+| Integration testing crunch     | High   | **Only 2 weeks for integration** (Mar 17-31): front-load Golden Paths (#10), run weekly smoke tests |
+| Database schema incompleteness | Medium | #6 StateStore must be complete before outbox worker (#16)                                           |
+| Outbox delivery reliability    | Medium | #16 must guarantee at-least-once delivery - load test with chaos (Phase 1.5)                        |
+| CI pipeline brittleness        | Medium | #17 contract tests must be deterministic - validate against golden hashes                           |
+| Dependency chain breakage      | Medium | Enforce critical path: #8 → #9 → #2 → #14 → #15 → #5,#6 → #16 → #10 → #17 (block PRs out of order)  |
 
 ---
 
@@ -119,6 +123,7 @@ gantt
 ### Focus Areas
 
 **Load Testing** (tooling: [k6](https://k6.io/docs/))
+
 - **Target**: 500 events/sec sustained (4K runs/hour @ 8 steps/run, 2 events/step average)
 - **Metrics**: State write latency p99 < 10ms, projection delay p99 < 1s, zero dropped events
 - **Chaos**: StateStore failover, network partition, worker crash (recovery < 30s)
@@ -126,11 +131,13 @@ gantt
 - **Adapter-specific details**: See individual adapter documentation (adapters/postgres/load-testing.md, etc.)
 
 **Operational Correctness**
+
 - **Idempotency torture**: 1M duplicate events (out-of-order, retries) → zero state corruption
 - **Projector rebuild**: State projector replays 100K events → consistent snapshot (timing per adapter: see adapters/postgres/projector-rebuild.md)
 - **Backpressure**: projection delay > 5s → trigger BACKPRESSURE_ON signal (no circuit breaker, consumer-driven)
 
 **Security Baseline**
+
 - **Authn/z**: API boundary enforcement (even if RBAC stubbed)
 - **Audit trail**: 90-day hot, 7-year cold (automated archival policy + verification)
 - **PII scrubbing**: regex scan → zero credentials in logs (automated gate in CI)
@@ -144,7 +151,7 @@ gantt
 - [ ] Backpressure: projection delay > 5s → BACKPRESSURE_ON signal emitted (consumable by external systems)
 - [ ] Security: penetration test passed, PII scan clean (zero credentials in logs)
 - [ ] Operational readiness: 3 game-days completed → MTTR p50 < 5 min
-- [ ] Adapter performance: Meet timing targets for chosen adapter (see adapters/*/load-testing.md)
+- [ ] Adapter performance: Meet timing targets for chosen adapter (see adapters/\*/load-testing.md)
 
 ---
 
@@ -152,16 +159,16 @@ gantt
 
 **Objective**: Add development tools to ensure determinism and code quality. Start Conductor adapter development.
 
-### Issues
+### Issues - Phase 2
 
-| # | Title | Priority | Status | Blocked By |
-|---|-------|----------|--------|-----------|
-| [#4](https://github.com/dunay2/dvt/issues/4) | Determinism linting rules | 🔴 High | Open | - |
-| [#7](https://github.com/dunay2/dvt/issues/7) | ESLint + Husky Phase 2 | 🟡 Medium | Open | #4 |
-| [#11](https://github.com/dunay2/dvt/issues/11) | Capability versioning policy | 🟡 Medium | Open | - |
-| [#12](https://github.com/dunay2/dvt/issues/12) | SLOs and severity matrix | 🟡 Medium | Open | Phase 1.5 |
+| #                                              | Title                        | Priority  | Status | Blocked By |
+| ---------------------------------------------- | ---------------------------- | --------- | ------ | ---------- |
+| [#4](https://github.com/dunay2/dvt/issues/4)   | Determinism linting rules    | 🔴 High   | Open   | -          |
+| [#7](https://github.com/dunay2/dvt/issues/7)   | ESLint + Husky Phase 2       | 🟡 Medium | Open   | #4         |
+| [#11](https://github.com/dunay2/dvt/issues/11) | Capability versioning policy | 🟡 Medium | Open   | -          |
+| [#12](https://github.com/dunay2/dvt/issues/12) | SLOs and severity matrix     | 🟡 Medium | Open   | Phase 1.5  |
 
-### Deliverables
+### Deliverables - Phase 2
 
 - ⏳ **Linting Rules**: Custom ESLint rules to detect non-deterministic code (issue #4)
 - ⏳ **Pre-commit Hooks**: Husky hooks to run lint + tests before commit (issue #7)
@@ -170,7 +177,7 @@ gantt
 - ⏳ **SLOs**: Per-subsystem SLOs and error budget policy (issue #12)
 - ⏳ **Conductor Adapter POC**: Cross-adapter determinism parity validation (Phase 2)
 
-### Success Criteria
+### Success Criteria - Phase 2
 
 - [ ] Linting rules detect non-deterministic patterns
 - [ ] Husky blocks commits that fail linting
@@ -188,6 +195,7 @@ gantt
 ## 📊 Progress Metrics
 
 ### Phase 1: MVP
+
 - **Progress**: 0/13 issues completed (0%)
 - **Deadline**: 2026-03-31
 - **Status**: 🟡 On track (7 weeks remaining)
@@ -196,16 +204,14 @@ gantt
 - **New issues**: #14-#17 implementation epics + #19 security docs (documentación y architecture-critical)
 
 ### Phase 1.5: Hardening
+
 - **Progress**: 0/3 focus areas completed (0%)
-- **Deadline**: 2026-05-31
-- **Status**: 🟢 Scheduled after Phase 1
-### Phase 1.5: Hardening
-- **Progress**: 0/1 epic completed (0%)
 - **Deadline**: 2026-05-31
 - **Status**: 🟢 Scheduled after Phase 1
 - **Epic**: Issue #18 (Load Testing + Chaos Suite) validates performance targets
 
 ### Phase 2: Advanced Tooling
+
 - **Progress**: 0/4 issues completed (0%)
 - **Deadline**: 2026-09-30
 - **Status**: 🟢 Awaiting Phase 1.5
@@ -215,6 +221,7 @@ gantt
 ## 🔗 References
 
 ### Core Documentation
+
 - [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) - Execution semantics
 - [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) - Engine interface
 - [State Store Contract](docs/architecture/engine/contracts/state-store/README.md) - StateStore contract
@@ -222,12 +229,14 @@ gantt
 - [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md) - Detailed phase breakdown with anchor decisions
 
 ### GitHub Project Management
+
 - [📋 All Issues](https://github.com/dunay2/dvt/issues)
 - [🎯 Phase 1 Milestone](https://github.com/dunay2/dvt/milestone/1)
 - [🚀 Phase 2 Milestone](https://github.com/dunay2/dvt/milestone/2)
 - [🏷️ Labels](https://github.com/dunay2/dvt/labels)
 
 ### External References
+
 - [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
 - [Conductor (Netflix/Orkes)](https://conductor.netflix.com/)
 - [OpenTelemetry](https://opentelemetry.io/)
@@ -247,26 +256,31 @@ gantt
 
 **Delivery Model**: At-least-once (consumers must handle duplicates).
 
-**Idempotency Key (Agnóstic)**: 
+**Idempotency Key (Agnóstic)**:
+
 ```
 idempotencyKey = tenantId + contractVersion + eventType + runId + stepId + attemptId
 ```
+
 - **Consumer responsibility**: Deduplicate using idempotency key (e.g., upsert by key in consumer DB)
 - **Replay safety**: Replaying events from outbox produces identical consumer state
 
 **Backpressure Signal (Agnóstic)**:
+
 - **Trigger condition**: Projection delay p99 > 5 seconds (or adapter-defined threshold)
 - **Signal**: Engine emits `BACKPRESSURE_ON` (auditable, not circuit breaker)
 - **Recovery**: When delay < 2 seconds, emit `BACKPRESSURE_OFF`
 - **Consumer action**: Pause consuming OR reduce request rate (adapter-specific implementation)
 
 **Consumer Contract**:
+
 - Consumers receive events via EventBus (Kafka/RabbitMQ/etc. - adapter choice)
 - **MUST** implement idempotent handling (upsert by idempotency_key)
 - **MUST** tolerate duplicates, out-of-order delivery, and retries
 - UI polling pattern: query StateStore latest-status index (not outbox directly)
 
 **Outbox Storage Interface** (Abstract - Implemented by Adapter):
+
 ```typescript
 // All outbox implementations must support:
 interface IOutboxStorage {
@@ -276,18 +290,20 @@ interface IOutboxStorage {
 }
 ```
 
-| Operation | Guarantee |
-|-----------|-----------|
-| `appendOutbox(event)` | Transactional with state change (consistency) |
-| `markDelivered(eventId)` | Idempotent (can safely retry) |
-| `pullUndelivered(limit)` | Consistent read (no duplicates within batch) |
+| Operation                | Guarantee                                     |
+| ------------------------ | --------------------------------------------- |
+| `appendOutbox(event)`    | Transactional with state change (consistency) |
+| `markDelivered(eventId)` | Idempotent (can safely retry)                 |
+| `pullUndelivered(limit)` | Consistent read (no duplicates within batch)  |
 
 **Adapter Responsibility**:
+
 - **PostgreSQL adapter**: DDL, indices, polling frequency (100ms), batch size (100 events), locks, etc.
   - See: [adapters/postgres/outbox-semantics.md](adapters/postgres/outbox-semantics.md)
 - **Other adapters** (future): Each defines storage, polling, delivery semantics **within the above constraints**
 
 **References**:
+
 - [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html)
 - [engine-phases.md Anchor Decision B](docs/architecture/engine/roadmap/engine-phases.md) - StateStore retention
 - Product Definition: "StateStore is primary truth, engine executes via outbox"
@@ -297,6 +313,7 @@ interface IOutboxStorage {
 ## ✅ Completed Milestones
 
 ### 2026-02-11: Initial Planning Phase 1
+
 - ✅ PR #1 merged: Document partition (9 files, split WORKFLOW_ENGINE.md)
 - ✅ 13 issues created (#2-#13) with detailed specifications
 - ✅ 11 labels created for organization
@@ -305,6 +322,7 @@ interface IOutboxStorage {
 - ✅ engine-phases.md updated with Phase 1.5 and anchor decisions
 
 ### 2026-02-11: Implementation Issues & GitHub Setup
+
 - ✅ 5 implementation issues created (#14-#18):
   - #14: IWorkflowEngine + SnapshotProjector
   - #15: Temporal Interpreter Workflow
@@ -317,6 +335,7 @@ interface IOutboxStorage {
 - ✅ ROADMAP.md updated with all 18+ issues and progress metrics
 
 ### 2026-02-11: Security Architecture Documentation
+
 - ✅ THREAT_MODEL.md created: 5 threat actors, 8 threat scenarios, 4 security boundaries, compliance requirements
 - ✅ IAuthorization.v1.md created: normative contract for API boundary authorization (5 RBAC roles, 5 invariants)
 - ✅ AuditLog.v1.md created: normative audit log schema (append-only, tamper-proof HMAC, 3-tier retention for SOC2/HIPAA/GDPR)
@@ -328,8 +347,8 @@ interface IOutboxStorage {
 
 To contribute to the project, check issues organized by milestone:
 
-1. **CRITICAL PATH**: Work issues in **strict order**: 
-   - #8 (Glossary) → #9 (RunEventCatalog) → #2 (Types) 
+1. **CRITICAL PATH**: Work issues in **strict order**:
+   - #8 (Glossary) → #9 (RunEventCatalog) → #2 (Types)
    - → #14 (IWorkflowEngine) → #15 (Temporal Interpreter)
    - → #5 (TemporalAdapter), #6 (StateStoreAdapter)
    - → #16 (Outbox worker) → #10 (Golden Paths) → #17 (CI pipeline)
@@ -355,7 +374,7 @@ To contribute to the project, check issues organized by milestone:
    - All tests pass (unit, integration, contract, determinism)
    - Golden path hash validation passes
    - CODEOWNERS auto-assign reviewers
-6. **Contract tests**: All PRs must include golden JSON fixtures validated in CI
+8. **Contract tests**: All PRs must include golden JSON fixtures validated in CI
 
 ---
 

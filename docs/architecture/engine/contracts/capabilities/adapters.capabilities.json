@@ -63,7 +63,10 @@
           "properties": {
             "maxTaskInputBytes": { "type": "integer", "default": 32000 },
             "maxTaskOutputBytes": { "type": "integer", "default": 32000 },
-            "maxWorkflowDefinitionBytes": { "type": "integer", "default": 1000000 }
+            "maxWorkflowDefinitionBytes": {
+              "type": "integer",
+              "default": 1000000
+            }
           }
         }
       },

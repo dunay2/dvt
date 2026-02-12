@@ -2,7 +2,7 @@
 
 **Version**: 1.0  
 **Status**: NORMATIVE (Required Contract)  
-**Phase**: Phase 1 (documentation), Phase 4 (implementation)  
+**Phase**: Phase 1 (documentation), Phase 4 (implementation)
 
 ---
 
@@ -20,13 +20,13 @@ Define the authorization interface that the **API boundary** must implement to p
 interface IAuthorization {
   /**
    * Check if actor can perform action on resource.
-   * 
+   *
    * @throws UnauthorizedError if authorization check fails
    * @param actor - User or service account performing the action
    * @param action - What they're trying to do (PLAN_READ, RUN_START, etc.)
    * @param resource - What they're trying to access (plan-123, run-456, etc.)
    * @param context - Request context (IP, user agent, request ID for audit)
-   * 
+   *
    * @example
    * await auth.authorize(
    *   'user-123',
@@ -44,16 +44,13 @@ interface IAuthorization {
 
   /**
    * Emit audit event for authorization decision.
-   * 
+   *
    * Called **both on success and failure** to create complete audit trail.
-   * 
+   *
    * @param decision - 'GRANTED' | 'DENIED'
    * @param context - Full context including why decision was made
    */
-  auditAuthDecision(
-    decision: AuthDecision,
-    context: AuthContext
-  ): Promise<void>;
+  auditAuthDecision(decision: AuthDecision, context: AuthContext): Promise<void>;
 }
 ```
 
@@ -76,23 +73,23 @@ enum Action {
   PLAN_READ = 'PLAN_READ',
   PLAN_UPDATE = 'PLAN_UPDATE',
   PLAN_DELETE = 'PLAN_DELETE',
-  
+
   // Run operations
   RUN_START = 'RUN_START',
   RUN_CANCEL = 'RUN_CANCEL',
   RUN_READ_STATUS = 'RUN_READ_STATUS',
-  
+
   // Signal operations
   SIGNAL_SEND = 'SIGNAL_SEND',
-  
+
   // Artifact operations
   ARTIFACT_READ = 'ARTIFACT_READ',
   ARTIFACT_DELETE = 'ARTIFACT_DELETE',
-  
+
   // Plugin operations
   PLUGIN_INSTALL = 'PLUGIN_INSTALL',
   PLUGIN_UNINSTALL = 'PLUGIN_UNINSTALL',
-  
+
   // Admin operations
   TENANT_READ = 'TENANT_READ',
   RBAC_ROLE_ASSIGN = 'RBAC_ROLE_ASSIGN',
@@ -115,8 +112,8 @@ interface AuthDecision {
   action: Action;
   resource: Resource;
   decision: 'GRANTED' | 'DENIED';
-  reason?: string;  // Why was it denied? 'RBAC_POLICY_X', 'TENANT_ISOLATION', etc.
-  decisionPolicy?: string;  // Which policy enforced this? (for audit)
+  reason?: string; // Why was it denied? 'RBAC_POLICY_X', 'TENANT_ISOLATION', etc.
+  decisionPolicy?: string; // Which policy enforced this? (for audit)
 }
 
 /**
@@ -141,11 +138,11 @@ At implementation time (Phase 4), define roles with specific permissions:
 
 ```typescript
 enum Role {
-  TENANT_ADMIN = 'tenant-admin',      // All permissions within tenant
-  PLAN_AUTHOR = 'plan-author',        // Create, update plans
-  OPERATOR = 'operator',               // Start, cancel, signal runs
-  AUDITOR = 'auditor',                 // Read-only logs
-  VIEWER = 'viewer',                   // Read plans and run status
+  TENANT_ADMIN = 'tenant-admin', // All permissions within tenant
+  PLAN_AUTHOR = 'plan-author', // Create, update plans
+  OPERATOR = 'operator', // Start, cancel, signal runs
+  AUDITOR = 'auditor', // Read-only logs
+  VIEWER = 'viewer', // Read plans and run status
 }
 
 interface RolePermissions {
@@ -158,7 +155,7 @@ const ROLE_PERMISSIONS: Record<Role, RolePermissions> = {
     role: Role.TENANT_ADMIN,
     permissions: new Set([
       // All actions
-      ...Object.values(Action)
+      ...Object.values(Action),
     ]),
   },
   [Role.PLAN_AUTHOR]: {
@@ -190,10 +187,7 @@ const ROLE_PERMISSIONS: Record<Role, RolePermissions> = {
   },
   [Role.VIEWER]: {
     role: Role.VIEWER,
-    permissions: new Set([
-      Action.PLAN_READ,
-      Action.RUN_READ_STATUS,
-    ]),
+    permissions: new Set([Action.PLAN_READ, Action.RUN_READ_STATUS]),
   },
 };
 ```
@@ -203,6 +197,7 @@ const ROLE_PERMISSIONS: Record<Role, RolePermissions> = {
 ## Authorization Invariants
 
 **I1: Authorization Enforced at API Boundary**
+
 ```
 ┌─────────────────────┐
 │     EXTERNAL API    │
@@ -216,12 +211,14 @@ const ROLE_PERMISSIONS: Record<Role, RolePermissions> = {
 ```
 
 **I2: Engine Never Performs Authorization**
+
 - Engine is a pure state machine
 - Assumes input is pre-authorized
 - Does not know about RBAC, tenants, or permissions
 - If authorization check is needed at runtime, it's a bug in API boundary design
 
 **I3: Every Authorization Decision is Audited**
+
 ```typescript
 try {
   await auth.authorize(actor, action, resource, context);
@@ -235,23 +232,25 @@ try {
 ```
 
 **I4: tenantId in Every Resource**
+
 ```typescript
 // ✅ GOOD - tenantId included
 const resource = {
   type: 'plan',
   id: 'plan-abc',
-  tenantId: 'tenant-1'  // Always present
+  tenantId: 'tenant-1', // Always present
 };
 
 // ❌ BAD - no tenantId
 const badResource = {
   type: 'plan',
-  id: 'plan-abc'
+  id: 'plan-abc',
   // Missing tenantId - breaks isolation
 };
 ```
 
 **I5: Tenant Isolation Checks at Query Time**
+
 ```typescript
 // ❌ WRONG - check tenantId in application code
 const plan = await db.query('SELECT * FROM plans WHERE id = $1', [planId]);
@@ -261,10 +260,10 @@ if (plan.tenantId !== actor.tenantId) {
 
 // ✅ RIGHT - check tenantId at database level (RLS)
 // Database enforces: WHERE tenantId = current_user_tenant_id
-const plan = await db.query(
-  'SELECT * FROM plans WHERE id = $1 AND tenantId = $2',
-  [planId, actor.tenantId]
-);
+const plan = await db.query('SELECT * FROM plans WHERE id = $1 AND tenantId = $2', [
+  planId,
+  actor.tenantId,
+]);
 // DB returns NULL if tenant mismatch, application never sees it
 ```
 
@@ -297,7 +296,7 @@ const plan = await db.query(
 async function startRun(req: Request) {
   const { planId } = req.params;
   const { actor, tenantId } = req.auth;
-  
+
   // STEP 1: Authorize at API boundary
   await auth.authorize(
     actor,
@@ -311,13 +310,13 @@ async function startRun(req: Request) {
       userAgent: req.headers['user-agent'],
     }
   );
-  
+
   // STEP 2: Retrieve plan (database enforces tenantId)
   const plan = await stateStore.getPlan(planId, tenantId);
-  
+
   // STEP 3: Delegate to engine (it's pre-authorized)
   const runRef = await engine.submit(plan);
-  
+
   // STEP 4: Return (no authorization needed for response)
   return { runId: runRef };
 }
@@ -337,7 +336,7 @@ async function startRunWithErrorHandling(req: Request) {
         decisionPolicy: e.policy,
         ...req.context,
       });
-      
+
       // Return generic error (don't leak policy info to client)
       return res.status(403).json({ error: 'Forbidden' });
     }

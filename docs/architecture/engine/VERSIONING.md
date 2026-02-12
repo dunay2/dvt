@@ -191,6 +191,7 @@ INVARIANT: v2.0 can coexist with v1.0 briefly during grace period
 
 ```markdown
 # IWorkflowEngine.v1.0.md
+
 **Status**: DEPRECATED (EOL: May 11, 2026)
 **Replacement**: [IWorkflowEngine.v2.0.md](./IWorkflowEngine.v2.0.md)
 **Grace Period**: 90 days from release (Feb 11 → May 11, 2026)
@@ -212,12 +213,14 @@ Support: GitHub Discussions #tag:engine-migration
 # Migrating from IWorkflowEngine v1.0 to v2.0
 
 ## Changes
+
 - [ ] Replace imports: `IWorkflowEngine.v1.0` → `IWorkflowEngine.v2.0`
 - [ ] Update error handlers (new error codes)
 - [ ] Verify event consumption patterns
 - [ ] Test adapter compatibility
 
 ## Support
+
 - Deadline: May 11, 2026
 - Stuck? File issue with label #migration-help
 - Timeline: 90-day grace period from Feb 11, 2026
@@ -236,7 +239,7 @@ Support: GitHub Discussions #tag:engine-migration
       ↓             ↓               ↓                   ↓
     Draft →      v1.0          v1.0 (90-day)      Moved to /
   (RFC stage)  (normative)     grace period      deprecated/
-                                 ↓ 
+                                 ↓
                                 v2.0
                              (normative)
                             [new default]
@@ -381,13 +384,13 @@ Is your change adding/clarifying WITHOUT removing required fields?
 
 Contracts consist of multiple surfaces, each with compatibility rules:
 
-| Surface Type | Examples | Compat Rule |
-|--------------|----------|-------------|
-| **Interfaces** | IWorkflowEngine methods, signal API | MAJOR bump if signature changes |
-| **Event Envelopes** | RunStateUpdate (bus/StateStore format) | MAJOR bump if event schema breaks consumers |
-| **Schemas** | PlanRef, capabilities.schema.json, payloads | MAJOR bump if required fields added/removed |
-| **Error Model** | Error codes, categories, retryability flags | MAJOR bump if codes reinterpreted or removed |
-| **Capability Matrix** | Temporal vs Conductor feature parity | MINOR when adding new capabilities/columns; MAJOR only if a capability's normative meaning/guarantee changes for a supported adapter baseline (otherwise handled as adapter release notes) |
+| Surface Type          | Examples                                    | Compat Rule                                                                                                                                                                                |
+| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Interfaces**        | IWorkflowEngine methods, signal API         | MAJOR bump if signature changes                                                                                                                                                            |
+| **Event Envelopes**   | RunStateUpdate (bus/StateStore format)      | MAJOR bump if event schema breaks consumers                                                                                                                                                |
+| **Schemas**           | PlanRef, capabilities.schema.json, payloads | MAJOR bump if required fields added/removed                                                                                                                                                |
+| **Error Model**       | Error codes, categories, retryability flags | MAJOR bump if codes reinterpreted or removed                                                                                                                                               |
+| **Capability Matrix** | Temporal vs Conductor feature parity        | MINOR when adding new capabilities/columns; MAJOR only if a capability's normative meaning/guarantee changes for a supported adapter baseline (otherwise handled as adapter release notes) |
 
 **Rule**: A MAJOR bump in **any one surface** bumps the contract **MAJOR** (synchronized).
 
@@ -444,7 +447,7 @@ New behavior introduced in a MINOR version must be guarded by one of:
 ```json
 {
   "version": "v1.1",
-  "correlationIdPropagation": true  // New in v1.1; v1.0 consumers ignore
+  "correlationIdPropagation": true // New in v1.1; v1.0 consumers ignore
 }
 ```
 
@@ -496,7 +499,7 @@ Only in cases of:
 
 ## Changelog
 
-| Date | Version | Change |
-|------|---------|--------|
-| 2026-02-11 | v1.0 | Initial versioning policy |
-| 2026-02-11 | v1.0.1 | Add surface taxonomy, mandatory compat tests, capability flags, deprecation trigger clarification (non-normative guidance; no behavioral guarantees changed) |
+| Date       | Version | Change                                                                                                                                                       |
+| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-02-11 | v1.0    | Initial versioning policy                                                                                                                                    |
+| 2026-02-11 | v1.0.1  | Add surface taxonomy, mandatory compat tests, capability flags, deprecation trigger clarification (non-normative guidance; no behavioral guarantees changed) |

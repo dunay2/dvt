@@ -1,0 +1,61 @@
+name: CI - Code Quality
+
+on:
+  # pull_request:
+  #   branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint-and-format:
+    name: ESLint + Prettier + TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Check Prettier formatting
+        run: pnpm format:check
+
+      - name: Type check
+        run: pnpm type-check
+
+  markdown-lint:
+    name: Markdown Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Markdown files
+        run: pnpm lint:md

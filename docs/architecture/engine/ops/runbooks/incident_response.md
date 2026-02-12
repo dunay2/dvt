@@ -25,8 +25,8 @@ pagerduty_trigger "temporal_heartbeat_lost" severity=P1
 
 # 4. Check active runs
 psql production -c "
-SELECT COUNT(*) as in_flight_runs 
-FROM runs_archive 
+SELECT COUNT(*) as in_flight_runs
+FROM runs_archive
 WHERE status = 'IN_FLIGHT';"
 
 # Sample output:
@@ -70,8 +70,8 @@ watch -n 2 'curl -s https://temporal-admin.prod:7233/health | jq .status'
 
 # Once recovered, resume pending runs
 psql production -c "
-UPDATE runs_archive 
-SET status = 'IN_FLIGHT', 
+UPDATE runs_archive
+SET status = 'IN_FLIGHT',
     resumed_at = NOW()
 WHERE status = 'PAUSED_SYSTEM'
   AND paused_reason = 'ADAPTER_UNAVAILABLE'
@@ -101,8 +101,8 @@ curl -s "http://prometheus:9090/api/v1/query_range?query=up{job='temporal'}&star
 ```bash
 # 1. Verify gap
 psql production -c "
-SELECT 
-  runId, 
+SELECT
+  runId,
   MAX(runSeq) as latest_seq,
   COUNT(*) as event_count
 FROM run_events
@@ -113,11 +113,11 @@ LIMIT 5;"
 
 # 2. Check snapshots
 psql production -c "
-SELECT 
+SELECT
   runId,
   snapshotSeq,
   generatedAt
-FROM snapshots 
+FROM snapshots
 WHERE generatedAt > NOW() - INTERVAL '5 minutes'
 ORDER BY generatedAt DESC
 LIMIT 10;"
@@ -134,10 +134,10 @@ kubectl logs deployment/snapshot-projector -n production --tail=50 --since=5m | 
 
 # Check lag backlog
 psql production -c "
-SELECT 
+SELECT
   runId,
   (SELECT MAX(runSeq) FROM run_events WHERE runId = snapshots.runId) - snapshotSeq as lag
-FROM snapshots 
+FROM snapshots
 WHERE snapshotSeq < (SELECT MAX(runSeq) FROM run_events)
 ORDER BY lag DESC
 LIMIT 20;"
@@ -155,7 +155,7 @@ kubectl describe pod -n production -l app=snapshot-projector | grep -A 5 "Condit
 kubectl scale deployment snapshot-projector --replicas=10 -n production
 
 # Monitor progress
-watch -n 1 'psql production -c "SELECT COUNT(DISTINCT runId) as gap_count FROM run_events re 
+watch -n 1 'psql production -c "SELECT COUNT(DISTINCT runId) as gap_count FROM run_events re
 WHERE NOT EXISTS (SELECT 1 FROM snapshots s WHERE s.runId = re.runId AND s.snapshotSeq >= re.runSeq);"'
 
 # Once caught up, scale back
@@ -172,7 +172,7 @@ kubectl rollout status deployment/snapshot-projector -n production --timeout=5m
 # 2. Force replay from last consistent snapshot
 psql production -c "
 BEGIN;
-DELETE FROM snapshots 
+DELETE FROM snapshots
 WHERE snapshotSeq < (SELECT MAX(snapshotSeq) - 100 FROM snapshots);
 COMMIT;"
 
@@ -193,7 +193,7 @@ WHERE NOT EXISTS (SELECT 1 FROM snapshots s WHERE s.runId = re.runId AND s.snaps
 
 # Resume affected runs
 psql production -c "
-UPDATE runs_archive 
+UPDATE runs_archive
 SET status = 'IN_FLIGHT'
 WHERE status = 'WAITING_FOR_SNAPSHOT'
   AND runId IN (SELECT runId FROM snapshots WHERE snapshotSeq > 0)
@@ -227,15 +227,15 @@ kibana_query "planId:plan-dbt-01 AND level:ERROR" timerange="last 10 minutes" li
 
 # 4. Sample failing runs
 psql production -c "
-SELECT 
-  runId, 
-  planId, 
-  status, 
-  error_code, 
+SELECT
+  runId,
+  planId,
+  status,
+  error_code,
   error_message,
   completedAt
 FROM runs_archive
-WHERE planId = 'plan-dbt-01' 
+WHERE planId = 'plan-dbt-01'
   AND status = 'FAILED'
   AND completedAt > NOW() - INTERVAL '10 minutes'
 ORDER BY completedAt DESC
@@ -249,9 +249,9 @@ LIMIT 5;"
 ```bash
 # Check if data.dbt-run timeout
 psql production -c "
-SELECT 
-  status, 
-  error_code, 
+SELECT
+  status,
+  error_code,
   COUNT(*) as count
 FROM runs_archive
 WHERE planId = 'plan-dbt-01'
@@ -284,9 +284,9 @@ curl -s 'http://prometheus:9090/api/v1/query' \
 
 # Review plugin trust tier
 psql production -c "
-SELECT 
-  pluginId, 
-  trustTier, 
+SELECT
+  pluginId,
+  trustTier,
   allowedCapabilities
 FROM plugins
 WHERE pluginId = 'plugin-xyz';
@@ -324,7 +324,7 @@ curl -X POST https://engine-api.prod/admin/throttle \
 ```bash
 # 1. Find stuck runs
 psql production -c "
-SELECT 
+SELECT
   runId,
   planId,
   startedAt,
@@ -339,7 +339,7 @@ ORDER BY startedAt ASC;"
 
 # 2. Check in-flight step
 psql production -c "
-SELECT 
+SELECT
   stepId,
   startedAt,
   engineAttemptId,
@@ -428,7 +428,7 @@ psql production -c "SELECT NOW();"
 
 # 2. Check write queue
 psql production -c "
-SELECT 
+SELECT
   COUNT(*) as pending_writes,
   MAX(createdAt) as oldest_write
 FROM write_queue
@@ -471,11 +471,11 @@ psql production -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE
 # Archive old events (if safe)
 psql production -c "
 BEGIN;
-CREATE TABLE run_events_archive AS 
-SELECT * FROM run_events 
+CREATE TABLE run_events_archive AS
+SELECT * FROM run_events
 WHERE emittedAt < NOW() - INTERVAL '90 days';
 
-DELETE FROM run_events 
+DELETE FROM run_events
 WHERE emittedAt < NOW() - INTERVAL '90 days';
 COMMIT;"
 
@@ -494,7 +494,7 @@ kubectl patch pvc postgres-pvc -n production -p '{"spec":{"resources":{"requests
 ```bash
 # 1. Check queue size and age
 psql production -c "
-SELECT 
+SELECT
   signal_type,
   status,
   COUNT(*) as count,
@@ -509,7 +509,7 @@ kubectl logs deployment/signal-processor -n production --tail=50 --since=10m | g
 
 # 3. Identify problematic run
 psql production -c "
-SELECT 
+SELECT
   runId,
   COUNT(*) as deferred_count
 FROM deferred_signals
@@ -550,14 +550,14 @@ WHERE runId = 'run-xyz'
 
 ## Escalation Matrix
 
-| Alert | Severity | Escalation |
-|-------|----------|------------|
-| Adapter Heartbeat Lost | P1 | Temporal SRE (on-call) |
-| Projection Gap | P1 | Database SRE + Platform eng |
-| StateStore Write Failure | P1 | Database SRE (page immediately) |
-| Error Rate > 5% | P2 | Platform on-call (Slack first) |
-| Projection Lag > 100 | P2 | Platform on-call (investigate) |
-| Stuck Workflow (30m) | P2 | Plan owner + platform eng |
+| Alert                    | Severity | Escalation                      |
+| ------------------------ | -------- | ------------------------------- |
+| Adapter Heartbeat Lost   | P1       | Temporal SRE (on-call)          |
+| Projection Gap           | P1       | Database SRE + Platform eng     |
+| StateStore Write Failure | P1       | Database SRE (page immediately) |
+| Error Rate > 5%          | P2       | Platform on-call (Slack first)  |
+| Projection Lag > 100     | P2       | Platform on-call (investigate)  |
+| Stuck Workflow (30m)     | P2       | Plan owner + platform eng       |
 
 ---
 
@@ -574,23 +574,28 @@ For **all P1 incidents**: Create postmortem within 24 hours.
 **Impact**: 127 in-flight runs blocked (median delay 15 minutes)
 
 ## Root Cause
+
 [Describe what went wrong]
 
 ## Timeline
+
 - 14:25:00: Alert `AdapterHeartbeatLost` fired
 - 14:27:00: On-call acknowledged; found Temporal cluster offline
 - 14:30:00: Infrastructure team identified network issue
 - 14:42:00: Cluster recovered; runs resumed
 
 ## Contributing Factors
+
 1. [Single point of failure]
 2. [Lack of monitoring for X]
 
 ## Fixes
+
 - [ ] Implement metrics for X
 - [ ] Add redundancy for Y
 - [ ] Update runbook with Z
 
 ## Owner
+
 @platform-eng (due by 2026-02-13)
 ```

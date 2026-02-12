@@ -5,12 +5,12 @@
 **Stability**: Extension policy — breaking changes require version bump  
 **Consumers**: Engine Runtime, PluginRuntime, Security/Ops  
 **Scope**: Applies only when an ExecutionPlan references plugins or extension code.  
-**References**:  
+**References**:
 
-- [IWorkflowEngine.v1.md](../engine/IWorkflowEngine.v1.md)  
-- Node.js security guidance: <https://nodejs.org/en/learn/security/>  
-- gVisor: <https://gvisor.dev/>  
-- isolated-vm: <https://www.npmjs.com/package/isolated-vm>  
+- [IWorkflowEngine.v1.md](../engine/IWorkflowEngine.v1.md)
+- Node.js security guidance: <https://nodejs.org/en/learn/security/>
+- gVisor: <https://gvisor.dev/>
+- isolated-vm: <https://www.npmjs.com/package/isolated-vm>
 
 ---
 
@@ -34,16 +34,16 @@
 Plugins MUST be classified into exactly one trust tier:
 
 ```ts
-type PluginTrustTier = "trusted" | "partner" | "untrusted";
+type PluginTrustTier = 'trusted' | 'partner' | 'untrusted';
 ```
 
 ### 2.1 Tier Semantics (MUST)
 
-| Tier | Intended Source | Default Network | Isolation | Notes |
-|------|------------------|----------------|-----------|------|
-| `trusted` | Core-maintained | allow (tenant-network allowed) | process/container boundary REQUIRED | still least-privilege |
-| `partner` | Verified vendors | allowlist only | stronger isolation REQUIRED | outbound only to allowlist |
-| `untrusted` | Community / unknown | none | strongest isolation REQUIRED | deny-by-default everywhere |
+| Tier        | Intended Source     | Default Network                | Isolation                           | Notes                      |
+| ----------- | ------------------- | ------------------------------ | ----------------------------------- | -------------------------- |
+| `trusted`   | Core-maintained     | allow (tenant-network allowed) | process/container boundary REQUIRED | still least-privilege      |
+| `partner`   | Verified vendors    | allowlist only                 | stronger isolation REQUIRED         | outbound only to allowlist |
+| `untrusted` | Community / unknown | none                           | strongest isolation REQUIRED        | deny-by-default everywhere |
 
 **Invariant**:
 
@@ -165,8 +165,8 @@ Allowed optional metadata field:
 
 ```ts
 type PluginPolicyRef = {
-  trustTier?: PluginTrustTier;  // default: "untrusted"
-  network?: { mode: "none" | "allowlist"; allowlist?: string[] };
+  trustTier?: PluginTrustTier; // default: "untrusted"
+  network?: { mode: 'none' | 'allowlist'; allowlist?: string[] };
   limits?: { timeoutMs?: number; maxMemoryMb?: number; maxCpuMillis?: number };
 };
 ```
@@ -181,6 +181,6 @@ type PluginPolicyRef = {
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial extension contract (trust tiers, sandboxing, env/secrets, network, limits, audit) |
+| Version | Date       | Change                                                                                    |
+| ------- | ---------- | ----------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial extension contract (trust tiers, sandboxing, env/secrets, network, limits, audit) |
