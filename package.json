@@ -24,6 +24,7 @@
     "test:contracts:compile": "tsc --noEmit",
     "test:contracts:hashes": "node scripts/run-golden-paths.cjs",
     "test:contracts:hash-compare": "node scripts/compare-hashes.cjs",
+    "db:migrate": "echo 'Database migrations not yet implemented (pending Issue #10: Golden Paths)'",
     "validate:contracts": "node scripts/validate-contracts.cjs",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
     "release": "standard-version",
