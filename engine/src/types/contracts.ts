@@ -53,8 +53,8 @@ export interface TemporalEngineRunRef {
   namespace: string;
   /** Workflow identifier */
   workflowId: string;
-  /** Run identifier (optional) */
-  runId?: string;
+  /** Run identifier (REQUIRED; used in signal idempotency key) */
+  runId: string;
   /** Task queue name (optional, for debugging) */
   taskQueue?: string;
 }
@@ -69,8 +69,8 @@ export interface ConductorEngineRunRef {
   provider: 'conductor';
   /** Workflow identifier */
   workflowId: string;
-  /** Run identifier (optional) */
-  runId?: string;
+  /** Run identifier (REQUIRED; used in signal idempotency key) */
+  runId: string;
   /** Conductor API URL (REQUIRED per normative invariant) */
   conductorUrl: string;
 }

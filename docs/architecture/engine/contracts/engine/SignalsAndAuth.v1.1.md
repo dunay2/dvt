@@ -15,17 +15,24 @@ Signals are **operator actions** routed to the engine, **ALWAYS enforced by `IAu
 
 ### 1.1 Signal Types and Requirements
 
-| SignalType        | Payload                                   | RBAC Role | Requires Reason? | Effect                         | Status     |
-| ----------------- | ----------------------------------------- | --------- | ---------------- | ------------------------------ | ---------- |
-| `PAUSE`           | `{ reason?: string }`                     | Operator  | No               | Pauses future step scheduling  | ✅ Phase 1 |
-| `RESUME`          | `{}`                                      | Operator  | No               | Resumes paused run             | ✅ Phase 1 |
-| `RETRY_STEP`      | `{ stepId, force?: boolean }`             | Engineer  | No               | Retries failed step            | ✅ Phase 1 |
-| `UPDATE_PARAMS`   | `{ params: object }`                      | Admin     | **YES**          | Updates runtime parameters     | ✅ Phase 1 |
-| `INJECT_OVERRIDE` | `{ stepId, override: object }`            | Admin     | **YES**          | Injects override for next step | ✅ Phase 1 |
-| `ESCALATE_ALERT`  | `{ level: string, note?: string }`        | System    | No               | Triggers escalation            | ✅ Phase 1 |
-| `SKIP_STEP`       | `{ stepId, reason?: string }`             | Engineer  | No               | Skips a step                   | ⏳ Phase 2 |
-| `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**          | Changes target schema/db       | ⏳ Phase 2 |
-| `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**          | Immediate termination          | ⏳ Phase 3 |
+**Destructive signals** (require justification and trigger P1 alerts):
+
+- `UPDATE_PARAMS`
+- `INJECT_OVERRIDE`
+- `UPDATE_TARGET`
+- `EMERGENCY_STOP`
+
+| SignalType        | Payload                                   | RBAC Role | Destructive? | Effect                         | Status     |
+| ----------------- | ----------------------------------------- | --------- | ------------ | ------------------------------ | ---------- |
+| `PAUSE`           | `{ reason?: string }`                     | Operator  | No           | Pauses future step scheduling  | ✅ Phase 1 |
+| `RESUME`          | `{}`                                      | Operator  | No           | Resumes paused run             | ✅ Phase 1 |
+| `RETRY_STEP`      | `{ stepId, force?: boolean }`             | Engineer  | No           | Retries failed step            | ✅ Phase 1 |
+| `UPDATE_PARAMS`   | `{ params: object }`                      | Admin     | **YES**      | Updates runtime parameters     | ✅ Phase 1 |
+| `INJECT_OVERRIDE` | `{ stepId, override: object }`            | Admin     | **YES**      | Injects override for next step | ✅ Phase 1 |
+| `ESCALATE_ALERT`  | `{ level: string, note?: string }`        | System    | No           | Triggers escalation            | ✅ Phase 1 |
+| `SKIP_STEP`       | `{ stepId, reason?: string }`             | Engineer  | No           | Skips a step                   | ⏳ Phase 2 |
+| `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**      | Changes target schema/db       | ⏳ Phase 2 |
+| `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**      | Immediate termination          | ⏳ Phase 3 |
 
 ---
 
@@ -43,8 +50,23 @@ interface SignalRequest {
 
 - **`signalId`** is **client-supplied UUID v4**
 - Engine stores handling result via StateStore upsert
-- Repeated `signalId` delivery is a **no-op** (returns cached result)
+- Repeated `signalId` delivery is a **no-op** (engine performs no further action; decision record is retrievable via StateStore)
 - Prevents duplicate signal processing (network retries, client bugs)
+
+**Idempotency key** (normative):
+
+```
+(tenantId, runId, signalId)
+```
+
+**Resolution**:
+
+- `tenantId`: Resolved from stored run metadata in StateStore using `engineRunRef.runId`
+- `runId`: From `engineRunRef.runId` (REQUIRED in all EngineRunRef instances)
+- `signalId`: From `SignalRequest.signalId`
+
+**Decision record retrieval**:
+Clients can query `SignalDecisionRecord` by `(tenantId, runId, signalId)` or `policyDecisionId` via StateStore.
 
 **Method signature** (see parent contract):
 
@@ -95,7 +117,10 @@ interface SignalDecisionRecord {
 2. **Decision made** → `SignalDecisionRecord` persisted (MANDATORY)
 3. **If ACCEPTED** → Engine processes signal
 4. **If REJECTED** → Client receives error with `policyDecisionId`
-5. **If REVISION_REQUIRED** → Requires approval workflow
+5. **If REVISION_REQUIRED** → Requires approval workflow (out of scope)
+
+**Approval workflow scope**:
+When `requiresApproval=true`, engine MUST NOT apply the signal until an external approval service updates the decision record to `ACCEPTED`. Approval workflow contract is defined in `ApprovalWorkflow.v1.md` (future spec, TBD).
 
 ---
 
@@ -117,6 +142,12 @@ interface IAuthorization {
 }
 ```
 
+**Actor field mapping**:
+
+- `actor.userId`: Unique user identifier (maps to `audit.actorId` in decision record)
+- `actor.roles[]`: User's assigned roles (authorization resolves effective `audit.actorRole` from this list)
+- `audit.actorRole`: **Effective role** used for this decision (single role string, derived from `roles[]` by policy)
+
 ### 4.1 RBAC Role Requirements
 
 | Role       | Allowed Signals                                                                       |
@@ -126,19 +157,24 @@ interface IAuthorization {
 | `Admin`    | `UPDATE_PARAMS`, `INJECT_OVERRIDE`, `UPDATE_TARGET`, `EMERGENCY_STOP` (+ all signals) |
 | `System`   | `ESCALATE_ALERT` (automated escalation only)                                          |
 
-### 4.2 Reason Requirements
+### 4.2 Reason Requirements (Destructive Signals)
 
-Signals marked **"Requires Reason? YES"** MUST include `audit.reason` field:
+**Destructive signals** (formal definition):
 
-- `UPDATE_PARAMS`
-- `INJECT_OVERRIDE`
-- `UPDATE_TARGET`
-- `EMERGENCY_STOP`
+```typescript
+type DestructiveSignalType =
+  | 'UPDATE_PARAMS'
+  | 'INJECT_OVERRIDE'
+  | 'UPDATE_TARGET'
+  | 'EMERGENCY_STOP';
+```
 
-If `reason` is missing or empty, authorization MUST reject with error:
+Destructive signals MUST include `audit.reason` field (non-empty string).
+
+If `reason` is missing or empty, authorization MUST reject with error code:
 
 ```
-AUTHORIZATION_DENIED: Destructive signal requires justification
+AUTHZ_REASON_REQUIRED: Destructive signal requires justification
 ```
 
 ---
@@ -168,20 +204,32 @@ Index by:
 ### 6.1 Tenant Isolation
 
 - Authorization MUST validate `tenantId` matches actor's tenant
-- Cross-tenant signal delivery MUST be rejected with `FORBIDDEN` error
+- Cross-tenant signal delivery MUST be rejected with error code `AUTHZ_TENANT_FORBIDDEN`
 - Audit logs MUST record attempted cross-tenant access
 
 ### 6.2 Audit Trail
 
 - All signals (accepted, rejected, pending) MUST be logged
-- Destructive signals (`EMERGENCY_STOP`, `UPDATE_TARGET`) trigger P1 alerts
+- **Destructive signals** (`UPDATE_PARAMS`, `INJECT_OVERRIDE`, `UPDATE_TARGET`, `EMERGENCY_STOP`) trigger P1 alerts
 - Failed authorization attempts trigger security monitoring
 
 ### 6.3 Replay Protection
 
 - `signalId` prevents duplicate processing
-- StateStore upsert ensures idempotency
-- Replay of old `signalId` returns cached decision
+- StateStore upsert ensures idempotency via key `(tenantId, runId, signalId)`
+- Replay of old `signalId` is a no-op (existing decision record returned)
+
+### 6.4 Error Codes (Normative)
+
+The following error codes MUST be used for signal authorization failures:
+
+| Error Code               | Description                                          | HTTP Status |
+| ------------------------ | ---------------------------------------------------- | ----------- |
+| `AUTHZ_DENIED`           | Authorization denied (generic)                       | 403         |
+| `AUTHZ_REASON_REQUIRED`  | Destructive signal missing required justification    | 400         |
+| `AUTHZ_TENANT_FORBIDDEN` | Cross-tenant access attempt                          | 403         |
+| `SIGNAL_DUPLICATE`       | Signal already processed (idempotency key collision) | 409         |
+| `SIGNAL_NOT_FOUND`       | Decision record not found for query                  | 404         |
 
 ---
 
@@ -195,6 +243,6 @@ Index by:
 
 ## Change Log
 
-| Version | Date       | Change                                                                  |
-| ------- | ---------- | ----------------------------------------------------------------------- |
-| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.md to reduce churn. Added RBAC table. |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                                                            |
+| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.md to reduce churn. Added RBAC table. **Critical fixes**: Declare signal idempotency key (tenantId, runId, signalId), clarify no-op behavior, scope approval workflow, normalize actor fields, define DestructiveSignalType enum, formalize error codes (AUTHZ_DENIED, AUTHZ_TENANT_FORBIDDEN). |

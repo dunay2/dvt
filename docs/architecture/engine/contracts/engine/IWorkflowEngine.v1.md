@@ -57,13 +57,13 @@ type EngineRunRef =
       provider: 'temporal';
       namespace: string;
       workflowId: string;
-      runId?: string;
+      runId: string; // REQUIRED (used in signal idempotency key)
       taskQueue?: string;
     }
   | {
       provider: 'conductor';
       workflowId: string;
-      runId?: string;
+      runId: string; // REQUIRED (used in signal idempotency key)
       conductorUrl: string; // REQUIRED per invariant below
     };
 ```
@@ -72,7 +72,7 @@ type EngineRunRef =
 
 - `namespace` (Temporal) MUST be present for Temporal provider.
 - `conductorUrl` (Conductor) MUST be present for Conductor provider.
-- `runId` SHOULD be present for cancellation/query operations.
+- `runId` MUST be present for all operations (cancellation, query, signal). Used in signal idempotency key: `(tenantId, runId, signalId)`.
 - For debugging, include `taskQueue` (Temporal) to trace worker routing.
 
 ---
@@ -278,7 +278,7 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove `any`. **PARTITION**: Extract RunEvents.v1.1.md and SignalsAndAuth.v1.1.md to reduce churn. |
-| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                                                                                                                                                                                                                |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove `any`. **PARTITION**: Extract RunEvents.v1.1.md and SignalsAndAuth.v1.1.md to reduce churn. **Fix EngineRunRef.runId**: Make REQUIRED for signal idempotency. |
+| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
