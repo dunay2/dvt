@@ -36,10 +36,10 @@ Schema for ValidationReport emitted by engine's `validatePlan()`.
 ```ts
 interface ExecutionPlan {
   metadata: {
-    targetAdapter: "temporal" | "conductor" | "any";
-    requiresCapabilities: string[];           // Must be from capabilities.schema.json
-    fallbackBehavior: "reject" | "emulate" | "degrade";
-    pluginTrustTier: "trusted" | "partner" | "untrusted";
+    targetAdapter: 'temporal' | 'conductor' | 'any';
+    requiresCapabilities: string[]; // Must be from capabilities.schema.json
+    fallbackBehavior: 'reject' | 'emulate' | 'degrade';
+    pluginTrustTier: 'trusted' | 'partner' | 'untrusted';
   };
   // ... rest of plan
 }
@@ -50,25 +50,25 @@ interface ExecutionPlan {
 ```ts
 async function validatePlan(plan: ExecutionPlan, targetAdapter: string): Promise<ValidationReport> {
   // 1. Load adapters.capabilities.json
-  const adapterMatrix = await loadJSON("adapters.capabilities.json");
+  const adapterMatrix = await loadJSON('adapters.capabilities.json');
   const adapterCaps = new Set(adapterMatrix[targetAdapter].capabilities);
 
   // 2. Check each required capability
   const report: ValidationReport = {
     planId: plan.planId,
-    status: "VALID",
+    status: 'VALID',
     capabilityChecks: [],
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   for (const requiredCap of plan.metadata.requiresCapabilities) {
     // Verify requiredCap exists in capabilities.schema.json
     if (!isValidCapability(requiredCap)) {
       report.errors.push({
-        code: "CAPABILITY_UNKNOWN",
+        code: 'CAPABILITY_UNKNOWN',
         capability: requiredCap,
-        message: `Unknown capability: ${requiredCap}`
+        message: `Unknown capability: ${requiredCap}`,
       });
       continue;
     }
@@ -78,20 +78,20 @@ async function validatePlan(plan: ExecutionPlan, targetAdapter: string): Promise
     report.capabilityChecks.push({
       capability: requiredCap,
       supported,
-      adapterSupport: supported ? "native" : undefined
+      adapterSupport: supported ? 'native' : undefined,
     });
 
     if (!supported) {
-      if (plan.metadata.fallbackBehavior === "reject") {
+      if (plan.metadata.fallbackBehavior === 'reject') {
         report.errors.push({
-          code: "CAPABILITY_NOT_SUPPORTED",
+          code: 'CAPABILITY_NOT_SUPPORTED',
           capability: requiredCap,
-          message: `${targetAdapter} doesn't support ${requiredCap}; fallbackBehavior=reject`
+          message: `${targetAdapter} doesn't support ${requiredCap}; fallbackBehavior=reject`,
         });
-      } else if (plan.metadata.fallbackBehavior === "emulate") {
+      } else if (plan.metadata.fallbackBehavior === 'emulate') {
         report.warnings.push({
-          code: "CAPABILITY_EMULATED",
-          message: `${requiredCap} will be emulated on ${targetAdapter}; latency may differ`
+          code: 'CAPABILITY_EMULATED',
+          message: `${requiredCap} will be emulated on ${targetAdapter}; latency may differ`,
         });
       }
     }
@@ -100,13 +100,14 @@ async function validatePlan(plan: ExecutionPlan, targetAdapter: string): Promise
   // 3. Validate pluginTrustTier
   if (!plan.metadata.pluginTrustTier) {
     report.errors.push({
-      code: "PLUGIN_TRUST_TIER_MISSING",
-      message: "ExecutionPlan.metadata.pluginTrustTier is mandatory"
+      code: 'PLUGIN_TRUST_TIER_MISSING',
+      message: 'ExecutionPlan.metadata.pluginTrustTier is mandatory',
     });
   }
 
   // 4. Final status
-  report.status = report.errors.length > 0 ? "ERRORS" : report.warnings.length > 0 ? "WARNINGS" : "VALID";
+  report.status =
+    report.errors.length > 0 ? 'ERRORS' : report.warnings.length > 0 ? 'WARNINGS' : 'VALID';
 
   return report;
 }
@@ -120,15 +121,15 @@ async function startRun(plan: ExecutionPlan, ctx: RunContext): Promise<EngineRun
 
   // Persist report to StateStore
   await stateStore.emit({
-    eventType: "RunValidationReport",
+    eventType: 'RunValidationReport',
     runId: ctx.runId,
     validationReport: report,
-    idempotencyKey: `val-${ctx.runId}-${plan.planVersion}`
+    idempotencyKey: `val-${ctx.runId}-${plan.planVersion}`,
   });
 
   // Reject if errors and plan says so
-  if (report.status === "ERRORS" && plan.metadata.fallbackBehavior === "reject") {
-    throw new PlanValidationError("Plan validation failed", report);
+  if (report.status === 'ERRORS' && plan.metadata.fallbackBehavior === 'reject') {
+    throw new PlanValidationError('Plan validation failed', report);
   }
 
   // Proceed

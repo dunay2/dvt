@@ -12,66 +12,83 @@
 
 These documents define the **engine boundary, semantics, and invariants**. Violations are bugs.
 
-| Document | Purpose | Scope | Version |
-|----------|---------|-------|---------|
-| [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) | Engine interface + signal catalog | Boundary contract | 1.0 |
-| [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic) | State machine | 1.1 |
-| [State Store Contract](contracts/state-store/README.md) | Storage-agnostic interface for event log + snapshots | Persistence layer | 1.0 |
-| [VERSIONING.md](./VERSIONING.md) | Policy for versioning contracts (major/minor bumps, deprecation) | Governance | 1.0 |
+| Document                                                              | Purpose                                                          | Scope             | Version |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------- | ------- |
+| [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md)       | Engine interface + signal catalog                                | Boundary contract | 1.0     |
+| [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic)               | State machine     | 1.1     |
+| [State Store Contract](contracts/state-store/README.md)               | Storage-agnostic interface for event log + snapshots             | Persistence layer | 1.0     |
+| [VERSIONING.md](./VERSIONING.md)                                      | Policy for versioning contracts (major/minor bumps, deprecation) | Governance        | 1.0     |
 
 ### 🟢 Capability Specifications (Executable, JSON)
 
 Validation contracts replaced with code-generatable schemas.
 
-| Document | Purpose | Scope | Usage |
-|----------|---------|-------|-------|
-| [capabilities.schema.json](contracts/capabilities/capabilities.schema.json) | Universal capability enum | 12 capabilities across 6 categories | `validatePlan()` input |
-| [adapters.capabilities.json](contracts/capabilities/adapters.capabilities.json) | Temporal vs Conductor parity matrix | Adapter comparison | ReferenceData in validation |
-| [validation-report.schema.json](contracts/capabilities/validation-report.schema.json) | Validation report schema | StartRun output | SDK code-gen |
-| [capabilities/README.md](contracts/capabilities/README.md) | Integration guide | validatePlan() pseudocode | Developer reference |
+| Document                                                                              | Purpose                             | Scope                               | Usage                       |
+| ------------------------------------------------------------------------------------- | ----------------------------------- | ----------------------------------- | --------------------------- |
+| [capabilities.schema.json](contracts/capabilities/capabilities.schema.json)           | Universal capability enum           | 12 capabilities across 6 categories | `validatePlan()` input      |
+| [adapters.capabilities.json](contracts/capabilities/adapters.capabilities.json)       | Temporal vs Conductor parity matrix | Adapter comparison                  | ReferenceData in validation |
+| [validation-report.schema.json](contracts/capabilities/validation-report.schema.json) | Validation report schema            | StartRun output                     | SDK code-gen                |
+| [capabilities/README.md](contracts/capabilities/README.md)                            | Integration guide                   | validatePlan() pseudocode           | Developer reference         |
 
-### 🔵 Adapter Specifications (Normative, Adapter-Specific)
+### � Security (Normative + Informative)
+
+Security-by-design documentation: threat model, authorization contracts, and audit requirements.
+
+| Document                                                        | Purpose                                        | Scope       | Version |
+| --------------------------------------------------------------- | ---------------------------------------------- | ----------- | ------- |
+| [THREAT_MODEL.md](security/THREAT_MODEL.md)                     | Threat actors, attack scenarios, mitigations   | Informative | 1.4     |
+| [IAuthorization.v1.md](contracts/security/IAuthorization.v1.md) | Authorization interface (API boundary)         | NORMATIVE   | 1.0     |
+| [AuditLog.v1.md](contracts/security/AuditLog.v1.md)             | Audit log schema, retention policy, compliance | NORMATIVE   | 1.0     |
+
+**Key invariants**:
+
+- **INV-SEC-1**: Authorization checks MUST happen at API boundary (never in engine)
+- **INV-SEC-2**: Every authorization decision (grant/deny) MUST be audited
+- **INV-SEC-3**: tenantId MUST be in every resource identifier
+- **INV-SEC-4**: Audit logs are append-only, tamper-proof (7-year retention for compliance)
+
+### �🔵 Adapter Specifications (Normative, Adapter-Specific)
 
 Implementation contracts for orchestration platform adapters and storage backends.
 
 **Execution Engine Adapters**:
 
-| Document | Adapter | Status | Target |
-|----------|---------|--------|--------|
-| [TemporalAdapter.spec.md](adapters/temporal/TemporalAdapter.spec.md) | Temporal | NORMATIVE | Temporal 1.0+ |
-| [Temporal Engine Policies](adapters/temporal/EnginePolicies.md) | Temporal-specific policies (continue-as-new, limits) | NORMATIVE | Temporal 1.0+ |
-| [ConductorAdapter.spec.md](adapters/conductor/ConductorAdapter.spec.md) | Conductor | DRAFT | Conductor 3.0+, Phase 2 |
+| Document                                                                | Adapter                                              | Status    | Target                  |
+| ----------------------------------------------------------------------- | ---------------------------------------------------- | --------- | ----------------------- |
+| [TemporalAdapter.spec.md](adapters/temporal/TemporalAdapter.spec.md)    | Temporal                                             | NORMATIVE | Temporal 1.0+           |
+| [Temporal Engine Policies](adapters/temporal/EnginePolicies.md)         | Temporal-specific policies (continue-as-new, limits) | NORMATIVE | Temporal 1.0+           |
+| [ConductorAdapter.spec.md](adapters/conductor/ConductorAdapter.spec.md) | Conductor                                            | DRAFT     | Conductor 3.0+, Phase 2 |
 
 **State Store Adapters**:
 
-| Document | Backend | Status | Features |
-|----------|---------|--------|----------|
-| [Snowflake StateStoreAdapter](adapters/state-store/snowflake/StateStoreAdapter.md) | Snowflake | NORMATIVE | DDL, MERGE patterns, clustering, stored procedures |
-| [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md) | PostgreSQL 14+ | NORMATIVE | SERIAL, ON CONFLICT, JSONB, partitioning |
+| Document                                                                           | Backend        | Status    | Features                                           |
+| ---------------------------------------------------------------------------------- | -------------- | --------- | -------------------------------------------------- |
+| [Snowflake StateStoreAdapter](adapters/state-store/snowflake/StateStoreAdapter.md) | Snowflake      | NORMATIVE | DDL, MERGE patterns, clustering, stored procedures |
+| [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md)   | PostgreSQL 14+ | NORMATIVE | SERIAL, ON CONFLICT, JSONB, partitioning           |
 
 ### 🟠 Operations & Incident Response (Informative, Evolving)
 
 Operational guides for running the engine in production.
 
-| Document | Purpose | Audience | SLA |
-|----------|---------|----------|-----|
-| [observability.md](ops/observability.md) | Metrics, traces, logs, alerts, dashboards | SRE, ops | Phase 1 MVP |
-| [runbooks/incident_response.md](ops/runbooks/incident_response.md) | Step-by-step incident procedures | On-call, SRE | 6 scenarios |
+| Document                                                           | Purpose                                   | Audience     | SLA         |
+| ------------------------------------------------------------------ | ----------------------------------------- | ------------ | ----------- |
+| [observability.md](ops/observability.md)                           | Metrics, traces, logs, alerts, dashboards | SRE, ops     | Phase 1 MVP |
+| [runbooks/incident_response.md](ops/runbooks/incident_response.md) | Step-by-step incident procedures          | On-call, SRE | 6 scenarios |
 
 ### 🟡 Developer Tooling (Informative, Gating)
 
 Tools & policies for determinism, testing, CI/CD.
 
-| Document | Purpose | Audience | Enforcement |
-|----------|---------|----------|------------|
+| Document                                                 | Purpose                        | Audience               | Enforcement            |
+| -------------------------------------------------------- | ------------------------------ | ---------------------- | ---------------------- |
 | [dev/determinism-tooling.md](dev/determinism-tooling.md) | Linting, replay tests, CI gate | Plan authors, SDK devs | Pre-commit (mandatory) |
 
 ### 🟣 Roadmap (Informative, Forward-Looking)
 
 Phase breakdown, milestones, risks, staffing.
 
-| Document | Purpose | Audience | Timeline |
-|----------|---------|----------|----------|
+| Document                                             | Purpose                               | Audience                          | Timeline  |
+| ---------------------------------------------------- | ------------------------------------- | --------------------------------- | --------- |
 | [roadmap/engine-phases.md](roadmap/engine-phases.md) | Phases 1-4 breakdown, success metrics | Executives, PM, engineering leads | 2026-2027 |
 
 ---
@@ -86,11 +103,14 @@ docs/architecture/engine/
 │   │   └── ExecutionSemantics.v1.md      # [NORMATIVE] Core execution semantics (agnostic)
 │   ├── state-store/
 │   │   └── README.md                      # [NORMATIVE] Storage-agnostic State Store contract
-│   └── capabilities/
-│       ├── capabilities.schema.json       # [EXECUTABLE] Capability enum
-│       ├── adapters.capabilities.json     # [EXECUTABLE] Adapter matrix
-│       ├── validation-report.schema.json  # [EXECUTABLE] Report schema
-│       └── README.md                      # Integration guide
+│   ├── capabilities/
+│   │   ├── capabilities.schema.json       # [EXECUTABLE] Capability enum
+│   │   ├── adapters.capabilities.json     # [EXECUTABLE] Adapter matrix
+│   │   ├── validation-report.schema.json  # [EXECUTABLE] Report schema
+│   │   └── README.md                      # Integration guide
+│   └── security/
+│       ├── IAuthorization.v1.md          # [NORMATIVE] Authorization interface
+│       └── AuditLog.v1.md                # [NORMATIVE] Audit log schema & retention
 │
 ├── adapters/                              # Adapter-specific specs (normative)
 │   ├── temporal/
@@ -103,6 +123,9 @@ docs/architecture/engine/
 │       │   └── StateStoreAdapter.md       # [NORMATIVE] Snowflake implementation (DDL, MERGE, clustering)
 │       └── postgres/
 │           └── StateStoreAdapter.md       # [NORMATIVE] Postgres implementation (SERIAL, ON CONFLICT)
+│
+├── security/                              # Security (informative + normative)
+│   └── THREAT_MODEL.md                    # [INFORMATIVE] Threat actors, attack scenarios, mitigations
 │
 ├── ops/                                   # Operations (informative, evolving)
 │   ├── observability.md                   # Metrics, traces, logs, SLOs
@@ -146,10 +169,14 @@ docs/architecture/engine/
 
 **For plan authors**:
 
-1. Read [dev/determinism-tooling.md](dev/determinism-tooling.md) (writing deterministic plans)
-2. Read [contracts/capabilities/README.md](contracts/capabilities/README.md) (capability validation)
-3. Author plan in plan schema v1.1
-4. Run determinism CI gate (pre-commit)
+1. **Explore [Golden Paths Examples](../../../examples/)** (executable plan examples - start here!)
+   - [plan-minimal](../../../examples/plan-minimal/) - "Hello World" for the engine
+   - [plan-parallel](../../../examples/plan-parallel/) - Parallel execution and fan-in pattern
+   - [plan-cancel-and-resume](../../../examples/plan-cancel-and-resume/) - Pause/resume signal handling
+2. Read [dev/determinism-tooling.md](dev/determinism-tooling.md) (writing deterministic plans)
+3. Read [contracts/capabilities/README.md](contracts/capabilities/README.md) (capability validation)
+4. Author plan in plan schema v1.1
+5. Run determinism CI gate (pre-commit)
 
 **For SREs**:
 
@@ -193,6 +220,12 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 ### "How do I write a deterministic plan?"
 
 → [dev/determinism-tooling.md](dev/determinism-tooling.md) (Section 7)
+
+### "What are the security requirements?"
+
+→ [security/THREAT_MODEL.md](security/THREAT_MODEL.md) (threat scenarios, mitigations)  
+→ [contracts/security/IAuthorization.v1.md](contracts/security/IAuthorization.v1.md) (authorization interface)  
+→ [contracts/security/AuditLog.v1.md](contracts/security/AuditLog.v1.md) (audit log schema, compliance)
 
 ### "How do I respond to a production incident?"
 
@@ -296,9 +329,11 @@ All internal references use **relative markdown links** (portable, versionable).
 
 ```markdown
 # Example: Linking from ConductorAdapter.spec.md to capability matrix
+
 → See [parity matrix](../contracts/capabilities/adapters.capabilities.json)
 
 # Example: Linking from incident_response.md to observability
+
 → Check [alert rules](../observability.md#section-4)
 ```
 
@@ -328,21 +363,24 @@ All internal references use **relative markdown links** (portable, versionable).
 
 ## 📊 Document Metrics
 
-| Document | Size | Type | Stability | Audience |
-|----------|------|------|-----------|----------|
-| IWorkflowEngine.v1.md | 120 lines | Contract | HIGH | SDK devs |
-| ExecutionSemantics.v1.md | 280 lines | Contract | HIGH | Engine impl |
-| VERSIONING.md | 320 lines | Policy | HIGH | Contract authors |
-| TemporalAdapter.spec.md | 300 lines | Adapter | HIGH | Temporal SDK |
-| ConductorAdapter.spec.md | 220 lines | Adapter | MEDIUM (DRAFT) | Conductor SDK |
-| observability.md | 280 lines | Guide | MEDIUM | SRE |
-| incident_response.md | 350 lines | Guide | MEDIUM | On-call |
-| determinism-tooling.md | 320 lines | Guide | LOW | Plan authors |
-| engine-phases.md | 350 lines | Roadmap | LOW | Execs |
-| capabilities/ (4 files) | 400 lines | Schemas | HIGH | Validation |
-| **TOTAL** | **~2,720 lines** | Mixed | - | - |
+| Document                 | Size             | Type     | Stability      | Audience         |
+| ------------------------ | ---------------- | -------- | -------------- | ---------------- |
+| IWorkflowEngine.v1.md    | 120 lines        | Contract | HIGH           | SDK devs         |
+| ExecutionSemantics.v1.md | 280 lines        | Contract | HIGH           | Engine impl      |
+| VERSIONING.md            | 320 lines        | Policy   | HIGH           | Contract authors |
+| TemporalAdapter.spec.md  | 300 lines        | Adapter  | HIGH           | Temporal SDK     |
+| ConductorAdapter.spec.md | 220 lines        | Adapter  | MEDIUM (DRAFT) | Conductor SDK    |
+| observability.md         | 280 lines        | Guide    | MEDIUM         | SRE              |
+| incident_response.md     | 350 lines        | Guide    | MEDIUM         | On-call          |
+| determinism-tooling.md   | 320 lines        | Guide    | LOW            | Plan authors     |
+| engine-phases.md         | 350 lines        | Roadmap  | LOW            | Execs            |
+| capabilities/ (4 files)  | 400 lines        | Schemas  | HIGH           | Validation       |
+| THREAT_MODEL.md          | 517 lines        | Guide    | MEDIUM         | Security eng     |
+| IAuthorization.v1.md     | 359 lines        | Contract | HIGH           | API devs         |
+| AuditLog.v1.md           | 425 lines        | Contract | HIGH           | Compliance       |
+| **TOTAL**                | **~4,741 lines** | Mixed    | -              | -                |
 
-**Previous monolith (WORKFLOW_ENGINE.md)**: 3,227 lines (51% reduction ✅)
+**Previous monolith (WORKFLOW_ENGINE.md)**: 3,227 lines (47% expansion for security + clarity ✅)
 
 ---
 
@@ -357,24 +395,28 @@ All internal references use **relative markdown links** (portable, versionable).
 
 ## 🔐 Approval & Ownership
 
-| Document | Owner | Last Reviewed | Next Review |
-|----------|-------|---------------|-------------|
-| IWorkflowEngine.v1.md | @engine-lead | 2026-02-11 | 2026-05-11 |
-| ExecutionSemantics.v1.md | @engine-lead | 2026-02-11 | 2026-05-11 |
-| VERSIONING.md | @architecture-lead | 2026-02-11 | 2026-12-11 |
-| TemporalAdapter.spec.md | @temporal-lead | 2026-02-11 | 2026-05-11 |
-| ConductorAdapter.spec.md | @conductor-lead | 2026-02-11 | 2026-06-11 |
-| observability.md | @sre-lead | 2026-02-11 | 2026-03-11 |
-| incident_response.md | @sre-oncall | 2026-02-11 | 2026-02-18 |
-| determinism-tooling.md | @qa-lead | 2026-02-11 | 2026-04-11 |
-| engine-phases.md | @pm-lead | 2026-02-11 | 2026-05-11 |
+| Document                 | Owner              | Last Reviewed | Next Review |
+| ------------------------ | ------------------ | ------------- | ----------- |
+| IWorkflowEngine.v1.md    | @engine-lead       | 2026-02-11    | 2026-05-11  |
+| ExecutionSemantics.v1.md | @engine-lead       | 2026-02-11    | 2026-05-11  |
+| VERSIONING.md            | @architecture-lead | 2026-02-11    | 2026-12-11  |
+| TemporalAdapter.spec.md  | @temporal-lead     | 2026-02-11    | 2026-05-11  |
+| ConductorAdapter.spec.md | @conductor-lead    | 2026-02-11    | 2026-06-11  |
+| observability.md         | @sre-lead          | 2026-02-11    | 2026-03-11  |
+| incident_response.md     | @sre-oncall        | 2026-02-11    | 2026-02-18  |
+| determinism-tooling.md   | @qa-lead           | 2026-02-11    | 2026-04-11  |
+| engine-phases.md         | @pm-lead           | 2026-02-11    | 2026-05-11  |
+| THREAT_MODEL.md          | @security-lead     | 2026-02-11    | 2026-05-11  |
+| IAuthorization.v1.md     | @security-lead     | 2026-02-11    | 2026-08-11  |
+| AuditLog.v1.md           | @security-lead     | 2026-02-11    | 2026-08-11  |
 
 ---
 
 ## Version History
 
-| Version | Date | Change |
-|---------|------|--------|
-| 0.1 | 2026-02-11 | Partition WORKFLOW_ENGINE.md into 8 modular documents |
-| 1.0 | 2026-02-11 | First stable index (Phase 1 MVP complete) |
-| 1.1 | 2026-02-11 | Add VERSIONING.md (contract versioning policy) |
+| Version | Date       | Change                                                        |
+| ------- | ---------- | ------------------------------------------------------------- |
+| 0.1     | 2026-02-11 | Partition WORKFLOW_ENGINE.md into 8 modular documents         |
+| 1.0     | 2026-02-11 | First stable index (Phase 1 MVP complete)                     |
+| 1.1     | 2026-02-11 | Add VERSIONING.md (contract versioning policy)                |
+| 1.2     | 2026-02-12 | Add Security section (THREAT_MODEL, IAuthorization, AuditLog) |

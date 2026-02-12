@@ -16,18 +16,18 @@ All plans MUST be **deterministic** for the interpreter workflow to replay corre
 ```ts
 // ✅ Deterministic
 const step: Step = {
-  stepId: "fetch-users",
-  type: "SQL_QUERY",
-  query: "SELECT * FROM users WHERE tenant_id = ?",
-  params: [tenantId],  // Fixed input
-  timeout: 30000
+  stepId: 'fetch-users',
+  type: 'SQL_QUERY',
+  query: 'SELECT * FROM users WHERE tenant_id = ?',
+  params: [tenantId], // Fixed input
+  timeout: 30000,
 };
 
 // ❌ Non-deterministic (uses Date.now())
 const step: Step = {
-  stepId: "fetch-recent",
-  type: "SQL_QUERY",
-  query: `SELECT * FROM users WHERE created_at > '${new Date().toISOString()}'`
+  stepId: 'fetch-recent',
+  type: 'SQL_QUERY',
+  query: `SELECT * FROM users WHERE created_at > '${new Date().toISOString()}'`,
 };
 
 // ❌ Non-deterministic (uses Math.random())
@@ -267,12 +267,12 @@ describe("Plan: plan-dbt-01, determinism", () => {
 ### 4.2 Multi-Attempt Determinism Check
 
 ```typescript
-it("should replay deterministically across 3 retries", async () => {
+it('should replay deterministically across 3 retries', async () => {
   const snapshots = [];
 
   for (let attempt = 0; attempt < 3; attempt++) {
     const result = await tester.replayFromEvent({
-      runId: "test-run-determinism",
+      runId: 'test-run-determinism',
       fromEventSeq: 1, // Replay from beginning
       engineAttemptId: `temporal-attempt-${attempt}`,
     });
@@ -304,25 +304,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: '18.x'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run determinism ESLint
         run: npm run lint:determinism
-        
+
       - name: Run replay tests
         run: npm run test:determinism
-        
+
       - name: Generate determinism report
         if: always()
         run: npm run report:determinism
-        
+
       - name: Comment PR with report
         uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
@@ -350,7 +350,7 @@ jobs:
 
 **Warnings**:
 - `plan-kafka-sink` step `http-call`: External API (non-deterministic)
-  
+
 **Next Steps**:
 - [ ] Address ESLint warnings
 - [ ] Check PR reviewer approval
@@ -410,7 +410,7 @@ dvt-cli trace-divergence \
 #   Input: {...}
 #   Output (expected): {...}
 #   Output (got): {...}
-#   
+#
 #   Likely cause:
 #   - Step timeout configuration changed
 #   - External data source (API, DB) returned different result
@@ -427,22 +427,19 @@ dvt-cli trace-divergence \
 {
   "stepId": "fetch-data",
   "type": "SQL_QUERY",
-  
+
   "description": "Deterministic: fixed query, parameterized inputs",
-  
+
   "query": "SELECT * FROM users WHERE tenant_id = ? AND created_at > ?",
-  "params": [
-    "${input.tenantId}",
-    "${input.cutoffDate}"
-  ],
-  
+  "params": ["${input.tenantId}", "${input.cutoffDate}"],
+
   "timeout": 30000,
   "retryPolicy": {
     "maxAttempts": 3,
     "backoff": "exponential",
     "backoffBaseSeconds": 1
   },
-  
+
   "fallback": {
     "type": "SKIP_STEP",
     "reason": "Non-critical; continue if query times out"
@@ -456,9 +453,9 @@ dvt-cli trace-divergence \
 {
   "stepId": "branch-by-count",
   "type": "DECISION",
-  
+
   "description": "Deterministic: branch depends on deterministic input, not random state",
-  
+
   "conditions": [
     {
       "name": "large-dataset",
@@ -471,7 +468,7 @@ dvt-cli trace-divergence \
       "nextStep": "dbt-run-single"
     }
   ],
-  
+
   "default": "dbt-run-single"
 }
 ```
@@ -480,14 +477,14 @@ dvt-cli trace-divergence \
 
 ## 8) Common Pitfalls & Fixes
 
-| Pitfall | Problem | Fix |
-|---------|---------|-----|
-| SQL with `NOW()` | Time varies on replay | Use `${input.runStartTime}` parameter |
-| Random parallelism | Retry may differ | Use fixed `parallelism: 10` |
-| Conditional on external API | API response may differ | Cache result as artifact; reuse on replay |
-| State mutation in loop | Loop counter non-deterministic | Use immutable accumulation + final step |
-| plugin UUID generation | UUID differs per run | Use deterministic hash (runId + stepId) |
-| Timestamp in artifact name | Artifact path differs | Use runSeq or stepId in name |
+| Pitfall                     | Problem                        | Fix                                       |
+| --------------------------- | ------------------------------ | ----------------------------------------- |
+| SQL with `NOW()`            | Time varies on replay          | Use `${input.runStartTime}` parameter     |
+| Random parallelism          | Retry may differ               | Use fixed `parallelism: 10`               |
+| Conditional on external API | API response may differ        | Cache result as artifact; reuse on replay |
+| State mutation in loop      | Loop counter non-deterministic | Use immutable accumulation + final step   |
+| plugin UUID generation      | UUID differs per run           | Use deterministic hash (runId + stepId)   |
+| Timestamp in artifact name  | Artifact path differs          | Use runSeq or stepId in name              |
 
 ---
 
@@ -503,30 +500,36 @@ dvt-cli trace-divergence \
 **Timestamp**: 2026-02-11 14:30:00 UTC
 
 ## Summary
+
 ✅ **PASSED** (ESLint + Replay tests)
 
 ## ESLint Results
+
 - Total issues: 0
 - Errors: 0
 - Warnings: 0
 
 ## Replay Test Results
+
 - Total runs: 5
 - Replayed runs: 5
 - Divergences: 0
 - Artifacts matched: 100% (SHA256)
 
 ## Step-by-Step Analysis
-| Step | Type | Status | Notes |
-|------|------|--------|-------|
-| fetch-users | SQL | ✅ | Deterministic, parameterized |
-| dbt-run | DBT | ✅ | Fixed transformation |
-| store-results | Artifact | ✅ | Idempotent store |
+
+| Step          | Type     | Status | Notes                        |
+| ------------- | -------- | ------ | ---------------------------- |
+| fetch-users   | SQL      | ✅     | Deterministic, parameterized |
+| dbt-run       | DBT      | ✅     | Fixed transformation         |
+| store-results | Artifact | ✅     | Idempotent store             |
 
 ## Recommendations
+
 - None; plan is ready for production.
 
 ## Checklist
+
 - [x] All steps ESLint-clean
 - [x] Replay tests passed
 - [x] Artifacts verified
@@ -546,6 +549,6 @@ dvt-cli trace-divergence \
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Pre-commit determinism gating for Phase 1 MVP |
+| Version | Date       | Change                                        |
+| ------- | ---------- | --------------------------------------------- |
+| 1.0     | 2026-02-11 | Pre-commit determinism gating for Phase 1 MVP |

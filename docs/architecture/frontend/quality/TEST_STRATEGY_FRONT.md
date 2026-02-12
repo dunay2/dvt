@@ -22,11 +22,13 @@ The frontend testing strategy follows the **Testing Pyramid**:
 ```
 
 **Goals**:
+
 - **Fast feedback**: Unit tests run in <10 seconds
 - **High confidence**: E2E tests cover golden paths
 - **Maintainability**: Tests are readable and resilient to UI changes
 
 **Test Runner Strategy**:
+
 - **Vitest** is the standard test runner across all packages (core, domain, planner, ui)
 - Only use Jest if a package truly requires it (e.g., specific Jest-only plugins)
 - If Jest is required, isolate it in a separate workspace to avoid config duplication and tooling drift
@@ -42,6 +44,7 @@ DVT+ uses a **monorepo structure** with multiple packages (core, domain, planner
 **Decision**: Use **Vitest** as the standard test runner across all packages.
 
 **Rationale**:
+
 - **Performance**: Vitest is significantly faster than Jest (native ESM, Vite-powered)
 - **Modern tooling**: Better TypeScript and ESM support out of the box
 - **API compatibility**: Drop-in replacement for Jest API (minimal migration effort)
@@ -122,10 +125,12 @@ export default mergeConfig(
 **Scope**: Pure functions, hooks, view model transformations
 
 **Tools**:
+
 - **Vitest** (standard test runner for all packages)
 - **@testing-library/react** (React component testing)
 
 **Why Vitest?**
+
 - Faster than Jest (native ESM support, Vite-powered)
 - Compatible with Jest API (easy migration)
 - Better TypeScript support out of the box
@@ -153,9 +158,9 @@ describe('transformRunSummary', () => {
         { stepId: 's2', status: 'SUCCESS' },
       ],
     };
-    
+
     const result = transformRunSummary(engineRun);
-    
+
     expect(result).toEqual({
       runId: 'run-123',
       planId: 'plan-abc',
@@ -170,7 +175,7 @@ describe('transformRunSummary', () => {
       duration: 1800, // 30 minutes in seconds
     });
   });
-  
+
   it('calculates progress percentage correctly', () => {
     const engineRun = {
       runId: 'run-123',
@@ -180,9 +185,9 @@ describe('transformRunSummary', () => {
         { stepId: 's3', status: 'PENDING' },
       ],
     };
-    
+
     const result = transformRunSummary(engineRun);
-    
+
     expect(result.progress).toEqual({
       completed: 1,
       total: 3,
@@ -212,33 +217,33 @@ describe('usePermissions', () => {
         {children}
       </PermissionsProvider>
     );
-    
+
     const { result } = renderHook(() => usePermissions(), { wrapper });
-    
+
     expect(result.current.can('plan:edit', 'team-123')).toBe(true);
   });
-  
+
   it('returns true if user has wildcard permission', () => {
     const wrapper = ({ children }) => (
       <PermissionsProvider value={{ permissions: ['plan:edit:*'] }}>
         {children}
       </PermissionsProvider>
     );
-    
+
     const { result } = renderHook(() => usePermissions(), { wrapper });
-    
+
     expect(result.current.can('plan:edit', 'team-999')).toBe(true);
   });
-  
+
   it('returns false if user lacks permission', () => {
     const wrapper = ({ children }) => (
       <PermissionsProvider value={{ permissions: [] }}>
         {children}
       </PermissionsProvider>
     );
-    
+
     const { result } = renderHook(() => usePermissions(), { wrapper });
-    
+
     expect(result.current.can('plan:delete', 'team-123')).toBe(false);
   });
 });
@@ -258,38 +263,38 @@ import { PermissionsProvider } from '@/contexts/PermissionsContext';
 describe('RunControls', () => {
   it('hides Cancel button if user lacks run:cancel permission', () => {
     const mockRun = { runId: 'run-123', status: 'RUNNING', teamId: 'team-123' };
-    
+
     render(
       <PermissionsProvider value={{ permissions: [] }}>
         <RunControls run={mockRun} />
       </PermissionsProvider>
     );
-    
+
     expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
   });
-  
+
   it('disables Cancel button if run is COMPLETED', () => {
     const mockRun = { runId: 'run-123', status: 'COMPLETED', teamId: 'team-123' };
-    
+
     render(
       <PermissionsProvider value={{ permissions: ['run:cancel:*'] }}>
         <RunControls run={mockRun} />
       </PermissionsProvider>
     );
-    
+
     const button = screen.getByText('Cancel');
     expect(button).toBeDisabled();
   });
-  
+
   it('enables Cancel button if run is RUNNING and user has permission', () => {
     const mockRun = { runId: 'run-123', status: 'RUNNING', teamId: 'team-123' };
-    
+
     render(
       <PermissionsProvider value={{ permissions: ['run:cancel:*'] }}>
         <RunControls run={mockRun} />
       </PermissionsProvider>
     );
-    
+
     const button = screen.getByText('Cancel');
     expect(button).not.toBeDisabled();
   });
@@ -303,6 +308,7 @@ describe('RunControls', () => {
 **Scope**: Component + API interactions, Zustand stores, TanStack Query
 
 **Tools**:
+
 - **MSW** (Mock Service Worker) - Mock API responses
 - **React Testing Library** - Render components
 - **@testing-library/user-event** - Simulate user interactions
@@ -322,13 +328,15 @@ import { RunListPage } from './RunListPage';
 
 const server = setupServer(
   rest.get('/v1/runs', (req, res, ctx) => {
-    return res(ctx.json({
-      runs: [
-        { runId: 'run-123', status: 'RUNNING', planName: 'Daily ETL' },
-        { runId: 'run-456', status: 'COMPLETED', planName: 'Weekly Report' },
-      ],
-      cursor: { next: null, hasMore: false },
-    }));
+    return res(
+      ctx.json({
+        runs: [
+          { runId: 'run-123', status: 'RUNNING', planName: 'Daily ETL' },
+          { runId: 'run-456', status: 'COMPLETED', planName: 'Weekly Report' },
+        ],
+        cursor: { next: null, hasMore: false },
+      })
+    );
   })
 );
 
@@ -339,35 +347,35 @@ afterAll(() => server.close());
 describe('RunListPage', () => {
   it('fetches and displays runs from API', async () => {
     const queryClient = new QueryClient();
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <RunListPage />
       </QueryClientProvider>
     );
-    
+
     // Wait for API call to complete
     await waitFor(() => {
       expect(screen.getByText('Daily ETL')).toBeInTheDocument();
       expect(screen.getByText('Weekly Report')).toBeInTheDocument();
     });
   });
-  
+
   it('shows error message if API call fails', async () => {
     server.use(
       rest.get('/v1/runs', (req, res, ctx) => {
         return res(ctx.status(500), ctx.json({ error: 'Internal Server Error' }));
       })
     );
-    
+
     const queryClient = new QueryClient();
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <RunListPage />
       </QueryClientProvider>
     );
-    
+
     await waitFor(() => {
       expect(screen.getByText(/error/i)).toBeInTheDocument();
     });
@@ -390,10 +398,10 @@ describe('graphStore', () => {
     // Reset store before each test
     useGraphStore.setState({ nodes: [], edges: [] });
   });
-  
+
   it('adds a node to the graph', () => {
     const { result } = renderHook(() => useGraphStore());
-    
+
     act(() => {
       result.current.addNode({
         id: 'node-1',
@@ -402,26 +410,26 @@ describe('graphStore', () => {
         data: { label: 'Fetch Data' },
       });
     });
-    
+
     expect(result.current.nodes).toHaveLength(1);
     expect(result.current.nodes[0].id).toBe('node-1');
   });
-  
+
   it('removes a node and connected edges', () => {
     const { result } = renderHook(() => useGraphStore());
-    
+
     // Setup: Add node and edge
     act(() => {
       result.current.addNode({ id: 'node-1', type: 'python-task', position: { x: 0, y: 0 } });
       result.current.addNode({ id: 'node-2', type: 'python-task', position: { x: 200, y: 0 } });
       result.current.addEdge({ id: 'edge-1', source: 'node-1', target: 'node-2' });
     });
-    
+
     // Remove node
     act(() => {
       result.current.removeNode('node-1');
     });
-    
+
     expect(result.current.nodes).toHaveLength(1);
     expect(result.current.edges).toHaveLength(0); // Connected edge also removed
   });
@@ -435,6 +443,7 @@ describe('graphStore', () => {
 **Scope**: Critical user journeys (golden paths)
 
 **Tools**:
+
 - **Playwright** (preferred) or **Cypress**
 
 **Test location**: `e2e/golden-paths/`
@@ -444,6 +453,7 @@ describe('graphStore', () => {
 See [GOLDEN_PATHS_UI.v1.md](../golden-paths/GOLDEN_PATHS_UI.v1.md) for full test examples.
 
 **Summary**:
+
 - GP-01: Import dbt → Validate → Execute
 - GP-02: Create plan → Add nodes → Execute
 - GP-03: Audit trail review
@@ -451,6 +461,7 @@ See [GOLDEN_PATHS_UI.v1.md](../golden-paths/GOLDEN_PATHS_UI.v1.md) for full test
 - GP-05: View cost breakdown
 
 **Run frequency**:
+
 - **On every PR**: Run E2E tests in CI (headless)
 - **On deploy to staging**: Run full E2E suite
 - **Synthetic canaries**: Run subset every 15 minutes in production
@@ -501,10 +512,10 @@ pactWith({ consumer: 'frontend', provider: 'backend' }, (provider) => {
         },
       });
     });
-    
+
     it('fetches runs from backend', async () => {
       const result = await getRuns({ limit: 50 });
-      
+
       expect(result.runs).toHaveLength(1);
       expect(result.runs[0].runId).toBe('run-123');
     });
@@ -513,6 +524,7 @@ pactWith({ consumer: 'frontend', provider: 'backend' }, (provider) => {
 ```
 
 **CI Integration**:
+
 - Frontend publishes contract (Pact file) to Pact Broker
 - Backend verifies contract in its CI pipeline
 - Breaking changes fail backend CI → prevents deploy
@@ -526,6 +538,7 @@ pactWith({ consumer: 'frontend', provider: 'backend' }, (provider) => {
 **Tool**: **Percy** or **Chromatic** (Storybook + visual diffing)
 
 **Workflow**:
+
 1. Developer adds Storybook stories for components
 2. Percy captures screenshots on every PR
 3. Reviewer approves or rejects visual changes
@@ -556,6 +569,7 @@ export const Failed = {
 ```
 
 **CI Integration**:
+
 ```yaml
 # .github/workflows/visual-tests.yml
 - name: Run Percy
@@ -571,6 +585,7 @@ export const Failed = {
 **Purpose**: Ensure UI is usable by screen readers, keyboard-only users
 
 **Tools**:
+
 - **vitest-axe** (unit tests - Jest-axe compatible API)
 - **axe-core** (E2E tests via Playwright)
 
@@ -586,7 +601,7 @@ expect.extend(toHaveNoViolations);
 describe('RunList A11y', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<RunList runs={mockRuns} />);
-    
+
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
@@ -601,7 +616,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 test('Audit viewer has no accessibility violations', async ({ page }) => {
   await page.goto('/audit');
-  
+
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
@@ -616,11 +631,13 @@ test('Audit viewer has no accessibility violations', async ({ page }) => {
 **Tool**: **Lighthouse CI** (run Lighthouse in CI)
 
 **Metrics** (see [PERF_BUDGET.md](PERF_BUDGET.md)):
+
 - **First Contentful Paint (FCP)**: <1.5s
 - **Largest Contentful Paint (LCP)**: <2.5s
 - **Time to Interactive (TTI)**: <3.5s
 
 **CI Integration**:
+
 ```yaml
 # .github/workflows/lighthouse.yml
 - name: Run Lighthouse CI
@@ -633,15 +650,16 @@ test('Audit viewer has no accessibility violations', async ({ page }) => {
 
 ## 6. Test Coverage Targets
 
-| Test Level | Target | Rationale |
-|------------|--------|-----------|
-| Unit tests | 80% | Pure functions, hooks, view models |
-| Integration tests | 70% | API interactions, stores |
-| E2E tests | 100% of golden paths | Critical user journeys |
-| Contract tests | 100% of API endpoints | Prevent breaking changes |
-| A11y tests | 100% of pages | WCAG 2.1 AA compliance |
+| Test Level        | Target                | Rationale                          |
+| ----------------- | --------------------- | ---------------------------------- |
+| Unit tests        | 80%                   | Pure functions, hooks, view models |
+| Integration tests | 70%                   | API interactions, stores           |
+| E2E tests         | 100% of golden paths  | Critical user journeys             |
+| Contract tests    | 100% of API endpoints | Prevent breaking changes           |
+| A11y tests        | 100% of pages         | WCAG 2.1 AA compliance             |
 
 **Coverage enforcement**:
+
 ```ts
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
@@ -680,14 +698,14 @@ jobs:
       - uses: actions/checkout@v3
       - run: npm ci
       - run: npm run test:unit -- --coverage
-      
+
   integration-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - run: npm ci
       - run: npm run test:integration
-      
+
   e2e-tests:
     runs-on: ubuntu-latest
     steps:
@@ -695,7 +713,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npm run test:e2e
-      
+
   contract-tests:
     runs-on: ubuntu-latest
     steps:
@@ -703,7 +721,7 @@ jobs:
       - run: npm ci
       - run: npm run test:contract
       - run: npx pact-broker publish ./pacts --consumer-app-version=${{ github.sha }}
-      
+
   a11y-tests:
     runs-on: ubuntu-latest
     steps:
@@ -759,13 +777,13 @@ Store reusable fixtures in `src/test-utils/fixtures/`:
 // src/test-utils/fixtures/runs.json
 [
   {
-    "runId": "run-123",
-    "planId": "plan-abc",
-    "status": "COMPLETED",
-    "startedAt": "2026-02-11T10:00:00Z",
-    "completedAt": "2026-02-11T10:30:00Z"
-  }
-]
+    runId: 'run-123',
+    planId: 'plan-abc',
+    status: 'COMPLETED',
+    startedAt: '2026-02-11T10:00:00Z',
+    completedAt: '2026-02-11T10:30:00Z',
+  },
+];
 ```
 
 ---
@@ -788,17 +806,15 @@ export function render(ui, { permissions = [], ...options } = {}) {
       queries: { retry: false },
     },
   });
-  
+
   function Wrapper({ children }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <PermissionsProvider value={{ permissions }}>
-          {children}
-        </PermissionsProvider>
+        <PermissionsProvider value={{ permissions }}>{children}</PermissionsProvider>
       </QueryClientProvider>
     );
   }
-  
+
   return rtlRender(ui, { wrapper: Wrapper, ...options });
 }
 

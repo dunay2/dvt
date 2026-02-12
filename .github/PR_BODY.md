@@ -23,12 +23,12 @@ Refactors monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 modular docume
 
 ## 🗺️ Quick Migration
 
-| Old Bookmark | New Location |
-|--------------|--------------|
-| `WORKFLOW_ENGINE.md` (all sections) | [INDEX.md](docs/architecture/engine/INDEX.md) (navigation hub) |
-| State Store Model | [ExecutionSemantics.v1.md § 1](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) + [State Store Contract](docs/architecture/engine/contracts/state-store/README.md) |
-| Snowflake DDL | [Snowflake StateStoreAdapter](docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md) |
-| Continue-As-New (Temporal) | [Temporal EnginePolicies.md](docs/architecture/engine/adapters/temporal/EnginePolicies.md) |
+| Old Bookmark                        | New Location                                                                                                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WORKFLOW_ENGINE.md` (all sections) | [INDEX.md](docs/architecture/engine/INDEX.md) (navigation hub)                                                                                                                        |
+| State Store Model                   | [ExecutionSemantics.v1.md § 1](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) + [State Store Contract](docs/architecture/engine/contracts/state-store/README.md) |
+| Snowflake DDL                       | [Snowflake StateStoreAdapter](docs/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md)                                                                           |
+| Continue-As-New (Temporal)          | [Temporal EnginePolicies.md](docs/architecture/engine/adapters/temporal/EnginePolicies.md)                                                                                            |
 
 **Action required**: Update bookmarks to [INDEX.md](docs/architecture/engine/INDEX.md)
 

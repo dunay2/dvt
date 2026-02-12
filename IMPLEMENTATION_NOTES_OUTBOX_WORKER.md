@@ -129,7 +129,7 @@ setInterval(async () => {
   const metrics = await worker.getMetrics();
   console.log(`Lag: ${metrics.deliveryLagSeconds}s`);
   console.log(`Rate: ${metrics.deliveryRate} events/s`);
-  
+
   if (worker.isCircuitBreakerOpen()) {
     console.warn('Circuit breaker is OPEN!');
   }
@@ -144,6 +144,7 @@ process.on('SIGTERM', async () => {
 ## Files Changed
 
 ### Added Files (9)
+
 - `engine/src/core/types.ts`
 - `engine/src/core/interfaces/IOutboxStorage.ts`
 - `engine/src/core/interfaces/IEventBus.ts`
@@ -156,6 +157,7 @@ process.on('SIGTERM', async () => {
 - `tsconfig.test.json`
 
 ### Modified Files (4)
+
 - `.eslintrc.json` - Added test file configuration
 - `engine/test/setup.ts` - Fixed Temporal mock
 - `engine/test/determinism/sample_determinism.test.ts` - Removed unused imports
@@ -220,6 +222,7 @@ Based on testing:
 The Outbox delivery worker implementation is complete and ready for integration with production adapters. All acceptance criteria from Issue #16 have been met, and the implementation provides a solid foundation for reliable event delivery in the DVT Engine.
 
 The worker is:
+
 - ✅ **Reliable**: At-least-once delivery with no event loss
 - ✅ **Resilient**: Exponential backoff and circuit breaker
 - ✅ **Observable**: Comprehensive metrics and monitoring

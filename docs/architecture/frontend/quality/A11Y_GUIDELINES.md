@@ -10,6 +10,7 @@
 ## Executive Summary
 
 The frontend MUST comply with **WCAG 2.1 Level AA** standards to ensure usability for:
+
 - Users with visual impairments (screen readers, low vision)
 - Users with motor impairments (keyboard-only navigation)
 - Users with cognitive disabilities (clear language, consistent UI)
@@ -22,46 +23,46 @@ The frontend MUST comply with **WCAG 2.1 Level AA** standards to ensure usabilit
 
 ### 1.1 Perceivable
 
-| Guideline | Requirement | Implementation |
-|-----------|-------------|----------------|
-| **1.1.1 Non-text Content** | All images have alt text | `<img alt="Run timeline graph">` |
-| **1.2.1 Audio/Video** | Provide captions (if applicable) | N/A (no video content) |
-| **1.3.1 Info & Relationships** | Use semantic HTML | `<nav>`, `<main>`, `<section>`, `<table>` |
-| **1.4.3 Contrast** | Text contrast ≥4.5:1 (7:1 for large text) | Test with [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) |
-| **1.4.4 Resize Text** | UI usable at 200% zoom | Test in browser zoom |
-| **1.4.11 Non-text Contrast** | UI elements ≥3:1 contrast | Buttons, borders, icons |
+| Guideline                      | Requirement                               | Implementation                                                                     |
+| ------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- |
+| **1.1.1 Non-text Content**     | All images have alt text                  | `<img alt="Run timeline graph">`                                                   |
+| **1.2.1 Audio/Video**          | Provide captions (if applicable)          | N/A (no video content)                                                             |
+| **1.3.1 Info & Relationships** | Use semantic HTML                         | `<nav>`, `<main>`, `<section>`, `<table>`                                          |
+| **1.4.3 Contrast**             | Text contrast ≥4.5:1 (7:1 for large text) | Test with [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) |
+| **1.4.4 Resize Text**          | UI usable at 200% zoom                    | Test in browser zoom                                                               |
+| **1.4.11 Non-text Contrast**   | UI elements ≥3:1 contrast                 | Buttons, borders, icons                                                            |
 
 ---
 
 ### 1.2 Operable
 
-| Guideline | Requirement | Implementation |
-|-----------|-------------|----------------|
-| **2.1.1 Keyboard** | All functionality keyboard-accessible | No mouse-only actions |
-| **2.1.2 No Keyboard Trap** | Users can exit all UI elements | Test modal/dropdown focus traps |
-| **2.4.1 Bypass Blocks** | Skip navigation link | `<a href="#main">Skip to content</a>` |
-| **2.4.3 Focus Order** | Logical tab order | Test with `Tab` key |
-| **2.4.7 Focus Visible** | Visible focus indicator | `:focus-visible { outline: 2px solid blue; }` |
+| Guideline                  | Requirement                           | Implementation                                |
+| -------------------------- | ------------------------------------- | --------------------------------------------- |
+| **2.1.1 Keyboard**         | All functionality keyboard-accessible | No mouse-only actions                         |
+| **2.1.2 No Keyboard Trap** | Users can exit all UI elements        | Test modal/dropdown focus traps               |
+| **2.4.1 Bypass Blocks**    | Skip navigation link                  | `<a href="#main">Skip to content</a>`         |
+| **2.4.3 Focus Order**      | Logical tab order                     | Test with `Tab` key                           |
+| **2.4.7 Focus Visible**    | Visible focus indicator               | `:focus-visible { outline: 2px solid blue; }` |
 
 ---
 
 ### 1.3 Understandable
 
-| Guideline | Requirement | Implementation |
-|-----------|-------------|----------------|
-| **3.1.1 Language** | Declare page language | `<html lang="en">` |
-| **3.2.1 On Focus** | No unexpected context changes | Don't auto-submit forms on focus |
-| **3.3.1 Error Identification** | Clearly describe errors | "Email is required" (not "Field is invalid") |
-| **3.3.2 Labels** | Form inputs have labels | `<label for="email">Email</label>` |
+| Guideline                      | Requirement                   | Implementation                               |
+| ------------------------------ | ----------------------------- | -------------------------------------------- |
+| **3.1.1 Language**             | Declare page language         | `<html lang="en">`                           |
+| **3.2.1 On Focus**             | No unexpected context changes | Don't auto-submit forms on focus             |
+| **3.3.1 Error Identification** | Clearly describe errors       | "Email is required" (not "Field is invalid") |
+| **3.3.2 Labels**               | Form inputs have labels       | `<label for="email">Email</label>`           |
 
 ---
 
 ### 1.4 Robust
 
-| Guideline | Requirement | Implementation |
-|-----------|-------------|----------------|
-| **4.1.2 Name, Role, Value** | Use ARIA attributes correctly | `role="button"`, `aria-label="Close"` |
-| **4.1.3 Status Messages** | Use `role="status"` for live updates | toast notifications, loading states |
+| Guideline                   | Requirement                          | Implementation                        |
+| --------------------------- | ------------------------------------ | ------------------------------------- |
+| **4.1.2 Name, Role, Value** | Use ARIA attributes correctly        | `role="button"`, `aria-label="Close"` |
+| **4.1.3 Status Messages**   | Use `role="status"` for live updates | toast notifications, loading states   |
 
 ---
 
@@ -84,13 +85,13 @@ import FocusTrap from 'focus-trap-react';
 
 function Modal({ isOpen, onClose, children }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  
+
   useEffect(() => {
     if (isOpen) {
       closeButtonRef.current?.focus();
     }
   }, [isOpen]);
-  
+
   return (
     <FocusTrap active={isOpen}>
       <div role="dialog" aria-modal="true">
@@ -112,7 +113,7 @@ When opening a modal/drawer, move focus to the first interactive element:
 
 ```tsx
 // ❌ WRONG: Focus stays on trigger button
-<button onClick={() => setModalOpen(true)}>Open</button>
+<button onClick={() => setModalOpen(true)}>Open</button>;
 
 // ✅ CORRECT: Focus moves to modal
 useEffect(() => {
@@ -130,7 +131,7 @@ function Modal({ triggerRef, onClose }) {
     onClose();
     triggerRef.current?.focus(); // Return focus
   };
-  
+
   return <button onClick={handleClose}>Close</button>;
 }
 ```
@@ -141,24 +142,24 @@ function Modal({ triggerRef, onClose }) {
 
 The graph editor MUST support keyboard shortcuts:
 
-| Shortcut | Action |
-|----------|--------|
-| `Tab` | Navigate between nodes |
-| `Enter` | Open node config panel |
-| `Delete` | Delete selected node |
-| `Ctrl+Z` | Undo |
-| `Ctrl+Shift+Z` | Redo |
-| `Ctrl+C` | Copy selected node |
-| `Ctrl+V` | Paste node |
-| `Arrow keys` | Move selected node |
-| `Esc` | Close config panel / deselect |
+| Shortcut       | Action                        |
+| -------------- | ----------------------------- |
+| `Tab`          | Navigate between nodes        |
+| `Enter`        | Open node config panel        |
+| `Delete`       | Delete selected node          |
+| `Ctrl+Z`       | Undo                          |
+| `Ctrl+Shift+Z` | Redo                          |
+| `Ctrl+C`       | Copy selected node            |
+| `Ctrl+V`       | Paste node                    |
+| `Arrow keys`   | Move selected node            |
+| `Esc`          | Close config panel / deselect |
 
 **Implementation**:
 
 ```tsx
 function GraphEditor() {
   const [selectedNode, setSelectedNode] = useState(null);
-  
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' && selectedNode) {
@@ -169,11 +170,11 @@ function GraphEditor() {
         undo();
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedNode]);
-  
+
   return <ReactFlow nodes={nodes} edges={edges} />;
 }
 ```
@@ -186,16 +187,16 @@ function GraphEditor() {
 
 Use native HTML elements when possible:
 
-| Semantic Element | Purpose |
-|-----------------|---------|
-| `<nav>` | Navigation menu |
-| `<main>` | Main content area |
-| `<aside>` | Sidebar / complementary content |
-| `<header>` | Page header |
-| `<footer>` | Page footer |
-| `<button>` | Clickable button |
-| `<a>` | Link to another page |
-| `<table>` | Tabular data |
+| Semantic Element | Purpose                         |
+| ---------------- | ------------------------------- |
+| `<nav>`          | Navigation menu                 |
+| `<main>`         | Main content area               |
+| `<aside>`        | Sidebar / complementary content |
+| `<header>`       | Page header                     |
+| `<footer>`       | Page footer                     |
+| `<button>`       | Clickable button                |
+| `<a>`            | Link to another page            |
+| `<table>`        | Tabular data                    |
 
 **Don't use `<div role="button">`** when `<button>` is sufficient.
 
@@ -205,13 +206,13 @@ Use native HTML elements when possible:
 
 Use ARIA roles for custom components:
 
-| Role | Usage |
-|------|-------|
-| `role="dialog"` | Modal windows |
-| `role="status"` | Live region (toast notifications) |
-| `role="alert"` | Critical alerts (errors) |
-| `role="progressbar"` | Progress indicators |
-| `role="tablist"` | Tab navigation |
+| Role                 | Usage                             |
+| -------------------- | --------------------------------- |
+| `role="dialog"`      | Modal windows                     |
+| `role="status"`      | Live region (toast notifications) |
+| `role="alert"`       | Critical alerts (errors)          |
+| `role="progressbar"` | Progress indicators               |
+| `role="tablist"`     | Tab navigation                    |
 
 **Example modal**:
 
@@ -278,11 +279,11 @@ Provide descriptive labels for interactive elements:
 
 Use `aria-live` for dynamic content updates:
 
-| `aria-live` Value | Usage |
-|-------------------|-------|
-| `off` | No announcements (default) |
-| `polite` | Announce after current speech (toast notifications) |
-| `assertive` | Interrupt current speech (critical errors) |
+| `aria-live` Value | Usage                                               |
+| ----------------- | --------------------------------------------------- |
+| `off`             | No announcements (default)                          |
+| `polite`          | Announce after current speech (toast notifications) |
+| `assertive`       | Interrupt current speech (critical errors)          |
 
 **Example toast notification**:
 
@@ -296,7 +297,7 @@ function Toast({ message }) {
 }
 
 // Usage
-<Toast message="Run started successfully" />
+<Toast message="Run started successfully" />;
 ```
 
 **Example error alert**:
@@ -311,7 +312,7 @@ function ErrorAlert({ message }) {
 }
 
 // Usage
-<ErrorAlert message="Failed to start run" />
+<ErrorAlert message="Failed to start run" />;
 ```
 
 ---
@@ -320,10 +321,10 @@ function ErrorAlert({ message }) {
 
 ### 4.1 Text Contrast
 
-| Text Size | Min Contrast Ratio |
-|-----------|-------------------|
-| Normal text (<18px) | 4.5:1 |
-| Large text (≥18px or bold ≥14px) | 3:1 |
+| Text Size                        | Min Contrast Ratio |
+| -------------------------------- | ------------------ |
+| Normal text (<18px)              | 4.5:1              |
+| Large text (≥18px or bold ≥14px) | 3:1                |
 
 **Testing**: Use [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 
@@ -435,7 +436,7 @@ function EmailInput({ error }) {
 }
 
 // Usage
-<EmailInput error="Email is required" />
+<EmailInput error="Email is required" />;
 ```
 
 ---
@@ -571,13 +572,13 @@ test('RunList has no accessibility violations', async () => {
 
 ### 8.2 Manual Testing
 
-| Test | Tool | Method |
-|------|------|--------|
-| **Screen reader** | NVDA (Windows), VoiceOver (Mac) | Navigate page with screen reader |
-| **Keyboard navigation** | Browser | Navigate with `Tab`, `Enter`, `Esc` |
-| **Color contrast** | Chrome DevTools → Accessibility | Check contrast ratios |
-| **Focus indicators** | Browser | Tab through page, verify visible focus |
-| **Zoom to 200%** | Browser zoom | Verify layout remains usable |
+| Test                    | Tool                            | Method                                 |
+| ----------------------- | ------------------------------- | -------------------------------------- |
+| **Screen reader**       | NVDA (Windows), VoiceOver (Mac) | Navigate page with screen reader       |
+| **Keyboard navigation** | Browser                         | Navigate with `Tab`, `Enter`, `Esc`    |
+| **Color contrast**      | Chrome DevTools → Accessibility | Check contrast ratios                  |
+| **Focus indicators**    | Browser                         | Tab through page, verify visible focus |
+| **Zoom to 200%**        | Browser zoom                    | Verify layout remains usable           |
 
 ---
 
@@ -589,25 +590,25 @@ import AxeBuilder from '@axe-core/playwright';
 
 test('Audit viewer has no accessibility violations', async ({ page }) => {
   await page.goto('/audit');
-  
+
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
 
 test('Can navigate audit viewer with keyboard', async ({ page }) => {
   await page.goto('/audit');
-  
+
   // Tab to first filter
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
-  
+
   // Type in actor filter
   await page.keyboard.type('alice@example.com');
-  
+
   // Tab to search button
   await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
-  
+
   // Verify results loaded
   await expect(page.locator('.audit-entry')).toBeVisible();
 });
@@ -617,15 +618,15 @@ test('Can navigate audit viewer with keyboard', async ({ page }) => {
 
 ## 9. Common Mistakes to Avoid
 
-| Mistake | Correct Approach |
-|---------|-----------------|
-| Using `<div>` instead of `<button>` | Use semantic HTML: `<button>` |
-| Icon-only button without label | Add `aria-label="Close"` |
-| Form input without label | Use `<label>` or `aria-label` |
-| Low contrast text (e.g., gray on white) | Ensure ≥4.5:1 contrast |
-| No focus indicator | Add `:focus-visible` styles |
-| Modal without focus trap | Use `focus-trap-react` |
-| Live updates without `aria-live` | Add `role="status"` or `role="alert"` |
+| Mistake                                 | Correct Approach                      |
+| --------------------------------------- | ------------------------------------- |
+| Using `<div>` instead of `<button>`     | Use semantic HTML: `<button>`         |
+| Icon-only button without label          | Add `aria-label="Close"`              |
+| Form input without label                | Use `<label>` or `aria-label`         |
+| Low contrast text (e.g., gray on white) | Ensure ≥4.5:1 contrast                |
+| No focus indicator                      | Add `:focus-visible` styles           |
+| Modal without focus trap                | Use `focus-trap-react`                |
+| Live updates without `aria-live`        | Add `role="status"` or `role="alert"` |
 
 ---
 

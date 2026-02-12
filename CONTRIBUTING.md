@@ -61,6 +61,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/). See [COMMIT
 **Format**: `<type>(<scope>): <subject>`
 
 **Examples**:
+
 ```
 feat(engine): add pause/resume support
 fix(temporal): correct history size calculation
@@ -94,6 +95,7 @@ docs(architecture): update determinism guide
 ### Determinism Tests
 
 For engine code, ensure:
+
 - No `Date.now()` - use `workflow.now()`
 - No `Math.random()` - use seeded RNG
 - No `process.env` in core engine
@@ -104,6 +106,7 @@ For engine code, ensure:
 ### Contracts (High Scrutiny)
 
 Changes to `/docs/architecture/engine/contracts/` require:
+
 - Clear rationale
 - Backward compatibility analysis
 - Version bump consideration (major/minor/patch)
@@ -112,6 +115,7 @@ Changes to `/docs/architecture/engine/contracts/` require:
 ### Adapters
 
 New adapters should:
+
 - Implement full `IWorkflowEngine` contract
 - Document platform-specific limitations
 - Include capability matrix

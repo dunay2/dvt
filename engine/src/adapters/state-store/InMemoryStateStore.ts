@@ -1,14 +1,13 @@
 /**
  * InMemoryStateStore - Mock implementation for testing
- * 
+ *
  * Simple in-memory implementation of IOutboxStorage for unit tests
  * NOT for production use
- * 
+ *
  * Note: Use of Date is intentional for testing infrastructure
  */
 
 /* eslint-disable no-restricted-globals */
-/* eslint-disable @typescript-eslint/require-await */
 
 import { IOutboxStorage } from '../../core/interfaces/IOutboxStorage';
 import { OutboxEvent } from '../../core/types';

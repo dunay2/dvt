@@ -36,7 +36,11 @@ interface IWorkflowEngine {
   startRun(executionPlan: ExecutionPlan, context: RunContext): Promise<EngineRunRef>;
   cancelRun(engineRunRef: EngineRunRef): Promise<void>;
   getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot>;
-  signal(engineRunRef: EngineRunRef, signalType: SignalType, payload: Record<string, any>): Promise<void>;
+  signal(
+    engineRunRef: EngineRunRef,
+    signalType: SignalType,
+    payload: Record<string, any>
+  ): Promise<void>;
 }
 
 interface RunContext {
@@ -44,7 +48,7 @@ interface RunContext {
   projectId: string;
   environmentId: string;
   runId: string;
-  targetAdapter: "temporal" | "conductor" | "auto";
+  targetAdapter: 'temporal' | 'conductor' | 'auto';
 }
 ```
 
@@ -53,14 +57,14 @@ interface RunContext {
 ```ts
 type EngineRunRef =
   | {
-      provider: "temporal";
+      provider: 'temporal';
       namespace: string;
       workflowId: string;
       runId?: string;
       taskQueue?: string;
     }
   | {
-      provider: "conductor";
+      provider: 'conductor';
       workflowId: string;
       runId?: string;
       conductorUrl?: string;
@@ -101,17 +105,17 @@ Events are written to `IRunStateStore` (synchronous primary path, source of trut
 
 Signals are **operator actions** routed to the engine, **ALWAYS enforced by `IAuthorization`** (RBAC + tenant scoping).
 
-| SignalType | Payload | RBAC Role | Requires Reason? | Effect | Status |
-|---|---|---|---|---|---|
-| `PAUSE` | `{ reason?: string }` | Operator | No | Pauses future step scheduling | ✅ Phase 1 |
-| `RESUME` | `{}` | Operator | No | Resumes paused run | ✅ Phase 1 |
-| `RETRY_STEP` | `{ stepId, force?: boolean }` | Engineer | No | Retries failed step | ✅ Phase 1 |
-| `UPDATE_PARAMS` | `{ params: object }` | Admin | **YES** | Updates runtime parameters | ✅ Phase 1 |
-| `INJECT_OVERRIDE` | `{ stepId, override: object }` | Admin | **YES** | Injects override for next step | ✅ Phase 1 |
-| `ESCALATE_ALERT` | `{ level: string, note?: string }` | System | No | Triggers escalation | ✅ Phase 1 |
-| `SKIP_STEP` | `{ stepId, reason?: string }` | Engineer | No | Skips a step | ⏳ Phase 2 |
-| `UPDATE_TARGET` | `{ stepId, newTarget: object }` | Admin | **YES** | Changes target schema/db | ⏳ Phase 2 |
-| `EMERGENCY_STOP` | `{ reason: string, forceKill?: boolean }` | Admin | **YES** | Immediate termination | ⏳ Phase 3 |
+| SignalType        | Payload                                   | RBAC Role | Requires Reason? | Effect                         | Status     |
+| ----------------- | ----------------------------------------- | --------- | ---------------- | ------------------------------ | ---------- |
+| `PAUSE`           | `{ reason?: string }`                     | Operator  | No               | Pauses future step scheduling  | ✅ Phase 1 |
+| `RESUME`          | `{}`                                      | Operator  | No               | Resumes paused run             | ✅ Phase 1 |
+| `RETRY_STEP`      | `{ stepId, force?: boolean }`             | Engineer  | No               | Retries failed step            | ✅ Phase 1 |
+| `UPDATE_PARAMS`   | `{ params: object }`                      | Admin     | **YES**          | Updates runtime parameters     | ✅ Phase 1 |
+| `INJECT_OVERRIDE` | `{ stepId, override: object }`            | Admin     | **YES**          | Injects override for next step | ✅ Phase 1 |
+| `ESCALATE_ALERT`  | `{ level: string, note?: string }`        | System    | No               | Triggers escalation            | ✅ Phase 1 |
+| `SKIP_STEP`       | `{ stepId, reason?: string }`             | Engineer  | No               | Skips a step                   | ⏳ Phase 2 |
+| `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**          | Changes target schema/db       | ⏳ Phase 2 |
+| `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**          | Immediate termination          | ⏳ Phase 3 |
 
 **Idempotency rule**:
 
@@ -128,27 +132,27 @@ Every signal **MUST** generate a `SignalDecisionRecord` **BEFORE** engine proces
 
 ```ts
 interface SignalDecisionRecord {
-  signalDecisionId: string;    // UUID v4
-  signalId: string;            // Client-supplied
-  decision: "ACCEPTED" | "REJECTED" | "REVISION_REQUIRED";
+  signalDecisionId: string; // UUID v4
+  signalId: string; // Client-supplied
+  decision: 'ACCEPTED' | 'REJECTED' | 'REVISION_REQUIRED';
   reason?: string;
-  policyDecisionId: string;    // IAuthorization ref
-  
+  policyDecisionId: string; // IAuthorization ref
+
   audit: {
     actorId: string;
-    actorRole: string;         // "Operator", "Engineer", "Admin", "System"
+    actorRole: string; // "Operator", "Engineer", "Admin", "System"
     tenantId: string;
-    timestamp: string;         // ISO 8601 UTC
-    reason?: string;           // REQUIRED for destructive signals
+    timestamp: string; // ISO 8601 UTC
+    reason?: string; // REQUIRED for destructive signals
     sourceIp?: string;
   };
-  
+
   signalType: SignalType;
   signalPayload: Record<string, any>;
-  
+
   engineProcessedAt?: string;
-  engineResult?: { status: "success" | "failure"; errorCode?: string };
-  
+  engineResult?: { status: 'success' | 'failure'; errorCode?: string };
+
   approvalRequired?: boolean;
   approvedBy?: string;
   approvalTimestamp?: string;
@@ -189,12 +193,12 @@ The engine receives a **plan reference**, not the full plan (Temporal payload li
 
 ```ts
 type PlanRef = {
-  uri: string;                          // e.g., s3://bucket/plans/{planId}.json
-  sha256: string;                       // integrity hash
-  schemaVersion: string;                // MANDATORY, e.g., "v1.2"
+  uri: string; // e.g., s3://bucket/plans/{planId}.json
+  sha256: string; // integrity hash
+  schemaVersion: string; // MANDATORY, e.g., "v1.2"
   planId: string;
   planVersion: string;
-  
+
   sizeBytes?: number;
   expiresAt?: string;
 };
@@ -234,18 +238,18 @@ Engine **MUST** validate plan capabilities against adapter before `startRun()`.
 ```ts
 interface ValidationReport {
   planId: string;
-  status: "VALID" | "WARNINGS" | "ERRORS";
+  status: 'VALID' | 'WARNINGS' | 'ERRORS';
   errors: { code: string; capability: string; message: string }[];
   warnings: { code: string; message: string }[];
 }
 
 async function startRun(plan: ExecutionPlan, ctx: RunContext): Promise<EngineRunRef> {
   const report = await validatePlan(plan, ctx.targetAdapter);
-  
-  if (report.status === "ERRORS" && plan.metadata.fallbackBehavior === "reject") {
-    throw new PlanValidationError("Plan validation failed", report);
+
+  if (report.status === 'ERRORS' && plan.metadata.fallbackBehavior === 'reject') {
+    throw new PlanValidationError('Plan validation failed', report);
   }
-  
+
   return await adapter.startRun(plan, ctx);
 }
 ```
@@ -274,6 +278,6 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 
 ## Change Log
 
-| Version | Date | Change |
-|---------|------|--------|
-| 1.0 | 2026-02-11 | Initial normative contract (Temporal + Conductor) |
+| Version | Date       | Change                                            |
+| ------- | ---------- | ------------------------------------------------- |
+| 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor) |

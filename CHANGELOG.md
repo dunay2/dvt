@@ -5,21 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0](https://github.com/dunay2/dvt/compare/v2.0.1...v2.1.0) (2026-02-11)
-
-
-### ✨ Features
-
-* implement outbox delivery worker with comprehensive tests ([45a7f78](https://github.com/dunay2/dvt/commit/45a7f78b5592c0aae5269648e80aa63c79d21975))
+### [2.4.8](https://github.com/dunay2/dvt/compare/v2.4.7...v2.4.8) (2026-02-12)
 
 
 ### 📝 Documentation
 
+* **engine:** Add Security section to INDEX.md ([#62](https://github.com/dunay2/dvt/issues/62)) ([6a04ff1](https://github.com/dunay2/dvt/commit/6a04ff17c7a56c4421b3ea5c63b32f0292c42835)), closes [#13](https://github.com/dunay2/dvt/issues/13)
+
+### [2.4.7](https://github.com/dunay2/dvt/compare/v2.4.6...v2.4.7) (2026-02-12)
+
+
+### 📝 Documentation
+
+* update quality summary ([#41](https://github.com/dunay2/dvt/issues/41)) ([58b0497](https://github.com/dunay2/dvt/commit/58b0497b0186fa66d27ae02a46e57b668c3c12da))
+
+### [2.4.6](https://github.com/dunay2/dvt/compare/v2.4.5...v2.4.6) (2026-02-12)
+
+### [2.4.5](https://github.com/dunay2/dvt/compare/v2.4.4...v2.4.5) (2026-02-12)
+
+### [2.4.4](https://github.com/dunay2/dvt/compare/v2.4.3...v2.4.4) (2026-02-12)
+
+### [2.4.3](https://github.com/dunay2/dvt/compare/v2.4.2...v2.4.3) (2026-02-12)
+
+### [2.4.2](https://github.com/dunay2/dvt/compare/v2.4.1...v2.4.2) (2026-02-12)
+
+### [2.4.1](https://github.com/dunay2/dvt/compare/v2.4.0...v2.4.1) (2026-02-12)
+
+## [2.4.0](https://github.com/dunay2/dvt/compare/v2.3.0...v2.4.0) (2026-02-12)
+
+
+### ✨ Features
+
+* Phase 2 - Projector and Engine adapter contracts ([#56](https://github.com/dunay2/dvt/issues/56)) ([81bfec8](https://github.com/dunay2/dvt/commit/81bfec85d59eb1b20be88fecd805dcbb75c44ebd))
+
+
+### 📝 Documentation
+
+* clarify determinism test README ([#43](https://github.com/dunay2/dvt/issues/43)) ([957f9f0](https://github.com/dunay2/dvt/commit/957f9f0a232646fbacd35128908453ffa34a004e))
+* refresh root README ([#42](https://github.com/dunay2/dvt/issues/42)) ([3397514](https://github.com/dunay2/dvt/commit/3397514155393df3fd365454ccab72f2dbb907f2))
+
+## [2.3.0](https://github.com/dunay2/dvt/compare/v2.2.0...v2.3.0) (2026-02-11)
+
+### ✨ Features
+
+* TypeScript project structure with adapter-agnostic contracts ([#55](https://github.com/dunay2/dvt/issues/55)) ([566f707](https://github.com/dunay2/dvt/commit/566f70746e52f2f485fa5a82966a007843da2eab)), closes [#2](https://github.com/dunay2/dvt/issues/2) [#2](https://github.com/dunay2/dvt/issues/2)
+
+## [2.2.0](https://github.com/dunay2/dvt/compare/v2.1.2...v2.2.0) (2026-02-11)
+
+### ✨ Features - TypeScript
+
+* implement TypeScript types for engine contracts ([090be4e](https://github.com/dunay2/dvt/commit/090be4e9cd97f50b76827f09db71ba58c3534ae0))
+
+### 📝 Documentation - Types
+
+* improve JSDoc clarity in type definitions ([4029760](https://github.com/dunay2/dvt/commit/402976025a7d803c856353821df5ba0062ab6c05))
+
+### 🐛 Bug Fixes - Formatting
+
+* align spacing in .golden/README.md with main branch ([0e68a10](https://github.com/dunay2/dvt/commit/0e68a1047f298ad1f0014b17e2370f58c3202f6f))
+* apply Prettier formatting to all files ([97b0e5d](https://github.com/dunay2/dvt/commit/97b0e5d56d51ed963005981bec51aacfb6cb9821))
+* resolve merge conflict in .golden/README.md ([db41a99](https://github.com/dunay2/dvt/commit/db41a990bc173c8ed57be095300fb81ee1619bc4))
+* update pnpm version to 9 in all workflow files ([04de73b](https://github.com/dunay2/dvt/commit/04de73bf3ac4b4571c14ae9916080b58845709eb))
+* use relative paths in JSDoc references ([e5c2996](https://github.com/dunay2/dvt/commit/e5c29960d05716ce5261782122d8e3ecc00d3118))
+
+### [2.1.2](https://github.com/dunay2/dvt/compare/v2.1.1...v2.1.2) (2026-02-11)
+
+### 📝 Documentation - Golden Paths
+
+* fix markdown lint errors in golden paths ([3a551f0](https://github.com/dunay2/dvt/commit/3a551f01ace7632dbc8a96c7826accbe695e9bf1))
+* implement golden paths examples with executable plans ([e6a8a91](https://github.com/dunay2/dvt/commit/e6a8a9137e04d74df88391cf0f803d7ee824af2f))
+
+### 🐛 Bug Fixes - ESLint
+
+* add .eslintignore to exclude test files from type-aware linting ([33b3c23](https://github.com/dunay2/dvt/commit/33b3c232a6f9e1564eeccd445a191cfe5782c01c))
+
+### 🏗️ Build System
+
+* add pnpm-lock.yaml for CI reproducible builds ([8c99ba8](https://github.com/dunay2/dvt/commit/8c99ba8e219bedf0b87b36d98a313e4fb0879f27))
+
+### [2.1.1](https://github.com/dunay2/dvt/compare/v2.1.0...v2.1.1) (2026-02-11)
+
+## [2.1.0](https://github.com/dunay2/dvt/compare/v2.0.1...v2.1.0) (2026-02-11)
+
+### ✨ Features - Outbox Worker
+
+* implement outbox delivery worker with comprehensive tests ([45a7f78](https://github.com/dunay2/dvt/commit/45a7f78b5592c0aae5269648e80aa63c79d21975))
+
+### 📝 Documentation - Outbox Worker
+
 * add comprehensive implementation notes for outbox worker ([1f991be](https://github.com/dunay2/dvt/commit/1f991be88d74b6db2f157df739aaeb4ebfde5706))
 * add comprehensive README and index exports for outbox worker ([d9434fc](https://github.com/dunay2/dvt/commit/d9434fc26f19452f1f5ddaf2ede39fcc83f62b68))
 
-
-### 🐛 Bug Fixes
+### 🐛 Bug Fixes - Outbox
 
 * address code review feedback ([9c81f2b](https://github.com/dunay2/dvt/commit/9c81f2b08f27569175c444c059bcf082d34a62fa))
 * **outbox:** accurate metrics + ordering ([412dbc3](https://github.com/dunay2/dvt/commit/412dbc39647eb2002438325e67a465f50c450350))
@@ -28,14 +105,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.0.0 (2026-02-11)
 
-
 ### ⚠ BREAKING CHANGES
 
 * **ci:** None (new tooling only, no semantic changes)
 
-### 🐛 Bug Fixes
+### 🐛 Bug Fixes - Markdown
 
-* agregar scripts placeholder para workflow engine y simplificar config markdownlint ([f9fec6b](https://github.com/dunay2/dvt/commit/f9fec6ba888d67ae22377bcd5ab63b4e686f0079))
 * aplicar auto-fix de markdownlint para corregir formato ([e01bc8a](https://github.com/dunay2/dvt/commit/e01bc8a7954208d9b1461afa473f59ad787a64b9))
 * corregir enlaces rotos en adapters y arreglar validación de contratos normativos (grep -F para búsqueda literal) ([6a63ca8](https://github.com/dunay2/dvt/commit/6a63ca8dd6cf0b4b2d27c859b43ab8499354038f))
 * corregir enlaces rotos en IWorkflowEngine.v1.md (capabilities/ y extensions/ paths) ([b51b4b0](https://github.com/dunay2/dvt/commit/b51b4b0f29716c207fd6f9868254dca4526a5736))
@@ -48,13 +123,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * remover cache npm del workflow y comentar enlace a Conductor EnginePolicies (no existe aún) ([b86e220](https://github.com/dunay2/dvt/commit/b86e220bfafd50c4130d3db53242c6205abaa48d))
 * simplificar reglas de markdownlint para enfoque en errores críticos ([09713be](https://github.com/dunay2/dvt/commit/09713be57a569396b71242eca96603b4e380019b))
 
-
 ### ♻️ Code Refactoring
 
 * make ROADMAP.md adapter-agnostic (move Postgres details to adapter docs) ([33e2395](https://github.com/dunay2/dvt/commit/33e2395d5d999cbf2452a90bdcae17cea624318b))
 
-
-### ✨ Features
+### ✨ Features - Contract Testing
 
 * add contract testing scripts and infrastructure ([6fe7ff1](https://github.com/dunay2/dvt/commit/6fe7ff1b5a41e47199ae8a74a2b3cbd9f073d097))
 * agregar package.json y configurar npm para el proyecto ([c9ac38a](https://github.com/dunay2/dvt/commit/c9ac38a4ed2a9ba7e520bab814063a7b17ded317))
@@ -62,8 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * complete Phase 1 implementation roadmap with epics and automation ([e4813e8](https://github.com/dunay2/dvt/commit/e4813e83d11c6e5dcd97127bb29d049c19c33451)), closes [#14](https://github.com/dunay2/dvt/issues/14) [-#18](https://github.com/dunay2/dvt/issues/18) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#16](https://github.com/dunay2/dvt/issues/16) [#17](https://github.com/dunay2/dvt/issues/17) [#18](https://github.com/dunay2/dvt/issues/18) [#8](https://github.com/dunay2/dvt/issues/8) [#9](https://github.com/dunay2/dvt/issues/9) [#2](https://github.com/dunay2/dvt/issues/2) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#5](https://github.com/dunay2/dvt/issues/5) [#6](https://github.com/dunay2/dvt/issues/6) [#16](https://github.com/dunay2/dvt/issues/16) [#10](https://github.com/dunay2/dvt/issues/10) [#17](https://github.com/dunay2/dvt/issues/17) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#18](https://github.com/dunay2/dvt/issues/18)
 * **security:** add issue template for THREAT_MODEL.md v1.4 update ([471e674](https://github.com/dunay2/dvt/commit/471e674b253cba24934160cc56badd326e441573))
 
-
-### 📝 Documentation
+### 📝 Documentation - Contracts
 
 * add documentation for contract testing infrastructure ([916d2f6](https://github.com/dunay2/dvt/commit/916d2f6fedceb986fb9de27eb08c1e23df8974ec))
 * add implementation summary for contract testing pipeline ([b7cab14](https://github.com/dunay2/dvt/commit/b7cab146b24275812973d38e20420784f426e289))
@@ -76,30 +148,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-02-11
 
-### ✨ Features
+### ✨ Features - v1.0.0
 
-- **engine**: Initial workflow engine architecture documentation
-- **contracts**: Core execution semantics and IWorkflowEngine contract
-- **adapters**: Temporal and State Store adapter specifications
-- **docs**: Comprehensive architecture documentation
+* **engine**: Initial workflow engine architecture documentation
+* **contracts**: Core execution semantics and IWorkflowEngine contract
+* **adapters**: Temporal and State Store adapter specifications
+* **docs**: Comprehensive architecture documentation
 
-### 📝 Documentation
+### 📝 Documentation - v1.0.0
 
-- Added ExecutionSemantics.v1.md with normative event specifications
-- Added IWorkflowEngine.v1.md with interface contracts
-- Added TemporalAdapter.spec.md with platform-specific policies
-- Added Appendix A with detailed RunStarted event schema
-- Documented PAUSE limitations in Conductor adapter
-- Added strict SHA256 validation requirements for fetchPlan
+* Added ExecutionSemantics.v1.md with normative event specifications
+* Added IWorkflowEngine.v1.md with interface contracts
+* Added TemporalAdapter.spec.md with platform-specific policies
+* Added Appendix A with detailed RunStarted event schema
+* Documented PAUSE limitations in Conductor adapter
+* Added strict SHA256 validation requirements for fetchPlan
 
-### 🏗️ Build System
+### 🏗️ Build System - v1.0.0
 
-- Initial project setup with npm
-- Added markdownlint configuration
+* Initial project setup with npm
+* Added markdownlint configuration
 
-### 👷 CI/CD
+### 👷 CI/CD - v1.0.0
 
-- Added GitHub Actions workflows for markdown linting
-- Added determinism pattern checks
-- Added contract validation
-- Added CODEOWNERS for automated review routing
+* Added GitHub Actions workflows for markdown linting
+* Added determinism pattern checks
+* Added contract validation
+* Added CODEOWNERS for automated review routing

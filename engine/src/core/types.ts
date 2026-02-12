@@ -1,11 +1,9 @@
 /**
  * Core types for DVT Engine
  * Based on ROADMAP.md - Anchor Decision: Outbox Semantics
- * 
+ *
  * Note: Use of Date is intentional for data structures, not in Temporal workflows
  */
-
-/* eslint-disable no-restricted-globals */
 
 /**
  * Outbox event structure for external event delivery
