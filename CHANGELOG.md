@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.4.8](https://github.com/dunay2/dvt/compare/v2.4.7...v2.4.8) (2026-02-12)
+
+
+### 📝 Documentation
+
+* **engine:** Add Security section to INDEX.md ([#62](https://github.com/dunay2/dvt/issues/62)) ([6a04ff1](https://github.com/dunay2/dvt/commit/6a04ff17c7a56c4421b3ea5c63b32f0292c42835)), closes [#13](https://github.com/dunay2/dvt/issues/13)
+
 ### [2.4.7](https://github.com/dunay2/dvt/compare/v2.4.6...v2.4.7) (2026-02-12)
 
 
