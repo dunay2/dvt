@@ -48,10 +48,12 @@ Events are written to `IRunStateStore` (synchronous primary path, source of trut
 Events **MUST** include these fields:
 
 - `runId`: Workflow run identifier (UUID v4)
-- `stepId`: Step identifier (if applicable, for step-level events)
+- `stepId`: Step identifier (REQUIRED for step-level events; omitted for run-level events)
+- `planId`: Execution plan identifier (REQUIRED; used in idempotency key)
+- `planVersion`: Execution plan version (REQUIRED; used in idempotency key)
 - `engineAttemptId`: Physical attempt counter (infrastructure retries)
 - `logicalAttemptId`: Logical attempt counter (policy/user retries)
-- `runSeq`: Monotonically increasing sequence number per `runId`
+- `runSeq`: Monotonically increasing sequence number per `runId` (assigned by StateStore)
 - `idempotencyKey`: SHA256 hash for deduplication
 - `tenantId`, `projectId`, `environmentId`: Correlation identifiers
 
@@ -62,8 +64,15 @@ Events **MUST** be idempotent: same event replayed → same state.
 **Idempotency key formula**:
 
 ```
-SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
+SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planVersion)
 ```
+
+**stepIdNormalized** (normalization rule):
+
+- For step-level events: use actual `stepId`
+- For run-level events (RunStarted, RunCompleted, RunFailed, RunCancelled, RunPaused, RunResumed): use literal `'RUN'`
+
+**Rationale**: Run-level events don't have a stepId, but the formula must be deterministic. The literal `'RUN'` ensures consistent hashing across all implementations.
 
 ### 2.3 Sequence Number Assignment (runSeq)
 
@@ -83,33 +92,39 @@ SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)
 
 ## 3) State Transition Mapping (Normative)
 
-This table defines the **ONLY valid** state transitions from events.
+This table defines the **ONLY valid** state transitions from **engine-emitted events**.
 
-| Event          | Status Transition | Notes                                      |
-| -------------- | ----------------- | ------------------------------------------ |
-| `RunStarted`   | → `RUNNING`       | Workflow execution begins                  |
-| `RunPaused`    | → `PAUSED`        | After PAUSE signal acknowledgment          |
-| `RunResumed`   | → `RUNNING`       | After RESUME signal acknowledgment         |
-| `RunCompleted` | → `COMPLETED`     | All steps succeeded                        |
-| `RunFailed`    | → `FAILED`        | Terminal failure (step exhausted retries)  |
-| `RunCancelled` | → `CANCELLED`     | After cancelRun() or EMERGENCY_STOP signal |
+| Event          | Status Transition | Notes                                                              |
+| -------------- | ----------------- | ------------------------------------------------------------------ |
+| `RunStarted`   | → `RUNNING`       | Workflow execution begins                                          |
+| `RunPaused`    | → `PAUSED`        | After PAUSE signal accepted + applied (not when request received)  |
+| `RunResumed`   | → `RUNNING`       | After RESUME signal accepted + applied (not when request received) |
+| `RunCompleted` | → `COMPLETED`     | All steps succeeded                                                |
+| `RunFailed`    | → `FAILED`        | Terminal failure (step exhausted retries)                          |
+| `RunCancelled` | → `CANCELLED`     | After cancelRun() or EMERGENCY_STOP signal                         |
 
 **Status enum** (see [ExecutionSemantics.v1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
 
-- `PENDING`: Run created, awaiting approval
-- `APPROVED`: Approved by planner, ready to start
+- `PENDING`: Run created, awaiting approval (**managed by Planner/StateStore, not engine events**)
+- `APPROVED`: Approved by planner, ready to start (**managed by Planner/StateStore, not engine events**)
 - `RUNNING`: Currently executing steps
 - `PAUSED`: Paused by operator signal
 - `COMPLETED`: Successfully finished all steps
 - `FAILED`: Terminated due to step failure
 - `CANCELLED`: Terminated by operator cancellation
 
+**Scope note**: This contract governs **engine-emitted transitions only**. `PENDING` and `APPROVED` states are set by Planner via StateStore contract (out of scope for this document).
+
 ---
 
-## 4) Event Schema (Base Structure)
+## 4) Event Schema (Two-Phase Model)
+
+### 4.1 RunEventWrite (Input to StateStore)
+
+Engine writes events **without** `runSeq` (StateStore assigns during write).
 
 ```ts
-interface RunEventBase {
+interface RunEventWrite {
   eventType:
     | 'RunStarted'
     | 'StepStarted'
@@ -120,29 +135,95 @@ interface RunEventBase {
     | 'RunCompleted'
     | 'RunFailed'
     | 'RunCancelled';
-  occurredAt: string; // ISO 8601 UTC
+  occurredAt: string; // ISO 8601 UTC (engine clock)
   runId: string;
   tenantId: string;
   projectId: string;
   environmentId: string;
+  planId: string; // REQUIRED (for idempotency key)
+  planVersion: string; // REQUIRED (for idempotency key)
   engineAttemptId: number;
   logicalAttemptId: number;
-  runSeq: number; // Assigned by StateStore (monotonic, gaps allowed)
   idempotencyKey: string; // SHA256 hash
-  stepId?: string; // Present for step-level events
+  stepId?: string; // Present for step-level events only
   payload?: Record<string, unknown>; // Event-specific data
 }
 ```
 
-### 4.1 Event Payload
+### 4.2 RunEventRecord (Persisted/Output from StateStore)
 
-`payload` field is **event-specific** and MAY contain:
+After StateStore persists, consumers (Projectors, UI, Audit) receive events **with** `runSeq` and `persistedAt`.
 
-- Step execution results (for `StepCompleted`)
-- Error details (for `StepFailed`, `RunFailed`)
-- Signal acknowledgment details (for `RunPaused`, `RunResumed`)
+```ts
+interface RunEventRecord {
+  eventType:
+    | 'RunStarted'
+    | 'StepStarted'
+    | 'StepCompleted'
+    | 'StepFailed'
+    | 'RunPaused'
+    | 'RunResumed'
+    | 'RunCompleted'
+    | 'RunFailed'
+    | 'RunCancelled';
+  occurredAt: string; // ISO 8601 UTC (engine clock)
+  persistedAt: string; // ISO 8601 UTC (StateStore server time, assigned during write)
+  runId: string;
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  planId: string;
+  planVersion: string;
+  engineAttemptId: number;
+  logicalAttemptId: number;
+  runSeq: number; // Assigned by StateStore (monotonic, gaps allowed)
+  idempotencyKey: string; // SHA256 hash
+  stepId?: string; // Present for step-level events only
+  payload?: Record<string, unknown>; // Event-specific data
+}
+```
 
-**Type safety**: `Record<string, unknown>` requires runtime validation by consumers.
+**Usage**:
+
+- Engine → StateStore: uses `RunEventWrite`
+- StateStore → Projectors/UI/Audit: uses `RunEventRecord`
+
+**persistedAt rationale**: Engine's `occurredAt` can suffer clock skew. `persistedAt` (server time) provides authoritative ordering for audit and debugging.
+
+### 4.3 Event Payload (Minimum Requirements)
+
+`payload` field is **event-specific** and MAY contain additional data. The following are **minimum required fields** for specific event types:
+
+#### StepFailed / RunFailed (Error Events)
+
+```ts
+payload: {
+  errorCode?: string;        // Machine-readable error code (e.g., "TIMEOUT", "DB_CONNECTION_FAILED")
+  errorMessage?: string;     // Human-readable error message
+  retryable?: boolean;       // Whether this failure is retryable
+  stack?: string;            // Stack trace (optional, for debugging)
+}
+```
+
+#### StepCompleted (Success Events)
+
+```ts
+payload: {
+  result?: unknown;          // Step execution result (schema varies by step type)
+  durationMs?: number;       // Execution duration in milliseconds
+}
+```
+
+#### RunPaused / RunResumed (Signal Events)
+
+```ts
+payload: {
+  signalId?: string;         // UUID of the signal that triggered pause/resume
+  reason?: string;           // Human-readable reason (if provided in signal)
+}
+```
+
+**Type safety**: `Record<string, unknown>` requires runtime validation by consumers. Implementations SHOULD define stricter payload schemas per event type.
 
 ---
 
@@ -180,6 +261,6 @@ Both MUST be included in event idempotency keys and audit logs.
 
 ## Change Log
 
-| Version | Date       | Change                                                                                |
-| ------- | ---------- | ------------------------------------------------------------------------------------- |
-| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.md to reduce churn. Added state transition mapping. |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                       |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.md to reduce churn. Added state transition mapping. **Critical fixes**: Split RunEventWrite/RunEventRecord (runSeq phases), normalize stepId in idempotency key (use 'RUN' for run-level events), add planId/planVersion as required fields, clarify PENDING/APPROVED managed by Planner, add persistedAt, define minimum payload schemas. |
