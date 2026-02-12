@@ -4,7 +4,11 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": [
+      "./tsconfig.json",
+      "./packages/*/tsconfig.json",
+      "./packages/*/tsconfig.eslint.json"
+    ]
   },
   "plugins": ["@typescript-eslint", "import", "jest"],
   "extends": [
@@ -89,7 +93,10 @@
   },
   "overrides": [
     {
-      "files": ["engine/core/**/*.ts", "engine/adapters/**/*.ts"],
+      "files": [
+        "packages/engine/src/core/**/*.ts",
+        "packages/engine/src/infrastructure/**/*.ts"
+      ],
       "rules": {
         "no-restricted-globals": [
           "error",
@@ -128,7 +135,11 @@
     "import/resolver": {
       "typescript": {
         "alwaysTryTypes": true,
-        "project": "./tsconfig.json"
+        "project": [
+          "./tsconfig.json",
+          "./packages/*/tsconfig.json",
+          "./packages/*/tsconfig.eslint.json"
+        ]
       }
     }
   }

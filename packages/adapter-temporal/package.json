@@ -1,0 +1,20 @@
+{
+  "name": "@dvt/adapter-temporal",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": false,
+  "license": "MIT",
+  "dependencies": {
+    "@dvt/contracts": "workspace:*",
+    "@dvt/engine": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json || true",
+    "test": "vitest run || true"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

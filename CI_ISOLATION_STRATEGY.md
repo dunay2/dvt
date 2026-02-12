@@ -1,4 +1,4 @@
-# 🔍 Estrategia: Divide y Vencerás (Aislado en Remoto)
+# 🔍 Strategy: Divide and Conquer (Remote Isolation)
 
 ## 📊 Estado Actual
 
@@ -9,9 +9,9 @@ COMMIT: e44b078
 │  WORKFLOWS EN PULL REQUEST (GITHUB ACTIONS)     │
 ├─────────────────────────────────────────────────┤
 │ ✅ ci.yml              - ESLint, Prettier, MD   │
-│ ⏸️ test.yml            - DESHABILITADO          │
-│ ⏸️ contracts.yml       - DESHABILITADO          │
-│ ⏸️ golden-paths.yml    - DESHABILITADO          │
+│ ⏸️ test.yml            - DISABLED               │
+│ ⏸️ contracts.yml       - DISABLED               │
+│ ⏸️ golden-paths.yml    - DISABLED               │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -21,10 +21,10 @@ COMMIT: e44b078
 
 **URL**: <https://github.com/dunay2/dvt/actions>
 
-Espera a que `ci.yml` termine. Si:
+Wait for `ci.yml` to finish. If:
 
-- ✅ **PASA**: Continúa a Step 2
-- ❌ **FALLA**: Revisa logs de GitHub, identifica error, arregla localmente
+- ✅ **PASS**: Continue to Step 2
+- ❌ **FAIL**: Review GitHub logs, identify the error, and fix locally
 
 ---
 
@@ -36,7 +36,7 @@ bash scripts/enable-workflow.sh test.yml
 
 # Opción B: Manual
 # 1. Abre: .github/workflows/test.yml
-# 2. Descomenta estas líneas:
+# 2. Uncomment these lines:
 #   on:
 #     pull_request:
 #       branches: [main]
@@ -87,7 +87,7 @@ git log --oneline -5
 # - XXX: test(ci): Enable golden-paths.yml
 ```
 
-## ❌ Si Algo Falla
+## ❌ If something fails
 
 ### Ver logs en GitHub
 
@@ -101,9 +101,9 @@ git log --oneline -5
 
 ```bash
 # Después de identificar el problema:
-1. Abre el archivo que falla
+1. Open the failing file
 2. Haz cambios locales
-3. Prueba: pnpm <script>
+3. Test: pnpm <script>
 4. Git commit
 5. Git push
 # El workflow volverá a correr automáticamente
@@ -114,7 +114,7 @@ git log --oneline -5
 ## 📈 Progress Checklist
 
 ```
-Estado: FASE 1 - Aislando ci.yml
+Status: PHASE 1 - Isolating ci.yml
 ═════════════════════════════════════════
 
 ✅ e44b078: Disabled test.yml, contracts.yml, golden-paths.yml
@@ -137,11 +137,11 @@ Estado: FASE 1 - Aislando ci.yml
 - **No hagas push a main**: Todos los cambios van a `feature/phase2-projector-engine-contracts`
 - **Los workflows auto-triggers**: Cada push dispara GitHub Actions automáticamente
 - **Rápido feedback**: Cada workflow solo tarda 3-5 minutos
-- **Isolación = claridad**: Si algo falla, es de ese workflow específico
+- **Isolation = clarity**: If something fails, it is isolated to that workflow
 
 ---
 
-## Próximo Comando
+## Next command
 
 ```bash
 # Monitorea y espera a que ci.yml pase, luego:

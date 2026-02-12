@@ -1,67 +1,67 @@
 # Workflow Isolation Testing Strategy
 
-## Objetivo
+## Objective
 
-Aislar y verificar cada workflow de GitHub Actions uno a la vez para identificar y corregir fallos sin interferencia.
+Isolate and verify each GitHub Actions workflow one at a time to identify and fix failures without interference.
 
 ## Estado Actual (Commit: e44b078)
 
-### Workflows Activos en Pull Request
+### Workflows active on Pull Request
 
-- ✅ **ci.yml** - Activo (`on: pull_request`)
+- ✅ **ci.yml** - Active (`on: pull_request`)
   - Job: ESLint + Prettier + TypeScript
-  - Job: Markdown Documentation
+  - Job: Markdown documentation
 
-### Workflows Deshabilitados (Solo workflow_dispatch + push)
+### Workflows disabled (only `workflow_dispatch` + `push`)
 
-- ⏸️ **test.yml** - Deshabilitado pull_request
-  - Job: Run Tests (18.x, 20.x)
-  - Job: Determinism Tests
+- ⏸️ **test.yml** - `pull_request` trigger disabled
+  - Job: Run tests (Node 18 & 20)
+  - Job: Determinism tests
 
-- ⏸️ **contracts.yml** - Deshabilitado pull_request
-  - Job: Validate JSON Schemas
-  - Job: Determinism Pattern Scan
-  - Job: Compile TypeScript Contracts
-  - Job: Validate Golden JSON Fixtures
+- ⏸️ **contracts.yml** - `pull_request` trigger disabled
+  - Job: Validate JSON schemas
+  - Job: Determinism pattern scan
+  - Job: Compile TypeScript contracts
+  - Job: Validate golden JSON fixtures
 
-- ⏸️ **golden-paths.yml** - Deshabilitado pull_request
-  - Job: Validate Golden Path Plans
+- ⏸️ **golden-paths.yml** - `pull_request` trigger disabled
+  - Job: Validate golden path plans
 
-## Pasos de Verificación Remota
+## Remote verification steps
 
-### Fase 1: Verificar ci.yml
+### Phase 1: Verify ci.yml
 
-1. ✅ Push a remoto → Esperar GitHub Actions
-2. Si **PASA**: Proceder a Fase 2
-3. Si **FALLA**: Revisar logs en GitHub y corregir
+1. ✅ Push to remote → wait for GitHub Actions
+2. If **PASS**: proceed to Phase 2
+3. If **FAIL**: check GitHub logs and fix
 
-### Fase 2: Habilitar test.yml
+### Phase 2: Enable test.yml
 
-1. Descomenta `pull_request:` en test.yml
-2. Commit y push
-3. Esperar ejecución en GitHub
-4. Si **PASA**: Proceder a Fase 3
-5. Si **FALLA**: Revisar logs y corregir
+1. Uncomment `pull_request:` in `test.yml`
+2. Commit and push
+3. Wait for GitHub execution
+4. If **PASS**: proceed to Phase 3
+5. If **FAIL**: check logs and fix
 
-### Fase 3: Habilitar contracts.yml
+### Phase 3: Enable contracts.yml
 
-1. Descomenta `pull_request:` en contracts.yml
-2. Commit y push
-3. Esperar ejecución en GitHub
-4. Si **PASA**: Proceder a Fase 4
-5. Si **FALLA**: Revisar logs y corregir
+1. Uncomment `pull_request:` in `contracts.yml`
+2. Commit and push
+3. Wait for GitHub execution
+4. If **PASS**: proceed to Phase 4
+5. If **FAIL**: check logs and fix
 
-### Fase 4: Habilitar golden-paths.yml
+### Phase 4: Enable golden-paths.yml
 
-1. Descomenta `pull_request:` en golden-paths.yml
-2. Commit y push
-3. Esperar ejecución en GitHub
-4. Si **PASA**: ✅ TODOS LOS WORKFLOWS PASAN
-5. Si **FALLA**: Revisar logs y corregir
+1. Uncomment `pull_request:` in `golden-paths.yml`
+2. Commit and push
+3. Wait for GitHub execution
+4. If **PASS**: ✅ ALL WORKFLOWS PASS
+5. If **FAIL**: check logs and fix
 
-## Cómo Proceder
+## How to proceed
 
-### Para habilitar siguiente workflow
+### To enable the next workflow
 
 ```bash
 # 1. Descomentar pull_request en el workflow

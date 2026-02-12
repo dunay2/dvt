@@ -198,22 +198,22 @@ app.post('/workflows/validate', (req) => {
 
 ---
 
-## 📚 Documentación Existente (Referencia)
+## 📚 Existing documentation (reference)
 
-### Contratos Normativos
+### Normative contracts
 
 - [IWorkflowEngine.v1.1.md](architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md) - Interface del motor
 - [ExecutionSemantics.v1.md](architecture/engine/contracts/engine/ExecutionSemantics.v1.md) - Semántica de ejecución
 - [SignalsAndAuth.v1.1.md](architecture/engine/contracts/engine/SignalsAndAuth.v1.1.md) - Señales y autorización
 - [RunEvents.v1.1.md](architecture/engine/contracts/engine/RunEvents.v1.1.md) - Eventos de ejecución
 
-### Políticas y Guidelines
+### Policies & guidelines
 
 - [VERSIONING.md](architecture/engine/VERSIONING.md) - Política de versionado de contratos
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Guidelines para contribuir a documentación
 - [INDEX.md](architecture/engine/INDEX.md) - Índice de arquitectura del engine
 
-### JSON Schemas Existentes
+### Existing JSON Schemas
 
 - [capabilities.schema.json](architecture/engine/contracts/capabilities/capabilities.schema.json)
 - [validation-report.schema.json](architecture/engine/contracts/capabilities/validation-report.schema.json)
@@ -221,25 +221,25 @@ app.post('/workflows/validate', (req) => {
 
 ### TypeScript Types
 
-- [engine/src/types/](../engine/src/types/) - Tipos TypeScript actuales
+- [engine/src/types/](../engine/src/types/) - Current TypeScript types
 - [engine/src/types/README.md](../engine/src/types/README.md) - Documentación de tipos
 
 ---
 
-## 🎯 Rutas de Lectura Recomendadas
+## 🎯 Recommended reading paths
 
-### Para Decisores (Product Manager, Tech Lead)
+### For decision-makers (Product Manager, Tech Lead)
 
 1. ✅ [CONTRACTS_EXECUTIVE_SUMMARY.md](CONTRACTS_EXECUTIVE_SUMMARY.md) - **5 min**
 2. 👀 [ZOD_ARCHITECTURE.mmd](architecture/engine/contracts/ZOD_ARCHITECTURE.mmd) - Diagramas - **2 min**
 3. 🚀 Probar [setup.sh](../examples/contracts-with-zod/setup.sh) - **5 min**
-4. 💡 Decidir: ¿Procedemos con Fase 1?
+4. 💡 Decide: Proceed with Phase 1?
 
 **Total: 15 minutos**
 
 ---
 
-### Para Desarrolladores (Implementación)
+### For developers (implementation)
 
 1. 👓 [examples/contracts-with-zod/README.md](../examples/contracts-with-zod/README.md) - **10 min**
 2. 💻 Revisar schemas de ejemplo:
@@ -257,14 +257,14 @@ app.post('/workflows/validate', (req) => {
 
 ---
 
-### Para Arquitectos (Evaluación Técnica)
+### For architects (technical evaluation)
 
 1. 📊 [TOOLING_RECOMMENDATIONS.md](TOOLING_RECOMMENDATIONS.md) - **15 min**
 2. 🏗️ [ZOD_ARCHITECTURE.mmd](architecture/engine/contracts/ZOD_ARCHITECTURE.mmd) - **5 min**
 3. 💻 Revisar código de ejemplo completo - **20 min**
 4. 🔍 Comparar con:
    - [VERSIONING.md](architecture/engine/VERSIONING.md) - Compatibilidad con política actual
-   - [Contratos existentes](architecture/engine/contracts/) - Casos de uso reales
+   - [Existing contracts](architecture/engine/contracts/) - Real-world use cases
 5. 📝 Evaluar:
    - ✅ Ventajas vs enfoque actual
    - ⚠️ Riesgos de migración
@@ -274,9 +274,9 @@ app.post('/workflows/validate', (req) => {
 
 ---
 
-## 📋 Checklist de Decisión
+## 📋 Decision checklist
 
-Usa este checklist para decidir si proceder con Zod:
+Use this checklist to decide whether to proceed with Zod:
 
 ### Criterios de Éxito
 
@@ -292,32 +292,32 @@ Usa este checklist para decidir si proceder con Zod:
 - **2-3 puntos**: Zod ayudaría, evalúa ROI específico
 - **0-1 puntos**: Quizá el enfoque actual es suficiente
 
-### Riesgos a Validar
+### Risks to validate
 
-- [ ] ¿Zod soporta todos nuestros casos de uso? → **Revisar ejemplos**
+- [ ] Does Zod support all our use cases? → **Review examples**
 - [ ] ¿Performance de validación runtime es aceptable? → **Benchmark en PoC**
 - [ ] ¿Equipo tiene tiempo para migración gradual? → **Plan de 2-4 semanas**
 - [ ] ¿CI/CD está listo para nuevas validaciones? → **Actualizar pipelines (4h)**
 
 ---
 
-## 🆘 ¿Preguntas Frecuentes?
+## 🆘 Frequently asked questions
 
-### ¿Tenemos que reescribir todo de una vez?
+### Do we have to rewrite everything at once?
 
 **No.** Migración gradual es posible y recomendada. Empieza con 2-3 contratos críticos.
 
-### ¿Puedo usar Zod y mantener JSON Schema?
+### Can I use Zod and keep JSON Schema?
 
 **Sí.** Zod puede generar JSON Schema automáticamente con `zod-to-json-schema`.
 
-### ¿Qué pasa con los tipos TypeScript existentes?
+### What happens to existing TypeScript types?
 
 **Puedes mantener compatibilidad** durante la transición. Ver ejemplo en [execution-plan.schema.ts](../examples/contracts-with-zod/schemas/execution-plan.schema.ts).
 
 ### ¿Performance de Zod es un problema?
 
-**Depende del caso de uso**. Para APIs normales es suficiente. Para high-throughput paths, Zod puede compilar a validadores más rápidos o puedes usar AJV.
+**Depends on the use case**. For normal APIs it's sufficient. For high-throughput paths, Zod can compile to faster validators or you can use AJV.
 
 ### ¿Cuánto tiempo toma la migración?
 
@@ -325,9 +325,9 @@ Usa este checklist para decidir si proceder con Zod:
 
 ---
 
-## 🚀 Próximos Pasos
+## 🚀 Next steps
 
-### Opción A: PoC Rápido (Recomendado)
+### Option A: Quick PoC (Recommended)
 
 ```bash
 # 1. Instalar dependencias (2 min)
@@ -342,10 +342,10 @@ pnpm tsx examples/contracts-with-zod/validate-fixture.ts
 # - Demo de validate-fixture.ts
 # - Discutir ROI
 
-# 4. Decidir: Proceder con Fase 1?
+# 4. Decide: Proceed with Phase 1?
 ```
 
-### Opción B: Análisis Profundo Primero
+### Option B: Deep analysis first
 
 1. Leer [TOOLING_RECOMMENDATIONS.md](TOOLING_RECOMMENDATIONS.md) completo
 2. Evaluar alternativas (AJV standalone, TypeBox, etc.)
@@ -364,9 +364,9 @@ Para preguntas o feedback sobre estos documentos:
 
 ---
 
-**Última actualización**: 12 febrero 2026  
-**Autor**: Análisis automatizado del workspace DVT  
-**Revisión**: Pendiente de revisión del equipo
+**Last updated**: 12 February 2026  
+**Author**: Automated workspace analysis (DVT)  
+**Review**: Pending team review
 
 ---
 

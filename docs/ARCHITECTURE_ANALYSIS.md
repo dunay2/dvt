@@ -8,7 +8,7 @@
 ## 📊 Estructura Actual
 
 ```
-dvt/ (monorepo raíz)
+dvt/ (monorepo root)
 ├── engine/
 │   ├── src/
 │   │   ├── adapters/          # ⚠️ PROBLEMA: Interfaces + Implementaciones mezcladas
@@ -286,7 +286,7 @@ packages:
   - 'packages/*'
 EOF
 
-# 3. Mover contracts
+# 3. Move contracts
 mv engine/src/adapters/I*.ts packages/contracts/src/adapters/
 mv engine/src/types/*.ts packages/contracts/src/types/
 
@@ -311,7 +311,7 @@ pnpm init
 - [ ] Crear `packages/engine/` con core logic
 - [ ] Crear `packages/adapter-postgres/` moviendo `adapters/postgres/`
 - [ ] Crear `packages/cli/` moviendo `scripts/`
-- [ ] Actualizar imports en todos los archivos
+- [ ] Update imports in all files
 - [ ] Configurar `tsconfig.base.json` compartido
 - [ ] Actualizar CI workflows (paths changed)
 
@@ -348,7 +348,7 @@ packages/engine/src/
 
 **Checklist**:
 
-- [ ] Mover lógica de negocio a `domain/`
+- [ ] Move business logic to `domain/`
 - [ ] Crear use cases en `application/`
 - [ ] Eliminar dependencias de infrastructure desde domain
 - [ ] Tests siguen pasando

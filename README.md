@@ -101,6 +101,39 @@ For engine implementation contributions, ensure:
 
 ---
 
+## 🗂️ Estructura Monorepo (pnpm workspaces)
+
+The project is now organized as a monorepo using pnpm workspaces. The primary packages are located under the `packages/` directory:
+
+- `packages/contracts` — Contratos e interfaces compartidas
+- `packages/engine` — Núcleo del motor de orquestación
+- `packages/adapter-postgres` — Adapter para Postgres
+- `packages/adapter-temporal` — Adapter para Temporal
+- `packages/cli` — Herramientas CLI y scripts
+
+### Comandos clave
+
+Run these commands from the repository root:
+
+```bash
+# Instalar dependencias de todos los paquetes
+pnpm install
+
+# Build de todos los paquetes
+pnpm build
+
+# Test de todos los paquetes
+pnpm test
+
+# Build/test de un paquete específico
+pnpm --filter @dvt/engine build
+pnpm --filter @dvt/engine test
+```
+
+Para más detalles, revisa los README de cada paquete en `packages/*/README.md`.
+
+---
+
 ## 📋 Project Status
 
 See [ROADMAP.md](./ROADMAP.md) and [engine-phases.md](./docs/architecture/engine/roadmap/engine-phases.md) for implementation roadmap.
@@ -133,7 +166,7 @@ npm run type-check # Run TypeScript compiler
 
 npm run build # Build the project
 
-````
+---
 
 ### Code Quality Standards
 
@@ -159,7 +192,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for semantic
 feat(engine): add new feature
 fix(temporal): correct bug
 docs(architecture): update documentation
-````
+```
 
 See [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for full guidelines.
 

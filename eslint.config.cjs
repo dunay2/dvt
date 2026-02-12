@@ -1,4 +1,18 @@
-// @ts-check
+// ESLint configuration file with ignores migrated from .eslintignore
+// See: https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
+
+/** @type {import('eslint').Linter.Config} */
+module.exports = {
+  ignores: [
+    '**/*.test.ts',
+    '**/*.spec.ts',
+    'engine/test/**',
+    'dist/',
+    'node_modules/',
+    '*.d.ts',
+  ],
+  // ...existing config (add your rules, plugins, etc. here)
+};// @ts-check
 const eslint = require('@eslint/js');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
@@ -168,6 +182,24 @@ module.exports = [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       'no-restricted-globals': 'off',
+    },
+  },
+
+  // Añadir overrides para TSConfig por carpeta
+  {
+    files: ['packages/engine/src/**/*.ts', 'packages/engine/vitest.config.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['packages/engine/tsconfig.eslint.json'],
+      },
+    },
+  },
+  {
+    files: ['packages/engine/test/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['packages/engine/tsconfig.test.eslint.json'],
+      },
     },
   },
 

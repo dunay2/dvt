@@ -1,6 +1,9 @@
-# PostgreSQL Adapter Design
+# PostgreSQL Adapter Design — (moved)
 
-This adapter implements DVT's normative contracts using PostgreSQL as the backend state store and event log.
+This document has moved to the package directory: `packages/adapter-postgres/DESIGN.md`.
+Please edit the canonical file under `packages/adapter-postgres`.
+
+(Top-level `adapters/` is deprecated as part of the monorepo consolidation — see https://github.com/dunay2/dvt/issues/76)
 
 ## Architecture
 

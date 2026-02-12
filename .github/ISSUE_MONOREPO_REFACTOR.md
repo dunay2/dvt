@@ -138,7 +138,7 @@ dvt/
 
 ### Sprint 1: Setup Monorepo Infrastructure (2-3 días)
 
-#### Fase 1.1: Configuración Base (4h)
+#### Phase 1.1: Base configuration (4h)
 
 - [ ] Crear `pnpm-workspace.yaml`:
 
@@ -172,7 +172,7 @@ dvt/
   mkdir -p packages/{contracts,engine,adapter-postgres,adapter-temporal,cli}
   ```
 
-#### Fase 1.2: Migrar `@dvt/contracts` (6h)
+#### Phase 1.2: Migrate `@dvt/contracts` (6h)
 
 - [ ] Crear `packages/contracts/package.json`:
 
@@ -201,7 +201,7 @@ dvt/
   }
   ```
 
-- [ ] Mover interfaces puras:
+- [ ] Move pure interfaces:
 
   ```bash
   # Desde engine/src/adapters/I*.ts
@@ -236,7 +236,7 @@ dvt/
   }
   ```
 
-#### Fase 1.3: Migrar `@dvt/engine` (8h)
+#### Phase 1.3: Migrate `@dvt/engine` (8h)
 
 - [ ] Crear `packages/engine/package.json`:
 
@@ -288,12 +288,12 @@ dvt/
   # A:  import { IStateStoreAdapter } from '@dvt/contracts/adapters'
   ```
 
-- [ ] Mover tests:
+- [ ] Move tests:
   ```bash
   mv engine/test/* packages/engine/test/
   ```
 
-#### Fase 1.4: Migrar `@dvt/adapter-postgres` (4h)
+#### Phase 1.4: Migrate `@dvt/adapter-postgres` (4h)
 
 - [ ] Crear `packages/adapter-postgres/package.json`:
 
@@ -323,12 +323,12 @@ dvt/
   }
   ```
 
-- [ ] Mover código:
+- [ ] Move code:
   ```bash
   mv adapters/postgres/* packages/adapter-postgres/src/
   ```
 
-#### Fase 1.5: Migrar `@dvt/cli` (4h)
+#### Phase 1.5: Migrate `@dvt/cli` (4h)
 
 - [ ] Crear `packages/cli/package.json`:
 
@@ -351,7 +351,7 @@ dvt/
   }
   ```
 
-- [ ] Mover scripts:
+- [ ] Move scripts:
 
   ```bash
   mv scripts/validate-contracts.cjs packages/cli/src/commands/validate-contracts.ts
@@ -362,7 +362,7 @@ dvt/
 
 - [ ] Convertir de CommonJS a ESM (buscar/reemplazar `require` → `import`)
 
-#### Fase 1.6: Actualizar Root Package (2h)
+#### Phase 1.6: Update root package (2h)
 
 - [ ] Actualizar `package.json` root:
   ```json
@@ -401,7 +401,7 @@ dvt/
 
 ### Sprint 2: Clean Architecture Refactor (2 días)
 
-#### Fase 2.1: Domain Layer (`@dvt/engine`) (1 día)
+#### Phase 2.1: Domain Layer (`@dvt/engine`) (1 day)
 
 - [ ] Crear entidades puras:
 
@@ -451,7 +451,7 @@ dvt/
   }
   ```
 
-#### Fase 2.2: Application Layer (`@dvt/engine`) (1 día)
+#### Phase 2.2: Application Layer (`@dvt/engine`) (1 day)
 
 - [ ] Crear use cases:
 
@@ -468,7 +468,7 @@ dvt/
   }
   ```
 
-- [ ] Mover workers a application layer:
+- [ ] Move workers to application layer:
 
   ```typescript
   // packages/engine/src/application/workers/OutboxWorker.ts
@@ -480,7 +480,7 @@ dvt/
   export * from '@dvt/contracts/adapters';
   ```
 
-#### Fase 2.3: Infrastructure Layer (`@dvt/engine`) (medio día)
+#### Phase 2.3: Infrastructure Layer (`@dvt/engine`) (half day)
 
 - [ ] Mantener solo adapters de testing:
 
@@ -495,7 +495,7 @@ dvt/
 
 ### Sprint 3: Integration & Testing (1 día)
 
-#### Fase 3.1: Actualizar Imports (4h)
+#### Phase 3.1: Update imports (4h)
 
 - [ ] Buscar y reemplazar en todo el proyecto:
 
@@ -514,7 +514,7 @@ dvt/
   # Debe pasar sin errores
   ```
 
-#### Fase 3.2: Actualizar Tests (4h)
+#### Phase 3.2: Update tests (4h)
 
 - [ ] Actualizar imports en tests:
 
@@ -543,7 +543,7 @@ dvt/
 
 ### Sprint 4: CI/CD & Documentation (1 día)
 
-#### Fase 4.1: Actualizar CI Workflows (2h)
+#### Phase 4.1: Update CI workflows (2h)
 
 - [ ] Actualizar `.github/workflows/test.yml`:
 
@@ -571,7 +571,7 @@ dvt/
     run: pnpm golden:validate
   ```
 
-#### Fase 4.2: Documentación (4h)
+#### Phase 4.2: Documentation (4h)
 
 - [ ] Actualizar `README.md` root:
 
@@ -614,7 +614,7 @@ dvt/
 
 - [ ] Actualizar `ARCHITECTURE_ANALYSIS.md` marcando como "IMPLEMENTED"
 
-#### Fase 4.3: Verificación Final (2h)
+#### Phase 4.3: Final verification (2h)
 
 - [ ] Checklist de validación:
   - [ ] `pnpm install` funciona
@@ -699,22 +699,22 @@ dvt/
 
 ### Estrategia de Migration
 
-**NO hacer Big Bang**: Migrar paquete por paquete
+**DO NOT perform a Big Bang**: Migrate package-by-package
 
 1. ✅ Setup infraestructura (pnpm-workspace.yaml)
-2. ✅ Migrar `@dvt/contracts` primero (independiente)
-3. ✅ Migrar `@dvt/engine` (depende de contracts)
-4. ✅ Migrar adapters (dependen de engine)
-5. ✅ Migrar CLI último (depende de todo)
+2. ✅ Migrate `@dvt/contracts` first (independent)
+3. ✅ Migrate `@dvt/engine` (depends on contracts)
+4. ✅ Migrate adapters (depend on engine)
+5. ✅ Migrate CLI last (depends on everything)
 
 ### Riesgos y Mitigaciones
 
-| Riesgo                         | Probabilidad | Impacto | Mitigación                                              |
-| ------------------------------ | ------------ | ------- | ------------------------------------------------------- |
-| Tests fallan después de migrar | Media        | Alto    | Migrar tests junto con código, ejecutar frecuentemente  |
-| Circular dependencies          | Baja         | Medio   | Usar `madge` para detectar, refactorizar antes de merge |
-| Build roto en CI               | Media        | Alto    | Testear CI localmente con `act`, merge solo si verde    |
-| Imports incorrectos            | Alta         | Bajo    | Script de search/replace, luego TypeScript catch errors |
+| Riesgo                     | Probabilidad | Impacto | Mitigación                                              |
+| -------------------------- | ------------ | ------- | ------------------------------------------------------- |
+| Tests fail after migration | Medium       | High    | Migrate tests together with code; run frequently        |
+| Circular dependencies      | Baja         | Medio   | Usar `madge` para detectar, refactorizar antes de merge |
+| Build roto en CI           | Media        | Alto    | Testear CI localmente con `act`, merge solo si verde    |
+| Imports incorrectos        | Alta         | Bajo    | Script de search/replace, luego TypeScript catch errors |
 
 ### Rollback Plan
 
@@ -728,7 +728,7 @@ git revert HEAD
 git cherry-pick <commit-hash>
 ```
 
-**Checkpoint**: Hacer commits pequeños por cada paquete migrado.
+**Checkpoint**: Make small commits per migrated package.
 
 ---
 

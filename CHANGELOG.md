@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## Unreleased
+
+### ♻️ Refactoring & repo layout
+- Migración completa del engine a `packages/engine` con módulos desacoplados: `WorkflowEngine`, `SnapshotProjector`, `idempotency`, `state store`, `outbox`, y helpers deterministas (`clock`, `jcs`, `sha256`).
+- Infraestructura de monorepo consolidada: workspaces pnpm, tsconfig base, tooling y scripts por paquete.
+- Legacy folders (`engine/`, `adapters/`) now contain only redirects or are deprecated.
+
+### 🔧 Tooling & configuration
+- ESLint y Vitest configurados para monorepo, con soporte para tests deterministas y clock sin Date.
+- Nuevos scripts y lockfile para dependencias de adaptadores y engine.
+- Soporte para Prisma y tooling de base de datos en `adapter-postgres` (infra inicial).
+
+### ✅ Tests & correctness
+- Nuevos tests unitarios y de contrato para engine: determinismo de hash, idempotencia, validación de PlanRef, integridad de plan, edge cases de clock, tipos de contrato.
+- Todos los tests de `@dvt/engine` pasan localmente tras la migración y refactorización.
+- Clock determinista (`SequenceClock`) y helpers de fecha validados (sin uso de Date).
+
+### ⚠️ Behavior & API changes
+- `WorkflowEngine`: proyección y eventos ahora 100% deterministas, con hash canónico y orden de eventos estable (RunQueued → RunStarted → provider events → RunCompleted).
+- Contratos y tipos normalizados/exportados para uso cross-package.
+- Outbox worker y state store desacoplados y probados.
+
+### 📝 Documentation & housekeeping
+- Documentation and runbooks moved to `runbooks/`.
+- Actualización de referencias y diagramas en docs.
+
+### 🧩 Related issues (implemented / referenced)
+- Cerradas: #2 (tipos), #6 (state store infra), #7 (determinism lint), #10 (golden paths infra), #14 (core engine y projector), #16 (outbox worker), #17 (CI pipeline infra).
+- En progreso: #5 (TemporalAdapter), #15 (Temporal Interpreter), #8 (Glossary), #9 (RunEventCatalog), #3 (Mermaid diagrams), #19 (Security docs).
+
+### 🔜 In progress / follow-ups
+- Integración real de adaptadores (Temporal, Conductor): #5, #68, #69.
+- Fixtures y determinism matrix: #70, #73.
+- Documentación y diagramas: #3, #19.
+- Lint/style cleanup (import/order, explicit return types): follow-up PR recomendado.
+
+---
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -123,11 +162,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * corregir enlaces rotos en IWorkflowEngine.v1.md (capabilities/ y extensions/ paths) ([b51b4b0](https://github.com/dunay2/dvt/commit/b51b4b0f29716c207fd6f9868254dca4526a5736))
 * corregir enlaces rotos en VERSIONING.md y deshabilitar temporalmente validación TypeScript (demasiado estricta para pseudocódigo) ([0910e02](https://github.com/dunay2/dvt/commit/0910e0284b870440d24f5ca7e00f7fdbd9071216))
 * corregir errores markdownlint en MIGRATION_GUIDE y CONTRIBUTING ([f03d1c1](https://github.com/dunay2/dvt/commit/f03d1c1e91abef3300d46f7f450e9d15b88fd349))
-* corregir líneas >120 caracteres en archivos críticos (MD013) ([9a1e258](https://github.com/dunay2/dvt/commit/9a1e25847a83ca9bd8f054a106053993c04f72a7))
+* fix lines longer than 120 characters in critical files (MD013) ([9a1e258](https://github.com/dunay2/dvt/commit/9a1e25847a83ca9bd8f054a106053993c04f72a7))
 * corregir MD051 y MD013 en MIGRATION_GUIDE y CONTRIBUTING ([a4e9ad4](https://github.com/dunay2/dvt/commit/a4e9ad442d03b24b4349144898ee6e1aaca7326e))
 * deshabilitar reglas adicionales de markdownlint (MD003, MD009, MD012, MD034, MD036, MD051) ([07715fc](https://github.com/dunay2/dvt/commit/07715fc10d43c583057e9e395b386be67a8c7904))
 * deshabilitar reglas estrictas de markdownlint (MD022, MD026, MD031, MD032, MD040, MD047, MD060) ([515848b](https://github.com/dunay2/dvt/commit/515848b6d12a6144d726585c19bc95f4d7fde7b9))
-* remover cache npm del workflow y comentar enlace a Conductor EnginePolicies (no existe aún) ([b86e220](https://github.com/dunay2/dvt/commit/b86e220bfafd50c4130d3db53242c6205abaa48d))
+* remove npm cache from workflow and comment out link to Conductor EnginePolicies (not present yet) ([b86e220](https://github.com/dunay2/dvt/commit/b86e220bfafd50c4130d3db53242c6205abaa48d))
 * simplificar reglas de markdownlint para enfoque en errores críticos ([09713be](https://github.com/dunay2/dvt/commit/09713be57a569396b71242eca96603b4e380019b))
 
 ### ♻️ Code Refactoring
@@ -137,7 +176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### ✨ Features - Contract Testing
 
 * add contract testing scripts and infrastructure ([6fe7ff1](https://github.com/dunay2/dvt/commit/6fe7ff1b5a41e47199ae8a74a2b3cbd9f073d097))
-* agregar package.json y configurar npm para el proyecto ([c9ac38a](https://github.com/dunay2/dvt/commit/c9ac38a4ed2a9ba7e520bab814063a7b17ded317))
+* add package.json and configure npm for the project ([c9ac38a](https://github.com/dunay2/dvt/commit/c9ac38a4ed2a9ba7e520bab814063a7b17ded317))
 * **ci:** add comprehensive quality tooling and documentation improvements ([044a180](https://github.com/dunay2/dvt/commit/044a180f86068e5010c11bafc74b38c76cd50c92)), closes [#1](https://github.com/dunay2/dvt/issues/1) [#2](https://github.com/dunay2/dvt/issues/2) [#3](https://github.com/dunay2/dvt/issues/3)
 * complete Phase 1 implementation roadmap with epics and automation ([e4813e8](https://github.com/dunay2/dvt/commit/e4813e83d11c6e5dcd97127bb29d049c19c33451)), closes [#14](https://github.com/dunay2/dvt/issues/14) [-#18](https://github.com/dunay2/dvt/issues/18) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#16](https://github.com/dunay2/dvt/issues/16) [#17](https://github.com/dunay2/dvt/issues/17) [#18](https://github.com/dunay2/dvt/issues/18) [#8](https://github.com/dunay2/dvt/issues/8) [#9](https://github.com/dunay2/dvt/issues/9) [#2](https://github.com/dunay2/dvt/issues/2) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#5](https://github.com/dunay2/dvt/issues/5) [#6](https://github.com/dunay2/dvt/issues/6) [#16](https://github.com/dunay2/dvt/issues/16) [#10](https://github.com/dunay2/dvt/issues/10) [#17](https://github.com/dunay2/dvt/issues/17) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#18](https://github.com/dunay2/dvt/issues/18)
 * **security:** add issue template for THREAT_MODEL.md v1.4 update ([471e674](https://github.com/dunay2/dvt/commit/471e674b253cba24934160cc56badd326e441573))
