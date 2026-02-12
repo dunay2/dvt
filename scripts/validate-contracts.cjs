@@ -1,67 +1,126 @@
 #!/usr/bin/env node
 /**
- * Validate Golden JSON Fixtures Against Schemas
+ * Validate Fixtures using AJV
  *
- * This script validates that golden JSON fixtures conform to their schemas.
- * Currently a stub until issue #10 (Golden Paths) provides actual fixtures.
+ * Valida los fixtures JSON contra los JSON Schemas generados
+ * usando AJV para validación rápida en runtime
+ *
+ * Uso:
+ *   node scripts/validate-contracts.cjs
+ *   pnpm validate:contracts
  */
 
 const fs = require('fs');
 const path = require('path');
+const Ajv = require('ajv');
+const addFormats = require('ajv-formats');
 
-const FIXTURES_DIR = path.join(__dirname, '../test/contracts/fixtures');
-const GOLDEN_HASHES = path.join(__dirname, '../.golden/hashes.json');
+// Inicializar AJV
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
 
-async function validateContracts() {
-  console.log('🔍 Validating contract fixtures...\n');
+console.log('🔍 Validating all fixtures with AJV...\n');
 
-  // Check if golden hashes file exists
-  if (!fs.existsSync(GOLDEN_HASHES)) {
-    console.error('❌ Missing .golden/hashes.json');
-    process.exit(1);
-  }
+// Rutas
+const schemasDir = path.join(__dirname, '../examples/contracts-with-zod/generated-schemas');
+const fixturesDir = path.join(__dirname, '../examples/contracts-with-zod/fixtures');
+const docsDir = path.join(__dirname, '../docs/architecture/engine/schemas');
 
-  const hashes = JSON.parse(fs.readFileSync(GOLDEN_HASHES, 'utf8'));
-  console.log(`✅ Golden hashes file loaded (version: ${hashes.version})`);
+// Esquemas disponibles
+const schemas = {
+  'validation-report.schema.json': path.join(schemasDir, 'validation-report.schema.json'),
+  'execution-plan.schema.json': path.join(schemasDir, 'execution-plan.schema.json'),
+};
 
-  // Check fixtures directory
-  if (!fs.existsSync(FIXTURES_DIR)) {
-    console.log('⚠️  No fixtures directory found (expected until issue #10 is completed)');
-    console.log('📝 Skipping fixture validation - golden paths not yet implemented\n');
-    console.log('✅ Validation passed (stub mode)');
+// Fixtures por schema
+const fixtures = {
+  'execution-plan.schema.json': [
+    path.join(fixturesDir, 'plan-minimal.json'),
+    path.join(__dirname, '../examples/plan-minimal/plan.v1.1.json'),
+  ],
+  'validation-report.schema.json': [
+    path.join(fixturesDir, 'validation-report.json'),
+  ],
+};
+
+// Signal schemas de documentación
+const signalSchemas = fs.existsSync(docsDir)
+  ? fs.readdirSync(docsDir)
+      .filter(file => file.endsWith('.json') && !file.includes('$'))
+      .reduce((acc, file) => {
+        acc[file] = path.join(docsDir, file);
+        return acc;
+      }, {})
+  : {};
+
+let totalChecks = 0;
+let totalValid = 0;
+let totalInvalid = 0;
+
+// Validar cada esquema
+Object.entries(schemas).forEach(([schemaName, schemaPath]) => {
+  if (!fs.existsSync(schemaPath)) {
+    console.log(`⚠️  Schema not found: ${schemaName}`);
     return;
   }
 
-  // Validate any existing fixtures
-  const files = fs.readdirSync(FIXTURES_DIR).filter((f) => f.endsWith('.json'));
+  const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
+  const validate = ajv.compile(schema);
 
-  if (files.length === 0) {
-    console.log('⚠️  No fixtures found (expected until issue #10 is completed)');
-    console.log('✅ Validation passed (stub mode)');
-    return;
-  }
+  const schemaFixtures = fixtures[schemaName] || [];
 
-  console.log(`📄 Found ${files.length} fixture file(s):`);
-
-  for (const file of files) {
-    const fixturePath = path.join(FIXTURES_DIR, file);
-    try {
-      const content = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-      console.log(`  ✓ ${file} - valid JSON`);
-
-      // TODO: Add schema validation when schemas are available (issue #2)
-      // For now, just validate that it's valid JSON
-    } catch (error) {
-      console.error(`  ✗ ${file} - ${error.message}`);
-      process.exit(1);
+  schemaFixtures.forEach(fixturePath => {
+    if (!fs.existsSync(fixturePath)) {
+      console.log(`⚠️  Fixture not found: ${path.relative(process.cwd(), fixturePath)}`);
+      return;
     }
-  }
 
-  console.log('\n✅ All fixtures validated successfully');
+    totalChecks++;
+    const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
+    const valid = validate(fixture);
+
+    if (valid) {
+      console.log(`✅ ${path.relative(process.cwd(), fixturePath)}`);
+      totalValid++;
+    } else {
+      console.log(`❌ ${path.relative(process.cwd(), fixturePath)}`);
+      validate.errors.forEach(error => {
+        console.log(`   ${error.instancePath || '$'}: ${error.message}`);
+      });
+      totalInvalid++;
+    }
+  });
+});
+
+// Validar Signal Schemas
+if (Object.keys(signalSchemas).length > 0) {
+  console.log('\n📋 Signal Schemas:');
+  Object.entries(signalSchemas).forEach(([schemaName, schemaPath]) => {
+    totalChecks++;
+    try {
+      const schemaContent = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
+      // Compilar para verificar que es un JSON Schema válido
+      const validate = ajv.compile(schemaContent);
+      console.log(`✅ ${path.relative(process.cwd(), schemaPath)}`);
+      totalValid++;
+    } catch (error) {
+      console.log(`❌ ${path.relative(process.cwd(), schemaPath)}: ${error.message}`);
+      totalInvalid++;
+    }
+  });
 }
 
-// Run validation
-validateContracts().catch((error) => {
-  console.error('\n❌ Validation failed:', error.message);
+// Resumen
+console.log('\n' + '='.repeat(50));
+console.log(`📊 Summary:`);
+console.log(`   Total checks: ${totalChecks}`);
+console.log(`   Valid: ${totalValid}`);
+console.log(`   Invalid: ${totalInvalid}`);
+console.log('='.repeat(50));
+
+if (totalInvalid > 0) {
   process.exit(1);
-});
+} else {
+  console.log('\n✨ All validations passed!');
+  process.exit(0);
+}
