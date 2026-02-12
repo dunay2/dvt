@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.4.9](https://github.com/dunay2/dvt/compare/v2.4.8...v2.4.9) (2026-02-12)
+
+
+### 🐛 Bug Fixes
+
+* **docs:** Extract normative security invariants from THREAT_MODEL [#63](https://github.com/dunay2/dvt/issues/63) ([#64](https://github.com/dunay2/dvt/issues/64)) ([dae7055](https://github.com/dunay2/dvt/commit/dae7055b9435225a592e130f10837528d46cbf9a)), closes [#13](https://github.com/dunay2/dvt/issues/13)
+
 ### [2.4.8](https://github.com/dunay2/dvt/compare/v2.4.7...v2.4.8) (2026-02-12)
 
 
