@@ -76,7 +76,7 @@ validate_json() {
     return 1
   fi
 
-  if ! node "$SCRIPT_DIR/validate-json.js" "$file" > /dev/null 2>&1; then
+  if ! node "$SCRIPT_DIR/validate-json.cjs" "$file" > /dev/null 2>&1; then
     print_error "Invalid JSON: $file"
     return 1
   fi
@@ -133,7 +133,7 @@ validate_golden_path() {
       # Write line to temp file and validate
       local temp_json="$path_dir/.temp_line_$line_num.json"
       echo "$line" > "$temp_json"
-      if ! node "$SCRIPT_DIR/validate-json.js" "$temp_json" > /dev/null 2>&1; then
+      if ! node "$SCRIPT_DIR/validate-json.cjs" "$temp_json" > /dev/null 2>&1; then
         rm -f "$temp_json"
         print_error "Invalid JSON at line $line_num in expected-events.jsonl"
         return 1
@@ -145,7 +145,7 @@ validate_golden_path() {
 
   # Validate plan schema version
   local schema_version
-  schema_version=$(node "$SCRIPT_DIR/extract-json-value.js" "$path_dir/plan.v1.1.json" "schemaVersion" 2>/dev/null || echo "")
+  schema_version=$(node "$SCRIPT_DIR/extract-json-value.cjs" "$path_dir/plan.v1.1.json" "schemaVersion" 2>/dev/null || echo "")
   if [ "$schema_version" != "v1.1" ]; then
     print_error "Invalid schema version: $schema_version (expected: v1.1)"
     return 1
@@ -154,7 +154,7 @@ validate_golden_path() {
 
   # Validate validation report status
   local validation_status
-  validation_status=$(node "$SCRIPT_DIR/extract-json-value.js" "$path_dir/validation-report.json" "status" 2>/dev/null || echo "")
+  validation_status=$(node "$SCRIPT_DIR/extract-json-value.cjs" "$path_dir/validation-report.json" "status" 2>/dev/null || echo "")
   if [ "$validation_status" != "VALID" ]; then
     print_error "Validation status is not VALID: $validation_status"
     return 1
