@@ -18,7 +18,7 @@
  */
 
 /* eslint-disable no-restricted-globals */
-/* eslint-disable @typescript-eslint/require-await */
+
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
 

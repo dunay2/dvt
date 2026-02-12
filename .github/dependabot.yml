@@ -8,10 +8,8 @@ updates:
       interval: 'weekly'
       day: 'monday'
       time: '09:00'
-      timezone: 'UTC'
+      timezone: 'Etc/UTC'
     open-pull-requests-limit: 5
-    reviewers:
-      - 'dunay2'
     labels:
       - 'dependencies'
       - 'automated'
@@ -57,10 +55,8 @@ updates:
       interval: 'weekly'
       day: 'monday'
       time: '09:00'
-      timezone: 'UTC'
+      timezone: 'Etc/UTC'
     open-pull-requests-limit: 3
-    reviewers:
-      - 'dunay2'
     labels:
       - 'ci/cd'
       - 'dependencies'

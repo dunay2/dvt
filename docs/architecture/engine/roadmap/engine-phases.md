@@ -535,7 +535,7 @@ Q4 2026 / Early 2027 (Phase 3)
 **References**:
 
 - DVT Product Definition: "engine executes, store is truth"
-- Engine boundary: https://github.com/dunay2/dvt/blob/main/docs/architecture/engine/design_principles.md
+- Engine boundary: <https://github.com/dunay2/dvt/blob/main/docs/architecture/engine/design_principles.md>
 
 ### Anchor Decision B: StateStore Indexing & Retention (OPERATIONAL CONTRACT)
 
@@ -577,8 +577,8 @@ Q4 2026 / Early 2027 (Phase 3)
 
 **References**:
 
-- Temporal history limits: https://docs.temporal.io/encyclopedia/temporal-platform-limits
-- OpenTelemetry for traces: https://opentelemetry.io/
+- Temporal history limits: <https://docs.temporal.io/encyclopedia/temporal-platform-limits>
+- OpenTelemetry for traces: <https://opentelemetry.io/>
 
 ---
 

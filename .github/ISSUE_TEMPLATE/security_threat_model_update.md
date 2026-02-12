@@ -108,10 +108,10 @@ graph LR
 
 ## 📚 References
 
-- HIPAA Security Rule: https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164
-- GDPR Right to Erasure: https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/
-- SLSA v1.2: https://slsa.dev/spec/v1.2/
-- Sigstore: https://docs.sigstore.dev/
+- HIPAA Security Rule: <https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164>
+- GDPR Right to Erasure: <https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/>
+- SLSA v1.2: <https://slsa.dev/spec/v1.2/>
+- Sigstore: <https://docs.sigstore.dev/>
 
 ---
 

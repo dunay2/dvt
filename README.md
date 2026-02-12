@@ -68,7 +68,7 @@ npm test                  # Run tests
 4. **Keep PRs focused** - one feature/fix per PR (< 500 lines preferred)
 5. **All CI checks must pass** before merge
 
-### Code Changes
+### Code Changes - Determinism Requirements
 
 For engine implementation contributions, ensure:
 
@@ -92,22 +92,22 @@ ISC
 Built with best practices from Temporal, Conductor, and event-sourced systems.
 npm run lint:md # Lint Markdown files
 
-# Formatting
+## Formatting
 
 npm run format # Format all files with Prettier
 npm run format:check # Check if files are formatted
 
-# Testing
+## Testing
 
 npm test # Run all tests
 npm run test:watch # Run tests in watch mode
 npm run test:coverage # Generate coverage report
 
-# Type Checking
+## Type Checking
 
 npm run type-check # Run TypeScript compiler
 
-# Build
+## Build
 
 npm run build # Build the project
 
@@ -119,7 +119,7 @@ This project enforces high code quality through:
 
 - ✅ **ESLint** - TypeScript linting with determinism rules
 - ✅ **Prettier** - Consistent code formatting
-- ✅ **Jest** - Unit and integration testing (80%+ coverage required)
+- ✅ **Vitest** - Unit and integration testing (80%+ coverage required)
 - ✅ **Conventional Commits** - Semantic versioning automation
 - ✅ **Pre-commit hooks** - Automatic linting and formatting
 - ✅ **GitHub Actions** - Comprehensive CI/CD pipelines
@@ -149,7 +149,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - CI/CD quality gates (Markdown linting, TypeScript validation, link checking)
 - Versioning policy (MAJOR/MINOR/PATCH bumps, deprecation process)
 
-**Quick pre-commit checks**:
+## Quick pre-commit checks
 
 ```bash
 # Lint Markdown
@@ -159,6 +159,6 @@ markdownlint-cli2 "docs/**/*.md"
 markdown-link-check docs/architecture/engine/INDEX.md
 ```
 
-### Code Changes
+### Code Changes - Contributing Guidelines
 
 (Coming soon: Engine implementation contribution guidelines)

@@ -5,8 +5,6 @@
  * NOT for production use
  */
 
-/* eslint-disable @typescript-eslint/require-await */
-
 import { IEventBus } from '../../core/interfaces/IEventBus';
 import { OutboxEvent } from '../../core/types';
 
