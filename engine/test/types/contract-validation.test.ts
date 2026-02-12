@@ -8,6 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+
 import type { SignalType, RunStatus } from '../../src/types/contracts';
 
 describe('IWorkflowEngine.v1.md Contract Validation', () => {
