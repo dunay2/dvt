@@ -1,8 +1,8 @@
 /**
  * IWorkflowEngine Contract Types (v1.1)
  *
- * TypeScript types extracted from IWorkflowEngine.v1.md
- * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md}
+ * TypeScript types extracted from IWorkflowEngine.v1.1.md
+ * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md}
  *
  * Version 1.1 changes:
  * - startRun() now accepts PlanRef (not ExecutionPlan directly)
@@ -45,7 +45,7 @@ export interface RunContext {
 
 /**
  * Temporal-specific engine run reference
- * @see IWorkflowEngine.v1.md § 2.1.1 - EngineRunRef
+ * @see IWorkflowEngine.v1.1.md § 2.1.1 - EngineRunRef
  */
 export interface TemporalEngineRunRef {
   provider: 'temporal';
@@ -61,7 +61,7 @@ export interface TemporalEngineRunRef {
 
 /**
  * Conductor-specific engine run reference
- * @see IWorkflowEngine.v1.md § 2.1.1 - EngineRunRef
+ * @see IWorkflowEngine.v1.1.md § 2.1.1 - EngineRunRef
  *
  * Invariant: conductorUrl MUST be present (per normative contract § 2.1.1)
  */
@@ -77,13 +77,13 @@ export interface ConductorEngineRunRef {
 
 /**
  * Polymorphic reference to a running workflow in any engine adapter
- * @see IWorkflowEngine.v1.md § 2.1.1 - EngineRunRef
+ * @see IWorkflowEngine.v1.1.md § 2.1.1 - EngineRunRef
  */
 export type EngineRunRef = TemporalEngineRunRef | ConductorEngineRunRef;
 
 /**
  * Plan reference for transport layer (not full plan due to size limits)
- * @see IWorkflowEngine.v1.md § 3.1 - PlanRef (Transport Layer)
+ * @see IWorkflowEngine.v1.1.md § 3.1 - PlanRef (Transport Layer)
  */
 export interface PlanRef {
   /** Opaque URI to the plan (e.g., https://..., s3://..., gs://..., azure://...) */
@@ -105,7 +105,7 @@ export interface PlanRef {
 /**
  * Execution plan structure (minimal contract)
  * Referenced by IWorkflowEngine.startRun
- * @see IWorkflowEngine.v1.md § 3 - Execution Plan Minimal Contract
+ * @see IWorkflowEngine.v1.1.md § 3 - Execution Plan Minimal Contract
  */
 export interface ExecutionPlan {
   /** Plan metadata */
@@ -156,6 +156,7 @@ export interface QueryRequest {
 
 /**
  * Run status returned by getRunStatus
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
  * @see ExecutionSemantics.v1.md § 1.2 - Append-Only Event Model
  */
 export type RunStatus =
@@ -169,7 +170,7 @@ export type RunStatus =
 
 /**
  * Snapshot of run status
- * @see IWorkflowEngine.v1.md § 2.1 - Operations
+ * @see IWorkflowEngine.v1.1.md § 2.1.2 - RunStatusSnapshot
  */
 export interface RunStatusSnapshot {
   /** Run identifier */
@@ -275,7 +276,7 @@ export interface IAuthorization {
 
 /**
  * Main workflow engine interface
- * @see IWorkflowEngine.v1.md § 2.1 - Operations
+ * @see IWorkflowEngine.v1.1.md § 2.1 - Operations
  */
 export interface IWorkflowEngine {
   /**
@@ -315,7 +316,7 @@ export interface IWorkflowEngine {
 
 /**
  * Validation report for plan capability checks
- * @see IWorkflowEngine.v1.md § 4 - Cross-Adapter Capability Validation
+ * @see IWorkflowEngine.v1.1.md § 4 - Cross-Adapter Capability Validation
  */
 export interface ValidationReport {
   /** Plan identifier */

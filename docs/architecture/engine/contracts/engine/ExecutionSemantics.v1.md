@@ -6,7 +6,7 @@
 **Consumers**: Engine, StateStore, Projector
 
 **References**:
-[IWorkflowEngine Contract](./IWorkflowEngine.v1.md)  
+[IWorkflowEngine Contract](./IWorkflowEngine.v1.1.md)  
  [Contract Versioning Policy](../../VERSIONING.md) — how this contract evolves (minor/major bumps, deprecation)  
  [State Store Contract](../state-store/README.md) — storage-agnostic interface  
  [State Store Adapters](../../adapters/state-store/) — backend-specific implementations (Snowflake, Postgres, etc.)  

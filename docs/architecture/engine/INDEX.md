@@ -14,7 +14,7 @@ These documents define the **engine boundary, semantics, and invariants**. Viola
 
 | Document                                                              | Purpose                                                          | Scope             | Version |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------- | ------- |
-| [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md)       | Engine interface + signal catalog                                | Boundary contract | 1.0     |
+| [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md)   | Engine interface + signal catalog                                | Boundary contract | 1.0     |
 | [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic)               | State machine     | 1.1     |
 | [State Store Contract](contracts/state-store/README.md)               | Storage-agnostic interface for event log + snapshots             | Persistence layer | 1.0     |
 | [VERSIONING.md](./VERSIONING.md)                                      | Policy for versioning contracts (major/minor bumps, deprecation) | Governance        | 1.0     |
@@ -99,7 +99,7 @@ Phase breakdown, milestones, risks, staffing.
 docs/architecture/engine/
 ├── contracts/                             # Normative contracts (versionable)
 │   ├── engine/
-│   │   ├── IWorkflowEngine.v1.md         # [NORMATIVE] Interface + signals
+│   │   ├── IWorkflowEngine.v1.1.md         # [NORMATIVE] Interface + signals
 │   │   └── ExecutionSemantics.v1.md      # [NORMATIVE] Core execution semantics (agnostic)
 │   ├── state-store/
 │   │   └── README.md                      # [NORMATIVE] Storage-agnostic State Store contract
@@ -156,7 +156,7 @@ docs/architecture/engine/
 **For SDK implementers**:
 
 1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
-2. Read [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (interface)
+2. Read [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) (interface)
 3. Read [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (core semantics, storage-agnostic)
 4. Read [State Store Contract](contracts/state-store/README.md) (persistence layer interface)
 5. Choose storage backend:
@@ -207,7 +207,7 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 
 ### "How do I implement the engine interface?"
 
-→ [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Section 2)
+→ [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) (Section 2)
 
 ### "What is the StateStore model?"
 
@@ -241,14 +241,14 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 
 ### "How do I handle signals (PAUSE, CANCEL, etc.)?"
 
-→ [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Sections 2.2-2.4)
+→ [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) (Sections 2.2-2.4)
 
 ---
 
 ## 🔄 Document Relationships
 
 ```
-IWorkflowEngine.v1.md
+IWorkflowEngine.v1.1.md
   ├─ references: ExecutionSemantics.v1.md (state model)
   ├─ references: TemporalAdapter.spec.md (implementation)
   └─ references: contracts/capabilities/ (validation)
@@ -258,17 +258,17 @@ ExecutionSemantics.v1.md
   └─ references: TemporalAdapter.spec.md (continueAsNew policy)
 
 TemporalAdapter.spec.md
-  ├─ implements: IWorkflowEngine.v1.md (interpreter workflow)
+  ├─ implements: IWorkflowEngine.v1.1.md (interpreter workflow)
   ├─ depends on: ExecutionSemantics.v1.md (state model)
   └─ references: dev/determinism-tooling.md (versioning)
 
 ConductorAdapter.spec.md (DRAFT, Phase 2)
-  ├─ implements: IWorkflowEngine.v1.md (emulated)
+  ├─ implements: IWorkflowEngine.v1.1.md (emulated)
   ├─ depends on: ExecutionSemantics.v1.md (state model)
   └─ references: contracts/capabilities/adapters.capabilities.json (parity)
 
 observability.md
-  ├─ monitors: IWorkflowEngine.v1.md (interface health)
+  ├─ monitors: IWorkflowEngine.v1.1.md (interface health)
   ├─ monitors: ExecutionSemantics.v1.md (StateStore health)
   └─ references: runbooks/incident_response.md (alerts → procedures)
 
@@ -365,7 +365,7 @@ All internal references use **relative markdown links** (portable, versionable).
 
 | Document                 | Size             | Type     | Stability      | Audience         |
 | ------------------------ | ---------------- | -------- | -------------- | ---------------- |
-| IWorkflowEngine.v1.md    | 120 lines        | Contract | HIGH           | SDK devs         |
+| IWorkflowEngine.v1.1.md  | 120 lines        | Contract | HIGH           | SDK devs         |
 | ExecutionSemantics.v1.md | 280 lines        | Contract | HIGH           | Engine impl      |
 | VERSIONING.md            | 320 lines        | Policy   | HIGH           | Contract authors |
 | TemporalAdapter.spec.md  | 300 lines        | Adapter  | HIGH           | Temporal SDK     |
@@ -397,7 +397,7 @@ All internal references use **relative markdown links** (portable, versionable).
 
 | Document                 | Owner              | Last Reviewed | Next Review |
 | ------------------------ | ------------------ | ------------- | ----------- |
-| IWorkflowEngine.v1.md    | @engine-lead       | 2026-02-11    | 2026-05-11  |
+| IWorkflowEngine.v1.1.md  | @engine-lead       | 2026-02-11    | 2026-05-11  |
 | ExecutionSemantics.v1.md | @engine-lead       | 2026-02-11    | 2026-05-11  |
 | VERSIONING.md            | @architecture-lead | 2026-02-11    | 2026-12-11  |
 | TemporalAdapter.spec.md  | @temporal-lead     | 2026-02-11    | 2026-05-11  |

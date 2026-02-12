@@ -1,11 +1,13 @@
 # Run Events Contract (Normative v1.1)
 
-**Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.1  
-**Stability**: Contracts — breaking changes require version bump  
-**Consumers**: StateStore, Projectors, UI, Audit Systems  
-**Parent Contract**: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md)  
+**Status**: Normative (MUST / MUST NOT)
+**Version**: 1.1
+**Stability**: Contracts — breaking changes require version bump
+**Consumers**: StateStore, Projectors, UI, Audit Systems
+**Parent Contract**: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md)
 **References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
+
+**Version alignment**: Contract v1.1 aligns with parent IWorkflowEngine.v1.1.md and ExecutionSemantics.v1.md.
 
 ---
 
@@ -261,6 +263,6 @@ Both MUST be included in event idempotency keys and audit logs.
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                       |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.md to reduce churn. Added state transition mapping. **Critical fixes**: Split RunEventWrite/RunEventRecord (runSeq phases), normalize stepId in idempotency key (use 'RUN' for run-level events), add planId/planVersion as required fields, clarify PENDING/APPROVED managed by Planner, add persistedAt, define minimum payload schemas. |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                         |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.1.md to reduce churn. Added state transition mapping. **Critical fixes**: Split RunEventWrite/RunEventRecord (runSeq phases), normalize stepId in idempotency key (use 'RUN' for run-level events), add planId/planVersion as required fields, clarify PENDING/APPROVED managed by Planner, add persistedAt, define minimum payload schemas. |

@@ -598,7 +598,7 @@ The following contracts define security-critical interfaces and policies. Implem
 - [AuditLog.v1.md](contracts/security/AuditLog.v1.md) - Audit log schema + cryptographic signature requirements
 - [ISecretsProvider.v1.md](contracts/security/ISecretsProvider.v1.md) - Secrets resolution interface (no secrets in logs/history)
 - [DecisionRecord.v1.md](contracts/operations/DecisionRecord.v1.md) - Operator action justification schema
-- [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) - Core engine interface with tenant scope requirements
+- [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) - Core engine interface with tenant scope requirements
 
 ### Architecture Documentation
 

@@ -15,8 +15,8 @@ This monolithic 3,227-line document has been **partitioned into 9 focused docume
 
 | Original Section  | Content                                            | New Home                                                                                                       | Status               |
 | ----------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------- |
-| **Section 1**     | Engine Boundary (MUST/MUST NOT)                    | [IWorkflowEngine.v1.md § 1](./contracts/engine/IWorkflowEngine.v1.md#1-engine-requirements-must-contracts)     | ✅ Extracted         |
-| **Section 2**     | IWorkflowEngine Interface                          | [IWorkflowEngine.v1.md § 2](./contracts/engine/IWorkflowEngine.v1.md#2-iworkflowengine-interface)              | ✅ Extracted         |
+| **Section 1**     | Engine Boundary (MUST/MUST NOT)                    | [IWorkflowEngine.v1.1.md § 1](./contracts/engine/IWorkflowEngine.v1.1.md#1-engine-requirements-must-contracts) | ✅ Extracted         |
+| **Section 2**     | IWorkflowEngine Interface                          | [IWorkflowEngine.v1.1.md § 2](./contracts/engine/IWorkflowEngine.v1.1.md#2-iworkflowengine-interface)          | ✅ Extracted         |
 | **Section 3**     | PlanRef Versioning                                 | [TemporalAdapter.spec.md § 1](./adapters/temporal/TemporalAdapter.spec.md#1-plan-transport-planref-versioning) | ✅ Extracted         |
 | **Section 4**     | Temporal Mapping (Interpreter, Namespace, Workers) | [TemporalAdapter.spec.md § 2-5](./adapters/temporal/TemporalAdapter.spec.md)                                   | ✅ Extracted         |
 | **Section 4.6**   | Capability Matrix (Temporal vs Conductor)          | [contracts/capabilities/adapters.capabilities.json](./contracts/capabilities/adapters.capabilities.json)       | ✅ Extracted (JSON)  |
@@ -37,7 +37,7 @@ This monolithic 3,227-line document has been **partitioned into 9 focused docume
 
 ### ���‍��� SDK Implementer
 
-1. [IWorkflowEngine.v1.md](./contracts/engine/IWorkflowEngine.v1.md) — Interface + signals
+1. [IWorkflowEngine.v1.1.md](./contracts/engine/IWorkflowEngine.v1.1.md) — Interface + signals
 2. [ExecutionSemantics.v1.md](./contracts/engine/ExecutionSemantics.v1.md) — State model
 3. [TemporalAdapter.spec.md](./adapters/temporal/TemporalAdapter.spec.md) — Temporal-specific details
 

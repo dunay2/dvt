@@ -3,7 +3,7 @@
 **Audience**: Platform engineers, SREs, operations  
 **Scope**: Metrics, traces, logs, alerts, SLOs  
 **Status**: Phase 1 MVP  
-**References**: [IWorkflowEngine](../contracts/engine/IWorkflowEngine.v1.md), [ExecutionSemantics](../contracts/engine/ExecutionSemantics.v1.md)
+**References**: [IWorkflowEngine](../contracts/engine/IWorkflowEngine.v1.1.md), [ExecutionSemantics](../contracts/engine/ExecutionSemantics.v1.md)
 
 ---
 

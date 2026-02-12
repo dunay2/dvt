@@ -7,6 +7,8 @@
 **Parent Contract**: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md)  
 **References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 
+**Version alignment**: Contract v1.1 aligns with parent IWorkflowEngine.v1.1.md and ExecutionSemantics.v1.md.
+
 ---
 
 ## 1) Supported Signals Catalog (Complete)
@@ -243,6 +245,6 @@ The following error codes MUST be used for signal authorization failures:
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                                                                                                                                                            |
-| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.md to reduce churn. Added RBAC table. **Critical fixes**: Declare signal idempotency key (tenantId, runId, signalId), clarify no-op behavior, scope approval workflow, normalize actor fields, define DestructiveSignalType enum, formalize error codes (AUTHZ_DENIED, AUTHZ_TENANT_FORBIDDEN). |
+| Version | Date       | Change                                                                                                                                                                                                                                                                                                                              |
+| ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.1.md to reduce churn. Added RBAC table. **Critical fixes**: Declare signal idempotency key (tenantId, runId, signalId), clarify no-op behavior, scope approval workflow, normalize actor fields, define DestructiveSignalType enum, formalize error codes (AUTHZ_DENIED, AUTHZ_TENANT_FORBIDDEN). |
