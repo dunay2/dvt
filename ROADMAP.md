@@ -201,7 +201,7 @@ gantt
 - **Status**: 🟡 On track (7 weeks remaining)
 - **Critical Path**: #8 → #9 → #2 → #14 → #15 → #5,#6 → #16 → #10 → #17 (enforce strict order)
 - **Risk**: Integration testing window = 2 weeks only (Mar 17-31), now includes golden paths AND outbox worker
-- **New issues**: #14-#17 implementation epics + #19 security docs (documentación y architecture-critical)
+- **New issues**: #14-#17 implementation epics + #19 security docs (documentation and architecture-critical)
 
 ### Phase 1.5: Hardening
 
@@ -225,7 +225,7 @@ gantt
 - [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) - Execution semantics
 - [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) - Engine interface
 - [State Store Contract](docs/architecture/engine/contracts/state-store/README.md) - StateStore contract
-- [WORKFLOW_ENGINE.md](docs/WORKFLOW_ENGINE.md) - Overall architecture
+- [WORKFLOW_ENGINE.md](docs/architecture/engine/WORKFLOW_ENGINE.md) - Overall architecture (deprecated, see INDEX.md)
 - [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md) - Detailed phase breakdown with anchor decisions
 
 ### GitHub Project Management
@@ -256,7 +256,7 @@ gantt
 
 **Delivery Model**: At-least-once (consumers must handle duplicates).
 
-**Idempotency Key (Agnóstic)**:
+**Idempotency Key (Adapter-agnostic)**:
 
 ```
 idempotencyKey = tenantId + contractVersion + eventType + runId + stepId + attemptId
@@ -265,7 +265,7 @@ idempotencyKey = tenantId + contractVersion + eventType + runId + stepId + attem
 - **Consumer responsibility**: Deduplicate using idempotency key (e.g., upsert by key in consumer DB)
 - **Replay safety**: Replaying events from outbox produces identical consumer state
 
-**Backpressure Signal (Agnóstic)**:
+**Backpressure Signal (Adapter-agnostic)**:
 
 - **Trigger condition**: Projection delay p99 > 5 seconds (or adapter-defined threshold)
 - **Signal**: Engine emits `BACKPRESSURE_ON` (auditable, not circuit breaker)

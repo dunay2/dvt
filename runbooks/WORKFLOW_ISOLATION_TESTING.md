@@ -1,5 +1,5 @@
 # Workflow Isolation Testing Strategy
 
-Aislar y verificar cada workflow de GitHub Actions uno a la vez para identificar y corregir fallos sin interferencia.
+This document has been archived. The canonical location is now:
 
-(Document migrated from the repository root — the canonical location is now `runbooks/`).
+- [docs/archive/ci/WORKFLOW_ISOLATION_TESTING.md](../docs/archive/ci/WORKFLOW_ISOLATION_TESTING.md)

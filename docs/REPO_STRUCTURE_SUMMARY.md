@@ -14,8 +14,6 @@ This document summarizes the repository's _current file layout_ and the _recomme
   - docs/
   - runbooks/
   - .github/
-  - engine/ (legacy top-level engine folder — **deprecated**)
-  - adapters/ (legacy top-level adapters folder — **deprecated**)
   - packages/
     - adapter-postgres/
     - adapter-temporal/
@@ -24,13 +22,13 @@ This document summarizes the repository's _current file layout_ and the _recomme
     - engine/
     - ...
   - scripts/
-  - test/ (legacy)
+  - test/ (legacy placeholder, safe to remove when empty)
   - pnpm-workspace.yaml, tsconfig.base.json, vitest.config.ts
 
 Notes:
 
-- `packages/*` already contains canonical packages and most implementation.
-- Some legacy folders (`engine/`, `adapters/`, `test/`) remain in the repo and were converted to README/redirects or left for archival.
+- `packages/*` is the canonical location for implementation and tests.
+- Legacy material is now handled under package-scoped archival folders (for example `packages/engine/legacy-top-level-engine/` and `packages/adapters-legacy/`).
 
 ---
 
@@ -71,7 +69,7 @@ Notes:
 Guiding rules:
 
 - Packages are the single source-of-truth for code and types.
-- Top-level `engine/`, `adapters/`, `test/` should be deprecated/archived after migration.
+- Top-level runtime code should not exist outside `packages/*`.
 - CI should run `pnpm -r build && pnpm -r test && pnpm -r lint`.
 
 ---
@@ -83,9 +81,9 @@ Guiding rules:
 3. Move each adapter into `packages/adapter-*` and wire package.json deps. ✅
 4. Update root and per-package `tsconfig.json` & `tsconfig.test.json` entries. ✅
 5. Update `.eslintrc.json` parserOptions.project to include `./packages/*/tsconfig.json`. ✅
-6. Replace top-level implementation copies with deprecation `README.md` (or archive). ✅/follow-up
+6. Replace top-level implementation copies with deprecation `README.md` (or archive). ✅
 7. Run full verification: `pnpm -r build && pnpm -r test && pnpm -r lint` in CI. ✅
-8. Create small, focused PRs for final cleanup (remove legacy folders, lint/style fixes). recommended.
+8. Create small, focused PRs for final cleanup (remove empty placeholders, lint/style fixes, CI path alignment). ✅/follow-up
 
 ---
 
@@ -94,7 +92,7 @@ Guiding rules:
 - `pnpm -r build` completes without TypeScript errors for all packages.
 - `pnpm -r test` passes for all packages that contain tests (engine tests green).
 - `pnpm -r lint` reports no `parserOptions.project` errors and no blocking errors.
-- No duplicate code remains across top-level `engine/` vs `packages/engine` (legacy archived).
+- No duplicate active code remains outside `packages/*`.
 
 ---
 
@@ -110,8 +108,8 @@ Guiding rules:
 ## 6) Recommendation / next PRs
 
 - PR A: final lint/style fixes (import ordering, explicit return types).
-- PR B: archive/remove legacy `engine/` and `adapters/` after review.
-- PR C: finalize CI workflow enabling (`test.yml`, `contracts.yml`, `golden-paths.yml`).
+- PR B: remove empty root placeholders (for example root `test/`) once CI/scripts/docs no longer reference them.
+- PR C: finalize CI path alignment to `packages/*` in workflows and checks.
 
 ---
 

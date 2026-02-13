@@ -26,15 +26,16 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./engine",
+    "rootDir": ".",
     "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@dvt/engine/*": ["engine/src/*"],
-      "@dvt/contracts/*": ["src/contracts/*"],
-      "@dvt/adapters/*": ["src/adapters/*"]
+      "@dvt/engine/*": ["packages/engine/src/*"],
+      "@dvt/contracts/*": ["packages/contracts/src/*"],
+      "@dvt/adapter-postgres/*": ["packages/adapter-postgres/src/*"],
+      "@dvt/adapter-temporal/*": ["packages/adapter-temporal/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "engine/**/*.ts", "packages/*/src/**/*.ts"],
+  "include": ["packages/*/src/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }

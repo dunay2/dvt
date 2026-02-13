@@ -1,6 +1,10 @@
-# Mi Arquitectura de Workers
+# Worker Architecture Diagram (Legacy Note)
 
-Aquí está el diagrama:
+The canonical execution semantics documentation lives under:
+
+- `docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md`
+
+This file is kept only as a lightweight historical pointer.
 
 ```mermaid
 graph TD

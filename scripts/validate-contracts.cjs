@@ -3,7 +3,7 @@
  * Validate Contract Fixtures
  *
  * Validates golden path fixtures against contract schemas.
- * Uses the Zod schemas defined in engine/src/contracts/schemas/
+ * Uses schema fixtures and plans colocated with the canonical engine package tests.
  *
  * Usage:
  *   node scripts/validate-contracts.cjs
@@ -17,8 +17,11 @@ console.log('🔍 Validating contract fixtures...\n');
 
 // Paths
 const docsDir = path.join(__dirname, '../docs/architecture/engine/schemas');
-const fixturesDir = path.join(__dirname, '../test/contracts/fixtures');
-const planDir = path.join(__dirname, '../test/contracts/plans');
+const fixturesDir = path.join(
+  __dirname,
+  '../packages/engine/test/contracts/fixtures'
+);
+const planDir = path.join(__dirname, '../packages/engine/test/contracts/plans');
 
 // Collect fixture files
 const fixtureFiles = [];
@@ -34,7 +37,7 @@ if (fs.existsSync(fixturesDir)) {
   );
 }
 
-// Check plans in test/contracts/plans
+// Check plans in packages/engine/test/contracts/plans
 if (fs.existsSync(planDir)) {
   const files = fs.readdirSync(planDir).filter(f => f.endsWith('.json'));
   fixtureFiles.push(

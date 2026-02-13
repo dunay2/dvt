@@ -10,38 +10,41 @@
 # Engine core changes
 'engine:core':
   - changed-files:
-      - any-glob-to-any-file: 'engine/core/**/*'
-      - any-glob-to-any-file: 'engine/src/**/*'
+      - any-glob-to-any-file: 'packages/engine/src/core/**/*'
+      - any-glob-to-any-file: 'packages/engine/src/**/*'
 
 # Adapter changes
 'engine:adapters':
   - changed-files:
-      - any-glob-to-any-file: 'engine/adapters/**/*'
+      - any-glob-to-any-file: 'packages/engine/src/adapters/**/*'
+      - any-glob-to-any-file: 'packages/adapter-*/**/*'
 
 # Temporal adapter
 'engine:temporal':
   - changed-files:
-      - any-glob-to-any-file: 'engine/adapters/temporal/**/*'
+      - any-glob-to-any-file: 'packages/engine/src/adapters/temporal/**/*'
+      - any-glob-to-any-file: 'packages/adapter-temporal/**/*'
       - any-glob-to-any-file: 'docs/architecture/engine/adapters/temporal/**/*'
 
 # State Store
 'engine:state-store':
   - changed-files:
-      - any-glob-to-any-file: 'engine/adapters/state-store/**/*'
+      - any-glob-to-any-file: 'packages/engine/src/adapters/state-store/**/*'
+      - any-glob-to-any-file: 'packages/adapter-postgres/**/*'
       - any-glob-to-any-file: 'docs/architecture/engine/contracts/state-store/**/*'
 
 # Contracts (high scrutiny)
 'contracts':
   - changed-files:
       - any-glob-to-any-file: 'docs/architecture/engine/contracts/**/*'
-      - any-glob-to-any-file: 'contracts/**/*'
+      - any-glob-to-any-file: 'packages/contracts/**/*'
 
 # Tests
 'tests':
   - changed-files:
       - any-glob-to-any-file: '**/*.test.ts'
       - any-glob-to-any-file: '**/*.spec.ts'
-      - any-glob-to-any-file: 'engine/test/**/*'
+      - any-glob-to-any-file: 'packages/*/test/**/*'
 
 # CI/CD
 'ci/cd':

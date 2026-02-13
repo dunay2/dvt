@@ -9,25 +9,24 @@ Move towards a light monorepo layout (packages/) and consolidate tests under the
 
 ## Scope
 
-- Move tests from root `test/` and `engine/test/` into `packages/engine/test`
-- Move adapter tests under their adapter folder (e.g. `adapters/postgres/test`)
-- Add package-level tsconfigs and ESLint overrides (already partly added)
-- Update CI to run per-package tests
+- Consolidate remaining root legacy placeholders (e.g. `test/`) after references are removed
+- Keep tests inside package folders (e.g. `packages/engine/test`, `packages/*/test`)
+- Align CI, CODEOWNERS, and label rules with `packages/*`
+- Run monorepo verification with workspace commands
 
 ## Checklist
 
-- [ ] Move tests into package folders
-- [ ] Update imports/paths if needed
-- [ ] Add `packages/*/tsconfig.*.json` for lint/test
-- [ ] Update ESLint overrides
-- [ ] Update CI workflows (test filters)
-- [ ] Run full test suite and fix regressions
+- [ ] Audit and replace legacy path references (`engine/`, `adapters/`, `test/`) in CI/docs/config
+- [ ] Ensure contract scripts write/read from `packages/engine/test/contracts/results`
+- [ ] Update CI workflows and ownership rules to package paths
+- [ ] Remove root legacy placeholders when empty and unreferenced
+- [ ] Run full verification: `pnpm -r build && pnpm -r test && pnpm -r lint`
 
 ## Acceptance criteria
 
-- All tests run under `pnpm -w test`
-- No tests remain in root `test/` or `engine/test/`
-- Lint is clean with package-level tsconfigs
+- All tests run under `pnpm -r test`
+- No active CI/script/config path points to root `engine/`, `adapters/`, or `test/`
+- Lint/type-check are clean with package-level tsconfigs
 
 ## Notes
 

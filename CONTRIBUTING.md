@@ -10,48 +10,51 @@ Be respectful and professional. We're all here to build great software.
 
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/dvt.git`
-3. Create a branch: `git checkout -b feature/your-feature-name`
-4. Make your changes
-5. Run tests: `npm test`
-6. Commit using conventional commits: `git commit -am "feat(scope): your message"`
-7. Push: `git push origin feature/your-feature-name`
-8. Open a Pull Request
+3. Install dependencies: `pnpm install`
+4. Create a branch: `git checkout -b feature/your-feature-name`
+5. Make your changes
+6. Run tests: `pnpm test`
+7. Commit using conventional commits: `git commit -m "feat(scope): your message"`
+8. Push: `git push origin feature/your-feature-name`
+9. Open a Pull Request
 
 ## Development Setup
 
 ### Prerequisites
 
 - Node.js 18+ or 20+
-- npm 9+
+- pnpm 9+
 - Git
 
 ### Installation
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Available Scripts
 
 ```bash
 # Linting
-npm run lint              # Run ESLint
-npm run lint:fix          # Auto-fix ESLint issues
-npm run lint:md           # Lint Markdown files
-npm run format            # Format code with Prettier
-npm run format:check      # Check formatting
+pnpm lint                 # Run ESLint
+pnpm lint:fix             # Auto-fix ESLint issues
+pnpm lint:md              # Lint Markdown files
+pnpm format               # Format code with Prettier
+pnpm format:check         # Check formatting
 
 # Testing
-npm test                  # Run all tests
-npm run test:watch        # Run tests in watch mode
-npm run test:coverage     # Generate coverage report
-npm run test:determinism  # Run determinism tests
+pnpm test                 # Run all tests
+pnpm test:coverage        # Generate coverage report
 
 # Type Checking
-npm run type-check        # Run TypeScript compiler
+pnpm type-check           # Run TypeScript compiler
 
 # Build
-npm run build             # Build the project
+pnpm build                # Build all packages
+
+# Contract validation
+pnpm validate:contracts   # Validate golden JSON fixtures
+pnpm golden:validate      # Execute golden paths
 ```
 
 ## Commit Message Guidelines
@@ -72,17 +75,17 @@ docs(architecture): update determinism guide
 
 1. **Update documentation** if you're changing behavior
 2. **Add tests** for new features
-3. **Ensure all tests pass**: `npm test`
-4. **Check code quality**: `npm run lint && npm run format:check`
+3. **Ensure all tests pass**: `pnpm test`
+4. **Check code quality**: `pnpm lint && pnpm format:check`
 5. **Update CHANGELOG.md** if needed (or let automation handle it)
 6. **Keep PRs focused** - one feature/fix per PR
 7. **Write a clear PR description** using the template
 
 ### PR Size Guidelines
 
-- ✅ **Small** (< 200 lines): Ideal
-- ⚠️ **Medium** (200-500 lines): Acceptable
-- ❌ **Large** (> 500 lines): Consider splitting
+- Small (< 200 lines): Ideal
+- Medium (200-500 lines): Acceptable
+- Large (> 500 lines): Consider splitting
 
 ## Testing Guidelines
 
@@ -133,7 +136,7 @@ New adapters should:
 We use ESLint and Prettier for consistency. Run:
 
 ```bash
-npm run lint:fix && npm run format
+pnpm lint:fix && pnpm format
 ```
 
 ### Key Rules
@@ -156,4 +159,4 @@ npm run lint:fix && npm run format
 - Check existing [issues](https://github.com/dunay2/dvt/issues)
 - Review [documentation](./docs/)
 
-Thank you for contributing! 🚀
+Thank you for contributing!
