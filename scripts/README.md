@@ -4,19 +4,19 @@ This directory contains scripts for validating contract tests and golden paths a
 
 ## Scripts
 
-### `validate-contracts.js`
+### `validate-contracts.cjs`
 
 Validates that golden JSON fixtures conform to their schemas.
 
 **Usage:**
 
 ```bash
-npm run test:contracts:validate
+pnpm test:contracts:validate
 ```
 
 **Status:** Stub implementation until issue #10 (Golden Paths) provides actual fixtures.
 
-### `run-golden-paths.js`
+### `run-golden-paths.cjs`
 
 Executes the 3 required golden paths from ROADMAP.md:
 
@@ -27,18 +27,18 @@ Executes the 3 required golden paths from ROADMAP.md:
 **Usage:**
 
 ```bash
-npm run test:contracts:hashes
+pnpm test:contracts:hashes
 ```
 
 **Environment Variables:**
 
 - `DATABASE_URL`: PostgreSQL connection string (optional until issue #6)
 
-**Output:** Saves execution results to `test/contracts/results/golden-paths-run.json`
+**Output:** Saves execution results to `packages/engine/test/contracts/results/golden-paths-run.json`
 
 **Status:** Stub implementation until issue #10 (Golden Paths) provides actual implementations.
 
-### `compare-hashes.js`
+### `compare-hashes.cjs`
 
 Compares current execution hashes against baseline in `.golden/hashes.json`.
 Fails if hashes mismatch (indicates non-determinism).
@@ -46,21 +46,21 @@ Fails if hashes mismatch (indicates non-determinism).
 **Usage:**
 
 ```bash
-npm run test:contracts:hash-compare
+pnpm test:contracts:hash-compare
 ```
 
-**Prerequisites:** Must run `npm run test:contracts:hashes` first.
+**Prerequisites:** Must run `pnpm test:contracts:hashes` first.
 
 **Status:** Functional - lenient for 'pending' hashes until implementations are complete.
 
-### `db-migrate.js`
+### `db-migrate.cjs`
 
 Runs database migrations for contract testing.
 
 **Usage:**
 
 ```bash
-npm run db:migrate
+pnpm db:migrate
 ```
 
 **Environment Variables:**

@@ -77,7 +77,7 @@ This monolithic 3,227-line document has been **partitioned into 9 focused docume
 ### Solution: Modular Contracts
 
 - ✅ Contracts <500 lines each → reviewable, versionable (v1.0, v1.1, v2.0)
-- ✅ Separated: normative (MUST, immutable) vs informative (evolve rápido)
+- ✅ Separated: normative (MUST, immutable) vs informative (evolves quickly)
 - ✅ Capabilities as executable JSON schemas → code-gen ready
 - ✅ Operators can find playbooks in dedicated docs
 

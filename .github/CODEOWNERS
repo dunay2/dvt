@@ -26,23 +26,24 @@
 # === Engine Implementation ===
 
 # Engine core (determinism-critical)
-/engine/core/ @dunay2
-/engine/src/ @dunay2
+/packages/engine/src/ @dunay2
+/packages/engine/core/ @dunay2
 
 # Adapters (Temporal, Postgres - multi-platform impact)
-/engine/adapters/temporal/ @dunay2
-/engine/adapters/state-store/ @dunay2
+/packages/engine/src/adapters/temporal/ @dunay2
+/packages/engine/src/adapters/state-store/ @dunay2
+/packages/adapter-temporal/ @dunay2
+/packages/adapter-postgres/ @dunay2
 
 # Outbox delivery worker (at-least-once delivery guarantee)
-/engine/outbox/ @dunay2
+/packages/engine/src/outbox/ @dunay2
 
 # === Contract Tests & Golden Paths ===
 # Validates determinism and cross-adapter compatibility
 
 /.golden/ @dunay2
-/test/contracts/ @dunay2
-/test/golden-paths/ @dunay2
-/test/idempotency/ @dunay2
+/packages/engine/test/contracts/ @dunay2
+/packages/engine/test/determinism/ @dunay2
 
 # === Determinism Tooling ===
 
@@ -51,7 +52,7 @@
 /linting/ @dunay2
 
 # Determinism-specific tests
-/test/determinism/ @dunay2
+/packages/engine/test/determinism/ @dunay2
 
 # === CI/CD & Infrastructure ===
 
@@ -81,17 +82,16 @@
 
 # ESLint config (affects determinism checks)
 /.eslintrc* @dunay2
-/eslint.config.js @dunay2
+/eslint.config.cjs @dunay2
 
 # GitHub config
 /.github/ISSUE_TEMPLATE/ @dunay2
 /.github/CODEOWNERS @dunay2
-/.github/CODEOWNERS                              @your-org/architecture-team @your-org/devops-team
 
 # ==============================================================================
 # NOTES
 # ==============================================================================
-# 
+#
 # Team handles (replace with your org's actual teams):
 #   @your-org/architecture-team       - Senior architects (normative contract changes)
 #   @your-org/engine-leads            - Engine tech leads

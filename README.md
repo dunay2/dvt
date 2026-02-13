@@ -1,39 +1,41 @@
 # dvt
 
-[![CI](https://github.com/dunay2/dvt/actions/workflows/test.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/test.yml)
-[![Code Quality](https://github.com/dunay2/dvt/actions/workflows/code-quality.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/code-quality.yml)
-[![Markdown Lint](https://github.com/dunay2/dvt/actions/workflows/markdown_lint.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/markdown_lint.yml)
-[![Determinism](https://github.com/dunay2/dvt/actions/workflows/determinism.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/determinism.yml)
+[![Tests](https://github.com/dunay2/dvt/actions/workflows/test.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/test.yml)
+[![Code Quality](https://github.com/dunay2/dvt/actions/workflows/ci.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/ci.yml)
+[![Contracts](https://github.com/dunay2/dvt/actions/workflows/contracts.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/contracts.yml)
 
 Data Value Transform — Multi-adapter orchestration engine.
 
 ---
 
-## 🚀 Acción Inmediata - Primeros Pasos
+## Immediate Action - First Steps
 
-**¿Nuevo en el proyecto?** Instala las herramientas prioritarias para desbloquear Issues #2, #6 y #10:
+**New to the project?** Set up the development environment:
 
-```powershell
-# Windows
-.\scripts\setup-immediate-tools.ps1
+```bash
+# Install dependencies (pnpm 9+ required)
+pnpm install
 
-# Linux/macOS
-bash scripts/setup-immediate-tools.sh
+# Build all packages
+pnpm build
+
+# Run tests
+pnpm test
 ```
 
-**Luego sigue**: [docs/IMMEDIATE_ACTION_PLAN.md](docs/IMMEDIATE_ACTION_PLAN.md) para completar el setup inicial.
+**Installed tools**: Zod (contract validation), Prisma (DB migrations), Vitest (testing).
 
-**Herramientas instaladas**: Zod (validación de contratos), Prisma (DB migrations), Docker Compose (dev environment).
-
-→ **Tiempo estimado**: 2-3 horas para tener un entorno de desarrollo completamente funcional.
+> See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development setup guide.
 
 ---
 
-## 📚 Documentation
+## Documentation
+
+> **[Documentation Index](docs/INDEX.md)**
 
 ### Architecture & Contracts
 
-→ **[Engine Architecture Index](docs/architecture/engine/INDEX.md)** ← Start here
+> **[Engine Architecture Index](docs/architecture/engine/INDEX.md)** — Start here
 
 The engine is documented as **modular, versioned contracts** (not a monolith):
 
@@ -57,29 +59,25 @@ The engine is documented as **modular, versioned contracts** (not a monolith):
 
 ---
 
-## 🛠️ Development Setup
+## Development Setup
 
 ### Prerequisites
 
 - Node.js 18+ or 20+
-- npm 9+
-
-### Installation, determinism checks)
-
-- Versioning policy (MAJOR/MINOR/PATCH bumps, deprecation process)
-- Git workflow and branch protection rules
+- pnpm 9+
 
 **Pre-commit validation** (automated via Git hooks):
 
 ```bash
 # These run automatically on git commit
-npm run lint              # ESLint
-npm run format:check      # Prettier
-npm run type-check        # TypeScript
+pnpm lint                 # ESLint
+pnpm format:check         # Prettier
+pnpm type-check           # TypeScript
 
 # Manual checks
-npm run lint:md           # Markdown linting
-npm test                  # Run tests
+pnpm lint:md              # Markdown linting
+pnpm test                 # Run tests
+pnpm test:coverage        # Coverage report
 ```
 
 ### Pull Request Process
@@ -101,55 +99,57 @@ For engine implementation contributions, ensure:
 
 ---
 
-## 📋 Project Status
+## Monorepo Structure (pnpm workspaces)
 
-See [ROADMAP.md](./ROADMAP.md) and [engine-phases.md](./docs/architecture/engine/roadmap/engine-phases.md) for implementation roadmap.
+The project is organized as a monorepo using pnpm workspaces. The primary packages are located under the `packages/` directory:
 
-## 📄 License
+- `packages/contracts` — Shared contracts and interfaces (`@dvt/contracts`)
+- `packages/engine` — Orchestration engine core (`@dvt/engine`)
+- `packages/adapter-postgres` — PostgreSQL adapter (`@dvt/adapter-postgres`)
+- `packages/adapter-temporal` — Temporal adapter (`@dvt/adapter-temporal`)
+- `packages/cli` — CLI tools and scripts (`@dvt/cli`)
 
-ISC
+### Key Commands
 
-## 🙏 Acknowledgments
+Run these commands from the repository root:
 
-Built with best practices from Temporal, Conductor, and event-sourced systems.
-npm run lint:md # Lint Markdown files
+```bash
+# Install dependencies for all packages
+pnpm install
 
-## Formatting
+# Build all packages
+pnpm build
 
-npm run format # Format all files with Prettier
-npm run format:check # Check if files are formatted
+# Test all packages
+pnpm test
 
-## Testing
+# Build/test a specific package
+pnpm --filter @dvt/engine build
+pnpm --filter @dvt/engine test
 
-npm test # Run all tests
-npm run test:watch # Run tests in watch mode
-npm run test:coverage # Generate coverage report
+# Contract and golden path validation
+pnpm validate:contracts
+pnpm golden:validate
+```
 
-## Type Checking
-
-npm run type-check # Run TypeScript compiler
-
-## Build
-
-npm run build # Build the project
-
-````
-
-### Code Quality Standards
-
-This project enforces high code quality through:
-
-- ✅ **ESLint** - TypeScript linting with determinism rules
-- ✅ **Prettier** - Consistent code formatting
-- ✅ **Vitest** - Standard unit and integration testing (80%+ coverage required)
-- ✅ **Conventional Commits** - Semantic versioning automation
-- ✅ **Pre-commit hooks** - Automatic linting and formatting
-- ✅ **GitHub Actions** - Comprehensive CI/CD pipelines
-- ✅ **Dependabot** - Automated dependency updates
+For more details, review each package README in `packages/*/README.md`.
 
 ---
 
-## 🤝 Contributing
+## Code Quality Standards
+
+This project enforces high code quality through:
+
+- **ESLint** - TypeScript linting with determinism rules
+- **Prettier** - Consistent code formatting
+- **Vitest** - Standard unit and integration testing (80%+ coverage required)
+- **Conventional Commits** - Semantic versioning automation
+- **Pre-commit hooks** - Automatic linting and formatting via Husky + lint-staged
+- **GitHub Actions** - Comprehensive CI/CD pipelines
+
+---
+
+## Contributing
 
 ### Commit Convention
 
@@ -159,7 +159,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for semantic
 feat(engine): add new feature
 fix(temporal): correct bug
 docs(architecture): update documentation
-````
+```
 
 See [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for full guidelines.
 
@@ -171,16 +171,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - CI/CD quality gates (Markdown linting, TypeScript validation, link checking)
 - Versioning policy (MAJOR/MINOR/PATCH bumps, deprecation process)
 
-## Quick pre-commit checks
+---
 
-```bash
-# Lint Markdown
-markdownlint-cli2 "docs/**/*.md"
+## Project Status
 
-# Check internal links
-markdown-link-check docs/architecture/engine/INDEX.md
-```
+See [ROADMAP.md](./ROADMAP.md) and [engine-phases.md](./docs/architecture/engine/roadmap/engine-phases.md) for implementation roadmap.
 
-### Code Changes - Contributing Guidelines
+## License
 
-(Coming soon: Engine implementation contribution guidelines)
+ISC
+
+## Acknowledgments
+
+Built with best practices from Temporal, Conductor, and event-sourced systems.

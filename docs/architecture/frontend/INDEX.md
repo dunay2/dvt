@@ -33,7 +33,7 @@ DVT Frontend architecture documentation. The frontend is NOT just "a pretty UI" 
 
 | File                                                     | Purpose                                                | Status    |
 | -------------------------------------------------------- | ------------------------------------------------------ | --------- |
-| [UI_API_CONTRACT.v1.md](contracts/UI_API_CONTRACT.v1.md) | REST API endpoints, payloads, errors, paginación       | Normative |
+| [UI_API_CONTRACT.v1.md](contracts/UI_API_CONTRACT.v1.md) | REST API endpoints, payloads, errors, pagination       | Normative |
 | [UI_EVENT_STREAM.v1.md](contracts/UI_EVENT_STREAM.v1.md) | Streaming/polling rules for run updates                | Normative |
 | [VIEW_MODELS.v1.md](contracts/VIEW_MODELS.v1.md)         | UI-ready models (RunSummary, NodeStatus, CostSnapshot) | Normative |
 
@@ -41,7 +41,7 @@ DVT Frontend architecture documentation. The frontend is NOT just "a pretty UI" 
 
 ---
 
-### 2. Semántica del Editor (React Flow) (Normative-lite)
+### 2. Editor Semantics (React Flow) (Normative-lite)
 
 | File                                                                     | Purpose                                                  | Status   |
 | ------------------------------------------------------------------------ | -------------------------------------------------------- | -------- |
@@ -125,7 +125,7 @@ Zustand stores by **responsibility**: `graphStore` ≠ `runMonitorStore` ≠ `ui
 ### Internal
 
 - [Product Definition](../../DVT_Product_Definition_V0.md) - User personas, use cases
-- [Engine Architecture](../engine/INDEX.v1.0.md) - Backend contracts
+- [Engine Architecture](../engine/INDEX.md) - Backend contracts
 - [ExecutionSemantics.v1.md](../engine/contracts/engine/ExecutionSemantics.v1.md) - Engine semantics (align UI)
 
 ### External

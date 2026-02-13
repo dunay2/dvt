@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dvt/contracts/*": ["packages/contracts/src/*"],
+      "@dvt/engine/*": ["packages/engine/src/*"],
+      "@dvt/adapter-postgres/*": ["packages/adapter-postgres/src/*"],
+      "@dvt/adapter-temporal/*": ["packages/adapter-temporal/src/*"],
+      "@dvt/cli/*": ["packages/cli/src/*"]
+    }
+  },
+  "include": ["packages/*/src"],
+  "exclude": ["node_modules", "dist", "test"]
+}

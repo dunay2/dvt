@@ -196,12 +196,14 @@ gantt
 
 ### Phase 1: MVP
 
-- **Progress**: 0/13 issues completed (0%)
-- **Deadline**: 2026-03-31
-- **Status**: 🟡 On track (7 weeks remaining)
-- **Critical Path**: #8 → #9 → #2 → #14 → #15 → #5,#6 → #16 → #10 → #17 (enforce strict order)
-- **Risk**: Integration testing window = 2 weeks only (Mar 17-31), now includes golden paths AND outbox worker
-- **New issues**: #14-#17 implementation epics + #19 security docs (documentación y architecture-critical)
+- **Progress**: 8/14 milestone issues closed (57%)
+- **Deadline**: 2026-04-01 (GitHub milestone)
+- **Status**: 🟡 In progress (6.5 weeks remaining)
+- **Closed**: #2 (types), #3 (diagrams), #10 (golden paths infra), #13 (security docs), #16 (outbox worker), #17 (CI pipeline), #19 (security docs)
+- **Open — critical path**: #8 (Glossary), #9 (RunEventCatalog), #14 (IWorkflowEngine core), #15 (Temporal Interpreter), #5 (TemporalAdapter), #6 (PostgresStateStore)
+- **Open — new scope**: #66 (Prisma for StateStore), #67 (runtime Zod validation), #68 (TemporalAdapter MVP), #70 (golden-path fixtures), #72 (version binding)
+- **Blocked**: #5 (TemporalAdapter), #6 (PostgresStateStore) — both need types and interpreter
+- **Risk**: Critical path items #8, #9, #14, #15 still open — these gate all adapter work
 
 ### Phase 1.5: Hardening
 
@@ -212,9 +214,11 @@ gantt
 
 ### Phase 2: Advanced Tooling
 
-- **Progress**: 0/4 issues completed (0%)
-- **Deadline**: 2026-09-30
-- **Status**: 🟢 Awaiting Phase 1.5
+- **Progress**: 0/5 issues completed (0%)
+- **Deadline**: 2026-06-30 (GitHub milestone)
+- **Status**: 🟢 Awaiting Phase 1
+- **Open**: #4 (determinism linting), #7 (ESLint+Husky Phase 2), #11 (capability versioning), #12 (SLOs), #18 (load testing)
+- **Additional scope**: #69 (ConductorAdapter), #71 (Conductor policies), #73 (determinism testing), #74 (pnpm workspaces refactor — largely done)
 
 ---
 
@@ -225,7 +229,7 @@ gantt
 - [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md) - Execution semantics
 - [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) - Engine interface
 - [State Store Contract](docs/architecture/engine/contracts/state-store/README.md) - StateStore contract
-- [WORKFLOW_ENGINE.md](docs/WORKFLOW_ENGINE.md) - Overall architecture
+- [WORKFLOW_ENGINE.md](docs/architecture/engine/WORKFLOW_ENGINE.md) - Overall architecture (deprecated, see INDEX.md)
 - [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md) - Detailed phase breakdown with anchor decisions
 
 ### GitHub Project Management
@@ -256,7 +260,7 @@ gantt
 
 **Delivery Model**: At-least-once (consumers must handle duplicates).
 
-**Idempotency Key (Agnóstic)**:
+**Idempotency Key (Adapter-agnostic)**:
 
 ```
 idempotencyKey = tenantId + contractVersion + eventType + runId + stepId + attemptId
@@ -265,7 +269,7 @@ idempotencyKey = tenantId + contractVersion + eventType + runId + stepId + attem
 - **Consumer responsibility**: Deduplicate using idempotency key (e.g., upsert by key in consumer DB)
 - **Replay safety**: Replaying events from outbox produces identical consumer state
 
-**Backpressure Signal (Agnóstic)**:
+**Backpressure Signal (Adapter-agnostic)**:
 
 - **Trigger condition**: Projection delay p99 > 5 seconds (or adapter-defined threshold)
 - **Signal**: Engine emits `BACKPRESSURE_ON` (auditable, not circuit breaker)
@@ -378,4 +382,4 @@ To contribute to the project, check issues organized by milestone:
 
 ---
 
-_Last updated: 2026-02-11_
+_Last updated: 2026-02-13_

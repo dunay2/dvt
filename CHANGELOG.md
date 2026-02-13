@@ -2,6 +2,61 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## Unreleased
+
+### 🔧 Tooling & configuration
+- Add missing `test:determinism` and `test:replay` scripts to root package.json (referenced by CI but were absent).
+- Create `CLAUDE.md` with project context for AI-assisted development.
+- Update ROADMAP.md progress metrics with real GitHub milestone data (Phase 1: 8/14 closed = 57%).
+
+### 📝 Documentation & housekeeping
+- Fix README.md: correct CI badge references to actual workflows (`ci.yml`, `contracts.yml`), remove references to non-existent setup scripts and `IMMEDIATE_ACTION_PLAN.md`, consolidate duplicate sections, normalize all commands to `pnpm`.
+- Fix docs/INDEX.md: remove broken link to non-existent `OPEN_ISSUES_AND_NEXT_FOCUS.md`, add missing sections (Contracts & automation, Runbooks, Frontend architecture).
+- Fix ROADMAP.md: correct broken reference to `docs/WORKFLOW_ENGINE.md` → `docs/architecture/engine/WORKFLOW_ENGINE.md`.
+- Fix CONTRIBUTING.md: replace all `npm` commands with `pnpm` for consistency with monorepo tooling.
+- Fix docs/guides/QUALITY.md: update workflow table to reference actual CI files, replace `npm` with `pnpm` throughout.
+- Fix scripts/README.md: replace `npm` commands with `pnpm`.
+- Enable PR triggers in `ci.yml` and `pr-quality-gate.yml` (were commented out).
+- Fix `release.yml`: migrate from `npm ci` to pnpm, replace deprecated `actions/create-release@v1` with `softprops/action-gh-release@v2`, make release manual-only (remove push trigger).
+- Clean up root `runbooks/` stub (Spanish content replaced with redirect to canonical archive location).
+
+### ♻️ Refactoring & repo layout
+- Full engine migration to `packages/engine` with decoupled modules: `WorkflowEngine`, `SnapshotProjector`, `idempotency`, `state store`, `outbox`, and deterministic helpers (`clock`, `jcs`, `sha256`).
+- Monorepo infrastructure consolidated: pnpm workspaces, shared tsconfig base, package-level tooling, and package-level scripts.
+- Legacy folders (`engine/`, `adapters/`) now contain only redirects or are deprecated.
+
+### 🔧 Tooling & configuration
+- ESLint and Vitest configured for the monorepo, including deterministic test support and Date-free clock validation.
+- New scripts and lockfile updates for adapter and engine dependencies.
+- Prisma and database tooling support added in `adapter-postgres` (initial infrastructure).
+
+### ✅ Tests & correctness
+- New unit and contract tests for the engine: hash determinism, idempotency, PlanRef validation, plan integrity, clock edge cases, and contract typing.
+- All `@dvt/engine` tests pass locally after migration and refactoring.
+- Deterministic clock (`SequenceClock`) and date helpers validated without direct `Date` usage.
+
+### ⚠️ Behavior & API changes
+- `WorkflowEngine`: projection and events are now fully deterministic, with canonical hashing and stable event ordering (RunQueued → RunStarted → provider events → RunCompleted).
+- Contracts and types normalized/exported for cross-package usage.
+- Outbox worker and state store decoupled and tested.
+
+### 📝 Documentation & housekeeping
+- Documentation and runbooks moved to `runbooks/`.
+- Updated documentation references and diagrams.
+
+### 🧩 Related issues (implemented / referenced)
+- Closed: #2 (types), #6 (state store infrastructure), #7 (determinism lint), #10 (golden-path infrastructure), #14 (engine core and projector), #16 (outbox worker), #17 (CI pipeline infrastructure).
+- In progress: #5 (TemporalAdapter), #15 (Temporal Interpreter), #8 (Glossary), #9 (RunEventCatalog), #3 (Mermaid diagrams), #19 (security documentation).
+
+### 🔜 In progress / follow-ups
+- Real adapter integration (Temporal, Conductor): #5, #68, #69.
+- Fixtures and determinism matrix: #70, #73.
+- Documentation and diagrams: #3, #19.
+- Lint/style cleanup (import/order, explicit return types): recommended follow-up PR.
+
+---
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -118,17 +173,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes - Markdown
 
-* aplicar auto-fix de markdownlint para corregir formato ([e01bc8a](https://github.com/dunay2/dvt/commit/e01bc8a7954208d9b1461afa473f59ad787a64b9))
-* corregir enlaces rotos en adapters y arreglar validación de contratos normativos (grep -F para búsqueda literal) ([6a63ca8](https://github.com/dunay2/dvt/commit/6a63ca8dd6cf0b4b2d27c859b43ab8499354038f))
-* corregir enlaces rotos en IWorkflowEngine.v1.md (capabilities/ y extensions/ paths) ([b51b4b0](https://github.com/dunay2/dvt/commit/b51b4b0f29716c207fd6f9868254dca4526a5736))
-* corregir enlaces rotos en VERSIONING.md y deshabilitar temporalmente validación TypeScript (demasiado estricta para pseudocódigo) ([0910e02](https://github.com/dunay2/dvt/commit/0910e0284b870440d24f5ca7e00f7fdbd9071216))
-* corregir errores markdownlint en MIGRATION_GUIDE y CONTRIBUTING ([f03d1c1](https://github.com/dunay2/dvt/commit/f03d1c1e91abef3300d46f7f450e9d15b88fd349))
-* corregir líneas >120 caracteres en archivos críticos (MD013) ([9a1e258](https://github.com/dunay2/dvt/commit/9a1e25847a83ca9bd8f054a106053993c04f72a7))
-* corregir MD051 y MD013 en MIGRATION_GUIDE y CONTRIBUTING ([a4e9ad4](https://github.com/dunay2/dvt/commit/a4e9ad442d03b24b4349144898ee6e1aaca7326e))
-* deshabilitar reglas adicionales de markdownlint (MD003, MD009, MD012, MD034, MD036, MD051) ([07715fc](https://github.com/dunay2/dvt/commit/07715fc10d43c583057e9e395b386be67a8c7904))
-* deshabilitar reglas estrictas de markdownlint (MD022, MD026, MD031, MD032, MD040, MD047, MD060) ([515848b](https://github.com/dunay2/dvt/commit/515848b6d12a6144d726585c19bc95f4d7fde7b9))
-* remover cache npm del workflow y comentar enlace a Conductor EnginePolicies (no existe aún) ([b86e220](https://github.com/dunay2/dvt/commit/b86e220bfafd50c4130d3db53242c6205abaa48d))
-* simplificar reglas de markdownlint para enfoque en errores críticos ([09713be](https://github.com/dunay2/dvt/commit/09713be57a569396b71242eca96603b4e380019b))
+* apply markdownlint auto-fix for formatting ([e01bc8a](https://github.com/dunay2/dvt/commit/e01bc8a7954208d9b1461afa473f59ad787a64b9))
+* fix broken links in adapters and restore normative contract validation (literal `grep -F` lookup) ([6a63ca8](https://github.com/dunay2/dvt/commit/6a63ca8dd6cf0b4b2d27c859b43ab8499354038f))
+* fix broken links in `IWorkflowEngine.v1.md` (`capabilities/` and `extensions/` paths) ([b51b4b0](https://github.com/dunay2/dvt/commit/b51b4b0f29716c207fd6f9868254dca4526a5736))
+* fix broken links in `VERSIONING.md` and temporarily disable TypeScript validation (too strict for pseudocode examples) ([0910e02](https://github.com/dunay2/dvt/commit/0910e0284b870440d24f5ca7e00f7fdbd9071216))
+* fix markdownlint errors in `MIGRATION_GUIDE` and `CONTRIBUTING` ([f03d1c1](https://github.com/dunay2/dvt/commit/f03d1c1e91abef3300d46f7f450e9d15b88fd349))
+* fix lines longer than 120 characters in critical files (MD013) ([9a1e258](https://github.com/dunay2/dvt/commit/9a1e25847a83ca9bd8f054a106053993c04f72a7))
+* fix MD051 and MD013 in `MIGRATION_GUIDE` and `CONTRIBUTING` ([a4e9ad4](https://github.com/dunay2/dvt/commit/a4e9ad442d03b24b4349144898ee6e1aaca7326e))
+* disable additional markdownlint rules (MD003, MD009, MD012, MD034, MD036, MD051) ([07715fc](https://github.com/dunay2/dvt/commit/07715fc10d43c583057e9e395b386be67a8c7904))
+* disable strict markdownlint rules (MD022, MD026, MD031, MD032, MD040, MD047, MD060) ([515848b](https://github.com/dunay2/dvt/commit/515848b6d12a6144d726585c19bc95f4d7fde7b9))
+* remove npm cache from workflow and comment out link to Conductor EnginePolicies (not present yet) ([b86e220](https://github.com/dunay2/dvt/commit/b86e220bfafd50c4130d3db53242c6205abaa48d))
+* simplify markdownlint rules to focus on critical errors ([09713be](https://github.com/dunay2/dvt/commit/09713be57a569396b71242eca96603b4e380019b))
 
 ### ♻️ Code Refactoring
 
@@ -137,7 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### ✨ Features - Contract Testing
 
 * add contract testing scripts and infrastructure ([6fe7ff1](https://github.com/dunay2/dvt/commit/6fe7ff1b5a41e47199ae8a74a2b3cbd9f073d097))
-* agregar package.json y configurar npm para el proyecto ([c9ac38a](https://github.com/dunay2/dvt/commit/c9ac38a4ed2a9ba7e520bab814063a7b17ded317))
+* add package.json and configure npm for the project ([c9ac38a](https://github.com/dunay2/dvt/commit/c9ac38a4ed2a9ba7e520bab814063a7b17ded317))
 * **ci:** add comprehensive quality tooling and documentation improvements ([044a180](https://github.com/dunay2/dvt/commit/044a180f86068e5010c11bafc74b38c76cd50c92)), closes [#1](https://github.com/dunay2/dvt/issues/1) [#2](https://github.com/dunay2/dvt/issues/2) [#3](https://github.com/dunay2/dvt/issues/3)
 * complete Phase 1 implementation roadmap with epics and automation ([e4813e8](https://github.com/dunay2/dvt/commit/e4813e83d11c6e5dcd97127bb29d049c19c33451)), closes [#14](https://github.com/dunay2/dvt/issues/14) [-#18](https://github.com/dunay2/dvt/issues/18) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#16](https://github.com/dunay2/dvt/issues/16) [#17](https://github.com/dunay2/dvt/issues/17) [#18](https://github.com/dunay2/dvt/issues/18) [#8](https://github.com/dunay2/dvt/issues/8) [#9](https://github.com/dunay2/dvt/issues/9) [#2](https://github.com/dunay2/dvt/issues/2) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#5](https://github.com/dunay2/dvt/issues/5) [#6](https://github.com/dunay2/dvt/issues/6) [#16](https://github.com/dunay2/dvt/issues/16) [#10](https://github.com/dunay2/dvt/issues/10) [#17](https://github.com/dunay2/dvt/issues/17) [#14](https://github.com/dunay2/dvt/issues/14) [#15](https://github.com/dunay2/dvt/issues/15) [#18](https://github.com/dunay2/dvt/issues/18)
 * **security:** add issue template for THREAT_MODEL.md v1.4 update ([471e674](https://github.com/dunay2/dvt/commit/471e674b253cba24934160cc56badd326e441573))
