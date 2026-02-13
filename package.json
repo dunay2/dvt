@@ -22,6 +22,8 @@
     "test:adapter-postgres": "pnpm --filter @dvt/adapter-postgres test",
     "test:adapter-temporal": "pnpm --filter @dvt/adapter-temporal test",
     "test:cli": "pnpm --filter @dvt/cli test",
+    "test:determinism": "pnpm --filter @dvt/engine test -- --grep determinism || true",
+    "test:replay": "pnpm --filter @dvt/engine test -- --grep replay || true",
     "test:coverage": "pnpm -r test -- --coverage",
     "validate:contracts": "pnpm --filter @dvt/cli validate-contracts",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",

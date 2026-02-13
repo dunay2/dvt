@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### 🔧 Tooling & configuration
+- Add missing `test:determinism` and `test:replay` scripts to root package.json (referenced by CI but were absent).
+- Create `CLAUDE.md` with project context for AI-assisted development.
+- Update ROADMAP.md progress metrics with real GitHub milestone data (Phase 1: 8/14 closed = 57%).
+
 ### 📝 Documentation & housekeeping
 - Fix README.md: correct CI badge references to actual workflows (`ci.yml`, `contracts.yml`), remove references to non-existent setup scripts and `IMMEDIATE_ACTION_PLAN.md`, consolidate duplicate sections, normalize all commands to `pnpm`.
 - Fix docs/INDEX.md: remove broken link to non-existent `OPEN_ISSUES_AND_NEXT_FOCUS.md`, add missing sections (Contracts & automation, Runbooks, Frontend architecture).
