@@ -10,8 +10,8 @@
     "@dvt/engine": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json || true",
-    "test": "vitest run || true",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
     "validate-contracts": "node validate-contracts.cjs",
     "run-golden-paths": "node run-golden-paths.cjs"
   },

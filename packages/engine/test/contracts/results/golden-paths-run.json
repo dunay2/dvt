@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-02-11T23:10:15.489Z",
+  "database": "not-configured",
+  "paths": {
+    "plan-minimal": {
+      "status": "success",
+      "duration": 22,
+      "hash": "f67700e014113dc5"
+    },
+    "plan-parallel": {
+      "status": "success",
+      "duration": 13,
+      "hash": "de7490f68aa73db8"
+    },
+    "plan-cancel-and-resume": {
+      "status": "success",
+      "duration": 14,
+      "hash": "b5a138be90164b1a"
+    },
+    "hello-world": {
+      "status": "success",
+      "duration": 15,
+      "hash": "afa27b44d43b02a9"
+    },
+    "pause-resume": {
+      "status": "success",
+      "duration": 14,
+      "hash": "fcbdc203a1c9bc81"
+    },
+    "retry": {
+      "status": "skipped",
+      "reason": "not-implemented",
+      "hash": "pending"
+    }
+  }
+}

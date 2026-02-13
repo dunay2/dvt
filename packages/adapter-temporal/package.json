@@ -10,8 +10,8 @@
     "@dvt/engine": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json || true",
-    "test": "vitest run || true"
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
   },
   "devDependencies": {
     "typescript": "^5.7.3",
