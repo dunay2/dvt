@@ -44,10 +44,17 @@
 - Remove tracking drift.
 - Keep one canonical issue for active Temporal implementation.
 
+**Current status**
+
+- 🟨 In progress (document and tracker text prepared).
+
 **Done**
 
-- Single source of truth for Temporal implementation.
-- No legacy `engine/...` references in related active issues.
+- Canonical operational text prepared for:
+  - Closing #5 as superseded.
+  - Updating #68 as canonical epic.
+- Remaining action to close PR-0:
+  - Publish tracker updates in #5 and #68 and mirror links/status back into this document.
 
 ### PR-1 — `adapter-temporal` foundation (Client + Config + Mapper contracts)
 
@@ -109,15 +116,15 @@
 
 ## 4) Tracking checklist table
 
-| ID   | Deliverable                         | Status     | Required evidence                                                                 | Dependencies       |
-| ---- | ----------------------------------- | ---------- | --------------------------------------------------------------------------------- | ------------------ |
-| PR-0 | Canonical tracking #5/#68           | ⬜ Pending | Updated issue comments/status                                                     | —                  |
-| PR-1 | Client+Config+Mapper                | ⬜ Pending | Code + unit tests + lint                                                          | PR-0               |
-| PR-2 | Worker+Workflow+Activities MVP      | ⬜ Pending | Real Temporal integration run                                                     | PR-1               |
-| PR-3 | Engine uses real adapter by default | ⬜ Pending | Real boot without stub in normal mode                                             | PR-2               |
-| PR-4 | Idempotency + minimal persistence   | ⬜ Pending | Duplicate-free test under retries                                                 | PR-3, #6 (partial) |
-| PR-5 | Stable CI test suite                | ⬜ Pending | Green unit+integration tests using `TestWorkflowEnvironment.createTimeSkipping()` | PR-4               |
-| PR-6 | CI + operational docs               | ⬜ Pending | README + CI workflow + roadmap/status                                             | PR-5               |
+| ID   | Deliverable                         | Status         | Required evidence                                                                 | Dependencies       |
+| ---- | ----------------------------------- | -------------- | --------------------------------------------------------------------------------- | ------------------ |
+| PR-0 | Canonical tracking #5/#68           | 🟨 In progress | Canonical text drafted in section 7; pending publication of issue comments/status | —                  |
+| PR-1 | Client+Config+Mapper                | ⬜ Pending     | Code + unit tests + lint                                                          | PR-0               |
+| PR-2 | Worker+Workflow+Activities MVP      | ⬜ Pending     | Real Temporal integration run                                                     | PR-1               |
+| PR-3 | Engine uses real adapter by default | ⬜ Pending     | Real boot without stub in normal mode                                             | PR-2               |
+| PR-4 | Idempotency + minimal persistence   | ⬜ Pending     | Duplicate-free test under retries                                                 | PR-3, #6 (partial) |
+| PR-5 | Stable CI test suite                | ⬜ Pending     | Green unit+integration tests using `TestWorkflowEnvironment.createTimeSkipping()` | PR-4               |
+| PR-6 | CI + operational docs               | ⬜ Pending     | README + CI workflow + roadmap/status                                             | PR-5               |
 
 ---
 
@@ -129,6 +136,7 @@
 4. Idempotency proven under activity retries.
 5. Run state derived from persisted events.
 6. Normalized tracking (#5/#68) with no scope ambiguity.
+   - PR-0 is only considered completed after tracker publication is done (#5 closed as superseded and #68 updated as canonical epic).
 
 ---
 
@@ -204,6 +212,12 @@ Blocker solved by #68:
 ---
 
 ## 9) Implementation progress (2026-02-13)
+
+### PR-0 tracking progress (current)
+
+- Canonical tracking text is drafted in section 7 (`#5` superseded close comment + `#68` canonical epic body).
+- Checklist status for PR-0 moved to in-progress.
+- Exit condition for PR-0: publish issue updates and record resulting links/status in this document.
 
 ### PR-1 executed in code
 

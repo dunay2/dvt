@@ -1,10 +1,6 @@
+
 import { describe, it, expect } from 'vitest';
-import {
-  RunStatusSnapshot,
-  RunStatus,
-  RunSubstatus,
-  AdapterScopedSubstatus,
-} from '../../src/types/engine-types';
+import { RunStatusSnapshot, RunStatus, AdapterScopedSubstatus } from '../../src/types/engine-types';
 
 describe('engine-types', () => {
   it('RunStatusSnapshot accepts substatus and message', () => {

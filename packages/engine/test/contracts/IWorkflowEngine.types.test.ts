@@ -1,12 +1,7 @@
+
 import { describe, it, expect } from 'vitest';
-import type { IWorkflowEngine } from '../../src/contracts/IWorkflowEngine';
 import type { PlanRef } from '../../src/types/plan-ref';
-import type {
-  RunContext,
-  EngineRunRef,
-  RunStatusSnapshot,
-  SignalRequest,
-} from '../../src/types/engine-types';
+import type { RunContext, EngineRunRef, RunStatusSnapshot, SignalRequest } from '../../src/types/engine-types';
 
 describe('IWorkflowEngine contract types', () => {
   it('PlanRef must have the required fields', () => {
