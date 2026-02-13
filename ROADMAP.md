@@ -196,14 +196,13 @@ gantt
 
 ### Phase 1: MVP
 
-- **Progress**: 8/14 milestone issues closed (57%)
-- **Deadline**: 2026-04-01 (GitHub milestone)
-- **Status**: 🟡 In progress (6.5 weeks remaining)
-- **Closed**: #2 (types), #3 (diagrams), #10 (golden paths infra), #13 (security docs), #16 (outbox worker), #17 (CI pipeline), #19 (security docs)
-- **Open — critical path**: #8 (Glossary), #9 (RunEventCatalog), #14 (IWorkflowEngine core), #15 (Temporal Interpreter), #5 (TemporalAdapter), #6 (PostgresStateStore)
-- **Open — new scope**: #66 (Prisma for StateStore), #67 (runtime Zod validation), #68 (TemporalAdapter MVP), #70 (golden-path fixtures), #72 (version binding)
-- **Blocked**: #5 (TemporalAdapter), #6 (PostgresStateStore) — both need types and interpreter
-- **Risk**: Critical path items #8, #9, #14, #15 still open — these gate all adapter work
+- **Progress**: 8/13 original milestone issues closed (~62%)
+- **Status**: 🟡 In progress
+- **Closed (key)**: #2, #3, #16, #17, #19
+- **Open — critical path**: #8, #9, #6, #68, #15
+- **Open — extension scope**: #66, #67, #69, #70, #71, #72, #73
+- **Audit note (2026-02-13)**: #14 is mostly implemented in active `packages/engine` path; issue checklist requires refresh to current API names and remaining deltas
+- **Dependency risk**: #6 and #68 remain the main unblockers for executable end-to-end adapter validation
 
 ### Phase 1.5: Hardening
 
@@ -214,11 +213,9 @@ gantt
 
 ### Phase 2: Advanced Tooling
 
-- **Progress**: 0/5 issues completed (0%)
-- **Deadline**: 2026-06-30 (GitHub milestone)
-- **Status**: 🟢 Awaiting Phase 1
-- **Open**: #4 (determinism linting), #7 (ESLint+Husky Phase 2), #11 (capability versioning), #12 (SLOs), #18 (load testing)
-- **Additional scope**: #69 (ConductorAdapter), #71 (Conductor policies), #73 (determinism testing), #74 (pnpm workspaces refactor — largely done)
+- **Status**: 🟢 Planned / partially prepared
+- **Open**: #4, #7, #11, #12, #18, #69, #71, #73
+- **Tracking cleanup**: #74 closed as duplicate/superseded by #76
 
 ---
 
