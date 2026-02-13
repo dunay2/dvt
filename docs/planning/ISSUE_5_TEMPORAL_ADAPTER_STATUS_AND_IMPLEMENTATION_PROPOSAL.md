@@ -227,3 +227,28 @@ This progress covers the PR-1 objective (foundation). Real workflow/activity exe
 - `single-flight` concurrency control was added for concurrent `connect()` calls.
 - `close()` now closes real resources via `connection.close()`.
 - `identity` remains optional to allow native SDK default behavior.
+
+### PR-2 executed in code
+
+- Activity factory implemented in `packages/adapter-temporal/src/activities/stepActivities.ts`.
+  - `fetchPlan`: integrity validation + JSON parse + PlanRef metadata match.
+  - `executeStep`: MVP step shape validation (stepId, kind only).
+  - `emitEvent`: idempotent event emission to state store + outbox.
+  - `saveRunMetadata`: run correlation persistence.
+- Deterministic interpreter workflow in `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`.
+  - Signals: `pause`, `resume`, `cancel`.
+  - Query: `status` (returns `WorkflowState`).
+  - Logic: fetch plan → walk steps → emit lifecycle events.
+  - Zero `Date.now`/`Math.random`/`process.env`/Node.js APIs.
+- Worker lifecycle manager in `packages/adapter-temporal/src/TemporalWorkerHost.ts`.
+  - `start(connection)` → creates Worker with bundled workflow + injected activities.
+  - `shutdown()` → graceful drain.
+- Local engine type surface in `packages/adapter-temporal/src/engine-types.ts` (structurally compatible with `@dvt/engine`).
+- Public exports updated in `packages/adapter-temporal/src/index.ts`.
+- New dependencies: `@temporalio/worker`, `@temporalio/workflow`, `@temporalio/activity`.
+
+### PR-2 technical validation
+
+- 15 tests passing (6 PR-1 foundation + 9 PR-2 activities).
+- TypeScript build green (`tsc -p tsconfig.json`).
+- tsconfig `paths` override applied to resolve `@dvt/contracts` via node_modules dist.

@@ -19,9 +19,9 @@ export function loadTemporalAdapterConfig(
   env: Record<string, string | undefined> = process.env
 ): TemporalAdapterConfig {
   const cfg: TemporalAdapterConfig = {
-    address: env.TEMPORAL_ADDRESS ?? DEFAULTS.address,
-    namespace: env.TEMPORAL_NAMESPACE ?? DEFAULTS.namespace,
-    taskQueue: env.TEMPORAL_TASK_QUEUE ?? DEFAULTS.taskQueue,
+    address: toRequiredTrimmed(env.TEMPORAL_ADDRESS, DEFAULTS.address),
+    namespace: toRequiredTrimmed(env.TEMPORAL_NAMESPACE, DEFAULTS.namespace),
+    taskQueue: toRequiredTrimmed(env.TEMPORAL_TASK_QUEUE, DEFAULTS.taskQueue),
     identity: toOptionalTrimmed(env.TEMPORAL_IDENTITY),
     connectTimeoutMs: parsePositiveInt(env.TEMPORAL_CONNECT_TIMEOUT_MS, DEFAULTS.connectTimeoutMs),
     requestTimeoutMs: parsePositiveInt(env.TEMPORAL_REQUEST_TIMEOUT_MS, DEFAULTS.requestTimeoutMs),
@@ -56,4 +56,10 @@ function toOptionalTrimmed(raw: string | undefined): string | undefined {
   if (!raw) return undefined;
   const value = raw.trim();
   return value.length > 0 ? value : undefined;
+}
+
+function toRequiredTrimmed(raw: string | undefined, fallback: string): string {
+  const value = raw?.trim();
+  if (value && value.length > 0) return value;
+  return fallback;
 }

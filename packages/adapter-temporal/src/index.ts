@@ -11,3 +11,24 @@ export {
   toTemporalTaskQueue,
   toTemporalWorkflowId,
 } from './WorkflowMapper.js';
+
+// PR-2: WorkerHost
+export type { TemporalWorkerHostConfig } from './TemporalWorkerHost.js';
+export { TemporalWorkerHost } from './TemporalWorkerHost.js';
+
+// PR-2: Activities
+export type {
+  ActivityDeps,
+  Activities,
+  EmitEventInput,
+  StepInput,
+  StepResult,
+} from './activities/stepActivities.js';
+export { createActivities } from './activities/stepActivities.js';
+
+// PR-2: Workflow types (workflow function itself is loaded by Worker bundler)
+export type {
+  RunPlanWorkflowInput,
+  RunPlanWorkflowResult,
+  WorkflowState,
+} from './workflows/RunPlanWorkflow.js';
