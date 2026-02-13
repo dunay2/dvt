@@ -6,12 +6,13 @@
   "private": false,
   "license": "MIT",
   "dependencies": {
+    "@temporalio/client": "^1.11.7",
     "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run ./test/smoke.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.7.3",
