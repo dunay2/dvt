@@ -1,57 +1,57 @@
-# Issue #5 / #68 — Estado, Puntos Alcanzados y Propuesta de Implementación Temporal
+# Issue #5 / #68 — Status, Achievements, and Temporal Implementation Proposal
 
-**Fecha**: 2026-02-13  
-**Rama**: `docs/issue-5-implementation-proposal`  
-**Ámbito**: Documentación de ejecución para cerrar el bloqueo Temporal en rutas activas `packages/*`
-
----
-
-## 1) Estado actual y puntos alcanzados
-
-### Puntos alcanzados (confirmados)
-
-1. Estructura monorepo activa bajo `packages/*`.
-2. Núcleo del engine funcional y con tests en `packages/engine`.
-3. Contratos centralizados en `packages/contracts`.
-4. Paquete `packages/adapter-temporal` creado (base de workspace existente).
-
-### Brechas bloqueantes (Issue #5)
-
-1. En `packages/engine/src/adapters/temporal/TemporalAdapterStub.ts` la ejecución real sigue en `NotImplemented`.
-2. `packages/adapter-temporal/src/index.ts` es placeholder.
-3. No existe aún wiring completo de Temporal SDK (Client + Worker + Workflow + Activities) en ruta activa.
-4. Falta suite de pruebas de integración real adapter+engine sobre Temporal.
-5. Existe drift entre #5 y #68 (scope legacy vs scope monorepo actual).
+**Date**: 2026-02-13  
+**Branch**: `docs/issue-5-implementation-proposal`  
+**Scope**: Execution documentation to unblock Temporal implementation on active `packages/*` paths
 
 ---
 
-## 2) Principios no negociables
+## 1) Current status and achieved points
 
-1. Separación de responsabilidades: planner ≠ engine ≠ state ≠ UI.
-2. Determinismo en Workflow (sin APIs no deterministas en código de workflow).
-3. Efectos externos en Activities (at-least-once ⇒ idempotencia obligatoria).
-4. `RunStateStore` como source of truth operativo (no depender de queries de Temporal como verdad única).
-5. Versionado de workflows obligatorio para evolución compatible con replay en ejecuciones vivas.
+### Achieved points (confirmed)
+
+1. Active monorepo structure under `packages/*`.
+2. Functional engine core with tests in `packages/engine`.
+3. Centralized contracts in `packages/contracts`.
+4. `packages/adapter-temporal` package created (existing workspace base).
+
+### Blocking gaps (Issue #5)
+
+1. In `packages/engine/src/adapters/temporal/TemporalAdapterStub.ts`, real execution is still `NotImplemented`.
+2. `packages/adapter-temporal/src/index.ts` is still a placeholder.
+3. Full Temporal SDK wiring (Client + Worker + Workflow + Activities) does not yet exist on active paths.
+4. Missing real adapter+engine Temporal integration test suite.
+5. Drift exists between #5 and #68 (legacy scope vs current monorepo scope).
 
 ---
 
-## 3) Plan de PRs (orden de ejecución)
+## 2) Non-negotiable principles
 
-### PR-0 — Normalize tracking (#5 vs #68) + paths canónicos
+1. Separation of concerns: planner ≠ engine ≠ state ≠ UI.
+2. Workflow determinism (no non-deterministic APIs in workflow code).
+3. External effects in Activities (at-least-once ⇒ mandatory idempotency).
+4. `RunStateStore` as the operational source of truth (do not rely on Temporal queries as the only truth).
+5. Mandatory workflow versioning for replay-compatible evolution in live executions.
 
-**Objetivo**
+---
 
-- Eliminar drift de tracking.
-- Dejar una incidencia canónica para implementación Temporal activa.
+## 3) PR plan (execution order)
+
+### PR-0 — Normalize tracking (#5 vs #68) + canonical paths
+
+**Objective**
+
+- Remove tracking drift.
+- Keep one canonical issue for active Temporal implementation.
 
 **Done**
 
-- Un único punto de verdad para implementación Temporal.
-- Sin referencias legacy `engine/...` en incidencias activas relacionadas.
+- Single source of truth for Temporal implementation.
+- No legacy `engine/...` references in related active issues.
 
 ### PR-1 — `adapter-temporal` foundation (Client + Config + Mapper contracts)
 
-**Archivos clave**
+**Key files**
 
 - `packages/adapter-temporal/src/config.ts`
 - `packages/adapter-temporal/src/TemporalClient.ts`
@@ -60,12 +60,12 @@
 
 **Done**
 
-- Wrapper de client con lifecycle connect/close.
-- Mapper con `workflowId = runId`, mapping status y task queue MVP.
+- Client wrapper with `connect/close` lifecycle.
+- Mapper with `workflowId = runId`, status mapping, and MVP task queue.
 
 ### PR-2 — `adapter-temporal` runnable MVP (WorkerHost + Workflow + Activities)
 
-**Archivos clave**
+**Key files**
 
 - `packages/adapter-temporal/src/TemporalWorkerHost.ts`
 - `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
@@ -73,112 +73,112 @@
 
 **Done**
 
-- Workflow ejecutado en entorno sandboxed/determinista (sin Node/DOM APIs en código de workflow).
-- Evidencia mínima: workflow start + activity executed + completion event persisted + query/status devuelve proyección del store.
+- Workflow running in a sandboxed/deterministic environment (no Node/DOM APIs in workflow code).
+- Minimum evidence: workflow start + activity executed + completion event persisted + query/status returns store projection.
 
-### PR-3 — Engine wiring (real adapter por defecto, stub solo test)
+### PR-3 — Engine wiring (real adapter by default, stub for tests only)
 
-**Objetivo**
+**Objective**
 
-- Retirar stub del camino normal de ejecución.
+- Remove the stub from the normal execution path.
 
 ### PR-4 — Idempotent Event Sink + RunState persistence contract (MVP)
 
-**Objetivo**
+**Objective**
 
-- Cubrir semántica at-least-once sin duplicados.
+- Cover at-least-once semantics without duplicates.
 
-### PR-5 — Tests (unit + integration con entorno Temporal)
+### PR-5 — Tests (unit + integration with Temporal environment)
 
-**Objetivo**
+**Objective**
 
-- Harness estable para CI.
+- Stable CI harness.
 
-**Estrategia recomendada**
+**Recommended strategy**
 
-- Base CI: `TestWorkflowEnvironment.createTimeSkipping()`.
-- Fallback documentado: entorno local/server completo cuando el CI lo requiera.
+- CI base: `TestWorkflowEnvironment.createTimeSkipping()`.
+- Documented fallback: full local/server environment when CI requires it.
 
-### PR-6 — CI + documentación operativa
+### PR-6 — CI + operational documentation
 
-**Objetivo**
+**Objective**
 
-- Hacer ejecutable y mantenible por el equipo.
-
----
-
-## 4) Tabla check de seguimiento
-
-| ID   | Entregable                          | Estado     | Evidencia requerida                                                             | Dependencias       |
-| ---- | ----------------------------------- | ---------- | ------------------------------------------------------------------------------- | ------------------ |
-| PR-0 | Canonical tracking #5/#68           | ⬜ Pending | Comentarios/estado de issues actualizado                                        | —                  |
-| PR-1 | Client+Config+Mapper                | ⬜ Pending | Código + unit tests + lint                                                      | PR-0               |
-| PR-2 | Worker+Workflow+Activities MVP      | ⬜ Pending | Run real en Temporal en integración                                             | PR-1               |
-| PR-3 | Engine usa adapter real por defecto | ⬜ Pending | Boot real sin stub en modo normal                                               | PR-2               |
-| PR-4 | Idempotencia + persistencia mínima  | ⬜ Pending | Test sin duplicados por retry                                                   | PR-3, #6 (parcial) |
-| PR-5 | Suite tests estable CI              | ⬜ Pending | Unit+integration en verde usando `TestWorkflowEnvironment.createTimeSkipping()` | PR-4               |
-| PR-6 | CI + docs operativas                | ⬜ Pending | README + workflow CI + roadmap/status                                           | PR-5               |
+- Make it executable and maintainable by the team.
 
 ---
 
-## 5) Criterios de aceptación global (MVP)
+## 4) Tracking checklist table
 
-1. `packages/adapter-temporal/src/index.ts` deja de ser placeholder.
-2. `packages/engine/src/adapters/temporal/TemporalAdapterStub.ts` sale del flujo normal de producción.
-3. Flujo mínimo validado: `startRun -> signal/query/status -> cancel`.
-4. Idempotencia demostrada en retries de activities.
-5. Estado de run derivado de eventos persistidos.
-6. Tracking normalizado (#5/#68) sin ambigüedad de alcance.
-
----
-
-## 6) Dudas a resolver
-
-1. Resuelta: #68 queda canónica (épica) y #5 pasa a superseded.
-2. Resuelta: CI primero con harness embebido (`createTimeSkipping`), docker/local server como fallback.
-3. Resuelta con condiciones: `in-memory` permitido temporalmente para PR-4, pero con semántica equivalente de idempotencia y marcado test/dev-only.
+| ID   | Deliverable                         | Status     | Required evidence                                                                 | Dependencies       |
+| ---- | ----------------------------------- | ---------- | --------------------------------------------------------------------------------- | ------------------ |
+| PR-0 | Canonical tracking #5/#68           | ⬜ Pending | Updated issue comments/status                                                     | —                  |
+| PR-1 | Client+Config+Mapper                | ⬜ Pending | Code + unit tests + lint                                                          | PR-0               |
+| PR-2 | Worker+Workflow+Activities MVP      | ⬜ Pending | Real Temporal integration run                                                     | PR-1               |
+| PR-3 | Engine uses real adapter by default | ⬜ Pending | Real boot without stub in normal mode                                             | PR-2               |
+| PR-4 | Idempotency + minimal persistence   | ⬜ Pending | Duplicate-free test under retries                                                 | PR-3, #6 (partial) |
+| PR-5 | Stable CI test suite                | ⬜ Pending | Green unit+integration tests using `TestWorkflowEnvironment.createTimeSkipping()` | PR-4               |
+| PR-6 | CI + operational docs               | ⬜ Pending | README + CI workflow + roadmap/status                                             | PR-5               |
 
 ---
 
-## 7) Texto operativo para PR-0 (tracking)
+## 5) Global acceptance criteria (MVP)
 
-### 7.1 Comentario de cierre para #5 (superseded)
+1. `packages/adapter-temporal/src/index.ts` is no longer a placeholder.
+2. `packages/engine/src/adapters/temporal/TemporalAdapterStub.ts` is removed from the normal production flow.
+3. Minimum validated flow: `startRun -> signal/query/status -> cancel`.
+4. Idempotency proven under activity retries.
+5. Run state derived from persisted events.
+6. Normalized tracking (#5/#68) with no scope ambiguity.
+
+---
+
+## 6) Questions resolved
+
+1. Resolved: #68 is canonical (epic) and #5 becomes superseded.
+2. Resolved: CI first with embedded harness (`createTimeSkipping`), docker/local server as fallback.
+3. Resolved with conditions: `in-memory` temporarily allowed for PR-4, but with equivalent idempotency semantics and clearly marked test/dev-only.
+
+---
+
+## 7) Operational text for PR-0 (tracking)
+
+### 7.1 Closing comment for #5 (superseded)
 
 ```md
-Cierro #5 como **superseded** por #68.
+Closing #5 as **superseded** by #68.
 
-Motivo:
+Reason:
 
-- El alcance original de #5 incluye referencias a layout legacy (`engine/...`) y nomenclatura previa.
-- La implementación Temporal real debe ejecutarse y testearse en rutas activas **`packages/*`** (monorepo actual).
+- The original scope of #5 includes references to legacy layout (`engine/...`) and previous naming.
+- Real Temporal implementation must run and be tested on active paths **`packages/*`** (current monorepo).
 
-Nuevo punto de verdad:
+New source of truth:
 
-- **#68** queda como épica canónica para Temporal Adapter (Client + Worker + Workflow + Activities + tests + CI).
-- Documento de estado/plan (rama): `docs/issue-5-implementation-proposal`.
+- **#68** becomes the canonical epic for Temporal Adapter (Client + Worker + Workflow + Activities + tests + CI).
+- Status/plan document (branch): `docs/issue-5-implementation-proposal`.
 
-Bloqueo que resuelve #68:
+Blocker solved by #68:
 
-- Eliminar `TemporalAdapterStub` del flujo normal.
-- Añadir wiring real Temporal SDK en `packages/adapter-temporal` + integración engine.
-- Suite de pruebas de integración (Temporal + engine) y semántica idempotente (at-least-once).
+- Remove `TemporalAdapterStub` from normal flow.
+- Add real Temporal SDK wiring in `packages/adapter-temporal` + engine integration.
+- Integration test suite (Temporal + engine) and idempotent semantics (at-least-once).
 ```
 
-### 7.2 Cuerpo sugerido para #68 (épica canónica)
+### 7.2 Suggested body for #68 (canonical epic)
 
 ```md
 # #68 — Temporal Adapter (Epic, canonical)
 
-**Scope**: Implementación ejecutable del Temporal Adapter en rutas activas `packages/*` (monorepo).
-**Status**: ACTIVE — Bloqueante para golden paths y validación determinista multi-adapter.
+**Scope**: Runnable Temporal Adapter implementation on active `packages/*` paths (monorepo).
+**Status**: ACTIVE — Blocking for golden paths and deterministic multi-adapter validation.
 
-## Principios no negociables
+## Non-negotiable principles
 
 1. planner ≠ engine ≠ state ≠ UI
-2. Determinismo en workflow
-3. Efectos externos en activities (idempotencia)
-4. RunStateStore como source of truth
-5. Versionado de workflow para replay/evolución
+2. Workflow determinism
+3. External effects in activities (idempotency)
+4. RunStateStore as source of truth
+5. Workflow versioning for replay/evolution
 
 ## Checklist
 
@@ -186,14 +186,14 @@ Bloqueo que resuelve #68:
 - [ ] PR-1 foundation
 - [ ] PR-2 runnable MVP
 - [ ] PR-3 engine wiring
-- [ ] PR-4 idempotencia + persistencia
-- [ ] PR-5 tests CI
+- [ ] PR-4 idempotency + persistence
+- [ ] PR-5 CI tests
 - [ ] PR-6 CI + docs
 ```
 
 ---
 
-## 8) Referencias
+## 8) References
 
 - Temporal TypeScript SDK: https://docs.temporal.io/develop/typescript
 - Determinism / core app: https://docs.temporal.io/develop/typescript/core-application
@@ -203,27 +203,27 @@ Bloqueo que resuelve #68:
 
 ---
 
-## 9) Avance de implementación (2026-02-13)
+## 9) Implementation progress (2026-02-13)
 
-### PR-1 ejecutado en código
+### PR-1 executed in code
 
-- Config foundation implementada en `packages/adapter-temporal/src/config.ts`.
-- Client wrapper lifecycle implementado en `packages/adapter-temporal/src/TemporalClient.ts`.
-- Mapper base implementado en `packages/adapter-temporal/src/WorkflowMapper.ts`.
-- Exports públicos habilitados en `packages/adapter-temporal/src/index.ts`.
+- Config foundation implemented in `packages/adapter-temporal/src/config.ts`.
+- Client wrapper lifecycle implemented in `packages/adapter-temporal/src/TemporalClient.ts`.
+- Base mapper implemented in `packages/adapter-temporal/src/WorkflowMapper.ts`.
+- Public exports enabled in `packages/adapter-temporal/src/index.ts`.
 
-### Validación técnica
+### Technical validation
 
-- Tests del paquete actualizados y en verde (`4 passed`) en `packages/adapter-temporal/test/smoke.test.ts`.
-- Build TypeScript del paquete en verde (`tsc -p tsconfig.json`).
+- Package tests updated and green (`4 passed`) in `packages/adapter-temporal/test/smoke.test.ts`.
+- Package TypeScript build green (`tsc -p tsconfig.json`).
 
-### Nota de alcance
+### Scope note
 
-Este avance cubre el objetivo de PR-1 (foundation). La ejecución real de workflows/activities (PR-2) queda como siguiente paso.
+This progress covers the PR-1 objective (foundation). Real workflow/activity execution (PR-2) remains the next step.
 
-### Endurecimiento aplicado tras revisión
+### Hardening applied after review
 
-- El wrapper ya no es fake: usa conexión real de Temporal con `Connection.connect` + `Client`.
-- Se añadió control de concurrencia `single-flight` para `connect()` concurrente.
-- `close()` cierra recursos reales vía `connection.close()`.
-- `identity` queda opcional para permitir default nativo del SDK.
+- The wrapper is no longer fake: it uses real Temporal connection with `Connection.connect` + `Client`.
+- `single-flight` concurrency control was added for concurrent `connect()` calls.
+- `close()` now closes real resources via `connection.close()`.
+- `identity` remains optional to allow native SDK default behavior.
