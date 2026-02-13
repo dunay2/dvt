@@ -23,8 +23,16 @@ describe('WorkflowEngine (basic failure modes)', () => {
     clock,
     authorizer: new AllowAllAuthorizer(),
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    planIntegrity: { async fetchAndValidate() { return new Uint8Array(); } } as any,
-    planFetcher: { async fetch() { return new Uint8Array(); } } as any,
+    planIntegrity: {
+      async fetchAndValidate() {
+        return new Uint8Array();
+      },
+    } as any,
+    planFetcher: {
+      async fetch() {
+        return new Uint8Array();
+      },
+    } as any,
     adapters: new Map(),
   } as any);
 
@@ -36,12 +44,27 @@ describe('WorkflowEngine (basic failure modes)', () => {
       planId: 'p',
       planVersion: '1.0',
     } as any;
-    const dummyContext = { tenantId: 't', projectId: 'p', environmentId: 'dev', runId: 'r', targetAdapter: 'temporal' } as any;
+    const dummyContext = {
+      tenantId: 't',
+      projectId: 'p',
+      environmentId: 'dev',
+      runId: 'r',
+      targetAdapter: 'temporal',
+    } as any;
 
-    await expect(engine.startRun(dummyPlanRef, dummyContext)).rejects.toThrow(/No adapter registered for provider/);
+    await expect(engine.startRun(dummyPlanRef, dummyContext)).rejects.toThrow(
+      /No adapter registered for provider/
+    );
   });
 
   it('cancelRun throws when run metadata missing', async () => {
-    await expect(engine.cancelRun({ provider: 'temporal', namespace: 'n', workflowId: 'w', runId: 'missing' } as any)).rejects.toThrow(/Run metadata not found/);
+    await expect(
+      engine.cancelRun({
+        provider: 'temporal',
+        namespace: 'n',
+        workflowId: 'w',
+        runId: 'missing',
+      } as any)
+    ).rejects.toThrow(/Run metadata not found/);
   });
 });

@@ -25,7 +25,10 @@ function makeHelloWorldPlan(): ExecutionPlan {
       fallbackBehavior: 'reject',
       requiresCapabilities: ['basic-execution'],
     },
-    steps: [{ stepId: 's1', kind: 'noop' }, { stepId: 's2', kind: 'noop' }],
+    steps: [
+      { stepId: 's1', kind: 'noop' },
+      { stepId: 's2', kind: 'noop' },
+    ],
   };
 }
 
@@ -141,10 +144,13 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const events = await store.listEvents('run-2');
     for (let i = 0; i < 100; i += 1) {
       // Strip runSeq and re-append. Dedup is by idempotencyKey.
-      await store.appendEventsTx('run-2', events.map((e) => {
-        const { runSeq: _runSeq, ...rest } = e;
-        return rest;
-      }));
+      await store.appendEventsTx(
+        'run-2',
+        events.map((e) => {
+          const { runSeq: _runSeq, ...rest } = e;
+          return rest;
+        })
+      );
     }
 
     const after = await engine.getRunStatus(runRef);
@@ -174,7 +180,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const fetcher = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
     const integrity = new PlanIntegrityValidator();
 
-    await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(/PLAN_INTEGRITY_VALIDATION_FAILED/);
+    await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
+      /PLAN_INTEGRITY_VALIDATION_FAILED/
+    );
   });
 
   it('does not call adapter.startRun when PlanRef validation fails', async () => {
@@ -189,7 +197,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       provider: 'conductor',
       startRun: startRunMock,
       cancelRun: async () => {},
-      getRunStatus: async () => { throw new Error('noop'); },
+      getRunStatus: async () => {
+        throw new Error('noop');
+      },
       signal: async () => {},
     };
 
@@ -242,7 +252,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planId: 'p',
       planVersion: '1',
     };
-    await expect(engine.startRun(badPlanRef2, baseCtx)).rejects.toThrow(/PLAN_SCHEMA_VERSION_UNKNOWN/);
+    await expect(engine.startRun(badPlanRef2, baseCtx)).rejects.toThrow(
+      /PLAN_SCHEMA_VERSION_UNKNOWN/
+    );
     expect(startRunMock).not.toHaveBeenCalled();
 
     // Case 3: sha256 mismatch
@@ -270,7 +282,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planFetcher: planFetcher3,
       adapters: new Map([['conductor', adapter]]),
     });
-    await expect(engine3.startRun(badPlanRef3, baseCtx)).rejects.toThrow(/PLAN_INTEGRITY_VALIDATION_FAILED/);
+    await expect(engine3.startRun(badPlanRef3, baseCtx)).rejects.toThrow(
+      /PLAN_INTEGRITY_VALIDATION_FAILED/
+    );
     expect(startRunMock).not.toHaveBeenCalled();
   });
 });

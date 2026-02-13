@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { RunStatusSnapshot, RunStatus, RunSubstatus, AdapterScopedSubstatus } from '../../src/types/engine-types';
+import {
+  RunStatusSnapshot,
+  RunStatus,
+  RunSubstatus,
+  AdapterScopedSubstatus,
+} from '../../src/types/engine-types';
 
 describe('engine-types', () => {
   it('RunStatusSnapshot accepts substatus and message', () => {
@@ -21,7 +26,13 @@ describe('engine-types', () => {
 
   it('RunStatus accepts all valid values', () => {
     const valid: RunStatus[] = [
-      'PENDING', 'APPROVED', 'RUNNING', 'PAUSED', 'COMPLETED', 'FAILED', 'CANCELLED',
+      'PENDING',
+      'APPROVED',
+      'RUNNING',
+      'PAUSED',
+      'COMPLETED',
+      'FAILED',
+      'CANCELLED',
     ];
     expect(valid).toContain('RUNNING');
   });
