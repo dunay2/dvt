@@ -10,6 +10,22 @@ import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
 import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
 
+interface WorkflowHandleLike {
+  cancel(): Promise<void>;
+  signal(signalName: string, ...args: unknown[]): Promise<void>;
+}
+
+interface WorkflowClientLike {
+  start(
+    workflowType: string,
+    options: unknown
+  ): Promise<{
+    workflowId: string;
+    firstExecutionRunId?: string;
+  }>;
+  getHandle(workflowId: string): WorkflowHandleLike;
+}
+
 interface IRunStateStoreLike {
   listEvents(runId: string): Promise<unknown[]>;
 }
@@ -27,7 +43,8 @@ interface IProviderAdapterLike {
 }
 
 export interface TemporalAdapterDeps {
-  clientManager: TemporalClientManager;
+  clientManager?: TemporalClientManager;
+  workflowClient?: WorkflowClientLike;
   config: TemporalAdapterConfig;
   stateStore: IRunStateStoreLike;
   projector: SnapshotProjectorLike;
@@ -39,12 +56,12 @@ export class TemporalAdapter implements IProviderAdapterLike {
   constructor(private readonly deps: TemporalAdapterDeps) {}
 
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
-    const handle = await this.getClient();
+    const workflowClient = await this.getClient();
 
     const workflowId = toTemporalWorkflowId(ctx.runId);
     const taskQueue = toTemporalTaskQueue(ctx.tenantId, this.deps.config);
 
-    const started = await handle.workflow.start('runPlanWorkflow', {
+    const started = await workflowClient.start('runPlanWorkflow', {
       taskQueue,
       workflowId,
       args: [{ planRef, ctx }],
@@ -64,8 +81,8 @@ export class TemporalAdapter implements IProviderAdapterLike {
   }
 
   async cancelRun(runRef: EngineRunRef): Promise<void> {
-    const handle = await this.getClient();
-    await handle.workflow.getHandle(runRef.workflowId).cancel();
+    const workflowClient = await this.getClient();
+    await workflowClient.getHandle(runRef.workflowId).cancel();
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
@@ -75,8 +92,8 @@ export class TemporalAdapter implements IProviderAdapterLike {
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    const handle = await this.getClient();
-    const workflow = handle.workflow.getHandle(runRef.workflowId);
+    const workflowClient = await this.getClient();
+    const workflow = workflowClient.getHandle(runRef.workflowId) as WorkflowHandleLike;
 
     switch (request.type) {
       case 'PAUSE':
@@ -99,9 +116,15 @@ export class TemporalAdapter implements IProviderAdapterLike {
   }
 
   private async getClient() {
+    if (this.deps.workflowClient) {
+      return this.deps.workflowClient;
+    }
+    if (!this.deps.clientManager) {
+      throw new Error('TEMPORAL_CLIENT_NOT_CONFIGURED');
+    }
     if (!this.deps.clientManager.isConnected()) {
       await this.deps.clientManager.connect();
     }
-    return this.deps.clientManager.getClient().client;
+    return this.deps.clientManager.getClient().client.workflow;
   }
 }
