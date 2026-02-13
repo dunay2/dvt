@@ -4,6 +4,9 @@ export { loadTemporalAdapterConfig, validateTemporalAdapterConfig } from './conf
 export type { TemporalClientHandle } from './TemporalClient.js';
 export { TemporalClientManager } from './TemporalClient.js';
 
+export type { TemporalAdapterDeps } from './TemporalAdapter.js';
+export { TemporalAdapter } from './TemporalAdapter.js';
+
 export {
   mapTemporalStatusToRunStatus,
   toRunStatusSnapshot,
