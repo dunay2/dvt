@@ -65,10 +65,24 @@ gh pr create \
 
 Before creating PR, verify:
 
+### Mandatory quality gates (required)
+
+- [ ] Pre-implementation risk briefing documented (risks, impact, mitigations)
+- [ ] Touched-files plan documented before coding (what, how, why)
+- [ ] Business-rule decisions confirmed before implementation (or marked N/A with rationale)
+- [ ] Validation evidence prepared (commands + outputs)
+- [ ] Rollback path documented (safe revert strategy)
+
+> Note: The **Temporal adapter integration (time‑skipping)** test runs automatically for PRs that touch `packages/adapter-temporal/**` or `packages/contracts/**`. The PR Quality Gate will skip that integration when unrelated files are changed to keep CI fast.
+
 ### Code Quality
 
 - [ ] All files committed and pushed
 - [ ] No merge conflicts with `main`
+- [ ] Commitlint checks pass for PR commits:
+  - [ ] Scope is allowed: `contracts`, `docs`, `ci`, `deps`, `release`
+  - [ ] Subject uses sentence-case
+  - [ ] Commit header length is `<= 100` characters
 - [ ] Markdown linting passed locally:
 
   ```bash

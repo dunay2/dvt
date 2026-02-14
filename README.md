@@ -3,6 +3,7 @@
 [![Tests](https://github.com/dunay2/dvt/actions/workflows/test.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/test.yml)
 [![Code Quality](https://github.com/dunay2/dvt/actions/workflows/ci.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/ci.yml)
 [![Contracts](https://github.com/dunay2/dvt/actions/workflows/contracts.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/contracts.yml)
+[![PR Quality Gate](https://github.com/dunay2/dvt/actions/workflows/pr-quality-gate.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/pr-quality-gate.yml)
 
 Data Value Transform — Multi-adapter orchestration engine.
 
