@@ -22,7 +22,10 @@ class TestTxStore {
     return this.metadataByRun.get(runId) ?? null;
   }
 
-  async appendEventsTx(runId: string, envelopes: any[]): Promise<{ appended: any[]; deduped: any[] }> {
+  async appendEventsTx(
+    runId: string,
+    envelopes: any[]
+  ): Promise<{ appended: any[]; deduped: any[] }> {
     const current = this.eventsByRun.get(runId) ?? [];
     const appended: any[] = [];
     const deduped: any[] = [];
@@ -106,10 +109,18 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
       outbox: store,
       clock: new TestClock(),
       idempotency: new TestIdempotencyKeyBuilder(),
-      fetcher: { fetch: async () => Buffer.from(JSON.stringify({
-        metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1' },
-        steps: [{ stepId: 'step-a', kind: 'test' }, { stepId: 'step-b', kind: 'test' }],
-      })) },
+      fetcher: {
+        fetch: async () =>
+          Buffer.from(
+            JSON.stringify({
+              metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1' },
+              steps: [
+                { stepId: 'step-a', kind: 'test' },
+                { stepId: 'step-b', kind: 'test' },
+              ],
+            })
+          ),
+      },
       integrity: { fetchAndValidate: async (_ref, fetcher) => fetcher.fetch(_ref) },
     };
 
@@ -132,7 +143,8 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
 
     // Prefer the client exposed by the Temporal test environment when available.
     // In time-skipping mode this client is fully wired to workflow service internals.
-    client = env.workflowClient ?? env.client ?? new WorkflowClient({ connection: env.nativeConnection });
+    client =
+      env.workflowClient ?? env.client ?? new WorkflowClient({ connection: env.nativeConnection });
 
     const input = {
       planRef: {
