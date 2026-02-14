@@ -44,7 +44,9 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 #### Vitest
 
-- **Config**: [`vitest.config.ts`](../../vitest.config.ts)
+- **Config (monorepo real)**:
+  - [`packages/engine/vitest.config.ts`](../../packages/engine/vitest.config.ts)
+  - [`packages/adapter-temporal/vitest.config.ts`](../../packages/adapter-temporal/vitest.config.ts)
 - **Coverage Requirements**: 80%+ (lines, statements, functions, branches)
 - **Features**:
   - Native TypeScript and ESM support
@@ -54,8 +56,8 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 - **Run**:
   - `pnpm test` - Run all tests
   - `pnpm test:coverage` - With coverage
-  - `pnpm test:watch` - Watch mode
   - `pnpm test:engine` - Run engine tests (includes determinism)
+  - `pnpm --filter @dvt/engine test -- --watch` - Watch mode (engine)
 
 **Exception policy**:
 
