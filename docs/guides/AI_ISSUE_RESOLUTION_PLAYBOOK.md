@@ -2,7 +2,7 @@
 
 > Document control
 >
-> - Version: `v1.3.0`
+> - Version: `v1.5.0`
 > - Status: `active`
 > - Last updated (UTC): `2026-02-14`
 > - Owner: `Engineering / AI Delivery Governance`
@@ -59,8 +59,12 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
    - Add a short execution plan in issue comments (what, where, validation).
 
 6. **Risk & impact briefing before implementation (mandatory)**
-   - Before touching code/docs, publish a short pre-implementation brief with:
+   - Before touching code/docs, publish a short pre-implementation brief **in the issue comments** with:
+     - what will change,
+     - what for (intended objective/outcome),
+     - how the change will be implemented,
      - expected files to change,
+     - affected components/surfaces,
      - identified risks and possible side effects,
      - why the proposed approach is chosen,
      - validation plan,
@@ -92,6 +96,8 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 10. **Document outcomes**
 
 - Update affected docs/runbooks/indexes.
+- Record execution evidence (impact, validation, decisions, rollback) in the **issue comments** as default audit trail.
+- Do **not** create standalone status docs for issue execution notes unless the issue explicitly requires new technical documentation.
 - In docs and issue comments, include an explicit **WHAT / WHY** summary for every non-trivial change.
 - If behavior changed, add a short "why" note in status docs.
 - Link changed files in the issue comment.
@@ -103,6 +109,8 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
   - why this approach was selected,
   - validation evidence,
   - remaining scope (if any).
+- Open a Pull Request for the implemented scope and reference the issue (`Closes #X` / `Refs #X`).
+- Ensure issue comment links to the PR before closure.
 - Close issue only when all acceptance criteria are met.
 
 ## Quality gates (must pass before close)
@@ -112,6 +120,8 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - Validation evidence provided.
 - Documentation/indexes updated if discoverability changed.
 - Docs and issue both contain explicit WHAT / WHY notes.
+- Impact/evidence trail recorded in issue comments unless new technical docs were explicitly required.
+- Issue includes explicit WHAT / FOR / HOW, touched scope, risks, and affected surfaces.
 - Pre-implementation risk/impact briefing recorded and acknowledged.
 - Business-rule-sensitive decisions explicitly confirmed and documented.
 - Think-first analysis recorded (selected option + rationale + alternatives rejected).
@@ -150,15 +160,36 @@ Use this baseline to reduce subjectivity in step 1:
 - Scope summary:
 - Expected files/paths:
 
+### FOR (goal)
+
+- Why this change is needed:
+- Expected outcome:
+
+### HOW
+
+- Planned implementation approach:
+- Sequence/strategy:
+
 ### WHY
 
 - Selected approach:
 - Alternatives rejected:
 
+### Scope touched
+
+- Components/packages/workflows affected:
+- Explicit out-of-scope:
+
 ### Risk
 
 - Classification: Low | Medium | High
 - Main risks / side effects:
+
+### Impact (affected areas)
+
+- What this affects (technical/functional/operational):
+- Compatibility impact (if any):
+- CI/runtime/observability impact (if any):
 
 ### Validation plan
 
@@ -207,6 +238,7 @@ Use this baseline to reduce subjectivity in step 1:
 - Conventional commit message valid.
 - Diff is focused and reviewable.
 - Includes issue reference (`Closes #X` / `Refs #X`).
+- Opening a PR is mandatory for implementation scope (no direct done-without-PR closure).
 - Includes risk note and rollback note for non-trivial changes.
 - Before opening a PR, compile, tests, and lint MUST pass for affected scope (and broader scope when shared/core contracts are touched).
 - Do not treat warning suppression as a final fix; solve root cause first. Hiding warnings is only acceptable with explicit maintainer approval and written rationale.
@@ -224,6 +256,7 @@ Use this baseline to reduce subjectivity in step 1:
 - Enforce quality-gate checks in CI (e.g., PR gate + lint/test/build + docs consistency where applicable).
 - If automation and maintainers disagree, pause and resolve policy interpretation explicitly in the issue.
 - Require template completeness checks (Template A before coding, Template B before closing) where automation is available.
+- Add/keep checks or bot reminders when implementation issues do not have a linked PR.
 
 ## Planned technical migration (approved before implementation)
 
@@ -327,6 +360,8 @@ Use these as a consistent gate before merge:
 
 | Date (UTC) | Version | Change                                                                                                                                                                                                                               | Author       |
 | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| 2026-02-14 | v1.5.0  | Added mandatory WHAT/FOR/HOW, touched-scope, and impact (risks + affected surfaces) requirements in the pre-implementation process and templates.                                                                                    | AI assistant |
+| 2026-02-14 | v1.4.0  | Clarified that issue comments are the default audit trail for execution notes (unless new technical docs are required) and made PR creation/linking mandatory before issue closure.                                                  | AI assistant |
 | 2026-02-14 | v1.3.0  | Added concrete risk rubric, business-rule-sensitive list, pre/final templates, primary-source guidance, TS projectService/`tsc -b` guidance, enforceable split strategy, lint-staged clarification, and explicit workflow numbering. | AI assistant |
 | 2026-02-14 | v1.2.0  | Added structured Think-First record, risk classification guide, playbook-conflict safeguard, automation guidance, and atomic-commit rule.                                                                                            | AI assistant |
 | 2026-02-14 | v1.1.0  | Added document-control signature, anti-warning rule, PR-size guard, and planned TS references migration section.                                                                                                                     | AI assistant |
