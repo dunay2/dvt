@@ -16,6 +16,7 @@ These documents define the **engine boundary, semantics, and invariants**. Viola
 | --------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------- | ------- |
 | [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md)   | Engine interface + signal catalog                                | Boundary contract | 1.0     |
 | [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic)               | State machine     | 1.1     |
+| [GlossaryContract.v1.md](contracts/engine/GlossaryContract.v1.md)     | Canonical terminology and identifier semantics                   | Terminology       | 1.0     |
 | [State Store Contract](contracts/state-store/README.md)               | Storage-agnostic interface for event log + snapshots             | Persistence layer | 1.0     |
 | [VERSIONING.md](./VERSIONING.md)                                      | Policy for versioning contracts (major/minor bumps, deprecation) | Governance        | 1.0     |
 
@@ -238,6 +239,7 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 ### "How do I interpret the dual attempt IDs?"
 
 → [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (Section 1.3)
+→ [GlossaryContract.v1.md](contracts/engine/GlossaryContract.v1.md) (Sections 2-5)
 
 ### "How do I handle signals (PAUSE, CANCEL, etc.)?"
 
