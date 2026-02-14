@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run ./test/",
-    "test:integration": "vitest run ./test/integration.time-skipping.test.ts"
+    "test:integration": "vitest run ./test/"
   },
   "devDependencies": {
     "@temporalio/testing": "1.11.7",
