@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true
+  },
+  "include": ["packages/*/src/**/*.ts", "packages/*/test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

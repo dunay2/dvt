@@ -4,7 +4,12 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": ["./tsconfig.json", "./packages/*/tsconfig.json"],
+    "project": [
+      "./tsconfig.json",
+      "./tsconfig.eslint.base.json",
+      "./packages/*/tsconfig.json",
+      "./packages/*/tsconfig.eslint.json"
+    ],
     "noWarnOnMultipleProjects": true
   },
   "plugins": ["@typescript-eslint", "import", "jest"],
@@ -132,7 +137,12 @@
     "import/resolver": {
       "typescript": {
         "alwaysTryTypes": true,
-        "project": ["./tsconfig.json", "./packages/*/tsconfig.json"]
+        "project": [
+          "./tsconfig.json",
+          "./tsconfig.eslint.base.json",
+          "./packages/*/tsconfig.json",
+          "./packages/*/tsconfig.eslint.json"
+        ]
       }
     }
   }

@@ -157,6 +157,21 @@ function sha256Hex(bytes: Uint8Array): string {
 }
 
 describe('temporal integration (time-skipping)', () => {
+  async function waitForCondition<T>(fn: () => Promise<T>, predicate: (v: T) => boolean, opts: { timeoutMs?: number; intervalMs?: number } = {}) {
+    const timeoutMs = opts.timeoutMs ?? 10_000;
+    const intervalMs = opts.intervalMs ?? 25;
+    const start = Date.now();
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const v = await fn();
+      if (predicate(v)) return v;
+      if (Date.now() - start > timeoutMs) {
+        throw new Error('waitForCondition: timeout');
+      }
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+  }
+
   it('executes startRun -> status -> cancel against TestWorkflowEnvironment', async () => {
     const env = await TestWorkflowEnvironment.createTimeSkipping();
 
@@ -215,22 +230,15 @@ describe('temporal integration (time-skipping)', () => {
     try {
       const runRef = await adapter.startRun(planRef, ctx);
 
-      let status = await adapter.getRunStatus(runRef);
-      for (let i = 0; i < 80 && status.status === 'RUNNING'; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 25));
-        status = await adapter.getRunStatus(runRef);
-      }
-
+      // wait until the run is no longer RUNNING (deterministic wait helper)
+      await waitForCondition(() => adapter.getRunStatus(runRef), (s) => s.status !== 'RUNNING', { timeoutMs: 30_000 });
+      const status = await adapter.getRunStatus(runRef);
       expect(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).toContain(status.status);
 
       await adapter.cancelRun(runRef);
 
-      let afterCancel = await adapter.getRunStatus(runRef);
-      for (let i = 0; i < 40 && afterCancel.status === 'RUNNING'; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 25));
-        afterCancel = await adapter.getRunStatus(runRef);
-      }
-
+      await waitForCondition(() => adapter.getRunStatus(runRef), (s) => s.status !== 'RUNNING', { timeoutMs: 10_000 });
+      const afterCancel = await adapter.getRunStatus(runRef);
       expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel.status);
     } finally {
       await worker.shutdown();
@@ -298,12 +306,8 @@ describe('temporal integration (time-skipping)', () => {
       const runRefA = await adapter.startRun(planRef, ctxA);
       await adapter.signal(runRefA, { signalId: 's-cancel-1', type: 'CANCEL' });
 
-      let statusA = await adapter.getRunStatus(runRefA);
-      for (let i = 0; i < 40 && statusA.status === 'RUNNING'; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 25));
-        statusA = await adapter.getRunStatus(runRefA);
-      }
-
+      await waitForCondition(() => adapter.getRunStatus(runRefA), (s) => s.status !== 'RUNNING', { timeoutMs: 10_000 });
+      const statusA = await adapter.getRunStatus(runRefA);
       expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(statusA.status);
 
       const eventsA = await store.listEvents(runRefA.runId);
@@ -325,12 +329,8 @@ describe('temporal integration (time-skipping)', () => {
       const runRefB = await adapter.startRun(planRef, ctxB);
       await adapter.cancelRun(runRefB);
 
-      let statusB = await adapter.getRunStatus(runRefB);
-      for (let i = 0; i < 40 && statusB.status === 'RUNNING'; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 25));
-        statusB = await adapter.getRunStatus(runRefB);
-      }
-
+      await waitForCondition(() => adapter.getRunStatus(runRefB), (s) => s.status !== 'RUNNING', { timeoutMs: 10_000 });
+      const statusB = await adapter.getRunStatus(runRefB);
       expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(statusB.status);
 
       const eventsB = await store.listEvents(runRefB.runId);

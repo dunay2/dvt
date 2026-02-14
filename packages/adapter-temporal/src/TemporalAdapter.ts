@@ -4,7 +4,9 @@ import type {
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
+  IProviderAdapter,
 } from '@dvt/contracts';
+import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
@@ -34,14 +36,6 @@ interface SnapshotProjectorLike {
   rebuild(runId: string, events: unknown[]): RunStatusSnapshot;
 }
 
-interface IProviderAdapterLike {
-  readonly provider: EngineRunRef['provider'];
-  startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef>;
-  cancelRun(runRef: EngineRunRef): Promise<void>;
-  getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
-  signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
-}
-
 export interface TemporalAdapterDeps {
   clientManager?: TemporalClientManager;
   workflowClient?: WorkflowClientLike;
@@ -50,7 +44,7 @@ export interface TemporalAdapterDeps {
   projector: SnapshotProjectorLike;
 }
 
-export class TemporalAdapter implements IProviderAdapterLike {
+export class TemporalAdapter implements IProviderAdapter {
   readonly provider = 'temporal' as const;
 
   constructor(private readonly deps: TemporalAdapterDeps) {}
@@ -61,7 +55,7 @@ export class TemporalAdapter implements IProviderAdapterLike {
     const workflowId = toTemporalWorkflowId(ctx.runId);
     const taskQueue = toTemporalTaskQueue(ctx.tenantId, this.deps.config);
 
-    const started = await workflowClient.start('runPlanWorkflow', {
+    const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
       workflowId,
       args: [{ planRef, ctx }],
@@ -97,10 +91,10 @@ export class TemporalAdapter implements IProviderAdapterLike {
 
     switch (request.type) {
       case 'PAUSE':
-        await workflow.signal('pause');
+        await workflow.signal(WorkflowSignals.PAUSE);
         return;
       case 'RESUME':
-        await workflow.signal('resume');
+        await workflow.signal(WorkflowSignals.RESUME);
         return;
       case 'CANCEL':
         // Canonicalize cancellation on the provider-native cancel path so both
