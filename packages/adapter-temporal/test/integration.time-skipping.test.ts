@@ -67,9 +67,10 @@ class TestIdempotencyKeyBuilder {
 // activities and assert that it completes and emitted lifecycle events.
 // ---------------------------------------------------------------------------
 describe('RunPlanWorkflow — integration (time-skipping env)', () => {
-  let env;
-  let worker;
-  let client;
+  let env: any = null;
+  let worker: any = null;
+  let client: any = null;
+  let runPromise: Promise<void> | null = null;
   const taskQueue = 'test-queue-integration';
 
   beforeAll(async () => {
@@ -77,14 +78,24 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
   });
 
   afterAll(async () => {
-    if (worker) {
-      // ensure worker has fully shut down before tearing down the env (avoids
-      // "Cannot close connection while Workers hold a reference to it").
-      await worker.shutdown();
-    }
-    if (env) {
-      // TestWorkflowEnvironment.teardown() closes the native connection internally.
-      await env.teardown();
+    try {
+      if (worker) {
+        // ensure worker has fully shut down before tearing down the env (avoids
+        // "Cannot close connection while Workers hold a reference to it").
+        if (typeof worker.shutdown === 'function') {
+          await worker.shutdown();
+        }
+        if (runPromise) {
+          await runPromise;
+          runPromise = null;
+        }
+      }
+    } finally {
+      if (env) {
+        // TestWorkflowEnvironment.teardown() closes the native connection internally.
+        await env.teardown();
+        env = null;
+      }
     }
   });
 
@@ -112,11 +123,12 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
       activities: createActivities(deps),
     });
 
-    // Run worker in background
-    const runPromise = worker.run();
+    // Run worker in background and keep the run promise in outer scope so we
+    // can await shutdown from afterAll reliably.
+    runPromise = worker.run();
 
     // give the worker time to register with the in-memory server before starting workflows
-    await new Promise((res) => setTimeout(res, 50));
+    await new Promise((res) => setTimeout(res, 100));
 
     client = new WorkflowClient({ connection: env.nativeConnection });
 
@@ -137,11 +149,24 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
       },
     };
 
-    const handle = await client.start('runPlanWorkflow', {
-      args: [input],
-      taskQueue,
-      workflowId: input.ctx.runId,
-    });
+    // start the workflow; retry a few times if the TestWorkflowEnvironment
+    // hasn't fully exposed the workflow service yet (avoids flaky race).
+    async function startWorkflowWithRetry(retries = 10, delayMs = 50): Promise<any> {
+      for (let i = 0; i < retries; i++) {
+        try {
+          return await client.start('runPlanWorkflow', {
+            args: [input],
+            taskQueue,
+            workflowId: input.ctx.runId,
+          });
+        } catch (err: any) {
+          if (i === retries - 1) throw err;
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+      }
+    }
+
+    const handle = await startWorkflowWithRetry();
 
     const result = await handle.result();
     expect(result).toEqual({ runId: 'run-1', status: 'COMPLETED' });
