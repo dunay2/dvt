@@ -304,6 +304,56 @@ markdown-link-check docs/architecture/engine/INDEX.md
 # Open .md file → Press Ctrl+Shift+V (Windows) or Cmd+Shift+V (Mac)
 ```
 
+### Troubleshooting: ESLint / TypeScript parser errors ⚠️
+
+If CI shows errors like `@typescript-eslint/parser` complaining that files listed in `parserOptions.project` cannot be found (for example `packages/engine/legacy-top-level-engine/...`), clean up stale references using the steps below.
+
+---
+
+### Tooling config convention (single-config per tool)
+
+To reduce duplication and prevent CJS/TS mismatch issues, follow these rules:
+
+- One config file per tool per package (e.g. `packages/foo/vitest.config.ts`), not duplicated in CJS + TS.
+- Add `vitest.config.ts` to the package `tsconfig.json` `include` when present so ESLint can parse it.
+- Prefer a shared `tsconfig.eslint.base.json` (root) and extend it with a small `packages/<pkg>/tsconfig.eslint.json` when package-specific includes are required.
+- Do not create multiple runtime/testing configs for the same package (this prevents ESM/CommonJS resolution errors in CI).
+
+Example: `packages/adapter-temporal/tsconfig.json` should include `"vitest.config.ts"` and a package-level `tsconfig.eslint.json` should `extends` the repo base.
+
+1. Inspect the failing ESLint/TypeScript config referenced in the error log (`parserOptions.project` / `tsconfig.json`).
+2. Remove or update any `include` / `files` entries that point to deleted or moved folders (e.g. `legacy-*`).
+
+   Example — remove stale legacy entry from `tsconfig.json`:
+
+   ```json
+   {
+     "include": [
+       "packages/*/src/**/*.ts"
+       // "packages/engine/legacy-top-level-engine/src/**"  <-- remove stale reference
+     ]
+   }
+   ```
+
+3. Ensure ESLint is not explicitly targeting removed code (check `eslint.config.cjs` / `.eslintrc.*`).
+4. Search for lingering imports or test references and update/remove them:
+
+```bash
+git grep -n "legacy-top-level-engine" || true
+```
+
+5. Run linter auto-fix for ordering/spacing issues and re-run CI:
+
+```bash
+pnpm lint --fix
+# or
+npx eslint . --ext .ts --fix
+```
+
+6. Commit the cleanup and re-run CI.
+
+This prevents `@typescript-eslint/parser` from failing when it resolves `tsconfig` file lists and keeps CI green.
+
 ### VS Code Extensions (Recommended)
 
 Install these for real-time validation:
