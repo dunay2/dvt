@@ -40,32 +40,32 @@ The baseline infrastructure is in place and aligned with the monorepo layout.
 - Full runtime boundary validation coverage across all entry points.
 - Golden-path matrix expansion and fixture hardening.
 
-## Issue Audit Snapshot (2026-02-13)
+## Issue Audit Snapshot (2026-02-14)
 
 Repository audit was reconciled against active package paths (`packages/*`) and issue comments were updated with concrete evidence.
 
 ### Updated in GitHub
 
 - #67: **Partial** (validation helpers exist mainly in legacy path; active path boundary wiring still pending).
-- #68: **Not started** (Temporal package is placeholder; engine Temporal adapter still stub).
+- #68: **In progress / near-closure** (Temporal adapter is implemented on active `packages/*` paths with workflow, activities, provider selection, and integration test harness; pending final CI workflow closure + tracker publication alignment).
 - #69: **Not started** (Conductor adapter package not present; engine Conductor adapter stub only).
 - #70: **Partial** (`.golden/hashes.json` exists, but `examples/` fixtures missing in current workspace and hashes still pending).
 - #71: **Blocked / not started** (depends on non-stub Conductor foundation).
 - #72: **Not started on active path** (version-binding enforcement currently visible in legacy area, not active runtime path).
-- #73: **Partial** (determinism tests for engine + mock exist; cross-adapter determinism blocked by adapter implementation gaps).
+- #73: **Partial** (determinism tests for engine + mock exist; cross-adapter determinism still blocked mainly by Conductor gaps).
 - #14: **Mostly implemented** in active engine path; issue checklist should be refreshed to current API names and remaining deltas.
-- #15: **Not started** (Temporal interpreter workflow not implemented in active packages).
-- #5: Legacy scope likely superseded by #68; kept open with audit note to avoid duplicate tracking confusion.
+- #15: **In progress** (Temporal interpreter workflow exists in active package implementation; issue tracking/checklist requires refresh to match current code evidence).
+- #5: **Superseded scope** by #68 for active monorepo implementation tracking.
 - #6: **Not started** in active adapter package (Postgres package currently placeholder).
 - #76 and #79: active repository-governance tracking for monorepo/path normalization and stale local reference cleanup.
 
 ### Suggested canonical execution order
 
-1. Complete #6 and #68 foundations (Postgres + Temporal active implementations).
-2. Resolve #67 on active API boundaries.
-3. Complete #70 fixtures and executable golden-path runs.
-4. Progress #69 and #71 (Conductor + draining policies).
-5. Finalize #72 and then expand #73 cross-adapter determinism.
+1. Finalize #68 closure track (CI workflow update + publication of canonical tracker status).
+2. Complete #6 foundation (Postgres active implementation).
+3. Resolve #67 on active API boundaries.
+4. Complete #70 fixtures and executable golden-path runs.
+5. Progress #69 and #71 (Conductor + draining policies), then finalize #72 and expand #73 cross-adapter determinism.
 
 ### Quality Debt Still Open
 
@@ -91,4 +91,4 @@ When behavior changes affect deterministic execution:
 ---
 
 **Status**: Active and usable (with audited gaps tracked)
-**Last updated**: 2026-02-13
+**Last updated**: 2026-02-14

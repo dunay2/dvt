@@ -1,13 +1,15 @@
+import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import type { RunContext } from '@dvt/contracts';
+
 import { describe, it, expect } from 'vitest';
 
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SequenceClock } from '../../src/utils/clock.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import type { RunContext } from '@dvt/contracts';
 import { AuthorizationError } from '../../src/security/AuthorizationError.js';
 
 class DenyAuthorizer {
@@ -31,7 +33,7 @@ class CountingAdapter implements IProviderAdapter {
   public signalCalls = 0;
   public cancelCalls = 0;
 
-  async startRun(_planRef: unknown, ctx: RunContext) {
+  async startRun(_planRef: unknown, ctx: RunContext): Promise<{ provider: string; workflowId: string; runId: string }> {
     this.startCalls += 1;
     return { provider: 'mock', workflowId: 'wf', runId: ctx.runId } as const;
   }
@@ -40,7 +42,7 @@ class CountingAdapter implements IProviderAdapter {
     this.cancelCalls += 1;
   }
 
-  async getRunStatus(_runRef: any) {
+  async getRunStatus(_runRef: any): Promise<any> {
     return { runId: 'r', status: 'PENDING' } as any;
   }
 
