@@ -44,7 +44,9 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 #### Vitest
 
-- **Config**: [`vitest.config.ts`](../../vitest.config.ts)
+- **Config (monorepo real)**:
+  - [`packages/engine/vitest.config.ts`](../../packages/engine/vitest.config.ts)
+  - [`packages/adapter-temporal/vitest.config.ts`](../../packages/adapter-temporal/vitest.config.ts)
 - **Coverage Requirements**: 80%+ (lines, statements, functions, branches)
 - **Features**:
   - Native TypeScript and ESM support
@@ -54,8 +56,8 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 - **Run**:
   - `pnpm test` - Run all tests
   - `pnpm test:coverage` - With coverage
-  - `pnpm test:watch` - Watch mode
   - `pnpm test:engine` - Run engine tests (includes determinism)
+  - `pnpm --filter @dvt/engine test -- --watch` - Watch mode (engine)
 
 **Exception policy**:
 
@@ -144,18 +146,16 @@ These practices were identified to improve test reliability, signal quality, and
 
 ### 5. Versioning & Releases
 
-#### Standard-Version
+#### Release Please
 
-- **Config**: [`.versionrc.json`](../../.versionrc.json)
+- **Workflow**: [`release.yml`](../../.github/workflows/release.yml)
 - **Features**:
-  - Automated semantic versioning
-  - Changelog generation from commits
-  - Git tag creation
+  - Automated release PRs based on Conventional Commits
+  - Changelog updates managed by release automation
+  - Tagged GitHub releases on merge
 - **Run**:
-  - `pnpm release` - Auto-detect version bump
-  - `pnpm release:major` - Major version
-  - `pnpm release:minor` - Minor version
-  - `pnpm release:patch` - Patch version
+  - Automatic on push to `main` (release-please workflow)
+  - Manual trigger available via GitHub Actions (`workflow_dispatch`)
 
 ### 6. Dependency Management
 
@@ -176,7 +176,7 @@ This section tracks recommended tooling to strengthen secure delivery, auditable
 
 - **release-please**
   - **Goal**: Replace legacy release flow and standardize changelog/release automation.
-  - **Status**: Planned migration (see repo issues).
+  - **Status**: Active release automation workflow.
 - **CodeQL**
   - **Goal**: Static application security testing (SAST) in CI.
 - **gitleaks**
@@ -324,10 +324,11 @@ pnpm format               # Format code
 ### Release
 
 ```bash
-pnpm release:dry-run      # Preview changes
-pnpm release:patch        # Patch version (0.0.X)
-pnpm release:minor        # Minor version (0.X.0)
-pnpm release:major        # Major version (X.0.0)
+# Release automation is managed in GitHub Actions:
+# .github/workflows/release.yml (release-please)
+#
+# Local command kept only as a pointer:
+pnpm release
 ```
 
 ---

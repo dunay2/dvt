@@ -44,6 +44,16 @@ The baseline infrastructure is in place and aligned with the monorepo layout.
 
 Repository audit was reconciled against active package paths (`packages/*`) and issue comments were updated with concrete evidence.
 
+### Closures applied during this audit pass
+
+- #92 **Closed**: documentation corrected in [`docs/guides/QUALITY.md`](../guides/QUALITY.md) to reflect real Vitest configs in package scope and current watch command usage.
+- #91 **Closed**: [`eslint.config.cjs`](../../eslint.config.cjs) normalized to a single active flat-config export.
+
+### Tracker comments updated (state refinement without closure)
+
+- #68: evidence posted for active Temporal adapter implementation in [`packages/adapter-temporal/src/TemporalAdapter.ts`](../../packages/adapter-temporal/src/TemporalAdapter.ts), workflows/activities, and tests; left as near-closure pending checklist alignment.
+- #14: evidence posted for engine core and projector implementation in [`packages/engine/src/core/WorkflowEngine.ts`](../../packages/engine/src/core/WorkflowEngine.ts) and [`packages/engine/src/core/SnapshotProjector.ts`](../../packages/engine/src/core/SnapshotProjector.ts); left open pending checklist/API wording refresh.
+
 ### Updated in GitHub
 
 - #67: **Partial** (validation helpers exist mainly in legacy path; active path boundary wiring still pending).
