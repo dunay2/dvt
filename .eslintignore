@@ -1,0 +1,7 @@
+# Ignore legacy folders and generated artifacts
+packages/engine/legacy-top-level-engine/**
+packages/adapters-legacy/**
+**/node_modules/**
+coverage/
+dist/
+docs-dist/

@@ -6,7 +6,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {}
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "test"]
