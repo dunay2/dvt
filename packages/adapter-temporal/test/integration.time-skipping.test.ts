@@ -130,7 +130,9 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
     // give the worker time to register with the in-memory server before starting workflows
     await new Promise((res) => setTimeout(res, 100));
 
-    client = new WorkflowClient({ connection: env.nativeConnection });
+    // Prefer the client exposed by the Temporal test environment when available.
+    // In time-skipping mode this client is fully wired to workflow service internals.
+    client = env.workflowClient ?? env.client ?? new WorkflowClient({ connection: env.nativeConnection });
 
     const input = {
       planRef: {
@@ -178,8 +180,6 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
     expect(types).toContain('StepCompleted');
     expect(types).toContain('RunCompleted');
 
-    // stop worker: trigger shutdown then await the worker.run() promise
-    worker.shutdown();
-    await runPromise;
+    // Worker teardown is handled in afterAll to avoid double-shutdown races.
   });
 });
