@@ -337,12 +337,12 @@ If CI shows errors like `@typescript-eslint/parser` complaining that files liste
 
 To reduce duplication and prevent CJS/TS mismatch issues, follow these rules:
 
-- One config file per tool per package (e.g. `packages/foo/vitest.config.ts`), not duplicated in CJS + TS.
-- Add `vitest.config.ts` to the package `tsconfig.json` `include` when present so ESLint can parse it.
+- One config file per tool per package (e.g. `packages/foo/vitest.config.ts` or `packages/foo/vitest.config.cjs`), not duplicated in CJS + TS.
+- Add the actual Vitest config filename (`vitest.config.ts` or `vitest.config.cjs`) to the package `tsconfig.json` `include` when present so ESLint can parse it.
 - Prefer a shared `tsconfig.eslint.base.json` (root) and extend it with a small `packages/<pkg>/tsconfig.eslint.json` when package-specific includes are required.
 - Do not create multiple runtime/testing configs for the same package (this prevents ESM/CommonJS resolution errors in CI).
 
-Example: `packages/adapter-temporal/tsconfig.json` should include `"vitest.config.ts"` and a package-level `tsconfig.eslint.json` should `extends` the repo base.
+Example: `packages/adapter-temporal/tsconfig.json` should include `"vitest.config.cjs"` and a package-level `tsconfig.eslint.json` should `extends` the repo base.
 
 1. Inspect the failing ESLint/TypeScript config referenced in the error log (`parserOptions.project` / `tsconfig.json`).
 2. Remove or update any `include` / `files` entries that point to deleted or moved folders (e.g. `legacy-*`).

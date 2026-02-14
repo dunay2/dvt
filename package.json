@@ -9,7 +9,7 @@
     "lint": "eslint \"packages/**/*.{ts,tsx}\" --max-warnings 0",
     "lint:fix": "eslint \"packages/**/*.{ts,tsx}\" --fix",
     "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"README.md\" --ignore-path .markdownlintignore",
-    "lint:determinism": "echo 'Determinism lint check passed (placeholder)'",
+    "lint:determinism": "eslint \"packages/engine/src/**/*.ts\" \"packages/adapter-temporal/src/**/*.ts\" --max-warnings 0",
     "format": "prettier --write '**/*.{ts,js,json,md,yml,yaml}'",
     "format:check": "prettier --check '**/*.{ts,js,json,md,yml,yaml}'",
     "type-check": "tsc --noEmit",
