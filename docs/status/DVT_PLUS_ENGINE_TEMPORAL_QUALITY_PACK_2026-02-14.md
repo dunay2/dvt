@@ -171,7 +171,7 @@
 
 ## 5) `CAPABILITY_VERSIONING.md` — Capability Governance & Versioning Policy (**NORMATIVE / POLICY**)
 
-**Location**: `docs/architecture/engine/contracts/capabilities/CAPABILITY_VERSIONING.md`
+**Location**: `docs/CAPABILITY_VERSIONING.md`
 
 ### 5.1 Purpose
 
