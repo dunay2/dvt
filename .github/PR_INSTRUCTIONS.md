@@ -77,6 +77,10 @@ Before creating PR, verify:
 
 - [ ] All files committed and pushed
 - [ ] No merge conflicts with `main`
+- [ ] Commitlint checks pass for PR commits:
+  - [ ] Scope is allowed: `contracts`, `docs`, `ci`, `deps`, `release`
+  - [ ] Subject uses sentence-case
+  - [ ] Commit header length is `<= 100` characters
 - [ ] Markdown linting passed locally:
 
   ```bash
