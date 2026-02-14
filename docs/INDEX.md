@@ -25,6 +25,7 @@ This is the canonical entrypoint for project documentation.
 
 - [Implementation summary](./status/IMPLEMENTATION_SUMMARY.md)
 - [Outbox worker implementation notes](./status/IMPLEMENTATION_NOTES_OUTBOX_WORKER.md)
+- [DVT+ Engine & Temporal Quality Pack (2026-02-14)](./status/DVT_PLUS_ENGINE_TEMPORAL_QUALITY_PACK_2026-02-14.md)
 
 ## Planning
 
