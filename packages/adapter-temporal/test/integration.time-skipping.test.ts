@@ -6,11 +6,7 @@ import type { PlanRef, RunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
-import {
-  loadTemporalAdapterConfig,
-  TemporalAdapter,
-  TemporalWorkerHost,
-} from '../src/index.js';
+import { loadTemporalAdapterConfig, TemporalAdapter, TemporalWorkerHost } from '../src/index.js';
 
 const TEST_DIR = dirname(fileURLToPath(import.meta.url));
 const WORKFLOW_PATH = resolve(TEST_DIR, '../src/workflows/RunPlanWorkflow.ts');
@@ -71,7 +67,10 @@ class TestStateStore {
   private readonly eventsByRun = new Map<string, EventEnvelope[]>();
   private readonly idempByRun = new Map<string, Map<string, EventEnvelope>>();
 
-  async appendEventsTx(runId: string, envelopes: Omit<EventEnvelope, 'runSeq'>[]): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+  async appendEventsTx(
+    runId: string,
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
     const events = this.eventsByRun.get(runId) ?? [];
     const idx = this.idempByRun.get(runId) ?? new Map<string, EventEnvelope>();
     const appended: EventEnvelope[] = [];
@@ -111,7 +110,13 @@ class TestStateStore {
 }
 
 class TestProjector {
-  rebuild(runId: string, events: EventEnvelope[]): { runId: string; status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED' } {
+  rebuild(
+    runId: string,
+    events: EventEnvelope[]
+  ): {
+    runId: string;
+    status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  } {
     let status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED' = 'PENDING';
 
     for (const e of events) {
@@ -131,7 +136,10 @@ class TestProjector {
 }
 
 class TestIntegrity {
-  async fetchAndValidate(planRef: PlanRef, fetcher: { fetch(planRef: PlanRef): Promise<Uint8Array> }): Promise<Uint8Array> {
+  async fetchAndValidate(
+    planRef: PlanRef,
+    fetcher: { fetch(planRef: PlanRef): Promise<Uint8Array> }
+  ): Promise<Uint8Array> {
     const bytes = await fetcher.fetch(planRef);
     const actual = createHash('sha256').update(bytes).digest('hex');
     if (actual !== planRef.sha256) {
@@ -157,7 +165,11 @@ function sha256Hex(bytes: Uint8Array): string {
 }
 
 describe('temporal integration (time-skipping)', () => {
-  async function waitForCondition<T>(fn: () => Promise<T>, predicate: (v: T) => boolean, opts: { timeoutMs?: number; intervalMs?: number } = {}): Promise<T> {
+  async function waitForCondition<T>(
+    fn: () => Promise<T>,
+    predicate: (v: T) => boolean,
+    opts: { timeoutMs?: number; intervalMs?: number } = {}
+  ): Promise<T> {
     const timeoutMs = opts.timeoutMs ?? 10_000;
     const intervalMs = opts.intervalMs ?? 25;
     const start = Date.now();
@@ -230,13 +242,21 @@ describe('temporal integration (time-skipping)', () => {
       const runRef = await adapter.startRun(planRef, ctx);
 
       // wait until the run is no longer RUNNING (deterministic wait helper)
-      await waitForCondition(() => adapter.getRunStatus(runRef), (s) => s.status !== 'RUNNING', { timeoutMs: 30_000 });
+      await waitForCondition(
+        () => adapter.getRunStatus(runRef),
+        (s) => s.status !== 'RUNNING',
+        { timeoutMs: 30_000 }
+      );
       const status = await adapter.getRunStatus(runRef);
       expect(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).toContain(status.status);
 
       await adapter.cancelRun(runRef);
 
-      await waitForCondition(() => adapter.getRunStatus(runRef), (s) => s.status !== 'RUNNING', { timeoutMs: 10_000 });
+      await waitForCondition(
+        () => adapter.getRunStatus(runRef),
+        (s) => s.status !== 'RUNNING',
+        { timeoutMs: 10_000 }
+      );
       const afterCancel = await adapter.getRunStatus(runRef);
       expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel.status);
     } finally {
@@ -305,7 +325,11 @@ describe('temporal integration (time-skipping)', () => {
       const runRefA = await adapter.startRun(planRef, ctxA);
       await adapter.signal(runRefA, { signalId: 's-cancel-1', type: 'CANCEL' });
 
-      await waitForCondition(() => adapter.getRunStatus(runRefA), (s) => s.status !== 'RUNNING', { timeoutMs: 10_000 });
+      await waitForCondition(
+        () => adapter.getRunStatus(runRefA),
+        (s) => s.status !== 'RUNNING',
+        { timeoutMs: 10_000 }
+      );
       const statusA = await adapter.getRunStatus(runRefA);
       expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(statusA.status);
 
@@ -328,7 +352,11 @@ describe('temporal integration (time-skipping)', () => {
       const runRefB = await adapter.startRun(planRef, ctxB);
       await adapter.cancelRun(runRefB);
 
-      await waitForCondition(() => adapter.getRunStatus(runRefB), (s) => s.status !== 'RUNNING', { timeoutMs: 10_000 });
+      await waitForCondition(
+        () => adapter.getRunStatus(runRefB),
+        (s) => s.status !== 'RUNNING',
+        { timeoutMs: 10_000 }
+      );
       const statusB = await adapter.getRunStatus(runRefB);
       expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(statusB.status);
 
