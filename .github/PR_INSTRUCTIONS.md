@@ -65,6 +65,18 @@ gh pr create \
 
 Before creating PR, verify:
 
+### Release governance alignment
+
+- [ ] Release flow references align with [`release-please`](.github/workflows/release.yml) on `main`
+- [ ] No manual release commit/tag instructions added in PR docs
+- [ ] No manual `CHANGELOG.md` release-entry instructions added in PR docs
+
+### PR Quality Gate preflight (blockers)
+
+- [ ] PR title follows Conventional Commits and subject starts with uppercase (policy in [`.github/workflows/pr-quality-gate.yml`](.github/workflows/pr-quality-gate.yml))
+- [ ] PR description body is present and has at least 50 characters
+- [ ] If PR size warning appears, use approved override (`[skip-size-check]` in title or labels `skip-size-check` / `pr-size-exempt`) only with explicit rationale
+
 ### Mandatory quality gates (required)
 
 - [ ] Pre-implementation risk briefing documented (risks, impact, mitigations)
@@ -288,6 +300,41 @@ Once merged, celebrate the team effort!
 - DevOps team (CI/CD setup)
 - Documentation team (migration guide)
 - All reviewers (thorough feedback)
+
+---
+
+## 🧹 Post-Merge Operational Cleanup
+
+After PR merge, execute the repository cleanup flow in this exact order:
+
+1. Close linked issue(s) with merge reference.
+2. Delete remote branch.
+3. Delete local branch.
+4. Switch back to `main` and sync with remote.
+5. Verify clean working tree before starting next issue.
+
+```bash
+# 1) Close issue (example: #90)
+gh issue close 90 --comment "Completed via merged PR #<PR_NUMBER>"
+
+# 2) Delete remote branch
+git push origin --delete <branch-name>
+
+# 3) Delete local branch
+git branch -d <branch-name>
+
+# 4) Return to main and sync
+git checkout main
+git pull --ff-only origin main
+
+# 5) Final sanity check
+git status -sb
+```
+
+> Notes:
+>
+> - If the issue is auto-closed by PR keywords, still leave a closure comment for traceability.
+> - If branch deletion fails because it is not merged, stop and resolve merge state first.
 
 ---
 

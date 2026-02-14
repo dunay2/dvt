@@ -19,6 +19,12 @@ Refactors monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 modular docume
 
 **Breaking changes**: Link structure only (90-day grace period for `WORKFLOW_ENGINE.md`)
 
+### Release governance
+
+- Releases are handled by [`release-please`](.github/workflows/release.yml) in GitHub Actions.
+- PR documentation should not instruct manual release commits/tags.
+- `CHANGELOG.md` release entries are managed by release automation.
+
 ---
 
 ## 🗺️ Quick Migration

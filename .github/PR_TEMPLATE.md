@@ -24,6 +24,12 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 **Breaking changes**: None (semantics unchanged, only document structure)  
 **Deprecation period**: 90 days for old `WORKFLOW_ENGINE.md` (clock starts at merge)
 
+### Release Governance
+
+- Releases are managed by `.github/workflows/release.yml` using `release-please`.
+- Do not create manual release commits/tags from PR workflow docs.
+- Do not manually edit `CHANGELOG.md` as part of release execution; release automation owns release entries.
+
 ---
 
 ## 🗺️ Migration Table
