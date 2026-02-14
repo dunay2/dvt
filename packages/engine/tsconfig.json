@@ -15,7 +15,11 @@
     "skipLibCheck": true,
     "lib": ["ES2022", "DOM"],
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "@dvt/contracts": ["../contracts/dist/index.d.ts"],
+      "@dvt/contracts/*": ["../contracts/dist/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]
