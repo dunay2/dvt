@@ -2,7 +2,7 @@
 
 > Document control
 >
-> - Version: `v1.1.0`
+> - Version: `v1.3.0`
 > - Status: `active`
 > - Last updated (UTC): `2026-02-14`
 > - Owner: `Engineering / AI Delivery Governance`
@@ -28,29 +28,37 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
    - Classify effort/risk: low, medium, high.
    - Identify if it is implementation, documentation, or mixed.
    - Perform think-first analysis: list candidate approaches and justify the selected one.
+   - Record a **structured Think-First Analysis** in the issue before implementation, at minimum:
+     - Problem summary (facts only)
+     - Constraints and invariants
+     - Options considered (A/B/C)
+     - Selected option + rationale
+     - Alternatives rejected + why
+     - Expected validation evidence
 
-1. **Research documented, updated, and compatible solutions first (mandatory)**
+2. **Research documented, updated, and compatible solutions first (mandatory)**
    - Prioritize official, documented patterns from the current libraries/frameworks used in this repository.
+   - Prefer **primary sources**: official product docs, upstream repositories, maintainer guidance, and project-internal normative docs.
    - Ensure the selected approach is up-to-date and aligned with pinned versions and current project tooling.
-   - Ensure compatibility with existing contracts, runtime constraints, and integration boundaries.
+   - Ensure compatibility with existing contracts, runtime constraints, integration boundaries, and supported toolchain versions in this repo.
    - Review previously generated repository information first (issues, status docs, runbooks, prior decisions) and reuse existing patterns when possible.
    - Do not start coding experiments "to see what happens"; first define expected behavior, constraints, and acceptance evidence.
 
-1. **Design complete end-to-end solution coverage (mandatory)**
+3. **Design complete end-to-end solution coverage (mandatory)**
    - Proposed solution must cover the full flow, not only a partial segment.
    - Explicitly account for: input, processing, state transitions, output, error paths, rollback path, and observability.
    - Ensure the result fits expected application behavior and acceptance criteria.
 
-1. **Map scope to repository paths**
+4. **Map scope to repository paths**
    - Identify exact files expected to change.
    - Prefer canonical active paths (`packages/*`, `docs/*`).
    - Record out-of-scope areas explicitly.
 
-1. **Create/confirm traceability**
+5. **Create/confirm traceability**
    - If no issue exists, create one before coding.
    - Add a short execution plan in issue comments (what, where, validation).
 
-1. **Risk & impact briefing before implementation (mandatory)**
+6. **Risk & impact briefing before implementation (mandatory)**
    - Before touching code/docs, publish a short pre-implementation brief with:
      - expected files to change,
      - identified risks and possible side effects,
@@ -59,33 +67,43 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
      - explicit unknowns/questions for maintainers.
    - Wait for maintainer confirmation if business rules, policy interpretation, or operational behavior may be affected.
 
-1. **Clarify business rules and decisions first (mandatory)**
+7. **Clarify business rules and decisions first (mandatory)**
    - If implementation could encode business decisions (for example: lifecycle transitions, adapter fallback behavior, auth policy, version compatibility), ask for explicit confirmation before coding.
+   - Treat the following as **business-rule-sensitive** by default:
+     - lifecycle transitions (`RunStatus` / `StepStatus`) and retry/idempotency semantics,
+     - authorization/RBAC policy, rate limits, retention/deletion rules,
+     - adapter fallback, routing, or execution-target selection behavior,
+     - persisted artifacts/state shape and meaning.
    - Record approved decisions in issue comments and relevant docs.
    - If there is ambiguity, **stop and ask** before implementation.
    - If documentation is missing, unclear, or outdated for the target behavior, **stop and ask** before implementation.
+   - If following any playbook step appears to conflict with issue goals, acceptance criteria, or documented constraints, **stop and ask maintainer clarification** before proceeding.
 
-1. **Implement in minimal safe increments**
+8. **Implement in minimal safe increments**
    - Keep changes focused on acceptance criteria.
    - Avoid unrelated refactors in the same patch.
    - Preserve backward compatibility unless issue explicitly requests a break.
 
-1. **Validate technically**
+9. **Validate technically**
    - Run the smallest relevant checks first (package-level test/build/lint).
    - Then run broader checks if the change touches shared contracts/core.
    - Capture evidence (command + pass/fail summary).
 
-1. **Document outcomes**
-   - Update affected docs/runbooks/indexes.
-   - If behavior changed, add a short "why" note in status docs.
-   - Link changed files in the issue comment.
+10. **Document outcomes**
 
-1. **Close loop on issue**
-   - Post final comment with:
-     - what changed,
-     - validation evidence,
-     - remaining scope (if any).
-   - Close issue only when all acceptance criteria are met.
+- Update affected docs/runbooks/indexes.
+- In docs and issue comments, include an explicit **WHAT / WHY** summary for every non-trivial change.
+- If behavior changed, add a short "why" note in status docs.
+- Link changed files in the issue comment.
+
+11. **Close loop on issue**
+
+- Post final comment with:
+  - what changed,
+  - why this approach was selected,
+  - validation evidence,
+  - remaining scope (if any).
+- Close issue only when all acceptance criteria are met.
 
 ## Quality gates (must pass before close)
 
@@ -93,12 +111,96 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - No hidden TODO/FIXME left for required scope.
 - Validation evidence provided.
 - Documentation/indexes updated if discoverability changed.
+- Docs and issue both contain explicit WHAT / WHY notes.
 - Pre-implementation risk/impact briefing recorded and acknowledged.
 - Business-rule-sensitive decisions explicitly confirmed and documented.
 - Think-first analysis recorded (selected option + rationale + alternatives rejected).
 - Solution demonstrates complete flow coverage (including error and rollback paths).
 - Documented sources and pattern compatibility are explicit.
 - Ambiguity or missing clarity triggered stop-and-ask before coding.
+
+## Risk classification guide (low / medium / high)
+
+Use this baseline to reduce subjectivity in step 1:
+
+- **Low**
+  - Docs-only/test-only updates, formatting, or non-behavioral refactor in a leaf package.
+  - No contract boundary, auth behavior, or workflow-semantics impact.
+  - Validation typically limited to targeted lint/test/docs checks.
+
+- **Medium**
+  - Behavior change behind an existing contract, or touches shared utilities.
+  - Requires test-suite updates and/or CI config changes for one scoped area.
+  - No broad cross-package contract migration.
+
+- **High**
+  - Cross-cutting change across multiple packages or core contracts.
+  - Affects auth policy, lifecycle/state-machine semantics, retention/deletion, billing/cost logic, or cross-adapter execution semantics.
+  - Requires migration strategy and has elevated risk to determinism, compatibility, security boundaries, or rollback complexity.
+
+## Standard templates (copy/paste)
+
+### Template A — Pre-implementation brief
+
+```markdown
+## Pre-implementation brief
+
+### WHAT
+
+- Scope summary:
+- Expected files/paths:
+
+### WHY
+
+- Selected approach:
+- Alternatives rejected:
+
+### Risk
+
+- Classification: Low | Medium | High
+- Main risks / side effects:
+
+### Validation plan
+
+- Targeted checks:
+- Broader checks (if shared/core touched):
+
+### Unknowns / maintainer decisions needed
+
+-
+```
+
+### Template B — Final close comment
+
+```markdown
+## Final issue close summary
+
+### WHAT changed
+
+-
+
+### WHY this approach
+
+-
+
+### Acceptance criteria mapping
+
+- [ ] AC1 → change + evidence
+- [ ] AC2 → change + evidence
+
+### Validation evidence
+
+- Command:
+- Result:
+
+### Rollback note
+
+-
+
+### Residual scope (if any)
+
+-
+```
 
 ## PR hygiene checklist
 
@@ -109,6 +211,19 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - Before opening a PR, compile, tests, and lint MUST pass for affected scope (and broader scope when shared/core contracts are touched).
 - Do not treat warning suppression as a final fix; solve root cause first. Hiding warnings is only acceptable with explicit maintainer approval and written rationale.
 - Keep PR size under quality-gate threshold (max 1000 changed lines). If exceeded, split into smaller, focused PRs.
+- Within each PR, keep commits logical and atomic (for example: implementation, tests, docs as separate coherent commits).
+- If PR exceeds size threshold, split by a deterministic strategy:
+  - contracts vs implementation vs docs, or
+  - per-package slices, or
+  - config-only PR first, then behavior/code PR.
+
+## Tooling and automation guidance
+
+- Treat this playbook as machine-checkable policy where practical.
+- Require a pre-implementation issue template block (Think-First + risk + validation plan) before coding starts.
+- Enforce quality-gate checks in CI (e.g., PR gate + lint/test/build + docs consistency where applicable).
+- If automation and maintainers disagree, pause and resolve policy interpretation explicitly in the issue.
+- Require template completeness checks (Template A before coding, Template B before closing) where automation is available.
 
 ## Planned technical migration (approved before implementation)
 
@@ -124,10 +239,13 @@ Unify TypeScript project resolution using a references-based graph, without supp
 
 1. ESLint alignment
    - Align `parserOptions.project` and resolver project settings in [`eslint.config.cjs`](eslint.config.cjs) with the references graph.
+   - Evaluate `parserOptions.projectService` as the preferred scalable typed-linting option for larger monorepos; keep `project` where compatibility constraints require it.
    - Keep `import/order` enforcement active for tests and source files.
 
 1. Precommit and CI hardening
    - Keep staged lint+format coverage for both `src` and `test` files via [`lint-staged`](package.json).
+   - Clarify that `lint-staged` executes tasks on staged files; ignore behavior must be configured in task/tool configuration, not by assuming global scope skipping.
+   - For references-based typechecking in CI, prefer `tsc -b` / `tsc --build` workflow over ad-hoc per-file type invocations.
    - Preserve PR quality gate constraints, especially max-size guard in [`.github/workflows/pr-quality-gate.yml`](.github/workflows/pr-quality-gate.yml).
 
 ### Risks and controls
@@ -192,6 +310,7 @@ Use these as a consistent gate before merge:
 1. **Small-diff maintainability standard**
    - Prefer focused, reviewable diffs.
    - Split mixed concerns into separate commits/PRs when possible.
+   - Ensure commits are atomic, each representing one logical change unit with clear intent.
 
 1. **Decision log standard**
    - For non-trivial trade-offs, include a short decision record in issue/PR:
@@ -206,7 +325,9 @@ Use these as a consistent gate before merge:
 
 ## Change history
 
-| Date (UTC) | Version | Change                                                                                                           | Author       |
-| ---------- | ------- | ---------------------------------------------------------------------------------------------------------------- | ------------ |
-| 2026-02-14 | v1.1.0  | Added document-control signature, anti-warning rule, PR-size guard, and planned TS references migration section. | AI assistant |
-| 2026-02-14 | v1.0.0  | Initial baseline playbook with mandatory workflow, quality gates, and anti-patterns.                             | AI assistant |
+| Date (UTC) | Version | Change                                                                                                                                                                                                                               | Author       |
+| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| 2026-02-14 | v1.3.0  | Added concrete risk rubric, business-rule-sensitive list, pre/final templates, primary-source guidance, TS projectService/`tsc -b` guidance, enforceable split strategy, lint-staged clarification, and explicit workflow numbering. | AI assistant |
+| 2026-02-14 | v1.2.0  | Added structured Think-First record, risk classification guide, playbook-conflict safeguard, automation guidance, and atomic-commit rule.                                                                                            | AI assistant |
+| 2026-02-14 | v1.1.0  | Added document-control signature, anti-warning rule, PR-size guard, and planned TS references migration section.                                                                                                                     | AI assistant |
+| 2026-02-14 | v1.0.0  | Initial baseline playbook with mandatory workflow, quality gates, and anti-patterns.                                                                                                                                                 | AI assistant |
