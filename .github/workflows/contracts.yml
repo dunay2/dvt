@@ -7,10 +7,72 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: contracts-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  detect-changes:
+    name: Detect contracts/determinism scope
+    runs-on: ubuntu-latest
+    outputs:
+      contracts_relevant: ${{ steps.changes.outputs.contracts_relevant }}
+      determinism_relevant: ${{ steps.changes.outputs.determinism_relevant }}
+      golden_relevant: ${{ steps.changes.outputs.golden_relevant }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Detect changed areas (PR only)
+        id: changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            contracts_relevant:
+              - 'packages/contracts/**'
+              - 'packages/engine/test/contracts/**'
+              - 'docs/architecture/engine/contracts/**'
+              - '.golden/**'
+              - 'scripts/compare-hashes.cjs'
+              - 'scripts/db-migrate.cjs'
+              - 'scripts/validate-contracts.cjs'
+              - '.github/workflows/contracts.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            determinism_relevant:
+              - 'packages/engine/**'
+              - 'packages/contracts/**'
+              - '.github/workflows/contracts.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            golden_relevant:
+              - 'packages/engine/test/contracts/**'
+              - 'docs/architecture/engine/contracts/**'
+              - '.golden/**'
+              - 'scripts/compare-hashes.cjs'
+              - 'scripts/db-migrate.cjs'
+              - '.github/workflows/contracts.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+
+      - name: Set default outputs (non-PR events)
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "contracts_relevant=true" >> "$GITHUB_OUTPUT"
+          echo "determinism_relevant=true" >> "$GITHUB_OUTPUT"
+          echo "golden_relevant=true" >> "$GITHUB_OUTPUT"
+        shell: bash
+
   validate-json-schemas:
     name: Validate JSON Schemas
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if:
+      github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -24,6 +86,14 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -42,6 +112,10 @@ jobs:
   determinism-checks:
     name: Determinism Pattern Scan
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if:
+      github.event_name != 'pull_request' || needs.detect-changes.outputs.determinism_relevant ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -55,6 +129,14 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -95,6 +177,10 @@ jobs:
   contract-compile:
     name: Compile TypeScript Contracts
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if:
+      github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -108,6 +194,14 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -130,10 +224,23 @@ jobs:
             echo "✅ Check passed (stub mode)"
           fi
 
+      - name: Upload compiled contracts artifact
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: compiled-contracts
+          path: |
+            packages/contracts/dist/
+            packages/contracts/src/**/*.js
+            packages/contracts/src/**/*.d.ts
+
   contract-validate:
     name: Validate Golden JSON Fixtures
     runs-on: ubuntu-latest
-    needs: contract-compile
+    needs: [detect-changes, contract-compile]
+    if:
+      github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -148,17 +255,32 @@ jobs:
         with:
           version: 9
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Download compiled contracts artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: compiled-contracts
+          path: .
+
       - name: Validate golden fixtures
         run: pnpm validate:contracts
-        continue-on-error: true
 
   contract-hashes:
     name: Execute Golden Paths & Validate Hashes
     runs-on: ubuntu-latest
-    needs: contract-validate
+    needs: [detect-changes, contract-validate]
+    if:
+      github.event_name != 'pull_request' || needs.detect-changes.outputs.golden_relevant == 'true'
     services:
       postgres:
         image: postgres:15
@@ -185,8 +307,22 @@ jobs:
         with:
           version: 9
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Download compiled contracts artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: compiled-contracts
+          path: .
 
       - name: Run database migrations
         run: node scripts/db-migrate.cjs
