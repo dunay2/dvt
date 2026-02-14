@@ -34,4 +34,6 @@ __exportStar(require('./src/adapters/IOutboxStorageAdapter.v1'), exports);
 __exportStar(require('./src/adapters/IProjectorAdapter.v1'), exports);
 __exportStar(require('./src/adapters/IStateStoreAdapter.v1'), exports);
 __exportStar(require('./src/adapters/IWorkflowEngineAdapter.v1'), exports);
+__exportStar(require('./src/adapters/IProviderAdapter.v1'), exports);
+__exportStar(require('./src/workflows'), exports);
 //# sourceMappingURL=index.js.map

@@ -65,6 +65,14 @@ gh pr create \
 
 Before creating PR, verify:
 
+### Mandatory quality gates (required)
+
+- [ ] Pre-implementation risk briefing documented (risks, impact, mitigations)
+- [ ] Touched-files plan documented before coding (what, how, why)
+- [ ] Business-rule decisions confirmed before implementation (or marked N/A with rationale)
+- [ ] Validation evidence prepared (commands + outputs)
+- [ ] Rollback path documented (safe revert strategy)
+
 ### Code Quality
 
 - [ ] All files committed and pushed

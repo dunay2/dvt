@@ -5,4 +5,6 @@ export * from './src/adapters/IOutboxStorageAdapter.v1';
 export * from './src/adapters/IProjectorAdapter.v1';
 export * from './src/adapters/IStateStoreAdapter.v1';
 export * from './src/adapters/IWorkflowEngineAdapter.v1';
+export * from './src/adapters/IProviderAdapter.v1';
+export * from './src/workflows';
 //# sourceMappingURL=index.d.ts.map

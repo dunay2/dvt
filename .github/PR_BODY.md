@@ -63,6 +63,14 @@ Refactors monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 modular docume
 - [x] **Markdown linting** passed (0 errors)
 - [x] **Contract structure** validated (3 normative contracts)
 
+### Mandatory quality gates (risk + business rules + rollback)
+
+- [ ] **Pre-implementation risk briefing completed** (top risks, impact, mitigations)
+- [ ] **Touched-files plan approved before coding** (what, how, why)
+- [ ] **Business-rule decisions confirmed** before implementation (or explicitly marked as not applicable)
+- [ ] **Validation evidence attached** (commands + outputs)
+- [ ] **Rollback path documented** (how to revert safely)
+
 ---
 
 ## 🎯 Rationale
