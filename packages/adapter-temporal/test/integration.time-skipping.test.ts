@@ -1,7 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { WorkflowClient } from '@temporalio/client';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { Worker } from '@temporalio/worker';
-import { WorkflowClient } from '@temporalio/client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createActivities } from '../src/activities/stepActivities.js';
 
@@ -14,18 +14,18 @@ class TestTxStore {
     this.metadataByRun = new Map();
   }
 
-  async saveRunMetadata(meta) {
+  async saveRunMetadata(meta): Promise<void> {
     this.metadataByRun.set(meta.runId, meta);
   }
 
-  async getRunMetadataByRunId(runId) {
+  async getRunMetadataByRunId(runId): Promise<unknown | null> {
     return this.metadataByRun.get(runId) ?? null;
   }
 
-  async appendEventsTx(runId, envelopes) {
+  async appendEventsTx(runId: string, envelopes: any[]): Promise<{ appended: any[]; deduped: any[] }> {
     const current = this.eventsByRun.get(runId) ?? [];
-    const appended = [];
-    const deduped = [];
+    const appended: any[] = [];
+    const deduped: any[] = [];
 
     for (const env of envelopes) {
       const exists = current.some((e) => e.idempotencyKey === env.idempotencyKey);
@@ -41,23 +41,23 @@ class TestTxStore {
     return { appended, deduped };
   }
 
-  async listEvents(runId) {
+  async listEvents(runId: string): Promise<any[]> {
     return [...(this.eventsByRun.get(runId) ?? [])];
   }
 
-  async enqueueTx() {
+  async enqueueTx(): Promise<void> {
     // noop for tests
   }
 }
 
 class TestClock {
-  nowIsoUtc() {
+  nowIsoUtc(): string {
     return new Date().toISOString();
   }
 }
 
 class TestIdempotencyKeyBuilder {
-  runEventKey({ eventType, tenantId, runId, logicalAttemptId, stepId = '' }) {
+  runEventKey({ eventType, tenantId, runId, logicalAttemptId, stepId = '' }): string {
     return [eventType, tenantId, runId, String(logicalAttemptId), stepId].join('|');
   }
 }
@@ -78,7 +78,9 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
 
   afterAll(async () => {
     if (worker) {
-      await worker.shutdown();
+      // worker.shutdown() is synchronous/trigger in this test harness; await the
+      // worker.run() promise instead to ensure the worker has finished.
+      worker.shutdown();
     }
     if (env) {
       // TestWorkflowEnvironment.teardown() closes the native connection internally.
@@ -148,8 +150,8 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
     expect(types).toContain('StepCompleted');
     expect(types).toContain('RunCompleted');
 
-    // stop worker
-    await worker.shutdown();
+    // stop worker: trigger shutdown then await the worker.run() promise
+    worker.shutdown();
     await runPromise;
   });
 });
