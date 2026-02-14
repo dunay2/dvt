@@ -36,3 +36,43 @@ Notes:
 
 - Do not delete broken image tags until fully investigated.
 - Always create a postmortem for rollbacks affecting >1% of runs.
+
+---
+
+## Post-refactor local cleanup (editor cache vs git reality)
+
+Context:
+
+- After large path refactors (for example, migration to canonical `packages/*` paths), local editor tabs can still show deleted/legacy files.
+- This section prevents false conflict reports caused by stale UI state.
+
+### Quick verification checklist
+
+Run from repo root:
+
+1. Working tree status
+   - `git status --short`
+
+2. Unresolved merge entries (must be empty)
+   - `git ls-files -u`
+
+3. Legacy-path references in tracked files
+   - `git grep -n "engine/"`
+   - `git grep -n "legacy-path"`
+
+4. Canonical active layout confirmation
+   - `git ls-files "packages/*"`
+
+### VS Code stale-tab cleanup
+
+1. Close all tabs pointing to deleted/legacy paths.
+2. Run command palette action: `Developer: Reload Window`.
+3. Re-open files only from git-tracked canonical paths (`packages/*`, `docs/*`).
+4. Re-run the checklist above to confirm no phantom conflicts.
+
+### Exit criteria
+
+- `git status --short` shows only intended changes.
+- `git ls-files -u` returns no entries.
+- No active editor tabs point to removed legacy paths.
+- Team discussion and PR reviews reference canonical paths only.

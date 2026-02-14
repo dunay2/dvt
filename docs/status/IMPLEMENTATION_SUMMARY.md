@@ -79,6 +79,12 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 3. Expand deterministic golden-path coverage and keep baseline hashes synchronized.
 4. Continue documentation normalization until all repository docs are fully consistent and English-only.
 
+## Recent Low-Priority Completed Task (2026-02-14)
+
+- Issue [#82](https://github.com/dunay2/dvt/issues/82) closed.
+- Change applied in [`validateStepShape()`](packages/adapter-temporal/src/activities/stepActivities.ts:172): hoisted allowed step fields to module-level constant to avoid per-call `Set` allocation.
+- Validation evidence: `pnpm --filter @dvt/adapter-temporal test` passed (19 tests).
+
 ## Operational Notes
 
 When behavior changes affect deterministic execution:

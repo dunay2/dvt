@@ -202,8 +202,9 @@ gantt
 - **Closed (key)**: #2, #3, #16, #17, #19
 - **Open — critical path**: #8, #9, #6, #68 (final CI/doc closure track)
 - **Open — extension scope**: #66, #67, #69, #70, #71, #72, #73
-- **Temporal audit note (2026-02-14)**: #15 and #68 are materially advanced in active `packages/*` paths (workflow/activities/adapter/integration tests implemented); remaining item is CI workflow closure and tracker publication alignment
-- **Dependency risk**: #6 remains the primary implementation unblocker; #68 is now in finalization phase (PR-6)
+- **Temporal audit note (2026-02-14)**: #15 and #68 are materially advanced in active `packages/*` paths (workflow/activities/adapter/integration tests implemented). Status comments were published on both issues to align tracker state with code evidence.
+- **Temporal scope note**: #15 remains open as residual parity scope (DAG parallelism + continue-as-new + stricter acceptance criteria), while #68 remains the canonical epic for closure/hardening.
+- **Dependency risk**: #6 remains the primary implementation unblocker; #68 is in finalization/hardening phase.
 
 ### Phase 1.5: Hardening
 
@@ -216,7 +217,7 @@ gantt
 
 - **Status**: 🟢 Planned / partially prepared
 - **Open**: #4, #7, #11, #12, #18, #69, #71, #73
-- **Tracking cleanup**: #74 closed as duplicate/superseded by #76
+- **Tracking cleanup**: #74 closed as duplicate/superseded by #76; #79 closed with runbook cleanup guidance for stale editor references
 
 ---
 

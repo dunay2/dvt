@@ -137,6 +137,8 @@ export type Activities = ReturnType<typeof createActivities>;
 // Internal helpers (mirrors MockAdapter)
 // ---------------------------------------------------------------------------
 
+const ALLOWED_STEP_FIELDS = new Set(['stepId', 'kind']);
+
 function parsePlan(bytes: Uint8Array): ExecutionPlan {
   const text = new TextDecoder().decode(bytes);
   const obj: unknown = JSON.parse(text);
@@ -170,9 +172,8 @@ function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
-  const allowed = new Set(['stepId', 'kind']);
   for (const k of Object.keys(step)) {
-    if (!allowed.has(k)) {
+    if (!ALLOWED_STEP_FIELDS.has(k)) {
       throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);
     }
   }
