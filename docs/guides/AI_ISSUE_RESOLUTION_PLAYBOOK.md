@@ -2,7 +2,7 @@
 
 > Document control
 >
-> - Version: `v1.6.1`
+> - Version: `v1.6.2`
 > - Status: `active`
 > - Last updated (UTC): `2026-02-14`
 > - Owner: `Engineering / AI Delivery Governance`
@@ -280,11 +280,12 @@ Use this baseline to reduce subjectivity in step 1:
 - Diff is focused and reviewable.
 - Includes issue reference (`Closes #X` / `Refs #X`).
 - Opening a PR is mandatory for implementation scope (no direct done-without-PR closure).
+- PR description MUST be at least 50 characters and clearly describe WHAT/FOR/HOW.
+- PR total changed lines MUST stay under 1000; if exceeded, split before review.
 - Issue/PR text MUST render as proper Markdown (no escaped literal `\n` sequences in final visible content).
 - Includes risk note and rollback note for non-trivial changes.
 - Before opening a PR, compile, tests, and lint MUST pass for affected scope (and broader scope when shared/core contracts are touched).
 - Do not treat warning suppression as a final fix; solve root cause first. Hiding warnings is only acceptable with explicit maintainer approval and written rationale.
-- Keep PR size under quality-gate threshold (max 1000 changed lines). If exceeded, split into smaller, focused PRs.
 - Within each PR, keep commits logical and atomic (for example: implementation, tests, docs as separate coherent commits).
 - If PR exceeds size threshold, split by a deterministic strategy:
   - contracts vs implementation vs docs, or
@@ -402,6 +403,7 @@ Use these as a consistent gate before merge:
 
 | Date (UTC) | Version | Change                                                                                                                                                                                                                               | Author       |
 | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| 2026-02-14 | v1.6.2  | Added mandatory PR description minimum length (>=50 chars) and explicit max changed-lines rule (<1000, split if exceeded).                                                                                                           | AI assistant |
 | 2026-02-14 | v1.6.1  | Added explicit rule that issue/PR content must render as valid Markdown (avoid escaped literal `\n` in visible text).                                                                                                                | AI assistant |
 | 2026-02-14 | v1.6.0  | Added mandatory sections for Suitability, Blockers, Opportunities, and Risks & Mitigation in pre-implementation briefing, quality gates, and issue-close template.                                                                   | AI assistant |
 | 2026-02-14 | v1.5.0  | Added mandatory WHAT/FOR/HOW, touched-scope, and impact (risks + affected surfaces) requirements in the pre-implementation process and templates.                                                                                    | AI assistant |
