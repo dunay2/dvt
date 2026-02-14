@@ -10,6 +10,16 @@ assignees: dunay2
 
 Update the DVT Engine Threat Model to version 1.4 with comprehensive security enhancements aligned with Execution Semantics v1.9.
 
+## WHAT / WHY (mandatory)
+
+### WHAT
+
+- Describe exactly what will change (sections, invariants, contracts, validation artifacts).
+
+### WHY
+
+- Explain why this approach is preferred and what alternatives were rejected.
+
 ## 🎯 Objectives
 
 1. **Add Security Invariants** - Testable security requirements (INV-01 through INV-10)

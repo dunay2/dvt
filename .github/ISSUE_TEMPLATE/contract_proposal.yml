@@ -13,6 +13,24 @@ body:
         2. You've validated against anchor decisions (see engine-phases.md)
         3. You've considered cross-adapter compatibility (Temporal + Conductor)
 
+        **Mandatory**: include a concise **WHAT / WHY** note in this issue.
+        - **WHAT**: what contract behavior/signature changes.
+        - **WHY**: why this option is preferred versus alternatives.
+
+  - type: textarea
+    id: what_why
+    attributes:
+      label: WHAT / WHY (mandatory)
+      description: Document what is changing in the contract and why this is the correct approach.
+      placeholder: |
+        WHAT:
+        - ...
+
+        WHY:
+        - ...
+    validations:
+      required: true
+
   - type: dropdown
     id: contract-type
     attributes:

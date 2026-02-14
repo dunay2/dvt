@@ -7,6 +7,16 @@ labels: [engine, determinism, lint, bug]
 
 The `SequenceClock` in `packages/engine/src/utils/clock.ts` currently uses JavaScript `Date` APIs (e.g., `Date.parse`, `new Date`, `toISOString`). This violates strict determinism and is flagged by ESLint rules, blocking precommit and CI. Temporal TypeScript workflows and engine-core must not use `Date` for time logic to ensure deterministic replay and cross-platform compatibility.
 
+## WHAT / WHY (mandatory)
+
+### WHAT
+
+- Describe exactly what will change (files/behavior/contracts).
+
+### WHY
+
+- Explain why this approach is preferred and what alternatives were rejected.
+
 ## Decision
 
 **Option 1**: Refactor `SequenceClock` to be fully Date-free and deterministic, while keeping the same public API. All time math and ISO string parsing/formatting will be implemented with pure functions and strict validation.

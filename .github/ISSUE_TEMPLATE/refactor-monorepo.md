@@ -7,6 +7,16 @@ about: 'Move tests and split packages (contracts, engine, adapters) — checklis
 
 Move towards a light monorepo layout (packages/) and consolidate tests under their package.
 
+## WHAT / WHY (mandatory)
+
+### WHAT
+
+- Describe exactly what will change (paths, CI rules, scripts, docs).
+
+### WHY
+
+- Explain why this sequence/approach is preferred and what alternatives were discarded.
+
 ## Scope
 
 - Consolidate remaining root legacy placeholders (e.g. `test/`) after references are removed

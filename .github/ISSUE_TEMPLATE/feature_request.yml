@@ -8,6 +8,10 @@ body:
       value: |
         Thank you for proposing a new feature! Please fill out the sections below to help us understand your request.
 
+        **Mandatory**: include a concise **WHAT / WHY** note in this issue.
+        - **WHAT**: what change is being proposed (scope and expected behavior).
+        - **WHY**: why this approach is preferred (trade-offs/rationale).
+
   - type: dropdown
     id: component
     attributes:
@@ -56,6 +60,20 @@ body:
         - Technical approach
         - API changes (if any)
         - Breaking changes (if any)
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_why
+    attributes:
+      label: WHAT / WHY (mandatory)
+      description: Document what will change and why this proposal is the right option.
+      placeholder: |
+        WHAT:
+        - ...
+
+        WHY:
+        - ...
     validations:
       required: true
 
