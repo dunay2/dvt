@@ -71,6 +71,12 @@ Before creating PR, verify:
 - [ ] No manual release commit/tag instructions added in PR docs
 - [ ] No manual `CHANGELOG.md` release-entry instructions added in PR docs
 
+### PR Quality Gate preflight (blockers)
+
+- [ ] PR title follows Conventional Commits and subject starts with uppercase (policy in [`.github/workflows/pr-quality-gate.yml`](.github/workflows/pr-quality-gate.yml))
+- [ ] PR description body is present and has at least 50 characters
+- [ ] If PR size warning appears, use approved override (`[skip-size-check]` in title or labels `skip-size-check` / `pr-size-exempt`) only with explicit rationale
+
 ### Mandatory quality gates (required)
 
 - [ ] Pre-implementation risk briefing documented (risks, impact, mitigations)
