@@ -19,9 +19,6 @@ jobs:
     name: PR Quality Checks
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    env:
-      # TEMPORARY: skip PR size gate while merge backlog is being normalized.
-      SKIP_PR_SIZE_CHECK: 'true'
     outputs:
       temporal_changed: ${{ steps.detect_changes.outputs.temporal_changed }}
     steps:
