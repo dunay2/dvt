@@ -1,470 +1,224 @@
 # Temporal Engine Policies
 
-**Status**: Implementation Guide  
-**Version**: 1.0  
+**Status**: Implementation Snapshot (aligned to current code)  
+**Version**: 1.1  
 **Engine**: Temporal  
-**Contract**: [ExecutionSemantics.v1.md](../../contracts/engine/ExecutionSemantics.v1.md)
+**Contract**: [ExecutionSemantics.v1.md](../../../../ExecutionSemantics.v1.md)
 
 ---
 
 ## Purpose
 
-This document specifies **Temporal-specific policies** required to implement the [Execution Semantics Contract](../../contracts/engine/ExecutionSemantics.v1.md).
+This document captures the **actual policies implemented today** in `@dvt/adapter-temporal` and separates them from planned work.
 
-These policies address Temporal platform constraints and best practices:
+Primary implementation references:
 
-- **History size limits** (50MB hard limit per workflow)
-- **Continue-as-new** rotation strategy
-- **Signal limits** (rate and size)
-- **Activity timeout policies**
-
-**References**:
-
-- [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
-- [Continue-as-new Best Practices](https://docs.temporal.io/workflows#continue-as-new)
+- Adapter API surface: `packages/adapter-temporal/src/TemporalAdapter.ts`
+- Workflow interpreter: `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
+- Activities: `packages/adapter-temporal/src/activities/stepActivities.ts`
+- Worker lifecycle: `packages/adapter-temporal/src/TemporalWorkerHost.ts`
+- Mapper/config: `packages/adapter-temporal/src/WorkflowMapper.ts`, `packages/adapter-temporal/src/config.ts`
 
 ---
 
-## 1) Continue-As-New Policy (NORMATIVE)
+## 1) Run Identity and Mapping (IMPLEMENTED)
 
-### 1.1 Trigger Conditions
+### 1.1 Workflow ID and RunRef
 
-Workflow MUST call `continueAsNew()` when **EITHER** condition is met:
+- `workflowId` is derived from `ctx.runId`.
+- Temporal task queue is tenant-aware:
+  - default: `cfg.taskQueue`
+  - tenant-scoped: `${cfg.taskQueue}-${tenantId}` when `tenantId` is non-empty.
+- Returned run reference uses:
+  - `namespace` from Temporal config
+  - `workflowId` from Temporal start response
+  - `runId = firstExecutionRunId` when available, else fallback to `ctx.runId`.
 
-| Condition                  | Threshold | Rationale                                                               |
-| -------------------------- | --------- | ----------------------------------------------------------------------- |
-| **Steps executed**         | 50 steps  | Prevent history bloat (50 steps ≈ 200-500 events)                       |
-| **Estimated history size** | 1 MB      | Safety margin (hard limit is 50MB, but performance degrades above 10MB) |
+### 1.2 Status source of truth
 
-**Implementation**:
-
-```typescript
-class WorkflowEngine {
-  private stepsSinceLastContinue = 0;
-  private estimatedHistoryBytes = 0;
-  private readonly CONTINUE_STEPS = 50;
-  private readonly HISTORY_BYTES_THRESHOLD = 1_000_000; // 1 MB
-
-  async executeStep(step: Step): Promise<void> {
-    // ... step execution logic
-
-    this.stepsSinceLastContinue++;
-    this.estimatedHistoryBytes += estimateEventSize(step);
-
-    // Check continue-as-new triggers
-    if (
-      this.stepsSinceLastContinue >= this.CONTINUE_STEPS ||
-      this.estimatedHistoryBytes >= this.HISTORY_BYTES_THRESHOLD
-    ) {
-      await this.continueAsNew();
-    }
-  }
-
-  private async continueAsNew(): Promise<void> {
-    // Compact state before continuation
-    const compactedState = this.compactState();
-
-    // Continue workflow in new run
-    workflow.continueAsNew({
-      planRef: this.planRef, // Reference only (not full plan)
-      cursor: compactedState.cursor, // Compacted: completed step ranges or bitmap
-      artifacts: compactedState.artifacts, // ArtifactRef[] pointers only
-      counters: {
-        totalSteps: this.totalStepsExecuted,
-        failedSteps: this.failedStepCount,
-        // ... other minimal counters
-      },
-    });
-  }
-}
-```
-
-### 1.2 State Persisted Across Continuation
-
-**MUST persist (minimal state)**:
-
-- `PlanRef` (reference to plan in StateStore, NOT full plan JSON)
-- `cursor` (compacted: completed step ranges `[[0,10],[15,20]]` or bitmap)
-- `ArtifactRef[]` (pointers to S3/GCS, NOT binary payloads)
-- Minimal counters (totalSteps, failedSteps, retriedSteps)
-
-**MUST NOT persist**:
-
-- Full plan JSON (retrieve from StateStore on continuation)
-- Step logs (retrieve from StateStore if needed)
-- Expanded lists (compress to ranges or bitmaps)
-- Large error blobs (store in StateStore, reference by eventId)
-
-**Compaction example**:
-
-```typescript
-interface CompactedState {
-  planRef: PlanRef; // 100 bytes
-  cursor: { start: number; end: number }[]; // O(log N) ranges
-  artifacts: ArtifactRef[]; // 50-200 bytes per artifact
-  counters: {
-    totalSteps: number;
-    failedSteps: number;
-    retriedSteps: number;
-  };
-}
-
-function compactState(): CompactedState {
-  // Compress completed steps: [1,2,3,5,6,7,10,11,12] → [[1,3],[5,7],[10,12]]
-  const ranges = compressRanges(this.completedStepIds);
-
-  return {
-    planRef: { planId: this.planId, version: this.planVersion },
-    cursor: ranges,
-    artifacts: this.artifactRefs, // Already compacted (pointers only)
-    counters: {
-      totalSteps: this.totalStepsExecuted,
-      failedSteps: this.failedStepCount,
-      retriedSteps: this.retriedStepCount,
-    },
-  };
-}
-```
+- `getRunStatus()` reads events from state store and projects snapshot (`stateStore.listEvents()` + `projector.rebuild()`).
+- The adapter **does not** use workflow query state as operational authority.
 
 ---
 
-## 2) Signal Limits (NORMATIVE)
+## 2) Signal and Cancellation Semantics (IMPLEMENTED)
 
-Temporal enforces platform limits on signals (see [docs](https://docs.temporal.io/encyclopedia/temporal-platform-limits#signal-limits)).
+### 2.1 Supported control surface
 
-### 2.1 Size Limits
+- Supported control requests in adapter:
+  - `PAUSE` → workflow signal `pause`
+  - `RESUME` → workflow signal `resume`
+  - `CANCEL` → provider-native `workflow.cancel()`
+- `RETRY_STEP` and `RETRY_RUN` are explicitly not implemented and throw `NotImplemented`.
 
-**MUST enforce**:
+### 2.2 Workflow handlers
 
-- `maxSignalSizeBytes = 64 KB` per signal
-- Total signal payload per workflow ≤ 2 MB (before continue-as-new)
+Workflow defines and handles:
 
-**Implementation**:
+- `pause` signal
+- `resume` signal
+- `cancel` signal (with reason payload)
+- `status` query
 
-```typescript
-const MAX_SIGNAL_SIZE_BYTES = 64 * 1024; // 64 KB
+Current adapter policy for cancel is canonicalized on `cancel()` instead of the `cancel` signal path so both cancellation entry points share provider-native behavior.
 
-async function sendSignal(signal: Signal): Promise<void> {
-  const payload = JSON.stringify(signal);
+### 2.3 Cancellation reason semantics (CURRENT)
 
-  if (Buffer.byteLength(payload, 'utf8') > MAX_SIGNAL_SIZE_BYTES) {
-    throw new Error(
-      `Signal exceeds size limit: ${Buffer.byteLength(payload)} > ${MAX_SIGNAL_SIZE_BYTES} bytes. ` +
-        `Use artifact storage for large payloads.`
-    );
-  }
+- Workflow defines a `cancel` signal with `reason` payload.
+- Current adapter cancellation path uses provider-native `workflow.cancel()` and does **not** send a reason payload first.
+- Therefore, `cancelReason` should be treated as **best-effort** and may be empty in runs cancelled through provider-native cancellation.
+- In the TypeScript SDK, `WorkflowHandle.cancel()` has no reason parameter, so reason persistence requires explicit signal + state-store eventing when needed.
 
-  await workflow.signal('handleSignal', signal);
-}
-```
+Consumer guidance for v1.1:
 
-**Mitigation for large signals**:
+- Treat `cancelReason` as optional in all readers/projections.
+- Apply fallback messaging when absent (for example: `Cancelled by system`).
+- Emit diagnostic logs/metrics when a reason is expected by product flow but arrives empty.
 
-```typescript
-// BAD: Inline large payload in signal
-await workflow.signal('deploySnapshot', { snapshot: largeJSON }); // 500KB payload
+Planned clarification for a future version:
 
-// GOOD: Store in StateStore, send reference
-const snapshotRef = await stateStore.storeArtifact({
-  kind: 'snapshot',
-  data: largeJSON,
-  runId: workflow.info().workflowId,
-});
-
-await workflow.signal('deploySnapshot', { snapshotRef: snapshotRef.uri }); // 100 bytes
-```
-
-### 2.2 Rate Limits
-
-**MUST enforce**:
-
-- `maxSignalsPerRunPerMinute = 60` (configurable, default conservative)
-
-**Implementation**:
-
-```typescript
-class SignalRateLimiter {
-  private signalTimestamps: number[] = [];
-  private readonly MAX_SIGNALS_PER_MINUTE = 60;
-
-  async checkRateLimit(): Promise<void> {
-    const now = Date.now();
-    const oneMinuteAgo = now - 60_000;
-
-    // Prune old timestamps
-    this.signalTimestamps = this.signalTimestamps.filter((ts) => ts > oneMinuteAgo);
-
-    if (this.signalTimestamps.length >= this.MAX_SIGNALS_PER_MINUTE) {
-      throw new Error(
-        `Signal rate limit exceeded: ${this.signalTimestamps.length} signals in last 60s ` +
-          `(max: ${this.MAX_SIGNALS_PER_MINUTE})`
-      );
-    }
-
-    this.signalTimestamps.push(now);
-  }
-}
-```
+- Either keep best-effort semantics explicitly, or
+- Send `cancel(reason)` signal before native cancel when product requirements need deterministic reason persistence.
 
 ---
 
-## 3) Activity Timeout Policies
+## 3) Pause/Resume/Cancellation Flow (IMPLEMENTED)
 
-### 3.1 Default Timeouts
+- Workflow state tracks: `status`, `paused`, `cancelled`, `cancelReason`, `currentStepIndex`.
+- Before each step, workflow checks cancellation and emits `RunCancelled` when applicable.
+- During pause, workflow blocks with `condition(() => !state.paused || state.cancelled)`.
+- On pause/resume transitions, lifecycle events are emitted via activities (`RunPaused`, `RunResumed`).
+- Step execution emits `StepStarted` and either `StepCompleted` or (`StepFailed` + `RunFailed`).
 
-**MUST configure** for all activities:
+---
+
+## 4) Activity Policy (IMPLEMENTED)
+
+Workflow activity proxy defaults:
 
 ```typescript
-const defaultActivityOptions: ActivityOptions = {
-  // Start-to-close: total time allowed (including retries)
+const activities = proxyActivities<Activities>({
   startToCloseTimeout: '30m',
-
-  // Schedule-to-start: max queue time before activity starts
-  scheduleToStartTimeout: '5m',
-
-  // Schedule-to-close: total time from schedule to completion
-  scheduleToCloseTimeout: '35m',
-
-  // Heartbeat: activity must heartbeat every N seconds
-  heartbeatTimeout: '60s',
-
-  // Retry policy
   retry: {
     initialInterval: '1s',
-    maximumInterval: '60s',
-    backoffCoefficient: 2.0,
-    maximumAttempts: 5,
-    nonRetryableErrorTypes: ['AuthorizationError', 'ValidationError'],
+    maximumInterval: '10s',
+    backoffCoefficient: 2,
+    maximumAttempts: 3,
   },
-};
+});
 ```
 
-### 3.2 Per-Step-Type Overrides
+Notes:
 
-```typescript
-const activityOptionsPerStepType: Record<string, Partial<ActivityOptions>> = {
-  // dbt runs can take hours
-  'dbt-run': {
-    startToCloseTimeout: '4h',
-    scheduleToCloseTimeout: '5h',
-    heartbeatTimeout: '5m', // Heartbeat every 5 min
-  },
+- `scheduleToStartTimeout`, `scheduleToCloseTimeout`, and `heartbeatTimeout` are **not currently configured**.
+- No per-step activity timeout overrides are implemented in current adapter.
 
-  // Quick healthchecks
-  healthcheck: {
-    startToCloseTimeout: '10s',
-    scheduleToCloseTimeout: '15s',
-    retry: { maximumAttempts: 1 }, // No retries
-  },
+Rationale and roadmap note:
 
-  // Warehouse queries (variable time)
-  'warehouse-query': {
-    startToCloseTimeout: '15m',
-    heartbeatTimeout: '30s',
-  },
-};
-```
+- In v1.1, only `startToCloseTimeout` + retry policy are intentionally configured to keep policy surface minimal while interpreter semantics stabilize.
+- `scheduleToStartTimeout`/`scheduleToCloseTimeout`/`heartbeatTimeout` and per-step timeout matrix are deferred to v1.2.
+
+Safe-default recommendation for v1.2 rollout:
+
+- Add a bounded `scheduleToCloseTimeout` (e.g., `'35m'`) to cap total elapsed time across retries and avoid unbounded retry extension.
+- `scheduleToCloseTimeout` is currently unset (defaults to unlimited), so total wall-clock time is bounded only by retry settings plus worker/service behavior.
+
+Timeout interaction note:
+
+- Current defaults (`startToCloseTimeout='30m'`, `maximumAttempts=3`) permit up to ~90 minutes of attempt runtime budget in the worst case, plus queue/backoff overhead.
+- v1.2 timeout matrix should explicitly confirm whether this ceiling aligns with product expectations for maximum step duration.
 
 ---
 
-## 4) Workflow History Size Monitoring
+## 5) Eventing and Idempotency (IMPLEMENTED)
 
-### 4.1 Estimate History Size (Heuristic)
+- Activities emit envelopes through `stateStore.appendEventsTx()` and forward appended events with `outbox.enqueueTx()`.
+- `engineAttemptId` is sourced from Temporal activity context (`Context.current().info.attempt`) with test fallback to `1`.
+- `logicalAttemptId` defaults to `engineAttemptId` when not supplied.
+- Idempotency key is generated from event dimensions (`eventType`, tenant/run IDs, attempts, optional `stepId`) via injected idempotency builder.
 
-```typescript
-function estimateEventSize(step: Step): number {
-  // Rough estimates (bytes per event type)
-  const EVENT_SIZE_ESTIMATES = {
-    ActivityScheduled: 500,
-    ActivityStarted: 200,
-    ActivityCompleted: 1000, // Includes result payload
-    ActivityFailed: 800,
-    TimerStarted: 300,
-    TimerFired: 200,
-    SignalReceived: 400,
-    MarkerRecorded: 600,
-  };
+### 5.1 Attempt semantics and event multiplicity
 
-  // Estimate: 4 events per step (scheduled, started, completed, marker)
-  return (
-    EVENT_SIZE_ESTIMATES.ActivityScheduled +
-    EVENT_SIZE_ESTIMATES.ActivityStarted +
-    EVENT_SIZE_ESTIMATES.ActivityCompleted +
-    EVENT_SIZE_ESTIMATES.MarkerRecorded
-  );
-}
+- `engineAttemptId` starts at `1` and increments on activity retries.
+- Multiple attempt-level event pairs for the same `stepId` are expected in failure/retry paths (diagnostic value), e.g. repeated `StepStarted`/`StepFailed` across attempts.
+- Idempotency still must dedupe duplicate delivery within the **same** attempt boundary (e.g., crash after persistence and before ack).
+- Activities are designed under Temporal’s at-least-once execution assumption; side effects must remain idempotent.
+- This follows Temporal guidance that activities should be idempotent in durable execution systems.
+
+Concrete key-shape example (illustrative):
+
+```text
+idempotencyKey = hash(tenantId + runId + stepId + engineAttemptId + eventType)
 ```
 
-### 4.2 Query Actual History Size (Observability)
+### Important current behavior
 
-```typescript
-async function getHistorySizeBytes(workflowId: string): Promise<number> {
-  const client = new WorkflowClient();
-  const handle = client.getHandle(workflowId);
-
-  // Fetch history (paginated)
-  let totalBytes = 0;
-  let nextPageToken: Uint8Array | undefined;
-
-  do {
-    const response = await handle.fetchHistory({ nextPageToken });
-    totalBytes += response.history.events.reduce((sum, event) => {
-      return sum + event.toJSON().toString().length; // Rough estimate
-    }, 0);
-    nextPageToken = response.nextPageToken;
-  } while (nextPageToken);
-
-  return totalBytes;
-}
-```
+Current implementation couples logical attempt fallback to engine attempt when caller does not provide a planner-level logical attempt. This is **implemented behavior**, not a target-state recommendation.
 
 ---
 
-## 5) Pause/Resume Semantics (Temporal-Specific)
+## 6) Determinism Constraints (IMPLEMENTED + GUARDRAILS)
 
-Temporal workflows can be **paused** via signals, but NOT via native platform feature (unlike some engines).
+In workflow code (`RunPlanWorkflow`), determinism guardrails are present by design:
 
-### 5.1 Signal-Based Pause
+- Avoid non-deterministic behavior and non-workflow-safe libraries; rely on Temporal workflow APIs. `Date` is deterministic in Temporal TypeScript workflow runtime, but we avoid it in workflow logic as a conservative house policy.
+- Side effects are delegated to activities.
+- Only Temporal workflow APIs are used for control flow (`defineSignal`, `defineQuery`, `condition`, `proxyActivities`).
 
-```typescript
-class WorkflowEngine {
-  private isPaused = false;
+Test-only non-deterministic helpers (e.g. polling with `Date.now()`) exist in integration tests and are outside workflow sandbox constraints.
 
-  @workflow.defineSignal('pause')
-  async handlePauseSignal(): Promise<void> {
-    this.isPaused = true;
-    await stateStore.appendEvent({
-      runId: workflow.info().workflowId,
-      eventType: 'RunPaused',
-      eventData: { reason: 'operator-signal', timestamp: Date.now() },
-      idempotencyKey: generateIdempotencyKey('RunPaused', ...),
-    });
-  }
-
-  @workflow.defineSignal('resume')
-  async handleResumeSignal(): Promise<void> {
-    this.isPaused = false;
-    await stateStore.appendEvent({
-      runId: workflow.info().workflowId,
-      eventType: 'RunResumed',
-      eventData: { timestamp: Date.now() },
-      idempotencyKey: generateIdempotencyKey('RunResumed', ...),
-    });
-  }
-
-  async executeStep(step: Step): Promise<void> {
-    // Check pause state before each step
-    if (this.isPaused) {
-      // Block until resumed (with timeout)
-      await workflow.condition(() => !this.isPaused, '24h');
-    }
-
-    // ... execute step
-  }
-}
-```
+For broader policy context, see [determinism-tooling.md](../../dev/determinism-tooling.md).
 
 ---
 
-## 6) Idempotency Key Generation (Temporal-Specific)
+## 7) Worker and Client Lifecycle (IMPLEMENTED)
 
-**MUST use `logicalAttemptId`, NOT `engineAttemptId`** (Temporal's `attemptNumber`).
+### 7.1 Worker host
 
-```typescript
-function generateIdempotencyKey(
-  runId: string,
-  stepId: string,
-  logicalAttemptId: string, // NOT workflow.info().attempt
-  eventType: string,
-  planVersion: string
-): string {
-  const payload = `${runId}|${stepId}|${logicalAttemptId}|${eventType}|${planVersion}`;
-  return crypto.createHash('sha256').update(payload).digest('hex');
-}
+- `TemporalWorkerHost.start(connection)` creates worker once and throws `TEMPORAL_WORKER_ALREADY_STARTED` on duplicate starts.
+- Worker fields are configured from adapter config (`namespace`, `taskQueue`, optional `identity`).
+- Workflow entry defaults to `RunPlanWorkflow` bundle unless `workflowsPath` override is provided.
+- `shutdown()` drains and resets internal worker state.
 
-// WRONG (uses engineAttemptId)
-const wrongKey = generateIdempotencyKey(
-  runId,
-  stepId,
-  workflow.info().attempt.toString(), // ❌ Temporal retry counter
-  eventType,
-  planVersion
-);
+### 7.2 Client manager
 
-// CORRECT (uses logicalAttemptId)
-const correctKey = generateIdempotencyKey(
-  runId,
-  stepId,
-  this.logicalAttemptId, // ✅ Business-level retry counter
-  eventType,
-  planVersion
-);
-```
+- Lazy-connect with connection de-dup (`connect()` memoizes in-flight promise).
+- Exposes `isConnected()`, `ensureConnected()`, and `close()` lifecycle APIs.
+- Adapter enforces client availability and throws `TEMPORAL_CLIENT_NOT_CONFIGURED` or `TEMPORAL_CLIENT_NOT_CONNECTED` in invalid states.
 
 ---
 
-## 7) Determinism Constraints
+## 8) Config Policy (IMPLEMENTED)
 
-### 7.1 Forbidden Operations in Workflows
+Environment-backed config defaults:
 
-Temporal workflows MUST be deterministic (see [Temporal docs](https://docs.temporal.io/workflows#deterministic-constraints)).
+- `address`: `127.0.0.1:7233`
+- `namespace`: `default`
+- `taskQueue`: `dvt-temporal`
+- `connectTimeoutMs`: `5000`
+- `requestTimeoutMs`: `10000`
 
-**FORBIDDEN** (will fail replay):
-
-- ❌ `Math.random()`, `Date.now()`, `new Date()`
-- ❌ Non-deterministic loops (`while (Math.random() > 0.5)`)
-- ❌ Direct network calls (`fetch()`, `axios.get()`)
-- ❌ File I/O (`fs.readFile()`)
-- ❌ Global state mutations
-
-**ALLOWED**:
-
-- ✅ `workflow.uuid()` (deterministic UUID via workflow context)
-- ✅ `workflow.now()` (deterministic timestamp)
-- ✅ Activities (encapsulate non-deterministic operations)
-- ✅ Signals, timers, queries
-
-### 7.2 Linting Rules (Enforcement)
-
-Use ESLint plugin: `@temporalio/eslint-plugin`
-
-```json
-// .eslintrc.json
-{
-  "plugins": ["@temporalio"],
-  "rules": {
-    "@temporalio/no-date-now": "error",
-    "@temporalio/no-math-random": "error",
-    "@temporalio/no-side-effects": "error"
-  }
-}
-```
+Validation enforces non-empty `address` / `namespace` / `taskQueue`, optional non-empty `identity`, and positive integer timeouts.
 
 ---
 
-## 8) Migration from Other Engines
+## 9) Planned / Not Yet Implemented
 
-### 8.1 Conductor → Temporal
+The following were previously documented as normative but are **not implemented** in current code:
 
-| Conductor Concept | Temporal Equivalent                        | Notes                              |
-| ----------------- | ------------------------------------------ | ---------------------------------- |
-| Task              | Activity                                   | Similar semantics                  |
-| Wait task         | Timer (`workflow.sleep()`)                 | Temporal more flexible             |
-| Switch task       | Workflow branching (`if/else`)             | Native in Temporal                 |
-| Sub-workflow      | Child workflow (`workflow.executeChild()`) | Temporal has better lifecycle mgmt |
-| Webhook callback  | Signal                                     | Temporal signal more reliable      |
+- Continue-as-new trigger and state compaction.
+- Workflow history byte-size estimation and rotation thresholds.
+- Signal payload size/rate enforcement inside adapter/workflow.
+- Per-step activity timeout override matrix.
+- Implemented runtime handling for `RETRY_STEP` / `RETRY_RUN`.
 
-**Migration checklist**:
-
-- [ ] Replace `wait` tasks with `workflow.sleep()`
-- [ ] Replace webhook callbacks with signals
-- [ ] Add continue-as-new logic (Conductor has no history limit)
-- [ ] Convert sub-workflows to child workflows
+These should be treated as backlog policies until corresponding code lands in `packages/adapter-temporal/src`.
 
 ---
 
 ## Change Log
 
-| Version | Date       | Change                                                                     |
-| ------- | ---------- | -------------------------------------------------------------------------- |
-| 1.0     | 2026-02-11 | Initial Temporal engine policies (extracted from ExecutionSemantics.v1.md) |
+| Version | Date       | Change                                                                                                                                                                                           |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.1     | 2026-02-14 | Rewritten to match real adapter implementation (`TemporalAdapter`, `RunPlanWorkflow`, activities, worker/client lifecycle). Removed unimplemented normative claims and fixed contract link path. |
+| 1.0     | 2026-02-11 | Initial Temporal engine policies.                                                                                                                                                                |
