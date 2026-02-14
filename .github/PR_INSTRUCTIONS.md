@@ -74,8 +74,18 @@ Before creating PR, verify:
 ### PR Quality Gate preflight (blockers)
 
 - [ ] PR title follows Conventional Commits and subject starts with uppercase (policy in [`.github/workflows/pr-quality-gate.yml`](.github/workflows/pr-quality-gate.yml))
-- [ ] PR description body is present and has at least 50 characters
+- [ ] PR description body is present and has at least 50 characters (**hard gate**)
+- [ ] If PR description is edited after PR creation, ensure the event triggers checks (workflow includes `pull_request.edited` in [`.github/workflows/pr-quality-gate.yml`](.github/workflows/pr-quality-gate.yml))
 - [ ] If PR size warning appears, use approved override (`[skip-size-check]` in title or labels `skip-size-check` / `pr-size-exempt`) only with explicit rationale
+
+#### Fast local preflight for AI/operator
+
+Before creating or updating a PR, validate description length locally:
+
+```bash
+# Replace BODY.md with your PR body file (must be >= 50 chars after trim)
+node -e "const fs=require('fs');const b=fs.readFileSync('.github/PR_BODY.md','utf8').trim();if(b.length<50){console.error('PR body too short:',b.length);process.exit(1)}console.log('PR body OK:',b.length)"
+```
 
 ### Mandatory quality gates (required)
 
