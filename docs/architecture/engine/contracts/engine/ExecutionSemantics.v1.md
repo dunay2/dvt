@@ -194,7 +194,7 @@ For **run-level events** (RunStarted, RunPaused, RunCancelled):
 
 ```
 // Normalize absent fields for idempotency key calculation
-stepIdNormalized = stepId ?? '__run__'
+stepIdNormalized = stepId ?? 'RUN'
 logicalAttemptIdNormalized = logicalAttemptId ?? 1
 SHA256(runId | stepIdNormalized | logicalAttemptIdNormalized | eventType | planVersion)
 ```
