@@ -20,6 +20,7 @@ This is the canonical entrypoint for project documentation.
 - [Contributing guide (root)](../CONTRIBUTING.md)
 - [Documentation contribution guide](./CONTRIBUTING.md)
 - [Quality guide](./guides/QUALITY.md)
+- [AI issue resolution playbook](./guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md)
 
 ## Project status
 

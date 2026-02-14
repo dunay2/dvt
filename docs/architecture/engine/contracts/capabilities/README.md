@@ -4,6 +4,10 @@ This directory contains **executable, schema-validated** capability declarations
 
 ## Files
 
+### `CAPABILITY_VERSIONING.md`
+
+Normative governance and versioning policy for capability lifecycle, adapter declarations, planner/UI gating, and deprecation timelines.
+
 ### `capabilities.schema.json`
 
 Universal capability enum. Defines all possible capabilities across all adapters.

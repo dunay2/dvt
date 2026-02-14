@@ -157,11 +157,10 @@ function sha256Hex(bytes: Uint8Array): string {
 }
 
 describe('temporal integration (time-skipping)', () => {
-  async function waitForCondition<T>(fn: () => Promise<T>, predicate: (v: T) => boolean, opts: { timeoutMs?: number; intervalMs?: number } = {}) {
+  async function waitForCondition<T>(fn: () => Promise<T>, predicate: (v: T) => boolean, opts: { timeoutMs?: number; intervalMs?: number } = {}): Promise<T> {
     const timeoutMs = opts.timeoutMs ?? 10_000;
     const intervalMs = opts.intervalMs ?? 25;
     const start = Date.now();
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const v = await fn();
       if (predicate(v)) return v;
