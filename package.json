@@ -13,7 +13,7 @@
     "format": "prettier --write '**/*.{ts,js,json,md,yml,yaml}'",
     "format:check": "prettier --check '**/*.{ts,js,json,md,yml,yaml}'",
     "type-check": "tsc --noEmit",
-    "verify:prepush": "pnpm test:contracts:compile && pnpm type-check && pnpm format:check && pnpm lint",
+    "verify:prepush": "pnpm test:contracts:compile && pnpm type-check && node scripts/check-changed.cjs",
     "build": "pnpm -r build",
     "build:clean": "rimraf dist && pnpm -r build",
     "test": "pnpm -r test",
