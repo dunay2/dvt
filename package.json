@@ -37,7 +37,7 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "packages/*/src/**/*.{ts,tsx}": [
+    "packages/*/{src,test}/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],

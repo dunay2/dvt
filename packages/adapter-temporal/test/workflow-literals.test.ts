@@ -4,7 +4,6 @@ import { resolve } from 'node:path';
 import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-
 const WORKFLOW_SRC = resolve(__dirname, '../src/workflows/RunPlanWorkflow.ts');
 const src = readFileSync(WORKFLOW_SRC, 'utf8');
 

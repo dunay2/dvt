@@ -15,7 +15,7 @@ module.exports = {
     'packages/engine/vitest.config.ts',
   ],
   // ...existing config (add your rules, plugins, etc. here)
-};// @ts-check
+}; // @ts-check
 const eslint = require('@eslint/js');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
@@ -37,6 +37,7 @@ module.exports = [
         sourceType: 'module',
         // Include root and all package tsconfig files so ESLint can resolve project files
         project: ['./tsconfig.json', './packages/*/tsconfig.json'],
+        noWarnOnMultipleProjects: true,
       },
       globals: {
         console: 'readonly',
@@ -66,6 +67,7 @@ module.exports = [
         typescript: {
           alwaysTryTypes: true,
           project: ['./tsconfig.json', './packages/*/tsconfig.json'],
+          noWarnOnMultipleProjects: true,
         },
       },
     },
@@ -171,6 +173,7 @@ module.exports = [
     languageOptions: {
       parserOptions: {
         project: './tsconfig.test.json',
+        noWarnOnMultipleProjects: true,
       },
       globals: {
         describe: 'readonly',
@@ -193,7 +196,6 @@ module.exports = [
   },
 
   // Añadir overrides para TSConfig por carpeta
-
 
   // Prettier should be last to override formatting rules
   prettier,
