@@ -128,21 +128,7 @@ class FailingFirstAppendStateStore extends TestTxStore {
   }
 }
 
-function buildDeps(): ActivityDeps {
-  const store = new TestTxStore();
-  return {
-    stateStore: store,
-    outbox: store,
-    clock: new TestClock(),
-    idempotency: new TestIdempotencyKeyBuilder(),
-    fetcher: { fetch: vi.fn(async () => PLAN_BYTES) },
-    integrity: {
-      fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
-    } as unknown as ActivityDeps['integrity'],
-  };
-}
-
-function buildDepsWithStore(store: TestTxStore): ActivityDeps {
+function buildDeps(store: TestTxStore = new TestTxStore()): ActivityDeps {
   return {
     stateStore: store,
     outbox: store,
@@ -223,7 +209,7 @@ describe('stepActivities', () => {
 
     it('retry-safe: transient failure then retry persists one logical event', async () => {
       const store = new FailingFirstAppendStateStore();
-      const deps = buildDepsWithStore(store);
+      const deps = buildDeps(store);
       const acts = createActivities(deps);
 
       await expect(acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' })).rejects.toThrow(
