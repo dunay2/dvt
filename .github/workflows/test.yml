@@ -7,6 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Run Tests
@@ -18,29 +22,120 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Detect package changes (PR only)
+        id: changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            engine:
+              - 'packages/engine/**'
+            contracts:
+              - 'packages/contracts/**'
+            adapter_postgres:
+              - 'packages/adapter-postgres/**'
+            adapter_temporal:
+              - 'packages/adapter-temporal/**'
+            cli:
+              - 'packages/cli/**'
+            root_config:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'vitest.config.ts'
+              - 'tsconfig*.json'
+              - '.github/workflows/test.yml'
+
       - name: Setup Node.js ${{ matrix.node-version }}
+        if:
+          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
+          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
+          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
+          'true' || steps.changes.outputs.root_config == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Setup pnpm
+        if:
+          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
+          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
+          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
+          'true' || steps.changes.outputs.root_config == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      - name: Cache pnpm store
+        if:
+          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
+          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
+          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
+          'true' || steps.changes.outputs.root_config == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Install dependencies
+        if:
+          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
+          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
+          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
+          'true' || steps.changes.outputs.root_config == 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests
+      - name: Run tests (push/workflow_dispatch full suite)
+        if: github.event_name != 'pull_request'
         run: pnpm test
 
+      - name: Run engine tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.engine == 'true' ||
+          steps.changes.outputs.root_config == 'true')
+        run: pnpm test:engine
+
+      - name: Run contracts tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.contracts == 'true' ||
+          steps.changes.outputs.root_config == 'true')
+        run: pnpm test:contracts
+
+      - name: Run adapter-postgres tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.adapter_postgres == 'true'
+          || steps.changes.outputs.root_config == 'true')
+        run: pnpm test:adapter-postgres
+
+      - name: Run adapter-temporal tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.adapter_temporal == 'true'
+          || steps.changes.outputs.root_config == 'true')
+        run: pnpm test:adapter-temporal
+
+      - name: Run cli tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.cli == 'true' ||
+          steps.changes.outputs.root_config == 'true')
+        run: pnpm test:cli
+
+      - name: Skip package tests (PR with no affected packages)
+        if:
+          github.event_name == 'pull_request' && steps.changes.outputs.engine != 'true' &&
+          steps.changes.outputs.contracts != 'true' && steps.changes.outputs.adapter_postgres !=
+          'true' && steps.changes.outputs.adapter_temporal != 'true' && steps.changes.outputs.cli !=
+          'true' && steps.changes.outputs.root_config != 'true'
+        run: echo "No affected test packages detected; skipping package test execution."
+
       - name: Generate coverage report
+        if: matrix.node-version == '20.x' && github.event_name != 'pull_request'
         run: pnpm test:coverage
-        if: matrix.node-version == '20.x'
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
-        if: matrix.node-version == '20.x'
+        if: matrix.node-version == '20.x' && github.event_name != 'pull_request'
         with:
           files: ./coverage/lcov.info
           flags: unittests
@@ -48,7 +143,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Coverage Summary
-        if: matrix.node-version == '20.x'
+        if: matrix.node-version == '20.x' && github.event_name != 'pull_request'
         run: |
           echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -61,23 +156,67 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Detect determinism-relevant changes (PR only)
+        id: det_changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            determinism_relevant:
+              - 'packages/engine/**'
+              - 'packages/contracts/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.github/workflows/test.yml'
+
       - name: Setup Node.js
+        if:
+          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true'
         uses: actions/setup-node@v6
         with:
           node-version: '20'
 
       - name: Setup pnpm
+        if:
+          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true'
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      - name: Cache pnpm store
+        if:
+          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Install dependencies
+        if:
+          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true'
         run: pnpm install --frozen-lockfile
 
       - name: Run determinism tests
+        if:
+          (github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true') && hashFiles('packages/engine/test/determinism/**/*.test.ts') != ''
         run: pnpm test:determinism
-        if: hashFiles('packages/engine/test/determinism/**/*.test.ts') != ''
 
       - name: Verify replay consistency
+        if:
+          (github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true') && hashFiles('packages/engine/test/replay/**/*.test.ts') != ''
         run: pnpm test:replay
-        if: hashFiles('packages/engine/test/replay/**/*.test.ts') != ''
+
+      - name: Skip determinism checks (PR without relevant changes)
+        if:
+          github.event_name == 'pull_request' && steps.det_changes.outputs.determinism_relevant !=
+          'true'
+        run: echo "No determinism-relevant changes detected; skipping determinism checks."
