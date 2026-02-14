@@ -6,6 +6,7 @@ import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
+import type { ActivityDeps } from '../src/activities/stepActivities.js';
 import { loadTemporalAdapterConfig, TemporalAdapter, TemporalWorkerHost } from '../src/index.js';
 
 const TEST_DIR = dirname(fileURLToPath(import.meta.url));
@@ -172,7 +173,7 @@ function createRunContext(runId: string): RunContext {
   };
 }
 
-function createActivityDeps(store: TestStateStore, planBytes: Uint8Array) {
+function createActivityDeps(store: TestStateStore, planBytes: Uint8Array): ActivityDeps {
   return {
     stateStore: store,
     outbox: store,
