@@ -37,7 +37,6 @@ module.exports = [
         sourceType: 'module',
         // Include root and all package tsconfig files so ESLint can resolve project files
         project: ['./tsconfig.json', './packages/*/tsconfig.json'],
-        noWarnOnMultipleProjects: true,
       },
       globals: {
         console: 'readonly',
@@ -67,7 +66,6 @@ module.exports = [
         typescript: {
           alwaysTryTypes: true,
           project: ['./tsconfig.json', './packages/*/tsconfig.json'],
-          noWarnOnMultipleProjects: true,
         },
       },
     },
@@ -173,7 +171,6 @@ module.exports = [
     languageOptions: {
       parserOptions: {
         project: './tsconfig.test.json',
-        noWarnOnMultipleProjects: true,
       },
       globals: {
         describe: 'readonly',

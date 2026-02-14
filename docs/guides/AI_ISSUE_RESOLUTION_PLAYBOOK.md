@@ -100,6 +100,35 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - Includes issue reference (`Closes #X` / `Refs #X`).
 - Includes risk note and rollback note for non-trivial changes.
 - Before opening a PR, compile, tests, and lint MUST pass for affected scope (and broader scope when shared/core contracts are touched).
+- Do not treat warning suppression as a final fix; solve root cause first. Hiding warnings is only acceptable with explicit maintainer approval and written rationale.
+- Keep PR size under quality-gate threshold (max 1000 changed lines). If exceeded, split into smaller, focused PRs.
+
+## Planned technical migration (approved before implementation)
+
+### Objective
+
+Unify TypeScript project resolution using a references-based graph, without suppressing warnings as a final solution.
+
+### Planned phases
+
+1. Root graph definition
+   - Add and validate `references` in [`tsconfig.json`](tsconfig.json) toward active package configurations and test scope.
+   - Align test scope in [`tsconfig.test.json`](tsconfig.test.json).
+
+1. ESLint alignment
+   - Align `parserOptions.project` and resolver project settings in [`eslint.config.cjs`](eslint.config.cjs) with the references graph.
+   - Keep `import/order` enforcement active for tests and source files.
+
+1. Precommit and CI hardening
+   - Keep staged lint+format coverage for both `src` and `test` files via [`lint-staged`](package.json).
+   - Preserve PR quality gate constraints, especially max-size guard in [`.github/workflows/pr-quality-gate.yml`](.github/workflows/pr-quality-gate.yml).
+
+### Risks and controls
+
+- Risk: incomplete references causing type-resolution failures across packages.
+  - Control: incremental rollout (root -> active packages -> tests) with `eslint` + `tsc --noEmit` at each step.
+- Risk: unrelated legacy areas failing after config tightening.
+  - Control: scope migration to active paths first and document deferred legacy alignment explicitly.
 
 ## Anti-patterns to avoid
 
@@ -115,6 +144,8 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - Ignoring prior repository decisions/patterns and reinventing behavior without rationale.
 - Trial-and-error implementation without an upfront plan and expected outcomes.
 - Shipping temporary "just make it pass" fixes as final solutions.
+- Silencing warnings/errors to pass CI instead of fixing the underlying issue.
+- Submitting oversized PRs that exceed reviewable limits instead of splitting by scope.
 
 ## Additional safeguards recommended for high quality
 
