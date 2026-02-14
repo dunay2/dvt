@@ -52,7 +52,7 @@ DVT Frontend architecture documentation. The frontend is NOT just "a pretty UI" 
 
 ---
 
-### 3. Estado y Arquitectura (Informative)
+### 3. State & Architecture (Informative)
 
 | File                                                        | Purpose                                                  | Status      |
 | ----------------------------------------------------------- | -------------------------------------------------------- | ----------- |
@@ -62,7 +62,7 @@ DVT Frontend architecture documentation. The frontend is NOT just "a pretty UI" 
 
 ---
 
-### 4. Pantallas y Golden Paths (Testable)
+### 4. Screens & Golden Paths (Testable)
 
 | File                                                        | Purpose                                        | Status      |
 | ----------------------------------------------------------- | ---------------------------------------------- | ----------- |
@@ -73,7 +73,7 @@ DVT Frontend architecture documentation. The frontend is NOT just "a pretty UI" 
 
 ---
 
-### 5. Seguridad en UI (Normative)
+### 5. UI Security (Normative)
 
 | File                                                    | Purpose                                                     | Status    |
 | ------------------------------------------------------- | ----------------------------------------------------------- | --------- |
@@ -84,7 +84,7 @@ DVT Frontend architecture documentation. The frontend is NOT just "a pretty UI" 
 
 ---
 
-### 6. Calidad: Tests, A11y, Performance (Informative)
+### 6. Quality: Tests, A11y, Performance (Informative)
 
 | File                                                     | Purpose                                            | Status      |
 | -------------------------------------------------------- | -------------------------------------------------- | ----------- |

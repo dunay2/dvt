@@ -4,12 +4,29 @@ import type {
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
+  IProviderAdapter,
 } from '@dvt/contracts';
-import type { Client } from '@temporalio/client';
+import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
 import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
+
+interface WorkflowHandleLike {
+  cancel(): Promise<unknown>;
+  signal(signalName: string, ...args: unknown[]): Promise<void>;
+}
+
+interface WorkflowClientLike {
+  start(
+    workflowType: string,
+    options: unknown
+  ): Promise<{
+    workflowId: string;
+    firstExecutionRunId?: string;
+  }>;
+  getHandle(workflowId: string): WorkflowHandleLike;
+}
 
 interface IRunStateStoreLike {
   listEvents(runId: string): Promise<unknown[]>;
@@ -19,33 +36,26 @@ interface SnapshotProjectorLike {
   rebuild(runId: string, events: unknown[]): RunStatusSnapshot;
 }
 
-interface IProviderAdapterLike {
-  readonly provider: EngineRunRef['provider'];
-  startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef>;
-  cancelRun(runRef: EngineRunRef): Promise<void>;
-  getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
-  signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
-}
-
 export interface TemporalAdapterDeps {
-  clientManager: TemporalClientManager;
+  clientManager?: TemporalClientManager;
+  workflowClient?: WorkflowClientLike;
   config: TemporalAdapterConfig;
   stateStore: IRunStateStoreLike;
   projector: SnapshotProjectorLike;
 }
 
-export class TemporalAdapter implements IProviderAdapterLike {
+export class TemporalAdapter implements IProviderAdapter {
   readonly provider = 'temporal' as const;
 
   constructor(private readonly deps: TemporalAdapterDeps) {}
 
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
-    const handle = await this.getClient();
+    const workflowClient = await this.getClient();
 
     const workflowId = toTemporalWorkflowId(ctx.runId);
     const taskQueue = toTemporalTaskQueue(ctx.tenantId, this.deps.config);
 
-    const started = await handle.workflow.start('runPlanWorkflow', {
+    const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
       workflowId,
       args: [{ planRef, ctx }],
@@ -65,8 +75,8 @@ export class TemporalAdapter implements IProviderAdapterLike {
   }
 
   async cancelRun(runRef: EngineRunRef): Promise<void> {
-    const handle = await this.getClient();
-    await handle.workflow.getHandle(runRef.workflowId).cancel();
+    const workflowClient = await this.getClient();
+    await workflowClient.getHandle(runRef.workflowId).cancel();
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
@@ -76,18 +86,20 @@ export class TemporalAdapter implements IProviderAdapterLike {
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    const handle = await this.getClient();
-    const workflow = handle.workflow.getHandle(runRef.workflowId);
+    const workflowClient = await this.getClient();
+    const workflow = workflowClient.getHandle(runRef.workflowId) as WorkflowHandleLike;
 
     switch (request.type) {
       case 'PAUSE':
-        await workflow.signal('pause');
+        await workflow.signal(WorkflowSignals.PAUSE);
         return;
       case 'RESUME':
-        await workflow.signal('resume');
+        await workflow.signal(WorkflowSignals.RESUME);
         return;
       case 'CANCEL':
-        await workflow.signal('cancel', request.reason ?? 'cancel-requested');
+        // Canonicalize cancellation on the provider-native cancel path so both
+        // `cancelRun()` and `signal(CANCEL)` follow the same execution semantics.
+        await workflow.cancel();
         return;
       case 'RETRY_STEP':
       case 'RETRY_RUN':
@@ -99,10 +111,16 @@ export class TemporalAdapter implements IProviderAdapterLike {
     }
   }
 
-  private async getClient(): Promise<Client> {
+  private async getClient(): Promise<WorkflowClientLike> {
+    if (this.deps.workflowClient) {
+      return this.deps.workflowClient;
+    }
+    if (!this.deps.clientManager) {
+      throw new Error('TEMPORAL_CLIENT_NOT_CONFIGURED');
+    }
     if (!this.deps.clientManager.isConnected()) {
       await this.deps.clientManager.connect();
     }
-    return this.deps.clientManager.getClient().client;
+    return this.deps.clientManager.getClient().client.workflow;
   }
 }
