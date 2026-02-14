@@ -52,10 +52,10 @@ gantt
 | [#5](https://github.com/dunay2/dvt/issues/5)   | TemporalAdapter MVP (legacy tracking)                          | 🔴 High   | Closed | #2, #15    | ✅ Done           |
 | [#68](https://github.com/dunay2/dvt/issues/68) | TemporalAdapter MVP (active package path)                      | 🔴 High   | Open   | #14, #15   | ⚠️ **CRITICAL**   |
 | [#6](https://github.com/dunay2/dvt/issues/6)   | PostgresStateStoreAdapter MVP                                  | 🔴 High   | Open   | #2         | ⚠️ **CRITICAL**   |
-| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker                                         | 🔴 High   | Open   | #6         | ⚠️ **CRITICAL**   |
+| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker                                         | 🔴 High   | Closed | #6         | ✅ Done           |
 | [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples                                          | 🔴 High   | Closed | #5, #6     | ✅ Done           |
 | [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline                                   | 🔴 High   | Closed | #10        | ✅ Done           |
-| [#3](https://github.com/dunay2/dvt/issues/3)   | Mermaid diagrams ExecutionSemantics                            | 🟡 Medium | Open   | -          | Parallel          |
+| [#3](https://github.com/dunay2/dvt/issues/3)   | Mermaid diagrams ExecutionSemantics                            | 🟡 Medium | Closed | -          | ✅ Done           |
 | [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High   | Closed | -          | ✅ Done           |
 
 **Why this order?** IDs + naming policies (Glossary) → event envelope fields (RunEventCatalog) → type definitions → engine core (IWorkflowEngine + Temporal Interpreter) → adapter implementations + outbox → contract test fixtures (Golden Paths) → CI validation. Security docs are parallel (design, not blocking implementation).

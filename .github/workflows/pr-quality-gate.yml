@@ -23,6 +23,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node.js (for fast-fail checks)
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies (fast-fail)
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile contracts (fast-fail)
+        run: pnpm test:contracts:compile
+
+      - name: Workspace type-check (fast-fail)
+        run: pnpm type-check
+
       - name: Check PR title follows Conventional Commits
         uses: amannn/action-semantic-pull-request@v5
         env:
