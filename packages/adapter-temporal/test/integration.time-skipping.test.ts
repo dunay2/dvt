@@ -1,0 +1,155 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { TestWorkflowEnvironment } from '@temporalio/testing';
+import { Worker } from '@temporalio/worker';
+import { WorkflowClient } from '@temporalio/client';
+
+import { createActivities } from '../src/activities/stepActivities.js';
+
+// ---------------------------------------------------------------------------
+// Minimal in-memory test doubles (copied/trimmed from unit tests)
+// ---------------------------------------------------------------------------
+class TestTxStore {
+  constructor() {
+    this.eventsByRun = new Map();
+    this.metadataByRun = new Map();
+  }
+
+  async saveRunMetadata(meta) {
+    this.metadataByRun.set(meta.runId, meta);
+  }
+
+  async getRunMetadataByRunId(runId) {
+    return this.metadataByRun.get(runId) ?? null;
+  }
+
+  async appendEventsTx(runId, envelopes) {
+    const current = this.eventsByRun.get(runId) ?? [];
+    const appended = [];
+    const deduped = [];
+
+    for (const env of envelopes) {
+      const exists = current.some((e) => e.idempotencyKey === env.idempotencyKey);
+      if (exists) {
+        deduped.push({ ...env, runSeq: current.length + deduped.length + appended.length + 1 });
+        continue;
+      }
+      const withSeq = { ...env, runSeq: current.length + appended.length + 1 };
+      current.push(withSeq);
+      appended.push(withSeq);
+    }
+    this.eventsByRun.set(runId, current);
+    return { appended, deduped };
+  }
+
+  async listEvents(runId) {
+    return [...(this.eventsByRun.get(runId) ?? [])];
+  }
+
+  async enqueueTx() {
+    // noop for tests
+  }
+}
+
+class TestClock {
+  nowIsoUtc() {
+    return new Date().toISOString();
+  }
+}
+
+class TestIdempotencyKeyBuilder {
+  runEventKey({ eventType, tenantId, runId, logicalAttemptId, stepId = '' }) {
+    return [eventType, tenantId, runId, String(logicalAttemptId), stepId].join('|');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Integration test — run the workflow inside TestWorkflowEnvironment with mocked
+// activities and assert that it completes and emitted lifecycle events.
+// ---------------------------------------------------------------------------
+describe('RunPlanWorkflow — integration (time-skipping env)', () => {
+  let env;
+  let worker;
+  let client;
+  const taskQueue = 'test-queue-integration';
+
+  beforeAll(async () => {
+    env = await TestWorkflowEnvironment.createTimeSkipping();
+  });
+
+  afterAll(async () => {
+    if (worker) {
+      await worker.shutdown();
+    }
+    if (env) {
+      // TestWorkflowEnvironment.teardown() closes the native connection internally.
+      await env.teardown();
+    }
+  });
+
+  it('completes a simple plan and persists lifecycle events', async () => {
+    const store = new TestTxStore();
+    const deps = {
+      stateStore: store,
+      outbox: store,
+      clock: new TestClock(),
+      idempotency: new TestIdempotencyKeyBuilder(),
+      fetcher: { fetch: async () => Buffer.from(JSON.stringify({
+        metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1' },
+        steps: [{ stepId: 'step-a', kind: 'test' }, { stepId: 'step-b', kind: 'test' }],
+      })) },
+      integrity: { fetchAndValidate: async (_ref, fetcher) => fetcher.fetch(_ref) },
+    };
+
+    // Start a Worker that uses the real workflow plus our test activity impls
+    worker = await Worker.create({
+      connection: env.nativeConnection,
+      namespace: 'default',
+      taskQueue,
+      // use compiled workflow bundle from dist so the Worker bundler can load it in tests
+      workflowsPath: require.resolve('../dist/workflows/RunPlanWorkflow'),
+      activities: createActivities(deps),
+    });
+
+    // Run worker in background
+    const runPromise = worker.run();
+
+    client = new WorkflowClient({ connection: env.nativeConnection });
+
+    const input = {
+      planRef: {
+        uri: 's3://bucket/plans/p1.json',
+        sha256: 'ignored',
+        schemaVersion: 's1',
+        planId: 'p1',
+        planVersion: 'v1',
+      },
+      ctx: {
+        tenantId: 'tenant-1',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        runId: 'run-1',
+        targetAdapter: 'temporal',
+      },
+    };
+
+    const handle = await client.start('runPlanWorkflow', {
+      args: [input],
+      taskQueue,
+      workflowId: input.ctx.runId,
+    });
+
+    const result = await handle.result();
+    expect(result).toEqual({ runId: 'run-1', status: 'COMPLETED' });
+
+    const events = await store.listEvents('run-1');
+    const types = events.map((e) => e.eventType);
+    expect(types).toContain('RunStarted');
+    expect(types).toContain('StepStarted');
+    expect(types).toContain('StepCompleted');
+    expect(types).toContain('RunCompleted');
+
+    // stop worker
+    await worker.shutdown();
+    await runPromise;
+  });
+});
