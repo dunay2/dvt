@@ -1,8 +1,9 @@
 export class AuthorizationError extends Error {
-  readonly code = 'AUTHZ_DENIED' as const;
+  public readonly code = 'AUTHZ_DENIED' as const;
 
-  constructor(message?: string) {
-    super(message ?? 'authorization denied');
+  constructor(message = 'Authorization denied') {
+    super(message);
     this.name = 'AuthorizationError';
+    Object.setPrototypeOf(this, AuthorizationError.prototype);
   }
 }
