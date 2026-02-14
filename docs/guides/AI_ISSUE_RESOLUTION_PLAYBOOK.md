@@ -7,6 +7,8 @@
 > - Last updated (UTC): `2026-02-14`
 > - Owner: `Engineering / AI Delivery Governance`
 
+> **Source of truth**: This playbook is the authoritative process source for issue-driven work in this repository. It MUST be reviewed before each action (analysis, implementation, validation, commenting, and closure).
+
 ## Purpose
 
 This guide defines a standard, auditable process for AI agents resolving repository issues.
