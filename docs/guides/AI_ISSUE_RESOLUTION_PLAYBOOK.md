@@ -106,7 +106,7 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - If behavior changed, add a short "why" note in status docs.
 - Link changed files in the issue comment.
 
-11. **Close loop on issue**
+1. **Close loop on issue**
 
 - Post final comment with:
   - what changed,

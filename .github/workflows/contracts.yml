@@ -112,8 +112,8 @@ jobs:
             echo "No schema files found — skipping"
             exit 0
           fi
-          echo "Installing ajv..."
-          npx ajv@8 compile -s docs/architecture/engine/contracts/**/*.schema.json
+          echo "Installing ajv-cli..."
+          npx --yes ajv-cli@5 compile -s "docs/architecture/engine/contracts/**/*.schema.json"
           echo "✅ Schema validation complete"
 
   determinism-checks:
