@@ -342,7 +342,7 @@ Example: `packages/adapter-temporal/tsconfig.json` should include `"vitest.confi
 git grep -n "legacy-top-level-engine" || true
 ```
 
-5. Run linter auto-fix for ordering/spacing issues and re-run CI:
+1. Run linter auto-fix for ordering/spacing issues and re-run CI:
 
 ```bash
 pnpm lint --fix
@@ -350,7 +350,7 @@ pnpm lint --fix
 npx eslint . --ext .ts --fix
 ```
 
-6. Commit the cleanup and re-run CI.
+1. Commit the cleanup and re-run CI.
 
 This prevents `@typescript-eslint/parser` from failing when it resolves `tsconfig` file lists and keeps CI green.
 
