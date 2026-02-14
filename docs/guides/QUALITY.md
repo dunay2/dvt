@@ -117,6 +117,75 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
   - Ignores major version bumps for critical deps
 - **Targets**: npm packages & GitHub Actions
 
+### 7. Security, Auditability & Governance Tooling Backlog
+
+This section tracks recommended tooling to strengthen secure delivery, auditable releases, and architecture governance.
+
+#### Priority A (Immediate)
+
+- **release-please**
+  - **Goal**: Replace legacy release flow and standardize changelog/release automation.
+  - **Status**: Planned migration (see repo issues).
+- **CodeQL**
+  - **Goal**: Static application security testing (SAST) in CI.
+- **gitleaks**
+  - **Goal**: Detect credential/secret leaks in commits and pull requests.
+- **Trivy** or **OSV-Scanner**
+  - **Goal**: Dependency vulnerability scanning with CI gate support.
+
+#### Priority B (Near-term hardening)
+
+- **dependency-cruiser**
+  - **Goal**: Enforce module/layer boundaries and prevent forbidden imports.
+- **Semgrep**
+  - **Goal**: Add custom security and determinism rules for engine/runtime code.
+- **Syft + Grype**
+  - **Goal**: Generate SBOM and scan generated inventories for vulnerabilities.
+
+#### Priority C (Maintainability)
+
+- **knip**
+  - **Goal**: Detect unused files/exports/dependencies and reduce dead code.
+- **markdown-link-check**
+  - **Goal**: Catch broken links in docs.
+- **cspell**
+  - **Goal**: Improve documentation quality and reduce review noise.
+
+#### Telemetry & Observability backlog
+
+- **OpenTelemetry (OTel SDK + Collector)**
+  - **Goal**: Unified traces, metrics, and logs across engine/adapters/CLI.
+- **Prometheus + Grafana**
+  - **Goal**: Time-series monitoring dashboards and SLO/SLA tracking.
+- **Loki + Tempo**
+  - **Goal**: Correlate logs and traces with run/tenant/correlation IDs.
+- **Sentry**
+  - **Goal**: Error tracking with release-aware alerting and stack trace grouping.
+- **Alertmanager**
+  - **Goal**: Route and deduplicate alerts by severity and ownership.
+
+#### Telemetry minimum standard (when enabled)
+
+- Trace IDs and correlation IDs MUST be propagated across API → Engine → Adapter boundaries.
+- Metrics MUST include, at minimum: error rate, latency p95/p99, throughput, queue lag, and retry counts.
+- Logs MUST be structured and tenant-safe (no secrets/PII leakage).
+- Dashboards and alerts MUST map to runbooks and severity policy.
+
+#### Suggested rollout order
+
+1. `release-please`
+2. `CodeQL` + `gitleaks` + (`Trivy` or `OSV-Scanner`)
+3. `dependency-cruiser` + `Semgrep`
+4. `OpenTelemetry` + `Prometheus/Grafana`
+5. `Loki/Tempo` + `Alertmanager` + `Sentry`
+6. `Syft + Grype`
+7. `knip` + `markdown-link-check` + `cspell`
+
+#### Notes
+
+- Treat this section as a governance backlog for quality/security tooling.
+- Promote each tool from backlog to "configured" only after CI integration and documented usage.
+
 ---
 
 ## 🔄 GitHub Actions (CI/CD)
