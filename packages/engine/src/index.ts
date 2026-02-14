@@ -17,6 +17,7 @@ export * from './outbox/InMemoryEventBus.js';
 export * from './utils/clock.js';
 
 export * from './security/authorizer.js';
+export * from './security/AuthorizationError.js';
 export * from './security/planRefPolicy.js';
 export * from './security/planIntegrity.js';
 
@@ -24,3 +25,5 @@ export * from './adapters/IProviderAdapter.js';
 export * from './adapters/mock/MockAdapter.js';
 export * from './adapters/temporal/TemporalAdapterStub.js';
 export * from './adapters/conductor/ConductorAdapterStub.js';
+
+export * from './application/providerSelection.js';
