@@ -20,17 +20,22 @@ if (changed.length === 0) {
 const prettierFiles = changed.filter(f => /\.(ts|js|json|md|yml|yaml|tsx)$/.test(f));
 const eslintFiles = changed.filter(f => /\.(ts|tsx|js)$/.test(f));
 
-if (prettierFiles.length) {
+const fs = require('fs');
+// remove deleted files from the lists
+const existingPrettierFiles = prettierFiles.filter(f => fs.existsSync(f));
+const existingEslintFiles = eslintFiles.filter(f => fs.existsSync(f));
+
+if (existingPrettierFiles.length) {
   console.log('Running Prettier check on changed files:');
-  console.log(prettierFiles.join('\n'));
-  const res = spawnSync('prettier', ['--check', ...prettierFiles], { stdio: 'inherit', shell: true });
+  console.log(existingPrettierFiles.join('\n'));
+  const res = spawnSync('prettier', ['--check', ...existingPrettierFiles], { stdio: 'inherit', shell: true });
   if (res.status !== 0) process.exit(res.status);
 }
 
-if (eslintFiles.length) {
+if (existingEslintFiles.length) {
   console.log('Running ESLint on changed files:');
-  console.log(eslintFiles.join('\n'));
-  const res = spawnSync('eslint', ['--max-warnings', '0', ...eslintFiles], { stdio: 'inherit', shell: true });
+  console.log(existingEslintFiles.join('\n'));
+  const res = spawnSync('eslint', ['--max-warnings', '0', ...existingEslintFiles], { stdio: 'inherit', shell: true });
   if (res.status !== 0) process.exit(res.status);
 }
 
