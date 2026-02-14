@@ -78,9 +78,9 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
 
   afterAll(async () => {
     if (worker) {
-      // worker.shutdown() is synchronous/trigger in this test harness; await the
-      // worker.run() promise instead to ensure the worker has finished.
-      worker.shutdown();
+      // ensure worker has fully shut down before tearing down the env (avoids
+      // "Cannot close connection while Workers hold a reference to it").
+      await worker.shutdown();
     }
     if (env) {
       // TestWorkflowEnvironment.teardown() closes the native connection internally.
@@ -114,6 +114,9 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
 
     // Run worker in background
     const runPromise = worker.run();
+
+    // give the worker time to register with the in-memory server before starting workflows
+    await new Promise((res) => setTimeout(res, 50));
 
     client = new WorkflowClient({ connection: env.nativeConnection });
 
