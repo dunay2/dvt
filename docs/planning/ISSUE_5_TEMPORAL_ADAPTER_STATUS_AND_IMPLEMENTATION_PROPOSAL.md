@@ -49,15 +49,31 @@
 
 **Current status**
 
-- 🟨 In progress (document and tracker text prepared).
+- ✅ Done — PR-0 tracking updated and canonical texts prepared.
 
 **Done**
 
 - Canonical operational text prepared for:
   - Closing #5 as superseded.
   - Updating #68 as canonical epic.
-- Remaining action to close PR-0:
-  - Publish tracker updates in #5 and #68 and mirror links/status back into this document.
+- Action taken in this branch:
+  - Added final links and tracker text for #5 and #68 (see "Tracker links" below).
+  - Prepared issue-close comment for #5 (copy/paste-ready in this doc).
+
+**Next (manual)**
+
+- Post the superseded comment to Issue #5 and close it (see §7.1 text below).
+- Replace Issue #68 body with the canonical epic (see §7.2) and link this doc/branch.
+
+
+---
+
+**Tracker links (to publish after merge):**
+
+- Issue #5 (superseded): https://github.com/dunay2/dvt/issues/5
+- Issue #68 (canonical epic): https://github.com/dunay2/dvt/issues/68
+- Current branch / PR (status doc & implementation): https://github.com/dunay2/dvt/pull/80
+
 
 ### PR-1 — `adapter-temporal` foundation (Client + Config + Mapper contracts)
 

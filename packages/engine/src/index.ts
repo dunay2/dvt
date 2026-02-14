@@ -17,6 +17,7 @@ export * from './outbox/InMemoryEventBus.js';
 export * from './utils/clock.js';
 
 export * from './security/authorizer.js';
+export * from './security/AuthorizationError.js';
 export * from './security/planRefPolicy.js';
 export * from './security/planIntegrity.js';
 

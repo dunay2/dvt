@@ -267,7 +267,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planId: 'p',
       planVersion: '1',
     };
-    await expect(engine.startRun(badPlanRef, baseCtx)).rejects.toThrow(/PLAN_SCHEMA_VERSION_UNKNOWN/);
+    await expect(engine.startRun(badPlanRef, baseCtx)).rejects.toThrow(/SCHEMA_VERSION_UNSUPPORTED_MAJOR/);
     expect(startRunMock).not.toHaveBeenCalled();
   });
 

@@ -231,13 +231,40 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 }
 
-function validateSchemaVersionOrThrow(schemaVersion: string): void {
-  // Contract: engine rejects unknown schema versions; supports <=3 minor versions back.
-  // MVP: accept v1.x only.
-  if (!schemaVersion.startsWith('v1.')) {
-    throw new Error(`PLAN_SCHEMA_VERSION_UNKNOWN: ${schemaVersion}`);
+// Parse semantic `v<major>.<minor>.<patch>` schema versions used by plans.
+function parseSchemaVersion(input: string): { major: number; minor: number; patch: number } {
+  const raw = input.trim().replace(/^v/i, '');
+  const parts = raw.split('.');
+  const major = Number(parts[0]);
+  const minor = Number(parts[1] ?? 0);
+  const patch = Number(parts[2] ?? 0);
+
+  if (!Number.isInteger(major) || !Number.isInteger(minor) || !Number.isInteger(patch)) {
+    throw new Error(`SCHEMA_VERSION_INVALID: ${input}`);
+  }
+  return { major, minor, patch };
+}
+
+// Current supported schema (single-source here for MVP). Update when bumping contract.
+const CURRENT_SCHEMA = { major: 1, minor: 2, patch: 0 };
+
+export function validateSchemaVersionOrThrow(schemaVersion: string, minorsBack = 3): void {
+  const v = parseSchemaVersion(schemaVersion);
+
+  if (v.major !== CURRENT_SCHEMA.major) {
+    throw new Error(`SCHEMA_VERSION_UNSUPPORTED_MAJOR: ${schemaVersion}`);
+  }
+
+  if (v.minor > CURRENT_SCHEMA.minor) {
+    throw new Error(`SCHEMA_VERSION_TOO_NEW: ${schemaVersion}`);
+  }
+
+  const minAllowed = Math.max(0, CURRENT_SCHEMA.minor - minorsBack);
+  if (v.minor < minAllowed) {
+    throw new Error(`SCHEMA_VERSION_TOO_OLD: ${schemaVersion}`);
   }
 }
+
 
 function buildRunMetadata(ctx: RunContext, runRef: EngineRunRef): RunMetadata {
   if (runRef.provider === 'temporal') {
