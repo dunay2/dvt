@@ -73,6 +73,8 @@ Before creating PR, verify:
 - [ ] Validation evidence prepared (commands + outputs)
 - [ ] Rollback path documented (safe revert strategy)
 
+> Note: The **Temporal adapter integration (time‑skipping)** test runs automatically for PRs that touch `packages/adapter-temporal/**` or `packages/contracts/**`. The PR Quality Gate will skip that integration when unrelated files are changed to keep CI fast.
+
 ### Code Quality
 
 - [ ] All files committed and pushed
