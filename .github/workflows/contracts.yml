@@ -116,7 +116,9 @@ jobs:
           echo "Validating draft 2020-12 schemas..."
           mapfile -t draft2020_schemas < <(grep -RIl --include="*.schema.json" '"\$schema"[[:space:]]*:[[:space:]]*"https://json-schema.org/draft/2020-12/schema"' docs/architecture/engine/contracts || true)
           if [ ${#draft2020_schemas[@]} -gt 0 ]; then
-            npx --yes ajv-cli@5 compile --spec=draft2020 -c ajv-formats -s "${draft2020_schemas[@]}"
+            for schema in "${draft2020_schemas[@]}"; do
+              npx --yes ajv-cli@5 compile --spec=draft2020 -c ajv-formats -s "$schema"
+            done
           else
             echo "No draft 2020-12 schemas found"
           fi
@@ -128,7 +130,9 @@ jobs:
             fi
           done)
           if [ ${#draft7_schemas[@]} -gt 0 ]; then
-            npx --yes ajv-cli@5 compile --spec=draft7 -c ajv-formats -s "${draft7_schemas[@]}"
+            for schema in "${draft7_schemas[@]}"; do
+              npx --yes ajv-cli@5 compile --spec=draft7 -c ajv-formats -s "$schema"
+            done
           else
             echo "No draft-07/legacy schemas found"
           fi
