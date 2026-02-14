@@ -112,8 +112,27 @@ jobs:
             echo "No schema files found — skipping"
             exit 0
           fi
-          echo "Installing ajv-cli..."
-          npx --yes ajv-cli@5 compile -s "docs/architecture/engine/contracts/**/*.schema.json"
+
+          echo "Validating draft 2020-12 schemas..."
+          mapfile -t draft2020_schemas < <(grep -RIl --include="*.schema.json" '"\$schema"[[:space:]]*:[[:space:]]*"https://json-schema.org/draft/2020-12/schema"' docs/architecture/engine/contracts || true)
+          if [ ${#draft2020_schemas[@]} -gt 0 ]; then
+            npx --yes ajv-cli@5 compile --spec=draft2020 -c ajv-formats -s "${draft2020_schemas[@]}"
+          else
+            echo "No draft 2020-12 schemas found"
+          fi
+
+          echo "Validating draft-07/legacy schemas..."
+          mapfile -t draft7_schemas < <(find docs/architecture/engine/contracts -name "*.schema.json" -type f 2>/dev/null | while read -r f; do
+            if ! grep -q '"\$schema"[[:space:]]*:[[:space:]]*"https://json-schema.org/draft/2020-12/schema"' "$f"; then
+              echo "$f"
+            fi
+          done)
+          if [ ${#draft7_schemas[@]} -gt 0 ]; then
+            npx --yes ajv-cli@5 compile --spec=draft7 -c ajv-formats -s "${draft7_schemas[@]}"
+          else
+            echo "No draft-07/legacy schemas found"
+          fi
+
           echo "✅ Schema validation complete"
 
   determinism-checks:
