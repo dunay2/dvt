@@ -1,42 +1,60 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+
 import { WorkflowClient } from '@temporalio/client';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { Worker } from '@temporalio/worker';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createActivities } from '../src/activities/stepActivities.js';
+import type {
+  EventEnvelope,
+  EventIdempotencyInput,
+  IPlanFetcher,
+  RunMetadata,
+} from '../src/engine-types.js';
 
 // ---------------------------------------------------------------------------
 // Minimal in-memory test doubles (copied/trimmed from unit tests)
 // ---------------------------------------------------------------------------
 class TestTxStore {
+  private eventsByRun: Map<string, EventEnvelope[]>;
+  private metadataByRun: Map<string, RunMetadata>;
+
   constructor() {
     this.eventsByRun = new Map();
     this.metadataByRun = new Map();
   }
 
-  async saveRunMetadata(meta): Promise<void> {
+  async saveRunMetadata(meta: RunMetadata): Promise<void> {
     this.metadataByRun.set(meta.runId, meta);
   }
 
-  async getRunMetadataByRunId(runId): Promise<unknown | null> {
+  async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
     return this.metadataByRun.get(runId) ?? null;
   }
 
   async appendEventsTx(
     runId: string,
-    envelopes: any[]
-  ): Promise<{ appended: any[]; deduped: any[] }> {
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
     const current = this.eventsByRun.get(runId) ?? [];
-    const appended: any[] = [];
-    const deduped: any[] = [];
+    const appended: EventEnvelope[] = [];
+    const deduped: EventEnvelope[] = [];
 
     for (const env of envelopes) {
       const exists = current.some((e) => e.idempotencyKey === env.idempotencyKey);
       if (exists) {
-        deduped.push({ ...env, runSeq: current.length + deduped.length + appended.length + 1 });
+        deduped.push({
+          ...env,
+          runSeq: current.length + deduped.length + appended.length + 1,
+        } as EventEnvelope);
         continue;
       }
-      const withSeq = { ...env, runSeq: current.length + appended.length + 1 };
+      const withSeq = {
+        ...env,
+        runSeq: current.length + appended.length + 1,
+      } as EventEnvelope;
       current.push(withSeq);
       appended.push(withSeq);
     }
@@ -44,7 +62,7 @@ class TestTxStore {
     return { appended, deduped };
   }
 
-  async listEvents(runId: string): Promise<any[]> {
+  async listEvents(runId: string): Promise<EventEnvelope[]> {
     return [...(this.eventsByRun.get(runId) ?? [])];
   }
 
@@ -60,7 +78,13 @@ class TestClock {
 }
 
 class TestIdempotencyKeyBuilder {
-  runEventKey({ eventType, tenantId, runId, logicalAttemptId, stepId = '' }): string {
+  runEventKey({
+    eventType,
+    tenantId,
+    runId,
+    logicalAttemptId,
+    stepId = '',
+  }: EventIdempotencyInput): string {
     return [eventType, tenantId, runId, String(logicalAttemptId), stepId].join('|');
   }
 }
@@ -76,7 +100,17 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
   let runPromise: Promise<void> | null = null;
   const taskQueue = 'test-queue-integration';
 
+  function assertWorkflowArtifactOrThrow(): void {
+    const artifactPath = path.resolve(__dirname, '../dist/workflows/RunPlanWorkflow.js');
+    if (!existsSync(artifactPath)) {
+      throw new Error(
+        `WORKFLOW_ARTIFACT_MISSING: ${artifactPath}. Run "pnpm --filter @dvt/adapter-temporal test:integration".`
+      );
+    }
+  }
+
   beforeAll(async () => {
+    assertWorkflowArtifactOrThrow();
     env = await TestWorkflowEnvironment.createTimeSkipping();
   });
 
@@ -110,7 +144,7 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
       clock: new TestClock(),
       idempotency: new TestIdempotencyKeyBuilder(),
       fetcher: {
-        fetch: async () =>
+        fetch: async (_planRef) =>
           Buffer.from(
             JSON.stringify({
               metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1' },
@@ -120,8 +154,11 @@ describe('RunPlanWorkflow — integration (time-skipping env)', () => {
               ],
             })
           ),
+      } satisfies IPlanFetcher,
+      integrity: {
+        fetchAndValidate: async (_ref: import('@dvt/contracts').PlanRef, fetcher: IPlanFetcher) =>
+          fetcher.fetch(_ref),
       },
-      integrity: { fetchAndValidate: async (_ref, fetcher) => fetcher.fetch(_ref) },
     };
 
     // Start a Worker that uses the real workflow plus our test activity impls

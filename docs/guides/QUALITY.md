@@ -61,6 +61,57 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 - If a package truly requires Jest, isolate it in its own workspace to avoid duplicated config and tooling drift.
 
+#### Testing quality practices & tooling backlog
+
+These practices were identified to improve test reliability, signal quality, and confidence in CI.
+
+- **Coverage gates in CI (per package and global)**
+  - **Goal**: Enforce minimum coverage thresholds in CI (not only local guidance).
+  - **Practice**: Require line/branch/function thresholds and block merges on regressions.
+- **Mutation testing (Stryker)**
+  - **Goal**: Measure test effectiveness (not just code coverage).
+  - **Practice**: Start with engine core and adapter boundary modules.
+- **Flaky test detection and quarantine workflow**
+  - **Goal**: Detect nondeterministic tests early.
+  - **Practice**: Retry matrix + flaky tagging + mandatory follow-up issue.
+- **Contract test expansion (consumer/provider boundaries)**
+  - **Goal**: Guarantee compatibility between engine, adapters, and CLI-facing contracts.
+  - **Practice**: Validate schema evolution and backward compatibility on pull requests.
+- **Test data builders and deterministic fixtures**
+  - **Goal**: Reduce brittle tests and improve readability.
+  - **Practice**: Prefer reusable builders over ad-hoc inline fixtures.
+- **Time-control policy for async/integration tests**
+  - **Goal**: Prevent race conditions and lifecycle leaks in Temporal/time-skipping tests.
+  - **Practice**: Standardize worker/client teardown and explicit clock control.
+
+#### Suggested adoption order (testing)
+
+1. CI coverage gates + regression blocking
+2. Flaky test detection workflow
+3. Deterministic fixture/builders standard
+4. Contract test expansion in adapter boundaries
+5. Mutation testing on critical modules
+
+#### Fit assessment: proposed practices and toolchain
+
+| Proposal                                | Fit for DVT | Recommendation                 | Notes                                                                     |
+| --------------------------------------- | ----------- | ------------------------------ | ------------------------------------------------------------------------- |
+| Trunk-Based Development + small PRs     | High        | Adopt now                      | Aligns with current PR quality gate and reduces merge drift/conflicts.    |
+| Conventional Commits + SemVer           | High        | Keep and enforce               | Already aligned with commitlint and release governance.                   |
+| ADRs for architecture decisions         | High        | Adopt now                      | Add a lightweight ADR template and link it from architecture docs.        |
+| DORA metrics + SLO/error budget mindset | Medium-High | Adopt in hardening phase       | Start with lead time and change failure rate using CI/deploy data.        |
+| Husky + lint-staged + commitlint        | High        | Keep                           | Already configured in repository workflow.                                |
+| Changesets for monorepo releases        | Medium      | Defer (decision needed)        | Current direction is release-please; avoid dual release systems.          |
+| Renovate for dependency updates         | Medium-High | Optional migration             | Dependabot is active; migrate only if advanced grouping/rules are needed. |
+| pnpm workspaces                         | High        | Keep                           | Already foundational in this monorepo.                                    |
+| Nx/Turborepo (cache/distributed tasks)  | Medium      | Defer                          | Introduce when CI duration/package graph complexity justifies it.         |
+| Playwright for E2E/UI                   | High        | Adopt now                      | Strong fit for golden-path browser validation.                            |
+| MSW for network mocking                 | High        | Adopt now                      | Improves realism and isolation for frontend/integration tests.            |
+| OpenTelemetry                           | High        | Adopt by stages                | Already in observability backlog; define minimum instrumentation first.   |
+| OWASP ASVS                              | High        | Adopt now (checklist baseline) | Use as verification baseline for app/service security controls.           |
+| SLSA                                    | Medium-High | Adopt incrementally            | Start with provenance and build integrity controls.                       |
+| Sigstore                                | Medium-High | Adopt with release hardening   | Pair with SLSA milestones for artifact signing and verification.          |
+
 ### 3. Type Safety
 
 #### TypeScript

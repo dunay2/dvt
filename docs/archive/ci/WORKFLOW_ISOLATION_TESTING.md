@@ -4,7 +4,7 @@
 
 Isolate and verify each GitHub Actions workflow one at a time to identify and fix failures without interference.
 
-## Estado Actual (Commit: e44b078)
+## Current Status (Commit: e44b078)
 
 ### Workflows active on Pull Request
 
@@ -64,8 +64,8 @@ Isolate and verify each GitHub Actions workflow one at a time to identify and fi
 ### To enable the next workflow
 
 ```bash
-# 1. Descomentar pull_request en el workflow
-# Ejemplo para test.yml:
+# 1. Uncomment pull_request in the workflow
+# Example for test.yml:
 # on:
 #   pull_request:
 #     branches: [main]
@@ -77,16 +77,16 @@ Isolate and verify each GitHub Actions workflow one at a time to identify and fi
 git add .github/workflows/test.yml
 git commit -m "test(ci): Enable test.yml for isolated verification"
 
-# 3. Push para disparar workflows en GitHub
+# 3. Push to trigger workflows in GitHub
 git push
 ```
 
-### Para revisar logs en GitHub
+### To review logs in GitHub
 
 - URL: <https://github.com/dunay2/dvt/actions>
-- Buscar el workflow corriendo
+- Find the running workflow
 - Click en el job fallido
-- Revisar step output
+- Review step output
 
 ## Expected Results
 
