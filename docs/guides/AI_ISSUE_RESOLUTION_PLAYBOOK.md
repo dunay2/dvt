@@ -2,7 +2,7 @@
 
 > Document control
 >
-> - Version: `v1.5.0`
+> - Version: `v1.6.1`
 > - Status: `active`
 > - Last updated (UTC): `2026-02-14`
 > - Owner: `Engineering / AI Delivery Governance`
@@ -60,12 +60,16 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 
 6. **Risk & impact briefing before implementation (mandatory)**
    - Before touching code/docs, publish a short pre-implementation brief **in the issue comments** with:
+     - suitability (is this the right solution for this issue/context?),
+     - blockers (what can block implementation/release/validation),
+     - opportunities (secondary improvements worth capturing),
      - what will change,
      - what for (intended objective/outcome),
      - how the change will be implemented,
      - expected files to change,
      - affected components/surfaces,
      - identified risks and possible side effects,
+     - risk mitigation actions,
      - why the proposed approach is chosen,
      - validation plan,
      - explicit unknowns/questions for maintainers.
@@ -122,6 +126,7 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - Docs and issue both contain explicit WHAT / WHY notes.
 - Impact/evidence trail recorded in issue comments unless new technical docs were explicitly required.
 - Issue includes explicit WHAT / FOR / HOW, touched scope, risks, and affected surfaces.
+- Issue includes explicit Suitability / Blockers / Opportunities / Risks & Mitigation.
 - Pre-implementation risk/impact briefing recorded and acknowledged.
 - Business-rule-sensitive decisions explicitly confirmed and documented.
 - Think-first analysis recorded (selected option + rationale + alternatives rejected).
@@ -155,6 +160,21 @@ Use this baseline to reduce subjectivity in step 1:
 ```markdown
 ## Pre-implementation brief
 
+### Suitability
+
+- Why this approach is suitable for this issue/context:
+- Constraints considered:
+
+### Blockers
+
+- Current blockers (technical/process/decision):
+- Required unblocks / owner:
+
+### Opportunities
+
+- Adjacent improvements identified (not mandatory for this scope):
+- Recommendation (now vs follow-up issue):
+
 ### WHAT
 
 - Scope summary:
@@ -185,6 +205,13 @@ Use this baseline to reduce subjectivity in step 1:
 - Classification: Low | Medium | High
 - Main risks / side effects:
 
+### Risks & Mitigation
+
+- Risk 1:
+  - Mitigation:
+- Risk 2:
+  - Mitigation:
+
 ### Impact (affected areas)
 
 - What this affects (technical/functional/operational):
@@ -205,6 +232,20 @@ Use this baseline to reduce subjectivity in step 1:
 
 ```markdown
 ## Final issue close summary
+
+### Suitability outcome
+
+- Was the selected approach suitable in practice? Why:
+
+### Blockers encountered
+
+- Blockers found during execution:
+- How they were resolved:
+
+### Opportunities identified
+
+- Follow-up opportunities discovered:
+- Proposed follow-up issue(s):
 
 ### WHAT changed
 
@@ -239,6 +280,7 @@ Use this baseline to reduce subjectivity in step 1:
 - Diff is focused and reviewable.
 - Includes issue reference (`Closes #X` / `Refs #X`).
 - Opening a PR is mandatory for implementation scope (no direct done-without-PR closure).
+- Issue/PR text MUST render as proper Markdown (no escaped literal `\n` sequences in final visible content).
 - Includes risk note and rollback note for non-trivial changes.
 - Before opening a PR, compile, tests, and lint MUST pass for affected scope (and broader scope when shared/core contracts are touched).
 - Do not treat warning suppression as a final fix; solve root cause first. Hiding warnings is only acceptable with explicit maintainer approval and written rationale.
@@ -360,6 +402,8 @@ Use these as a consistent gate before merge:
 
 | Date (UTC) | Version | Change                                                                                                                                                                                                                               | Author       |
 | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| 2026-02-14 | v1.6.1  | Added explicit rule that issue/PR content must render as valid Markdown (avoid escaped literal `\n` in visible text).                                                                                                                | AI assistant |
+| 2026-02-14 | v1.6.0  | Added mandatory sections for Suitability, Blockers, Opportunities, and Risks & Mitigation in pre-implementation briefing, quality gates, and issue-close template.                                                                   | AI assistant |
 | 2026-02-14 | v1.5.0  | Added mandatory WHAT/FOR/HOW, touched-scope, and impact (risks + affected surfaces) requirements in the pre-implementation process and templates.                                                                                    | AI assistant |
 | 2026-02-14 | v1.4.0  | Clarified that issue comments are the default audit trail for execution notes (unless new technical docs are required) and made PR creation/linking mandatory before issue closure.                                                  | AI assistant |
 | 2026-02-14 | v1.3.0  | Added concrete risk rubric, business-rule-sensitive list, pre/final templates, primary-source guidance, TS projectService/`tsc -b` guidance, enforceable split strategy, lint-staged clarification, and explicit workflow numbering. | AI assistant |
