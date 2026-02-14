@@ -6,9 +6,11 @@
     "sourceType": "module",
     "project": [
       "./tsconfig.json",
+      "./tsconfig.eslint.base.json",
       "./packages/*/tsconfig.json",
       "./packages/*/tsconfig.eslint.json"
-    ]
+    ],
+    "noWarnOnMultipleProjects": true
   },
   "plugins": ["@typescript-eslint", "import", "jest"],
   "extends": [
@@ -24,6 +26,10 @@
     "es2022": true,
     "jest": true
   },
+  "ignorePatterns": [
+    "packages/engine/legacy-top-level-engine/**",
+    "packages/adapters-legacy/**"
+  ],
   "rules": {
     // Determinism-critical rules
     "no-console": ["warn", { "allow": ["warn", "error"] }],
@@ -137,6 +143,7 @@
         "alwaysTryTypes": true,
         "project": [
           "./tsconfig.json",
+          "./tsconfig.eslint.base.json",
           "./packages/*/tsconfig.json",
           "./packages/*/tsconfig.eslint.json"
         ]

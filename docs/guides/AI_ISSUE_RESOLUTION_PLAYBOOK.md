@@ -1,5 +1,12 @@
 # AI Issue Resolution Playbook
 
+> Document control
+>
+> - Version: `v1.1.0`
+> - Status: `active`
+> - Last updated (UTC): `2026-02-14`
+> - Owner: `Engineering / AI Delivery Governance`
+
 ## Purpose
 
 This guide defines a standard, auditable process for AI agents resolving repository issues.
@@ -196,3 +203,10 @@ Use these as a consistent gate before merge:
 1. **Merge readiness standard**
    - Mandatory checks green for affected scope (lint/tests/build/docs lint where relevant).
    - Issue comment updated with final evidence and residual scope (if any).
+
+## Change history
+
+| Date (UTC) | Version | Change                                                                                                           | Author       |
+| ---------- | ------- | ---------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-02-14 | v1.1.0  | Added document-control signature, anti-warning rule, PR-size guard, and planned TS references migration section. | AI assistant |
+| 2026-02-14 | v1.0.0  | Initial baseline playbook with mandatory workflow, quality gates, and anti-patterns.                             | AI assistant |

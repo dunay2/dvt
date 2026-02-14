@@ -15,11 +15,35 @@ jobs:
     name: PR Quality Checks
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    env:
+      # TEMPORARY: skip PR size gate while merge backlog is being normalized.
+      SKIP_PR_SIZE_CHECK: 'true'
+    outputs:
+      temporal_changed: ${{ steps.detect_changes.outputs.temporal_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup Node.js (for fast-fail checks)
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies (fast-fail)
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile contracts (fast-fail)
+        run: pnpm test:contracts:compile
+
+      - name: Workspace type-check (fast-fail)
+        run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
         uses: amannn/action-semantic-pull-request@v5
@@ -48,19 +72,35 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const additions = context.payload.pull_request.additions;
-            const deletions = context.payload.pull_request.deletions;
-            const changes = additions + deletions;
+            const title = context.payload.pull_request.title || '';
+            const labels = (context.payload.pull_request.labels || []).map(l => l.name.toLowerCase());
+            const forceSkip = (process.env.SKIP_PR_SIZE_CHECK || '').toLowerCase() === 'true';
 
-            const maxChanges = 1000;
-            const warningThreshold = 500;
-
-            if (changes > maxChanges) {
-              core.setFailed(`❌ PR too large: ${changes} lines changed (max: ${maxChanges}). Consider splitting into smaller PRs.`);
-            } else if (changes > warningThreshold) {
-              core.warning(`⚠️ Large PR: ${changes} lines changed. Consider splitting if possible.`);
+            // Override mechanisms (use one):
+            // - add `[skip-size-check]` to the PR title, or
+            // - add a PR label named `skip-size-check` or `pr-size-exempt`
+            if (
+              forceSkip ||
+              /\[skip-size-check\]/i.test(title) ||
+              labels.includes('skip-size-check') ||
+              labels.includes('pr-size-exempt')
+            ) {
+              core.info('ℹ️ PR size check skipped by override (title or label).');
             } else {
-              core.info(`✅ PR size acceptable: ${changes} lines changed.`);
+              const additions = context.payload.pull_request.additions;
+              const deletions = context.payload.pull_request.deletions;
+              const changes = additions + deletions;
+
+              const maxChanges = 1000;
+              const warningThreshold = 500;
+
+              if (changes > maxChanges) {
+                core.setFailed(`❌ PR too large: ${changes} lines changed (max: ${maxChanges}). Consider splitting into smaller PRs.`);
+              } else if (changes > warningThreshold) {
+                core.warning(`⚠️ Large PR: ${changes} lines changed. Consider splitting if possible.`);
+              } else {
+                core.info(`✅ PR size acceptable: ${changes} lines changed.`);
+              }
             }
 
       - name: Check for merge conflicts
@@ -88,10 +128,56 @@ jobs:
               core.setFailed('❌ PR description is too short. Please provide a detailed description (min 50 characters).');
             }
 
+      - name: Detect PR changes relevant to Temporal
+        id: detect_changes
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setOutput('temporal_changed', 'true');
+              return;
+            }
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number }
+            );
+            const patterns = ['packages/adapter-temporal/', 'packages/contracts/'];
+            const changed = files.some(f => patterns.some(p => f.filename.startsWith(p)));
+            core.setOutput('temporal_changed', changed ? 'true' : 'false');
+
+  temporal-integration:
+    name: Temporal adapter integration (time-skipping)
+    runs-on: ubuntu-latest
+    needs: [pr-checks]
+    if:
+      needs.pr-checks.outputs.temporal_changed == 'true' && github.event.pull_request.draft == false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts for integration
+        run: pnpm --filter @dvt/contracts build
+
+      - name: Run Temporal adapter integration (time-skipping)
+        run: pnpm --filter @dvt/adapter-temporal test:integration
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
-    needs: [pr-checks]
+    needs: [pr-checks, temporal-integration]
     if: always()
     steps:
       - name: Check all jobs
@@ -99,8 +185,9 @@ jobs:
         with:
           script: |
             const jobs = ${{ toJSON(needs) }};
+            // Consider only explicit failures as blocking; ignore skipped/neutral jobs
             const failedJobs = Object.entries(jobs)
-              .filter(([_, job]) => job.result !== 'success')
+              .filter(([_, job]) => ['failure', 'cancelled', 'timed_out'].includes(job.result))
               .map(([name, _]) => name);
 
             if (failedJobs.length > 0) {

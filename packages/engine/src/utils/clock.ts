@@ -7,6 +7,11 @@ export interface IClock {
 // Regex for strict ISO UTC: YYYY-MM-DDTHH:mm:ss.mmmZ
 const ISO_UTC_REGEX = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/;
 
+const MS_PER_SECOND = 1000;
+const MS_PER_MINUTE = 60 * MS_PER_SECOND;
+const MS_PER_HOUR = 60 * MS_PER_MINUTE;
+const MS_PER_DAY = 24 * MS_PER_HOUR;
+
 // Helper: Check leap year
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -14,6 +19,70 @@ function isLeapYear(year: number): boolean {
 
 // Helper: Days in month
 const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function daysInMonth(year: number, month: number): number {
+  if (month === 2 && isLeapYear(year)) return 29;
+  return DAYS_IN_MONTH[month - 1]!; // month is validated before calling
+}
+
+function assertInRange({
+  value,
+  min,
+  max,
+  label,
+  iso,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  label: string;
+  iso: IsoUtcString;
+}): void {
+  if (value < min || value > max) throw new Error(`Invalid ${label} in ISO UTC: ${iso}`);
+}
+
+function parseIsoParts(iso: IsoUtcString): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  min: number;
+  sec: number;
+  milli: number;
+} {
+  const match = ISO_UTC_REGEX.exec(iso);
+  if (!match) throw new Error(`Invalid ISO UTC format: ${iso}`);
+
+  const [_, y, mo, d, h, mi, s, ms] = match;
+  return {
+    year: Number(y),
+    month: Number(mo),
+    day: Number(d),
+    hour: Number(h),
+    min: Number(mi),
+    sec: Number(s),
+    milli: Number(ms),
+  };
+}
+
+function validateIsoParts(parts: ReturnType<typeof parseIsoParts>, iso: IsoUtcString): void {
+  assertInRange({ value: parts.month, min: 1, max: 12, label: 'month', iso });
+  assertInRange({
+    value: parts.day,
+    min: 1,
+    max: daysInMonth(parts.year, parts.month),
+    label: 'day',
+    iso,
+  });
+  assertInRange({ value: parts.hour, min: 0, max: 23, label: 'time', iso });
+  assertInRange({ value: parts.min, min: 0, max: 59, label: 'time', iso });
+  assertInRange({ value: parts.sec, min: 0, max: 59, label: 'time', iso });
+  assertInRange({ value: parts.milli, min: 0, max: 999, label: 'time', iso });
+}
+
+function pad(n: number, w: number): string {
+  return n.toString().padStart(w, '0');
+}
 
 // Howard Hinnant's days-from-civil algorithm (proleptic Gregorian)
 function daysFromCivil(y: number, m: number, d: number): number {
@@ -43,41 +112,35 @@ function civilFromDays(days: number): { year: number; month: number; day: number
 
 // Parse strict ISO UTC string to epoch ms
 export function parseIsoUtcToEpochMs(iso: IsoUtcString): number {
-  const m = ISO_UTC_REGEX.exec(iso);
-  if (!m) throw new Error(`Invalid ISO UTC format: ${iso}`);
-  const [_, y, mo, d, h, mi, s, ms] = m;
-  const year = Number(y),
-    month = Number(mo),
-    day = Number(d);
-  const hour = Number(h),
-    min = Number(mi),
-    sec = Number(s),
-    milli = Number(ms);
-  if (month < 1 || month > 12) throw new Error(`Invalid month in ISO UTC: ${iso}`);
-  let dim = DAYS_IN_MONTH[month - 1]!; // validated month in 1..12 above
-  if (month === 2 && isLeapYear(year)) dim = 29;
-  if (day < 1 || day > dim) throw new Error(`Invalid day in ISO UTC: ${iso}`);
-  if (hour > 23 || min > 59 || sec > 59 || milli > 999)
-    throw new Error(`Invalid time in ISO UTC: ${iso}`);
-  const days = daysFromCivil(year, month, day);
-  return days * 86400000 + hour * 3600000 + min * 60000 + sec * 1000 + milli;
+  const parts = parseIsoParts(iso);
+  validateIsoParts(parts, iso);
+
+  const days = daysFromCivil(parts.year, parts.month, parts.day);
+  return (
+    days * MS_PER_DAY +
+    parts.hour * MS_PER_HOUR +
+    parts.min * MS_PER_MINUTE +
+    parts.sec * MS_PER_SECOND +
+    parts.milli
+  );
 }
 
 // Convert epoch ms to strict ISO UTC string
 export function epochMsToIsoUtc(ms: number): IsoUtcString {
   if (!Number.isFinite(ms) || ms < 0) throw new Error(`Invalid epoch ms: ${ms}`);
-  const days = Math.floor(ms / 86400000);
-  let rem = ms % 86400000;
+
+  const days = Math.floor(ms / MS_PER_DAY);
+  let rem = ms % MS_PER_DAY;
   const { year, month, day } = civilFromDays(days);
-  const hour = Math.floor(rem / 3600000);
-  rem %= 3600000;
-  const min = Math.floor(rem / 60000);
-  rem %= 60000;
-  const sec = Math.floor(rem / 1000);
-  rem %= 1000;
+
+  const hour = Math.floor(rem / MS_PER_HOUR);
+  rem %= MS_PER_HOUR;
+  const min = Math.floor(rem / MS_PER_MINUTE);
+  rem %= MS_PER_MINUTE;
+  const sec = Math.floor(rem / MS_PER_SECOND);
+  rem %= MS_PER_SECOND;
   const milli = rem;
-  // Pad to fixed width
-  const pad = (n: number, w: number) => n.toString().padStart(w, '0');
+
   return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}T${pad(hour, 2)}:${pad(min, 2)}:${pad(sec, 2)}.${pad(milli, 3)}Z` as IsoUtcString;
 }
 

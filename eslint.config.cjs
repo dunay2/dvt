@@ -9,10 +9,12 @@ module.exports = {
     'engine/test/**',
     'dist/',
     'node_modules/',
+    'packages/engine/legacy-top-level-engine/**',
+    'packages/adapters-legacy/**',
     '*.d.ts',
   ],
   // ...existing config (add your rules, plugins, etc. here)
-};// @ts-check
+}; // @ts-check
 const eslint = require('@eslint/js');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
@@ -212,6 +214,8 @@ module.exports = [
       'dist/',
       'coverage/',
       'node_modules/',
+      'packages/engine/legacy-top-level-engine/**',
+      'packages/adapters-legacy/**',
       '**/*.d.ts',
       '.github/',
       'docs/',

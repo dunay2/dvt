@@ -17,10 +17,7 @@ console.log('🔍 Validating contract fixtures...\n');
 
 // Paths
 const docsDir = path.join(__dirname, '../docs/architecture/engine/schemas');
-const fixturesDir = path.join(
-  __dirname,
-  '../packages/engine/test/contracts/fixtures'
-);
+const fixturesDir = path.join(__dirname, '../packages/engine/test/contracts/fixtures');
 const planDir = path.join(__dirname, '../packages/engine/test/contracts/plans');
 
 // Collect fixture files
@@ -28,9 +25,9 @@ const fixtureFiles = [];
 
 // Check plan fixtures in test directory
 if (fs.existsSync(fixturesDir)) {
-  const files = fs.readdirSync(fixturesDir).filter(f => f.endsWith('.json'));
+  const files = fs.readdirSync(fixturesDir).filter((f) => f.endsWith('.json'));
   fixtureFiles.push(
-    ...files.map(f => ({
+    ...files.map((f) => ({
       type: 'execution-plan',
       path: path.join(fixturesDir, f),
     }))
@@ -39,9 +36,9 @@ if (fs.existsSync(fixturesDir)) {
 
 // Check plans in packages/engine/test/contracts/plans
 if (fs.existsSync(planDir)) {
-  const files = fs.readdirSync(planDir).filter(f => f.endsWith('.json'));
+  const files = fs.readdirSync(planDir).filter((f) => f.endsWith('.json'));
   fixtureFiles.push(
-    ...files.map(f => ({
+    ...files.map((f) => ({
       type: 'execution-plan',
       path: path.join(planDir, f),
     }))
@@ -51,8 +48,8 @@ if (fs.existsSync(planDir)) {
 // Collect signal schemas from docs
 const signalSchemas = [];
 if (fs.existsSync(docsDir)) {
-  const files = fs.readdirSync(docsDir).filter(f => f.endsWith('.json'));
-  signalSchemas.push(...files.map(f => path.join(docsDir, f)));
+  const files = fs.readdirSync(docsDir).filter((f) => f.endsWith('.json'));
+  signalSchemas.push(...files.map((f) => path.join(docsDir, f)));
 }
 
 // Validate
@@ -80,16 +77,14 @@ fixtureFiles.forEach(({ type, path: filePath }) => {
 // Validate signal schemas
 if (signalSchemas.length > 0) {
   console.log('\n📋 Signal Schemas:');
-  signalSchemas.forEach(schemaPath => {
+  signalSchemas.forEach((schemaPath) => {
     totalChecks++;
     try {
       const content = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
       console.log(`✅ ${path.relative(process.cwd(), schemaPath)}`);
       totalValid++;
     } catch (error) {
-      console.log(
-        `❌ ${path.relative(process.cwd(), schemaPath)}: ${error.message}`
-      );
+      console.log(`❌ ${path.relative(process.cwd(), schemaPath)}: ${error.message}`);
       totalInvalid++;
     }
   });
@@ -105,13 +100,9 @@ console.log('='.repeat(50));
 
 if (totalInvalid > 0 || totalChecks === 0) {
   if (totalChecks === 0) {
-    console.log(
-      '\n⏸️  No fixtures found (expected - populated by Issue #10: Golden Paths)'
-    );
+    console.log('\n⏸️  No fixtures found (expected - populated by Issue #10: Golden Paths)');
   }
-  console.log(
-    '\n✅ Validation logic ready (will activate when golden path fixtures exist)'
-  );
+  console.log('\n✅ Validation logic ready (will activate when golden path fixtures exist)');
   process.exit(0);
 } else {
   console.log('\n✨ All validations passed!');

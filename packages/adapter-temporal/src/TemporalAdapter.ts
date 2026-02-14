@@ -1,0 +1,126 @@
+import type {
+  EngineRunRef,
+  PlanRef,
+  RunContext,
+  RunStatusSnapshot,
+  SignalRequest,
+  IProviderAdapter,
+} from '@dvt/contracts';
+import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
+
+import type { TemporalAdapterConfig } from './config.js';
+import type { TemporalClientManager } from './TemporalClient.js';
+import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
+
+interface WorkflowHandleLike {
+  cancel(): Promise<unknown>;
+  signal(signalName: string, ...args: unknown[]): Promise<void>;
+}
+
+interface WorkflowClientLike {
+  start(
+    workflowType: string,
+    options: unknown
+  ): Promise<{
+    workflowId: string;
+    firstExecutionRunId?: string;
+  }>;
+  getHandle(workflowId: string): WorkflowHandleLike;
+}
+
+interface IRunStateStoreLike {
+  listEvents(runId: string): Promise<unknown[]>;
+}
+
+interface SnapshotProjectorLike {
+  rebuild(runId: string, events: unknown[]): RunStatusSnapshot;
+}
+
+export interface TemporalAdapterDeps {
+  clientManager?: TemporalClientManager;
+  workflowClient?: WorkflowClientLike;
+  config: TemporalAdapterConfig;
+  stateStore: IRunStateStoreLike;
+  projector: SnapshotProjectorLike;
+}
+
+export class TemporalAdapter implements IProviderAdapter {
+  readonly provider = 'temporal' as const;
+
+  constructor(private readonly deps: TemporalAdapterDeps) {}
+
+  async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
+    const workflowClient = await this.getClient();
+
+    const workflowId = toTemporalWorkflowId(ctx.runId);
+    const taskQueue = toTemporalTaskQueue(ctx.tenantId, this.deps.config);
+
+    const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
+      taskQueue,
+      workflowId,
+      args: [{ planRef, ctx }],
+    });
+
+    const runId =
+      typeof started.firstExecutionRunId === 'string' && started.firstExecutionRunId.length > 0
+        ? started.firstExecutionRunId
+        : ctx.runId;
+
+    return toTemporalRunRef({
+      workflowId: started.workflowId,
+      runId,
+      config: this.deps.config,
+      taskQueue,
+    });
+  }
+
+  async cancelRun(runRef: EngineRunRef): Promise<void> {
+    const workflowClient = await this.getClient();
+    await workflowClient.getHandle(runRef.workflowId).cancel();
+  }
+
+  async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
+    // Operational authority is persisted projection, not Workflow query state.
+    const events = await this.deps.stateStore.listEvents(runRef.runId);
+    return this.deps.projector.rebuild(runRef.runId, events);
+  }
+
+  async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
+    const workflowClient = await this.getClient();
+    const workflow = workflowClient.getHandle(runRef.workflowId) as WorkflowHandleLike;
+
+    switch (request.type) {
+      case 'PAUSE':
+        await workflow.signal(WorkflowSignals.PAUSE);
+        return;
+      case 'RESUME':
+        await workflow.signal(WorkflowSignals.RESUME);
+        return;
+      case 'CANCEL':
+        // Canonicalize cancellation on the provider-native cancel path so both
+        // `cancelRun()` and `signal(CANCEL)` follow the same execution semantics.
+        await workflow.cancel();
+        return;
+      case 'RETRY_STEP':
+      case 'RETRY_RUN':
+        throw new Error('NotImplemented: RETRY_* signals are Phase 2');
+      default: {
+        const _never: never = request.type;
+        throw new Error(`Unknown signal type: ${String(_never)}`);
+      }
+    }
+  }
+
+  private async getClient(): Promise<WorkflowClientLike> {
+    if (this.deps.workflowClient) {
+      return this.deps.workflowClient;
+    }
+    if (!this.deps.clientManager) {
+      throw new Error('TEMPORAL_CLIENT_NOT_CONFIGURED');
+    }
+    if (!this.deps.clientManager.isConnected()) {
+      await this.deps.clientManager.connect();
+    }
+    return this.deps.clientManager.getClient().client.workflow;
+  }
+}

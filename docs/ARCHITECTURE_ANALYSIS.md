@@ -76,6 +76,53 @@ dvt/
 
 ---
 
+## Architecture Fitness Review (2026-02-14)
+
+### Verdict
+
+The current architecture is **adequate for the project context** (contracts-first workflow engine with adapter boundaries in a monorepo), with **operational deviations** that should be addressed in the short term.
+
+### What is working well
+
+1. **Package boundaries are clear**
+   - Monorepo package split (`contracts`, `engine`, adapters, `cli`) remains coherent with domain responsibilities.
+
+2. **Core dependency injection and testability**
+   - The engine core uses explicit dependency contracts via [`WorkflowEngineDeps`](../../packages/engine/src/core/WorkflowEngine.ts), improving isolation and unit/integration testing.
+
+3. **Security and contract guards happen early**
+   - Run start flow enforces plan policy, tenant authorization, and integrity validation before provider execution.
+
+4. **Deterministic event persistence model**
+   - Idempotency and event append flow remain aligned with deterministic execution constraints.
+
+### Detected deviations and risks
+
+1. **Temporal integration test fragility**
+   - Integration lifecycle (`worker.run`/`shutdown`/`environment teardown`) still shows risk of flaky behavior under time-skipping/native connection scenarios.
+
+2. **Release governance drift**
+   - Documentation and tooling references are not fully converged on a single release automation path yet.
+
+3. **Architecture hardening debt remains open**
+   - Lint boundary debt and adapter parity are still active, reducing confidence in long-term maintainability if left unresolved.
+
+### Priority actions (recommended order)
+
+1. **Stabilize Temporal integration lifecycle policy**
+   - Standardize teardown order and assert no leaked worker references in integration tests.
+
+2. **Converge release process documentation and automation**
+   - Keep one canonical release flow and remove parallel/legacy ambiguity.
+
+3. **Enforce architectural boundaries with tooling**
+   - Adopt/enable boundary validation and targeted static rules to prevent layer erosion.
+
+4. **Turn gaps into measurable exit criteria**
+   - Define explicit targets (flake rate, coverage by package, pass stability window) and align them with roadmap checkpoints.
+
+---
+
 ## Acceptance Criteria
 
 - `pnpm -r build` succeeds.
