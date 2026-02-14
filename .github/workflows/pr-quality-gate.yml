@@ -110,7 +110,10 @@ jobs:
               core.setOutput('temporal_changed', 'true');
               return;
             }
-            const files = await github.paginate(github.pulls.listFiles, { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number });
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number }
+            );
             const patterns = ['packages/adapter-temporal/', 'packages/contracts/'];
             const changed = files.some(f => patterns.some(p => f.filename.startsWith(p)));
             core.setOutput('temporal_changed', changed ? 'true' : 'false');
