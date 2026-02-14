@@ -80,7 +80,10 @@ class TestTxStore {
     for (const env of envelopes) {
       const exists = current.some((e) => e.idempotencyKey === env.idempotencyKey);
       if (exists) {
-        deduped.push({ ...env, runSeq: current.length + deduped.length + appended.length + 1 } as EventEnvelope);
+        deduped.push({
+          ...env,
+          runSeq: current.length + deduped.length + appended.length + 1,
+        } as EventEnvelope);
         continue;
       }
 

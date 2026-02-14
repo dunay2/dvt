@@ -1,4 +1,3 @@
-
 import { describe, it, expect } from 'vitest';
 
 import { RunStatusSnapshot, RunStatus, AdapterScopedSubstatus } from '../../src/contracts/types.js';

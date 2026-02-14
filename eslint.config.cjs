@@ -14,7 +14,7 @@ module.exports = {
     '*.d.ts',
   ],
   // ...existing config (add your rules, plugins, etc. here)
-};// @ts-check
+}; // @ts-check
 const eslint = require('@eslint/js');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');

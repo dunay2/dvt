@@ -1,7 +1,11 @@
-
 import { describe, it, expect } from 'vitest';
 
-import type { RunContext, EngineRunRef, RunStatusSnapshot, SignalRequest } from '../../src/contracts/types.js';
+import type {
+  RunContext,
+  EngineRunRef,
+  RunStatusSnapshot,
+  SignalRequest,
+} from '../../src/contracts/types.js';
 import type { PlanRef } from '../../src/types/plan-ref';
 
 describe('IWorkflowEngine contract types', () => {
