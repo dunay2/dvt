@@ -1,0 +1,6 @@
+# Ignore generated and dependency files
+node_modules/**
+**/node_modules/**
+coverage/**
+dist/**
+docs-dist/**

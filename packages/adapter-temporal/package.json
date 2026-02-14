@@ -6,15 +6,19 @@
   "private": false,
   "license": "MIT",
   "dependencies": {
+    "@temporalio/activity": "^1.11.7",
+    "@temporalio/client": "^1.11.7",
+    "@temporalio/worker": "^1.11.7",
+    "@temporalio/workflow": "^1.11.7",
     "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run ./test/"
   },
   "devDependencies": {
-    "typescript": "^5.7.3",
-    "vitest": "^2.1.8"
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
   }
 }
