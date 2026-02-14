@@ -51,9 +51,17 @@ class TestIdempotencyKeyBuilder implements IIdempotencyKeyBuilder {
     tenantId: string;
     runId: string;
     logicalAttemptId: number;
+    engineAttemptId: number;
     stepId?: string;
   }): string {
-    return [e.eventType, e.tenantId, e.runId, String(e.logicalAttemptId), e.stepId ?? ''].join('|');
+    return [
+      e.eventType,
+      e.tenantId,
+      e.runId,
+      String(e.logicalAttemptId),
+      String(e.engineAttemptId),
+      e.stepId ?? '',
+    ].join('|');
   }
 }
 
@@ -105,8 +113,22 @@ class TestTxStore {
   }
 }
 
-function buildDeps(): ActivityDeps {
-  const store = new TestTxStore();
+class FailingFirstAppendStateStore extends TestTxStore {
+  private first = true;
+
+  override async appendEventsTx(
+    runId: string,
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+    if (this.first) {
+      this.first = false;
+      throw new Error('TRANSIENT_DB_ERROR');
+    }
+    return super.appendEventsTx(runId, envelopes);
+  }
+}
+
+function buildDeps(store: TestTxStore = new TestTxStore()): ActivityDeps {
   return {
     stateStore: store,
     outbox: store,
@@ -183,6 +205,53 @@ describe('stepActivities', () => {
       expect(events).toHaveLength(2);
       expect(events[0]!.eventType).toBe('StepStarted');
       expect((events[0] as { stepId: string }).stepId).toBe('step-a');
+    });
+
+    it('retry-safe: transient failure then retry persists one logical event', async () => {
+      const store = new FailingFirstAppendStateStore();
+      const deps = buildDeps(store);
+      const acts = createActivities(deps);
+
+      await expect(acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' })).rejects.toThrow(
+        'TRANSIENT_DB_ERROR'
+      );
+
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+
+      const events = await deps.stateStore.listEvents('run-1');
+      const runStarted = events.filter((e) => e.eventType === 'RunStarted');
+      expect(runStarted).toHaveLength(1);
+      expect(runStarted[0]!.idempotencyKey).toBe('RunStarted|tenant-1|run-1|1|1|');
+    });
+
+    it('idempotency key varies by engineAttemptId (same logical vs different engine)', () => {
+      const keyForEngine1 = new TestIdempotencyKeyBuilder().runEventKey({
+        eventType: 'RunStarted',
+        tenantId: 't',
+        runId: 'r',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+      } as any);
+
+      const keyForEngine2 = new TestIdempotencyKeyBuilder().runEventKey({
+        eventType: 'RunStarted',
+        tenantId: 't',
+        runId: 'r',
+        logicalAttemptId: 1,
+        engineAttemptId: 2,
+      } as any);
+
+      expect(keyForEngine1).not.toBe(keyForEngine2);
+
+      const keySame = new TestIdempotencyKeyBuilder().runEventKey({
+        eventType: 'RunStarted',
+        tenantId: 't',
+        runId: 'r',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+      } as any);
+      expect(keySame).toBe(keyForEngine1);
     });
   });
 

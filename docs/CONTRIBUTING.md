@@ -81,6 +81,29 @@ Changes to different documentation areas require specific team approvals:
 
 Every PR goes through **4 automated validation stages** before merge:
 
+### PR metadata gate (required before rerun)
+
+Before rerunning failed PR checks, verify PR metadata first. The workflow
+[`pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) fails if these
+rules are not met:
+
+1. **PR title must use Conventional Commits format**
+   - Required shape: `<type>: <Subject>`
+   - Allowed types are defined in
+     [`Check PR title follows Conventional Commits`](../../.github/workflows/pr-quality-gate.yml).
+   - Current policy requires subject to start with uppercase (pattern `^[A-Z].+$`).
+   - Example: `chore: Safe integrate pr85`
+
+1. **PR description must be present and long enough**
+   - Minimum body length: 50 characters.
+   - Include at least: summary, concrete changes, and validation evidence.
+
+1. **Operational procedure for agents (mandatory order)**
+   - Read failed job logs first (do not assume cause).
+   - Fix title/body with [`gh pr edit`](../../package.json).
+   - Re-run checks only after metadata is corrected.
+   - Confirm state with [`gh pr checks`](../../package.json) until all required checks are green.
+
 **Tool**: `markdownlint-cli2`  
 **Workflow**: `.github/workflows/markdown_lint.yml`  
 **Checks**:

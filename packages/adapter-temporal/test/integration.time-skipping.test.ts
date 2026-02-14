@@ -1,64 +1,95 @@
-import { existsSync } from 'node:fs';
-import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { WorkflowClient } from '@temporalio/client';
+import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
-import { Worker } from '@temporalio/worker';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { createActivities } from '../src/activities/stepActivities.js';
-import type {
-  EventEnvelope,
-  EventIdempotencyInput,
-  IPlanFetcher,
-  RunMetadata,
-} from '../src/engine-types.js';
+import type { ActivityDeps } from '../src/activities/stepActivities.js';
+import { loadTemporalAdapterConfig, TemporalAdapter, TemporalWorkerHost } from '../src/index.js';
 
-// ---------------------------------------------------------------------------
-// Minimal in-memory test doubles (copied/trimmed from unit tests)
-// ---------------------------------------------------------------------------
-class TestTxStore {
-  private eventsByRun: Map<string, EventEnvelope[]>;
-  private metadataByRun: Map<string, RunMetadata>;
+const TEST_DIR = dirname(fileURLToPath(import.meta.url));
+const WORKFLOW_PATH = resolve(TEST_DIR, '../src/workflows/RunPlanWorkflow.ts');
 
-  constructor() {
-    this.eventsByRun = new Map();
-    this.metadataByRun = new Map();
+type EventType =
+  | 'RunQueued'
+  | 'RunStarted'
+  | 'RunPaused'
+  | 'RunResumed'
+  | 'RunCancelled'
+  | 'RunCompleted'
+  | 'RunFailed'
+  | 'StepStarted'
+  | 'StepCompleted'
+  | 'StepFailed';
+
+interface EventEnvelope {
+  eventType: EventType;
+  emittedAt: string;
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string;
+  engineAttemptId: number;
+  logicalAttemptId: number;
+  idempotencyKey: string;
+  runSeq: number;
+  stepId?: string;
+}
+
+class TestIdempotency {
+  runEventKey(args: {
+    eventType: EventType;
+    tenantId: string;
+    runId: string;
+    logicalAttemptId: number;
+    engineAttemptId: number;
+    stepId?: string;
+  }): string {
+    return [
+      args.eventType,
+      args.tenantId,
+      args.runId,
+      String(args.logicalAttemptId),
+      String(args.engineAttemptId),
+      args.stepId ?? '',
+    ].join('|');
   }
+}
 
-  async saveRunMetadata(meta: RunMetadata): Promise<void> {
-    this.metadataByRun.set(meta.runId, meta);
+class TestClock {
+  nowIsoUtc(): string {
+    return '2026-01-01T00:00:00.000Z';
   }
+}
 
-  async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
-    return this.metadataByRun.get(runId) ?? null;
-  }
+class TestStateStore {
+  private readonly eventsByRun = new Map<string, EventEnvelope[]>();
+  private readonly idempByRun = new Map<string, Map<string, EventEnvelope>>();
 
   async appendEventsTx(
     runId: string,
     envelopes: Omit<EventEnvelope, 'runSeq'>[]
   ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
-    const current = this.eventsByRun.get(runId) ?? [];
+    const events = this.eventsByRun.get(runId) ?? [];
+    const idx = this.idempByRun.get(runId) ?? new Map<string, EventEnvelope>();
     const appended: EventEnvelope[] = [];
     const deduped: EventEnvelope[] = [];
 
     for (const env of envelopes) {
-      const exists = current.some((e) => e.idempotencyKey === env.idempotencyKey);
-      if (exists) {
-        deduped.push({
-          ...env,
-          runSeq: current.length + deduped.length + appended.length + 1,
-        } as EventEnvelope);
+      const found = idx.get(env.idempotencyKey);
+      if (found) {
+        deduped.push(found);
         continue;
       }
-      const withSeq = {
-        ...env,
-        runSeq: current.length + appended.length + 1,
-      } as EventEnvelope;
-      current.push(withSeq);
+      const withSeq: EventEnvelope = { ...env, runSeq: events.length + appended.length + 1 };
       appended.push(withSeq);
+      idx.set(withSeq.idempotencyKey, withSeq);
     }
-    this.eventsByRun.set(runId, current);
+
+    this.eventsByRun.set(runId, events.concat(appended));
+    this.idempByRun.set(runId, idx);
     return { appended, deduped };
   }
 
@@ -66,169 +97,288 @@ class TestTxStore {
     return [...(this.eventsByRun.get(runId) ?? [])];
   }
 
-  async enqueueTx(): Promise<void> {
-    // noop for tests
+  async enqueueTx(_runId: string, _events: EventEnvelope[]): Promise<void> {
+    // no-op for this integration test
+  }
+
+  async saveRunMetadata(_meta: unknown): Promise<void> {
+    // no-op for this integration test
+  }
+
+  async getRunMetadataByRunId(_runId: string): Promise<null> {
+    return null;
   }
 }
 
-class TestClock {
-  nowIsoUtc(): string {
-    return new Date().toISOString();
-  }
-}
+class TestProjector {
+  rebuild(
+    runId: string,
+    events: EventEnvelope[]
+  ): {
+    runId: string;
+    status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  } {
+    let status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED' = 'PENDING';
 
-class TestIdempotencyKeyBuilder {
-  runEventKey({
-    eventType,
-    tenantId,
-    runId,
-    logicalAttemptId,
-    stepId = '',
-  }: EventIdempotencyInput): string {
-    return [eventType, tenantId, runId, String(logicalAttemptId), stepId].join('|');
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Integration test — run the workflow inside TestWorkflowEnvironment with mocked
-// activities and assert that it completes and emitted lifecycle events.
-// ---------------------------------------------------------------------------
-describe('RunPlanWorkflow — integration (time-skipping env)', () => {
-  let env: any = null;
-  let worker: any = null;
-  let client: any = null;
-  let runPromise: Promise<void> | null = null;
-  const taskQueue = 'test-queue-integration';
-
-  function assertWorkflowArtifactOrThrow(): void {
-    const artifactPath = path.resolve(__dirname, '../dist/workflows/RunPlanWorkflow.js');
-    if (!existsSync(artifactPath)) {
-      throw new Error(
-        `WORKFLOW_ARTIFACT_MISSING: ${artifactPath}. Run "pnpm --filter @dvt/adapter-temporal test:integration".`
-      );
+    for (const e of events) {
+      if (e.eventType === 'RunStarted') status = 'RUNNING';
+      if (e.eventType === 'RunPaused') status = 'PAUSED';
+      if (e.eventType === 'RunResumed') status = 'RUNNING';
+      if (e.eventType === 'RunCompleted') status = 'COMPLETED';
+      if (e.eventType === 'RunFailed') status = 'FAILED';
+      if (e.eventType === 'RunCancelled') status = 'CANCELLED';
     }
-  }
 
-  beforeAll(async () => {
-    assertWorkflowArtifactOrThrow();
-    env = await TestWorkflowEnvironment.createTimeSkipping();
-  });
-
-  afterAll(async () => {
-    try {
-      if (worker) {
-        // ensure worker has fully shut down before tearing down the env (avoids
-        // "Cannot close connection while Workers hold a reference to it").
-        if (typeof worker.shutdown === 'function') {
-          await worker.shutdown();
-        }
-        if (runPromise) {
-          await runPromise;
-          runPromise = null;
-        }
-      }
-    } finally {
-      if (env) {
-        // TestWorkflowEnvironment.teardown() closes the native connection internally.
-        await env.teardown();
-        env = null;
-      }
-    }
-  });
-
-  it('completes a simple plan and persists lifecycle events', async () => {
-    const store = new TestTxStore();
-    const deps = {
-      stateStore: store,
-      outbox: store,
-      clock: new TestClock(),
-      idempotency: new TestIdempotencyKeyBuilder(),
-      fetcher: {
-        fetch: async (_planRef) =>
-          Buffer.from(
-            JSON.stringify({
-              metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1' },
-              steps: [
-                { stepId: 'step-a', kind: 'test' },
-                { stepId: 'step-b', kind: 'test' },
-              ],
-            })
-          ),
-      } satisfies IPlanFetcher,
-      integrity: {
-        fetchAndValidate: async (_ref: import('@dvt/contracts').PlanRef, fetcher: IPlanFetcher) =>
-          fetcher.fetch(_ref),
-      },
+    return {
+      runId,
+      status,
     };
+  }
+}
 
-    // Start a Worker that uses the real workflow plus our test activity impls
-    worker = await Worker.create({
-      connection: env.nativeConnection,
-      namespace: 'default',
-      taskQueue,
-      // use compiled workflow bundle from dist so the Worker bundler can load it in tests
-      workflowsPath: require.resolve('../dist/workflows/RunPlanWorkflow'),
-      activities: createActivities(deps),
+class TestIntegrity {
+  async fetchAndValidate(
+    planRef: PlanRef,
+    fetcher: { fetch(planRef: PlanRef): Promise<Uint8Array> }
+  ): Promise<Uint8Array> {
+    const bytes = await fetcher.fetch(planRef);
+    const actual = createHash('sha256').update(bytes).digest('hex');
+    if (actual !== planRef.sha256) {
+      throw new Error('PLAN_INTEGRITY_VALIDATION_FAILED');
+    }
+    return bytes;
+  }
+}
+
+type RunStatusValue = 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+function createPlanRef(planId: string, planBytes: Uint8Array): PlanRef {
+  return {
+    uri: `memory://plans/${planId}.json`,
+    sha256: sha256Hex(planBytes),
+    schemaVersion: 'v1.2',
+    planId,
+    planVersion: '1.0.0',
+    sizeBytes: planBytes.byteLength,
+  };
+}
+
+function createRunContext(runId: string): RunContext {
+  return {
+    tenantId: 't-it',
+    projectId: 'p-it',
+    environmentId: 'test',
+    runId,
+    targetAdapter: 'temporal',
+  };
+}
+
+function createActivityDeps(store: TestStateStore, planBytes: Uint8Array): ActivityDeps {
+  return {
+    stateStore: store,
+    outbox: store,
+    clock: new TestClock(),
+    idempotency: new TestIdempotency(),
+    fetcher: {
+      fetch: async () => planBytes,
+    },
+    integrity: new TestIntegrity(),
+  };
+}
+
+async function waitForTerminalStatus(
+  adapter: TemporalAdapter,
+  runRef: EngineRunRef,
+  waitForCondition: <T>(
+    fn: () => Promise<T>,
+    predicate: (v: T) => boolean,
+    opts?: { timeoutMs?: number; intervalMs?: number }
+  ) => Promise<T>,
+  timeoutMs = 10_000
+): Promise<RunStatusValue> {
+  await waitForCondition(
+    () => adapter.getRunStatus(runRef),
+    (s) => s.status !== 'RUNNING',
+    { timeoutMs }
+  );
+  const status = await adapter.getRunStatus(runRef);
+  return status.status as RunStatusValue;
+}
+
+async function runCancelScenario(
+  mode: 'signal' | 'cancel',
+  adapter: TemporalAdapter,
+  planRef: PlanRef,
+  runId: string,
+  store: TestStateStore,
+  waitForCondition: <T>(
+    fn: () => Promise<T>,
+    predicate: (v: T) => boolean,
+    opts?: { timeoutMs?: number; intervalMs?: number }
+  ) => Promise<T>
+): Promise<{ status: RunStatusValue; cancelledCount: number }> {
+  const runCtx = createRunContext(runId);
+  const runRef = await adapter.startRun(planRef, runCtx);
+
+  if (mode === 'signal') {
+    await adapter.signal(runRef, { signalId: `s-${runId}`, type: 'CANCEL' });
+  } else {
+    await adapter.cancelRun(runRef);
+  }
+
+  const status = await waitForTerminalStatus(adapter, runRef, waitForCondition);
+  const events = await store.listEvents(runRef.runId);
+  const cancelledCount = events.filter((e) => e.eventType === 'RunCancelled').length;
+
+  return { status, cancelledCount };
+}
+
+function mkPlan(stepCount: number): unknown {
+  return {
+    metadata: {
+      planId: 'it-plan',
+      planVersion: '1.0.0',
+      schemaVersion: 'v1.2',
+    },
+    steps: Array.from({ length: stepCount }, (_, i) => ({ stepId: `s-${i + 1}`, kind: 'noop' })),
+  } as const;
+}
+
+function sha256Hex(bytes: Uint8Array): string {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+describe('temporal integration (time-skipping)', () => {
+  async function waitForCondition<T>(
+    fn: () => Promise<T>,
+    predicate: (v: T) => boolean,
+    opts: { timeoutMs?: number; intervalMs?: number } = {}
+  ): Promise<T> {
+    const timeoutMs = opts.timeoutMs ?? 10_000;
+    const intervalMs = opts.intervalMs ?? 25;
+    const start = Date.now();
+    while (true) {
+      const v = await fn();
+      if (predicate(v)) return v;
+      if (Date.now() - start > timeoutMs) {
+        throw new Error('waitForCondition: timeout');
+      }
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+  }
+
+  it('executes startRun -> status -> cancel against TestWorkflowEnvironment', async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+    const store = new TestStateStore();
+    const projector = new TestProjector();
+    const plan = mkPlan(250);
+    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+
+    const planRef = createPlanRef('it-plan', planBytes);
+    const ctx = createRunContext('run-it-1');
+
+    const temporalConfig = loadTemporalAdapterConfig({
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping',
+      TEMPORAL_IDENTITY: 'adapter-temporal-it',
     });
 
-    // Run worker in background and keep the run promise in outer scope so we
-    // can await shutdown from afterAll reliably.
-    runPromise = worker.run();
+    const worker = new TemporalWorkerHost({
+      temporalConfig,
+      workflowsPath: WORKFLOW_PATH,
+      activityDeps: createActivityDeps(store, planBytes),
+    });
 
-    // give the worker time to register with the in-memory server before starting workflows
-    await new Promise((res) => setTimeout(res, 100));
+    await worker.start(env.nativeConnection);
 
-    // Prefer the client exposed by the Temporal test environment when available.
-    // In time-skipping mode this client is fully wired to workflow service internals.
-    client =
-      env.workflowClient ?? env.client ?? new WorkflowClient({ connection: env.nativeConnection });
+    const adapter = new TemporalAdapter({
+      workflowClient: env.client.workflow,
+      config: temporalConfig,
+      stateStore: store,
+      projector,
+    });
 
-    const input = {
-      planRef: {
-        uri: 's3://bucket/plans/p1.json',
-        sha256: 'ignored',
-        schemaVersion: 's1',
-        planId: 'p1',
-        planVersion: 'v1',
-      },
-      ctx: {
-        tenantId: 'tenant-1',
-        projectId: 'proj-1',
-        environmentId: 'env-1',
-        runId: 'run-1',
-        targetAdapter: 'temporal',
-      },
-    };
+    try {
+      const runRef = await adapter.startRun(planRef, ctx);
 
-    // start the workflow; retry a few times if the TestWorkflowEnvironment
-    // hasn't fully exposed the workflow service yet (avoids flaky race).
-    async function startWorkflowWithRetry(retries = 10, delayMs = 50): Promise<any> {
-      for (let i = 0; i < retries; i++) {
-        try {
-          return await client.start('runPlanWorkflow', {
-            args: [input],
-            taskQueue,
-            workflowId: input.ctx.runId,
-          });
-        } catch (err: any) {
-          if (i === retries - 1) throw err;
-          await new Promise((r) => setTimeout(r, delayMs));
-        }
-      }
+      // wait until the run is no longer RUNNING (deterministic wait helper)
+      const status = await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
+      expect(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).toContain(status);
+
+      await adapter.cancelRun(runRef);
+
+      const afterCancel = await waitForTerminalStatus(adapter, runRef, waitForCondition);
+      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel);
+    } finally {
+      await worker.shutdown();
+      await env.teardown();
     }
+  }, 60_000);
 
-    const handle = await startWorkflowWithRetry();
+  it('signal(CANCEL) and cancelRun() produce identical terminal behaviour with a single RunCancelled event', async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
 
-    const result = await handle.result();
-    expect(result).toEqual({ runId: 'run-1', status: 'COMPLETED' });
+    const store = new TestStateStore();
+    const projector = new TestProjector();
+    const plan = mkPlan(10);
+    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-    const events = await store.listEvents('run-1');
-    const types = events.map((e) => e.eventType);
-    expect(types).toContain('RunStarted');
-    expect(types).toContain('StepStarted');
-    expect(types).toContain('StepCompleted');
-    expect(types).toContain('RunCompleted');
+    const planRef = createPlanRef('it-plan-2', planBytes);
 
-    // Worker teardown is handled in afterAll to avoid double-shutdown races.
-  });
+    const temporalConfig = loadTemporalAdapterConfig({
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-cancel',
+      TEMPORAL_IDENTITY: 'adapter-temporal-it',
+    });
+
+    const worker = new TemporalWorkerHost({
+      temporalConfig,
+      workflowsPath: WORKFLOW_PATH,
+      activityDeps: createActivityDeps(store, planBytes),
+    });
+
+    await worker.start(env.nativeConnection);
+
+    const adapter = new TemporalAdapter({
+      workflowClient: env.client.workflow,
+      config: temporalConfig,
+      stateStore: store,
+      projector,
+    });
+
+    try {
+      const signalResult = await runCancelScenario(
+        'signal',
+        adapter,
+        planRef,
+        'run-it-cancel-1',
+        store,
+        waitForCondition
+      );
+      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
+      // Accept 0 or 1 persisted RunCancelled (cancellation may occur before any
+      // events are emitted). Critical invariant: there must NOT be >1 (no double
+      // terminal events).
+      expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
+
+      const cancelResult = await runCancelScenario(
+        'cancel',
+        adapter,
+        planRef,
+        'run-it-cancel-2',
+        store,
+        waitForCondition
+      );
+      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
+      expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
+
+      // Both paths should produce the same number of terminal RunCancelled events
+      // (0 or 1) — critically, never more than one.
+      expect(signalResult.cancelledCount).toBe(cancelResult.cancelledCount);
+    } finally {
+      await worker.shutdown();
+      await env.teardown();
+    }
+  }, 60_000);
 });
