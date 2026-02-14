@@ -11,7 +11,7 @@ import type { TemporalClientManager } from './TemporalClient.js';
 import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
 
 interface WorkflowHandleLike {
-  cancel(): Promise<void>;
+  cancel(): Promise<unknown>;
   signal(signalName: string, ...args: unknown[]): Promise<void>;
 }
 
@@ -115,7 +115,7 @@ export class TemporalAdapter implements IProviderAdapterLike {
     }
   }
 
-  private async getClient() {
+  private async getClient(): Promise<WorkflowClientLike> {
     if (this.deps.workflowClient) {
       return this.deps.workflowClient;
     }

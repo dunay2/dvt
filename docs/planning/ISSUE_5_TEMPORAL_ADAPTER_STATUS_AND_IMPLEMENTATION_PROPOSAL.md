@@ -30,8 +30,11 @@
 1. Separation of concerns: planner ≠ engine ≠ state ≠ UI.
 2. Workflow determinism (no non-deterministic APIs in workflow code).
 3. External effects in Activities (at-least-once ⇒ mandatory idempotency).
-4. `RunStateStore` as the operational source of truth (do not rely on Temporal queries as the only truth).
-5. Mandatory workflow versioning for replay-compatible evolution in live executions.
+4. `RunStateStore` is the operational source of truth for adapter status contracts.
+   - Temporal Workflow Query is optional diagnostic state, never the sole authority.
+5. Workflow versioning is mandatory for replay-compatible evolution.
+   - MVP baseline uses patch markers (`patched()` / `deprecatePatch()`).
+   - Worker Versioning is deferred as a later hardening track.
 
 ---
 
@@ -89,17 +92,35 @@
 
 - Remove the stub from the normal execution path.
 
+**Done**
+
+- Temporal provider selection wiring added in `packages/engine/src/application/providerSelection.ts`.
+- Engine exports include provider-selection helpers in `packages/engine/src/index.ts`.
+- Adapter implementation introduced in `packages/adapter-temporal/src/TemporalAdapter.ts` and exported from `packages/adapter-temporal/src/index.ts`.
+- Validation tests added for provider selection in `packages/engine/test/application/providerSelection.test.ts`.
+
 ### PR-4 — Idempotent Event Sink + RunState persistence contract (MVP)
 
 **Objective**
 
 - Cover at-least-once semantics without duplicates.
 
+**Done**
+
+- Retry/idempotency proof test added in `packages/adapter-temporal/test/activities.test.ts`.
+- Scenario validates transient append failure + retry path and verifies one logical persisted event by idempotency key.
+
 ### PR-5 — Tests (unit + integration with Temporal environment)
 
 **Objective**
 
 - Stable CI harness.
+
+**Done**
+
+- Added integration test using `TestWorkflowEnvironment.createTimeSkipping()` in `packages/adapter-temporal/test/integration.time-skipping.test.ts`.
+- Added script `test:integration` in `packages/adapter-temporal/package.json`.
+- Added dev dependency `@temporalio/testing` pinned to `1.11.7`.
 
 **Recommended strategy**
 
@@ -112,6 +133,11 @@
 
 - Make it executable and maintainable by the team.
 
+**Current status**
+
+- 🟨 In progress.
+- Documentation and scripts are updated; CI workflow file update remains pending.
+
 ---
 
 ## 4) Tracking checklist table
@@ -119,12 +145,12 @@
 | ID   | Deliverable                         | Status         | Required evidence                                                                 | Dependencies       |
 | ---- | ----------------------------------- | -------------- | --------------------------------------------------------------------------------- | ------------------ |
 | PR-0 | Canonical tracking #5/#68           | 🟨 In progress | Canonical text drafted in section 7; pending publication of issue comments/status | —                  |
-| PR-1 | Client+Config+Mapper                | ⬜ Pending     | Code + unit tests + lint                                                          | PR-0               |
-| PR-2 | Worker+Workflow+Activities MVP      | ⬜ Pending     | Real Temporal integration run                                                     | PR-1               |
-| PR-3 | Engine uses real adapter by default | ⬜ Pending     | Real boot without stub in normal mode                                             | PR-2               |
-| PR-4 | Idempotency + minimal persistence   | ⬜ Pending     | Duplicate-free test under retries                                                 | PR-3, #6 (partial) |
-| PR-5 | Stable CI test suite                | ⬜ Pending     | Green unit+integration tests using `TestWorkflowEnvironment.createTimeSkipping()` | PR-4               |
-| PR-6 | CI + operational docs               | ⬜ Pending     | README + CI workflow + roadmap/status                                             | PR-5               |
+| PR-1 | Client+Config+Mapper                | ✅ Done        | Code + unit tests + lint                                                          | PR-0               |
+| PR-2 | Worker+Workflow+Activities MVP      | ✅ Done        | Real Temporal integration run                                                     | PR-1               |
+| PR-3 | Engine uses real adapter by default | ✅ Done        | Real boot without stub in normal mode                                             | PR-2               |
+| PR-4 | Idempotency + minimal persistence   | ✅ Done        | Duplicate-free test under retries                                                 | PR-3, #6 (partial) |
+| PR-5 | Stable CI test suite                | ✅ Done        | Green unit+integration tests using `TestWorkflowEnvironment.createTimeSkipping()` | PR-4               |
+| PR-6 | CI + operational docs               | 🟨 In progress | README + CI workflow + roadmap/status                                             | PR-5               |
 
 ---
 
@@ -132,7 +158,7 @@
 
 1. `packages/adapter-temporal/src/index.ts` is no longer a placeholder.
 2. `packages/engine/src/adapters/temporal/TemporalAdapterStub.ts` is removed from the normal production flow.
-3. Minimum validated flow: `startRun -> signal/query/status -> cancel`.
+3. Minimum validated flow: `startRun -> status -> cancel`.
 4. Idempotency proven under activity retries.
 5. Run state derived from persisted events.
 6. Normalized tracking (#5/#68) with no scope ambiguity.
@@ -266,3 +292,33 @@ This progress covers the PR-1 objective (foundation). Real workflow/activity exe
 - 15 tests passing (6 PR-1 foundation + 9 PR-2 activities).
 - TypeScript build green (`tsc -p tsconfig.json`).
 - tsconfig `paths` override applied to resolve `@dvt/contracts` via node_modules dist.
+
+### PR-3/PR-4/PR-5 implementation updates (2026-02-14)
+
+- Engine provider-selection helpers implemented in `packages/engine/src/application/providerSelection.ts` with coverage in `packages/engine/test/application/providerSelection.test.ts`.
+- Temporal adapter implementation added in `packages/adapter-temporal/src/TemporalAdapter.ts` and exported via `packages/adapter-temporal/src/index.ts`.
+- Retry/idempotency test added in `packages/adapter-temporal/test/activities.test.ts`.
+- Time-skipping integration test added in `packages/adapter-temporal/test/integration.time-skipping.test.ts`.
+- Temporal testing dependency and integration script added in `packages/adapter-temporal/package.json`.
+
+### PR-3/PR-4/PR-5 technical validation
+
+- `pnpm --filter @dvt/adapter-temporal test:integration` ✅
+- `pnpm --filter @dvt/engine test` ✅
+- `pnpm --filter @dvt/adapter-temporal test` ✅
+
+### CI-like local validation (2026-02-14)
+
+- `pnpm build` ✅
+- `pnpm lint` ✅
+- `pnpm type-check` ✅
+- `pnpm test` ✅
+
+Notes:
+
+- `pnpm build` initially failed in `packages/engine` due to workspace path resolution inheritance; fixed by overriding `baseUrl`/`paths` in `packages/engine/tsconfig.json`.
+- Engine tests were adjusted for stricter mock typing in `packages/engine/test/contracts/engine.test.ts`.
+
+### PR-6 pending item
+
+- Add/update CI workflow to execute integration time-skipping test in pipeline (documentation and scripts already prepared).

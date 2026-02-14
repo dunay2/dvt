@@ -1,18 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { vi } from 'vitest';
 
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SequenceClock } from '../../src/utils/clock.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
-import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
 import type { PlanRef, RunContext } from '../../src/contracts/types.js';
+import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
+import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
+import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
+
 import { InMemoryPlanFetcher, utf8 } from './helpers.js';
 
 function makeHelloWorldPlan(): ExecutionPlan {
@@ -185,24 +187,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     );
   });
 
-  it('does not call adapter.startRun when PlanRef validation fails', async () => {
-    const startRunMock = vi.fn(async (_planRef: PlanRef, ctx: RunContext) => ({
-      provider: 'conductor',
-      workflowId: 'wf',
-      runId: ctx.runId,
-      conductorUrl: 'http://conductor',
-    }));
-
-    const adapter: IProviderAdapter = {
-      provider: 'conductor',
-      startRun: startRunMock,
-      cancelRun: async () => {},
-      getRunStatus: async () => {
-        throw new Error('noop');
-      },
-      signal: async () => {},
-    };
-
+  const setupEngine = (adapter: IProviderAdapter, planFetcher: InMemoryPlanFetcher): WorkflowEngine => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const idempotency = new IdempotencyKeyBuilder();
@@ -210,9 +195,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const authorizer = new AllowAllAuthorizer();
     const planRefPolicy = new PlanRefPolicy({ allowedSchemes: ['https'] });
     const planIntegrity = new PlanIntegrityValidator();
-    const planFetcher = new InMemoryPlanFetcher(new Map());
-
-    const engine = new WorkflowEngine({
+    return new WorkflowEngine({
       stateStore: store,
       outbox: store,
       projector,
@@ -224,44 +207,88 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planFetcher,
       adapters: new Map([['conductor', adapter]]),
     });
+  };
 
-    const baseCtx: RunContext = {
-      tenantId: 't1',
-      projectId: 'p1',
-      environmentId: 'dev',
-      runId: 'run-x',
-      targetAdapter: 'conductor',
+  const baseCtx: RunContext = {
+    tenantId: 't1',
+    projectId: 'p1',
+    environmentId: 'dev',
+    runId: 'run-x',
+    targetAdapter: 'conductor',
+  };
+
+  it('does not call adapter.startRun when PlanRef validation fails: URI not allowlisted', async () => {
+    const startRunMock = vi.fn(async (_planRef: PlanRef, ctx: RunContext) => ({
+      provider: 'conductor',
+      workflowId: 'wf',
+      runId: ctx.runId,
+      conductorUrl: 'http://conductor',
+    } as const));
+    const adapter: IProviderAdapter = {
+      provider: 'conductor',
+      startRun: startRunMock as IProviderAdapter['startRun'],
+      cancelRun: async () => {},
+      getRunStatus: async () => { throw new Error('noop'); },
+      signal: async () => {},
     };
-
-    // Case 1: URI not allowlisted
-    const badPlanRef1: PlanRef = {
+    const planFetcher = new InMemoryPlanFetcher(new Map());
+    const engine = setupEngine(adapter, planFetcher);
+    const badPlanRef: PlanRef = {
       uri: 'file:///etc/passwd',
       sha256: '0'.repeat(64),
       schemaVersion: 'v1.2',
       planId: 'p',
       planVersion: '1',
     };
-    await expect(engine.startRun(badPlanRef1, baseCtx)).rejects.toThrow(/PLAN_URI_NOT_ALLOWED/);
+    await expect(engine.startRun(badPlanRef, baseCtx)).rejects.toThrow(/PLAN_URI_NOT_ALLOWED/);
     expect(startRunMock).not.toHaveBeenCalled();
+  });
 
-    // Case 2: invalid schemaVersion
-    const badPlanRef2: PlanRef = {
+  it('does not call adapter.startRun when PlanRef validation fails: invalid schemaVersion', async () => {
+    const startRunMock = vi.fn(async (_planRef: PlanRef, ctx: RunContext) => ({
+      provider: 'conductor',
+      workflowId: 'wf',
+      runId: ctx.runId,
+      conductorUrl: 'http://conductor',
+    } as const));
+    const adapter: IProviderAdapter = {
+      provider: 'conductor',
+      startRun: startRunMock as IProviderAdapter['startRun'],
+      cancelRun: async () => {},
+      getRunStatus: async () => { throw new Error('noop'); },
+      signal: async () => {},
+    };
+    const planFetcher = new InMemoryPlanFetcher(new Map());
+    const engine = setupEngine(adapter, planFetcher);
+    const badPlanRef: PlanRef = {
       uri: 'https://plans.example.com/plan.json',
       sha256: '0'.repeat(64),
       schemaVersion: 'v2.0', // invalid
       planId: 'p',
       planVersion: '1',
     };
-    await expect(engine.startRun(badPlanRef2, baseCtx)).rejects.toThrow(
-      /PLAN_SCHEMA_VERSION_UNKNOWN/
-    );
+    await expect(engine.startRun(badPlanRef, baseCtx)).rejects.toThrow(/PLAN_SCHEMA_VERSION_UNKNOWN/);
     expect(startRunMock).not.toHaveBeenCalled();
+  });
 
-    // Case 3: sha256 mismatch
+  it('does not call adapter.startRun when PlanRef validation fails: sha256 mismatch', async () => {
+    const startRunMock = vi.fn(async (_planRef: PlanRef, ctx: RunContext) => ({
+      provider: 'conductor',
+      workflowId: 'wf',
+      runId: ctx.runId,
+      conductorUrl: 'http://conductor',
+    } as const));
+    const adapter: IProviderAdapter = {
+      provider: 'conductor',
+      startRun: startRunMock as IProviderAdapter['startRun'],
+      cancelRun: async () => {},
+      getRunStatus: async () => { throw new Error('noop'); },
+      signal: async () => {},
+    };
     const plan = makeHelloWorldPlan();
     const uri = 'https://plans.example.com/plan.json';
     const bytes = utf8(JSON.stringify(plan));
-    const badPlanRef3: PlanRef = {
+    const badPlanRef: PlanRef = {
       uri,
       sha256: 'deadbeef',
       schemaVersion: plan.metadata.schemaVersion,
@@ -269,22 +296,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planVersion: plan.metadata.planVersion,
       sizeBytes: bytes.byteLength,
     };
-    const planFetcher3 = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
-    const engine3 = new WorkflowEngine({
-      stateStore: store,
-      outbox: store,
-      projector,
-      idempotency,
-      clock,
-      authorizer,
-      planRefPolicy,
-      planIntegrity,
-      planFetcher: planFetcher3,
-      adapters: new Map([['conductor', adapter]]),
-    });
-    await expect(engine3.startRun(badPlanRef3, baseCtx)).rejects.toThrow(
-      /PLAN_INTEGRITY_VALIDATION_FAILED/
-    );
+    const planFetcher = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
+    const engine = setupEngine(adapter, planFetcher);
+    await expect(engine.startRun(badPlanRef, baseCtx)).rejects.toThrow(/PLAN_INTEGRITY_VALIDATION_FAILED/);
     expect(startRunMock).not.toHaveBeenCalled();
   });
 });

@@ -24,3 +24,5 @@ export * from './adapters/IProviderAdapter.js';
 export * from './adapters/mock/MockAdapter.js';
 export * from './adapters/temporal/TemporalAdapterStub.js';
 export * from './adapters/conductor/ConductorAdapterStub.js';
+
+export * from './application/providerSelection.js';

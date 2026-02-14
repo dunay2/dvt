@@ -10,6 +10,9 @@ module.exports = {
     'dist/',
     'node_modules/',
     '*.d.ts',
+    // Ignore legacy folders and non-source config files that ESLint shouldn't parse
+    '**/legacy-*/**',
+    'packages/engine/vitest.config.ts',
   ],
   // ...existing config (add your rules, plugins, etc. here)
 };// @ts-check
@@ -32,7 +35,8 @@ module.exports = [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        project: './tsconfig.json',
+        // Include root and all package tsconfig files so ESLint can resolve project files
+        project: ['./tsconfig.json', './packages/*/tsconfig.json'],
       },
       globals: {
         console: 'readonly',
@@ -48,6 +52,9 @@ module.exports = [
         clearInterval: 'readonly',
         NodeJS: 'readonly',
         global: 'readonly',
+        // Crypto/text encoder/decoder available in Node runtime
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
       },
     },
     plugins: {
@@ -58,7 +65,7 @@ module.exports = [
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: './tsconfig.json',
+          project: ['./tsconfig.json', './packages/*/tsconfig.json'],
         },
       },
     },
@@ -186,22 +193,7 @@ module.exports = [
   },
 
   // Añadir overrides para TSConfig por carpeta
-  {
-    files: ['packages/engine/src/**/*.ts', 'packages/engine/vitest.config.ts'],
-    languageOptions: {
-      parserOptions: {
-        project: ['packages/engine/tsconfig.eslint.json'],
-      },
-    },
-  },
-  {
-    files: ['packages/engine/test/**/*.ts'],
-    languageOptions: {
-      parserOptions: {
-        project: ['packages/engine/tsconfig.test.eslint.json'],
-      },
-    },
-  },
+
 
   // Prettier should be last to override formatting rules
   prettier,
@@ -217,6 +209,10 @@ module.exports = [
       'docs/',
       '*.config.js',
       '*.config.ts',
+      // Exclude legacy packages and local config files not intended for linting
+      '**/*-legacy/**',
+      '**/*legacy*/**',
+      'packages/engine/vitest.config.ts',
     ],
   },
 ];

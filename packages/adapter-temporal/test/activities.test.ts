@@ -102,8 +102,36 @@ class TestTxStore {
   }
 }
 
+class FailingFirstAppendStateStore extends TestTxStore {
+  private first = true;
+
+  override async appendEventsTx(
+    runId: string,
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+    if (this.first) {
+      this.first = false;
+      throw new Error('TRANSIENT_DB_ERROR');
+    }
+    return super.appendEventsTx(runId, envelopes);
+  }
+}
+
 function buildDeps(): ActivityDeps {
   const store = new TestTxStore();
+  return {
+    stateStore: store,
+    outbox: store,
+    clock: new TestClock(),
+    idempotency: new TestIdempotencyKeyBuilder(),
+    fetcher: { fetch: vi.fn(async () => PLAN_BYTES) },
+    integrity: {
+      fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
+    } as unknown as ActivityDeps['integrity'],
+  };
+}
+
+function buildDepsWithStore(store: TestTxStore): ActivityDeps {
   return {
     stateStore: store,
     outbox: store,
@@ -180,6 +208,24 @@ describe('stepActivities', () => {
       expect(events).toHaveLength(2);
       expect(events[0]!.eventType).toBe('StepStarted');
       expect((events[0] as { stepId: string }).stepId).toBe('step-a');
+    });
+
+    it('retry-safe: transient failure then retry persists one logical event', async () => {
+      const store = new FailingFirstAppendStateStore();
+      const deps = buildDepsWithStore(store);
+      const acts = createActivities(deps);
+
+      await expect(acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' })).rejects.toThrow(
+        'TRANSIENT_DB_ERROR'
+      );
+
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+
+      const events = await deps.stateStore.listEvents('run-1');
+      const runStarted = events.filter((e) => e.eventType === 'RunStarted');
+      expect(runStarted).toHaveLength(1);
+      expect(runStarted[0]!.idempotencyKey).toBe('RunStarted|tenant-1|run-1|1|');
     });
   });
 
