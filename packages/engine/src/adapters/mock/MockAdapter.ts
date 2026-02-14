@@ -85,6 +85,7 @@ export class MockAdapter implements IProviderAdapter {
         tenantId: ctx.tenantId,
         runId: ctx.runId,
         logicalAttemptId: 1,
+        engineAttemptId: 1,
       }),
     };
 
@@ -112,6 +113,7 @@ export class MockAdapter implements IProviderAdapter {
         tenantId: ctx.tenantId,
         runId: ctx.runId,
         logicalAttemptId: 1,
+        engineAttemptId: 1,
         stepId,
       }),
     };

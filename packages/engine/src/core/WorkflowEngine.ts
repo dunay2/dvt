@@ -164,6 +164,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       tenantId: meta.tenantId,
       runId: meta.runId,
       logicalAttemptId: 1,
+      engineAttemptId: 1,
     });
 
     const env: Omit<EventEnvelope, 'runSeq'> = {
@@ -192,6 +193,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         tenantId: ctx.tenantId,
         runId: ctx.runId,
         logicalAttemptId: 1,
+        engineAttemptId: 1,
       }),
     };
     await this.persistEvent(ctx.runId, env);
@@ -264,7 +266,6 @@ export function validateSchemaVersionOrThrow(schemaVersion: string, minorsBack =
     throw new Error(`SCHEMA_VERSION_TOO_OLD: ${schemaVersion}`);
   }
 }
-
 
 function buildRunMetadata(ctx: RunContext, runRef: EngineRunRef): RunMetadata {
   if (runRef.provider === 'temporal') {

@@ -1,6 +1,7 @@
 import { TextDecoder } from 'node:util';
 
 import type { PlanRef, RunContext } from '@dvt/contracts';
+import { Context } from '@temporalio/activity';
 
 import type {
   EventEnvelope,
@@ -47,6 +48,8 @@ export interface EmitEventInput {
   ctx: RunContext;
   eventType: EventType;
   stepId?: string;
+  /** Optional planner-driven logical attempt id; fallback is engineAttemptId from Temporal runtime. */
+  logicalAttemptId?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,6 +90,16 @@ export function createActivities(deps: ActivityDeps): {
     async emitEvent(input: EmitEventInput): Promise<void> {
       const { ctx, eventType, stepId } = input;
 
+      let engineAttemptId = 1;
+      try {
+        engineAttemptId = Context.current().info.attempt;
+      } catch {
+        // Activity context not available (unit tests) — fall back to 1.
+        engineAttemptId = 1;
+      }
+
+      const logicalAttemptId = input.logicalAttemptId ?? engineAttemptId;
+
       const envelope = {
         eventType,
         emittedAt: deps.clock.nowIsoUtc(),
@@ -95,13 +108,14 @@ export function createActivities(deps: ActivityDeps): {
         environmentId: ctx.environmentId,
         runId: ctx.runId,
         ...(stepId ? { stepId } : {}),
-        engineAttemptId: 1,
-        logicalAttemptId: 1,
+        engineAttemptId,
+        logicalAttemptId,
         idempotencyKey: deps.idempotency.runEventKey({
           eventType,
           tenantId: ctx.tenantId,
           runId: ctx.runId,
-          logicalAttemptId: 1,
+          logicalAttemptId,
+          engineAttemptId,
           ...(stepId ? { stepId } : {}),
         }),
       } as Omit<EventEnvelope, 'runSeq'>;

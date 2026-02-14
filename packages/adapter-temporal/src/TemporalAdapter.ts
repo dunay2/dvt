@@ -103,7 +103,9 @@ export class TemporalAdapter implements IProviderAdapterLike {
         await workflow.signal('resume');
         return;
       case 'CANCEL':
-        await workflow.signal('cancel', request.reason ?? 'cancel-requested');
+        // Canonicalize cancellation on the provider-native cancel path so both
+        // `cancelRun()` and `signal(CANCEL)` follow the same execution semantics.
+        await workflow.cancel();
         return;
       case 'RETRY_STEP':
       case 'RETRY_RUN':

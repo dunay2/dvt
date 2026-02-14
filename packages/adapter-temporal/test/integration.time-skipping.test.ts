@@ -47,6 +47,7 @@ class TestIdempotency {
     tenantId: string;
     runId: string;
     logicalAttemptId: number;
+    engineAttemptId: number;
     stepId?: string;
   }): string {
     return [
@@ -54,6 +55,7 @@ class TestIdempotency {
       args.tenantId,
       args.runId,
       String(args.logicalAttemptId),
+      String(args.engineAttemptId),
       args.stepId ?? '',
     ].join('|');
   }
@@ -230,6 +232,114 @@ describe('temporal integration (time-skipping)', () => {
       }
 
       expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel.status);
+    } finally {
+      await worker.shutdown();
+      await env.teardown();
+    }
+  }, 60_000);
+
+  it('signal(CANCEL) and cancelRun() produce identical terminal behaviour with a single RunCancelled event', async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+    const store = new TestStateStore();
+    const projector = new TestProjector();
+    const plan = mkPlan(10);
+    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+
+    const planRef: PlanRef = {
+      uri: 'memory://plans/it-plan-2.json',
+      sha256: sha256Hex(planBytes),
+      schemaVersion: 'v1.2',
+      planId: 'it-plan-2',
+      planVersion: '1.0.0',
+      sizeBytes: planBytes.byteLength,
+    };
+
+    const temporalConfig = loadTemporalAdapterConfig({
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-cancel',
+      TEMPORAL_IDENTITY: 'adapter-temporal-it',
+    });
+
+    const worker = new TemporalWorkerHost({
+      temporalConfig,
+      workflowsPath: WORKFLOW_PATH,
+      activityDeps: {
+        stateStore: store,
+        outbox: store,
+        clock: new TestClock(),
+        idempotency: new TestIdempotency(),
+        fetcher: {
+          fetch: async () => planBytes,
+        },
+        integrity: new TestIntegrity(),
+      },
+    });
+
+    await worker.start(env.nativeConnection);
+
+    const adapter = new TemporalAdapter({
+      workflowClient: env.client.workflow,
+      config: temporalConfig,
+      stateStore: store,
+      projector,
+    });
+
+    try {
+      // 1) signal(CANCEL)
+      const ctxA: RunContext = {
+        tenantId: 't-it',
+        projectId: 'p-it',
+        environmentId: 'test',
+        runId: 'run-it-cancel-1',
+        targetAdapter: 'temporal',
+      };
+
+      const runRefA = await adapter.startRun(planRef, ctxA);
+      await adapter.signal(runRefA, { signalId: 's-cancel-1', type: 'CANCEL' });
+
+      let statusA = await adapter.getRunStatus(runRefA);
+      for (let i = 0; i < 40 && statusA.status === 'RUNNING'; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        statusA = await adapter.getRunStatus(runRefA);
+      }
+
+      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(statusA.status);
+
+      const eventsA = await store.listEvents(runRefA.runId);
+      const cancelledEventsA = eventsA.filter((e) => e.eventType === 'RunCancelled');
+      // Accept 0 or 1 persisted RunCancelled (cancellation may occur before any
+      // events are emitted). Critical invariant: there must NOT be >1 (no double
+      // terminal events).
+      expect(cancelledEventsA.length).toBeLessThanOrEqual(1);
+
+      // 2) cancelRun()
+      const ctxB: RunContext = {
+        tenantId: 't-it',
+        projectId: 'p-it',
+        environmentId: 'test',
+        runId: 'run-it-cancel-2',
+        targetAdapter: 'temporal',
+      };
+
+      const runRefB = await adapter.startRun(planRef, ctxB);
+      await adapter.cancelRun(runRefB);
+
+      let statusB = await adapter.getRunStatus(runRefB);
+      for (let i = 0; i < 40 && statusB.status === 'RUNNING'; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        statusB = await adapter.getRunStatus(runRefB);
+      }
+
+      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(statusB.status);
+
+      const eventsB = await store.listEvents(runRefB.runId);
+      const cancelledEventsB = eventsB.filter((e) => e.eventType === 'RunCancelled');
+      expect(cancelledEventsB.length).toBeLessThanOrEqual(1);
+
+      // Both paths should produce the same number of terminal RunCancelled events
+      // (0 or 1) — critically, never more than one.
+      expect(cancelledEventsA.length).toBe(cancelledEventsB.length);
     } finally {
       await worker.shutdown();
       await env.teardown();

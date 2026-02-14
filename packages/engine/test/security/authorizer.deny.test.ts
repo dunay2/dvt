@@ -1,16 +1,14 @@
-import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import type { RunContext } from '@dvt/contracts';
-
 import { describe, it, expect } from 'vitest';
 
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SequenceClock } from '../../src/utils/clock.js';
-import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AuthorizationError } from '../../src/security/AuthorizationError.js';
+import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 
 class DenyAuthorizer {
   async assertTenantAccess(): Promise<void> {
@@ -51,7 +49,7 @@ class CountingAdapter implements IProviderAdapter {
   }
 }
 
-function makeEngine(authorizer: any, adapter: IProviderAdapter) {
+function makeEngine(authorizer: any, adapter: IProviderAdapter): { engine: WorkflowEngine; store: InMemoryTxStore } {
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();

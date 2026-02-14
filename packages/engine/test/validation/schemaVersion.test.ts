@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { validateSchemaVersionOrThrow } from '../../src/core/WorkflowEngine';
+
+import { validateSchemaVersionOrThrow } from '../../src/core/WorkflowEngine.js';
 
 describe('validateSchemaVersionOrThrow', () => {
   it('accepts same minor and v-prefixed', () => {

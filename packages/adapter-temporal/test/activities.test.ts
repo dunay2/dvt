@@ -51,9 +51,17 @@ class TestIdempotencyKeyBuilder implements IIdempotencyKeyBuilder {
     tenantId: string;
     runId: string;
     logicalAttemptId: number;
+    engineAttemptId: number;
     stepId?: string;
   }): string {
-    return [e.eventType, e.tenantId, e.runId, String(e.logicalAttemptId), e.stepId ?? ''].join('|');
+    return [
+      e.eventType,
+      e.tenantId,
+      e.runId,
+      String(e.logicalAttemptId),
+      String(e.engineAttemptId),
+      e.stepId ?? '',
+    ].join('|');
   }
 }
 
@@ -225,7 +233,36 @@ describe('stepActivities', () => {
       const events = await deps.stateStore.listEvents('run-1');
       const runStarted = events.filter((e) => e.eventType === 'RunStarted');
       expect(runStarted).toHaveLength(1);
-      expect(runStarted[0]!.idempotencyKey).toBe('RunStarted|tenant-1|run-1|1|');
+      expect(runStarted[0]!.idempotencyKey).toBe('RunStarted|tenant-1|run-1|1|1|');
+    });
+
+    it('idempotency key varies by engineAttemptId (same logical vs different engine)', () => {
+      const keyForEngine1 = new TestIdempotencyKeyBuilder().runEventKey({
+        eventType: 'RunStarted',
+        tenantId: 't',
+        runId: 'r',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+      } as any);
+
+      const keyForEngine2 = new TestIdempotencyKeyBuilder().runEventKey({
+        eventType: 'RunStarted',
+        tenantId: 't',
+        runId: 'r',
+        logicalAttemptId: 1,
+        engineAttemptId: 2,
+      } as any);
+
+      expect(keyForEngine1).not.toBe(keyForEngine2);
+
+      const keySame = new TestIdempotencyKeyBuilder().runEventKey({
+        eventType: 'RunStarted',
+        tenantId: 't',
+        runId: 'r',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+      } as any);
+      expect(keySame).toBe(keyForEngine1);
     });
   });
 

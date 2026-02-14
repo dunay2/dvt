@@ -7,18 +7,28 @@ export interface EventIdempotencyInput {
   tenantId: string;
   runId: string;
   logicalAttemptId: number;
+  engineAttemptId: number;
   stepId?: string;
 }
 
 /**
- * Idempotency keys MUST derive from logicalAttemptId (not engineAttemptId).
+ * Idempotency keys SHOULD embed both logicalAttemptId and engineAttemptId to
+ * ensure uniqueness across retries while preserving logical attempt grouping.
  * This builder is deterministic and stable.
  */
 export class IdempotencyKeyBuilder {
   runEventKey(e: EventIdempotencyInput): string {
     const scope = isStepEventType(e.eventType) ? 'STEP' : 'RUN';
 
-    const base = ['evt', scope, e.tenantId, e.runId, e.eventType, `la:${e.logicalAttemptId}`];
+    const base = [
+      'evt',
+      scope,
+      e.tenantId,
+      e.runId,
+      e.eventType,
+      `la:${e.logicalAttemptId}`,
+      `ea:${e.engineAttemptId}`,
+    ];
 
     if (scope === 'STEP') {
       if (!e.stepId) {
