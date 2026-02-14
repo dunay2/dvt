@@ -10,6 +10,6 @@
     "baseUrl": ".",
     "paths": {}
   },
-  "include": ["src", "vitest.config.ts"],
+  "include": ["src", "vitest.config.cjs"],
   "exclude": ["node_modules", "dist", "test"]
 }

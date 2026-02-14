@@ -23,7 +23,7 @@ This document summarizes the repository's _current file layout_ and the _recomme
     - ...
   - scripts/
   - test/ (legacy placeholder, safe to remove when empty)
-  - pnpm-workspace.yaml, tsconfig.base.json, vitest.config.ts
+  - pnpm-workspace.yaml, tsconfig.base.json
 
 Notes:
 
@@ -64,7 +64,7 @@ Notes:
   - scripts/ # dev scripts (can be converted to @dvt/cli)
   - pnpm-workspace.yaml
   - tsconfig.base.json
-  - vitest.config.ts
+  - package-level Vitest configs (e.g. `packages/engine/vitest.config.ts`, `packages/adapter-temporal/vitest.config.cjs`)
 
 Guiding rules:
 
@@ -80,7 +80,7 @@ Guiding rules:
 2. Move engine core to `packages/engine/src` (already done for most files). ✅
 3. Move each adapter into `packages/adapter-*` and wire package.json deps. ✅
 4. Update root and per-package `tsconfig.json` & `tsconfig.test.json` entries. ✅
-5. Update `.eslintrc.json` parserOptions.project to include `./packages/*/tsconfig.json`. ✅
+5. Update `eslint.config.cjs` parserOptions.project to include package tsconfigs as needed. ✅
 6. Replace top-level implementation copies with deprecation `README.md` (or archive). ✅
 7. Run full verification: `pnpm -r build && pnpm -r test && pnpm -r lint` in CI. ✅
 8. Create small, focused PRs for final cleanup (remove empty placeholders, lint/style fixes, CI path alignment). ✅/follow-up

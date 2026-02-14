@@ -14,7 +14,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 #### ESLint
 
-- **Config**: [`.eslintrc.json`](../../.eslintrc.json)
+- **Config**: [`eslint.config.cjs`](../../eslint.config.cjs)
 - **Purpose**: TypeScript code quality and determinism enforcement
 - **Key Rules**:
   - No `Date.now()` in engine code (use `workflow.now()`)
@@ -46,7 +46,7 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 
 - **Config (monorepo real)**:
   - [`packages/engine/vitest.config.ts`](../../packages/engine/vitest.config.ts)
-  - [`packages/adapter-temporal/vitest.config.ts`](../../packages/adapter-temporal/vitest.config.ts)
+  - [`packages/adapter-temporal/vitest.config.cjs`](../../packages/adapter-temporal/vitest.config.cjs)
 - **Coverage Requirements**: 80%+ (lines, statements, functions, branches)
 - **Features**:
   - Native TypeScript and ESM support

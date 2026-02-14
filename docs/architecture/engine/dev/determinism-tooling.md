@@ -53,7 +53,7 @@ npm run setup-hooks
 
 ### 2.2 ESLint Determinism Plugin
 
-**Config** (.eslintrc.json in plan repo):
+**Config** (`eslint.config.cjs` / Flat Config in this repo):
 
 ```json
 {
