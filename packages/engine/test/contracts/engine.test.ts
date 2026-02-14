@@ -1,18 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { vi } from 'vitest';
 
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SequenceClock } from '../../src/utils/clock.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
-import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
 import type { PlanRef, RunContext } from '../../src/contracts/types.js';
+import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
+import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
+import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
+
 import { InMemoryPlanFetcher, utf8 } from './helpers.js';
 
 function makeHelloWorldPlan(): ExecutionPlan {

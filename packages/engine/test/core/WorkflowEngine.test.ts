@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SequenceClock } from '../../src/utils/clock.js';
+import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import { SequenceClock } from '../../src/utils/clock.js';
 
 describe('WorkflowEngine (basic failure modes)', () => {
   const store = new InMemoryTxStore();

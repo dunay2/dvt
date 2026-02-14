@@ -50,19 +50,29 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const additions = context.payload.pull_request.additions;
-            const deletions = context.payload.pull_request.deletions;
-            const changes = additions + deletions;
+            const title = context.payload.pull_request.title || '';
+            const labels = (context.payload.pull_request.labels || []).map(l => l.name.toLowerCase());
 
-            const maxChanges = 1000;
-            const warningThreshold = 500;
-
-            if (changes > maxChanges) {
-              core.setFailed(`❌ PR too large: ${changes} lines changed (max: ${maxChanges}). Consider splitting into smaller PRs.`);
-            } else if (changes > warningThreshold) {
-              core.warning(`⚠️ Large PR: ${changes} lines changed. Consider splitting if possible.`);
+            // Override mechanisms (use one):
+            // - add `[skip-size-check]` to the PR title, or
+            // - add a PR label named `skip-size-check` or `pr-size-exempt`
+            if (/\[skip-size-check\]/i.test(title) || labels.includes('skip-size-check') || labels.includes('pr-size-exempt')) {
+              core.info('ℹ️ PR size check skipped by override (title or label).');
             } else {
-              core.info(`✅ PR size acceptable: ${changes} lines changed.`);
+              const additions = context.payload.pull_request.additions;
+              const deletions = context.payload.pull_request.deletions;
+              const changes = additions + deletions;
+
+              const maxChanges = 1000;
+              const warningThreshold = 500;
+
+              if (changes > maxChanges) {
+                core.setFailed(`❌ PR too large: ${changes} lines changed (max: ${maxChanges}). Consider splitting into smaller PRs.`);
+              } else if (changes > warningThreshold) {
+                core.warning(`⚠️ Large PR: ${changes} lines changed. Consider splitting if possible.`);
+              } else {
+                core.info(`✅ PR size acceptable: ${changes} lines changed.`);
+              }
             }
 
       - name: Check for merge conflicts

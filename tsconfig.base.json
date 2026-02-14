@@ -13,7 +13,9 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
+      "@dvt/contracts": ["packages/contracts/index.ts"],
       "@dvt/contracts/*": ["packages/contracts/src/*"],
+      "@dvt/engine": ["packages/engine/src/index.ts"],
       "@dvt/engine/*": ["packages/engine/src/*"],
       "@dvt/adapter-postgres/*": ["packages/adapter-postgres/src/*"],
       "@dvt/adapter-temporal/*": ["packages/adapter-temporal/src/*"],
