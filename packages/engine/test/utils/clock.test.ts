@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { SequenceClock, parseIsoUtcToEpochMs, epochMsToIsoUtc } from '../../src/utils/clock';
 import type { IsoUtcString } from '@dvt/contracts';
+import { describe, it, expect } from 'vitest';
+
+import { SequenceClock, parseIsoUtcToEpochMs, epochMsToIsoUtc } from '../../src/utils/clock';
 
 describe('SequenceClock', () => {
   it('returns increasing ISO UTC strings deterministically', () => {

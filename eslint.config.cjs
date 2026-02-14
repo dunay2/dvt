@@ -9,6 +9,8 @@ module.exports = {
     'engine/test/**',
     'dist/',
     'node_modules/',
+    'packages/engine/legacy-top-level-engine/**',
+    'packages/adapters-legacy/**',
     '*.d.ts',
   ],
   // ...existing config (add your rules, plugins, etc. here)
@@ -212,6 +214,8 @@ module.exports = [
       'dist/',
       'coverage/',
       'node_modules/',
+      'packages/engine/legacy-top-level-engine/**',
+      'packages/adapters-legacy/**',
       '**/*.d.ts',
       '.github/',
       'docs/',

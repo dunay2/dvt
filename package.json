@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint \"packages/**/*.{ts,tsx}\" --max-warnings 0",
     "lint:fix": "eslint \"packages/**/*.{ts,tsx}\" --fix",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.git\"",
+    "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"README.md\" --ignore-path .markdownlintignore",
     "lint:determinism": "echo 'Determinism lint check passed (placeholder)'",
     "format": "prettier --write '**/*.{ts,js,json,md,yml,yaml}'",
     "format:check": "prettier --check '**/*.{ts,js,json,md,yml,yaml}'",

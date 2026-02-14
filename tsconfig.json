@@ -36,6 +36,6 @@
       "@dvt/adapter-temporal/*": ["packages/adapter-temporal/src/*"]
     }
   },
-  "include": ["packages/*/src/**/*.ts"],
+  "include": ["packages/*/src/**/*.ts", "packages/*/index.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }

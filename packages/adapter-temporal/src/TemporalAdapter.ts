@@ -5,6 +5,7 @@ import type {
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
+import type { Client } from '@temporalio/client';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
@@ -98,7 +99,7 @@ export class TemporalAdapter implements IProviderAdapterLike {
     }
   }
 
-  private async getClient() {
+  private async getClient(): Promise<Client> {
     if (!this.deps.clientManager.isConnected()) {
       await this.deps.clientManager.connect();
     }
