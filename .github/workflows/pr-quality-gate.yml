@@ -15,6 +15,8 @@ jobs:
     name: PR Quality Checks
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    outputs:
+      temporal_changed: ${{ steps.detect_changes.outputs.temporal_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -98,10 +100,53 @@ jobs:
               core.setFailed('❌ PR description is too short. Please provide a detailed description (min 50 characters).');
             }
 
+      - name: Detect PR changes relevant to Temporal
+        id: detect_changes
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setOutput('temporal_changed', 'true');
+              return;
+            }
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number }
+            );
+            const patterns = ['packages/adapter-temporal/', 'packages/contracts/'];
+            const changed = files.some(f => patterns.some(p => f.filename.startsWith(p)));
+            core.setOutput('temporal_changed', changed ? 'true' : 'false');
+
+  temporal-integration:
+    name: Temporal adapter integration (time-skipping)
+    runs-on: ubuntu-latest
+    needs: [pr-checks]
+    if:
+      needs.pr-checks.outputs.temporal_changed == 'true' && github.event.pull_request.draft == false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Temporal adapter integration (time-skipping)
+        run: pnpm --filter @dvt/adapter-temporal test:integration
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
-    needs: [pr-checks]
+    needs: [pr-checks, temporal-integration]
     if: always()
     steps:
       - name: Check all jobs
@@ -109,8 +154,9 @@ jobs:
         with:
           script: |
             const jobs = ${{ toJSON(needs) }};
+            // Consider only explicit failures as blocking; ignore skipped/neutral jobs
             const failedJobs = Object.entries(jobs)
-              .filter(([_, job]) => job.result !== 'success')
+              .filter(([_, job]) => ['failure', 'cancelled', 'timed_out'].includes(job.result))
               .map(([name, _]) => name);
 
             if (failedJobs.length > 0) {
