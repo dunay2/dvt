@@ -1,5 +1,11 @@
 name: Contracts & Determinism
 
+# Blocking policy (issue #93):
+# - Critical contract checks MUST fail the job and block merge.
+# - Documented exceptions:
+#   1) Scope gating: jobs are skipped when no relevant files changed on PRs.
+#   2) JSON schema validation is skipped only when no *.schema.json files exist.
+
 on:
   pull_request:
     branches: [main]
@@ -100,13 +106,14 @@ jobs:
 
       - name: Validate JSON schemas
         run: |
+          set -euo pipefail
           echo "Checking for JSON schema files..."
           if ! find docs/architecture/engine/contracts -name "*.schema.json" -type f 2>/dev/null | grep -q .; then
             echo "No schema files found — skipping"
             exit 0
           fi
           echo "Installing ajv..."
-          npx ajv@8 compile -s docs/architecture/engine/contracts/**/*.schema.json 2>&1 | head -20 || true
+          npx ajv@8 compile -s docs/architecture/engine/contracts/**/*.schema.json
           echo "✅ Schema validation complete"
 
   determinism-checks:
@@ -335,11 +342,11 @@ jobs:
           DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
         timeout-minutes: 5
 
-      - name: Compare snapshot hashes
+      - name: Compare snapshot hashes (blocking)
         run: |
+          set -euo pipefail
           echo "Comparing snapshot hashes..."
           node scripts/compare-hashes.cjs
-        continue-on-error: true
 
       - name: Upload test results
         if: always()
