@@ -1,5 +1,2 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "🔒 Running pre-push verifications: pnpm verify:prepush"
 pnpm -s verify:prepush
