@@ -145,6 +145,7 @@ This project enforces high code quality through:
 - **Prettier** - Consistent code formatting
 - **Vitest** - Standard unit and integration testing (80%+ coverage required)
 - **Conventional Commits** - Semantic versioning automation
+- **release-please** - Automated releases, changelogs, and NPM publishing ([workflow](.github/workflows/release.yml))
 - **Pre-commit hooks** - Automatic linting and formatting via Husky + lint-staged
 - **GitHub Actions** - Comprehensive CI/CD pipelines
 

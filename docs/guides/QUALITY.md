@@ -146,16 +146,24 @@ These practices were identified to improve test reliability, signal quality, and
 
 ### 5. Versioning & Releases
 
-#### Release Please
+#### Release Please (official release tool)
 
 - **Workflow**: [`release.yml`](../../.github/workflows/release.yml)
+- **Policy**: [VERSIONING.md](../architecture/engine/VERSIONING.md) (contract versioning); [Semantic Versioning 2.0.0](https://semver.org/) (package versioning)
 - **Features**:
   - Automated release PRs based on Conventional Commits
   - Changelog updates managed by release automation
   - Tagged GitHub releases on merge
+  - NPM publishing on release creation
 - **Run**:
   - Automatic on push to `main` (release-please workflow)
   - Manual trigger available via GitHub Actions (`workflow_dispatch`)
+- **Flow**:
+  1. Merge PRs to `main` using Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
+  2. release-please opens/updates a Release PR with version bump and changelog
+  3. Merge the Release PR to create a GitHub release and git tag
+  4. CI publishes to NPM automatically
+- **Note**: No other release tooling is used. `standard-version` was removed; all releases go through release-please
 
 ### 6. Dependency Management
 
@@ -174,9 +182,9 @@ This section tracks recommended tooling to strengthen secure delivery, auditable
 
 #### Priority A (Immediate)
 
-- **release-please**
-  - **Goal**: Replace legacy release flow and standardize changelog/release automation.
-  - **Status**: Active release automation workflow.
+- **release-please** --- **CONFIGURED**
+  - **Goal**: Standardize changelog and release automation via Conventional Commits.
+  - **Status**: Active. Configured in [`.github/workflows/release.yml`](../../.github/workflows/release.yml). No legacy release tooling remains (standard-version was fully removed).
 - **CodeQL**
   - **Goal**: Static application security testing (SAST) in CI.
 - **gitleaks**
@@ -224,7 +232,7 @@ This section tracks recommended tooling to strengthen secure delivery, auditable
 
 #### Suggested rollout order
 
-1. `release-please`
+1. ~~`release-please`~~ (done — active in CI)
 2. `CodeQL` + `gitleaks` + (`Trivy` or `OSV-Scanner`)
 3. `dependency-cruiser` + `Semgrep`
 4. `OpenTelemetry` + `Prometheus/Grafana`
@@ -324,11 +332,15 @@ pnpm format               # Format code
 ### Release
 
 ```bash
-# Release automation is managed in GitHub Actions:
-# .github/workflows/release.yml (release-please)
+# Releases are fully automated via release-please (GitHub Actions).
+# There are no local release commands to run.
 #
-# Local command kept only as a pointer:
-pnpm release
+# Workflow: .github/workflows/release.yml
+# Trigger: Automatic on push to main (or manual via workflow_dispatch)
+# Process: Conventional Commits → release-please PR → merge → GitHub release → NPM publish
+#
+# To check release status:
+gh run list --workflow=release.yml --limit=5
 ```
 
 ---
