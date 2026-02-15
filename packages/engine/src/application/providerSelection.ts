@@ -7,8 +7,7 @@ type Provider = EngineRunRef['provider'];
 const VALID_PROVIDERS = new Set<Provider>(['temporal', 'conductor', 'mock']);
 
 export function resolveEngineProvider(
-  // eslint-disable-next-line no-restricted-syntax -- config injection: callers can override env
-  env: Record<string, string | undefined> = process.env,
+  env: Record<string, string | undefined>,
   fallback: Provider = 'temporal'
 ): Provider {
   const raw = env['ENGINE_PROVIDER']?.trim().toLowerCase();
@@ -32,8 +31,7 @@ export function buildAdapterRegistry(
 
 export function pickDefaultAdapter(
   adapters: Map<Provider, IProviderAdapter>,
-  // eslint-disable-next-line no-restricted-syntax -- config injection: callers can override env
-  env: Record<string, string | undefined> = process.env,
+  env: Record<string, string | undefined>,
   fallback: Provider = 'temporal'
 ): IProviderAdapter {
   const provider = resolveEngineProvider(env, fallback);
