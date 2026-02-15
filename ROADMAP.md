@@ -42,28 +42,28 @@ gantt
 
 **Critical Path - Phase 1: MVP** (in order):
 
-| #                                              | Title                                                          | Priority  | Status | Blocked By | Critical Path     |
-| ---------------------------------------------- | -------------------------------------------------------------- | --------- | ------ | ---------- | ----------------- |
-| [#8](https://github.com/dunay2/dvt/issues/8)   | GLOSSARY.v1.md normative contract                              | 🔴 High   | Open   | -          | ⚠️ **START HERE** |
-| [#9](https://github.com/dunay2/dvt/issues/9)   | RunEventCatalog.v1.md event taxonomy                           | 🔴 High   | Open   | #8         | ⚠️ **CRITICAL**   |
-| [#2](https://github.com/dunay2/dvt/issues/2)   | Implement TypeScript types                                     | 🔴 High   | Closed | #9         | ✅ Done           |
-| [#14](https://github.com/dunay2/dvt/issues/14) | IWorkflowEngine + SnapshotProjector                            | 🔴 High   | Open   | #2, #9     | ⚠️ **CRITICAL**   |
-| [#15](https://github.com/dunay2/dvt/issues/15) | Temporal Interpreter Workflow                                  | 🔴 High   | Open   | #14        | ⚠️ **CRITICAL**   |
-| [#5](https://github.com/dunay2/dvt/issues/5)   | TemporalAdapter MVP (legacy tracking)                          | 🔴 High   | Closed | #2, #15    | ✅ Done           |
-| [#68](https://github.com/dunay2/dvt/issues/68) | TemporalAdapter MVP (active package path)                      | 🔴 High   | Open   | #14, #15   | ⚠️ **CRITICAL**   |
-| [#6](https://github.com/dunay2/dvt/issues/6)   | PostgresStateStoreAdapter MVP                                  | 🔴 High   | Open   | #2         | ⚠️ **CRITICAL**   |
-| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker                                         | 🔴 High   | Closed | #6         | ✅ Done           |
-| [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples                                          | 🔴 High   | Closed | #5, #6     | ✅ Done           |
-| [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline                                   | 🔴 High   | Closed | #10        | ✅ Done           |
-| [#3](https://github.com/dunay2/dvt/issues/3)   | Mermaid diagrams ExecutionSemantics                            | 🟡 Medium | Closed | -          | ✅ Done           |
-| [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High   | Closed | -          | ✅ Done           |
+| #                                              | Title                                                          | Priority  | Status | Blocked By | Critical Path   |
+| ---------------------------------------------- | -------------------------------------------------------------- | --------- | ------ | ---------- | --------------- |
+| [#8](https://github.com/dunay2/dvt/issues/8)   | GLOSSARY.v1.md normative contract                              | 🔴 High   | Closed | -          | ✅ Done         |
+| [#9](https://github.com/dunay2/dvt/issues/9)   | RunEventCatalog.v1.md event taxonomy                           | 🔴 High   | Closed | #8         | ✅ Done         |
+| [#2](https://github.com/dunay2/dvt/issues/2)   | Implement TypeScript types                                     | 🔴 High   | Closed | #9         | ✅ Done         |
+| [#14](https://github.com/dunay2/dvt/issues/14) | IWorkflowEngine + SnapshotProjector                            | 🔴 High   | Open   | #2, #9     | ⚠️ **CRITICAL** |
+| [#15](https://github.com/dunay2/dvt/issues/15) | Temporal Interpreter Workflow                                  | 🔴 High   | Open   | #14        | ⚠️ **CRITICAL** |
+| [#5](https://github.com/dunay2/dvt/issues/5)   | TemporalAdapter MVP (legacy tracking)                          | 🔴 High   | Closed | #2, #15    | ✅ Done         |
+| [#68](https://github.com/dunay2/dvt/issues/68) | TemporalAdapter MVP (active package path)                      | 🔴 High   | Open   | #14, #15   | ⚠️ **CRITICAL** |
+| [#6](https://github.com/dunay2/dvt/issues/6)   | PostgresStateStoreAdapter MVP                                  | 🔴 High   | Open   | #2         | ⚠️ **CRITICAL** |
+| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker                                         | 🔴 High   | Closed | #6         | ✅ Done         |
+| [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples                                          | 🔴 High   | Closed | #5, #6     | ✅ Done         |
+| [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline                                   | 🔴 High   | Closed | #10        | ✅ Done         |
+| [#3](https://github.com/dunay2/dvt/issues/3)   | Mermaid diagrams ExecutionSemantics                            | 🟡 Medium | Closed | -          | ✅ Done         |
+| [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High   | Closed | -          | ✅ Done         |
 
 **Why this order?** IDs + naming policies (Glossary) → event envelope fields (RunEventCatalog) → type definitions → engine core (IWorkflowEngine + Temporal Interpreter) → adapter implementations + outbox → contract test fixtures (Golden Paths) → CI validation. Security docs are parallel (design, not blocking implementation).
 
 ### Deliverables
 
-- ⏳ **Glossary**: Canonical definitions for IDs, terminology, and naming policies (issue #8)
-- ⏳ **Event Catalog**: Complete event taxonomy with state machine validation (issue #9)
+- ✅ **Glossary**: Canonical definitions for IDs, terminology, and naming policies (issue #8)
+- ✅ **Event Catalog**: Complete event taxonomy with state machine validation (issue #9)
 - ✅ **TypeScript Types**: Interfaces for normative contracts (EngineRunRef, ArtifactRef, ProjectorInput, StateStoreAdapter) (issue #2)
 - ⏳ **IWorkflowEngine + SnapshotProjector**: Core engine orchestration and event sourcing (issue #14)
 - ⏳ **Temporal Interpreter Workflow**: DAG walker and activity dispatch (issue #15)
@@ -73,7 +73,7 @@ gantt
 - ✅ **Outbox Delivery Worker**: At-least-once event delivery (adapter-agnostic interface, Postgres polling in outbox-semantics.md) (issue #16)
 - ✅ **Golden Paths**: Executable example plans for contract testing (issue #10)
 - ✅ **CI Contract Testing Pipeline**: GitHub Actions workflow for golden path validation (issue #17)
-- ⏳ **Visual Documentation**: Sequence and state diagrams for critical flows (issue #3)
+- ✅ **Visual Documentation**: Sequence and state diagrams for critical flows (issue #3)
 - ✅ **Security Design**: Threat model, authorization contract, audit log schema for compliance (issue #19, design only)
 
 ### Success Criteria - Phase 1 MVP
@@ -167,7 +167,7 @@ gantt
 | ---------------------------------------------- | ---------------------------- | --------- | ------ | ---------- |
 | [#4](https://github.com/dunay2/dvt/issues/4)   | Determinism linting rules    | 🔴 High   | Open   | -          |
 | [#7](https://github.com/dunay2/dvt/issues/7)   | ESLint + Husky Phase 2       | 🟡 Medium | Open   | #4         |
-| [#11](https://github.com/dunay2/dvt/issues/11) | Capability versioning policy | 🟡 Medium | Open   | -          |
+| [#11](https://github.com/dunay2/dvt/issues/11) | Capability versioning policy | 🟡 Medium | Closed | -          |
 | [#12](https://github.com/dunay2/dvt/issues/12) | SLOs and severity matrix     | 🟡 Medium | Open   | Phase 1.5  |
 
 ### Deliverables - Phase 2
@@ -199,9 +199,9 @@ gantt
 ### Phase 1: MVP
 
 - **Status**: 🟡 In progress (critical path partially closed)
-- **Closed (key)**: #2, #3, #5, #10, #16, #17, #19
-- **Open — critical path**: #8, #9, #14, #15, #6, #68, #70
-- **Open — supporting scope**: #66, #67, #72, #73
+- **Closed (key)**: #2, #3, #5, #8, #9, #10, #16, #17, #19
+- **Open — critical path**: #14, #15, #6, #68
+- **Open — supporting scope**: #66, #67, #70, #72, #73
 - **Audit note (2026-02-14)**: Core engine and CI foundation exist, but active adapter/runtime parity and fixture hardening remain as main blockers
 - **Dependency risk**: #6 + #68 + #70 currently gate reliable executable end-to-end validation
 
@@ -214,10 +214,10 @@ gantt
 
 ### Phase 2: Advanced Tooling
 
-- **Status**: 🟡 Planned / active governance updates in progress
-- **Open (tooling & quality)**: #4, #7, #11, #12, #18, #73, #76, #89, #90, #91, #92, #93, #94
+- **Status**: 🟡 Planned / governance baseline largely closed
+- **Open (tooling & quality)**: #4, #7, #12, #18, #73, #89
 - **Open (adapter expansion)**: #69, #71
-- **Tracking cleanup**: #74 closed as duplicate/superseded by #76
+- **Tracking cleanup**: #74 closed as duplicate/superseded by #76 (already closed)
 
 ---
 
@@ -225,12 +225,12 @@ gantt
 
 ### Wave 0 — Governance & quality coherence (immediate)
 
-1. [#90](https://github.com/dunay2/dvt/issues/90) — Release flow migration to release-please
-2. [#91](https://github.com/dunay2/dvt/issues/91) — ESLint config normalization
-3. [#92](https://github.com/dunay2/dvt/issues/92) — QUALITY guide correction (Vitest path reality)
-4. [#93](https://github.com/dunay2/dvt/issues/93) — Harden contracts CI (`continue-on-error` review)
-5. [#94](https://github.com/dunay2/dvt/issues/94) — Replace determinism placeholder with real gate
-6. [#89](https://github.com/dunay2/dvt/issues/89) — Documentation normalization for release governance
+1. ✅ [#90](https://github.com/dunay2/dvt/issues/90) — Release flow migration to release-please
+2. ✅ [#91](https://github.com/dunay2/dvt/issues/91) — ESLint config normalization
+3. ✅ [#92](https://github.com/dunay2/dvt/issues/92) — QUALITY guide correction (Vitest path reality)
+4. ✅ [#93](https://github.com/dunay2/dvt/issues/93) — Harden contracts CI (`continue-on-error` review)
+5. ✅ [#94](https://github.com/dunay2/dvt/issues/94) — Replace determinism placeholder with real gate
+6. [#89](https://github.com/dunay2/dvt/issues/89) — Documentation normalization for release governance (open)
 
 ### Wave 1 — MVP execution unblockers
 
@@ -413,4 +413,4 @@ To contribute to the project, check issues organized by milestone:
 
 ---
 
-_Last updated: 2026-02-13_
+_Last updated: 2026-02-15_
