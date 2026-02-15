@@ -34,10 +34,36 @@ export function pickDefaultAdapter(
   env: Record<string, string | undefined>,
   fallback: Provider = 'temporal'
 ): IProviderAdapter {
-  const provider = resolveEngineProvider(env, fallback);
+  const hasEnvOverride = Boolean(env['ENGINE_PROVIDER']?.trim());
+  if (hasEnvOverride) {
+    const provider = resolveEngineProvider(env, fallback);
+    return getRegisteredAdapterOrThrow(adapters, provider);
+  }
+
+  return pickFirstAvailableAdapterOrThrow(adapters, fallback);
+}
+
+function getRegisteredAdapterOrThrow(
+  adapters: Map<Provider, IProviderAdapter>,
+  provider: Provider
+): IProviderAdapter {
   const adapter = adapters.get(provider);
   if (!adapter) {
     throw new Error(`No adapter registered for provider: ${provider}`);
   }
   return adapter;
+}
+
+function pickFirstAvailableAdapterOrThrow(
+  adapters: Map<Provider, IProviderAdapter>,
+  fallback: Provider
+): IProviderAdapter {
+  const orderedProviders: readonly Provider[] = [fallback, 'temporal', 'conductor', 'mock'];
+
+  for (const provider of orderedProviders) {
+    const adapter = adapters.get(provider);
+    if (adapter) return adapter;
+  }
+
+  throw new Error('No adapters registered');
 }
