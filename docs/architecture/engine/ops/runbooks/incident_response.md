@@ -1,9 +1,10 @@
 # Incident Response Runbook
 
-**Audience**: On-call SRE, engineers  
-**Purpose**: Step-by-step procedures for common incidents  
-**Owner**: Platform Stability team  
+**Audience**: On-call SRE, engineers
+**Purpose**: Step-by-step procedures for common incidents
+**Owner**: Platform Stability team
 **Last Updated**: 2026-02-11
+**References**: [SLOs.md](../SLOs.md), [severity_matrix.md](./severity_matrix.md), [observability.md](../observability.md)
 
 ---
 

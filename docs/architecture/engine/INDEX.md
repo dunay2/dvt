@@ -72,10 +72,12 @@ Implementation contracts for orchestration platform adapters and storage backend
 
 Operational guides for running the engine in production.
 
-| Document                                                           | Purpose                                   | Audience     | SLA         |
-| ------------------------------------------------------------------ | ----------------------------------------- | ------------ | ----------- |
-| [observability.md](ops/observability.md)                           | Metrics, traces, logs, alerts, dashboards | SRE, ops     | Phase 1 MVP |
-| [runbooks/incident_response.md](ops/runbooks/incident_response.md) | Step-by-step incident procedures          | On-call, SRE | 6 scenarios |
+| Document                                                           | Purpose                                         | Audience     | SLA         |
+| ------------------------------------------------------------------ | ----------------------------------------------- | ------------ | ----------- |
+| [observability.md](ops/observability.md)                           | Metrics, traces, logs, alerts, dashboards       | SRE, ops     | Phase 1 MVP |
+| [SLOs.md](ops/SLOs.md)                                             | SLO targets, error budgets, cost baseline       | SRE, leads   | Phase 1 MVP |
+| [runbooks/severity_matrix.md](ops/runbooks/severity_matrix.md)     | Severity definitions, alert mapping, escalation | On-call, SRE | Phase 1 MVP |
+| [runbooks/incident_response.md](ops/runbooks/incident_response.md) | Step-by-step incident procedures                | On-call, SRE | 6 scenarios |
 
 ### 🟡 Developer Tooling (Informative, Gating)
 
@@ -133,8 +135,10 @@ docs/architecture/engine/
 │
 ├── ops/                                   # Operations (informative, evolving)
 │   ├── observability.md                   # Metrics, traces, logs, SLOs
+│   ├── SLOs.md                            # SLO targets, error budgets, cost baseline
 │   └── runbooks/
-│       └── incident_response.md           # 6 incident scenarios
+│       ├── incident_response.md           # 6 incident scenarios
+│       └── severity_matrix.md             # Sev0-Sev3 definitions, alert mapping, escalation
 │
 ├── dev/                                   # Developer tools (informative, gating)
 │   └── determinism-tooling.md             # Linting, replay tests, CI gate
@@ -185,9 +189,11 @@ docs/architecture/engine/
 **For SREs**:
 
 1. Read [ops/observability.md](ops/observability.md) (metrics, dashboards)
-2. Read [ops/runbooks/incident_response.md](ops/runbooks/incident_response.md) (incident playbooks)
-3. Deploy Prometheus + Grafana
-4. Configure alerts
+2. Read [ops/SLOs.md](ops/SLOs.md) (SLO targets, error budgets)
+3. Read [ops/runbooks/severity_matrix.md](ops/runbooks/severity_matrix.md) (severity definitions, escalation)
+4. Read [ops/runbooks/incident_response.md](ops/runbooks/incident_response.md) (incident playbooks)
+5. Deploy Prometheus + Grafana
+6. Configure alerts
 
 ### Phase 2 (Conductor Adapter)
 
@@ -230,6 +236,14 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 → [security/THREAT_MODEL.md](security/THREAT_MODEL.md) (threat scenarios, mitigations)  
 → [contracts/security/IAuthorization.v1.md](contracts/security/IAuthorization.v1.md) (authorization interface)  
 → [contracts/security/AuditLog.v1.md](contracts/security/AuditLog.v1.md) (audit log schema, compliance)
+
+### "What are the SLO targets and error budgets?"
+
+→ [ops/SLOs.md](ops/SLOs.md)
+
+### "What severity level is this incident?"
+
+→ [ops/runbooks/severity_matrix.md](ops/runbooks/severity_matrix.md)
 
 ### "How do I respond to a production incident?"
 
@@ -275,7 +289,18 @@ ConductorAdapter.spec.md (DRAFT, Phase 2)
 observability.md
   ├─ monitors: IWorkflowEngine.v1.1.md (interface health)
   ├─ monitors: ExecutionSemantics.v1.md (StateStore health)
+  ├─ references: SLOs.md (target thresholds)
   └─ references: runbooks/incident_response.md (alerts → procedures)
+
+SLOs.md
+  ├─ defines: SLO targets per subsystem
+  ├─ references: observability.md (metrics definitions)
+  └─ references: runbooks/severity_matrix.md (breach → severity)
+
+severity_matrix.md
+  ├─ maps: observability.md alerts → severity levels
+  ├─ references: SLOs.md (SLO ↔ severity relationship)
+  └─ references: runbooks/incident_response.md (procedures)
 
 determinism-tooling.md
   ├─ enforces: ExecutionSemantics.v1.md (determinism invariant)
@@ -376,6 +401,8 @@ All internal references use **relative markdown links** (portable, versionable).
 | TemporalAdapter.spec.md  | 300 lines        | Adapter  | HIGH           | Temporal SDK     |
 | ConductorAdapter.spec.md | 220 lines        | Adapter  | MEDIUM (DRAFT) | Conductor SDK    |
 | observability.md         | 280 lines        | Guide    | MEDIUM         | SRE              |
+| SLOs.md                  | 180 lines        | Guide    | MEDIUM         | SRE, leads       |
+| severity_matrix.md       | 200 lines        | Guide    | MEDIUM         | On-call, SRE     |
 | incident_response.md     | 350 lines        | Guide    | MEDIUM         | On-call          |
 | determinism-tooling.md   | 320 lines        | Guide    | LOW            | Plan authors     |
 | engine-phases.md         | 350 lines        | Roadmap  | LOW            | Execs            |
@@ -408,6 +435,8 @@ All internal references use **relative markdown links** (portable, versionable).
 | TemporalAdapter.spec.md  | @temporal-lead     | 2026-02-11    | 2026-05-11  |
 | ConductorAdapter.spec.md | @conductor-lead    | 2026-02-11    | 2026-06-11  |
 | observability.md         | @sre-lead          | 2026-02-11    | 2026-03-11  |
+| SLOs.md                  | @sre-lead          | 2026-02-15    | 2026-05-15  |
+| severity_matrix.md       | @sre-oncall        | 2026-02-15    | 2026-05-15  |
 | incident_response.md     | @sre-oncall        | 2026-02-11    | 2026-02-18  |
 | determinism-tooling.md   | @qa-lead           | 2026-02-11    | 2026-04-11  |
 | engine-phases.md         | @pm-lead           | 2026-02-11    | 2026-05-11  |
