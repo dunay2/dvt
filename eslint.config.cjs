@@ -107,51 +107,130 @@ module.exports = [
       'import/no-unresolved': 'error',
       'import/no-cycle': 'error',
 
-      // Temporal workflow rules (for engine code)
-      'no-restricted-globals': [
-        'error',
-        {
-          name: 'Date',
-          message: 'Use workflow.now() in Temporal workflows for determinism',
-        },
-        {
-          name: 'Math.random',
-          message: 'Use workflow-seeded RNG for determinism',
-        },
-        {
-          name: 'setTimeout',
-          message: 'Use workflow.sleep() in Temporal workflows',
-        },
-        {
-          name: 'setInterval',
-          message: 'Not allowed in Temporal workflows (non-deterministic)',
-        },
-      ],
     },
   },
 
-  // Stricter rules for core engine and adapters
+  // ──────────────────────────────────────────────────────────────────────────
+  // Determinism rules for engine source (packages/engine/src/**)
+  // Forbidden: Date.now(), new Date(), Math.random(), process.env
+  // See: CLAUDE.md "Determinism Rules" and docs/architecture/engine/dev/determinism-tooling.md
+  // ──────────────────────────────────────────────────────────────────────────
   {
-    files: ['engine/core/**/*.ts', 'engine/adapters/**/*.ts'],
+    files: ['packages/engine/src/**/*.ts'],
     rules: {
-      'no-restricted-globals': [
+      'no-restricted-syntax': [
         'error',
         {
-          name: 'Date',
-          message: 'Use workflow.now() in Temporal workflows for determinism',
+          selector: "NewExpression[callee.name='Date']",
+          message:
+            'new Date() is non-deterministic in engine code. Use the injected IClock interface.',
+        },
+        {
+          selector: "MemberExpression[object.name='process'][property.name='env']",
+          message:
+            'process.env is forbidden in engine code. Pass configuration explicitly via dependency injection.',
         },
       ],
       'no-restricted-properties': [
         'error',
         {
+          object: 'Date',
+          property: 'now',
+          message: 'Date.now() is non-deterministic in engine code. Use the injected IClock interface.',
+        },
+        {
           object: 'Math',
           property: 'random',
-          message: 'Use workflow-seeded RNG for determinism',
+          message: 'Math.random() is non-deterministic. Use the injected RNG.',
         },
         {
           object: 'crypto',
           property: 'randomBytes',
-          message: 'Use deterministic UUID generation',
+          message: 'crypto.randomBytes() is non-deterministic. Use deterministic UUID generation.',
+        },
+      ],
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Strictest determinism rules for Temporal workflow files
+  // Workflows run inside the Temporal sandbox and MUST be fully deterministic.
+  // All I/O, timers, and side effects must be delegated to activities.
+  // See: https://docs.temporal.io/workflows#deterministic-constraints
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    files: ['packages/adapter-temporal/src/workflows/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "NewExpression[callee.name='Date']",
+          message:
+            'new Date() is non-deterministic in workflows. Use workflow SDK time utilities.',
+        },
+        {
+          selector: "MemberExpression[object.name='process'][property.name='env']",
+          message:
+            'process.env is forbidden in workflows. Configuration must come from workflow arguments.',
+        },
+      ],
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'Date',
+          property: 'now',
+          message: 'Date.now() is non-deterministic in workflows. Use workflow SDK time utilities.',
+        },
+        {
+          object: 'Math',
+          property: 'random',
+          message: 'Math.random() is non-deterministic in workflows. Use workflow SDK uuid4().',
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'setTimeout',
+          message: 'setTimeout is non-deterministic in workflows. Use workflow.sleep() instead.',
+        },
+        {
+          name: 'setInterval',
+          message: 'setInterval is not allowed in Temporal workflows.',
+        },
+        {
+          name: 'setImmediate',
+          message: 'setImmediate is not allowed in Temporal workflows.',
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'fs',
+              message: 'File system access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'fs/promises',
+              message: 'File system access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'http',
+              message: 'Network access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'https',
+              message: 'Network access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'net',
+              message: 'Network access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'child_process',
+              message: 'Process spawning is forbidden in workflows. Delegate to activities.',
+            },
+          ],
         },
       ],
     },
@@ -184,6 +263,9 @@ module.exports = [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       'no-restricted-globals': 'off',
+      'no-restricted-syntax': 'off',
+      'no-restricted-properties': 'off',
+      'no-restricted-imports': 'off',
     },
   },
 
