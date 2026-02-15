@@ -1,2 +1,12 @@
-// Placeholder source to ensure tsc has inputs for strict CI
-export const adapterPostgresPlaceholder = true;
+export type {
+  AppendResult,
+  EventEnvelope,
+  EventType,
+  IOutboxStorage,
+  IRunStateStore,
+  OutboxRecord,
+  RunMetadata,
+} from './types.js';
+export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
+
+export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
