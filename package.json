@@ -31,7 +31,7 @@
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
     "release": "echo \"Releases are managed by release-please workflow\"",
     "prepare": "husky",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged && pnpm lint:determinism"
   },
   "lint-staged": {
     "packages/*/src/**/*.{ts,tsx}": [

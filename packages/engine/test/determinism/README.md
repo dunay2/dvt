@@ -33,6 +33,10 @@ pnpm lint:determinism
 pnpm test:determinism
 ```
 
+## Local Hook Enforcement
+
+Determinism linting is also enforced at commit time through [`pnpm run precommit`](package.json:34), which runs `lint-staged` and then [`pnpm lint:determinism`](package.json:12).
+
 ## ESLint Rules
 
 Determinism is enforced via ESLint rules in `eslint.config.cjs`:
