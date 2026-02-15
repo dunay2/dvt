@@ -66,4 +66,62 @@ describe('WorkflowEngine (basic failure modes)', () => {
       } as any)
     ).rejects.toThrow(/Run metadata not found/);
   });
+
+  it('startRun rejects invalid runtime boundary payloads', async () => {
+    const invalidPlanRef = {
+      uri: '',
+      sha256: 'deadbeef',
+      schemaVersion: 'v1.1',
+      planId: 'p',
+      planVersion: '1.0',
+    } as any;
+
+    const validContext = {
+      tenantId: 't',
+      projectId: 'p',
+      environmentId: 'dev',
+      runId: 'r',
+      targetAdapter: 'temporal',
+    } as any;
+
+    await expect(engine.startRun(invalidPlanRef, validContext)).rejects.toThrow(
+      /Validation failed/
+    );
+
+    const validPlanRef = {
+      uri: 'https://example.com/plan',
+      sha256: 'deadbeef',
+      schemaVersion: 'v1.1',
+      planId: 'p',
+      planVersion: '1.0',
+    } as any;
+
+    const invalidContext = {
+      tenantId: 't',
+      projectId: 'p',
+      environmentId: 'dev',
+      runId: 'r',
+      targetAdapter: 'unknown-provider',
+    } as any;
+
+    await expect(engine.startRun(validPlanRef, invalidContext)).rejects.toThrow(
+      /Validation failed/
+    );
+  });
+
+  it('signal rejects invalid runtime boundary payloads', async () => {
+    const runRef = {
+      provider: 'temporal',
+      namespace: 'n',
+      workflowId: 'w',
+      runId: 'missing',
+    } as any;
+
+    const badSignal = {
+      signalId: 's1',
+      type: 'INVALID_SIGNAL',
+    } as any;
+
+    await expect(engine.signal(runRef, badSignal)).rejects.toThrow(/Validation failed/);
+  });
 });
