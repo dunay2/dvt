@@ -59,14 +59,14 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - #67: **Partial** (validation helpers exist mainly in legacy path; active path boundary wiring still pending).
 - #68: **In progress / near-closure** (Temporal adapter is implemented on active `packages/*` paths with workflow, activities, provider selection, and integration test harness; pending final CI workflow closure + tracker publication alignment).
 - #69: **Not started** (Conductor adapter package not present; engine Conductor adapter stub only).
-- #70: **Substantially completed** (golden-path fixtures now present at `packages/engine/test/contracts/plans/`, baseline hashes synchronized for implemented/deprecated paths in `.golden/hashes.json`, and `validate:contracts` + `golden:validate` + hash comparison passing).
+- #70: **Implemented and merged** (fixtures + baseline hashes + validation flow integrated via PR #201; GitHub issue remains open pending manual closure/update).
 - #71: **Blocked / not started** (depends on non-stub Conductor foundation).
 - #72: **Not started on active path** (version-binding enforcement currently visible in legacy area, not active runtime path).
 - #73: **Partial** (determinism tests for engine + mock exist; cross-adapter determinism still blocked mainly by Conductor gaps).
 - #14: **Mostly implemented** in active engine path; issue checklist should be refreshed to current API names and remaining deltas.
 - #15: **In progress** (Temporal interpreter workflow exists in active package implementation; issue tracking/checklist requires refresh to match current code evidence).
 - #5: **Superseded scope** by #68 for active monorepo implementation tracking.
-- #6: **Foundation implemented (MVP base)** in active adapter package (`PostgresStateStoreAdapter` + contract-compatible types + smoke coverage for metadata, idempotency append, and outbox lifecycle).
+- #6: **Foundation implemented and merged** in active adapter package (MVP base via PR #202 with `PostgresStateStoreAdapter`, contract-compatible types, and smoke coverage); follow-up required for full PostgreSQL persistence/runtime hardening.
 - #76 and #79: active repository-governance tracking for monorepo/path normalization and stale local reference cleanup.
 
 ### Suggested canonical execution order
@@ -107,4 +107,4 @@ When behavior changes affect deterministic execution:
 ---
 
 **Status**: Active and usable (with audited gaps tracked)
-**Last updated**: 2026-02-14
+**Last updated**: 2026-02-15
