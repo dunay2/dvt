@@ -59,7 +59,7 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - #67: **Partial** (validation helpers exist mainly in legacy path; active path boundary wiring still pending).
 - #68: **In progress / near-closure** (Temporal adapter is implemented on active `packages/*` paths with workflow, activities, provider selection, and integration test harness; pending final CI workflow closure + tracker publication alignment).
 - #69: **Not started** (Conductor adapter package not present; engine Conductor adapter stub only).
-- #70: **Partial** (`.golden/hashes.json` exists, but `examples/` fixtures missing in current workspace and hashes still pending).
+- #70: **Substantially completed** (golden-path fixtures now present at `packages/engine/test/contracts/plans/`, baseline hashes synchronized for implemented/deprecated paths in `.golden/hashes.json`, and `validate:contracts` + `golden:validate` + hash comparison passing).
 - #71: **Blocked / not started** (depends on non-stub Conductor foundation).
 - #72: **Not started on active path** (version-binding enforcement currently visible in legacy area, not active runtime path).
 - #73: **Partial** (determinism tests for engine + mock exist; cross-adapter determinism still blocked mainly by Conductor gaps).

@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "planId": "plan-parallel",
+    "planVersion": "1.0.0",
+    "schemaVersion": "v1.2",
+    "targetAdapter": "mock",
+    "fallbackBehavior": "reject",
+    "requiresCapabilities": ["basic-execution", "workflow.fan.parallel"]
+  },
+  "steps": [
+    { "stepId": "s1", "kind": "noop" },
+    { "stepId": "s2", "kind": "noop" },
+    { "stepId": "s3", "kind": "noop" },
+    { "stepId": "s4", "kind": "noop" }
+  ]
+}

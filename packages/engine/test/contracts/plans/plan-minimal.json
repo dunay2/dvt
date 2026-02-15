@@ -1,0 +1,11 @@
+{
+  "metadata": {
+    "planId": "plan-minimal",
+    "planVersion": "1.0.0",
+    "schemaVersion": "v1.2",
+    "targetAdapter": "mock",
+    "fallbackBehavior": "reject",
+    "requiresCapabilities": ["basic-execution"]
+  },
+  "steps": [{ "stepId": "s1", "kind": "noop" }]
+}
