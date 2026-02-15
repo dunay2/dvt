@@ -56,7 +56,7 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 ### Updated in GitHub
 
-- #67: **Partial** (validation helpers exist mainly in legacy path; active path boundary wiring still pending).
+- #67: **Substantially completed** (runtime boundary validation now wired in active engine entry points via `parsePlanRef`/`parseRunContext`/`parseEngineRunRef`/`parseSignalRequest` usage in `WorkflowEngine`, with regression tests covering invalid boundary payload rejection).
 - #68: **In progress / near-closure** (Temporal adapter is implemented on active `packages/*` paths with workflow, activities, provider selection, and integration test harness; pending final CI workflow closure + tracker publication alignment).
 - #69: **Not started** (Conductor adapter package not present; engine Conductor adapter stub only).
 - #70: **Implemented and merged** (fixtures + baseline hashes + validation flow integrated via PR #201; GitHub issue remains open pending manual closure/update).

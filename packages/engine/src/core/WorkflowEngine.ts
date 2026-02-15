@@ -5,6 +5,12 @@ import type {
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
+import {
+  parseEngineRunRef,
+  parsePlanRef,
+  parseRunContext,
+  parseSignalRequest,
+} from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
@@ -40,50 +46,55 @@ export class WorkflowEngine implements IWorkflowEngine {
   constructor(private readonly deps: WorkflowEngineDeps) {}
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
+    const validatedPlanRef = parsePlanRef(planRef);
+    const validatedContext = parseRunContext(context);
+
     // 1) PlanRef allowlist + schemaVersion gate (contract).
-    this.deps.planRefPolicy.validateOrThrow(planRef.uri);
-    validateSchemaVersionOrThrow(planRef.schemaVersion);
+    this.deps.planRefPolicy.validateOrThrow(validatedPlanRef.uri);
+    validateSchemaVersionOrThrow(validatedPlanRef.schemaVersion);
 
     // 2) Tenant boundary gate (contract).
-    await this.deps.authorizer.assertTenantAccess(context.tenantId);
+    await this.deps.authorizer.assertTenantAccess(validatedContext.tenantId);
 
     // 3) Integrity gate: MUST happen before any provider start (contract).
-    await this.deps.planIntegrity.fetchAndValidate(planRef, this.deps.planFetcher);
+    await this.deps.planIntegrity.fetchAndValidate(validatedPlanRef, this.deps.planFetcher);
 
-    const provider = context.targetAdapter;
+    const provider = validatedContext.targetAdapter;
     const adapter = this.deps.adapters.get(provider);
     if (!adapter) {
       throw new Error(`No adapter registered for provider: ${provider}`);
     }
 
     // MVP: immediate start.
-    await this.emitRunEventFromContext(context, 'RunQueued');
+    await this.emitRunEventFromContext(validatedContext, 'RunQueued');
 
     // Emit RunStarted *before* invoking provider so projection order is: RunQueued → RunStarted → Provider events → RunCompleted
-    await this.emitRunEventFromContext(context, 'RunStarted');
+    await this.emitRunEventFromContext(validatedContext, 'RunStarted');
 
-    const runRef = await adapter.startRun(planRef, context);
+    const runRef = await adapter.startRun(validatedPlanRef, validatedContext);
 
     // Persist minimal metadata for correlation resolution.
-    const meta: RunMetadata = buildRunMetadata(context, runRef);
+    const meta: RunMetadata = buildRunMetadata(validatedContext, runRef);
     await this.deps.stateStore.saveRunMetadata(meta);
 
     return runRef;
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
-    const meta = await this.resolveMetaOrThrow(engineRunRef);
+    const validatedRunRef = parseEngineRunRef(engineRunRef);
+    const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
     const adapter = this.deps.adapters.get(meta.provider);
     if (!adapter) throw new Error(`No adapter registered for provider: ${meta.provider}`);
 
-    await adapter.cancelRun(engineRunRef);
+    await adapter.cancelRun(validatedRunRef);
     await this.emitRunEvent(meta, 'RunCancelled');
   }
 
   async getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
-    const meta = await this.resolveMetaOrThrow(engineRunRef);
+    const validatedRunRef = parseEngineRunRef(engineRunRef);
+    const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
     const events = await this.deps.stateStore.listEvents(meta.runId);
@@ -93,7 +104,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const adapter = this.deps.adapters.get(meta.provider);
     if (!adapter) return projected;
 
-    const providerView = await adapter.getRunStatus(engineRunRef);
+    const providerView = await adapter.getRunStatus(validatedRunRef);
     const mergedSubstatus = providerView.substatus ?? projected.substatus;
     const mergedMessage = providerView.message ?? projected.message;
 
@@ -105,32 +116,35 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    const meta = await this.resolveMetaOrThrow(engineRunRef);
+    const validatedRunRef = parseEngineRunRef(engineRunRef);
+    const validatedRequest = parseSignalRequest(request);
+
+    const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
     const adapter = this.deps.adapters.get(meta.provider);
     if (!adapter) throw new Error(`No adapter registered for provider: ${meta.provider}`);
 
     // Provider-native signalling.
-    await adapter.signal(engineRunRef, request);
+    await adapter.signal(validatedRunRef, validatedRequest);
 
     // Engine-level lifecycle events for operator signals.
-    switch (request.type) {
+    switch (validatedRequest.type) {
       case 'PAUSE':
-        await this.emitSignalDerivedRunEvent(meta, request, 'RunPaused');
+        await this.emitSignalDerivedRunEvent(meta, validatedRequest, 'RunPaused');
         return;
       case 'RESUME':
-        await this.emitSignalDerivedRunEvent(meta, request, 'RunResumed');
+        await this.emitSignalDerivedRunEvent(meta, validatedRequest, 'RunResumed');
         return;
       case 'CANCEL':
-        await this.emitSignalDerivedRunEvent(meta, request, 'RunCancelled');
+        await this.emitSignalDerivedRunEvent(meta, validatedRequest, 'RunCancelled');
         return;
       case 'RETRY_STEP':
       case 'RETRY_RUN':
         // Phase 2: planner-driven deterministic retry semantics.
         throw new Error('NotImplemented: RETRY_* signals are Phase 2');
       default: {
-        const _never: never = request.type;
+        const _never: never = validatedRequest.type;
         throw new Error(`Unknown signal type: ${String(_never)}`);
       }
     }
