@@ -16,7 +16,7 @@ const DEFAULTS: TemporalAdapterConfig = {
 };
 
 export function loadTemporalAdapterConfig(
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined>
 ): TemporalAdapterConfig {
   const cfg: TemporalAdapterConfig = {
     address: toRequiredTrimmed(env.TEMPORAL_ADDRESS, DEFAULTS.address),
