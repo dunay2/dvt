@@ -6,6 +6,8 @@
  */
 import { z } from 'zod';
 
+import type { RunStatusSnapshot } from './types/contracts';
+
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
 export const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
@@ -65,12 +67,14 @@ export const SignalRequestSchema = z.object({
 export const RunStatusSnapshotSchema = z.object({
   runId: z.string().min(1),
   status: RunStatusSchema,
-  substatus: z.string().optional(),
+  substatus: z
+    .union([RunSubstatusSchema, z.string().regex(/^(temporal|conductor|mock)\/.+$/)])
+    .optional(),
   message: z.string().optional(),
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
   hash: z.string().optional(),
-});
+}) as z.ZodType<RunStatusSnapshot>;
 
 // ─── EngineRunRef (discriminated union) ──────────────────────────────────────
 
