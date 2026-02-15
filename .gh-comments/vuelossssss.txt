@@ -1,0 +1,2894 @@
+Documentación Técnica del Proyecto GeoVuelos
+Tabla de Contenidos
+Visión General de Documentación
+
+Especificación de Frontend (Next.js + MapLibre)
+
+Especificación de Backend (Node.js + Fastify + CQRS)
+
+Especificación de Base de Datos (PostgreSQL)
+
+Especificación de API (Contratos OpenAPI)
+
+Especificación de Modelo de Datos (JSON Schema)
+
+Especificación de Algoritmos y Heurísticas
+
+Especificación de UI/UX y Componentes
+
+Especificación de Testing
+
+Especificación de Despliegue y DevOps
+
+Especificación de Seguridad
+
+Especificación de Rendimiento
+
+Plan de Desarrollo por Sprint
+
+Análisis Comparativo y Roadmap de Producto
+
+1. Visión General de Documentación
+1.1 Propósito del Sistema
+GeoVuelos es una plataforma SaaS de inteligencia geoespacial para optimización de rutas aéreas, diseñada específicamente para aerolíneas regionales y operadores de aviación ejecutiva. El sistema combina datos meteorológicos en tiempo real, restricciones del espacio aéreo, y algoritmos de optimización multiobjetivo para generar rutas de vuelo que minimicen consumo de combustible, tiempos de vuelo y riesgos operacionales.
+
+1.2 Audiencia Objetivo
+Rol	Uso Principal
+Desarrolladores Frontend	Implementación de interfaces de mapa interactivas
+Desarrolladores Backend	Mantenimiento de servicios y algoritmos
+Arquitectos de Software	Evaluación de decisiones técnicas
+DevOps	Gestión de despliegue y monitoreo
+Product Managers	Planificación de sprints y features
+QA Engineers	Diseño de casos de prueba
+1.3 Principios Arquitectónicos
+Separación de Concerns: CQRS para separar operaciones de lectura/escritura
+
+Event-Driven: Event sourcing para trazabilidad completa
+
+Real-time First: WebSockets para actualizaciones en vivo
+
+Geo-Distributed: Datos replicados regionalmente
+
+Deterministic Core: Algoritmos de optimización reproducibles
+
+1.4 Stack Tecnológico
+graph TD
+    A[Cliente Next.js] --> B[API Gateway]
+    B --> C[Fastify Services]
+    B --> D[WebSocket Server]
+    C --> E[(PostgreSQL)]
+    C --> F[Redis Cache]
+    C --> G[Message Queue]
+    G --> H[Workers Temporal]
+    H --> I[Algoritmos Python]
+    H --> J[Procesamiento Geo]
+2. Especificación de Frontend (Next.js + MapLibre)
+2.1 Arquitectura Frontend
+typescript
+// Estructura de directorios
+src/
+├── app/                    # App Router Next.js
+│   ├── (routes)/           # Páginas principales
+│   ├── api/                # API routes
+│   └── layout.tsx          # Layout principal
+├── components/
+│   ├── map/                # Componentes de MapLibre
+│   ├── flight/             # Componentes de vuelos
+│   ├── ui/                  # Componentes reutilizables
+│   └── forms/              # Formularios complejos
+├── lib/
+│   ├── maplibre/           # Configuración y helpers
+│   ├── websocket/          # Cliente WebSocket
+│   ├── state/              # Zustand stores
+│   └── utils/              # Utilidades generales
+├── hooks/                   # Custom hooks
+├── types/                   # TypeScript definitions
+└── styles/                  # Estilos globales
+2.2 Componentes Core de Mapa
+2.2.1 FlightMap Component
+tsx
+interface FlightMapProps {
+  center: [number, number];
+  zoom: number;
+  flights: Flight[];
+  weather?: WeatherLayer;
+  airspace?: AirspaceRestriction[];
+  onRouteSelect: (route: Route) => void;
+  onMapClick: (coordinates: [number, number]) => void;
+}
+
+// Capas de mapa configurables
+interface MapLayers {
+  baseLayer: 'satellite' | 'streets' | 'terrain';
+  weatherRadar: boolean;
+  windAloft: boolean;
+  airspace: boolean;
+  flightPaths: boolean;
+  waypoints: boolean;
+}
+2.2.2 Route Editor
+typescript
+interface RouteEditorState {
+  waypoints: Waypoint[];
+  constraints: RouteConstraint[];
+  optimizationTarget: 'fuel' | 'time' | 'safety' | 'balanced';
+  weatherAvoidance: boolean;
+  preferredAltitude: number;
+}
+
+// Interacción con el mapa
+interface MapInteraction {
+  mode: 'view' | 'add-waypoint' | 'edit-constraint' | 'measure';
+  selectedFeature?: GeoJSON.Feature;
+  hoveredFeature?: GeoJSON.Feature;
+  measurement?: {
+    distance: number;
+    bearing: number;
+  };
+}
+2.3 Estado Global (Zustand)
+typescript
+// Store principal
+interface AppState {
+  // Estado de vuelos
+  flights: Record<string, Flight>;
+  selectedFlightId: string | null;
+
+  // Estado del mapa
+  mapView: MapView;
+  layers: MapLayers;
+
+  // Estado de UI
+  ui: {
+    sidebar: 'open' | 'closed' | 'minimized';
+    activePanel: 'flight-list' | 'route-editor' | 'weather' | 'settings';
+    modals: ModalState[];
+  };
+
+  // Estado de datos
+  weather: WeatherState;
+  airspace: AirspaceState;
+
+  // Acciones
+  actions: AppActions;
+}
+2.4 WebSocket Integration
+typescript
+// Cliente WebSocket con reconexión automática
+class FlightWebSocket {
+  private ws: WebSocket | null = null;
+  private reconnectAttempts = 0;
+  private subscribers: Map<string, (data: any) => void>;
+
+  subscribe(channel: string, callback: (data: any) => void): () => void;
+  unsubscribe(channel: string): void;
+
+  // Canales disponibles
+  channels: {
+    flightPosition: (flightId: string) => void;
+    weatherUpdate: (region: BoundingBox) => void;
+    routeOptimization: (optimizationId: string) => void;
+    systemAlerts: () => void;
+  }
+}
+2.5 Rendering Optimizations
+typescript
+// Virtualización para listas de vuelos
+import { VirtualizedFlightList } from './VirtualizedFlightList';
+
+// Lazy loading de capas de mapa
+const WeatherRadarLayer = dynamic(
+  () => import('@/components/map/layers/WeatherRadarLayer'),
+  { ssr: false, loading: () => <LayerSkeleton /> }
+);
+
+// Memoización de rutas complejas
+const optimizedRouteSelector = (state: AppState) =>
+  useMemo(() => optimizeRoute(state.selectedFlight.route), [state.selectedFlight?.route]);
+3. Especificación de Backend (Node.js + Fastify + CQRS)
+3.1 Arquitectura de Servicios
+graph TB
+    subgraph "API Layer"
+        A[Fastify Server] --> B[Routes]
+        B --> C[Validation]
+        B --> D[Authentication]
+    end
+
+    subgraph "Command Layer"
+        E[Command Handlers] --> F[Aggregates]
+        F --> G[Event Store]
+    end
+
+    subgraph "Query Layer"
+        H[Query Handlers] --> I[Read Models]
+        I --> J[(PostgreSQL Read DB)]
+    end
+
+    subgraph "Workers"
+        K[Temporal Workers] --> L[Activities]
+        L --> M[Algorithms]
+        L --> N[External APIs]
+    end
+
+    C --> E
+    C --> H
+    G --> K
+    J --> A
+3.2 Estructura del Proyecto
+typescript
+src/
+├── api/
+│   ├── routes/
+│   │   ├── flights.ts
+│   │   ├── routes.ts
+│   │   ├── weather.ts
+│   │   └── admin.ts
+│   ├── schemas/
+│   │   ├── flight.schema.ts
+│   │   ├── route.schema.ts
+│   │   └── common.schema.ts
+│   └── plugins/
+│       ├── auth.ts
+│       ├── websocket.ts
+│       └── rate-limit.ts
+├── core/
+│   ├── command/
+│   │   ├── handlers/
+│   │   ├── aggregates/
+│   │   └── commands/
+│   ├── query/
+│   │   ├── handlers/
+│   │   ├── projections/
+│   │   └── read-models/
+│   └── domain/
+│       ├── events/
+│       ├── value-objects/
+│       └── errors/
+├── infrastructure/
+│   ├── temporal/
+│   │   ├── workflows/
+│   │   └── activities/
+│   ├── database/
+│   │   ├── postgres/
+│   │   └── redis/
+│   └── messaging/
+│       ├── kafka/
+│       └── websocket/
+└── shared/
+    ├── types/
+    ├── utils/
+    └── constants/
+3.3 Command Handlers (CQRS)
+typescript
+// Ejemplo de comando
+interface CreateFlightCommand {
+  type: 'CREATE_FLIGHT';
+  payload: {
+    flightId: string;
+    aircraft: AircraftType;
+    departure: Airport;
+    arrival: Airport;
+    scheduledDeparture: Date;
+    preferredRoute?: Route;
+  };
+  metadata: {
+    userId: string;
+    timestamp: Date;
+    correlationId: string;
+  };
+}
+
+// Command handler
+class FlightCommandHandler {
+  async handle(command: CreateFlightCommand): Promise<Event[]> {
+    const flight = new FlightAggregate(command.payload.flightId);
+
+    flight.createFlight(
+      command.payload.aircraft,
+      command.payload.departure,
+      command.payload.arrival
+    );
+
+    const events = flight.getUncommittedEvents();
+    await this.eventStore.save(events);
+
+    // Publicar eventos para proyecciones
+    await this.eventBus.publish(events);
+
+    return events;
+  }
+}
+3.4 Query Handlers
+typescript
+// Query con filtros complejos
+interface FlightQuery {
+  filter?: {
+    status?: FlightStatus[];
+    airline?: string[];
+    departureAirport?: string[];
+    arrivalAirport?: string[];
+    timeRange?: {
+      start: Date;
+      end: Date;
+    };
+    region?: GeoJSON.Polygon;
+  };
+  sort?: {
+    field: 'departureTime' | 'status' | 'airline';
+    order: 'asc' | 'desc';
+  };
+  pagination: {
+    limit: number;
+    offset: number;
+  };
+  fields?: string[]; // Projection
+}
+
+// Query handler con caching
+class FlightQueryHandler {
+  async handle(query: FlightQuery): Promise<PaginatedResult<FlightReadModel>> {
+    const cacheKey = this.generateCacheKey(query);
+
+    // Intentar obtener de cache
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    // Construir query SQL optimizado
+    const result = await this.buildOptimizedQuery(query);
+
+    // Cachear resultado
+    await this.cache.set(cacheKey, JSON.stringify(result), 'TTL 5s');
+
+    return result;
+  }
+}
+3.5 WebSocket Server
+typescript
+// Configuración WebSocket con Fastify
+fastify.register(websocket, {
+  options: {
+    maxPayload: 1048576, // 1MB
+    clientTracking: true,
+    perMessageDeflate: true
+  }
+});
+
+// Manejo de conexiones
+fastify.get('/ws', { websocket: true }, (connection, req) => {
+  const client = new WebSocketClient(connection);
+
+  // Autenticación
+  const token = req.headers['sec-websocket-protocol'];
+  if (!authenticate(token)) {
+    client.close(1008, 'Unauthorized');
+    return;
+  }
+
+  // Suscripción a canales
+  connection.on('message', (message) => {
+    const { action, channel, data } = JSON.parse(message.toString());
+
+    switch(action) {
+      case 'subscribe':
+        client.subscribe(channel, data);
+        break;
+      case 'unsubscribe':
+        client.unsubscribe(channel);
+        break;
+    }
+  });
+});
+4. Especificación de Base de Datos (PostgreSQL)
+4.1 Modelo de Datos
+sql
+-- Tabla de eventos (Event Store)
+CREATE TABLE events (
+  id BIGSERIAL PRIMARY KEY,
+  aggregate_id UUID NOT NULL,
+  aggregate_type VARCHAR(50) NOT NULL,
+  event_type VARCHAR(50) NOT NULL,
+  event_data JSONB NOT NULL,
+  metadata JSONB,
+  version INT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE(aggregate_id, version)
+);
+
+-- Índices para event store
+CREATE INDEX idx_events_aggregate ON events(aggregate_id, version);
+CREATE INDEX idx_events_type_time ON events(event_type, created_at);
+
+-- Proyecciones (Read Models)
+CREATE TABLE flight_projections (
+  flight_id UUID PRIMARY KEY,
+  flight_number VARCHAR(10) NOT NULL,
+  airline VARCHAR(50),
+  aircraft_type VARCHAR(20),
+  departure_airport CHAR(3),
+  arrival_airport CHAR(3),
+  scheduled_departure TIMESTAMPTZ,
+  actual_departure TIMESTAMPTZ,
+  scheduled_arrival TIMESTAMPTZ,
+  estimated_arrival TIMESTAMPTZ,
+  status VARCHAR(20),
+  route_path GEOGRAPHY(LINESTRING, 4326),
+  current_position GEOGRAPHY(POINT, 4326),
+  fuel_burned DECIMAL(10,2),
+  distance_remaining DECIMAL(10,2),
+  weather_conditions JSONB,
+  version INT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices geoespaciales
+CREATE INDEX idx_flights_position ON flight_projections USING GIST (current_position);
+CREATE INDEX idx_flights_path ON flight_projections USING GIST (route_path);
+
+-- Tabla de waypoints
+CREATE TABLE waypoints (
+  id UUID PRIMARY KEY,
+  flight_id UUID REFERENCES flight_projections(flight_id),
+  sequence INT NOT NULL,
+  location GEOGRAPHY(POINT, 4326) NOT NULL,
+  altitude INT,
+  estimated_time TIMESTAMPTZ,
+  fuel_remaining DECIMAL(10,2),
+  weather_at_location JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Particionamiento por tiempo
+CREATE TABLE flight_positions_history (
+  flight_id UUID,
+  timestamp TIMESTAMPTZ,
+  position GEOGRAPHY(POINT, 4326),
+  altitude INT,
+  speed DECIMAL(5,2),
+  heading DECIMAL(5,2)
+) PARTITION BY RANGE (timestamp);
+
+-- Cache de datos meteorológicos
+CREATE TABLE weather_cache (
+  region_id UUID PRIMARY KEY,
+  bounding_box GEOGRAPHY(POLYGON, 4326),
+  weather_data JSONB,
+  valid_from TIMESTAMPTZ,
+  valid_until TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- TimescaleDB para series temporales
+CREATE TABLE telemetry (
+  time TIMESTAMPTZ NOT NULL,
+  flight_id UUID NOT NULL,
+  altitude DOUBLE PRECISION,
+  speed DOUBLE PRECISION,
+  fuel_flow DOUBLE PRECISION,
+  engine_temp DOUBLE PRECISION
+);
+
+SELECT create_hypertable('telemetry', 'time');
+4.2 Optimizaciones de Consultas
+sql
+-- Consultas optimizadas para tracking de vuelos
+WITH latest_positions AS (
+  SELECT DISTINCT ON (flight_id)
+    flight_id,
+    position,
+    timestamp
+  FROM flight_positions_history
+  ORDER BY flight_id, timestamp DESC
+)
+SELECT
+  f.flight_id,
+  f.flight_number,
+  f.airline,
+  lp.position,
+  lp.timestamp,
+  f.estimated_arrival
+FROM flight_projections f
+JOIN latest_positions lp ON f.flight_id = lp.flight_id
+WHERE ST_DWithin(lp.position, ST_MakePoint(-74.006, 40.7128)::geography, 50000);
+
+-- Consultas geoespaciales con índices
+EXPLAIN ANALYZE
+SELECT flight_id, route_path
+FROM flight_projections
+WHERE ST_Intersects(
+  route_path,
+  ST_MakeEnvelope(-75, 40, -73, 42, 4326)
+);
+4.3 Políticas de Retención
+sql
+-- Políticas de retención para diferentes tipos de datos
+CREATE POLICY retention_policy ON flight_positions_history
+  USING (timestamp > NOW() - INTERVAL '90 days');
+
+-- Job de limpieza automática
+CREATE OR REPLACE FUNCTION cleanup_old_data()
+RETURNS void AS $$
+BEGIN
+  -- Limpiar posiciones antiguas
+  DELETE FROM flight_positions_history
+  WHERE timestamp < NOW() - INTERVAL '90 days';
+
+  -- Limpiar cache meteorológico expirado
+  DELETE FROM weather_cache
+  WHERE valid_until < NOW();
+
+  -- Archivar eventos completados
+  INSERT INTO events_archive
+  SELECT * FROM events
+  WHERE created_at < NOW() - INTERVAL '1 year';
+
+  DELETE FROM events
+  WHERE created_at < NOW() - INTERVAL '1 year';
+END;
+$$ LANGUAGE plpgsql;
+5. Especificación de API (Contratos OpenAPI)
+5.1 Esquema OpenAPI Principal
+yaml
+openapi: 3.0.0
+info:
+  title: GeoVuelos API
+  version: 1.0.0
+  description: API para optimización de rutas aéreas
+servers:
+  - url: https://api.geovuelos.com/v1
+    description: Producción
+  - url: https://staging-api.geovuelos.com/v1
+    description: Staging
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    Flight:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        flightNumber:
+          type: string
+          pattern: '^[A-Z]{2}[0-9]{1,4}$'
+        airline:
+          type: string
+        aircraft:
+          $ref: '#/components/schemas/Aircraft'
+        departure:
+          $ref: '#/components/schemas/Airport'
+        arrival:
+          $ref: '#/components/schemas/Airport'
+        times:
+          type: object
+          properties:
+            scheduledDeparture:
+              type: string
+              format: date-time
+            estimatedArrival:
+              type: string
+              format: date-time
+            actualDeparture:
+              type: string
+              format: date-time
+        route:
+          $ref: '#/components/schemas/Route'
+        status:
+          type: string
+          enum: [scheduled, boarding, departed, en-route, arriving, landed, cancelled, diverted]
+        weather:
+          $ref: '#/components/schemas/WeatherConditions'
+
+    Route:
+      type: object
+      properties:
+        waypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+        distance:
+          type: number
+          format: float
+          description: Distancia total en kilómetros
+        estimatedDuration:
+          type: string
+          format: duration
+        fuelRequired:
+          type: number
+          format: float
+          description: Combustible requerido en litros
+        optimizationTarget:
+          type: string
+          enum: [fuel, time, safety, balanced]
+        constraints:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteConstraint'
+
+    Waypoint:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+        altitude:
+          type: integer
+          description: Altitud en pies
+        type:
+          type: string
+          enum: [standard, custom, airway, vor, ndb]
+        name:
+          type: string
+        estimatedTime:
+          type: string
+          format: date-time
+
+    WeatherConditions:
+      type: object
+      properties:
+        temperature:
+          type: number
+          format: float
+          description: Temperatura en Celsius
+        windSpeed:
+          type: number
+          format: float
+          description: Velocidad del viento en nudos
+        windDirection:
+          type: integer
+          minimum: 0
+          maximum: 360
+        visibility:
+          type: number
+          format: float
+          description: Visibilidad en kilómetros
+        conditions:
+          type: string
+          enum: [vfr, mvfr, ifr, lifr]
+        precipitation:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [rain, snow, hail, none]
+            intensity:
+              type: string
+              enum: [light, moderate, heavy]
+        turbulence:
+          type: object
+          properties:
+            severity:
+              type: string
+              enum: [none, light, moderate, severe]
+            altitude:
+              type: array
+              items:
+                type: integer
+        icing:
+          type: object
+          properties:
+            severity:
+              type: string
+              enum: [none, light, moderate, severe]
+            altitude:
+              type: array
+              items:
+                type: integer
+
+paths:
+  /flights:
+    get:
+      summary: Lista de vuelos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: airline
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: region
+          in: query
+          schema:
+            type: string
+            description: GeoJSON polygon
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 1000
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: Lista de vuelos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Flight'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+
+    post:
+      summary: Crear nuevo vuelo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - flightNumber
+                - departure
+                - arrival
+                - aircraft
+              properties:
+                flightNumber:
+                  type: string
+                departure:
+                  $ref: '#/components/schemas/Airport'
+                arrival:
+                  $ref: '#/components/schemas/Airport'
+                aircraft:
+                  $ref: '#/components/schemas/Aircraft'
+                scheduledDeparture:
+                  type: string
+                  format: date-time
+                preferredRoute:
+                  $ref: '#/components/schemas/Route'
+      responses:
+        201:
+          description: Vuelo creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flight'
+
+  /flights/{flightId}/optimize:
+    post:
+      summary: Optimizar ruta de vuelo
+      parameters:
+        - name: flightId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum: [fuel, time, safety, balanced]
+                  default: balanced
+                weatherAvoidance:
+                  type: boolean
+                  default: true
+                constraints:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/RouteConstraint'
+                preferredAltitude:
+                  type: integer
+                  minimum: 0
+                  maximum: 60000
+      responses:
+        200:
+          description: Ruta optimizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  optimizationId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [pending, processing, completed, failed]
+                  result:
+                    $ref: '#/components/schemas/Route'
+                  metrics:
+                    type: object
+                    properties:
+                      processingTime:
+                        type: number
+                      improvements:
+                        type: object
+                        properties:
+                          fuelSaved:
+                            type: number
+                          timeSaved:
+                            type: string
+                            format: duration
+
+  /ws:
+    get:
+      summary: WebSocket connection
+      description: Conexión WebSocket para actualizaciones en tiempo real
+      parameters:
+        - name: channels
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [flights, weather, alerts]
+      responses:
+        101:
+          description: Switching protocols to WebSocket
+6. Especificación de Modelo de Datos (JSON Schema)
+6.1 Esquemas JSON Validación
+json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "aircraft": {
+      "type": "object",
+      "required": ["type", "registration", "performance"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["B738", "A320", "E190", "B788", "A333", "C172"]
+        },
+        "registration": {
+          "type": "string",
+          "pattern": "^[A-Z]-[A-Z0-9]{4}$"
+        },
+        "performance": {
+          "type": "object",
+          "required": ["fuelFlow", "cruiseSpeed", "maxAltitude", "range"],
+          "properties": {
+            "fuelFlow": {
+              "type": "number",
+              "minimum": 0,
+              "description": "kg/hora"
+            },
+            "cruiseSpeed": {
+              "type": "number",
+              "minimum": 0,
+              "description": "nudos"
+            },
+            "maxAltitude": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60000
+            },
+            "range": {
+              "type": "number",
+              "minimum": 0,
+              "description": "kilómetros"
+            }
+          }
+        }
+      }
+    },
+
+    "routeConstraint": {
+      "type": "object",
+      "required": ["type", "parameters"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["noFlyZone", "preferredAltitude", "maxTurbulence", "avoidWeather", "timeWindow"]
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 5
+        },
+        "active": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+
+    "weatherCell": {
+      "type": "object",
+      "required": ["id", "type", "geometry", "severity"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["thunderstorm", "turbulence", "icing", "volcanicAsh", "cyclone"]
+        },
+        "geometry": {
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["Polygon", "MultiPolygon"]
+            },
+            "coordinates": {
+              "type": "array"
+            }
+          }
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "moderate", "high", "extreme"]
+        },
+        "movement": {
+          "type": "object",
+          "properties": {
+            "speed": {
+              "type": "number"
+            },
+            "direction": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 360
+            }
+          }
+        },
+        "forecast": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "position": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}
+7. Especificación de Algoritmos y Heurísticas
+7.1 Algoritmo de Optimización de Rutas
+typescript
+// Core optimization algorithm
+interface RouteOptimizer {
+  // Parámetros de entrada
+  departure: GeoPoint;
+  arrival: GeoPoint;
+  aircraft: AircraftPerformance;
+  weather: WeatherData;
+  constraints: Constraint[];
+
+  // Configuración del algoritmo
+  config: {
+    algorithm: 'a-star' | 'dijkstra' | 'genetic' | 'hybrid';
+    resolution: 'low' | 'medium' | 'high'; // Grid resolution
+    maxIterations: number;
+    convergenceThreshold: number;
+    paretoFront: boolean; // Multi-objective optimization
+  };
+
+  // Optimización multi-objetivo
+  objectives: {
+    fuel: number; // Weight 0-1
+    time: number; // Weight 0-1
+    safety: number; // Weight 0-1
+    passengerComfort: number; // Weight 0-1
+  };
+}
+
+// Implementación del algoritmo A* con pesos dinámicos
+class AStarRouteOptimizer implements RouteOptimizer {
+  private graph: Graph;
+  private heuristic: HeuristicFunction;
+
+  async optimize(): Promise<Route[]> {
+    // Crear grid de puntos de navegación
+    const grid = this.createNavigationGrid({
+      resolution: this.config.resolution,
+      bounds: this.calculateBounds()
+    });
+
+    // Añadir waypoints basados en airways
+    this.addAirwayWaypoints(grid);
+
+    // Ponderar nodos según condiciones
+    await this.applyWeatherWeighting(grid);
+    await this.applyConstraintWeighting(grid);
+
+    // Ejecutar A* con pesos dinámicos
+    const routes = await this.aStarSearch(
+      grid,
+      this.departure,
+      this.arrival,
+      this.heuristic
+    );
+
+    // Optimización multi-objetivo (Pareto front)
+    if (this.config.paretoFront) {
+      return this.computeParetoFront(routes);
+    }
+
+    // Retornar mejor ruta según pesos
+    return [this.selectBestRoute(routes)];
+  }
+
+  private computeParetoFront(routes: Route[]): Route[] {
+    // Implementación de frente de Pareto
+    // Retorna conjunto de rutas no dominadas
+    return routes.filter(route => {
+      return !routes.some(other =>
+        this.dominates(other, route)
+      );
+    });
+  }
+}
+7.2 Predicción Meteorológica
+typescript
+interface WeatherPredictor {
+  // Modelos de predicción
+  models: {
+    shortTerm: 'rapid-refresh' | 'hrrr';
+    mediumTerm: 'gfs' | 'ecmwf';
+    convective: 'hrrr-convective' | 'nam-convective';
+  };
+
+  // Interpolación espacio-temporal
+  interpolate(
+    points: GeoPoint[],
+    time: Date,
+    parameters: WeatherParameter[]
+  ): Promise<InterpolatedWeather>;
+
+  // Predicción de turbulencia
+  predictTurbulence(
+    route: Route,
+    time: Date,
+    aircraft: AircraftType
+  ): Promise<TurbulencePrediction>;
+
+  // Predicción de formación de hielo
+  predictIcing(
+    route: Route,
+    weather: WeatherData
+  ): Promise<IcingPrediction>;
+}
+
+// Algoritmo de interpolación Kriging
+class KrigingWeatherInterpolator implements WeatherInterpolator {
+  private variogram: VariogramModel;
+
+  interpolate(points: WeatherStation[], target: GeoPoint): WeatherEstimate {
+    // Calcular matriz de covarianza
+    const covariance = this.computeCovarianceMatrix(points);
+
+    // Resolver sistema de ecuaciones
+    const weights = this.solveKrigingSystem(covariance, target);
+
+    // Estimar valor e incertidumbre
+    return {
+      value: this.weightedAverage(points, weights),
+      variance: this.estimationVariance(weights, covariance),
+      confidence: this.computeConfidence(weights)
+    };
+  }
+}
+7.3 Heurísticas de Decisión
+typescript
+// Sistema de reglas para toma de decisiones
+class DecisionEngine {
+  private rules: DecisionRule[];
+  private inferenceEngine: InferenceEngine;
+
+  async evaluateSituation(
+    flight: Flight,
+    weather: WeatherData,
+    airspace: AirspaceStatus
+  ): Promise<Decision[]> {
+
+    const facts = {
+      flight: flight,
+      weather: weather,
+      airspace: airspace,
+      time: new Date()
+    };
+
+    // Evaluar reglas en paralelo
+    const decisions = await Promise.all(
+      this.rules.map(rule => rule.evaluate(facts))
+    );
+
+    // Priorizar decisiones
+    return this.prioritizeDecisions(decisions.flat());
+  }
+
+  private prioritizeDecisions(decisions: Decision[]): Decision[] {
+    return decisions
+      .filter(d => d.confidence > 0.7)
+      .sort((a, b) => {
+        // Ordenar por urgencia * impacto
+        return (b.urgency * b.impact) - (a.urgency * a.impact);
+      });
+  }
+}
+
+// Regla de ejemplo: evitar tormentas
+const avoidThunderstormRule: DecisionRule = {
+  name: 'avoid-thunderstorm',
+  priority: 10,
+
+  async evaluate(facts: FlightFacts): Promise<Decision[]> {
+    const storms = facts.weather.cells
+      .filter(cell => cell.type === 'thunderstorm')
+      .filter(cell => this.intersectsFlightPath(facts.flight, cell));
+
+    if (storms.length === 0) return [];
+
+    return [{
+      type: 'ROUTE_DEVIATION',
+      confidence: this.calculateConfidence(storms),
+      urgency: this.calculateUrgency(storms),
+      impact: 'HIGH',
+      recommendation: {
+        action: 'DEVIATE',
+        reason: 'Thunderstorm along route',
+        alternativeRoute: await this.suggestAlternative(facts.flight, storms)
+      }
+    }];
+  }
+};
+8. Especificación de UI/UX y Componentes
+8.1 Sistema de Diseño
+typescript
+// Tokens de diseño
+const designTokens = {
+  colors: {
+    primary: {
+      50: '#e6f0ff',
+      100: '#b3d1ff',
+      200: '#80b3ff',
+      300: '#4d94ff',
+      400: '#1a75ff',
+      500: '#0056d6',
+      600: '#0044a8',
+      700: '#00337a',
+      800: '#00224c',
+      900: '#00111f'
+    },
+    semantic: {
+      success: '#10b981',
+      warning: '#f59e0b',
+      error: '#ef4444',
+      info: '#3b82f6'
+    },
+    flight: {
+      scheduled: '#6b7280',
+      boarding: '#f59e0b',
+      departed: '#3b82f6',
+      'en-route': '#10b981',
+      arriving: '#8b5cf6',
+      landed: '#1f2937'
+    }
+  },
+
+  typography: {
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      mono: ['JetBrains Mono', 'monospace']
+    },
+    fontSize: {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem'
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+
+  spacing: {
+    xs: '0.5rem',
+    sm: '0.75rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem',
+    '2xl': '3rem'
+  },
+
+  breakpoints: {
+    sm: '640px',
+    md: '768px',
+    lg: '1024px',
+    xl: '1280px',
+    '2xl': '1536px'
+  }
+};
+8.2 Componentes Core
+tsx
+// FlightCard Component
+interface FlightCardProps {
+  flight: Flight;
+  variant?: 'compact' | 'detailed';
+  onClick?: () => void;
+  actions?: React.ReactNode;
+}
+
+const FlightCard: React.FC<FlightCardProps> = ({
+  flight,
+  variant = 'compact',
+  onClick,
+  actions
+}) => {
+  const statusColors = {
+    scheduled: 'bg-gray-500',
+    boarding: 'bg-yellow-500',
+    departed: 'bg-blue-500',
+    'en-route': 'bg-green-500',
+    arriving: 'bg-purple-500',
+    landed: 'bg-gray-800'
+  };
+
+  return (
+    <div
+      className={`
+        bg-white rounded-lg shadow-md p-4
+        ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}
+      `}
+      onClick={onClick}
+    >
+      {/* Header */}
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <span className="text-lg font-bold">{flight.flightNumber}</span>
+          <span className="ml-2 text-sm text-gray-600">{flight.airline}</span>
+        </div>
+        <span className={`
+          px-2 py-1 rounded-full text-xs font-semibold text-white
+          ${statusColors[flight.status]}
+        `}>
+          {flight.status.toUpperCase()}
+        </span>
+      </div>
+
+      {/* Route */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-center">
+          <div className="text-xl font-bold">{flight.departure.code}</div>
+          <div className="text-xs text-gray-600">
+            {formatTime(flight.times.scheduledDeparture)}
+          </div>
+        </div>
+
+        <div className="flex-1 mx-4">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t-2 border-gray-300 border-dashed"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="px-2 bg-white text-sm text-gray-500">
+                {formatDistance(flight.route?.distance)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <div className="text-xl font-bold">{flight.arrival.code}</div>
+          <div className="text-xs text-gray-600">
+            {formatTime(flight.times.estimatedArrival)}
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar for en-route flights */}
+      {flight.status === 'en-route' && (
+        <div className="mb-3">
+          <div className="flex justify-between text-xs mb-1">
+            <span>Progress</span>
+            <span>{flight.route?.progress || 0}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-green-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${flight.route?.progress || 0}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Additional info for detailed variant */}
+      {variant === 'detailed' && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Aircraft:</span>
+              <span className="ml-2 font-medium">{flight.aircraft.type}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Fuel:</span>
+              <span className="ml-2 font-medium">{flight.route?.fuelRequired} L</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Altitude:</span>
+              <span className="ml-2 font-medium">{flight.currentAltitude} ft</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Speed:</span>
+              <span className="ml-2 font-medium">{flight.currentSpeed} kts</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      {actions && (
+        <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end space-x-2">
+          {actions}
+        </div>
+      )}
+    </div>
+  );
+};
+8.3 Map Integration
+typescript
+// Map configuration
+interface MapConfig {
+  style: 'satellite' | 'streets' | 'terrain';
+  center: [number, number];
+  zoom: number;
+  minZoom: number;
+  maxZoom: number;
+  projection: 'mercator' | 'globe';
+}
+
+// Layer configurations
+const layerConfigs = {
+  flightPaths: {
+    type: 'line',
+    paint: {
+      'line-color': [
+        'match',
+        ['get', 'status'],
+        'en-route', '#10b981',
+        'departed', '#3b82f6',
+        'scheduled', '#6b7280',
+        '#000000'
+      ],
+      'line-width': 3,
+      'line-opacity': 0.8,
+      'line-dasharray': ['case', ['==', ['get', 'status'], 'scheduled'], [2, 1], [0, 0]]
+    }
+  },
+
+  weatherRadar: {
+    type: 'raster',
+    source: 'weather-radar',
+    paint: {
+      'raster-opacity': 0.6,
+      'raster-color': [
+        'interpolate',
+        ['linear'],
+        ['get', 'intensity'],
+        0, 'rgba(0, 0, 0, 0)',
+        25, '#ffffb2',
+        50, '#fd8d3c',
+        75, '#f03b20',
+        100, '#bd0026'
+      ]
+    }
+  },
+
+  airspaceZones: {
+    type: 'fill',
+    paint: {
+      'fill-color': [
+        'match',
+        ['get', 'type'],
+        'restricted', '#ef4444',
+        'controlled', '#3b82f6',
+        'warning', '#f59e0b',
+        '#94a3b8'
+      ],
+      'fill-opacity': 0.2,
+      'fill-outline-color': '#000000'
+    }
+  }
+};
+9. Especificación de Testing
+9.1 Estrategia de Testing
+
+    A[Testing Strategy] --> B[Unit Tests]
+    A --> C[Integration Tests]
+    A --> D[E2E Tests]
+    A --> E[Performance Tests]
+    A --> F[Security Tests]
+
+    B --> B1[Jest + Vitest]
+    B --> B2[Coverage > 80%]
+
+    C --> C1[API Tests]
+    C --> C2[Database Tests]
+    C --> C3[WebSocket Tests]
+
+    D --> D1[Cypress]
+    D --> D2[Playwright]
+    D --> D2[Playwright]
+    E --> E1[k6]
+    E --> E1[k6]
+    E --> E2[Artillery]
+    F --> F1[OWASP ZAP]
+    F --> F1[OWASP ZAP]
+9.2 Unit Tests
+typescript
+// Test para algoritmo de optimización
+describe('RouteOptimizer', () => {
+  let optimizer: AStarRouteOptimizer;
+
+  beforeEach(() => {
+    optimizer = new AStarRouteOptimizer({
+      resolution: 'medium',
+      algorithm: 'a-star',
+      objectives: {
+        fuel: 0.5,
+        time: 0.3,
+        safety: 0.2
+      }
+    });
+  });
+
+  test('should find valid route between two points', async () => {
+    const route = await optimizer.optimize({
+      departure: { lat: 40.7128, lon: -74.0060 },
+      arrival: { lat: 34.0522, lon: -118.2437 },
+      aircraft: mockAircraft,
+      weather: mockWeather,
+      constraints: []
+    });
+
+    expect(route).toBeDefined();
+    expect(route.waypoints.length).toBeGreaterThan(1);
+    expect(route.distance).toBeGreaterThan(0);
+  });
+
+  test('should avoid no-fly zones', async () => {
+    const noFlyZone = createNoFlyZone({
+      center: [-100, 40],
+      radius: 100
+    });
+
+    const route = await optimizer.optimize({
+      departure: { lat: 35, lon: -90 },
+      arrival: { lat: 45, lon: -110 },
+      aircraft: mockAircraft,
+      weather: mockWeather,
+      constraints: [{ type: 'noFlyZone', zone: noFlyZone }]
+    });
+
+    const intersects = route.waypoints.some(wp =>
+      pointInPolygon(wp, noFlyZone.geometry)
+    );
+
+    expect(intersects).toBe(false);
+  });
+
+  test('should prefer routes with better weather', async () => {
+    const routes = await optimizer.generateAlternatives({
+      count: 10,
+      ...defaultParams
+    });
+
+    // Verificar que las rutas evitan áreas con mal tiempo
+    const weatherScores = routes.map(r =>
+      calculateWeatherScore(r, mockWeather)
+    );
+
+    const hasGoodWeather = weatherScores.every(score => score > 0.7);
+    expect(hasGoodWeather).toBe(true);
+  });
+});
+9.3 Integration Tests
+typescript
+describe('Flight API Integration', () => {
+  let app: FastifyInstance;
+  let testDb: TestDatabase;
+
+  beforeAll(async () => {
+    testDb = await TestDatabase.create();
+    app = await buildApp({
+      database: testDb.connection,
+      redis: mockRedis
+    });
+  });
+
+  afterAll(async () => {
+    await testDb.cleanup();
+    await app.close();
+  });
+
+  test('should create flight and trigger optimization', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/flights',
+      payload: {
+        flightNumber: 'AA123',
+        departure: 'JFK',
+        arrival: 'LAX',
+        aircraft: 'B738',
+        scheduledDeparture: new Date().toISOString()
+      }
+    });
+
+    expect(response.statusCode).toBe(201);
+
+    const flight = response.json();
+    expect(flight.id).toBeDefined();
+
+    // Verificar que se disparó la optimización
+    await waitForCondition(async () => {
+      const optimization = await getOptimizationStatus(flight.id);
+      return optimization.status === 'completed';
+    }, { timeout: 10000 });
+
+    // Verificar ruta optimizada
+    const routeResponse = await app.inject({
+      method: 'GET',
+      url: `/api/v1/flights/${flight.id}/route`
+    });
+
+    expect(routeResponse.statusCode).toBe(200);
+    expect(routeResponse.json().waypoints.length).toBeGreaterThan(0);
+  });
+});
+9.4 Performance Tests
+typescript
+// k6 performance test
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '1m', target: 50 },  // Ramp up
+    { duration: '3m', target: 100 }, // Peak
+    { duration: '1m', target: 0 },   // Ramp down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<500'], // 95% requests under 500ms
+    http_req_failed: ['rate<0.01'],    // Error rate < 1%
+  },
+};
+
+export default function() {
+  const response = http.get('https://api.geovuelos.com/v1/flights');
+
+  check(response, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(1);
+}
+10. Especificación de Despliegue y DevOps
+10.1 Arquitectura de Despliegue
+graph TB
+    subgraph "CDN"
+        A[CloudFront]
+    end
+
+    subgraph "Load Balancers"
+        B[ALB - API]
+        C[ALB - WebSocket]
+    end
+
+    subgraph "Kubernetes Cluster"
+        D[Frontend Pods]
+        E[API Pods]
+        F[Worker Pods]
+        G[WebSocket Pods]
+    end
+
+    subgraph "Data Layer"
+        H[(PostgreSQL)]
+        I[(Redis)]
+        J[Kafka]
+    end
+
+    subgraph "External Services"
+        K[Weather API]
+        L[Airspace Data]
+    end
+
+    User --> A
+    A --> B
+    A --> C
+    B --> E
+    C --> G
+    E --> H
+    E --> I
+    E --> J
+    F --> J
+    F --> K
+    F --> L
+10.2 Docker Configuration
+dockerfile
+# Frontend Dockerfile
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+EXPOSE 3000
+CMD ["npm", "start"]
+
+# Backend Dockerfile
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+EXPOSE 3001
+CMD ["node", "dist/server.js"]
+10.3 Kubernetes Manifests
+yaml
+# api-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: geovuelos-api
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: geovuelos-api
+  template:
+    metadata:
+      labels:
+        app: geovuelos-api
+    spec:
+      containers:
+      - name: api
+        image: geovuelos/api:latest
+        ports:
+        - containerPort: 3001
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: geovuelos-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: geovuelos-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+10.4 CI/CD Pipeline
+yaml
+# .github/workflows/deploy.yml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile.api
+          push: true
+          tags: |
+            ghcr.io/geovuelos/api:${{ github.sha }}
+            ghcr.io/geovuelos/api:latest
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          tags: |
+            ghcr.io/geovuelos/frontend:${{ github.sha }}
+            ghcr.io/geovuelos/frontend:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/geovuelos-api \
+            api=ghcr.io/geovuelos/api:${{ github.sha }} \
+            -n production
+          kubectl set image deployment/geovuelos-frontend \
+            frontend=ghcr.io/geovuelos/frontend:${{ github.sha }} \
+            -n production
+          kubectl rollout status deployment/geovuelos-api -n production
+          kubectl rollout status deployment/geovuelos-frontend -n production
+11. Especificación de Seguridad
+11.1 Autenticación y Autorización
+typescript
+// JWT Strategy
+interface JWTPayload {
+  sub: string;           // User ID
+  email: string;
+  roles: string[];
+  permissions: string[];
+  tenantId: string;
+  exp: number;
+}
+
+// RBAC Implementation
+const rbacRules = {
+  roles: {
+    admin: {
+      permissions: ['*']
+    },
+    dispatcher: {
+      permissions: [
+        'flight:create',
+        'flight:read',
+        'flight:update',
+        'route:optimize',
+        'weather:read'
+      ]
+    },
+    pilot: {
+      permissions: [
+        'flight:read:own',
+        'route:view:own'
+      ]
+    },
+    observer: {
+      permissions: [
+        'flight:read',
+        'weather:read'
+      ]
+    }
+  },
+
+  constraints: {
+    'flight:read:own': (user: User, flight: Flight) => {
+      return flight.pilotId === user.id;
+    }
+  }
+};
+
+// API Key authentication
+interface APIKey {
+  id: string;
+  key: string; // hashed
+  name: string;
+  tenantId: string;
+  permissions: string[];
+  expiresAt?: Date;
+  lastUsed?: Date;
+  createdAt: Date;
+}
+11.2 Data Encryption
+typescript
+// Encryption at rest
+interface EncryptionConfig {
+  algorithm: 'aes-256-gcm';
+  keyRotation: {
+    interval: '90d';
+    overlappingPeriod: '7d';
+  };
+
+  fields: {
+    pii: ['email', 'name', 'phone'],
+    credentials: ['apiKeys', 'tokens'],
+    sensitive: ['flightPlans', 'routes']
+  };
+}
+
+// Encryption in transit
+const tlsConfig = {
+  minVersion: 'TLSv1.3',
+  ciphers: [
+    'TLS_AES_256_GCM_SHA384',
+    'TLS_CHACHA20_POLY1305_SHA256'
+  ],
+  certificateRotation: '30d'
+};
+
+// Field-level encryption
+class FieldEncryption {
+  private readonly masterKey: Buffer;
+  private readonly keyCache: Map<string, Buffer>;
+
+  async encryptField(value: string, context: EncryptionContext): Promise<string> {
+    // Derive key per tenant/field
+    const key = await this.deriveKey(context);
+
+    // Encrypt with AEAD
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+
+    const encrypted = Buffer.concat([
+      cipher.update(value, 'utf8'),
+      cipher.final()
+    ]);
+
+    const authTag = cipher.getAuthTag();
+
+    // Encode: iv + authTag + encrypted
+    return Buffer.concat([iv, authTag, encrypted]).toString('base64');
+  }
+}
+11.3 Security Headers
+typescript
+// Helmet.js configuration
+const helmetConfig = {
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https://tiles.geovuelos.com"],
+      connectSrc: ["'self'", "wss://api.geovuelos.com"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"]
+    }
+  },
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: { policy: "same-origin" },
+  crossOriginResourcePolicy: { policy: "same-site" },
+  dnsPrefetchControl: { allow: false },
+  frameguard: { action: "deny" },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  ieNoOpen: true,
+  noSniff: true,
+  originAgentCluster: true,
+  permittedCrossDomainPolicies: { policy: "none" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  xXssProtection: "0"
+};
+11.4 Audit Logging
+typescript
+interface AuditLog {
+  id: string;
+  timestamp: Date;
+  actor: {
+    type: 'user' | 'system' | 'api';
+    id: string;
+    email?: string;
+    roles?: string[];
+  };
+  action: string;
+  resource: {
+    type: 'flight' | 'route' | 'user' | 'setting';
+    id: string;
+  };
+  context: {
+    ip: string;
+    userAgent: string;
+    sessionId: string;
+    requestId: string;
+  };
+  changes?: {
+    before: any;
+    after: any;
+  };
+  result: 'success' | 'failure';
+  metadata: Record<string, any>;
+}
+
+// Audit trail implementation
+class AuditService {
+  async log(event: AuditLog): Promise<void> {
+    // Log to multiple destinations
+    await Promise.all([
+      this.logToDatabase(event),
+      this.logToElasticsearch(event),
+      this.logToS3(event)
+    ]);
+
+    // Alert on suspicious activities
+    if (this.isSuspicious(event)) {
+      await this.alertSecurityTeam(event);
+    }
+  }
+
+  private isSuspicious(event: AuditLog): boolean {
+    const rules = [
+      // Multiple failed logins
+      this.checkFailedLogins(event),
+      // Access outside normal hours
+      this.checkTimeAnomaly(event),
+      // Unusual API patterns
+      this.checkAPIPatterns(event),
+      // Permission escalations
+      this.checkPrivilegeChanges(event)
+    ];
+
+    return rules.some(rule => rule);
+  }
+}
+12. Especificación de Rendimiento
+12.1 Performance Budgets
+javascript
+// Performance budgets
+const performanceBudgets = {
+  // Frontend metrics
+  frontend: {
+    firstContentfulPaint: 1500, // ms
+    largestContentfulPaint: 2500, // ms
+    timeToInteractive: 3500, // ms
+    totalBlockingTime: 300, // ms
+    cumulativeLayoutShift: 0.1,
+
+    bundleSize: {
+      total: 500, // KB
+      main: 200, // KB
+      vendor: 200, // KB
+      map: 100 // KB
+    },
+
+    apiRequests: {
+      initial: 5, // Number of requests
+      subsequent: 10 // per minute
+    }
+  },
+
+  // Backend metrics
+  backend: {
+    apiLatency: {
+      p50: 50, // ms
+      p95: 150, // ms
+      p99: 300 // ms
+    },
+    optimizationLatency: {
+      simple: 500, // ms
+      complex: 2000, // ms
+    },
+    databaseQueries: {
+      p95: 50, // ms
+      p99: 100 // ms
+    },
+    throughput: {
+      api: 1000, // req/s
+      websocket: 10000 // connections
+    }
+  }
+};
+12.2 Caching Strategy
+typescript
+// Multi-layer caching
+interface CacheStrategy {
+  // Browser cache
+  browser: {
+    static: {
+      '/*.js': 'public, max-age=31536000, immutable';
+      '/*.css': 'public, max-age=31536000, immutable';
+      '/images/*': 'public, max-age=86400';
+    };
+    dynamic: {
+      '/api/*': 'no-cache';
+    };
+  };
+
+  // CDN cache
+  cdn: {
+    tiles: {
+      ttl: '7d';
+      staleWhileRevalidate: '1d';
+    };
+    api: {
+      ttl: '5s';
+      vary: ['Accept-Encoding', 'Authorization'];
+    };
+  };
+
+  // Redis cache
+  redis: {
+    flightData: {
+      ttl: '30s';
+      strategy: 'write-through';
+    };
+    weatherData: {
+      ttl: '5m';
+      strategy: 'refresh-ahead';
+    };
+    userSessions: {
+      ttl: '1h';
+      strategy: 'write-behind';
+    };
+  };
+
+  // Database cache
+  database: {
+    queryCache: {
+      mode: 'shared';
+      ttl: '10s';
+    };
+    preparedStatements: true;
+    connectionPool: {
+      min: 10;
+      max: 50;
+      idleTimeout: 10000;
+    };
+  };
+}
+
+// Cache implementation
+class CacheManager {
+  private caches: Map<string, CacheLayer>;
+
+  async get<T>(key: string, options: CacheOptions): Promise<T | null> {
+    // Try L1 cache (Redis)
+    const l1 = await this.caches.get('redis').get(key);
+    if (l1) return l1;
+
+    // Try L2 cache (Database)
+    const l2 = await this.caches.get('database').get(key);
+    if (l2) {
+      // Refresh L1 asynchronously
+      this.caches.get('redis').set(key, l2, options.ttl);
+      return l2;
+    }
+
+    return null;
+  }
+
+  async set(key: string, value: any, options: CacheOptions): Promise<void> {
+    // Write to all layers
+    await Promise.all([
+      this.caches.get('redis').set(key, value, options.ttl),
+      this.caches.get('database').set(key, value, options.ttl),
+      this.caches.get('cdn').purge(key) // Invalidate CDN
+    ]);
+  }
+}
+12.3 Database Optimization
+sql
+-- Query optimization with materialized views
+CREATE MATERIALIZED VIEW flight_summary AS
+SELECT
+  f.flight_id,
+  f.flight_number,
+  f.airline,
+  f.departure_airport,
+  f.arrival_airport,
+  f.status,
+  COUNT(w.id) as waypoint_count,
+  ST_Length(f.route_path::geography) as route_length,
+  json_agg(
+    json_build_object(
+      'sequence', w.sequence,
+      'location', ST_AsGeoJSON(w.location)::json,
+      'altitude', w.altitude
+    ) ORDER BY w.sequence
+  ) as waypoints
+FROM flight_projections f
+LEFT JOIN waypoints w ON f.flight_id = w.flight_id
+GROUP BY f.flight_id;
+
+-- Refresh materialized view
+REFRESH MATERIALIZED VIEW CONCURRENTLY flight_summary;
+
+-- Partitioning by date
+CREATE TABLE flight_events (
+  id BIGSERIAL,
+  flight_id UUID,
+  event_type VARCHAR(50),
+  event_time TIMESTAMPTZ,
+  event_data JSONB
+) PARTITION BY RANGE (event_time);
+
+-- Create partitions
+CREATE TABLE flight_events_2024_q1 PARTITION OF flight_events
+  FOR VALUES FROM ('2024-01-01') TO ('2024-04-01');
+
+CREATE TABLE flight_events_2024_q2 PARTITION OF flight_events
+  FOR VALUES FROM ('2024-04-01') TO ('2024-07-01');
+12.4 Load Testing Scenarios
+javascript
+// Artillery load test
+const loadTestConfig = {
+  scenarios: [
+    {
+      name: "Normal traffic",
+      flow: [
+        { get: "/api/v1/flights" },
+        { think: 1 },
+        { get: "/api/v1/weather/region?bbox=-74,40,-73,41" },
+        { think: 2 },
+        { post: "/api/v1/flights/{{ flightId }}/optimize", json: { target: "fuel" } }
+      ]
+    },
+    {
+      name: "Peak traffic",
+      weight: 2,
+      flow: [
+        { get: "/api/v1/flights?status=en-route" },
+        { think: 0.5 },
+        { get: "/api/v1/weather/radar" }
+      ]
+    },
+    {
+      name: "WebSocket connections",
+      engine: "ws",
+      flow: [
+        { connect: "/ws" },
+        { send: JSON.stringify({ action: "subscribe", channel: "flights" }) },
+        { think: 30 }
+      ]
+    }
+  ],
+
+  phases: [
+    { duration: 60, arrivalRate: 10 }, // Ramp up
+    { duration: 300, arrivalRate: 50 }, // Sustained load
+    { duration: 60, arrivalRate: 100 }, // Peak
+    { duration: 60, arrivalRate: 0 } // Ramp down
+  ]
+};
+13. Plan de Desarrollo por Sprint
+13.1 Sprint 1: Fundación (2 semanas)
+Objetivo: Establecer infraestructura base y modelos de datos
+
+Tarea	Horas	Dependencias	Asignado
+Setup repositorio y CI/CD	8	-	DevOps
+Configuración de base de datos PostgreSQL	16	-	Backend
+Implementación de modelos de datos core	24	DB setup	Backend
+Configuración de Next.js + TypeScript	8	-	Frontend
+Setup de MapLibre básico	16	Frontend setup	Frontend
+Dockerización de servicios	16	-	DevOps
+Documentación inicial API	8	-	Tech Writer
+Entregables:
+
+Repositorio con CI/CD funcionando
+
+Base de datos con migraciones iniciales
+
+Aplicación Next.js básica con mapa
+
+Docker compose para desarrollo local
+
+Esquema OpenAPI base
+
+Criterios de Aceptación:
+
+CI corre tests en cada PR
+
+Base de datos acepta conexiones y migraciones
+
+Mapa muestra tile base correctamente
+
+Servicios levantan con docker-compose
+
+13.2 Sprint 2: Core de Vuelos (2 semanas)
+Objetivo: Implementar CRUD básico de vuelos
+
+Tarea	Horas	Dependencias	Asignado
+API endpoints para vuelos	24	Sprint 1	Backend
+Implementación de CQRS básico	32	Sprint 1	Backend
+Componente FlightCard	16	Sprint 1	Frontend
+Lista de vuelos con filtros	24	API + Componente	Frontend
+WebSocket básico para actualizaciones	20	API	Backend
+Tests de integración para vuelos	16	API	QA
+Entregables:
+
+API RESTful para vuelos (CRUD)
+
+Lista de vuelos con filtros en frontend
+
+WebSocket para updates en tiempo real
+
+Tests de integración
+
+13.3 Sprint 3: Visualización de Rutas (2 semanas)
+Objetivo: Mostrar y editar rutas en el mapa
+
+Tarea	Horas	Dependencias	Asignado
+Renderizado de rutas en mapa	24	Sprint 2	Frontend
+Editor de waypoints interactivo	32	Sprint 2	Frontend
+API para guardar rutas	16	Sprint 2	Backend
+Almacenamiento geoespacial	20	Sprint 2	Backend
+Cálculo de distancias	12	-	Backend
+Tooltips con información de ruta	16	Frontend	Frontend
+13.4 Sprint 4: Integración Meteorológica (2 semanas)
+Objetivo: Integrar datos meteorológicos en tiempo real
+
+Tarea	Horas	Dependencias	Asignado
+Integración con API de clima	24	-	Backend
+Cache de datos meteorológicos	16	DB	Backend
+Capa de radar en mapa	24	Sprint 3	Frontend
+Visualización de vientos	20	Sprint 3	Frontend
+Algoritmo de impacto climático	32	-	Data Science
+Predicción por ruta	24	Algoritmo	Backend
+13.5 Sprint 5: Optimización de Rutas (3 semanas)
+Objetivo: Implementar algoritmos de optimización
+
+Tarea	Horas	Dependencias	Asignado
+Algoritmo A* para rutas	40	Sprint 4	Data Science
+Optimización multi-objetivo	32	Algoritmo base	Data Science
+Temporal workflows para optimización	24	Sprint 2	Backend
+API de optimización asíncrona	20	Workflows	Backend
+UI de parámetros de optimización	24	Sprint 3	Frontend
+Visualización de rutas alternativas	24	Frontend	Frontend
+Tests de rendimiento de algoritmo	16	-	QA
+13.6 Sprint 6: Restricciones y No-Fly Zones (2 semanas)
+Objetivo: Manejar restricciones del espacio aéreo
+
+Tarea	Horas	Dependencias	Asignado
+Modelo de restricciones	16	Sprint 2	Backend
+API de restricciones	20	Modelo	Backend
+Editor de no-fly zones	24	Sprint 5	Frontend
+Algoritmo de evasión	32	Sprint 5	Data Science
+Integración con datos oficiales	24	-	Backend
+Validación de rutas contra restricciones	16	Algoritmo	Backend
+13.7 Sprint 7: Dashboard y Analytics (2 semanas)
+Objetivo: Implementar dashboards y métricas
+
+Tarea	Horas	Dependencias	Asignado
+Dashboard de vuelos activos	24	Sprint 5	Frontend
+Métricas de optimización	20	Sprint 5	Backend
+Gráficos de consumo	24	-	Frontend
+Exportación de reportes	16	-	Backend
+Timeline de vuelos	20	Frontend	Frontend
+Alertas y notificaciones	16	WebSocket	Backend
+13.8 Sprint 8: Seguridad y Multi-tenancy (2 semanas)
+Objetivo: Implementar autenticación y aislamiento
+
+Tarea	Horas	Dependencias	Asignado
+Autenticación JWT	20	-	Backend
+RBAC y permisos	24	Auth	Backend
+Multi-tenancy en base de datos	32	Sprint 1	Backend
+API Keys para integraciones	16	Auth	Backend
+Login/Register UI	16	-	Frontend
+Audit logging	20	-	Backend
+Security headers y CORS	8	-	DevOps
+13.9 Sprint 9: Testing y Optimización (2 semanas)
+Objetivo: Asegurar calidad y rendimiento
+
+Tarea	Horas	Dependencias	Asignado
+E2E tests con Cypress	32	Todos	QA
+Load testing con k6	24	-	QA
+Optimización de queries	20	-	Backend
+Code splitting y lazy loading	16	-	Frontend
+Performance monitoring	16	-	DevOps
+Bug fixes y deuda técnica	24	-	Equipo
+13.10 Sprint 10: Documentación y Deployment (2 semanas)
+Objetivo: Preparar para producción
+
+Tarea	Horas	Dependencias	Asignado
+Documentación de API	24	-	Tech Writer
+Guías de usuario	24	-	Tech Writer
+Runbooks de operaciones	16	-	DevOps
+Configuración de producción	20	-	DevOps
+Monitoreo y alertas	16	-	DevOps
+Backup y disaster recovery	16	-	DevOps
+Deploy a producción	8	Todo	DevOps
+13.11 Sprint 11-12: Features Avanzados (4 semanas)
+Objetivo: Implementar capacidades diferenciales
+
+Tarea	Horas	Dependencias	Sprint
+Machine Learning para predicción	40	Sprint 5	11
+Análisis histórico de rutas	24	Sprint 7	11
+Optimización en tiempo real	32	Sprint 9	11
+Colaboración en rutas	24	Sprint 8	11
+Versión mobile PWA	40	Sprint 9	12
+Offline mode	32	Sprint 12	12
+Integración con sistemas de a bordo	40	Sprint 10	12
+14. Análisis Comparativo y Roadmap de Producto
+14.1 Análisis de Competencia
+Característica	GeoVuelos	Competidor A	Competidor B	Competidor C
+Optimización multi-objetivo	✅	⚠️ Parcial	✅	❌
+ML para predicción climática	✅ (Q2)	❌	⚠️ Básico	✅
+Tiempo real con WebSockets	✅	❌ REST only	✅	⚠️ Polling
+Editor visual de rutas	✅	✅	⚠️ Básico	✅
+No-fly zones dinámicas	✅	✅	❌	⚠️ Estáticas
+API GraphQL	⚠️ (Q3)	❌	✅	❌
+Offline mode	✅ (Q4)	❌	❌	⚠️ Limitado
+Multi-tenancy	✅	❌	✅	❌
+Auditoría completa	✅	⚠️ Parcial	❌	✅
+Precios	SaaS flexible	Enterprise	Por vuelo	Licencia
+14.2 Ventajas Competitivas
+14.3 Roadmap de Producto
+14.4 Métricas de Éxito (OKRs)
+Q1 2026 - Fundación
+
+KR1: Lanzar MVP con 100% de features core
+
+KR2: Onboarding de 5 aerolíneas piloto
+
+KR3: Tiempo de respuesta API < 200ms p95
+
+KR4: Cobertura de tests > 80%
+
+Q2 2026 - Crecimiento
+
+KR1: 20 aerolíneas activas
+
+KR2: Optimización 15% más eficiente que rutas manuales
+
+KR3: 99.9% uptime
+
+KR4: NPS > 50
+
+Q3 2026 - Escalamiento
+
+KR1: 100 aerolíneas activas
+
+KR2: Procesamiento de 10,000 vuelos/día
+
+KR3: Expansión a 3 regiones geográficas
+
+KR4: Integración con 5 sistemas de a bordo
+
+Q4 2026 - Innovación
+
+KR1: Modelo ML con 95% precisión en predicción
+
+KR2: Lanzamiento app mobile
+
+KR3: Patentes de algoritmos de optimización
+
+KR4: 25% reducción consumo combustible clientes
+
+14.5 Matriz de Priorización
+Feature	Impacto	Esfuerzo	Riesgo	Prioridad
+Optimización multi-objetivo	Alto	Alto	Medio	P0
+Tiempo real WebSockets	Alto	Medio	Bajo	P0
+Editor visual de rutas	Alto	Medio	Bajo	P0
+No-fly zones	Alto	Bajo	Bajo	P0
+ML predicción	Muy Alto	Muy Alto	Alto	P1
+Mobile app	Medio	Alto	Medio	P2
+Offline mode	Medio	Alto	Alto	P3
+Blockchain tracking	Bajo	Muy Alto	Muy Alto	Backlog
+14.6 Estrategia de Mercado
+Fase 1 (Q1-Q2): Early Adopters
+
+Target: Aerolíneas regionales de 10-50 aviones
+
+Propuesta: Reducción 10-15% costos operativos
+
+Pricing: Freemium + Enterprise
+
+Fase 2 (Q3): Crecimiento
+
+Target: Aerolíneas nacionales 50-200 aviones
+
+Propuesta: Optimización flota completa
+
+Pricing: Por volumen + anual
+
+Fase 3 (Q4): Expansión
+
+Target: Aerolíneas internacionales 200+ aviones
+
+Propuesta: Suite completa + integraciones
+
+Pricing: Enterprise custom
+
+Apéndices
+A. Glosario de Términos
+Término	Definición
+Waypoint	Punto de referencia en una ruta aérea
+No-fly zone	Área restringida para sobrevolar
+CQRS	Command Query Responsibility Segregation
+Event Sourcing	Persistencia basada en eventos
+A*	Algoritmo de búsqueda de caminos
+Pareto front	Conjunto de soluciones óptimas multi-objetivo
+B. Referencias
+Temporal Documentation
+
+MapLibre GL JS
+
+Fastify
+
+Next.js
+
+PostGIS
+
+C. Diagramas de Secuencia Clave
+
+    participant User
+    participant Frontend
+    participant API
+    participant Optimizer
+    participant WeatherAPI
+
+    User->>Frontend: Selecciona ruta
+    Frontend->>API: POST /optimize
+    API->>Optimizer: Inicia optimización
+    API->>Optimizer: Inicia optimización
+    Optimizer->>WeatherAPI: Obtiene clima
+    WeatherAPI-->>Optimizer: Datos climáticos
+    Optimizer->>Optimizer: Ejecuta algoritmo
+
+
+14.13.1 Cálculo de ROI por Feature
+Feature	Inversión	Retorno Anual	ROI	Payback	Prioridad
+Optimización multi-objetivo	$60k	$500k	733%	1.5 meses	P0
+ML predictivo	$100k	$1.2M	1100%	1 mes	P0
+Tiempo real WebSockets	$40k	$300k	650%	1.6 meses	P0
+Editor visual	$50k	$200k	300%	3 meses	P1
+Mobile app	$120k	$400k	233%	3.6 meses	P2
+Integraciones	$40k	$250k	525%	1.9 meses	P1
+Multi-tenancy	$30k	$150k	400%	2.4 meses	P1
+Auditoría	$25k	$100k	300%	3 meses	P2
+*Assumptions: $500/hora costo desarrollo, precios enterprise promedio*
+
+14.14 Estrategia de Salida a Mercado
+14.14.1 Fases de Lanzamiento
+timeline
+    title Go-to-Market Timeline
+    2026 Q1 : Beta privado
+            : 5 aerolíneas piloto
+            : Feedback loop
+    2026 Q2 : Launch público
+            : Marketing digital
+            : Early adopter program
+    2026 Q3 : Expansión regional
+            : Partners integración
+            : Enterprise sales
+    2026 Q4 : Internacional
+            : Mobile launch
+            : Conference circuit
+14.14.2 Canales de Adquisición
+Canal	Inversión	CAC	Conversión	Escalabilidad
+Inbound
+SEO/Content	$10k/mes	$2k	3%	Alta
+Webinars	$5k/evento	$3k	5%	Media
+White papers	$15k/pieza	$4k	2%	Baja
+Outbound
+Sales team	$20k/mes/rep	$15k	10%	Media
+Partners	Comisión 20%	$8k	15%	Alta
+Events	$50k/evento	$25k	20%	Baja
+Digital
+LinkedIn Ads	$15k/mes	$3.5k	2%	Alta
+Google Ads	$10k/mes	$4k	1.5%	Alta
+Retargeting	$5k/mes	$1.5k	4%	Media
+14.15 Proyecciones Financieras
+14.15.1 Modelo de Ingresos
+typescript
+interface RevenueModel {
+  freemium: {
+    users: 1000;
+    conversion: 5%;
+    arpu: 0;
+  };
+
+  professional: {
+    customers: 200;
+    avgTicket: '$3,000/mes';
+    revenue: '$600k/mes';
+    churn: '2%';
+  };
+
+  enterprise: {
+    customers: 20;
+    avgTicket: '$30,000/mes';
+    revenue: '$600k/mes';
+    churn: '0.5%';
+  };
+
+  payPerUse: {
+    flights: '100,000/mes';
+    avgPrice: '$3';
+    revenue: '$300k/mes';
+  };
+
+  total: {
+    monthly: '$1.5M';
+    annual: '$18M';
+    growth: '15% QoQ';
+  };
+}
+14.15.2 Proyección 3 Años
+14.16 KPIs y Métricas de Éxito
+14.16.1 Dashboard de Métricas
+typescript
+interface KPIDashboard {
+  acquisition: {
+    mqls: { target: 500, current: 320, trend: '+15%' };
+    sqls: { target: 100, current: 65, trend: '+20%' };
+    customers: { target: 50, current: 28, trend: '+25%' };
+    cac: { target: 5000, current: 6200, trend: '-8%' };
+  };
+
+  activation: {
+    timeToValue: { target: '7d', current: '10d', trend: '-3d' };
+    activationRate: { target: 80, current: 72, trend: '+5%' };
+    featureAdoption: { target: 5, current: 3.2, trend: '+0.8' };
+  };
+
+  retention: {
+    retentionD30: { target: 90, current: 85, trend: '+2%' };
+    retentionD90: { target: 80, current: 72, trend: '+3%' };
+    churn: { target: 2, current: 2.8, trend: '-0.3%' };
+    nps: { target: 50, current: 42, trend: '+4' };
+  };
+
+  revenue: {
+    mrr: { target: 250000, current: 185000, trend: '+15%' };
+    arr: { target: 3000000, current: 2220000, trend: '+15%' };
+    ltv: { target: 120000, current: 95000, trend: '+8%' };
+    ltvCac: { target: 3, current: 2.4, trend: '+0.2' };
+  };
+
+  product: {
+    flightsOptimized: { target: 50000, current: 32000, trend: '+25%' };
+    avgOptimizationTime: { target: 500, current: 620, trend: '-50ms' };
+    apiLatency: { target: 150, current: 180, trend: '-15ms' };
+    uptime: { target: 99.95, current: 99.92, trend: '+0.02%' };
+  };
+}
+14.16.2 OKRs por Trimestre 2026
+Trimestre	Objective	Key Results	Status
+Q1	Lanzamiento MVP	• 5 pilotos • 80% coverage • API <200ms	🟡 En progreso
+Q2	Tracción inicial	• 20 clientes • 15% eficiencia • NPS 40	⚪ No iniciado
+Q3	Escalamiento	• 10k vuelos/día • 3 regiones • 5 enterprise	⚪ No iniciado
+Q4	Innovación	• 95% ML accuracy • Mobile launch • 20% ahorro	⚪ No iniciado
+Apéndices Completos
+A. Glosario Técnico Extendido
+Término	Definición	Contexto
+A*	Algoritmo de búsqueda heurística para encontrar camino óptimo	Optimización de rutas
+CQRS	Patrón que separa operaciones de lectura y escritura	Arquitectura backend
+Event Sourcing	Persistencia basada en eventos en lugar de estado actual	Trazabilidad
+GeoJSON	Formato para codificar estructuras de datos geográficos	Mapas
+MBTiles	Especificación para almacenar tiles de mapa	Cache mapping
+PostGIS	Extensión espacial para PostgreSQL	Base de datos
+WebSocket	Protocolo de comunicación bidireccional en tiempo real	Live updates
+Wind Aloft	Datos de viento a diferentes altitudes	Meteorología
+No-Fly Zone	Área restringida para sobrevolar	Regulaciones
+Pareto Front	Conjunto de soluciones óptimas no dominadas	Multi-objetivo
+B. Referencias y Documentación
+B.1 Documentación Técnica
+Temporal.io Documentation
+
+MapLibre GL JS Docs
+
+Fastify Reference
+
+Next.js Documentation
+
+PostGIS Manual
+
+OpenAPI Specification
+
+B.2 APIs de Terceros
+AviationStack API
+
+OpenWeatherMap
+
+AviationWeather.gov
+
+FlightAware API
+
+B.3 Estándares de la Industria
+ARINC 424 - Navegación
+
+ICAO AIS - Información aeronáutica
+
+WGS84 - Sistema de coordenadas
+
+ISO 19115 - Metadata geoespacial
+
+C. Diagramas de Arquitectura Detallados
+C.1 Flujo de Optimización de Rutas
+
+    participant User
+    participant Frontend
+    participant API
+    participant CommandBus
+    participant Optimizer
+    participant WeatherAPI
+    participant EventStore
+    participant Projection
+
+    User->>Frontend: Solicita optimización
+    Frontend->>API: POST /optimize
+    Frontend->>API: POST /optimize
+    API->>CommandBus: Dispatch command
+    CommandBus->>EventStore: CreateOptimizationStarted event
+    EventStore-->>CommandBus: Event stored
+    CommandBus->>Optimizer
+C.2 Arquitectura de Microservicios
+D. Guías de Usuario
+D.1 Guía Rápida: Optimización de Ruta
+Seleccionar Vuelo
+
+Navegar a "Flights" en dashboard
+
+Buscar vuelo por número o ruta
+
+Click en "Optimize"
+
+Configurar Parámetros
+
+Seleccionar objetivo (Fuel/Time/Safety)
+
+Ajustar restricciones
+
+Activar/desactivar evasión climática
+
+Visualizar Resultados
+
+Comparar rutas en mapa
+
+Ver métricas de mejora
+
+Aceptar o solicitar alternativas
+
+Implementar
+
+Guardar ruta optimizada
+
+Notificar a tripulación
+
+Monitorear en tiempo real
+
+D.2 API Quick Start
+bash
+# Autenticación
+curl -X POST https://api.geovuelos.com/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@airline.com","apiKey":"your_key"}'
+
+# Crear vuelo
+curl -X POST https://api.geovuelos.com/v1/flights \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flightNumber": "AA123",
+    "departure": "JFK",
+    "arrival": "LAX",
+    "aircraft": "B738",
+    "scheduledDeparture": "2026-03-15T10:00:00Z"
+  }'
+
+# Optimizar ruta
+curl -X POST https://api.geovuelos.com/v1/flights/FLIGHT_ID/optimize \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target": "fuel",
+    "weatherAvoidance": true,
+    "constraints": []
+  }'
+E. Plan de Contingencia
+E.1 Escenarios de Disaster Recovery
+Escenario	RTO	RPO	Estrategia	Responsable
+Data center failure	4h	15min	Multi-AZ failover	DevOps
+Database corruption	2h	5min	Point-in-time recovery	DBA
+API service down	5min	-	Auto-scaling + LB	DevOps
+Third-party API outage	1h	-	Cache + fallback	Backend
+Security breach	1h	-	Isolation + audit	Security
+E.2 Runbooks de Incidentes
+yaml
+incident_response:
+  severity_1:
+    description: "Critical outage affecting multiple customers"
+    response_time: "5min"
+    communication: "Status page + email + slack"
+    escalation: "CTO + VP Engineering"
+    steps:
+      - "Identify affected services"
+      - "Isolate issue (rollback / failover)"
+      - "Communicate to customers"
+      - "Root cause analysis"
+      - "Post-mortem within 24h"
+
+  severity_2:
+    description: "Partial outage or degraded performance"
+    response_time: "15min"
+    communication: "Internal channels"
+    escalation: "Engineering Manager"
+    steps:
+      - "Diagnose issue"
+      - "Apply fix or workaround"
+      - "Monitor recovery"
+      - "Post-mortem within 72h"
+
+  severity_3:
+    description: "Minor issue, no customer impact"
+    response_time: "4h"
+    communication: "Internal ticket"
+    escalation: "Team lead"
+    steps:
+      - "Fix in normal workflow"
+      - "Deploy with next release"
+Historial de Cambios
+Versión	Fecha	Autor	Cambios
+1.0	2026-02-14	Equipo	Versión inicial de documentación
+1.1	2026-02-15	Arquitecto	Añadido análisis comparativo y roadmap
+1.2	2026-02-16	Product	Actualizado OKRs y proyecciones
+1.3	2026-02-17	Equipo	Completados apéndices y guías
+Fin del Documento
