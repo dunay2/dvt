@@ -42,12 +42,14 @@ This is the canonical entrypoint for project documentation.
 - [Frontend DVT+ epics and user stories](./planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md)
 - [Frontend DVT+ GitHub execution guide](./planning/BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md)
 
-## Runbooks
+## Operations & Runbooks
 
+- [SLOs (Service Level Objectives)](./architecture/engine/ops/SLOs.md)
+- [Severity matrix](./architecture/engine/ops/runbooks/severity_matrix.md)
+- [Incident response](./architecture/engine/ops/runbooks/incident_response.md)
 - [Outbox replay](./runbooks/outbox_replay.md)
 - [Plugin quarantine](./runbooks/plugin_quarantine.md)
 - [Rollback and restore](./runbooks/rollback_and_restore.md)
-- [Incident response](./architecture/engine/ops/runbooks/incident_response.md)
 
 ## Archived operational docs
 
