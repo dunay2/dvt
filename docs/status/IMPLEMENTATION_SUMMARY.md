@@ -66,7 +66,7 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - #14: **Mostly implemented** in active engine path; issue checklist should be refreshed to current API names and remaining deltas.
 - #15: **In progress** (Temporal interpreter workflow exists in active package implementation; issue tracking/checklist requires refresh to match current code evidence).
 - #5: **Superseded scope** by #68 for active monorepo implementation tracking.
-- #6: **Not started** in active adapter package (Postgres package currently placeholder).
+- #6: **Foundation implemented (MVP base)** in active adapter package (`PostgresStateStoreAdapter` + contract-compatible types + smoke coverage for metadata, idempotency append, and outbox lifecycle).
 - #76 and #79: active repository-governance tracking for monorepo/path normalization and stale local reference cleanup.
 
 ### Suggested canonical execution order

@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests --config vitest.config.cjs"
   },
   "devDependencies": {
     "typescript": "5.9.3",
