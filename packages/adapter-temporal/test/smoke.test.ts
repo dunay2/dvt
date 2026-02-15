@@ -44,6 +44,27 @@ import {
 } from '../src/index.js';
 
 describe('adapter-temporal foundation', () => {
+  it('does not read ambient process.env when explicit env is provided', () => {
+    const previous = process.env.TEMPORAL_NAMESPACE;
+    process.env.TEMPORAL_NAMESPACE = 'ambient-namespace';
+
+    try {
+      const cfg = loadTemporalAdapterConfig({
+        TEMPORAL_ADDRESS: 'temporal:7233',
+        TEMPORAL_NAMESPACE: 'explicit-namespace',
+        TEMPORAL_TASK_QUEUE: 'q-main',
+      });
+
+      expect(cfg.namespace).toBe('explicit-namespace');
+    } finally {
+      if (previous === undefined) {
+        delete process.env.TEMPORAL_NAMESPACE;
+      } else {
+        process.env.TEMPORAL_NAMESPACE = previous;
+      }
+    }
+  });
+
   it('loads config with defaults when identity is omitted', () => {
     const cfg = loadTemporalAdapterConfig({
       TEMPORAL_ADDRESS: 'temporal:7233',
