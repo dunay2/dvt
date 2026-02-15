@@ -57,4 +57,28 @@ describe('providerSelection', () => {
     const selected = pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'mock' });
     expect(selected.provider).toBe('mock');
   });
+
+  it('picks fallback adapter when ENGINE_PROVIDER is unset', () => {
+    const adapters = buildAdapterRegistry([mkAdapter('mock')]);
+    const selected = pickDefaultAdapter(adapters, {}, 'mock');
+    expect(selected.provider).toBe('mock');
+  });
+
+  it('falls back to first available adapter when fallback provider is not registered', () => {
+    const adapters = buildAdapterRegistry([mkAdapter('mock')]);
+    const selected = pickDefaultAdapter(adapters, {});
+    expect(selected.provider).toBe('mock');
+  });
+
+  it('still throws when ENGINE_PROVIDER override targets an unregistered adapter', () => {
+    const adapters = buildAdapterRegistry([mkAdapter('mock')]);
+    expect(() => pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'temporal' })).toThrow(
+      /No adapter registered for provider: temporal/
+    );
+  });
+
+  it('throws when no adapters are registered', () => {
+    const adapters = buildAdapterRegistry([]);
+    expect(() => pickDefaultAdapter(adapters, {})).toThrow(/No adapters registered/);
+  });
 });
