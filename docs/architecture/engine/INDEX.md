@@ -16,6 +16,7 @@ These documents define the **engine boundary, semantics, and invariants**. Viola
 | --------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------- | ------- |
 | [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md)   | Engine interface + signal catalog                                | Boundary contract | 1.0     |
 | [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic)               | State machine     | 1.1     |
+| [RunEventCatalog.v1.md](contracts/engine/RunEventCatalog.v1.md)       | Canonical run event catalog alias (taxonomy + transitions + ids) | Event taxonomy    | 1.0     |
 | [GlossaryContract.v1.md](contracts/engine/GlossaryContract.v1.md)     | Canonical terminology and identifier semantics                   | Terminology       | 1.0.1   |
 | [State Store Contract](contracts/state-store/README.md)               | Storage-agnostic interface for event log + snapshots             | Persistence layer | 1.0     |
 | [VERSIONING.md](./VERSIONING.md)                                      | Policy for versioning contracts (major/minor bumps, deprecation) | Governance        | 1.0     |
@@ -102,6 +103,7 @@ docs/architecture/engine/
 │   ├── engine/
 │   │   ├── IWorkflowEngine.v1.1.md         # [NORMATIVE] Interface + signals
 │   │   ├── ExecutionSemantics.v1.md      # [NORMATIVE] Core execution semantics (agnostic)
+│   │   ├── RunEventCatalog.v1.md         # [NORMATIVE ALIAS] Canonical run event catalog entrypoint
 │   │   └── GlossaryContract.v1.md        # [NORMATIVE] Canonical terminology + identifier semantics
 │   ├── state-store/
 │   │   └── README.md                      # [NORMATIVE] Storage-agnostic State Store contract
