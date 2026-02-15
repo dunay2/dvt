@@ -30,6 +30,7 @@ This is the canonical entrypoint for project documentation.
 ## Planning
 
 - [Next issue templates](./planning/NEXT_ISSUES_TEMPLATES.md)
+- [Product strategy, GTM and financials (draft)](./planning/PRODUCT_STRATEGY_GTM_AND_FINANCIALS.md)
 
 ## Runbooks
 
