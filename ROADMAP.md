@@ -219,6 +219,17 @@ gantt
 - **Open (adapter expansion)**: #69, #71
 - **Tracking cleanup**: #74 closed as duplicate/superseded by #76 (already closed)
 
+### Frontend DVT+ Track (Planning + GitHub operationalization)
+
+- **Status**: ✅ Backlog and execution scaffolding created
+- **Specification**: [FRONTEND_DVT_PLUS_TECHNICAL_SPEC.md](docs/planning/FRONTEND_DVT_PLUS_TECHNICAL_SPEC.md)
+- **Backlog (epics/stories)**: [BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md](docs/planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md)
+- **Execution + evidence**: [BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md](docs/planning/BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md)
+- **GitHub milestones created**: 9 (`EPICA-F1` → `EPICA-F9`)
+- **GitHub epic issues created**: 9 (`#160` → `#168`)
+- **GitHub user stories created**: 20 (`#169` → `#188`)
+- **Open by design**: delivery stories remain open for implementation sequencing
+
 ---
 
 ## 📌 Backlog Prioritization (Audit 2026-02-14)
@@ -268,6 +279,8 @@ gantt
 - [📋 All Issues](https://github.com/dunay2/dvt/issues)
 - [🎯 Phase 1 Milestone](https://github.com/dunay2/dvt/milestone/1)
 - [🚀 Phase 2 Milestone](https://github.com/dunay2/dvt/milestone/2)
+- [🧩 Frontend milestone set (EPICA-F1)](https://github.com/dunay2/dvt/milestone/14)
+- [🧩 Frontend milestone set (EPICA-F9)](https://github.com/dunay2/dvt/milestone/22)
 - [🏷️ Labels](https://github.com/dunay2/dvt/labels)
 
 ### External References
@@ -413,4 +426,4 @@ To contribute to the project, check issues organized by milestone:
 
 ---
 
-_Last updated: 2026-02-15_
+_Last updated: 2026-02-15 (frontend planning+backlog+GitHub execution synced)_

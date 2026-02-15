@@ -53,3 +53,7 @@ temp/
 # Generated documentation
 docs-dist/
 .docusaurus/
+
+# Private business/finance (must not be public)
+private/finance/
+private/business/
