@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+> **Note**: Future releases are managed by [release-please](https://github.com/googleapis/release-please).
+> Changelog entries are generated automatically from Conventional Commits on merge to `main`.
+> The section below documents changes made before release-please was activated.
 
 ## Unreleased
 
