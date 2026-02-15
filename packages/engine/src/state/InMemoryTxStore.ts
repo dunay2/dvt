@@ -66,6 +66,18 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     return { appended, deduped };
   }
 
+  /**
+   * Transactional shortcut for stores that can atomically append and enqueue.
+   * In this in-memory store, appendEventsTx already enqueues internally.
+   */
+  async appendAndEnqueueTx(
+    runId: string,
+    envelopes: Omit<EventEnvelope, 'runSeq'>[],
+    _outbox: IOutboxStorage
+  ): Promise<AppendResult> {
+    return this.appendEventsTx(runId, envelopes);
+  }
+
   async listEvents(runId: string): Promise<EventEnvelope[]> {
     return this.eventsByRunId.get(runId) ?? [];
   }
