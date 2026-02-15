@@ -40,6 +40,12 @@ export interface WorkflowEngineDeps {
   planFetcher: IPlanFetcher;
 
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
+
+  /** Optional operation timeouts for external calls. */
+  timeouts?: {
+    adapterCallMs?: number;
+    outboxEnqueueMs?: number;
+  };
 }
 
 export class WorkflowEngine implements IWorkflowEngine {
@@ -60,10 +66,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.deps.planIntegrity.fetchAndValidate(validatedPlanRef, this.deps.planFetcher);
 
     const provider = validatedContext.targetAdapter;
-    const adapter = this.deps.adapters.get(provider);
-    if (!adapter) {
-      throw new Error(`No adapter registered for provider: ${provider}`);
-    }
+    const adapter = this.getAdapterOrThrow(provider);
 
     // MVP: immediate start.
     await this.emitRunEventFromContext(validatedContext, 'RunQueued');
@@ -71,7 +74,11 @@ export class WorkflowEngine implements IWorkflowEngine {
     // Emit RunStarted *before* invoking provider so projection order is: RunQueued → RunStarted → Provider events → RunCompleted
     await this.emitRunEventFromContext(validatedContext, 'RunStarted');
 
-    const runRef = await adapter.startRun(validatedPlanRef, validatedContext);
+    const runRef = await this.withTimeout(
+      adapter.startRun(validatedPlanRef, validatedContext),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.startRun'
+    );
 
     // Persist minimal metadata for correlation resolution.
     const meta: RunMetadata = buildRunMetadata(validatedContext, runRef);
@@ -85,10 +92,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
-    const adapter = this.deps.adapters.get(meta.provider);
-    if (!adapter) throw new Error(`No adapter registered for provider: ${meta.provider}`);
+    const adapter = this.getAdapterOrThrow(meta.provider);
 
-    await adapter.cancelRun(validatedRunRef);
+    await this.withTimeout(
+      adapter.cancelRun(validatedRunRef),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.cancelRun'
+    );
     await this.emitRunEvent(meta, 'RunCancelled');
   }
 
@@ -104,7 +114,11 @@ export class WorkflowEngine implements IWorkflowEngine {
     const adapter = this.deps.adapters.get(meta.provider);
     if (!adapter) return projected;
 
-    const providerView = await adapter.getRunStatus(validatedRunRef);
+    const providerView = await this.withTimeout(
+      adapter.getRunStatus(validatedRunRef),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.getRunStatus'
+    );
     const mergedSubstatus = providerView.substatus ?? projected.substatus;
     const mergedMessage = providerView.message ?? projected.message;
 
@@ -122,32 +136,40 @@ export class WorkflowEngine implements IWorkflowEngine {
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
-    const adapter = this.deps.adapters.get(meta.provider);
-    if (!adapter) throw new Error(`No adapter registered for provider: ${meta.provider}`);
+    const adapter = this.getAdapterOrThrow(meta.provider);
 
     // Provider-native signalling.
-    await adapter.signal(validatedRunRef, validatedRequest);
+    await this.withTimeout(
+      adapter.signal(validatedRunRef, validatedRequest),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.signal'
+    );
 
-    // Engine-level lifecycle events for operator signals.
-    switch (validatedRequest.type) {
-      case 'PAUSE':
-        await this.emitSignalDerivedRunEvent(meta, validatedRequest, 'RunPaused');
-        return;
-      case 'RESUME':
-        await this.emitSignalDerivedRunEvent(meta, validatedRequest, 'RunResumed');
-        return;
-      case 'CANCEL':
-        await this.emitSignalDerivedRunEvent(meta, validatedRequest, 'RunCancelled');
-        return;
-      case 'RETRY_STEP':
-      case 'RETRY_RUN':
-        // Phase 2: planner-driven deterministic retry semantics.
-        throw new Error('NotImplemented: RETRY_* signals are Phase 2');
-      default: {
-        const _never: never = validatedRequest.type;
-        throw new Error(`Unknown signal type: ${String(_never)}`);
-      }
+    const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
+    if (mappedEventType) {
+      await this.emitSignalDerivedRunEvent(meta, validatedRequest, mappedEventType);
     }
+  }
+
+  private getAdapterOrThrow(provider: EngineRunRef['provider']): IProviderAdapter {
+    const adapter = this.deps.adapters.get(provider);
+    if (!adapter) throw new Error(`No adapter registered for provider: ${provider}`);
+    return adapter;
+  }
+
+  private mapSignalToRunEventType(type: SignalRequest['type']): EventEnvelope['eventType'] | null {
+    if (type === 'RETRY_STEP' || type === 'RETRY_RUN') {
+      // Phase 2: planner-driven deterministic retry semantics.
+      throw new Error('NotImplemented: RETRY_* signals are Phase 2');
+    }
+
+    const byType: Record<'PAUSE' | 'RESUME' | 'CANCEL', EventEnvelope['eventType']> = {
+      PAUSE: 'RunPaused',
+      RESUME: 'RunResumed',
+      CANCEL: 'RunCancelled',
+    };
+
+    return byType[type as 'PAUSE' | 'RESUME' | 'CANCEL'] ?? null;
   }
 
   private async resolveMetaOrThrow(runRef: EngineRunRef): Promise<RunMetadata> {
@@ -238,10 +260,45 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   private async persistEvent(runId: string, env: Omit<EventEnvelope, 'runSeq'>): Promise<void> {
-    const { appended } = await this.deps.stateStore.appendEventsTx(runId, [env]);
+    const transactionalStore = this.deps.stateStore as IRunStateStore & {
+      appendAndEnqueueTx?: (
+        runId: string,
+        envelopes: Omit<EventEnvelope, 'runSeq'>[],
+        outbox: IOutboxStorage
+      ) => Promise<unknown>;
+    };
 
-    // If outbox is embedded in the state store (InMemoryTxStore), enqueueTx is a no-op.
-    await this.deps.outbox.enqueueTx(runId, appended);
+    // Preferred path when store supports atomic append+enqueue.
+    if (typeof transactionalStore.appendAndEnqueueTx === 'function') {
+      await transactionalStore.appendAndEnqueueTx(runId, [env], this.deps.outbox);
+      return;
+    }
+
+    const { appended } = await this.deps.stateStore.appendEventsTx(runId, [env]);
+    await this.withTimeout(
+      this.deps.outbox.enqueueTx(runId, appended),
+      this.deps.timeouts?.outboxEnqueueMs ?? 30_000,
+      'outbox.enqueueTx'
+    );
+  }
+
+  private async withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+    operation: string
+  ): Promise<T> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error(`${operation} timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
   }
 }
 
