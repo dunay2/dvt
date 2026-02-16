@@ -9,6 +9,7 @@ This is the canonical entrypoint for project documentation.
 - [Roadmap](../ROADMAP.md)
 - [Repository structure summary](./REPO_STRUCTURE_SUMMARY.md)
 - [Architecture analysis](./ARCHITECTURE_ANALYSIS.md)
+- [Knowledge base index](./knowledge/INDEX.md)
 
 ## Contracts & automation
 
