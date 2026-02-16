@@ -207,16 +207,16 @@ function chunk(items, size) {
   return out;
 }
 
-async function ensureSchema(session) {
-  const stmts = [
-    'CREATE CONSTRAINT modulo_path_unique IF NOT EXISTS FOR (m:Modulo) REQUIRE m.path IS UNIQUE',
-    'CREATE CONSTRAINT archivo_path_unique IF NOT EXISTS FOR (a:Archivo) REQUIRE a.path IS UNIQUE',
-    'CREATE CONSTRAINT issue_key_unique IF NOT EXISTS FOR (i:Issue) REQUIRE i.key IS UNIQUE',
-    'CREATE CONSTRAINT decision_id_unique IF NOT EXISTS FOR (d:Decision) REQUIRE d.id IS UNIQUE',
-    'CREATE CONSTRAINT funcion_key_unique IF NOT EXISTS FOR (f:Funcion) REQUIRE f.key IS UNIQUE',
-  ];
+const SCHEMA_CONSTRAINTS = [
+  'CREATE CONSTRAINT modulo_path_unique IF NOT EXISTS FOR (m:Modulo) REQUIRE m.path IS UNIQUE',
+  'CREATE CONSTRAINT archivo_path_unique IF NOT EXISTS FOR (a:Archivo) REQUIRE a.path IS UNIQUE',
+  'CREATE CONSTRAINT issue_key_unique IF NOT EXISTS FOR (i:Issue) REQUIRE i.key IS UNIQUE',
+  'CREATE CONSTRAINT decision_id_unique IF NOT EXISTS FOR (d:Decision) REQUIRE d.id IS UNIQUE',
+  'CREATE CONSTRAINT funcion_key_unique IF NOT EXISTS FOR (f:Funcion) REQUIRE f.key IS UNIQUE',
+];
 
-  for (const stmt of stmts) {
+async function ensureSchema(session) {
+  for (const stmt of SCHEMA_CONSTRAINTS) {
     await session.run(stmt);
   }
 }
@@ -228,7 +228,7 @@ async function resetGraph(session) {
   }
 }
 
-async function ingest() {
+function collectGraphRows() {
   const trackedFiles = Array.from(new Set([...runGitList(), ...listAdrFilesFromFs()])).sort();
   const fileSet = new Set(trackedFiles);
 
@@ -310,6 +310,20 @@ async function ingest() {
       }
     }
   }
+
+  return {
+    trackedFiles,
+    files,
+    deps,
+    issues,
+    adrRows,
+    adrIssueRows,
+    classRows,
+  };
+}
+
+async function ingest() {
+  const { files, deps, issues, adrRows, adrIssueRows, classRows } = collectGraphRows();
 
   const driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWORD));
   const session = driver.session({ database: NEO4J_DATABASE });
@@ -437,7 +451,26 @@ async function ingest() {
   }
 }
 
-ingest().catch((error) => {
-  console.error('❌ Ingest failed:', error.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  ingest().catch((error) => {
+    console.error('❌ Ingest failed:', error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  SCHEMA_CONSTRAINTS,
+  REPO_ROOT,
+  runGitList,
+  listAdrFilesFromFs,
+  fileType,
+  moduloPathFor,
+  moduloLanguageFor,
+  parseImports,
+  parseIssueRefs,
+  parseAdr,
+  parseClassDefs,
+  chunk,
+  collectGraphRows,
+  ingest,
+};

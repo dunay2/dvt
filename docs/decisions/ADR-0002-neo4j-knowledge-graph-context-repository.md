@@ -7,7 +7,9 @@
   - [`docs/INDEX.md`](../INDEX.md)
   - [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
   - [`scripts/neo4j/base-schema.cypher`](../../scripts/neo4j/base-schema.cypher)
+  - [`scripts/neo4j/generated-repo.cypher`](../../scripts/neo4j/generated-repo.cypher)
   - [`scripts/neo4j/neo4j-seed.cjs`](../../scripts/neo4j/neo4j-seed.cjs)
+  - [`scripts/neo4j/neo4j-generate-cypher.cjs`](../../scripts/neo4j/neo4j-generate-cypher.cjs)
   - [`scripts/neo4j/neo4j-query-context.cjs`](../../scripts/neo4j/neo4j-query-context.cjs)
   - [`scripts/neo4j/neo4j-json-to-prompt.cjs`](../../scripts/neo4j/neo4j-json-to-prompt.cjs)
 
@@ -46,6 +48,14 @@ The baseline stack includes:
 - VS Code extension for Cypher exploration
 - serialization scripts (subgraph JSON → prompt text)
 
+#### Phase 2 automation baseline (implemented)
+
+- deterministic Cypher generation from repository metadata (`kg:generate`)
+- generated graph snapshot tracked in-repo (`scripts/neo4j/generated-repo.cypher`)
+- local drift check command (`kg:check`)
+- CI sync gate in contracts workflow to fail when generated Cypher is stale
+- pre-commit regeneration for ADR and KG ingest related changes
+
 ### 3) Data model baseline
 
 Minimum graph model:
@@ -56,10 +66,11 @@ Minimum graph model:
 ### 4) Operating workflow
 
 1. Start Neo4j instance.
-2. Seed baseline graph.
-3. Ingest repository metadata.
-4. Query subgraph by scope.
-5. Serialize context for AI workflows.
+2. Generate deterministic graph Cypher snapshot.
+3. Seed baseline graph.
+4. Ingest repository metadata.
+5. Query subgraph by scope.
+6. Serialize context for AI workflows.
 
 ---
 

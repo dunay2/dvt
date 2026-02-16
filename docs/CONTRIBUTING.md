@@ -412,6 +412,19 @@ The following validator streams are approved and tracked as dedicated GitHub iss
 - Executable examples validation
 - Contract index generation automation
 
+### Knowledge Graph sync policy (ADR-0002 Phase 2)
+
+When ADRs or KG ingest scripts change, contributors MUST keep generated graph Cypher in sync.
+
+Local commands:
+
+```bash
+pnpm kg:generate
+pnpm kg:check
+```
+
+`kg:check` is enforced in CI via [`contracts.yml`](../.github/workflows/contracts.yml).
+
 ### ADR requirement (semantic contract changes)
 
 Contract semantic changes SHOULD include an ADR in `docs/decisions/`.
