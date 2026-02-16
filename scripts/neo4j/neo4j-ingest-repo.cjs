@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* global console, process, __dirname */
+/* global console, process, __dirname, Buffer */
 
 const fs = require('fs');
 const path = require('path');
@@ -269,20 +269,25 @@ function collectGraphRows() {
       '.d.ts',
     ].some((t) => relPosix.endsWith(t));
 
+    let content = null;
+    let normalizedBytes = stat.size;
+    if (isText && stat.size <= 1024 * 1024 * 2) {
+      content = fs.readFileSync(abs, 'utf8');
+      normalizedBytes = Buffer.byteLength(content.replace(/\r\n/g, '\n'), 'utf8');
+    }
+
     files.push({
       path: relPosix,
       nombre: path.posix.basename(relPosix),
       tipo: ext.replace('.', '') || 'none',
-      bytes: stat.size,
+      bytes: normalizedBytes,
       topico: fileType(relPosix),
       moduloPath: moduloPathFor(relPosix),
       moduloNombre: path.posix.basename(moduloPathFor(relPosix)),
       moduloLenguaje: moduloLanguageFor(relPosix),
     });
 
-    if (!isText || stat.size > 1024 * 1024 * 2) continue;
-
-    const content = fs.readFileSync(abs, 'utf8');
+    if (!content) continue;
 
     if (['.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'].includes(ext)) {
       const d = parseImports(relPosix, content, fileSet);
