@@ -72,7 +72,7 @@ jobs:
           steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
           'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
           'true' || steps.changes.outputs.root_config == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -190,7 +190,7 @@ jobs:
         if:
           github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
           'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
