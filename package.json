@@ -51,13 +51,13 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "scripts/neo4j/neo4j-ingest-repo.cjs": [
+    "scripts/neo4j/*.cjs": [
       "pnpm kg:generate",
-      "git add scripts/neo4j/generated-repo.cypher"
+      "node -e \"const fs=require('fs');const cp=require('child_process');const p='scripts/neo4j/generated-repo.cypher';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
     "docs/decisions/ADR-*.md": [
       "pnpm kg:generate",
-      "git add scripts/neo4j/generated-repo.cypher"
+      "node -e \"const fs=require('fs');const cp=require('child_process');const p='scripts/neo4j/generated-repo.cypher';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"
