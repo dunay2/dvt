@@ -1,13 +1,15 @@
-# Plugin Sandbox Contract (Extension, Normative v1.0)
+# Plugin Sandbox Contract (Extension, Normative v1)
 
-**Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.0  
+[← Back to Contracts Registry](../README.md)
+
+**Status**: DRAFT  
+**Version**: v1
 **Stability**: Extension policy — breaking changes require version bump  
 **Consumers**: Engine Runtime, PluginRuntime, Security/Ops  
 **Scope**: Applies only when an ExecutionPlan references plugins or extension code.  
 **References**:
 
-- [IWorkflowEngine.v1.1.md](../engine/IWorkflowEngine.v1.1.md)
+- [IWorkflowEngine.reference.v1.md](../engine/IWorkflowEngine.reference.v1.md)
 - Node.js security guidance: <https://nodejs.org/en/learn/security/>
 - gVisor: <https://gvisor.dev/>
 - isolated-vm: <https://www.npmjs.com/package/isolated-vm>

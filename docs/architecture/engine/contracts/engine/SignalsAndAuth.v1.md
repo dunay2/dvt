@@ -1,13 +1,15 @@
-# Signals and Authorization Contract (Normative v1.1.1)
+# Signals and Authorization Contract (Normative v1)
 
-**Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.1.1  
+[← Back to Contracts Registry](../README.md)
+
+**Status**: DRAFT  
+**Version**: v1
 **Stability**: Contracts — breaking changes require version bump  
 **Consumers**: Engine, Authorization Service, Audit Systems, UI  
-**Parent Contract**: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md)  
-**References**: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md)
+**Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)  
+**References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 
-**Version alignment**: Contract v1.1.1 aligns with parent IWorkflowEngine.v1.1.1 and ExecutionSemantics.v1.1.1.
+**Version alignment**: Contract v1 aligns with parent IWorkflowEngine.v1 and ExecutionSemantics.v1.
 
 ---
 
@@ -324,8 +326,8 @@ Implementations SHOULD enforce per-tenant/per-run signal rate limits to prevent 
 
 ## 7) References
 
-- Parent Contract: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md)
-- Run Events: [RunEvents.v1.1.md](./RunEvents.v1.1.md)
+- Parent Contract: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
+- Run Events: [RunEvents.v1.md](./RunEvents.v1.md)
 - Execution Semantics: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md)
 - Approval Workflow (Draft): [ApprovalWorkflow.v1.md](../security/ApprovalWorkflow.v1.md)
 - UUID v4 (RFC 4122): https://www.rfc-editor.org/rfc/rfc4122
@@ -337,4 +339,4 @@ Implementations SHOULD enforce per-tenant/per-run signal rate limits to prevent 
 | Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.1.1   | 2026-02-12 | **PATCH**: Align with ExecutionSemantics v1.1.1 and IWorkflowEngine v1.1.1. Add `CANCEL`, `RETRY_RUN` to Phase 1; clarify `CANCEL` vs `EMERGENCY_STOP` semantics (§1.1.1); move `UPDATE_TARGET` to Phase 1; define `RETRY_RUN` immutability semantics (§1.1.2); add `AlertLevel` enum and System-only enforcement for `ESCALATE_ALERT` (§1.1.3); add signal ordering constraints (§1.2); add payload schema validation table (§1.3) with 11 JSON Schemas; define effective role resolution rule (§4.1); add `policyDecisionId` UUID v4 requirement (§4.4); add transactionality rule for decision record persistence (§5.1); add GDPR stance (§5.1); expand error codes: `SIGNAL_INVALID_PAYLOAD`, `RUN_TERMINAL`, `STEP_NOT_TERMINAL`, `STEP_TERMINAL` (§6.4); remove HTTP status codes (moved to ErrorMapping.v1.md); add rate limiting recommendation (§6.5); update references to v1.1.1; fix RBAC table to include `CANCEL` in Operator role (§4.2). |
-| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.1.md to reduce churn. Added RBAC table. **Critical fixes**: Declare signal idempotency key (tenantId, runId, signalId), clarify no-op behavior, scope approval workflow, normalize actor fields, define DestructiveSignalType enum, formalize error codes (AUTHZ_DENIED, AUTHZ_TENANT_FORBIDDEN).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.reference.v1.md to reduce churn. Added RBAC table. **Critical fixes**: Declare signal idempotency key (tenantId, runId, signalId), clarify no-op behavior, scope approval workflow, normalize actor fields, define DestructiveSignalType enum, formalize error codes (AUTHZ_DENIED, AUTHZ_TENANT_FORBIDDEN).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |

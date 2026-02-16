@@ -1,7 +1,9 @@
 # IAuthorization.v1.md - Authorization Contract
 
-**Version**: 1.0  
-**Status**: NORMATIVE (Required Contract)  
+[← Back to Contracts Registry](../README.md)
+
+**Version**: v1
+**Status**: DRAFT  
 **Phase**: Phase 1 (documentation), Phase 4 (implementation)
 
 ---

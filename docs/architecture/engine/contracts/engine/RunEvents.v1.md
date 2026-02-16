@@ -1,13 +1,15 @@
-# Run Events Contract (Normative v1.1)
+# Run Events Contract (Normative v1)
 
-**Status**: Normative (MUST / MUST NOT)
-**Version**: 1.1.1
+[← Back to Contracts Registry](../README.md)
+
+**Status**: DRAFT
+**Version**: v1
 **Stability**: Contracts — breaking changes require version bump
 **Consumers**: StateStore, Projectors, UI, Audit Systems
-**Parent Contract**: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md)
-**References**: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md), [Temporal Limits](https://docs.temporal.io/encyclopedia/limits), [Temporal SDK](https://docs.temporal.io/develop/typescript), [Conductor](https://github.com/netflix/conductor/wiki)
+**Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
+**References**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md), [Temporal Limits](https://docs.temporal.io/encyclopedia/limits), [Temporal SDK](https://docs.temporal.io/develop/typescript), [Conductor](https://github.com/netflix/conductor/wiki)
 
-**Version alignment**: Contract v1.1.1 aligns with parent IWorkflowEngine.v1.1.md and ExecutionSemantics.v1.1.md.
+**Version alignment**: Contract v1 aligns with parent IWorkflowEngine.v1 and ExecutionSemantics.v1.
 
 ---
 
@@ -28,7 +30,7 @@ Events are written to `IRunStateStore` (synchronous primary path, source of trut
 - `RunFailed`
 - `RunCancelled`
 
-**Scope (NORMATIVE)**: This contract governs events emitted by the **Engine** during workflow execution. Signal decision events (`SignalAccepted`, `SignalRejected`) are emitted by the **Authorization** component and are defined in `SignalsAndAuth.v1.1.md`. They are out of scope here.
+**Scope (NORMATIVE)**: This contract governs events emitted by the **Engine** during workflow execution. Signal decision events (`SignalAccepted`, `SignalRejected`) are emitted by the **Authorization** component and are defined in `SignalsAndAuth.v1.md`. They are out of scope here.
 
 **Note**: `RunQueued` may be emitted by the Admission Control / Run Queue component (see ExecutionSemantics §3). If admission control is implemented inside an engine adapter, that adapter MUST emit `RunQueued` using the shared schema; otherwise it is out of scope for this contract.
 
@@ -298,7 +300,7 @@ All events MUST include these identifiers for traceability:
 - `engineAttemptId` = "how many times did the infrastructure restart this?"
 - `logicalAttemptId` = "how many times did the user/policy retry this step?"
 
-**Idempotency rule (alignment with IWorkflowEngine v1.1.1)**:
+**Idempotency rule (alignment with IWorkflowEngine v1)**:
 
 - Event `idempotencyKey` MUST be derived from `logicalAttemptId`, NOT `engineAttemptId`.
 - `engineAttemptId` MUST be present in events/audit logs for debugging, but MUST NOT affect idempotency.
@@ -308,8 +310,8 @@ All events MUST include these identifiers for traceability:
 
 ## 6) References
 
-- **Parent Contract**: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md)
-- **Execution Semantics**: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md)
+- **Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
+- **Execution Semantics**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 - **State Store Interface**: [IRunStateStore.v1.md](../../state/IRunStateStore.v1.md) (if exists)
 - **Temporal Limits**: <https://docs.temporal.io/encyclopedia/limits>
 - **Temporal SDK**: <https://docs.temporal.io/develop/typescript>
@@ -331,4 +333,4 @@ All events MUST include these identifiers for traceability:
 | Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.1.1   | 2026-02-12 | **PATCH**: Align with ExecutionSemantics v1.1.1 and IWorkflowEngine v1.1.1. **Critical fixes**: (A) Standardize `emittedAt` (not `occurredAt`) for event envelope timestamp. (B) Add `StepSkipped` to lifecycle events, unions, state transitions, and payload schema. (C) Clarify scope: Signal decision events (`SignalAccepted`, `SignalRejected`) out of scope. (D) Rename StateStore to **Append Authority** for `runSeq` assignment. (E) Add timestamp authority rule: use `persistedAt` for time-based queries. (F) Define idempotency collision handling (reject OR return existing). (G) Clarify `RunQueued` ownership. (H) Enhance error payload with `failureCategory` and `failureSource`. (I) Add rationale for `planId`/`planVersion` in all events. (J) Change payload optionalidad to NORMATIVE. Add Operational Recommendations section. |
-| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.v1.1.md to reduce churn. Added state transition mapping. **Critical fixes**: Split RunEventWrite/RunEventRecord (runSeq phases), normalize stepId in idempotency key (use 'RUN' for run-level events), add planId/planVersion as required fields, clarify PENDING/APPROVED managed by Planner, add persistedAt, define minimum payload schemas.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 1.1     | 2026-02-12 | Extracted from IWorkflowEngine.reference.v1.md to reduce churn. Added state transition mapping. **Critical fixes**: Split RunEventWrite/RunEventRecord (runSeq phases), normalize stepId in idempotency key (use 'RUN' for run-level events), add planId/planVersion as required fields, clarify PENDING/APPROVED managed by Planner, add persistedAt, define minimum payload schemas.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |

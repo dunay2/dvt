@@ -1,10 +1,12 @@
-# Plan Integrity & Conductor Pause Semantics (Normative v1.1.1)
+# Plan Integrity & Conductor Pause Semantics (Normative v1)
 
-**Status**: Normative (MUST / MUST NOT)
-**Version**: 1.1.1
+[← Back to Contracts Registry](../README.md)
+
+**Status**: DRAFT
+**Version**: v1
 **Stability**: Contracts — breaking changes require version bump
 **Consumers**: Engine adapters, Planner, UI, Operations
-**References**: [IWorkflowEngine.v1.1.md](./IWorkflowEngine.v1.1.md), [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
+**References**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md), [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md), [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 
 ---
 
@@ -54,5 +56,5 @@ Adapters MUST reject any `PlanRef.uri` that is outside the configured allowlist 
 
 - [ ] `PlanRef` fetch Activities enforce SHA256 comparison and halt runs on mismatch.
 - [ ] Conductor adapter emits `DRAINING` during pause drain windows.
-- [ ] UI displays pause status + substatus alignment with [RunStatusSnapshot](./IWorkflowEngine.v1.1.md#212-runstatussnapshot-status-query-result).
+- [ ] UI displays pause status + substatus alignment with [RunStatusSnapshot](./IWorkflowEngine.reference.v1.md#212-runstatussnapshot-status-query-result).
 - [ ] Observability dashboards monitor `PLAN_INTEGRITY_VALIDATION_FAILED` alerts and Conductor drain durations.

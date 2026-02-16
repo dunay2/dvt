@@ -1,10 +1,12 @@
-# IWorkflowEngine Contract (Normative v1.1.1)
+# IWorkflowEngine Contract (Reference v1)
 
-**Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.1.1  
+[? Back to Contracts Registry](../README.md)
+
+**Status**: DRAFT  
+**Version**: v1
 **Stability**: Contracts — breaking changes require version bump  
 **Consumers**: Planner, State, UI  
-**Sub-Contracts**: [RunEvents.v1.1.md](./RunEvents.v1.1.md), [SignalsAndAuth.v1.1.md](./SignalsAndAuth.v1.1.md)  
+**Sub-Contracts**: [RunEvents.v1.md](./RunEvents.v1.md), [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md)  
 **References**: [Temporal SDK](https://docs.temporal.io/develop/typescript), [Conductor API](https://github.com/netflix/conductor/wiki)
 
 ---
@@ -17,7 +19,7 @@
 - Emit **run/step lifecycle events** (persisted into `IRunStateStore`).
 - Support retries/backoff as specified by Planner policy (engine-agnostic rules).
 - Support cancellation and "stop" semantics.
-- Support **resuming / continuing** after transient failures (see [ExecutionSemantics.v1.1.md § 2](./ExecutionSemantics.v1.md#2-resume-semantics) for resume semantics: PAUSE/RESUME signals, step replay rules, at-least-once vs exactly-once guarantees).
+- Support **resuming / continuing** after transient failures (see [ExecutionSemantics.v1.md § 2](./ExecutionSemantics.v1.md#2-resume-semantics) for resume semantics: PAUSE/RESUME signals, step replay rules, at-least-once vs exactly-once guarantees).
 - Provide correlation identifiers: `tenantId`, `projectId`, `environmentId`, `runId`, `engineAttemptId`, `logicalAttemptId`.
 
 ### MUST NOT
@@ -110,7 +112,7 @@ interface RunStatusSnapshot {
 - UI MUST treat unknown substatus values as opaque and display them verbatim.
 - **Conductor PAUSE (NORMATIVE)**: `PAUSED` reflects that Conductor stops scheduling _new_ tasks. In-flight tasks **MUST be allowed to finish** because Conductor lacks cancellation tokens. While those tasks drain, adapters MUST emit `substatus = 'DRAINING'`. UI/API MUST expose both `PAUSED` status and `DRAINING` substatus until all running tasks complete.
 
-**Status enum** (see [ExecutionSemantics.v1.1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
+**Status enum** (see [ExecutionSemantics.v1.md § 1.2](./ExecutionSemantics.v1.md#12-append-only-event-model)):
 
 - `PENDING`: Run created, awaiting approval
 - `APPROVED`: Approved by planner, ready to start
@@ -167,7 +169,7 @@ The resolution mechanism is adapter-specific. Each adapter MUST implement correl
 
 ## 2.2 Event Emission Contract
 
-**See**: [RunEvents.v1.1.md](./RunEvents.v1.1.md) for complete event schema, idempotency rules, and state transition mapping.
+**See**: [RunEvents.v1.md](./RunEvents.v1.md) for complete event schema, idempotency rules, and state transition mapping.
 
 **Summary**:
 
@@ -178,14 +180,14 @@ The resolution mechanism is adapter-specific. Each adapter MUST implement correl
 
 **RunQueued ownership**:
 
-- `RunQueued` is emitted by the Run Queue / Admission Control component (see [ExecutionSemantics.v1.1.md § 3](./ExecutionSemantics.v1.md#3-backpressure-and-admission-control)).
+- `RunQueued` is emitted by the Run Queue / Admission Control component (see [ExecutionSemantics.v1.md § 3](./ExecutionSemantics.v1.md#3-backpressure-and-admission-control)).
 - If admission control is implemented inside the Engine adapter, the adapter MUST emit `RunQueued` using the same event schema; otherwise, the external queue component emits it.
 
 ---
 
 ## 2.3 Signals and Authorization
 
-**See**: [SignalsAndAuth.v1.1.md](./SignalsAndAuth.v1.1.md) for complete signal catalog, authorization rules, and audit requirements.
+**See**: [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md) for complete signal catalog, authorization rules, and audit requirements.
 
 ---
 
@@ -326,11 +328,11 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 - **Temporal Signals**: <https://docs.temporal.io/workflows>
 - **Conductor**: <https://github.com/netflix/conductor/wiki>
 - **Sub-Contracts**:
-  - [RunEvents.v1.1.md](./RunEvents.v1.1.md) — Event schema, idempotency, state transitions
-  - [SignalsAndAuth.v1.1.md](./SignalsAndAuth.v1.1.md) — Signal catalog, authorization, audit
-- **Execution Semantics**: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md)
+  - [RunEvents.v1.md](./RunEvents.v1.md) — Event schema, idempotency, state transitions
+  - [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md) — Signal catalog, authorization, audit
+- **Execution Semantics**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 - **Capabilities**: [capabilities/](../capabilities/)
-- **Plugin Sandbox (Extension)**: [extensions/PluginSandbox.v1.0.md](../extensions/PluginSandbox.v1.0.md)
+- **Plugin Sandbox (Extension)**: [extensions/PluginSandbox.v1.md](../extensions/PluginSandbox.v1.md)
 - **TemporalAdapter spec**: [../../adapters/temporal/TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
 
 ---
@@ -353,5 +355,5 @@ See: [capabilities/](../capabilities/) for executable enum + adapter matrix.
 | Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.1.1   | 2026-02-12 | **PATCH**: Fix idempotency key contradiction (derived from logicalAttemptId only, NOT engineAttemptId). Update references to ExecutionSemantics v1.1.1. Add substatus enum (RunSubstatus + adapter-scoped format). Remove targetAdapter 'auto' (resolved before startRun). Add PlanRef URI allowlist security rule (SSRF/RCE mitigation). Add ExecutionPlan narrowing rule. Define emulate/degrade validation outcomes. Add terminology consistency note (emittedAt, PascalCase events). Add RunQueued ownership clarification. Update Conductor reference link. Clarify engine persistence boundary and correlation ID resolution mechanism. Fix runId type (globally unique, UUID v4 RECOMMENDED). |
-| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove `any`. **PARTITION**: Extract RunEvents.v1.1.md and SignalsAndAuth.v1.1.md to reduce churn. **Fix EngineRunRef.runId**: Make REQUIRED for signal idempotency.                                                                                                                                                                                                                   |
+| 1.1     | 2026-02-12 | **BREAKING**: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove `any`. **PARTITION**: Extract RunEvents.v1.md and SignalsAndAuth.v1.md to reduce churn. **Fix EngineRunRef.runId**: Make REQUIRED for signal idempotency.                                                                                                                                                                                                                       |
 | 1.0     | 2026-02-11 | Initial normative contract (Temporal + Conductor)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
