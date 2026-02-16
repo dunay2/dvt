@@ -1,5 +1,7 @@
 # Capabilities: Executable Contracts
 
+[← Back to Contracts Registry](../README.md)
+
 This directory contains **executable, schema-validated** capability declarations. These are NOT prose; they drive validation logic.
 
 ## Files
@@ -148,7 +150,7 @@ When adding a new capability:
 
 ## References
 
-- [IWorkflowEngine.v1.1.md](../engine/IWorkflowEngine.v1.1.md)
+- [IWorkflowEngine.reference.v1.md](../engine/IWorkflowEngine.reference.v1.md)
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
 - [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
 - [Temporal Capabilities](https://docs.temporal.io/)

@@ -1,7 +1,9 @@
 # State Store Contract (Normative)
 
-**Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.0  
+[← Back to Contracts Registry](../README.md)
+
+**Status**: DRAFT  
+**Version**: v1
 **Stability**: Core semantics — breaking changes require version bump  
 **Consumers**: Engine, Adapters, Projector
 

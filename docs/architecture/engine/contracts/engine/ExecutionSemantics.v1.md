@@ -1,12 +1,14 @@
-# Execution Semantics Contract (Normative v1.1.1)
+# Execution Semantics Contract (Normative v1)
 
-**Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.1.1  
+[← Back to Contracts Registry](../README.md)
+
+**Status**: DRAFT  
+**Version**: v1
 **Stability**: Core semantics — breaking changes require version bump  
 **Consumers**: Engine, StateStore, Projector
 
 **References**:
-[IWorkflowEngine Contract](./IWorkflowEngine.v1.1.md)  
+[IWorkflowEngine Contract](./IWorkflowEngine.reference.v1.md)  
  [Contract Versioning Policy](../../VERSIONING.md) — how this contract evolves (minor/major bumps, deprecation)  
  [State Store Contract](../state-store/README.md) — storage-agnostic interface  
  [State Store Adapters](../../adapters/state-store/) — backend-specific implementations (Snowflake, Postgres, etc.)  
