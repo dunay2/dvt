@@ -8,7 +8,7 @@
   "dependencies": {
     "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*",
-    "prisma": "^5.0.0"
+    "prisma": "^7.4.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
