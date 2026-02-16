@@ -57,3 +57,10 @@ docs-dist/
 # Private business/finance (must not be public)
 private/finance/
 private/business/
+
+# Neo4j local runtime artifacts (docker volume mounts)
+private/neo4j/data/
+private/neo4j/logs/
+private/neo4j/plugins/
+private/neo4j/import/
+private/neo4j/output/
