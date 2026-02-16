@@ -1,0 +1,19 @@
+name: dvt-knowledge-graph
+
+services:
+  neo4j:
+    image: neo4j:5
+    container_name: dvt-neo4j
+    restart: unless-stopped
+    ports:
+      - '7474:7474'
+      - '7687:7687'
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/password}
+      NEO4J_server_memory_heap_initial__size: ${NEO4J_HEAP_INIT:-512m}
+      NEO4J_server_memory_heap_max__size: ${NEO4J_HEAP_MAX:-512m}
+    volumes:
+      - ./private/neo4j/data:/data
+      - ./private/neo4j/logs:/logs
+      - ./private/neo4j/import:/import
+      - ./private/neo4j/plugins:/plugins
