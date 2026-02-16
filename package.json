@@ -35,6 +35,7 @@
     "kg:ingest": "node scripts/neo4j/neo4j-ingest-repo.cjs",
     "kg:sync": "pnpm kg:generate && pnpm kg:seed && pnpm kg:ingest",
     "kg:query": "node scripts/neo4j/neo4j-query-context.cjs",
+    "kg:roadmap:tree": "node scripts/neo4j/neo4j-query-roadmap-tree.cjs",
     "kg:prompt": "node scripts/neo4j/neo4j-json-to-prompt.cjs",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",

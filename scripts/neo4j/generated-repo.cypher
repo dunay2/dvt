@@ -8,6 +8,8 @@ CREATE CONSTRAINT archivo_path_unique IF NOT EXISTS FOR (a:Archivo) REQUIRE a.pa
 CREATE CONSTRAINT issue_key_unique IF NOT EXISTS FOR (i:Issue) REQUIRE i.key IS UNIQUE;
 CREATE CONSTRAINT decision_id_unique IF NOT EXISTS FOR (d:Decision) REQUIRE d.id IS UNIQUE;
 CREATE CONSTRAINT funcion_key_unique IF NOT EXISTS FOR (f:Funcion) REQUIRE f.key IS UNIQUE;
+CREATE CONSTRAINT roadmap_id_unique IF NOT EXISTS FOR (r:Roadmap) REQUIRE r.id IS UNIQUE;
+CREATE CONSTRAINT fase_roadmap_id_unique IF NOT EXISTS FOR (p:FaseRoadmap) REQUIRE p.id IS UNIQUE;
 
 // Modules + files
 MERGE (m:Modulo { path: '.editorconfig' })
@@ -783,7 +785,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/knowledge' })
 SET m += { nombre: 'knowledge', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/knowledge/ROADMAP_AND_ISSUES_MAP.md' })
-SET a += { nombre: 'ROADMAP_AND_ISSUES_MAP.md', tipo: 'md', bytes: 3466, topico: 'doc' }
+SET a += { nombre: 'ROADMAP_AND_ISSUES_MAP.md', tipo: 'md', bytes: 4193, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
@@ -898,7 +900,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'package.json' })
 SET m += { nombre: 'package.json', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 4877, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 4951, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'markdown' }
@@ -1763,17 +1765,17 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'scripts/neo4j/generated-repo.cypher' })
-SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 183256, topico: 'other' }
+SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 189572, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/neo4j/neo4j-generate-cypher.cjs' })
-SET a += { nombre: 'neo4j-generate-cypher.cjs', tipo: 'cjs', bytes: 6274, topico: 'code' }
+SET a += { nombre: 'neo4j-generate-cypher.cjs', tipo: 'cjs', bytes: 9041, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/neo4j/neo4j-ingest-repo.cjs' })
-SET a += { nombre: 'neo4j-ingest-repo.cjs', tipo: 'cjs', bytes: 13241, topico: 'code' }
+SET a += { nombre: 'neo4j-ingest-repo.cjs', tipo: 'cjs', bytes: 20533, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
@@ -1787,8 +1789,18 @@ SET a += { nombre: 'neo4j-query-context.cjs', tipo: 'cjs', bytes: 2819, topico: 
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/neo4j/neo4j-query-roadmap-tree.cjs' })
+SET a += { nombre: 'neo4j-query-roadmap-tree.cjs', tipo: 'cjs', bytes: 4674, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/neo4j' })
+SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/neo4j/neo4j-seed.cjs' })
 SET a += { nombre: 'neo4j-seed.cjs', tipo: 'cjs', bytes: 1689, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/neo4j' })
+SET m += { nombre: 'neo4j', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'scripts/neo4j/roadmap-tree.cypher' })
+SET a += { nombre: 'roadmap-tree.cypher', tipo: 'cypher', bytes: 875, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/run-golden-paths.cjs' })
 SET m += { nombre: 'run-golden-paths.cjs', lenguaje: 'javascript' }
@@ -3198,6 +3210,123 @@ WITH i
 MATCH (a:Archivo { path: 'scripts/validate-contracts.cjs' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 
+// Roadmap root nodes
+MERGE (r:Roadmap { id: 'ROADMAP_MAIN' })
+SET r += { path: 'ROADMAP.md', nombre: 'DVT Engine Roadmap', topico: 'roadmap' };
+
+// Roadmap phase nodes
+MERGE (p:FaseRoadmap { id: 'PHASE_1' })
+SET p += { numero: '1', nombre: 'MVP', orden: 1, path: 'ROADMAP.md' };
+MERGE (p:FaseRoadmap { id: 'PHASE_1_5' })
+SET p += { numero: '1.5', nombre: 'Hardening', orden: 2, path: 'ROADMAP.md' };
+MERGE (p:FaseRoadmap { id: 'PHASE_2' })
+SET p += { numero: '2', nombre: 'Advanced Tooling', orden: 3, path: 'ROADMAP.md' };
+
+// Roadmap containment and unlock links
+MATCH (r:Roadmap { id: 'ROADMAP_MAIN' })
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (r)-[rel:CONTIENE_FASE]->(p)
+SET rel += { orden: 1 };
+MATCH (p1:FaseRoadmap { id: 'PHASE_1' })
+MATCH (p2:FaseRoadmap { id: 'PHASE_1_5' })
+MERGE (p1)-[rel:DESBLOQUEA]->(p2)
+SET rel += { orden: 101 };
+MATCH (r:Roadmap { id: 'ROADMAP_MAIN' })
+MATCH (p:FaseRoadmap { id: 'PHASE_1_5' })
+MERGE (r)-[rel:CONTIENE_FASE]->(p)
+SET rel += { orden: 2 };
+MATCH (p1:FaseRoadmap { id: 'PHASE_1_5' })
+MATCH (p2:FaseRoadmap { id: 'PHASE_2' })
+MERGE (p1)-[rel:DESBLOQUEA]->(p2)
+SET rel += { orden: 102 };
+MATCH (r:Roadmap { id: 'ROADMAP_MAIN' })
+MATCH (p:FaseRoadmap { id: 'PHASE_2' })
+MERGE (r)-[rel:CONTIENE_FASE]->(p)
+SET rel += { orden: 3 };
+
+// Roadmap phase issue tracking
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#8' })
+SET i += { number: 8, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/8' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#9' })
+SET i += { number: 9, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/9' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#2' })
+SET i += { number: 2, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/2' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#14' })
+SET i += { number: 14, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/14' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#15' })
+SET i += { number: 15, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/15' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#5' })
+SET i += { number: 5, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/5' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#68' })
+SET i += { number: 68, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/68' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#6' })
+SET i += { number: 6, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/6' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#16' })
+SET i += { number: 16, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/16' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#10' })
+SET i += { number: 10, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/10' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#17' })
+SET i += { number: 17, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/17' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#3' })
+SET i += { number: 3, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/3' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+MERGE (i:Issue { key: 'dunay2/dvt#19' })
+SET i += { number: 19, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/19' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_2' })
+MERGE (i:Issue { key: 'dunay2/dvt#4' })
+SET i += { number: 4, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/4' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_2' })
+MERGE (i:Issue { key: 'dunay2/dvt#7' })
+SET i += { number: 7, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/7' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_2' })
+MERGE (i:Issue { key: 'dunay2/dvt#11' })
+SET i += { number: 11, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/11' }
+MERGE (p)-[:TRACKED_BY]->(i);
+MATCH (p:FaseRoadmap { id: 'PHASE_2' })
+MERGE (i:Issue { key: 'dunay2/dvt#12' })
+SET i += { number: 12, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/12' }
+MERGE (p)-[:TRACKED_BY]->(i);
+
+// Roadmap phase status from progress metrics
+MATCH (p:FaseRoadmap { id: 'PHASE_1' })
+SET p += { estado: '🟡 In progress (critical path partially closed)' };
+MATCH (p:FaseRoadmap { id: 'PHASE_1_5' })
+SET p += { estado: '🟢 Scheduled after Phase 1' };
+MATCH (p:FaseRoadmap { id: 'PHASE_2' })
+SET p += { estado: '🟡 Planned / governance baseline largely closed' };
+
+// Roadmap source file links to roadmap root
+MATCH (a:Archivo { path: 'ROADMAP.md' })
+MATCH (r:Roadmap { id: 'ROADMAP_MAIN' })
+MERGE (a)-[:IMPLEMENTA_DECISION]->(r);
+
 // ADR decision nodes
 MERGE (d:Decision { id: 'ADR-0000' })
 SET d += { title: 'ADR-0000: ADR-0000-Generación de código con trazabilidad normativa obligatoria', date: '2026-02-14', status: 'Accepted', path: 'docs/decisions/ADR-0000-Generación de código con trazabilidad normativa obligatoria.md' }
@@ -3243,5 +3372,11 @@ MATCH (a:Archivo { path: 'docs/decisions/ADR-0006-contract-tooling-governance.md
 MERGE (a)-[:IMPLEMENTA_DECISION]->(d);
 
 // ADR tracked-by issues
+
+// Derived roadmap phase links to artifacts and decisions
+MATCH (p:FaseRoadmap)-[:TRACKED_BY]->(i:Issue)<-[:REFERENCIA_ISSUE]-(a:Archivo)
+MERGE (p)-[:RELACIONA_ARTEFACTO]->(a);
+MATCH (p:FaseRoadmap)-[:TRACKED_BY]->(i:Issue)<-[:TRACKED_BY]-(d:Decision)
+MERGE (p)-[:ANCLA_DECISION]->(d);
 
 // End of generated graph script

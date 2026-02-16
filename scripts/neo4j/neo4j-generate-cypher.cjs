@@ -68,7 +68,19 @@ function buildBatchStatements(rows, size, mapper) {
 }
 
 function generateCypher({ includeReset }) {
-  const { files, deps, issues, adrRows, adrIssueRows, classRows } = collectGraphRows();
+  const {
+    files,
+    deps,
+    issues,
+    adrRows,
+    adrIssueRows,
+    classRows,
+    roadmapNodes,
+    phaseNodes,
+    phaseLinks,
+    phaseIssueRows,
+    roadmapStatusRows,
+  } = collectGraphRows();
   const lines = [];
 
   lines.push('// GENERATED FILE - DO NOT EDIT MANUALLY');
@@ -84,7 +96,7 @@ function generateCypher({ includeReset }) {
 
   if (includeReset) {
     lines.push('// Optional reset block');
-    for (const label of ['Archivo', 'Modulo', 'Issue', 'Decision', 'Funcion', 'Persona']) {
+    for (const label of ['Archivo', 'Modulo', 'Issue', 'Decision', 'Funcion', 'Persona', 'Roadmap', 'FaseRoadmap']) {
       lines.push(`MATCH (n:${label}) DETACH DELETE n;`);
     }
     lines.push('');
@@ -124,6 +136,46 @@ function generateCypher({ includeReset }) {
   }));
   lines.push('');
 
+  lines.push('// Roadmap root nodes');
+  lines.push(...buildBatchStatements(roadmapNodes, 20, (row) => {
+    return `MERGE (r:Roadmap ${propsToCypher({ id: row.id })})\nSET r += ${propsToCypher({ path: row.path, nombre: row.name, topico: row.topico })};`;
+  }));
+  lines.push('');
+
+  lines.push('// Roadmap phase nodes');
+  lines.push(...buildBatchStatements(phaseNodes, 50, (row) => {
+    return `MERGE (p:FaseRoadmap ${propsToCypher({ id: row.id })})\nSET p += ${propsToCypher({ numero: row.number, nombre: row.name, orden: row.order, path: row.sourcePath })};`;
+  }));
+  lines.push('');
+
+  lines.push('// Roadmap containment and unlock links');
+  lines.push(...buildBatchStatements(phaseLinks, 100, (row) => {
+    if (row.relation === 'DESBLOQUEA') {
+      return `MATCH (p1:FaseRoadmap ${propsToCypher({ id: row.roadmapId })})\nMATCH (p2:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (p1)-[rel:DESBLOQUEA]->(p2)\nSET rel += ${propsToCypher({ orden: row.order })};`;
+    }
+
+    return `MATCH (r:Roadmap ${propsToCypher({ id: row.roadmapId })})\nMATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (r)-[rel:CONTIENE_FASE]->(p)\nSET rel += ${propsToCypher({ orden: row.order })};`;
+  }));
+  lines.push('');
+
+  lines.push('// Roadmap phase issue tracking');
+  lines.push(...buildBatchStatements(phaseIssueRows, 200, (row) => {
+    return `MATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (i:Issue ${propsToCypher({ key: row.key })})\nSET i += ${propsToCypher({ number: row.number, repo: 'dunay2/dvt', url: row.url })}\nMERGE (p)-[:TRACKED_BY]->(i);`;
+  }));
+  lines.push('');
+
+  lines.push('// Roadmap phase status from progress metrics');
+  lines.push(...buildBatchStatements(roadmapStatusRows, 50, (row) => {
+    return `MATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nSET p += ${propsToCypher({ estado: row.status })};`;
+  }));
+  lines.push('');
+
+  lines.push('// Roadmap source file links to roadmap root');
+  lines.push("MATCH (a:Archivo { path: 'ROADMAP.md' })");
+  lines.push("MATCH (r:Roadmap { id: 'ROADMAP_MAIN' })");
+  lines.push('MERGE (a)-[:IMPLEMENTA_DECISION]->(r);');
+  lines.push('');
+
   lines.push('// ADR decision nodes');
   lines.push(...buildBatchStatements(adrRows, 100, (row) => {
     return `MERGE (d:Decision ${propsToCypher({ id: row.id })})\nSET d += ${propsToCypher({ title: row.title, date: row.date, status: row.status, path: row.path })}\nREMOVE d.titulo, d.fecha, d.estado\nWITH d\nMATCH (a:Archivo ${propsToCypher({ path: row.path })})\nMERGE (a)-[:IMPLEMENTA_DECISION]->(d);`;
@@ -136,6 +188,13 @@ function generateCypher({ includeReset }) {
   }));
   lines.push('');
 
+  lines.push('// Derived roadmap phase links to artifacts and decisions');
+  lines.push('MATCH (p:FaseRoadmap)-[:TRACKED_BY]->(i:Issue)<-[:REFERENCIA_ISSUE]-(a:Archivo)');
+  lines.push('MERGE (p)-[:RELACIONA_ARTEFACTO]->(a);');
+  lines.push('MATCH (p:FaseRoadmap)-[:TRACKED_BY]->(i:Issue)<-[:TRACKED_BY]-(d:Decision)');
+  lines.push('MERGE (p)-[:ANCLA_DECISION]->(d);');
+  lines.push('');
+
   lines.push('// End of generated graph script');
 
   return {
@@ -144,6 +203,8 @@ function generateCypher({ includeReset }) {
       files: files.length,
       deps: deps.length,
       issues: issues.length,
+      roadmaps: roadmapNodes.length,
+      phases: phaseNodes.length,
       decisions: adrRows.length,
       decisionIssueLinks: adrIssueRows.length,
       classes: classRows.length,
