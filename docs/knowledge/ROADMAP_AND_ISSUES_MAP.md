@@ -20,6 +20,21 @@ Según [`ROADMAP.md`](../../ROADMAP.md):
 - Fase 2 Tooling: parcialmente planificada, con deuda en determinismo/adapters.
 - Track Frontend DVT+: backlog y estructura GitHub creados.
 
+### 2.1 Actualización de desbloqueo (2026-02-16)
+
+Estado publicado tras completar ADR-0002 Fase 2 (automatización de Knowledge Graph):
+
+- ✅ Generación dinámica de Cypher habilitada (`kg:generate`).
+- ✅ Snapshot versionado y validado (`scripts/neo4j/generated-repo.cypher`).
+- ✅ Gate de sincronía activo en CI (`kg-cypher-sync` ejecutando `kg:check`).
+- ✅ Regeneración automática en pre-commit para cambios relevantes (ADRs/KG scripts).
+
+Impacto de desbloqueo inmediato:
+
+- Se elimina deriva silenciosa entre documentación local y grafo ejecutado.
+- La PR falla temprano si el snapshot del grafo no está actualizado.
+- Se reduce fricción para trazabilidad ADR→código en sesiones AI y revisiones técnicas.
+
 Según [`docs/status/IMPLEMENTATION_SUMMARY.md`](../status/IMPLEMENTATION_SUMMARY.md):
 
 - Base de contratos/golden-path funcional en CI.
