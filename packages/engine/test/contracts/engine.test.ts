@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
-import type { PlanRef, RunContext } from '../../src/contracts/types.js';
+import type { EngineRunRef, PlanRef, RunContext } from '../../src/contracts/types.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -30,6 +30,23 @@ function makeHelloWorldPlan(): ExecutionPlan {
     steps: [
       { stepId: 's1', kind: 'noop' },
       { stepId: 's2', kind: 'noop' },
+    ],
+  };
+}
+
+function makeDagPlanWithDependsOn(): ExecutionPlan {
+  return {
+    metadata: {
+      planId: 'dag-plan',
+      planVersion: '1.0.0',
+      schemaVersion: 'v1.2',
+      targetAdapter: 'mock',
+      fallbackBehavior: 'reject',
+      requiresCapabilities: ['basic-execution'],
+    },
+    steps: [
+      { stepId: 's1', kind: 'noop' },
+      { stepId: 's2', kind: 'noop', dependsOn: ['s1'] },
     ],
   };
 }
@@ -160,6 +177,47 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     expect(after.status).toBe('COMPLETED');
   });
 
+  it('accepts ExecutionPlan steps with dependsOn in mock adapter path', async () => {
+    const plan = makeDagPlanWithDependsOn();
+    const uri = 'https://plans.example.com/dag-plan.json';
+    const planRef = makePlanRef(uri, plan);
+
+    const fetcher = new InMemoryPlanFetcher(new Map([[uri, utf8(JSON.stringify(plan))]]));
+
+    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const idempotency = new IdempotencyKeyBuilder();
+
+    const mock = new MockAdapter({
+      stateStore: store,
+      outbox: store,
+      clock,
+      idempotency,
+      projector,
+      fetcher,
+      integrity: new PlanIntegrityValidator(),
+    });
+
+    const engine = new WorkflowEngine({
+      stateStore: store,
+      outbox: store,
+      projector,
+      idempotency,
+      clock,
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planIntegrity: new PlanIntegrityValidator(),
+      planFetcher: fetcher,
+      adapters: new Map([['mock', mock]]),
+    });
+
+    const runRef = await engine.startRun(planRef, makeCtx('run-dag-1'));
+    const snapshot = await engine.getRunStatus(runRef);
+
+    expect(snapshot.status).toBe('COMPLETED');
+  });
+
   it('PlanRef policy: rejects dangerous schemes (file://)', async () => {
     const policy = new PlanRefPolicy({ allowedSchemes: ['https'] });
     expect(() => policy.validateOrThrow('file:///etc/passwd')).toThrowError(/PLAN_URI_NOT_ALLOWED/);
@@ -188,12 +246,14 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
   });
 
   it('does not call adapter.startRun when PlanRef validation fails', async () => {
-    const startRunMock = vi.fn(async (_planRef: PlanRef, ctx: RunContext) => ({
-      provider: 'conductor',
-      workflowId: 'wf',
-      runId: ctx.runId,
-      conductorUrl: 'http://conductor',
-    }));
+    const startRunMock: IProviderAdapter['startRun'] = vi.fn(
+      async (_planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> => ({
+        provider: 'conductor',
+        workflowId: 'wf',
+        runId: ctx.runId,
+        conductorUrl: 'http://conductor',
+      })
+    );
 
     const adapter: IProviderAdapter = {
       provider: 'conductor',

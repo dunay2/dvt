@@ -7,5 +7,15 @@ export interface ExecutionPlan {
     fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
     targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
   };
-  steps: Array<{ stepId: string; kind?: string } & Record<string, unknown>>;
+  steps: Array<
+    {
+      stepId: string;
+      kind?: string;
+      /**
+       * Optional DAG dependencies for interpreter execution.
+       * If omitted, consumers may execute in declaration order.
+       */
+      dependsOn?: string[];
+    } & Record<string, unknown>
+  >;
 }
