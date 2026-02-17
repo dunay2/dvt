@@ -22,6 +22,7 @@ This is the canonical entrypoint for project documentation.
 - [Documentation contribution guide](./CONTRIBUTING.md)
 - [Quality guide](./guides/QUALITY.md)
 - [AI issue resolution playbook](./guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md)
+- [Technical debt register (iterative)](./guides/TECHNICAL_DEBT_REGISTER.md)
 
 ## Project status
 

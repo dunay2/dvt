@@ -106,6 +106,7 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - In docs and issue comments, include an explicit **WHAT / WHY** summary for every non-trivial change.
 - If behavior changed, add a short "why" note in status docs.
 - Link changed files in the issue comment.
+- Review and update the [Technical debt register](./TECHNICAL_DEBT_REGISTER.md) in every iteration (or explicitly note `no new debt`).
 
 1. **Close loop on issue**
 
@@ -124,6 +125,7 @@ This explicitly means: no "quick-and-dirty" fixes to just unblock, and no trial-
 - No hidden TODO/FIXME left for required scope.
 - Validation evidence provided.
 - Documentation/indexes updated if discoverability changed.
+- [Technical debt register](./TECHNICAL_DEBT_REGISTER.md) reviewed and updated per iteration (or `no new debt` explicitly recorded).
 - Docs and issue both contain explicit WHAT / WHY notes.
 - Impact/evidence trail recorded in issue comments unless new technical docs were explicitly required.
 - Issue includes explicit WHAT / FOR / HOW, touched scope, risks, and affected surfaces.
@@ -404,6 +406,7 @@ Use these as a consistent gate before merge:
 
 | Date (UTC) | Version | Change                                                                                                                                                                                                                               | Author       |
 | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| 2026-02-17 | v1.6.3  | Added iterative technical debt register governance to mandatory documentation outcomes and quality gates; consolidated process source and removed duplicate Spanish workflow guide from canonical process path.                      | AI assistant |
 | 2026-02-14 | v1.6.2  | Added mandatory PR description minimum length (>=50 chars) and explicit max changed-lines rule (<1000, split if exceeded).                                                                                                           | AI assistant |
 | 2026-02-14 | v1.6.1  | Added explicit rule that issue/PR content must render as valid Markdown (avoid escaped literal `\n` in visible text).                                                                                                                | AI assistant |
 | 2026-02-14 | v1.6.0  | Added mandatory sections for Suitability, Blockers, Opportunities, and Risks & Mitigation in pre-implementation briefing, quality gates, and issue-close template.                                                                   | AI assistant |
