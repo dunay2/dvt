@@ -156,11 +156,19 @@ function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
 
 function validateMockStep(step: ExecutionPlan['steps'][number]): void {
   // Adapter narrowing rule: reject unrecognized fields.
-  // For mock we only allow: stepId, kind.
-  const allowed = new Set(['stepId', 'kind']);
+  // For mock we only allow: stepId, kind, dependsOn.
+  const allowed = new Set(['stepId', 'kind', 'dependsOn']);
   for (const k of Object.keys(step)) {
     if (!allowed.has(k)) {
       throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);
     }
+  }
+
+  if (!Array.isArray(step.dependsOn) && typeof step.dependsOn !== 'undefined') {
+    throw new Error('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
+  }
+
+  if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
+    throw new Error('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
   }
 }

@@ -137,9 +137,22 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 ### Residual Risks / Follow-up (Issue #15)
 
-- Canonical contract alignment remains pending: `dependsOn` is currently introduced on adapter-local plan typing and should be promoted to shared contract surfaces.
+- Canonical contract alignment for execution plan dependencies is now promoted in engine contracts for active runtime paths; remaining follow-up is cross-package validation/schema parity in all consumers.
 - `continueAsNew` policy/threshold and long-run compaction behavior remain unimplemented in the workflow.
 - Full end-to-end DAG parity acceptance (including richer dispatch semantics) remains open and should continue in follow-up slices.
+
+## Recent High-Priority Progress Slice 2 (2026-02-17)
+
+- Scope: continue `#15` by promoting DAG dependency shape (`dependsOn`) from adapter-local typing to shared engine contract surfaces.
+- Runtime changes:
+  - Added optional `dependsOn?: string[]` to shared engine execution plan contract in [`ExecutionPlan`](../../packages/engine/src/contracts/executionPlan.ts:1).
+  - Updated mock adapter step validation in [`validateMockStep()`](../../packages/engine/src/adapters/mock/MockAdapter.ts:157) to accept/validate `dependsOn`.
+- Tests:
+  - Added engine contract regression coverage in [`engine.test.ts`](../../packages/engine/test/contracts/engine.test.ts:37) with a DAG-shaped plan using `dependsOn`.
+- Validation evidence:
+  - `pnpm --filter @dvt/contracts build` ✅
+  - `pnpm --filter @dvt/engine test -- --run test/contracts/engine.test.ts` ✅
+  - Result: engine suite passed (7 files, 42 tests).
 
 ## Operational Notes
 
