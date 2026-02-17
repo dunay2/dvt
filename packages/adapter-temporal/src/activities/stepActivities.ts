@@ -27,6 +27,8 @@ export interface ActivityDeps {
   idempotency: IIdempotencyKeyBuilder;
   fetcher: IPlanFetcher;
   integrity: IPlanIntegrityValidator;
+  /** Optional override for tests; runtime uses Temporal activity context. */
+  getEngineAttemptId?: () => number;
 }
 
 // ---------------------------------------------------------------------------
@@ -48,7 +50,7 @@ export interface EmitEventInput {
   ctx: RunContext;
   eventType: EventType;
   stepId?: string;
-  /** Optional planner-driven logical attempt id; fallback is engineAttemptId from Temporal runtime. */
+  /** Optional planner-driven logical attempt id; defaults to 1. */
   logicalAttemptId?: number;
 }
 
@@ -90,15 +92,12 @@ export function createActivities(deps: ActivityDeps): {
     async emitEvent(input: EmitEventInput): Promise<void> {
       const { ctx, eventType, stepId } = input;
 
-      let engineAttemptId = 1;
-      try {
-        engineAttemptId = Context.current().info.attempt;
-      } catch {
-        // Activity context not available (unit tests) — fall back to 1.
-        engineAttemptId = 1;
-      }
+      const engineAttemptId =
+        typeof deps.getEngineAttemptId === 'function'
+          ? deps.getEngineAttemptId()
+          : resolveTemporalAttemptFromContext();
 
-      const logicalAttemptId = input.logicalAttemptId ?? engineAttemptId;
+      const logicalAttemptId = input.logicalAttemptId ?? 1;
 
       const envelope = {
         eventType,
@@ -115,7 +114,6 @@ export function createActivities(deps: ActivityDeps): {
           tenantId: ctx.tenantId,
           runId: ctx.runId,
           logicalAttemptId,
-          engineAttemptId,
           ...(stepId ? { stepId } : {}),
         }),
       } as Omit<EventEnvelope, 'runSeq'>;
@@ -138,6 +136,16 @@ export type Activities = ReturnType<typeof createActivities>;
 // ---------------------------------------------------------------------------
 
 const ALLOWED_STEP_FIELDS = new Set(['stepId', 'kind']);
+
+function resolveTemporalAttemptFromContext(): number {
+  try {
+    const attempt = Context.current().info.attempt;
+    return Number.isInteger(attempt) && attempt > 0 ? attempt : 1;
+  } catch {
+    // Activity context not available (unit tests) — fall back to 1.
+    return 1;
+  }
+}
 
 function parsePlan(bytes: Uint8Array): ExecutionPlan {
   const text = new TextDecoder().decode(bytes);

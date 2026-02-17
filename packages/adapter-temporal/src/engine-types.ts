@@ -114,7 +114,6 @@ export interface EventIdempotencyInput {
   tenantId: string;
   runId: string;
   logicalAttemptId: number;
-  engineAttemptId: number;
   stepId?: string;
 }
 
