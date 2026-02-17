@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dvt.local/contracts/engine/events/RunEventRecord.v2.0.schema.json",
+  "title": "RunEventRecord v2.0.0",
+  "allOf": [
+    {
+      "$ref": "./RunEventWrite.v2.0.schema.json"
+    },
+    {
+      "type": "object",
+      "required": ["runSeq", "persistedAt"],
+      "properties": {
+        "runSeq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "persistedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  ]
+}
