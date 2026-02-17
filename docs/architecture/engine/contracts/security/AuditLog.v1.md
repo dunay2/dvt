@@ -5,7 +5,7 @@
 **Version**: v1
 **Status**: DRAFT  
 **Phase**: Phase 1 (documentation), Phase 3 (implementation)  
-**Versioning**: See [VERSIONING.md](../../../VERSIONING.md) for contract evolution policy
+**Versioning**: See [VERSIONING.md](../../VERSIONING.md) for contract evolution policy
 
 ---
 
@@ -406,9 +406,9 @@ WHERE signature != HMAC_SHA256(event_data, secret)
 
 ## References
 
-- [THREAT_MODEL.md](../THREAT_MODEL.md) - Threat scenarios (T4: audit tampering)
+- [THREAT_MODEL.md](../../security/THREAT_MODEL.md) - Threat scenarios (T4: audit tampering)
 - [IAuthorization.v1.md](IAuthorization.v1.md) - Auth decision source
-- [ExecutionSemantics.v1.md](../../../contracts/engine/ExecutionSemantics.v1.md) - State mutation source
+- [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md) - State mutation source
 - SOC2 Trust Services Criteria: <https://www.aicpa.org/interestareas/informationsystemssecurity/pages/trust-services-criteria.aspx>
 - HIPAA Security Rule: <https://www.hhs.gov/hipaa/for-professionals/security/index.html>
 - GDPR Article 5: <https://gdpr-info.eu/art-5-gdpr/>
