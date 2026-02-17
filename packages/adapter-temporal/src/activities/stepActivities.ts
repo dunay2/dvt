@@ -2,6 +2,7 @@ import { TextDecoder } from 'node:util';
 
 import type { PlanRef, RunContext } from '@dvt/contracts';
 import { Context } from '@temporalio/activity';
+import { ApplicationFailure } from '@temporalio/activity';
 
 import type {
   EventEnvelope,
@@ -43,6 +44,7 @@ export interface StepInput {
 export interface StepResult {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
+  retriable?: boolean;
   error?: string;
 }
 
@@ -82,6 +84,24 @@ export function createActivities(deps: ActivityDeps): {
      */
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
+
+      const simulateErrorKind =
+        typeof input.step['simulateError'] === 'string'
+          ? String(input.step['simulateError'])
+          : undefined;
+
+      if (simulateErrorKind === 'transient') {
+        throw new Error(`TRANSIENT_STEP_ERROR:${input.step.stepId}`);
+      }
+
+      if (simulateErrorKind === 'permanent') {
+        throw ApplicationFailure.create({
+          type: 'PermanentStepError',
+          message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
+          nonRetryable: true,
+        });
+      }
+
       return { stepId: input.step.stepId, status: 'COMPLETED' };
     },
 
@@ -135,7 +155,7 @@ export type Activities = ReturnType<typeof createActivities>;
 // Internal helpers (mirrors MockAdapter)
 // ---------------------------------------------------------------------------
 
-const ALLOWED_STEP_FIELDS = new Set(['stepId', 'kind', 'dependsOn']);
+const ALLOWED_STEP_FIELDS = new Set(['stepId', 'kind', 'dependsOn', 'simulateError']);
 
 function resolveTemporalAttemptFromContext(): number {
   try {

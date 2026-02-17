@@ -176,6 +176,26 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
   - `pnpm --filter @dvt/adapter-temporal test` ✅
   - Result: adapter-temporal suite passed (6 files, 39 tests).
 
+## Recent High-Priority Progress Slice 4+6 (2026-02-17)
+
+- Scope: complete Option A parity closure for `#15` with retry/error handling + E2E golden-path coverage.
+- Runtime changes:
+  - Added controlled failure simulation in [`executeStep()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:85) via `simulateError: 'transient' | 'permanent'` for deterministic retry/error-path testing.
+  - Expanded step validation allowlist in [`validateStepShape()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:200) to accept `simulateError` in test plans.
+  - Updated workflow activity retry policy in [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:88) to:
+    - `maximumInterval: '60s'`
+    - `maximumAttempts: 3`
+    - `nonRetryableErrorTypes: ['PermanentStepError']`
+  - Added explicit activity error mapping in [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:205) to convert terminal activity failures into deterministic `StepFailed` + `RunFailed` event emission.
+- Tests added/updated:
+  - Added failure-simulation unit coverage in [`activities.test.ts`](../../packages/adapter-temporal/test/activities.test.ts:351) for transient and permanent error branches.
+  - Added linear 3-step golden-path E2E in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:417) asserting deterministic event order and `runSeq` continuity.
+  - Added permanent-failure E2E in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:476) asserting deterministic `StepFailed` + `RunFailed` terminal path.
+- Validation evidence:
+  - `pnpm --filter @dvt/adapter-temporal test -- --run test/integration.time-skipping.test.ts` ✅
+  - `pnpm --filter @dvt/adapter-temporal test` ✅
+  - Result: adapter-temporal suite passed (6 files, 43 tests).
+
 ## Operational Notes
 
 When behavior changes affect deterministic execution:

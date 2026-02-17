@@ -242,6 +242,32 @@ function mkPlan(stepCount: number): unknown {
   } as const;
 }
 
+function mkLinearThreeStepPlan(): unknown {
+  return {
+    metadata: {
+      planId: 'it-plan-linear-3',
+      planVersion: '1.0.0',
+      schemaVersion: 'v1.2',
+    },
+    steps: [
+      { stepId: 's-1', kind: 'noop' },
+      { stepId: 's-2', kind: 'noop', dependsOn: ['s-1'] },
+      { stepId: 's-3', kind: 'noop', dependsOn: ['s-2'] },
+    ],
+  } as const;
+}
+
+function mkPermanentFailurePlan(): unknown {
+  return {
+    metadata: {
+      planId: 'it-plan-permanent-failure',
+      planVersion: '1.0.0',
+      schemaVersion: 'v1.2',
+    },
+    steps: [{ stepId: 's-fail', kind: 'noop', simulateError: 'permanent' }],
+  } as const;
+}
+
 function sha256Hex(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
 }
@@ -374,6 +400,131 @@ describe('temporal integration (time-skipping)', () => {
       // Both paths should produce the same number of terminal RunCancelled events
       // (0 or 1) — critically, never more than one.
       expect(signalResult.cancelledCount).toBe(cancelResult.cancelledCount);
+    } finally {
+      await worker.shutdown();
+      await env.teardown();
+    }
+  }, 60_000);
+
+  it('golden path: linear 3-step plan reaches COMPLETED with deterministic event order', async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+    const store = new TestStateStore();
+    const projector = new TestProjector();
+    const plan = mkLinearThreeStepPlan();
+    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+
+    const planRef = createPlanRef('it-plan-linear-3', planBytes);
+    const ctx: RunContext = {
+      ...createRunContext('run-it-linear-3'),
+      tenantId: '',
+    };
+
+    const temporalConfig = loadTemporalAdapterConfig({
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-linear-3',
+      TEMPORAL_IDENTITY: 'adapter-temporal-it',
+    });
+
+    const worker = new TemporalWorkerHost({
+      temporalConfig,
+      workflowsPath: WORKFLOW_PATH,
+      activityDeps: createActivityDeps(store, planBytes),
+    });
+
+    await worker.start(env.nativeConnection);
+
+    const adapter = new TemporalAdapter({
+      workflowClient: env.client.workflow,
+      config: temporalConfig,
+      stateStore: store,
+      projector,
+    });
+
+    try {
+      await adapter.startRun(planRef, ctx);
+
+      await waitForCondition(
+        () => store.listEvents(ctx.runId),
+        (events) => events.some((e) => e.eventType === 'RunCompleted'),
+        { timeoutMs: 30_000 }
+      );
+
+      const events = await store.listEvents(ctx.runId);
+      expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
+        'RunStarted:-',
+        'StepStarted:s-1',
+        'StepCompleted:s-1',
+        'StepStarted:s-2',
+        'StepCompleted:s-2',
+        'StepStarted:s-3',
+        'StepCompleted:s-3',
+        'RunCompleted:-',
+      ]);
+      expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
+
+      const projected = projector.rebuild(ctx.runId, events);
+      expect(projected.status).toBe('COMPLETED');
+    } finally {
+      await worker.shutdown();
+      await env.teardown();
+    }
+  }, 60_000);
+
+  it('retry/error path: permanent step failure emits StepFailed + RunFailed deterministically', async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+    const store = new TestStateStore();
+    const projector = new TestProjector();
+    const plan = mkPermanentFailurePlan();
+    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+
+    const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
+    const ctx: RunContext = {
+      ...createRunContext('run-it-permanent-failure'),
+      tenantId: '',
+    };
+
+    const temporalConfig = loadTemporalAdapterConfig({
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-permanent-failure',
+      TEMPORAL_IDENTITY: 'adapter-temporal-it',
+    });
+
+    const worker = new TemporalWorkerHost({
+      temporalConfig,
+      workflowsPath: WORKFLOW_PATH,
+      activityDeps: createActivityDeps(store, planBytes),
+    });
+
+    await worker.start(env.nativeConnection);
+
+    const adapter = new TemporalAdapter({
+      workflowClient: env.client.workflow,
+      config: temporalConfig,
+      stateStore: store,
+      projector,
+    });
+
+    try {
+      await adapter.startRun(planRef, ctx);
+
+      await waitForCondition(
+        () => store.listEvents(ctx.runId),
+        (events) => events.some((e) => e.eventType === 'RunFailed'),
+        { timeoutMs: 30_000 }
+      );
+
+      const events = await store.listEvents(ctx.runId);
+      expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
+        'RunStarted:-',
+        'StepStarted:s-fail',
+        'StepFailed:s-fail',
+        'RunFailed:-',
+      ]);
+
+      const projected = projector.rebuild(ctx.runId, events);
+      expect(projected.status).toBe('FAILED');
     } finally {
       await worker.shutdown();
       await env.teardown();

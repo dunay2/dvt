@@ -11,6 +11,7 @@
  *  - Zero Node.js / DOM APIs
  */
 import {
+  ApplicationFailure,
   continueAsNew,
   condition,
   defineQuery,
@@ -88,9 +89,10 @@ const activities = proxyActivities<Activities>({
   startToCloseTimeout: '30m',
   retry: {
     initialInterval: '1s',
-    maximumInterval: '10s',
+    maximumInterval: '60s',
     backoffCoefficient: 2,
     maximumAttempts: 3,
+    nonRetryableErrorTypes: ['PermanentStepError'],
   },
 });
 
@@ -202,8 +204,20 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
       const layerResults = await Promise.all(
         layer.map(async (step) => {
-          const result = await activities.executeStep({ step, ctx });
-          return { stepId: step.stepId, result };
+          try {
+            const result = await activities.executeStep({ step, ctx });
+            return { stepId: step.stepId, result };
+          } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            const retriable = !(error instanceof ApplicationFailure) || error.nonRetryable !== true;
+            const result = {
+              stepId: step.stepId,
+              status: 'FAILED' as const,
+              retriable,
+              error: err.message,
+            };
+            return { stepId: step.stepId, result };
+          }
         })
       );
 
