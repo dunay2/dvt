@@ -2,6 +2,8 @@
 /* eslint-env node */
 /* global console, process */
 const { execSync, spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const DEFAULT_BATCH_SIZE = 40;
 
@@ -16,8 +18,29 @@ function resolveCliPath(candidates) {
   return null;
 }
 
-const PRETTIER_CLI = resolveCliPath(['prettier/bin/prettier.cjs', 'prettier/bin-prettier.js']);
-const ESLINT_CLI = resolveCliPath(['eslint/bin/eslint.js']);
+function resolvePackageBin(packageName, relativeCandidates) {
+  try {
+    const packageJsonPath = require.resolve(`${packageName}/package.json`);
+    const packageDir = path.dirname(packageJsonPath);
+    for (const relativePath of relativeCandidates) {
+      const absolutePath = path.join(packageDir, relativePath);
+      if (fs.existsSync(absolutePath)) {
+        return absolutePath;
+      }
+    }
+  } catch {
+    // package not resolvable in current environment
+  }
+  return null;
+}
+
+const PRETTIER_CLI =
+  resolveCliPath(['prettier/bin/prettier.cjs', 'prettier/bin-prettier.js']) ??
+  resolvePackageBin('prettier', ['bin/prettier.cjs', 'bin-prettier.js']);
+
+const ESLINT_CLI =
+  resolveCliPath(['eslint/bin/eslint.js', 'eslint/bin/eslint.mjs', 'eslint/bin/eslint.cjs']) ??
+  resolvePackageBin('eslint', ['bin/eslint.js', 'bin/eslint.mjs', 'bin/eslint.cjs']);
 
 function parseChangedFiles(output) {
   return output
@@ -118,7 +141,6 @@ if (changed.length === 0) {
 const prettierFiles = changed.filter(f => /\.(ts|js|json|md|yml|yaml|tsx)$/.test(f));
 const eslintFiles = changed.filter(f => /\.(ts|tsx|js)$/.test(f));
 
-const fs = require('fs');
 // remove deleted files from the lists
 const existingPrettierFiles = prettierFiles.filter(f => fs.existsSync(f));
 const existingEslintFiles = eslintFiles.filter(f => fs.existsSync(f));
