@@ -151,7 +151,19 @@ jobs:
               github.rest.pulls.listFiles,
               { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number }
             );
-            const patterns = ['packages/adapter-temporal/', 'packages/contracts/'];
+
+            // Temporal integration can be affected by adapter, engine, contracts,
+            // shared root config, and workflow definitions.
+            const patterns = [
+              'packages/adapter-temporal/',
+              'packages/engine/',
+              'packages/contracts/',
+              'package.json',
+              'pnpm-lock.yaml',
+              'pnpm-workspace.yaml',
+              '.github/workflows/pr-quality-gate.yml',
+              '.github/workflows/test.yml',
+            ];
             const changed = files.some(f => patterns.some(p => f.filename.startsWith(p)));
             core.setOutput('temporal_changed', changed ? 'true' : 'false');
 
