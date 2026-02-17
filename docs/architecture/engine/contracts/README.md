@@ -1,4 +1,4 @@
-﻿# Engine Contracts Registry
+# Engine Contracts Registry
 
 Source path: `docs/architecture/engine/contracts`
 
@@ -20,6 +20,7 @@ This file tracks:
 | engine       | [SignalsAndAuth](./engine/SignalsAndAuth.v1.md)                          | v1      | DRAFT     | Core      | [engine/SignalsAndAuth.v1.md](./engine/SignalsAndAuth.v1.md)                               |
 | engine       | [PlanIntegrityAndPause](./engine/PlanIntegrityAndPause.v1.md)            | v1      | DRAFT     | Core      | [engine/PlanIntegrityAndPause.v1.md](./engine/PlanIntegrityAndPause.v1.md)                 |
 | engine       | [GlossaryContract](./engine/GlossaryContract.v1.md)                      | v1      | DRAFT     | Core      | [engine/GlossaryContract.v1.md](./engine/GlossaryContract.v1.md)                           |
+| engine       | [IProviderAdapter](./engine/IProviderAdapter.v1.md)                      | v1      | DRAFT     | Core      | [engine/IProviderAdapter.v1.md](./engine/IProviderAdapter.v1.md)                           |
 | engine       | [RunEventCatalog (alias)](./engine/RunEventCatalog.v1.md)                | v1      | DRAFT     | Alias     | [engine/RunEventCatalog.v1.md](./engine/RunEventCatalog.v1.md)                             |
 | state-store  | [State Store Contract](./state-store/README.md)                          | v1      | DRAFT     | Core      | [state-store/README.md](./state-store/README.md)                                           |
 | security     | [IAuthorization](./security/IAuthorization.v1.md)                        | v1      | DRAFT     | Core      | [security/IAuthorization.v1.md](./security/IAuthorization.v1.md)                           |
