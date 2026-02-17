@@ -387,6 +387,55 @@ Install these for real-time validation:
 
 ---
 
+## Contract Tooling Workflow (Immediate Policy)
+
+Contract quality is enforced by repository automation first, editor tooling second.
+
+### Mandatory checks for contract changes
+
+For changes under `docs/architecture/engine/contracts/**`, contributors MUST run:
+
+```bash
+pnpm validate:contracts
+```
+
+CI remains authoritative through [`contracts.yml`](../.github/workflows/contracts.yml).
+
+### Approved validator rollout (tracked as issues)
+
+The following validator streams are approved and tracked as dedicated GitHub issues:
+
+- Glossary-driven validation (`validate-glossary-usage`)
+- Idempotency vectors validation (`validate-idempotency-vectors`)
+- Cross-contract references validation (`validate-references`)
+- RFC 2119 compliance validation (`validate-rfc2119`)
+- Executable examples validation
+- Contract index generation automation
+
+### Knowledge Graph sync policy (ADR-0002 Phase 2)
+
+When ADRs or KG ingest scripts change, contributors MUST keep generated graph Cypher in sync.
+
+Local commands:
+
+```bash
+pnpm kg:generate
+pnpm kg:check
+```
+
+`kg:check` is enforced in CI via [`contracts.yml`](../.github/workflows/contracts.yml).
+
+### ADR requirement (semantic contract changes)
+
+Contract semantic changes SHOULD include an ADR in `docs/decisions/`.
+
+In hardened phase, semantic changes (required fields, event semantics, deprecations)
+MUST include an ADR and will be enforced by CI gate.
+
+Reference policy: [`ADR-0006-contract-tooling-governance.md`](./decisions/ADR-0006-contract-tooling-governance.md)
+
+---
+
 ## FAQ
 
 ### Q: I need to fix a typo in a normative contract. Do I create a new file?

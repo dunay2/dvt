@@ -595,7 +595,7 @@ Execution engines (Temporal, Conductor, etc.) have platform-specific constraints
 
 - No native pause support → signal-based emulation required
 - Different timeout semantics
-<!-- - See [Conductor Engine Policies](../../adapters/conductor/EnginePolicies.md) (Planned: future document for Conductor-specific policies) -->
+<!-- - See [Conductor Adapter Spec](../../adapters/conductor/ConductorAdapter.spec.md) (Conductor-specific behavior and limits) -->
 
 **NORMATIVE: PAUSE Limitations in Conductor**
 

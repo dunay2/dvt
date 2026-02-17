@@ -6,15 +6,21 @@ This directory contains scripts for validating contract tests and golden paths a
 
 ### `validate-contracts.cjs`
 
-Validates that golden JSON fixtures conform to their schemas.
+Validates contract fixtures and core runtime envelopes used by the base-contract workstream.
+
+Current checks include:
+
+- plan fixtures under `packages/engine/test/contracts/plans/*.json`,
+- contract envelope parsers (`PlanRef`, `RunContext`, `SignalRequest`, `EngineRunRef`, `RunStatusSnapshot`, `CanonicalEngineEvent`, `RunSnapshot`, `ExecuteStepRequest`, `ExecuteStepResult`),
+- result artifact structure at `packages/engine/test/contracts/results/golden-paths-run.json` (if present).
 
 **Usage:**
 
 ```bash
-pnpm test:contracts:validate
+pnpm validate:contracts
 ```
 
-**Status:** Stub implementation until issue #10 (Golden Paths) provides actual fixtures.
+**Status:** Functional for US-1.1 base-contract validation bundle.
 
 ### `run-golden-paths.cjs`
 

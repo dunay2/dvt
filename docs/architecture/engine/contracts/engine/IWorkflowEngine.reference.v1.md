@@ -235,7 +235,7 @@ When the Engine's Worker fetches a plan via `fetchPlan(PlanRef)` Activity:
 
 **Rationale**: This prevents execution of plans that have been modified after approval (e.g., cache poisoning, storage corruption, or malicious tampering).
 
-**See**: [TemporalAdapter § 2.1](../adapters/temporal/TemporalAdapter.spec.md#21-fetchplan-activity-normative-validation) for reference implementation.
+**See**: [TemporalAdapter § 2.1](../../adapters/temporal/TemporalAdapter.spec.md#21-fetchplan-activity-normative-validation) for reference implementation.
 
 #### 3.1.1 PlanRef URI Allowlist (Security - NORMATIVE)
 

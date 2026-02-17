@@ -4,7 +4,7 @@
 **Version**: 2.0.0  
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: Planner, State, UI, adapter implementers  
-**Sub-Contracts**: [RunEvents.v2.0.md](./RunEvents.v2.0.md), [SignalsAndAuth.v1.1.md](./SignalsAndAuth.v1.1.md), [ExecutionSemantics.v2.0.md](./ExecutionSemantics.v2.0.md)
+**Sub-Contracts**: [RunEvents.v2.0.md](./RunEvents.v2.0.md), SignalsAndAuth v1.1 (pending publication), [ExecutionSemantics.v2.0.md](./ExecutionSemantics.v2.0.md)
 
 ---
 

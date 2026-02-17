@@ -182,7 +182,7 @@ interface SignalDecisionRecord {
 6. If REVISION_REQUIRED → requires approval workflow (out of scope)
 
 **Approval workflow scope**:
-When `requiresApproval=true`, engine MUST NOT apply the signal until an external approval service updates the decision record to `ACCEPTED`. Approval workflow contract is defined in [ApprovalWorkflow.v1.md](../security/ApprovalWorkflow.v1.md) (Draft).
+When `requiresApproval=true`, engine MUST NOT apply the signal until an external approval service updates the decision record to `ACCEPTED`. Approval workflow contract is pending publication (Draft).
 
 ---
 
@@ -329,7 +329,7 @@ Implementations SHOULD enforce per-tenant/per-run signal rate limits to prevent 
 - Parent Contract: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
 - Run Events: [RunEvents.v1.md](./RunEvents.v1.md)
 - Execution Semantics: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md)
-- Approval Workflow (Draft): [ApprovalWorkflow.v1.md](../security/ApprovalWorkflow.v1.md)
+- Approval Workflow (Draft): pending publication
 - UUID v4 (RFC 4122): https://www.rfc-editor.org/rfc/rfc4122
 
 ---
