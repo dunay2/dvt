@@ -29,6 +29,7 @@ This file tracks:
 | capabilities | [Capabilities schema](./capabilities/capabilities.schema.json)           | v1      | DRAFT     | Schema    | [capabilities/capabilities.schema.json](./capabilities/capabilities.schema.json)           |
 | capabilities | [ValidationReport schema](./capabilities/validation-report.schema.json)  | v1      | DRAFT     | Schema    | [capabilities/validation-report.schema.json](./capabilities/validation-report.schema.json) |
 | capabilities | [Adapter capabilities matrix](./capabilities/adapters.capabilities.json) | v1      | DRAFT     | Matrix    | [capabilities/adapters.capabilities.json](./capabilities/adapters.capabilities.json)       |
+| schemas      | [LogicalGraph schema](./schemas/logical-graph.schema.json)               | v0.1    | DRAFT     | Schema    | [schemas/logical-graph.schema.json](./schemas/logical-graph.schema.json)                   |
 
 ---
 
@@ -48,7 +49,7 @@ These contracts are required to complete the domain base-contract track and avoi
 | ---------------------------------------- | -------------- | --------- | ----------------------------------------------------------------------------- | -------- |
 | IRunStateStore (domain baseline)         | v1             | DRAFT     | Define minimal storage invariants and append/query guarantees for v1 baseline | #217     |
 | IProviderAdapter (domain baseline)       | v1             | DRAFT     | Define provider boundary, responsibilities, and error/correlation rules       | #218     |
-| LogicalGraph (GCM) JSON Schema           | v1             | DRAFT     | Canonical domain graph shape for ingestion/planning compatibility             | #219     |
+| LogicalGraph (GCM) JSON Schema           | v0.1           | DRAFT     | Canonical domain graph shape for ingestion/planning compatibility             | #219     |
 | CanvasState JSON Schema                  | v1             | DRAFT     | Stable workspace/canvas model for deterministic reads/writes                  | #220     |
 | ProvenanceEvent JSON Schema              | v1             | DRAFT     | Auditable provenance envelope and minimal event semantics                     | #221     |
 | schemaVersion policy (contracts/schemas) | v1             | DRAFT     | Explicit compatibility/rejection rules to prevent version drift               | #222     |

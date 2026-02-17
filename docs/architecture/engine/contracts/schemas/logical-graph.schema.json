@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/schemas/logical-graph.schema.json",
+  "title": "LogicalGraph (GCM) v0.1",
+  "description": "Canonical graph contract for dbt artifact ingestion/planning compatibility.",
+  "type": "object",
+  "required": ["schemaVersion", "graphId", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "v0.1",
+      "description": "LogicalGraph schema version."
+    },
+    "graphId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this logical graph snapshot."
+    },
+    "source": {
+      "type": "object",
+      "description": "Optional source metadata for ingestion provenance.",
+      "required": ["manifestRef"],
+      "additionalProperties": false,
+      "properties": {
+        "manifestRef": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Reference to source manifest/canonical artifact input."
+        },
+        "catalogRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runResultsRef": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      },
+      "description": "Graph nodes derived from dbt domain entities."
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      },
+      "description": "Directed dependencies among graph nodes."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Extensible graph-level metadata.",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["node_uuid", "dbt_unique_id", "tipo", "dependencias"],
+      "additionalProperties": false,
+      "properties": {
+        "node_uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Internal node identifier (stable within graph snapshot)."
+        },
+        "dbt_unique_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "dbt unique_id identity."
+        },
+        "tipo": {
+          "type": "string",
+          "enum": [
+            "source",
+            "model",
+            "seed",
+            "snapshot",
+            "test",
+            "exposure",
+            "metric"
+          ],
+          "description": "Logical node category in GCM."
+        },
+        "dependencias": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Incoming dependency node UUIDs for deterministic planning."
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Extensible node metadata (materialization, tags, owner, etc.).",
+          "additionalProperties": true
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Upstream node UUID."
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Downstream node UUID."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["depends_on", "exposes", "tests"],
+          "default": "depends_on",
+          "description": "Edge semantics."
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "v0.1",
+      "graphId": "gcm_2026_02_17_001",
+      "source": {
+        "manifestRef": "s3://artifacts/manifest.json"
+      },
+      "nodes": [
+        {
+          "node_uuid": "n_src_orders",
+          "dbt_unique_id": "source.analytics.orders",
+          "tipo": "source",
+          "dependencias": [],
+          "metadata": {
+            "package": "analytics"
+          }
+        },
+        {
+          "node_uuid": "n_model_fct_orders",
+          "dbt_unique_id": "model.analytics.fct_orders",
+          "tipo": "model",
+          "dependencias": ["n_src_orders"],
+          "metadata": {
+            "materialized": "table"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "n_src_orders",
+          "to": "n_model_fct_orders",
+          "kind": "depends_on"
+        }
+      ],
+      "metadata": {
+        "tenantId": "tenant_acme",
+        "environmentId": "prod"
+      }
+    }
+  ]
+}
