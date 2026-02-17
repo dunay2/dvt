@@ -64,7 +64,7 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - #72: **Not started on active path** (version-binding enforcement currently visible in legacy area, not active runtime path).
 - #73: **Partial** (determinism tests for engine + mock exist; cross-adapter determinism still blocked mainly by Conductor gaps).
 - #14: **Mostly implemented** in active engine path; issue checklist should be refreshed to current API names and remaining deltas.
-- #15: **In progress** (Temporal interpreter workflow exists in active package implementation; issue tracking/checklist requires refresh to match current code evidence).
+- #15: **In progress** (Temporal interpreter now includes deterministic DAG-layer planning with declaration-order fallback; remaining scope includes full parity items like continue-as-new thresholds and broader acceptance scenarios).
 - #5: **Superseded scope** by #68 for active monorepo implementation tracking.
 - #6: **Foundation implemented and merged** in active adapter package (MVP base via PR #202 with `PostgresStateStoreAdapter`, contract-compatible types, and smoke coverage); follow-up required for full PostgreSQL persistence/runtime hardening.
 - #76 and #79: active repository-governance tracking for monorepo/path normalization and stale local reference cleanup.
@@ -117,6 +117,29 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 - Engine package (`packages/engine`) still emits fixed attempt values in several paths ([`WorkflowEngine.emitRunEvent*`](../../packages/engine/src/core/WorkflowEngine.ts:307)); this task only closes the active Temporal activity emission gap.
 - Conductor path remains pending and should adopt the same logical-vs-engine-attempt invariants before parity testing.
+
+## Recent High-Priority Progress Slice (2026-02-17)
+
+- Scope: `#15` incremental interpreter upgrade with deterministic DAG-layer scheduling primitives.
+- Problem addressed: workflow execution was strictly sequential with no explicit DAG dependency planning path.
+- Runtime changes:
+  - Added optional DAG dependency support (`dependsOn`) in adapter-local execution plan typing via [`ExecutionPlan`](../../packages/adapter-temporal/src/engine-types.ts:64).
+  - Extended step validation in [`validateStepShape()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:182) to allow and validate `dependsOn` arrays.
+  - Added deterministic DAG-layer planner in [`planExecutionLayers()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:213), including validation for duplicate step IDs, unknown dependencies, self-dependencies, invalid dependency values, and cycles.
+  - Updated [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:92) to execute by deterministic layers (parallelizable frontier via `Promise.all`) while preserving declaration-order fallback for legacy plans.
+- Tests added/updated:
+  - New scheduler-focused unit suite in [`workflow-dag-scheduler.test.ts`](../../packages/adapter-temporal/test/workflow-dag-scheduler.test.ts:1) covering linear fallback, layered DAG ordering, and invalid-graph error paths.
+  - Extended activity validation coverage in [`activities.test.ts`](../../packages/adapter-temporal/test/activities.test.ts:278) for `dependsOn` acceptance and invalid-shape rejection.
+- Validation evidence:
+  - `pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-dag-scheduler.test.ts` ✅
+  - `pnpm --filter @dvt/adapter-temporal test` ✅
+  - Result: 5 test files passed, 35 tests passed.
+
+### Residual Risks / Follow-up (Issue #15)
+
+- Canonical contract alignment remains pending: `dependsOn` is currently introduced on adapter-local plan typing and should be promoted to shared contract surfaces.
+- `continueAsNew` policy/threshold and long-run compaction behavior remain unimplemented in the workflow.
+- Full end-to-end DAG parity acceptance (including richer dispatch semantics) remains open and should continue in follow-up slices.
 
 ## Operational Notes
 
