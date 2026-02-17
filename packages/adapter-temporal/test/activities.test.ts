@@ -39,6 +39,8 @@ const CTX: RunContext = {
   targetAdapter: 'temporal',
 };
 
+const DEFAULT_LOGICAL_ATTEMPT_ID = 1;
+
 class TestClock {
   nowIsoUtc(): string {
     return '2026-01-01T00:00:00.000Z';
@@ -51,7 +53,6 @@ class TestIdempotencyKeyBuilder implements IIdempotencyKeyBuilder {
     tenantId: string;
     runId: string;
     logicalAttemptId: number;
-    engineAttemptId: number;
     stepId?: string;
   }): string {
     return [e.eventType, e.tenantId, e.runId, String(e.logicalAttemptId), e.stepId ?? ''].join('|');
@@ -134,6 +135,24 @@ function buildDeps(store: TestTxStore = new TestTxStore()): ActivityDeps {
   };
 }
 
+function expectSingleRunStartedEvent(
+  events: EventEnvelope[],
+  options: { logicalAttemptId?: number; engineAttemptId?: number } = {}
+): void {
+  const logicalAttemptId = options.logicalAttemptId ?? DEFAULT_LOGICAL_ATTEMPT_ID;
+  const runStarted = events.filter((e) => e.eventType === 'RunStarted');
+
+  expect(runStarted).toHaveLength(1);
+  expect(runStarted[0]!.logicalAttemptId).toBe(logicalAttemptId);
+  expect(runStarted[0]!.idempotencyKey).toBe(
+    `RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|`
+  );
+
+  if (typeof options.engineAttemptId === 'number') {
+    expect(runStarted[0]!.engineAttemptId).toBe(options.engineAttemptId);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -212,39 +231,47 @@ describe('stepActivities', () => {
       await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
       await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
 
-      const events = await deps.stateStore.listEvents('run-1');
-      const runStarted = events.filter((e) => e.eventType === 'RunStarted');
-      expect(runStarted).toHaveLength(1);
-      expect(runStarted[0]!.idempotencyKey).toBe('RunStarted|tenant-1|run-1|1|');
+      const events = await deps.stateStore.listEvents(CTX.runId);
+      expectSingleRunStartedEvent(events);
     });
 
-    it('idempotency key is stable across engineAttemptId when logicalAttemptId is unchanged', () => {
-      const keyForEngine1 = new TestIdempotencyKeyBuilder().runEventKey({
-        eventType: 'RunStarted',
-        tenantId: 't',
-        runId: 'r',
-        logicalAttemptId: 1,
-        engineAttemptId: 1,
-      } as any);
+    it('defaults logicalAttemptId to 1 even when engineAttemptId is greater than 1', async () => {
+      const deps = buildDeps();
+      deps.getEngineAttemptId = () => 7;
+      const acts = createActivities(deps);
 
-      const keyForEngine2 = new TestIdempotencyKeyBuilder().runEventKey({
-        eventType: 'RunStarted',
-        tenantId: 't',
-        runId: 'r',
-        logicalAttemptId: 1,
-        engineAttemptId: 2,
-      } as any);
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
 
-      expect(keyForEngine1).toBe(keyForEngine2);
+      const events = await deps.stateStore.listEvents(CTX.runId);
+      expect(events).toHaveLength(1);
+      expectSingleRunStartedEvent(events, { engineAttemptId: 7 });
+    });
 
-      const keySame = new TestIdempotencyKeyBuilder().runEventKey({
-        eventType: 'RunStarted',
-        tenantId: 't',
-        runId: 'r',
-        logicalAttemptId: 1,
-        engineAttemptId: 1,
-      } as any);
-      expect(keySame).toBe(keyForEngine1);
+    it('dedupes retries across different engineAttemptId when logicalAttemptId is unchanged', async () => {
+      const store = new TestTxStore();
+      let attempt = 1;
+      const deps = buildDeps(store);
+      deps.getEngineAttemptId = () => attempt;
+      const acts = createActivities(deps);
+
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      attempt = 2;
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+
+      const events = await deps.stateStore.listEvents(CTX.runId);
+      expectSingleRunStartedEvent(events, { engineAttemptId: 1 });
+    });
+
+    it('uses explicit logicalAttemptId independent of engineAttemptId', async () => {
+      const deps = buildDeps();
+      deps.getEngineAttemptId = () => 9;
+      const acts = createActivities(deps);
+
+      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted', logicalAttemptId: 3 });
+
+      const events = await deps.stateStore.listEvents(CTX.runId);
+      expect(events).toHaveLength(1);
+      expectSingleRunStartedEvent(events, { logicalAttemptId: 3, engineAttemptId: 9 });
     });
   });
 

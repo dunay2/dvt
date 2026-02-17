@@ -44,7 +44,6 @@ class TestIdempotency {
     tenantId: string;
     runId: string;
     logicalAttemptId: number;
-    engineAttemptId: number;
     stepId?: string;
   }): string {
     return [
@@ -52,7 +51,6 @@ class TestIdempotency {
       args.tenantId,
       args.runId,
       String(args.logicalAttemptId),
-      String(args.engineAttemptId),
       args.stepId ?? '',
     ].join('|');
   }

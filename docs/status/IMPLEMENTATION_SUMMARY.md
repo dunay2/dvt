@@ -95,6 +95,29 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - Change applied in [`validateStepShape()`](packages/adapter-temporal/src/activities/stepActivities.ts:172): hoisted allowed step fields to module-level constant to avoid per-call `Set` allocation.
 - Validation evidence: `pnpm --filter @dvt/adapter-temporal test` passed (19 tests).
 
+## Recent High-Priority Completed Task (2026-02-17)
+
+- Scope: align logical attempts vs infrastructure attempts in Temporal activity event emission.
+- Problem addressed: `logicalAttemptId` defaulted to infrastructure attempt under retries, risking duplicate logical events and non-canonical idempotency behavior.
+- Runtime changes:
+  - [`emitEvent()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:92) now defaults `logicalAttemptId` to `1` (unless explicitly provided).
+  - [`resolveTemporalAttemptFromContext()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:140) centralizes safe extraction of Temporal activity attempt for `engineAttemptId` only.
+  - [`EventIdempotencyInput`](../../packages/adapter-temporal/src/engine-types.ts:112) no longer includes `engineAttemptId`, reinforcing idempotency derivation from logical attempt dimensions.
+- Regression tests added/updated:
+  - [`activities.test.ts`](../../packages/adapter-temporal/test/activities.test.ts:221) now validates:
+    - logical attempt defaults to `1` even when engine attempt > 1,
+    - dedupe remains stable across infrastructure retries with unchanged logical attempt,
+    - explicit logical attempt remains independent from engine attempt.
+  - [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:41) test idempotency fixture aligned with logical-attempt-based derivation.
+- Validation evidence:
+  - `pnpm --filter @dvt/adapter-temporal test` ✅
+  - Result: 4 test files passed, 24 tests passed.
+
+### Residual Risks / Follow-up
+
+- Engine package (`packages/engine`) still emits fixed attempt values in several paths ([`WorkflowEngine.emitRunEvent*`](../../packages/engine/src/core/WorkflowEngine.ts:307)); this task only closes the active Temporal activity emission gap.
+- Conductor path remains pending and should adopt the same logical-vs-engine-attempt invariants before parity testing.
+
 ## Operational Notes
 
 When behavior changes affect deterministic execution:
@@ -107,4 +130,4 @@ When behavior changes affect deterministic execution:
 ---
 
 **Status**: Active and usable (with audited gaps tracked)
-**Last updated**: 2026-02-15
+**Last updated**: 2026-02-17
