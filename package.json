@@ -37,6 +37,8 @@
     "kg:query": "node scripts/neo4j/neo4j-query-context.cjs",
     "kg:roadmap:tree": "node scripts/neo4j/neo4j-query-roadmap-tree.cjs",
     "kg:prompt": "node scripts/neo4j/neo4j-json-to-prompt.cjs",
+    "contracts:index:generate": "node scripts/generate-contract-index.cjs",
+    "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- docs/architecture/engine/contracts/README.md",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
     "release": "echo \"Releases are managed by release-please workflow\"",
@@ -55,6 +57,10 @@
     "scripts/neo4j/*.cjs": [
       "pnpm kg:generate",
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='scripts/neo4j/generated-repo.cypher';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
+    ],
+    "docs/architecture/engine/contracts/**/*.{md,json}": [
+      "pnpm contracts:index:generate",
+      "node -e \"const fs=require('fs');const cp=require('child_process');const p='docs/architecture/engine/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
     "docs/decisions/ADR-*.md": [
       "pnpm kg:generate",
