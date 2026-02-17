@@ -5,7 +5,7 @@
 **Stability**: Contracts — breaking changes require major version bump  
 **Consumers**: StateStore (Append Authority), Projectors, UI, Audit Systems  
 **Parent Contract**: [`IWorkflowEngine.v2.0.md`](./IWorkflowEngine.v2.0.md)  
-**References**: [`ExecutionSemantics.v2.0.md`](./ExecutionSemantics.v2.0.md), [`IRunStateStore.v2.0.md`](../state-store/IRunStateStore.v2.0.md), [`SignalsAndAuth.v1.1.md`](./SignalsAndAuth.v1.1.md), [`AgnosticEventLayerStrategy.v2.0.1.md`](./AgnosticEventLayerStrategy.v2.0.1.md)
+**References**: [`ExecutionSemantics.v2.0.md`](./ExecutionSemantics.v2.0.md), [`IRunStateStore.v2.0.md`](../state-store/IRunStateStore.v2.0.md), SignalsAndAuth v1.1 (pending publication), [`AgnosticEventLayerStrategy.v2.0.1.md`](./AgnosticEventLayerStrategy.v2.0.1.md)
 
 **Normative keywords**: The key words “MUST”, “MUST NOT”, “SHOULD”, “SHOULD NOT”, “MAY” in this document are to be interpreted as described in BCP 14 (RFC 2119 and RFC 8174).
 
@@ -20,7 +20,7 @@ This contract governs run and step lifecycle events emitted by the Engine domain
 - engine runtime,
 - workers/activities owned by the engine adapter.
 
-Signal decision events (`SignalAccepted`, `SignalRejected`) are out of scope and remain defined in [`SignalsAndAuth.v1.1.md`](./SignalsAndAuth.v1.1.md).
+Signal decision events (`SignalAccepted`, `SignalRejected`) are out of scope and remain defined in SignalsAndAuth v1.1 (pending publication).
 
 ### 1.2 Known Lifecycle Events (NORMATIVE)
 

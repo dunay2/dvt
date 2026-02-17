@@ -30,11 +30,16 @@ if (!fs.existsSync(cypherPath)) {
 
 const cypher = fs.readFileSync(cypherPath, 'utf-8');
 
+/**
+ * Splits Cypher statements safely.
+ * Note: This is a basic implementation. For complex Cypher with semicolons inside strings,
+ * a proper parser or a specific delimiter comment (e.g. ////) is recommended.
+ */
 function splitCypherStatements(input) {
   return input
     .split(';')
     .map((s) => s.trim())
-    .filter(Boolean);
+    .filter((s) => s.length > 0 && !s.startsWith('//'));
 }
 
 const driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWORD));
@@ -44,7 +49,11 @@ async function run() {
   try {
     console.log(`🔌 Connecting to ${NEO4J_URI} (${NEO4J_DATABASE})...`);
     const statements = splitCypherStatements(cypher);
+
+    console.log(`📝 Found ${statements.length} statements to execute.`);
+
     for (const stmt of statements) {
+      // Running sequentially to ensure dependency order (e.g. creating nodes before rels)
       await session.run(stmt);
     }
     console.log('✅ Base seed applied successfully.');

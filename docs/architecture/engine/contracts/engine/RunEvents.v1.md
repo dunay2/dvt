@@ -312,7 +312,7 @@ All events MUST include these identifiers for traceability:
 
 - **Parent Contract**: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
 - **Execution Semantics**: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
-- **State Store Interface**: [IRunStateStore.v1.md](../../state/IRunStateStore.v1.md) (if exists)
+- **State Store Interface**: [IRunStateStore.v2.0.md](../state-store/IRunStateStore.v2.0.md)
 - **Temporal Limits**: <https://docs.temporal.io/encyclopedia/limits>
 - **Temporal SDK**: <https://docs.temporal.io/develop/typescript>
 - **Conductor**: <https://github.com/netflix/conductor/wiki>

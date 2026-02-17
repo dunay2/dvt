@@ -23,6 +23,7 @@ This file tracks:
 | engine       | [IProviderAdapter](./engine/IProviderAdapter.v1.md)                      | v1      | DRAFT     | Core      | [engine/IProviderAdapter.v1.md](./engine/IProviderAdapter.v1.md)                           |
 | engine       | [RunEventCatalog (alias)](./engine/RunEventCatalog.v1.md)                | v1      | DRAFT     | Alias     | [engine/RunEventCatalog.v1.md](./engine/RunEventCatalog.v1.md)                             |
 | state-store  | [State Store Contract](./state-store/README.md)                          | v1      | DRAFT     | Core      | [state-store/README.md](./state-store/README.md)                                           |
+| state-store  | [IRunStateStore](./state-store/IRunStateStore.v1.md)                     | v1      | DRAFT     | Core      | [state-store/IRunStateStore.v1.md](./state-store/IRunStateStore.v1.md)                     |
 | security     | [IAuthorization](./security/IAuthorization.v1.md)                        | v1      | DRAFT     | Core      | [security/IAuthorization.v1.md](./security/IAuthorization.v1.md)                           |
 | security     | [AuditLog](./security/AuditLog.v1.md)                                    | v1      | DRAFT     | Core      | [security/AuditLog.v1.md](./security/AuditLog.v1.md)                                       |
 | extensions   | [PluginSandbox](./extensions/PluginSandbox.v1.md)                        | v1      | DRAFT     | Extension | [extensions/PluginSandbox.v1.md](./extensions/PluginSandbox.v1.md)                         |

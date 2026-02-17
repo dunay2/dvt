@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* global console, process, __dirname */
+/* global console, process, __dirname, Buffer */
 
 const fs = require('fs');
 const path = require('path');
@@ -207,28 +207,200 @@ function chunk(items, size) {
   return out;
 }
 
-async function ensureSchema(session) {
-  const stmts = [
-    'CREATE CONSTRAINT modulo_path_unique IF NOT EXISTS FOR (m:Modulo) REQUIRE m.path IS UNIQUE',
-    'CREATE CONSTRAINT archivo_path_unique IF NOT EXISTS FOR (a:Archivo) REQUIRE a.path IS UNIQUE',
-    'CREATE CONSTRAINT issue_key_unique IF NOT EXISTS FOR (i:Issue) REQUIRE i.key IS UNIQUE',
-    'CREATE CONSTRAINT decision_id_unique IF NOT EXISTS FOR (d:Decision) REQUIRE d.id IS UNIQUE',
-    'CREATE CONSTRAINT funcion_key_unique IF NOT EXISTS FOR (f:Funcion) REQUIRE f.key IS UNIQUE',
+function safeNodeId(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toUpperCase();
+}
+
+function parseRoadmapPhases(content) {
+  const lines = content.split('\n');
+  const phases = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const match = line.match(/^##\s+.*?Phase\s+([0-9]+(?:\.[0-9]+)?)\s*:\s*(.+?)\s*(?:\(.*\))?\s*$/i);
+    if (!match) continue;
+
+    const phaseNumber = match[1];
+    const phaseName = match[2].trim();
+    const phaseId = `PHASE_${safeNodeId(phaseNumber)}`;
+
+    let sectionEnd = lines.length;
+    for (let j = i + 1; j < lines.length; j += 1) {
+      if (/^##\s+/.test(lines[j])) {
+        sectionEnd = j;
+        break;
+      }
+    }
+
+    const sectionText = lines.slice(i, sectionEnd).join('\n');
+    const issueRegex = /\[#(\d+)\]\((https?:\/\/github\.com\/[^)]+\/issues\/\d+)\)/g;
+    const issueRows = [];
+    let issueMatch;
+    while ((issueMatch = issueRegex.exec(sectionText)) !== null) {
+      issueRows.push({
+        issueNumber: Number(issueMatch[1]),
+        issueUrl: issueMatch[2],
+      });
+    }
+
+    phases.push({
+      id: phaseId,
+      number: phaseNumber,
+      name: phaseName,
+      order: phases.length + 1,
+      sourcePath: 'ROADMAP.md',
+      issueRows,
+    });
+  }
+
+  for (let i = 0; i < phases.length; i += 1) {
+    const current = phases[i];
+    const next = phases[i + 1];
+    current.nextPhaseId = next ? next.id : null;
+  }
+
+  return phases;
+}
+
+function parseRoadmapStatusRows(content) {
+  const rows = [];
+  const lines = content.split('\n');
+
+  let inMetrics = false;
+  let currentPhaseId = null;
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/\r$/, '');
+
+    if (/^##\s+.*(Progress Metrics|M[eé]tricas? de progreso)/i.test(line)) {
+      inMetrics = true;
+      currentPhaseId = null;
+      continue;
+    }
+
+    if (
+      inMetrics &&
+      /^##\s+/.test(line) &&
+      !/^##\s+.*(Progress Metrics|M[eé]tricas? de progreso)/i.test(line)
+    ) {
+      break;
+    }
+
+    if (!inMetrics) continue;
+
+    if (/^###\s+/.test(line) && !/^###\s+.*?Phase\s+([0-9]+(?:\.[0-9]+)?)/i.test(line)) {
+      currentPhaseId = null;
+      continue;
+    }
+
+    const phaseMatch = line.match(/^###\s+.*?Phase\s+([0-9]+(?:\.[0-9]+)?)/i);
+    if (phaseMatch) {
+      currentPhaseId = `PHASE_${safeNodeId(phaseMatch[1])}`;
+      continue;
+    }
+
+    const statusMatch = line.match(/^\s*-\s+\*\*(?:Status|Estado)\*\*:\s+(.+?)\s*$/i);
+    if (statusMatch && currentPhaseId) {
+      rows.push({
+        phaseId: currentPhaseId,
+        status: statusMatch[1].trim(),
+        sourcePath: 'ROADMAP.md',
+      });
+    }
+  }
+
+  return rows;
+}
+
+function collectRoadmapRows() {
+  const roadmapPath = path.join(REPO_ROOT, 'ROADMAP.md');
+  if (!fs.existsSync(roadmapPath)) {
+    return {
+      roadmapNodes: [],
+      phaseNodes: [],
+      phaseLinks: [],
+      phaseIssueRows: [],
+      roadmapStatusRows: [],
+    };
+  }
+
+  const content = fs.readFileSync(roadmapPath, 'utf8');
+  const phaseNodes = parseRoadmapPhases(content);
+  const roadmapStatusRows = parseRoadmapStatusRows(content);
+
+  const roadmapNodes = [
+    {
+      id: 'ROADMAP_MAIN',
+      path: 'ROADMAP.md',
+      name: 'DVT Engine Roadmap',
+      topico: 'roadmap',
+    },
   ];
 
-  for (const stmt of stmts) {
+  const phaseLinks = [];
+  const phaseIssueRows = [];
+  for (const phase of phaseNodes) {
+    phaseLinks.push({
+      roadmapId: 'ROADMAP_MAIN',
+      phaseId: phase.id,
+      order: phase.order,
+    });
+
+    if (phase.nextPhaseId) {
+      phaseLinks.push({
+        roadmapId: phase.id,
+        phaseId: phase.nextPhaseId,
+        order: phase.order + 100,
+        relation: 'DESBLOQUEA',
+      });
+    }
+
+    for (const issue of phase.issueRows) {
+      phaseIssueRows.push({
+        phaseId: phase.id,
+        key: `dunay2/dvt#${issue.issueNumber}`,
+        number: issue.issueNumber,
+        url: issue.issueUrl,
+      });
+    }
+  }
+
+  return {
+    roadmapNodes,
+    phaseNodes,
+    phaseLinks,
+    phaseIssueRows,
+    roadmapStatusRows,
+  };
+}
+
+const SCHEMA_CONSTRAINTS = [
+  'CREATE CONSTRAINT modulo_path_unique IF NOT EXISTS FOR (m:Modulo) REQUIRE m.path IS UNIQUE',
+  'CREATE CONSTRAINT archivo_path_unique IF NOT EXISTS FOR (a:Archivo) REQUIRE a.path IS UNIQUE',
+  'CREATE CONSTRAINT issue_key_unique IF NOT EXISTS FOR (i:Issue) REQUIRE i.key IS UNIQUE',
+  'CREATE CONSTRAINT decision_id_unique IF NOT EXISTS FOR (d:Decision) REQUIRE d.id IS UNIQUE',
+  'CREATE CONSTRAINT funcion_key_unique IF NOT EXISTS FOR (f:Funcion) REQUIRE f.key IS UNIQUE',
+  'CREATE CONSTRAINT roadmap_id_unique IF NOT EXISTS FOR (r:Roadmap) REQUIRE r.id IS UNIQUE',
+  'CREATE CONSTRAINT fase_roadmap_id_unique IF NOT EXISTS FOR (p:FaseRoadmap) REQUIRE p.id IS UNIQUE',
+];
+
+async function ensureSchema(session) {
+  for (const stmt of SCHEMA_CONSTRAINTS) {
     await session.run(stmt);
   }
 }
 
 async function resetGraph(session) {
-  const labels = ['Archivo', 'Modulo', 'Issue', 'Decision', 'Funcion', 'Persona'];
+  const labels = ['Archivo', 'Modulo', 'Issue', 'Decision', 'Funcion', 'Persona', 'Roadmap', 'FaseRoadmap'];
   for (const label of labels) {
     await session.run(`MATCH (n:${label}) DETACH DELETE n`);
   }
 }
 
-async function ingest() {
+function collectGraphRows() {
   const trackedFiles = Array.from(new Set([...runGitList(), ...listAdrFilesFromFs()])).sort();
   const fileSet = new Set(trackedFiles);
 
@@ -238,6 +410,13 @@ async function ingest() {
   const adrRows = [];
   const adrIssueRows = [];
   const classRows = [];
+  const {
+    roadmapNodes,
+    phaseNodes,
+    phaseLinks,
+    phaseIssueRows,
+    roadmapStatusRows,
+  } = collectRoadmapRows();
 
   for (const relPath of trackedFiles) {
     const abs = path.join(REPO_ROOT, relPath);
@@ -269,20 +448,25 @@ async function ingest() {
       '.d.ts',
     ].some((t) => relPosix.endsWith(t));
 
+    let content = null;
+    let normalizedBytes = stat.size;
+    if (isText && stat.size <= 1024 * 1024 * 2) {
+      content = fs.readFileSync(abs, 'utf8');
+      normalizedBytes = Buffer.byteLength(content.replace(/\r\n/g, '\n'), 'utf8');
+    }
+
     files.push({
       path: relPosix,
       nombre: path.posix.basename(relPosix),
       tipo: ext.replace('.', '') || 'none',
-      bytes: stat.size,
+      bytes: normalizedBytes,
       topico: fileType(relPosix),
       moduloPath: moduloPathFor(relPosix),
       moduloNombre: path.posix.basename(moduloPathFor(relPosix)),
       moduloLenguaje: moduloLanguageFor(relPosix),
     });
 
-    if (!isText || stat.size > 1024 * 1024 * 2) continue;
-
-    const content = fs.readFileSync(abs, 'utf8');
+    if (!content) continue;
 
     if (['.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'].includes(ext)) {
       const d = parseImports(relPosix, content, fileSet);
@@ -310,6 +494,37 @@ async function ingest() {
       }
     }
   }
+
+  return {
+    trackedFiles,
+    files,
+    deps,
+    issues,
+    adrRows,
+    adrIssueRows,
+    classRows,
+    roadmapNodes,
+    phaseNodes,
+    phaseLinks,
+    phaseIssueRows,
+    roadmapStatusRows,
+  };
+}
+
+async function ingest() {
+  const {
+    files,
+    deps,
+    issues,
+    adrRows,
+    adrIssueRows,
+    classRows,
+    roadmapNodes,
+    phaseNodes,
+    phaseLinks,
+    phaseIssueRows,
+    roadmapStatusRows,
+  } = collectGraphRows();
 
   const driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWORD));
   const session = driver.session({ database: NEO4J_DATABASE });
@@ -385,6 +600,95 @@ async function ingest() {
       );
     }
 
+    for (const c of chunk(roadmapNodes, 20)) {
+      await session.run(
+        `
+        UNWIND $rows AS row
+        MERGE (r:Roadmap {id: row.id})
+        SET r.path = row.path,
+            r.nombre = row.name,
+            r.topico = row.topico
+      `,
+        { rows: c }
+      );
+    }
+
+    for (const c of chunk(phaseNodes, 50)) {
+      await session.run(
+        `
+        UNWIND $rows AS row
+        MERGE (p:FaseRoadmap {id: row.id})
+        SET p.numero = row.number,
+            p.nombre = row.name,
+            p.orden = row.order,
+            p.path = row.sourcePath
+      `,
+        { rows: c }
+      );
+    }
+
+    for (const c of chunk(phaseLinks, 100)) {
+      await session.run(
+        `
+        UNWIND $rows AS row
+        WITH row
+        CALL {
+          WITH row
+          MATCH (r:Roadmap {id: row.roadmapId})
+          MATCH (p:FaseRoadmap {id: row.phaseId})
+          WHERE coalesce(row.relation, 'CONTIENE_FASE') = 'CONTIENE_FASE'
+          MERGE (r)-[rel:CONTIENE_FASE]->(p)
+          SET rel.orden = row.order
+          RETURN 1 AS done
+          UNION
+          WITH row
+          MATCH (p1:FaseRoadmap {id: row.roadmapId})
+          MATCH (p2:FaseRoadmap {id: row.phaseId})
+          WHERE row.relation = 'DESBLOQUEA'
+          MERGE (p1)-[rel:DESBLOQUEA]->(p2)
+          SET rel.orden = row.order
+          RETURN 1 AS done
+        }
+        RETURN count(*) AS processed
+      `,
+        { rows: c }
+      );
+    }
+
+    for (const c of chunk(phaseIssueRows, 200)) {
+      await session.run(
+        `
+        UNWIND $rows AS row
+        MATCH (p:FaseRoadmap {id: row.phaseId})
+        MERGE (i:Issue {key: row.key})
+        SET i.number = row.number,
+            i.repo = 'dunay2/dvt',
+            i.url = row.url
+        MERGE (p)-[:TRACKED_BY]->(i)
+      `,
+        { rows: c }
+      );
+    }
+
+    for (const c of chunk(roadmapStatusRows, 50)) {
+      await session.run(
+        `
+        UNWIND $rows AS row
+        MATCH (p:FaseRoadmap {id: row.phaseId})
+        SET p.estado = row.status
+      `,
+        { rows: c }
+      );
+    }
+
+    await session.run(
+      `
+      MATCH (a:Archivo {path: 'ROADMAP.md'})
+      MATCH (r:Roadmap {id: 'ROADMAP_MAIN'})
+      MERGE (a)-[:IMPLEMENTA_DECISION]->(r)
+    `
+    );
+
     for (const c of chunk(adrRows, 100)) {
       await session.run(
         `
@@ -419,6 +723,20 @@ async function ingest() {
       );
     }
 
+    await session.run(
+      `
+      MATCH (p:FaseRoadmap)-[:TRACKED_BY]->(i:Issue)<-[:REFERENCIA_ISSUE]-(a:Archivo)
+      MERGE (p)-[:RELACIONA_ARTEFACTO]->(a)
+    `
+    );
+
+    await session.run(
+      `
+      MATCH (p:FaseRoadmap)-[:TRACKED_BY]->(i:Issue)<-[:TRACKED_BY]-(d:Decision)
+      MERGE (p)-[:ANCLA_DECISION]->(d)
+    `
+    );
+
     const stats = await session.run(
       `
       MATCH (n)
@@ -437,7 +755,30 @@ async function ingest() {
   }
 }
 
-ingest().catch((error) => {
-  console.error('❌ Ingest failed:', error.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  ingest().catch((error) => {
+    console.error('❌ Ingest failed:', error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  SCHEMA_CONSTRAINTS,
+  safeNodeId,
+  parseRoadmapPhases,
+  parseRoadmapStatusRows,
+  collectRoadmapRows,
+  REPO_ROOT,
+  runGitList,
+  listAdrFilesFromFs,
+  fileType,
+  moduloPathFor,
+  moduloLanguageFor,
+  parseImports,
+  parseIssueRefs,
+  parseAdr,
+  parseClassDefs,
+  chunk,
+  collectGraphRows,
+  ingest,
+};
