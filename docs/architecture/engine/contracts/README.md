@@ -12,28 +12,33 @@ This file tracks:
 
 ## 1) Current contracts in repository
 
-| Area         | Contract                                                                 | Version | Lifecycle | Type      | Path                                                                                       |
-| ------------ | ------------------------------------------------------------------------ | ------- | --------- | --------- | ------------------------------------------------------------------------------------------ |
-| engine       | [IWorkflowEngine (baseline)](./engine/IWorkflowEngine.v1.md)             | v1      | DRAFT     | Core      | [engine/IWorkflowEngine.v1.md](./engine/IWorkflowEngine.v1.md)                             |
-| engine       | [ExecutionSemantics](./engine/ExecutionSemantics.v1.md)                  | v1      | DRAFT     | Core      | [engine/ExecutionSemantics.v1.md](./engine/ExecutionSemantics.v1.md)                       |
-| engine       | [RunEvents](./engine/RunEvents.v1.md)                                    | v1      | DRAFT     | Core      | [engine/RunEvents.v1.md](./engine/RunEvents.v1.md)                                         |
-| engine       | [SignalsAndAuth](./engine/SignalsAndAuth.v1.md)                          | v1      | DRAFT     | Core      | [engine/SignalsAndAuth.v1.md](./engine/SignalsAndAuth.v1.md)                               |
-| engine       | [PlanIntegrityAndPause](./engine/PlanIntegrityAndPause.v1.md)            | v1      | DRAFT     | Core      | [engine/PlanIntegrityAndPause.v1.md](./engine/PlanIntegrityAndPause.v1.md)                 |
-| engine       | [GlossaryContract](./engine/GlossaryContract.v1.md)                      | v1      | DRAFT     | Core      | [engine/GlossaryContract.v1.md](./engine/GlossaryContract.v1.md)                           |
-| engine       | [IProviderAdapter](./engine/IProviderAdapter.v1.md)                      | v1      | DRAFT     | Core      | [engine/IProviderAdapter.v1.md](./engine/IProviderAdapter.v1.md)                           |
-| engine       | [RunEventCatalog (alias)](./engine/RunEventCatalog.v1.md)                | v1      | DRAFT     | Alias     | [engine/RunEventCatalog.v1.md](./engine/RunEventCatalog.v1.md)                             |
-| state-store  | [State Store Contract](./state-store/README.md)                          | v1      | DRAFT     | Core      | [state-store/README.md](./state-store/README.md)                                           |
-| state-store  | [IRunStateStore](./state-store/IRunStateStore.v1.md)                     | v1      | DRAFT     | Core      | [state-store/IRunStateStore.v1.md](./state-store/IRunStateStore.v1.md)                     |
-| security     | [IAuthorization](./security/IAuthorization.v1.md)                        | v1      | DRAFT     | Core      | [security/IAuthorization.v1.md](./security/IAuthorization.v1.md)                           |
-| security     | [AuditLog](./security/AuditLog.v1.md)                                    | v1      | DRAFT     | Core      | [security/AuditLog.v1.md](./security/AuditLog.v1.md)                                       |
-| extensions   | [PluginSandbox](./extensions/PluginSandbox.v1.md)                        | v1      | DRAFT     | Extension | [extensions/PluginSandbox.v1.md](./extensions/PluginSandbox.v1.md)                         |
-| capabilities | [Capabilities schema](./capabilities/capabilities.schema.json)           | v1      | DRAFT     | Schema    | [capabilities/capabilities.schema.json](./capabilities/capabilities.schema.json)           |
-| capabilities | [ValidationReport schema](./capabilities/validation-report.schema.json)  | v1      | DRAFT     | Schema    | [capabilities/validation-report.schema.json](./capabilities/validation-report.schema.json) |
-| capabilities | [Adapter capabilities matrix](./capabilities/adapters.capabilities.json) | v1      | DRAFT     | Matrix    | [capabilities/adapters.capabilities.json](./capabilities/adapters.capabilities.json)       |
-| schemas      | [LogicalGraph schema](./schemas/logical-graph.schema.json)               | v0.1    | DRAFT     | Schema    | [schemas/logical-graph.schema.json](./schemas/logical-graph.schema.json)                   |
+| Area         | Contract | Version | Lifecycle | Type      | Path |
+| ------------ | -------- | ------- | --------- | --------- | ---- |
+| capabilities | [Adapter Capability Matrix](./capabilities/adapters.capabilities.json) | v1 | DRAFT | Matrix | [capabilities/adapters.capabilities.json](./capabilities/adapters.capabilities.json) |
+| capabilities | [Capability Enum](./capabilities/capabilities.schema.json) | v1 | DRAFT | Schema | [capabilities/capabilities.schema.json](./capabilities/capabilities.schema.json) |
+| capabilities | [ValidationReport](./capabilities/validation-report.schema.json) | v1 | DRAFT | Schema | [capabilities/validation-report.schema.json](./capabilities/validation-report.schema.json) |
+| engine | [Agnostic Event Layer Strategy](./engine/AgnosticEventLayerStrategy.v2.0.1.md) | v2.0.1 | DRAFT | Core | [engine/AgnosticEventLayerStrategy.v2.0.1.md](./engine/AgnosticEventLayerStrategy.v2.0.1.md) |
+| engine | [Execution Semantics](./engine/ExecutionSemantics.v1.md) | v1 | DRAFT | Core | [engine/ExecutionSemantics.v1.md](./engine/ExecutionSemantics.v1.md) |
+| engine | [Execution Semantics](./engine/ExecutionSemantics.v2.0.md) | v2.0.0 | ACTIVE | Core | [engine/ExecutionSemantics.v2.0.md](./engine/ExecutionSemantics.v2.0.md) |
+| engine | [Glossary](./engine/GlossaryContract.v1.md) | v1 | DRAFT | Core | [engine/GlossaryContract.v1.md](./engine/GlossaryContract.v1.md) |
+| engine | [Glossary](./engine/GlossaryContract.v2.0.md) | v2.0.0 | ACTIVE | Core | [engine/GlossaryContract.v2.0.md](./engine/GlossaryContract.v2.0.md) |
+| engine | [IProviderAdapter](./engine/IProviderAdapter.v1.md) | v1 | DRAFT | Core | [engine/IProviderAdapter.v1.md](./engine/IProviderAdapter.v1.md) |
+| engine | [IWorkflowEngine](./engine/IWorkflowEngine.v1.md) | v1 | DRAFT | Core | [engine/IWorkflowEngine.v1.md](./engine/IWorkflowEngine.v1.md) |
+| engine | [IWorkflowEngine](./engine/IWorkflowEngine.v2.0.md) | v2.0.0 | ACTIVE | Core | [engine/IWorkflowEngine.v2.0.md](./engine/IWorkflowEngine.v2.0.md) |
+| engine | [Plan Integrity & Conductor Pause Semantics](./engine/PlanIntegrityAndPause.v1.md) | v1 | DRAFT | Core | [engine/PlanIntegrityAndPause.v1.md](./engine/PlanIntegrityAndPause.v1.md) |
+| engine | [Run Event Catalog](./engine/RunEventCatalog.v1.md) | v1 | DRAFT | Alias | [engine/RunEventCatalog.v1.md](./engine/RunEventCatalog.v1.md) |
+| engine | [Run Events](./engine/RunEvents.v1.md) | v1 | DRAFT | Core | [engine/RunEvents.v1.md](./engine/RunEvents.v1.md) |
+| engine | [Run Events](./engine/RunEvents.v2.0.md) | v2.0.1 | ACTIVE | Core | [engine/RunEvents.v2.0.md](./engine/RunEvents.v2.0.md) |
+| engine | [Signals and Authorization](./engine/SignalsAndAuth.v1.md) | v1 | DRAFT | Core | [engine/SignalsAndAuth.v1.md](./engine/SignalsAndAuth.v1.md) |
+| extensions | [Plugin Sandbox](./extensions/PluginSandbox.v1.md) | v1 | DRAFT | Extension | [extensions/PluginSandbox.v1.md](./extensions/PluginSandbox.v1.md) |
+| schemas | [LogicalGraph (GCM)](./schemas/logical-graph.schema.json) | v0.1 | DRAFT | Schema | [schemas/logical-graph.schema.json](./schemas/logical-graph.schema.json) |
+| security | [Audit Log](./security/AuditLog.v1.md) | v1 | DRAFT | Core | [security/AuditLog.v1.md](./security/AuditLog.v1.md) |
+| security | [Authorization](./security/IAuthorization.v1.md) | v1 | DRAFT | Core | [security/IAuthorization.v1.md](./security/IAuthorization.v1.md) |
+| state-store | [IRunStateStore](./state-store/IRunStateStore.v1.md) | v1 | DRAFT | Core | [state-store/IRunStateStore.v1.md](./state-store/IRunStateStore.v1.md) |
+| state-store | [IRunStateStore](./state-store/IRunStateStore.v2.0.md) | v2.0.0 | ACTIVE | Core | [state-store/IRunStateStore.v2.0.md](./state-store/IRunStateStore.v2.0.md) |
+| state-store | [State Store](./state-store/README.md) | v1 | DRAFT | Core | [state-store/README.md](./state-store/README.md) |
 
 ---
-
 ## 1.1) Historical / reference contracts
 
 | Area   | Contract                                                                | Version | Lifecycle | Type      | Path                                                                               |
