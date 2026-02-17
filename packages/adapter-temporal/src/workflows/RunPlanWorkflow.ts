@@ -20,6 +20,8 @@ import {
 
 import type { Activities } from '../activities/stepActivities.js';
 
+type WorkflowStep = Awaited<ReturnType<Activities['fetchPlan']>>['steps'][number];
+
 // ---------------------------------------------------------------------------
 // Workflow input / output
 // ---------------------------------------------------------------------------
@@ -139,12 +141,13 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     // 3. Fetch & validate plan via activity
     const plan = await activities.fetchPlan(planRef);
 
-    // 4. Walk steps sequentially
-    for (let i = 0; i < plan.steps.length; i++) {
-      state.currentStepIndex = i;
-      const step = plan.steps[i]!;
+    // 4. Walk steps in deterministic layers (sequential fallback when no DAG edges).
+    const executionLayers = planExecutionLayers(plan.steps);
+    let completedSteps = 0;
+    for (const layer of executionLayers) {
+      state.currentStepIndex = completedSteps;
 
-      // Check cancellation before each step
+      // Check cancellation before each layer
       if (state.cancelled) {
         await activities.emitEvent({ ctx, eventType: 'RunCancelled' });
         state.status = 'CANCELLED';
@@ -165,15 +168,27 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
         await activities.emitEvent({ ctx, eventType: 'RunResumed' });
       }
 
-      // Execute step
-      await activities.emitEvent({ ctx, eventType: 'StepStarted', stepId: step.stepId });
+      // Emit StepStarted in stable order, then execute the whole layer.
+      for (const step of layer) {
+        await activities.emitEvent({ ctx, eventType: 'StepStarted', stepId: step.stepId });
+      }
 
-      const result = await activities.executeStep({ step, ctx });
+      const layerResults = await Promise.all(
+        layer.map(async (step) => {
+          const result = await activities.executeStep({ step, ctx });
+          return { stepId: step.stepId, result };
+        })
+      );
 
-      if (result.status === 'COMPLETED') {
-        await activities.emitEvent({ ctx, eventType: 'StepCompleted', stepId: step.stepId });
-      } else {
-        await activities.emitEvent({ ctx, eventType: 'StepFailed', stepId: step.stepId });
+      for (const { stepId, result } of layerResults) {
+        if (result.status === 'COMPLETED') {
+          await activities.emitEvent({ ctx, eventType: 'StepCompleted', stepId });
+          completedSteps += 1;
+          state.currentStepIndex = completedSteps;
+          continue;
+        }
+
+        await activities.emitEvent({ ctx, eventType: 'StepFailed', stepId });
         await activities.emitEvent({ ctx, eventType: 'RunFailed' });
         state.status = 'FAILED';
         return { runId: ctx.runId, status: 'FAILED' };
@@ -196,4 +211,96 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     }
     throw err;
   }
+}
+
+export function planExecutionLayers(steps: ReadonlyArray<WorkflowStep>): WorkflowStep[][] {
+  if (steps.length === 0) {
+    return [];
+  }
+
+  // Validate duplicate IDs upfront (applies to both DAG and sequential fallback paths).
+  const seenStepIds = new Set<string>();
+  for (const step of steps) {
+    if (seenStepIds.has(step.stepId)) {
+      throw new Error(`INVALID_PLAN_SCHEMA: duplicate_step_id:${step.stepId}`);
+    }
+    seenStepIds.add(step.stepId);
+  }
+
+  // Backward-compatible fallback for legacy plans without explicit dependencies.
+  const hasExplicitDependencies = steps.some((step) => Array.isArray(step.dependsOn));
+  if (!hasExplicitDependencies) {
+    return steps.map((step) => [step]);
+  }
+
+  const byId = new Map<string, WorkflowStep>();
+  const remainingDeps = new Map<string, number>();
+  const dependents = new Map<string, string[]>();
+
+  for (const step of steps) {
+    byId.set(step.stepId, step);
+    remainingDeps.set(step.stepId, 0);
+    dependents.set(step.stepId, []);
+  }
+
+  for (const step of steps) {
+    for (const dep of normalizeDependsOn(step)) {
+      if (!byId.has(dep)) {
+        throw new Error(`INVALID_PLAN_SCHEMA: unknown_dependency:${step.stepId}->${dep}`);
+      }
+      if (dep === step.stepId) {
+        throw new Error(`INVALID_PLAN_SCHEMA: self_dependency:${step.stepId}`);
+      }
+
+      remainingDeps.set(step.stepId, (remainingDeps.get(step.stepId) ?? 0) + 1);
+      const nextDependents = dependents.get(dep)!;
+      nextDependents.push(step.stepId);
+    }
+  }
+
+  const consumed = new Set<string>();
+  const layers: WorkflowStep[][] = [];
+
+  let ready = steps.filter((step) => (remainingDeps.get(step.stepId) ?? 0) === 0);
+
+  while (ready.length > 0) {
+    layers.push(ready);
+
+    const nextReadyIds = new Set<string>();
+    for (const step of ready) {
+      consumed.add(step.stepId);
+      for (const dependentId of dependents.get(step.stepId) ?? []) {
+        const nextCount = (remainingDeps.get(dependentId) ?? 0) - 1;
+        remainingDeps.set(dependentId, nextCount);
+        if (nextCount === 0) {
+          nextReadyIds.add(dependentId);
+        }
+      }
+    }
+
+    // Preserve declaration order inside the same frontier for deterministic history.
+    ready = steps.filter((step) => nextReadyIds.has(step.stepId) && !consumed.has(step.stepId));
+  }
+
+  if (consumed.size !== steps.length) {
+    throw new Error('INVALID_PLAN_SCHEMA: cyclic_dependencies_detected');
+  }
+
+  return layers;
+}
+
+function normalizeDependsOn(step: WorkflowStep): string[] {
+  if (!Array.isArray(step.dependsOn)) {
+    return [];
+  }
+
+  const deduped = new Set<string>();
+  for (const dep of step.dependsOn) {
+    if (typeof dep !== 'string' || dep.length === 0) {
+      throw new Error(`INVALID_PLAN_SCHEMA: invalid_dependency_value:${step.stepId}`);
+    }
+    deduped.add(dep);
+  }
+
+  return [...deduped];
 }

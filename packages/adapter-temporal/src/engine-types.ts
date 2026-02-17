@@ -70,7 +70,17 @@ export interface ExecutionPlan {
     fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
     targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
   };
-  steps: Array<{ stepId: string; kind?: string } & Record<string, unknown>>;
+  steps: Array<
+    {
+      stepId: string;
+      kind?: string;
+      /**
+       * Optional dependency edges for DAG execution.
+       * If omitted, workflow falls back to strict input order.
+       */
+      dependsOn?: string[];
+    } & Record<string, unknown>
+  >;
 }
 
 // ---------------------------------------------------------------------------

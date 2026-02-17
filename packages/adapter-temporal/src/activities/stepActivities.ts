@@ -135,7 +135,7 @@ export type Activities = ReturnType<typeof createActivities>;
 // Internal helpers (mirrors MockAdapter)
 // ---------------------------------------------------------------------------
 
-const ALLOWED_STEP_FIELDS = new Set(['stepId', 'kind']);
+const ALLOWED_STEP_FIELDS = new Set(['stepId', 'kind', 'dependsOn']);
 
 function resolveTemporalAttemptFromContext(): number {
   try {
@@ -184,5 +184,13 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
     if (!ALLOWED_STEP_FIELDS.has(k)) {
       throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);
     }
+  }
+
+  if (!Array.isArray(step.dependsOn) && typeof step.dependsOn !== 'undefined') {
+    throw new Error('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
+  }
+
+  if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
+    throw new Error('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
   }
 }
