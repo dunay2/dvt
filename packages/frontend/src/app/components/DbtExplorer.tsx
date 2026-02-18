@@ -13,6 +13,12 @@ import { DbtNode, DbtNodeType } from '../types/dbt';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from './ui/context-menu';
 import { cn } from './ui/utils';
 
 interface DbtExplorerProps {
@@ -62,30 +68,35 @@ export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps
 
   return (
     <div className="h-full bg-[#0f1116] border-r border-gray-800 flex flex-col">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-800">
-        <h2 className="font-semibold text-sm">dbt Explorer</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Drag to canvas</p>
-      </div>
-
       {/* Node Groups */}
       <ScrollArea className="flex-1">
-        <Accordion type="multiple" defaultValue={['SOURCE', 'MODEL', 'TEST']} className="px-2">
+        <Accordion type="multiple" defaultValue={['SOURCE', 'MODEL', 'TEST']} className="px-2 pt-2">
           {Object.entries(groupedNodes).map(([type, typeNodes]) => {
             const config = nodeTypeConfig[type as DbtNodeType];
             if (!config) return null;
 
             return (
               <AccordionItem key={type} value={type} className="border-b border-gray-800">
-                <AccordionTrigger className="py-2 px-2 hover:bg-[#1a1d23] text-sm">
-                  <div className="flex items-center gap-2">
-                    <config.icon className={cn('size-4', config.color)} />
-                    <span>{config.label}</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      {typeNodes.length}
-                    </Badge>
-                  </div>
-                </AccordionTrigger>
+                <ContextMenu>
+                  <ContextMenuTrigger asChild>
+                    <div>
+                      <AccordionTrigger className="py-2 px-2 hover:bg-[#1a1d23] text-sm">
+                        <div className="flex items-center gap-2">
+                          <config.icon className={cn('size-4', config.color)} />
+                          <span>{config.label}</span>
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            {typeNodes.length}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem onSelect={() => {}}>+ New</ContextMenuItem>
+                    <ContextMenuItem onSelect={() => {}}>Import</ContextMenuItem>
+                    <ContextMenuItem onSelect={() => {}}>Discover</ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
                 <AccordionContent className="pb-2">
                   <div className="space-y-1">
                     {typeNodes.map((node) => (
