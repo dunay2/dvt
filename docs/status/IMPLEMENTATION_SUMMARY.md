@@ -205,7 +205,18 @@ When behavior changes affect deterministic execution:
 3. Update baseline hashes intentionally.
 4. Document changes in `CHANGELOG.md`.
 
+## Post-Closure Direction (2026-02-18)
+
+- `#15` is considered closed for MVP runtime parity after Slice 4+6 completion and validation.
+- Next product-delivery focus is `#10` (Golden Paths) to capitalize on the now-stable interpreter runtime.
+- Immediate sequencing recommendation:
+  1. dbt project parser
+  2. lineage/DAG builder from dbt metadata
+  3. SQL preview + end-to-end execution demo flow
+- Retry policy rationale and constraints for the current MVP baseline are formalized in [`ADR-0007`](../decisions/ADR-0007-temporal-retry-policy-mvp.md).
+- Observability, determinism linting, and heartbeat strategy remain explicit debt and are intentionally deferred to hardening iterations.
+
 ---
 
 **Status**: Active and usable (with audited gaps tracked)
-**Last updated**: 2026-02-17
+**Last updated**: 2026-02-18
