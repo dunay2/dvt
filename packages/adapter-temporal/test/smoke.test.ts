@@ -73,6 +73,7 @@ describe('adapter-temporal foundation', () => {
     });
 
     expect(cfg.identity).toBeUndefined();
+    expect(cfg.continueAsNewAfterLayerCount).toBe(0);
   });
 
   it('loads config with defaults and env overrides', () => {
@@ -83,6 +84,7 @@ describe('adapter-temporal foundation', () => {
       TEMPORAL_IDENTITY: 'adapter-a',
       TEMPORAL_CONNECT_TIMEOUT_MS: '1500',
       TEMPORAL_REQUEST_TIMEOUT_MS: '2500',
+      TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: '12',
     });
 
     expect(cfg.address).toBe('temporal:7233');
@@ -91,6 +93,7 @@ describe('adapter-temporal foundation', () => {
     expect(cfg.identity).toBe('adapter-a');
     expect(cfg.connectTimeoutMs).toBe(1500);
     expect(cfg.requestTimeoutMs).toBe(2500);
+    expect(cfg.continueAsNewAfterLayerCount).toBe(12);
   });
 
   it('maps workflow identifiers and status deterministically', () => {

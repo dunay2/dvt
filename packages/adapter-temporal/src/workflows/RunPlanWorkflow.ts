@@ -11,6 +11,8 @@
  *  - Zero Node.js / DOM APIs
  */
 import {
+  ApplicationFailure,
+  continueAsNew,
   condition,
   defineQuery,
   defineSignal,
@@ -43,11 +45,18 @@ export interface RunPlanWorkflowInput {
     runId: string;
     targetAdapter: 'temporal' | 'conductor' | 'mock';
   };
+  /** Number of layers to process before continue-as-new (`0` disables rollover). */
+  continueAsNewAfterLayerCount?: number;
+  /** Internal resume cursor used across continue-as-new executions. */
+  resumeFromLayerIndex?: number;
+  /** Internal cumulative counter used for observability and test assertions. */
+  continuedAsNewCount?: number;
 }
 
 export interface RunPlanWorkflowResult {
   runId: string;
   status: 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  continuedAsNewCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,6 +69,7 @@ export interface WorkflowState {
   cancelled: boolean;
   cancelReason?: string;
   currentStepIndex: number;
+  continuedAsNewCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,9 +89,10 @@ const activities = proxyActivities<Activities>({
   startToCloseTimeout: '30m',
   retry: {
     initialInterval: '1s',
-    maximumInterval: '10s',
+    maximumInterval: '60s',
     backoffCoefficient: 2,
     maximumAttempts: 3,
+    nonRetryableErrorTypes: ['PermanentStepError'],
   },
 });
 
@@ -91,12 +102,16 @@ const activities = proxyActivities<Activities>({
 
 export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunPlanWorkflowResult> {
   const { planRef, ctx } = input;
+  const continueAsNewAfterLayerCount = normalizeNonNegativeInt(input.continueAsNewAfterLayerCount);
+  const resumeFromLayerIndex = normalizeNonNegativeInt(input.resumeFromLayerIndex);
+  const continuedAsNewCount = normalizeNonNegativeInt(input.continuedAsNewCount);
 
   const state: WorkflowState = {
     status: 'RUNNING',
     paused: false,
     cancelled: false,
     currentStepIndex: 0,
+    continuedAsNewCount,
   };
 
   // -- signal handlers ------------------------------------------------
@@ -124,34 +139,48 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
   // -- main orchestration ---------------------------------------------
   try {
-    // 1. Persist run metadata
-    await activities.saveRunMetadata({
-      tenantId: ctx.tenantId,
-      projectId: ctx.projectId,
-      environmentId: ctx.environmentId,
-      runId: ctx.runId,
-      provider: 'temporal',
-      providerWorkflowId: ctx.runId,
-      providerRunId: ctx.runId,
-    });
+    // 1. Persist run metadata + RunStarted only in first execution.
+    if (resumeFromLayerIndex === 0) {
+      await activities.saveRunMetadata({
+        tenantId: ctx.tenantId,
+        projectId: ctx.projectId,
+        environmentId: ctx.environmentId,
+        runId: ctx.runId,
+        provider: 'temporal',
+        providerWorkflowId: ctx.runId,
+        providerRunId: ctx.runId,
+      });
 
-    // 2. Emit RunStarted
-    await activities.emitEvent({ ctx, eventType: 'RunStarted' });
+      await activities.emitEvent({ ctx, eventType: 'RunStarted' });
+    }
 
-    // 3. Fetch & validate plan via activity
+    // 2. Fetch & validate plan via activity
     const plan = await activities.fetchPlan(planRef);
 
-    // 4. Walk steps in deterministic layers (sequential fallback when no DAG edges).
+    // 3. Walk steps in deterministic layers (sequential fallback when no DAG edges).
     const executionLayers = planExecutionLayers(plan.steps);
-    let completedSteps = 0;
-    for (const layer of executionLayers) {
+    if (resumeFromLayerIndex > executionLayers.length) {
+      throw new Error('INVALID_WORKFLOW_STATE: resumeFromLayerIndex_out_of_range');
+    }
+
+    let completedSteps = countStepsBeforeLayer(executionLayers, resumeFromLayerIndex);
+    state.currentStepIndex = completedSteps;
+
+    let processedLayersInCurrentExecution = 0;
+
+    for (
+      let layerIndex = resumeFromLayerIndex;
+      layerIndex < executionLayers.length;
+      layerIndex += 1
+    ) {
+      const layer = executionLayers[layerIndex]!;
       state.currentStepIndex = completedSteps;
 
       // Check cancellation before each layer
       if (state.cancelled) {
         await activities.emitEvent({ ctx, eventType: 'RunCancelled' });
         state.status = 'CANCELLED';
-        return { runId: ctx.runId, status: 'CANCELLED' };
+        return { runId: ctx.runId, status: 'CANCELLED', continuedAsNewCount };
       }
 
       // Block while paused
@@ -162,7 +191,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
         if (state.cancelled) {
           await activities.emitEvent({ ctx, eventType: 'RunCancelled' });
           state.status = 'CANCELLED';
-          return { runId: ctx.runId, status: 'CANCELLED' };
+          return { runId: ctx.runId, status: 'CANCELLED', continuedAsNewCount };
         }
 
         await activities.emitEvent({ ctx, eventType: 'RunResumed' });
@@ -175,8 +204,20 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
       const layerResults = await Promise.all(
         layer.map(async (step) => {
-          const result = await activities.executeStep({ step, ctx });
-          return { stepId: step.stepId, result };
+          try {
+            const result = await activities.executeStep({ step, ctx });
+            return { stepId: step.stepId, result };
+          } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            const retriable = !(error instanceof ApplicationFailure) || error.nonRetryable !== true;
+            const result = {
+              stepId: step.stepId,
+              status: 'FAILED' as const,
+              retriable,
+              error: err.message,
+            };
+            return { stepId: step.stepId, result };
+          }
         })
       );
 
@@ -191,14 +232,33 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
         await activities.emitEvent({ ctx, eventType: 'StepFailed', stepId });
         await activities.emitEvent({ ctx, eventType: 'RunFailed' });
         state.status = 'FAILED';
-        return { runId: ctx.runId, status: 'FAILED' };
+        return { runId: ctx.runId, status: 'FAILED', continuedAsNewCount };
+      }
+
+      processedLayersInCurrentExecution += 1;
+      const nextLayerIndex = layerIndex + 1;
+
+      if (
+        shouldTriggerContinueAsNew({
+          continueAsNewAfterLayerCount,
+          processedLayersInCurrentExecution,
+          nextLayerIndex,
+          totalLayerCount: executionLayers.length,
+        })
+      ) {
+        return continueAsNew<typeof runPlanWorkflow>({
+          ...input,
+          continueAsNewAfterLayerCount,
+          resumeFromLayerIndex: nextLayerIndex,
+          continuedAsNewCount: continuedAsNewCount + 1,
+        });
       }
     }
 
-    // 5. All steps completed
+    // 4. All steps completed
     await activities.emitEvent({ ctx, eventType: 'RunCompleted' });
     state.status = 'COMPLETED';
-    return { runId: ctx.runId, status: 'COMPLETED' };
+    return { runId: ctx.runId, status: 'COMPLETED', continuedAsNewCount };
   } catch (err) {
     // Unexpected error — emit RunFailed if not already terminal
     if (state.status !== 'CANCELLED' && state.status !== 'FAILED') {
@@ -211,6 +271,54 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     }
     throw err;
   }
+}
+
+export function shouldTriggerContinueAsNew(args: {
+  continueAsNewAfterLayerCount: number;
+  processedLayersInCurrentExecution: number;
+  nextLayerIndex: number;
+  totalLayerCount: number;
+}): boolean {
+  if (args.continueAsNewAfterLayerCount <= 0) {
+    return false;
+  }
+
+  if (args.processedLayersInCurrentExecution < args.continueAsNewAfterLayerCount) {
+    return false;
+  }
+
+  // No rollover if there are no pending layers.
+  if (args.nextLayerIndex >= args.totalLayerCount) {
+    return false;
+  }
+
+  return true;
+}
+
+function countStepsBeforeLayer(
+  layers: ReadonlyArray<ReadonlyArray<WorkflowStep>>,
+  layerIndex: number
+): number {
+  let total = 0;
+  for (let i = 0; i < layerIndex; i += 1) {
+    total += layers[i]?.length ?? 0;
+  }
+  return total;
+}
+
+function normalizeNonNegativeInt(value: unknown): number {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const n = Number(value);
+    if (Number.isInteger(n) && n >= 0) {
+      return n;
+    }
+  }
+
+  return 0;
 }
 
 export function planExecutionLayers(steps: ReadonlyArray<WorkflowStep>): WorkflowStep[][] {

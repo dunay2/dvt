@@ -79,8 +79,15 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 ### Quality Debt Still Open
 
-- Workspace lint debt in legacy/adapter areas (import order, unresolved imports, parser project boundaries).
-- Remaining docs/path normalization across long-tail markdown files.
+- Workspace lint debt (concrete backlog):
+  - `packages/adapters-legacy/src/**` — normalize import order and unresolved references; target gate: `eslint --max-warnings 0` on package scope.
+  - `packages/adapter-postgres/test/**` — align parser project boundaries and test-lint rules; target gate: package test-lint clean run.
+  - `packages/engine/legacy-top-level-engine/**` — legacy lint drift cleanup or archive decision with explicit owner.
+- Docs/path normalization backlog (explicit files):
+  - `docs/REPO_STRUCTURE_SUMMARY.md` — reconcile active vs legacy package maps after latest adapter/engine changes.
+  - `docs/planning/ISSUE_5_TEMPORAL_ADAPTER_STATUS_AND_IMPLEMENTATION_PROPOSAL.md` — refresh status links to current PR/issue trail.
+  - `docs/knowledge/ROADMAP_AND_ISSUES_MAP.md` — align issue state transitions (`#68` closed, `#15` multi-slice in progress).
+  - `docs/INDEX.md` — ensure discoverability links include current status/debt records.
 
 ## Next Work Focus
 
@@ -153,6 +160,41 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
   - `pnpm --filter @dvt/contracts build` ✅
   - `pnpm --filter @dvt/engine test -- --run test/contracts/engine.test.ts` ✅
   - Result: engine suite passed (7 files, 42 tests).
+
+## Recent High-Priority Progress Slice 3 (2026-02-17)
+
+- Scope: add deterministic continue-as-new policy to Temporal interpreter workflow (`#15`).
+- Runtime changes:
+  - Added adapter config parameter `continueAsNewAfterLayerCount` in [`TemporalAdapterConfig`](../../packages/adapter-temporal/src/config.ts:1), sourced from `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS` with safe default `0` (disabled).
+  - Workflow input/state upgraded in [`RunPlanWorkflow`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:29) with resume cursor and `continuedAsNewCount` tracking.
+  - Added deterministic rollover policy helper [`shouldTriggerContinueAsNew()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:278) and integrated `continueAsNew(...)` trigger after configured layer threshold.
+  - Adapter start payload now passes threshold to workflow in [`TemporalAdapter.startRun()`](../../packages/adapter-temporal/src/TemporalAdapter.ts:52).
+- Tests added/updated:
+  - New policy tests in [`workflow-continue-as-new.test.ts`](../../packages/adapter-temporal/test/workflow-continue-as-new.test.ts:1).
+  - Config coverage extended in [`smoke.test.ts`](../../packages/adapter-temporal/test/smoke.test.ts:68).
+- Validation evidence:
+  - `pnpm --filter @dvt/adapter-temporal test` ✅
+  - Result: adapter-temporal suite passed (6 files, 39 tests).
+
+## Recent High-Priority Progress Slice 4+6 (2026-02-17)
+
+- Scope: complete Option A parity closure for `#15` with retry/error handling + E2E golden-path coverage.
+- Runtime changes:
+  - Added controlled failure simulation in [`executeStep()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:85) via `simulateError: 'transient' | 'permanent'` for deterministic retry/error-path testing.
+  - Expanded step validation allowlist in [`validateStepShape()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:200) to accept `simulateError` in test plans.
+  - Updated workflow activity retry policy in [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:88) to:
+    - `maximumInterval: '60s'`
+    - `maximumAttempts: 3`
+    - `nonRetryableErrorTypes: ['PermanentStepError']`
+  - Added explicit activity error mapping in [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:205) to convert terminal activity failures into deterministic `StepFailed` + `RunFailed` event emission.
+- Tests added/updated:
+  - Added failure-simulation unit coverage in [`activities.test.ts`](../../packages/adapter-temporal/test/activities.test.ts:351) for transient and permanent error branches.
+  - Added linear 3-step golden-path E2E in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:417) asserting deterministic event order and `runSeq` continuity.
+  - Added permanent-failure E2E in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:476) asserting deterministic `StepFailed` + `RunFailed` terminal path.
+- Validation evidence:
+  - `pnpm --filter @dvt/adapter-temporal test -- --run test/integration.time-skipping.test.ts` ✅
+  - `pnpm --filter @dvt/adapter-temporal test` ✅
+  - Result: adapter-temporal suite passed (6 files, 43 tests).
 
 ## Operational Notes
 

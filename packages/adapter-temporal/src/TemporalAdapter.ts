@@ -58,7 +58,13 @@ export class TemporalAdapter implements IProviderAdapter {
     const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
       workflowId,
-      args: [{ planRef, ctx }],
+      args: [
+        {
+          planRef,
+          ctx,
+          continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
+        },
+      ],
     });
 
     const runId =

@@ -347,6 +347,30 @@ describe('stepActivities', () => {
         })
       ).rejects.toThrow('INVALID_STEP_SCHEMA: field_not_allowed:forbidden');
     });
+
+    it('simulates transient error when step requests transient failure', async () => {
+      const deps = buildDeps();
+      const acts = createActivities(deps);
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'test', simulateError: 'transient' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow('TRANSIENT_STEP_ERROR:s1');
+    });
+
+    it('simulates permanent error when step requests permanent failure', async () => {
+      const deps = buildDeps();
+      const acts = createActivities(deps);
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'test', simulateError: 'permanent' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow('PERMANENT_STEP_ERROR:s1');
+    });
   });
 
   describe('saveRunMetadata', () => {
