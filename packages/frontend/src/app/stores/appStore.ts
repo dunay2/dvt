@@ -69,7 +69,12 @@ interface AppState {
   setHighlightedNodes: (nodes: string[]) => void;
   toggleImpactOverlay: () => void;
   toggleColumnLevelLineage: () => void;
-  addTab: (tab: { id: string; type: string; label: string; data?: any }) => void;
+  addTab: (tab: {
+    id: string;
+    type: 'canvas' | 'run' | 'diff' | 'lineage';
+    label: string;
+    data?: any;
+  }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   setConnectionStatus: (status: Partial<ConnectionStatus>) => void;
@@ -144,7 +149,7 @@ export const useAppStore = create<AppState>((set) => ({
       const newTabs = state.activeTabs.filter((t) => t.id !== tabId);
       const newActiveId =
         state.activeTabId === tabId && newTabs.length > 0
-          ? newTabs[newTabs.length - 1].id
+          ? (newTabs[newTabs.length - 1]?.id ?? null)
           : state.activeTabId;
       return { activeTabs: newTabs, activeTabId: newActiveId };
     }),

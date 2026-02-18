@@ -29,6 +29,7 @@ module.exports = [
   // Global language options for all TypeScript files
   {
     files: ['**/*.ts'],
+    ignores: ['packages/frontend/**'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
