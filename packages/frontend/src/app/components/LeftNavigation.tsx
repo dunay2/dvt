@@ -34,7 +34,7 @@ export default function LeftNavigation() {
   return (
     <div className="bg-[#0f1116] border-r border-gray-800 flex flex-col w-14">
       {/* Navigation Items - Icon Only */}
-      <nav className="flex-1 py-3 overflow-y-auto">
+      <nav className="flex flex-col items-center gap-2 flex-1 py-3 overflow-y-auto">
         <TooltipProvider delayDuration={300}>
           {navItems.map((item) => (
             <Tooltip key={item.to}>
@@ -43,9 +43,9 @@ export default function LeftNavigation() {
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-center h-12 my-1 text-gray-400 hover:bg-[#1a1d23] hover:text-white transition-colors relative rounded-md',
-                      isActive &&
-                        'bg-[#1a1d23] text-white before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-blue-500'
+                      'flex items-center justify-center h-10 w-10 text-gray-400 border border-transparent rounded-lg transition-colors',
+                      'hover:bg-[#1a1d23] hover:text-white',
+                      isActive && 'bg-[#1a1d23] text-white border-blue-500'
                     )
                   }
                 >
