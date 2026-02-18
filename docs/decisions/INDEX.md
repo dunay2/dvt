@@ -14,6 +14,7 @@ This document is the main entry point for all ADRs in the repository.
 | ADR-0005 | Contract Formalization Tooling                              | Accepted | 2026-02-16 | [`ADR-0005-contract-formalization-tooling.md`](./ADR-0005-contract-formalization-tooling.md)                                                                       |
 | ADR-0006 | Contract Tooling Governance                                 | Accepted | 2026-02-16 | [`ADR-0006-contract-tooling-governance.md`](./ADR-0006-contract-tooling-governance.md)                                                                             |
 | ADR-0007 | Temporal Retry Policy for MVP Interpreter Runtime           | Accepted | 2026-02-18 | [`ADR-0007-temporal-retry-policy-mvp.md`](./ADR-0007-temporal-retry-policy-mvp.md)                                                                                 |
+| ADR-0008 | Source Import Wizard (Warehouse → dbt Sources)              | Accepted | 2026-02-18 | [`ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md`](./ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md)                                         |
 
 ---
 
