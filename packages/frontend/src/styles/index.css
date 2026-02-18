@@ -1,0 +1,39 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* React Flow Custom Styles */
+.react-flow {
+  background-color: #1a1d23;
+}
+
+.react-flow__node {
+  cursor: pointer;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__controls {
+  background: #0f1116;
+  border: 1px solid #374151;
+}
+
+.react-flow__controls-button {
+  background: #1a1d23;
+  border-bottom: 1px solid #374151;
+  color: #fff;
+}
+
+.react-flow__controls-button:hover {
+  background: #22252b;
+}
+
+.react-flow__minimap {
+  background: #0f1116;
+}
+
+.react-flow__attribution {
+  display: none;
+}

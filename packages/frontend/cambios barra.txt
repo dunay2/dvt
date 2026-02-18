@@ -1,0 +1,31 @@
+1. barra mas a la izquierda, la que tiene la cabecera project. 
+1️.1 Eliminar la cabecera "Projects"
+	Antes: Decía "Projects" ocupando espacio y confundiendo
+	Después: Desaparece. La barra empieza directamente con los iconos
+
+1.2 Iconos + Tooltips (solo iconos, sin texto)
+	Mantienes todos los iconos actuales pero sin el texto al lado:
+
+Icono	Tooltip	Atajo sugerido
+🖼️	Canvas	Ctrl+Shift+C
+⚡	Runs	Ctrl+Shift+R
+📦	Artifacts	Ctrl+Shift+A
+🔀	Diff	Ctrl+Shift+D
+🔗	Lineage	Ctrl+Shift+L
+💰	Cost & Observability	Ctrl+Shift+O
+🧩	Plugins	Ctrl+Shift+P
+⚙️	Admin	Ctrl+Shift+,
+3️⃣ Quitar el collapse inferior
+Antes: Había un collapse en la parte inferior para contraer/expandir
+
+Después: Desaparece. La barra tiene un ancho fijo (estándar VSCode)
+
+Los iconos se quedan siempre visibles, sin opción de colapsar más
+
+
+2. La segunda barra mas a la izquierda la que tiene la cabecera dbt explorer. 
+
+
+2.1 Eliminar la cabecera la cabecera "dbt explorer"
+	Antes: Decía "dbt explorer" ocupando espacio y confundiendo
+	Después: Desaparece. 
