@@ -25,7 +25,7 @@ const navItems = [
 
 export default function LeftNavigation() {
   return (
-    <div className="w-16 bg-[#0f1116] border-r border-gray-800 flex flex-col overflow-hidden">
+    <div className="w-16 bg-black border-r border-gray-800 flex flex-col overflow-hidden">
       <nav className="flex flex-col items-center gap-2 py-3 flex-1">
         {navItems.map((item) => (
           <TooltipProvider key={item.to}>
@@ -36,8 +36,9 @@ export default function LeftNavigation() {
                   aria-label={item.tooltip}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-center w-full p-3 text-gray-400 transition-colors duration-200',
-                      isActive && 'text-white bg-[#1a1d23] border-l-4 border-blue-500'
+                      'flex items-center justify-center w-full p-3 text-gray-400 bg-black transition-colors duration-200',
+                      'hover:text-white hover:bg-black',
+                      isActive && 'text-white bg-black border-l-4 border-blue-500'
                     )
                   }
                 >
