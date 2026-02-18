@@ -7,6 +7,12 @@ import {
   Activity,
   Maximize2,
   Minimize2,
+  Menu,
+  Eye,
+  EyeOff,
+  PanelLeftClose,
+  PanelRightClose,
+  TerminalSquare,
 } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
 import { Button } from './ui/button';
@@ -20,6 +26,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from './ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
@@ -36,6 +46,14 @@ export default function TopAppBar() {
     setSelectedTenant,
     setSelectedProject,
     setSelectedEnvironment,
+    explorerPanelVisible,
+    inspectorPanelVisible,
+    consolePanelVisible,
+    toggleExplorerPanel,
+    toggleInspectorPanel,
+    toggleConsolePanel,
+    gridSize,
+    setGridSize,
   } = useAppStore();
 
   const getStatusColor = () => {
@@ -70,6 +88,57 @@ export default function TopAppBar() {
         <Database className="size-6 text-blue-400" />
         <span className="font-semibold text-lg">DVT+</span>
       </div>
+
+      {/* View Menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+            <Menu className="size-4 mr-2" />
+            View
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuLabel>Panels</DropdownMenuLabel>
+          <DropdownMenuCheckboxItem
+            checked={explorerPanelVisible}
+            onCheckedChange={toggleExplorerPanel}
+          >
+            <PanelLeftClose className="size-4 mr-2" />
+            Explorer Panel
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuCheckboxItem
+            checked={inspectorPanelVisible}
+            onCheckedChange={toggleInspectorPanel}
+          >
+            <PanelRightClose className="size-4 mr-2" />
+            Inspector Panel
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuCheckboxItem
+            checked={consolePanelVisible}
+            onCheckedChange={toggleConsolePanel}
+          >
+            <TerminalSquare className="size-4 mr-2" />
+            Console
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Canvas Grid Size</DropdownMenuLabel>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Grid: {gridSize}px</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={() => setGridSize(10)}>10px (Dense)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setGridSize(15)}>15px</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setGridSize(20)}>20px (Default)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setGridSize(30)}>30px</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setGridSize(40)}>40px (Sparse)</DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSeparator />
+          <DropdownMenuCheckboxItem checked={focusMode} onCheckedChange={toggleFocusMode}>
+            <Maximize2 className="size-4 mr-2" />
+            Focus Mode
+          </DropdownMenuCheckboxItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Tenant Switcher */}
       <Select value={selectedTenant} onValueChange={setSelectedTenant}>

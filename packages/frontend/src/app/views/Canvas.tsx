@@ -11,6 +11,7 @@ import {
   useNodesState,
   useEdgesState,
   ReactFlowProvider,
+  MarkerType,
 } from '@xyflow/react';
 import dagre from 'dagre';
 import { toast } from 'sonner';
@@ -98,6 +99,9 @@ function CanvasContent() {
     setCurrentRun,
     userPermissions,
     setConsolePanelHeight,
+    explorerPanelVisible,
+    inspectorPanelVisible,
+    gridSize,
   } = useAppStore();
 
   const [planModalOpen, setPlanModalOpen] = useState(false);
@@ -118,9 +122,10 @@ function CanvasContent() {
         status: node.status,
         lastDuration: node.lastDuration,
         lastCost: node.lastCost,
+        showColumns: columnLevelLineageEnabled,
       },
     }));
-  }, []);
+  }, [columnLevelLineageEnabled]);
 
   const initialEdges: Edge[] = useMemo(() => {
     return mockEdges.map((edge) => ({
@@ -129,7 +134,13 @@ function CanvasContent() {
       target: edge.target,
       type: 'smoothstep',
       animated: false,
-      style: { stroke: '#6b7280' },
+      style: { stroke: '#6b7280', strokeWidth: 2 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#6b7280',
+        width: 20,
+        height: 20,
+      },
     }));
   }, []);
 
@@ -189,7 +200,20 @@ function CanvasContent() {
     const connection = (window as any).__pendingConnection;
     if (connection) {
       setEdges((eds) =>
-        addEdge({ ...connection, type: 'smoothstep', style: { stroke: '#6b7280' } }, eds)
+        addEdge(
+          {
+            ...connection,
+            type: 'smoothstep',
+            style: { stroke: '#6b7280', strokeWidth: 2 },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: '#6b7280',
+              width: 20,
+              height: 20,
+            },
+          },
+          eds
+        )
       );
       toast.success('Dependency added');
     }
@@ -240,6 +264,7 @@ function CanvasContent() {
           status: dbtNode.status,
           lastDuration: dbtNode.lastDuration,
           lastCost: dbtNode.lastCost,
+          showColumns: columnLevelLineageEnabled,
         },
       };
 
@@ -253,13 +278,27 @@ function CanvasContent() {
         return [...nds, newNode];
       });
     },
-    [setNodes]
+    [setNodes, columnLevelLineageEnabled]
   );
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
+
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedNodeIds.length === 0) {
+      toast.error('No nodes selected');
+      return;
+    }
+
+    setNodes((nds) => nds.filter((n) => !selectedNodeIds.includes(n.id)));
+    setEdges((eds) =>
+      eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target))
+    );
+    setSelectedNodes([]);
+    toast.success(`Removed ${selectedNodeIds.length} node(s)`);
+  }, [selectedNodeIds, setNodes, setEdges, setSelectedNodes]);
 
   const handlePlan = useCallback(() => {
     if (!userPermissions.canPlan) {
@@ -285,7 +324,13 @@ function CanvasContent() {
   // Update nodes with impact overlay
   const nodesWithImpact = useMemo(() => {
     if (!impactOverlayEnabled || selectedNodeIds.length === 0) {
-      return nodes;
+      return nodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          showColumns: columnLevelLineageEnabled,
+        },
+      }));
     }
 
     // Get selected node
@@ -337,9 +382,10 @@ function CanvasContent() {
           : downstream.has(node.id)
             ? 'downstream'
             : 'none',
+        showColumns: columnLevelLineageEnabled,
       },
     }));
-  }, [nodes, edges, impactOverlayEnabled, selectedNodeIds]);
+  }, [nodes, edges, impactOverlayEnabled, selectedNodeIds, columnLevelLineageEnabled]);
 
   const inspectorNode = mockNodes.find((n) => n.id === inspectorNodeId);
 
@@ -347,7 +393,7 @@ function CanvasContent() {
     <>
       <ResizablePanelGroup direction="horizontal" className="h-full">
         {/* Left: Explorer */}
-        {!focusMode && (
+        {!focusMode && explorerPanelVisible && (
           <>
             <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
               <DbtExplorer nodes={mockNodes} />
@@ -357,7 +403,9 @@ function CanvasContent() {
         )}
 
         {/* Center: Canvas */}
-        <ResizablePanel defaultSize={focusMode ? 100 : 55}>
+        <ResizablePanel
+          defaultSize={focusMode || !explorerPanelVisible || !inspectorPanelVisible ? 100 : 55}
+        >
           <div className="h-full flex flex-col bg-[#1a1d23]">
             {/* Toolbar */}
             <div className="h-12 bg-[#0f1116] border-b border-gray-800 flex items-center justify-between px-4">
@@ -432,10 +480,15 @@ function CanvasContent() {
                       .join(', ')}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedNodes([])}>
-                  <X className="size-4 mr-1" />
-                  Clear
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
+                    <X className="size-4 mr-1" />
+                    Remove
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedNodes([])}>
+                    Clear
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -453,7 +506,7 @@ function CanvasContent() {
                 fitView
                 className="bg-[#1a1d23]"
               >
-                <Background color="#374151" gap={20} />
+                <Background color="#374151" gap={gridSize} />
                 <Controls className="bg-[#0f1116] border-gray-700" />
                 <MiniMap
                   className="bg-[#0f1116] border border-gray-700"
@@ -464,6 +517,10 @@ function CanvasContent() {
                     if (type === 'TEST') return '#ef4444';
                     return '#6b7280';
                   }}
+                  nodeBorderRadius={4}
+                  onClick={(event, position) => {
+                    // This enables minimap click navigation - React Flow handles it automatically
+                  }}
                 />
               </ReactFlow>
             </div>
@@ -471,7 +528,7 @@ function CanvasContent() {
         </ResizablePanel>
 
         {/* Right: Inspector */}
-        {!focusMode && (
+        {!focusMode && inspectorPanelVisible && (
           <>
             <ResizableHandle />
             <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>

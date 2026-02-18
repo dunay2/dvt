@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import {
   Database,
@@ -8,9 +8,12 @@ import {
   Presentation,
   TrendingUp,
   Package,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { cn } from '../ui/utils';
 
 interface DbtNodeData {
@@ -21,6 +24,8 @@ interface DbtNodeData {
   lastCost?: number;
   isHighlighted?: boolean;
   impactLevel?: 'upstream' | 'downstream' | 'none';
+  showColumns?: boolean;
+  columns?: Array<{ name: string; type: string }>;
 }
 
 const nodeTypeConfig: Record<DbtNodeType, { icon: any; bgColor: string; borderColor: string }> = {
@@ -46,6 +51,7 @@ const statusColors: Record<NodeStatus, string> = {
 function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
   const config = nodeTypeConfig[data.type];
   const Icon = config.icon;
+  const [columnsExpanded, setColumnsExpanded] = useState(false);
 
   const shouldShowSourceHandle = data.type !== 'TEST' && data.type !== 'EXPOSURE';
   const shouldShowTargetHandle = data.type !== 'SOURCE';
@@ -57,11 +63,19 @@ function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
         ? 'border-orange-500'
         : '';
 
+  // Mock columns for demonstration
+  const columns = data.columns || [
+    { name: 'id', type: 'INTEGER' },
+    { name: 'name', type: 'VARCHAR' },
+    { name: 'created_at', type: 'TIMESTAMP' },
+  ];
+
+  const showColumnsSection = data.showColumns && (data.type === 'MODEL' || data.type === 'SOURCE');
+
   return (
     <div
       className={cn(
-        'relative rounded-lg border-2 transition-all',
-        config.bgColor,
+        'relative rounded-lg border-2 transition-all bg-[#0f1116]',
         selected ? 'border-white shadow-lg' : config.borderColor,
         data.isHighlighted && 'ring-2 ring-white ring-offset-2 ring-offset-[#1a1d23]',
         impactBorderColor && impactBorderColor
@@ -114,6 +128,40 @@ function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
             >
               {data.impactLevel}
             </Badge>
+          </div>
+        )}
+
+        {/* Columns Section */}
+        {showColumnsSection && (
+          <div className="mt-2 border-t border-gray-700 pt-2">
+            <button
+              onClick={() => setColumnsExpanded(!columnsExpanded)}
+              className="flex items-center justify-between w-full text-xs text-gray-400 hover:text-white transition-colors"
+            >
+              <span className="flex items-center gap-1">
+                <Table className="size-3" />
+                Columns ({columns.length})
+              </span>
+              {columnsExpanded ? (
+                <ChevronUp className="size-3" />
+              ) : (
+                <ChevronDown className="size-3" />
+              )}
+            </button>
+
+            {columnsExpanded && (
+              <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                {columns.map((col, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between text-[10px] px-2 py-1 bg-[#1a1d23] rounded"
+                  >
+                    <span className="font-mono text-white truncate">{col.name}</span>
+                    <span className="text-gray-500 ml-2 flex-shrink-0">{col.type}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
