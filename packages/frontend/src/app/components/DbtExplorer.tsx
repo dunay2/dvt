@@ -75,28 +75,42 @@ export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps
             const config = nodeTypeConfig[type as DbtNodeType];
             if (!config) return null;
 
+            const isSources = type === 'SOURCE';
+
             return (
               <AccordionItem key={type} value={type} className="border-b border-gray-800">
-                <ContextMenu>
-                  <ContextMenuTrigger asChild>
-                    <div>
-                      <AccordionTrigger className="py-2 px-2 hover:bg-[#1a1d23] text-sm">
-                        <div className="flex items-center gap-2">
-                          <config.icon className={cn('size-4', config.color)} />
-                          <span>{config.label}</span>
-                          <Badge variant="secondary" className="ml-auto text-xs">
-                            {typeNodes.length}
-                          </Badge>
-                        </div>
-                      </AccordionTrigger>
+                {isSources ? (
+                  <ContextMenu>
+                    <ContextMenuTrigger asChild>
+                      <div>
+                        <AccordionTrigger className="py-2 px-2 hover:bg-[#1a1d23] text-sm">
+                          <div className="flex items-center gap-2">
+                            <config.icon className={cn('size-4', config.color)} />
+                            <span>{config.label}</span>
+                            <Badge variant="secondary" className="ml-auto text-xs">
+                              {typeNodes.length}
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                      </div>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem onSelect={() => {}}>+ New</ContextMenuItem>
+                      <ContextMenuItem onSelect={() => {}}>Import</ContextMenuItem>
+                      <ContextMenuItem onSelect={() => {}}>Discover</ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ) : (
+                  <AccordionTrigger className="py-2 px-2 hover:bg-[#1a1d23] text-sm">
+                    <div className="flex items-center gap-2">
+                      <config.icon className={cn('size-4', config.color)} />
+                      <span>{config.label}</span>
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        {typeNodes.length}
+                      </Badge>
                     </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem onSelect={() => {}}>+ New</ContextMenuItem>
-                    <ContextMenuItem onSelect={() => {}}>Import</ContextMenuItem>
-                    <ContextMenuItem onSelect={() => {}}>Discover</ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
+                  </AccordionTrigger>
+                )}
                 <AccordionContent className="pb-2">
                   <div className="space-y-1">
                     {typeNodes.map((node) => (
