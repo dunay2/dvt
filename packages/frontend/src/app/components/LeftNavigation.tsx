@@ -1,5 +1,6 @@
 import {
   LayoutGrid,
+  GitBranch,
   PlayCircle,
   FileText,
   GitCompare,
@@ -7,51 +8,56 @@ import {
   DollarSign,
   Puzzle,
   Shield,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { NavLink } from 'react-router';
+import { useAppStore } from '../stores/appStore';
+import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
 
 const navItems = [
-  { to: '/canvas', icon: LayoutGrid, tooltip: 'Canvas', shortcut: 'Ctrl+Shift+C' },
-  { to: '/runs', icon: PlayCircle, tooltip: 'Runs', shortcut: 'Ctrl+Shift+R' },
-  { to: '/artifacts', icon: FileText, tooltip: 'Artifacts', shortcut: 'Ctrl+Shift+A' },
-  { to: '/diff', icon: GitCompare, tooltip: 'Diff', shortcut: 'Ctrl+Shift+D' },
-  { to: '/lineage', icon: GitGraph, tooltip: 'Lineage', shortcut: 'Ctrl+Shift+L' },
-  { to: '/cost', icon: DollarSign, tooltip: 'Cost & Observability', shortcut: 'Ctrl+Shift+O' },
-  { to: '/plugins', icon: Puzzle, tooltip: 'Plugins', shortcut: 'Ctrl+Shift+P' },
-  { to: '/admin', icon: Shield, tooltip: 'Admin', shortcut: 'Ctrl+Shift+,' },
+  { to: '/canvas', icon: LayoutGrid, label: 'Canvas' },
+  { to: '/runs', icon: PlayCircle, label: 'Runs' },
+  { to: '/artifacts', icon: FileText, label: 'Artifacts' },
+  { to: '/diff', icon: GitCompare, label: 'Diff' },
+  { to: '/lineage', icon: GitGraph, label: 'Lineage' },
+  { to: '/cost', icon: DollarSign, label: 'Cost & Observability' },
+  { to: '/plugins', icon: Puzzle, label: 'Plugins' },
+  { to: '/admin', icon: Shield, label: 'Admin' },
 ];
 
 export default function LeftNavigation() {
+  const { leftNavCollapsed } = useAppStore();
+
   return (
-    <div className="w-16 bg-[#0f1116] border-r border-gray-800 flex flex-col overflow-hidden">
-      <nav className="flex flex-col items-center gap-2 py-3 flex-1">
-        {navItems.map((item) => (
-          <TooltipProvider key={item.to}>
-            <Tooltip>
+    <div className="bg-[#0f1116] border-r border-gray-800 flex flex-col w-14">
+      {/* Navigation Items - Icon Only */}
+      <nav className="flex-1 py-3 overflow-y-auto">
+        <TooltipProvider delayDuration={300}>
+          {navItems.map((item) => (
+            <Tooltip key={item.to}>
               <TooltipTrigger asChild>
                 <NavLink
                   to={item.to}
-                  aria-label={item.tooltip}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-center w-full p-3 text-gray-400 transition-colors duration-200',
-                      'hover:text-white hover:bg-[#1a1d23]',
-                      isActive && 'text-white border-l-4 border-blue-500'
+                      'flex items-center justify-center h-12 my-1 text-gray-400 hover:bg-[#1a1d23] hover:text-white transition-colors relative rounded-md',
+                      isActive &&
+                        'bg-[#1a1d23] text-white before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-blue-500'
                     )
                   }
                 >
-                  <item.icon className="size-5" />
+                  <item.icon className="size-6" />
                 </NavLink>
               </TooltipTrigger>
-              <TooltipContent className="bg-[#0f1116] border border-gray-800 text-white">
-                <div className="text-sm font-medium">{item.tooltip}</div>
-                <div className="text-xs text-gray-500">{item.shortcut}</div>
+              <TooltipContent side="right">
+                <p>{item.label}</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        ))}
+          ))}
+        </TooltipProvider>
       </nav>
     </div>
   );
