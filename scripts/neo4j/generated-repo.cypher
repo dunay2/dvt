@@ -800,7 +800,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/decisions' })
 SET m += { nombre: 'decisions', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/decisions/ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md' })
-SET a += { nombre: 'ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md', tipo: 'md', bytes: 5636, topico: 'doc' }
+SET a += { nombre: 'ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md', tipo: 'md', bytes: 5817, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/decisions' })
 SET m += { nombre: 'decisions', lenguaje: 'markdown' }
@@ -2275,7 +2275,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'scripts/neo4j/generated-repo.cypher' })
-SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 194934, topico: 'other' }
+SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 258795, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
@@ -4498,7 +4498,7 @@ WITH d
 MATCH (a:Archivo { path: 'docs/decisions/ADR-0007-temporal-retry-policy-mvp.md' })
 MERGE (a)-[:IMPLEMENTA_DECISION]->(d);
 MERGE (d:Decision { id: 'ADR-0008' })
-SET d += { title: 'ADR-0008: Source Import Wizard (Warehouse  dbt Sources)', date: '2026-02-18', status: 'Accepted', path: 'docs/decisions/ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md' }
+SET d += { title: 'ADR-0008: Source Import Wizard (Warehouse → dbt Sources)', date: '2026-02-18', status: 'Accepted', path: 'docs/decisions/ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md' }
 REMOVE d.titulo, d.fecha, d.estado
 WITH d
 MATCH (a:Archivo { path: 'docs/decisions/ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md' })
