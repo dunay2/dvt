@@ -1,26 +1,26 @@
-# Base de Conocimiento DVT — Índice
+# DVT Knowledge Base — Index
 
-Este índice centraliza el conocimiento operativo/técnico del repositorio para acelerar:
+This index centralizes operational/technical knowledge for the repository to accelerate:
 
 - onboarding
-- análisis de impacto
-- planificación de issues
-- trazabilidad entre ADR ↔ documentación ↔ código
+- impact analysis
+- issue planning
+- traceability between ADR ↔ documentation ↔ code
 
 ---
 
-## 1) Visión general del sistema
+## 1) System overview
 
-- [Mapa del repositorio y capas](./REPOSITORY_MAP.md)
-- [Roadmap, estado e issues](./ROADMAP_AND_ISSUES_MAP.md)
+- [Repository map and layers](./REPOSITORY_MAP.md)
+- [Roadmap, status, and issues](./ROADMAP_AND_ISSUES_MAP.md)
 
-## 2) Arquitectura y contratos
+## 2) Architecture and contracts
 
-- [Arquitectura engine (índice)](../architecture/engine/INDEX.md)
-- [Arquitectura frontend (índice)](../architecture/frontend/INDEX.md)
-- [Contratos automatización](../CONTRACTS_AUTOMATION_INDEX.md)
+- [Engine architecture (index)](../architecture/engine/INDEX.md)
+- [Frontend architecture (index)](../architecture/frontend/INDEX.md)
+- [Contracts automation](../CONTRACTS_AUTOMATION_INDEX.md)
 
-## 3) Decisiones arquitectónicas (ADR)
+## 3) Architecture Decision Records (ADR)
 
 - [ADR-0001: Temporal integration test policy](../decisions/ADR-0001-temporal-integration-test-policy.md)
 - [ADR-0002: Neo4j knowledge graph context repository](../decisions/ADR-0002-neo4j-knowledge-graph-context-repository.md)
@@ -28,12 +28,12 @@ Este índice centraliza el conocimiento operativo/técnico del repositorio para 
 ## 4) Knowledge graph (Neo4j)
 
 - Compose: [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
-- Cypher base: [`scripts/neo4j/base-schema.cypher`](../../scripts/neo4j/base-schema.cypher)
+- Base Cypher: [`scripts/neo4j/base-schema.cypher`](../../scripts/neo4j/base-schema.cypher)
 - Seed: [`scripts/neo4j/neo4j-seed.cjs`](../../scripts/neo4j/neo4j-seed.cjs)
-- Query contexto: [`scripts/neo4j/neo4j-query-context.cjs`](../../scripts/neo4j/neo4j-query-context.cjs)
+- Context query: [`scripts/neo4j/neo4j-query-context.cjs`](../../scripts/neo4j/neo4j-query-context.cjs)
 - JSON → prompt: [`scripts/neo4j/neo4j-json-to-prompt.cjs`](../../scripts/neo4j/neo4j-json-to-prompt.cjs)
 
-## 5) Paquetes (workspace)
+## 5) Packages (workspace)
 
 - [`packages/contracts`](../../packages/contracts)
 - [`packages/engine`](../../packages/engine)
@@ -41,7 +41,7 @@ Este índice centraliza el conocimiento operativo/técnico del repositorio para 
 - [`packages/adapter-postgres`](../../packages/adapter-postgres)
 - [`packages/cli`](../../packages/cli)
 
-## 6) Estado operativo
+## 6) Operational status
 
 - [Implementation summary](../status/IMPLEMENTATION_SUMMARY.md)
 - [Quality pack temporal/engine](../status/DVT_PLUS_ENGINE_TEMPORAL_QUALITY_PACK_2026-02-14.md)
