@@ -382,6 +382,9 @@ jobs:
       - name: Validate RFC 2119 normative keywords (warning mode)
         run: pnpm contracts:rfc2119:validate
 
+      - name: Validate glossary terminology usage (warning mode)
+        run: pnpm contracts:glossary:validate
+
       - name: Validate cross-contract markdown references (warning mode)
         run: pnpm contracts:references:validate
 
@@ -452,7 +455,9 @@ jobs:
           DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
 
       - name: Run adapter-postgres integration smoke tests
-        run: pnpm --filter @dvt/adapter-postgres test
+        run:
+          pnpm --filter @dvt/adapter-postgres exec vitest run test/smoke.test.ts --config
+          vitest.config.cjs
         env:
           DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
           DVT_PG_INTEGRATION: '1'
