@@ -12,22 +12,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-format:
-    name: ESLint + Prettier + TypeScript
+  detect-affected:
+    name: Detect affected workspaces
     runs-on: ubuntu-latest
+    outputs:
+      any_changed: ${{ steps.matrix.outputs.any_changed }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Detect code changes (PR only)
-        id: changes
+      - name: Detect changes by path (PR only)
+        id: filter
         if: github.event_name == 'pull_request'
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            code:
-              - 'packages/**'
-              - 'scripts/**'
+            global:
               - '.github/workflows/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -36,21 +39,96 @@ jobs:
               - 'eslint.config.cjs'
               - 'commitlint.config.cjs'
               - '.prettierrc.json'
+              - 'scripts/**'
+            api:
+              - 'apps/api/**'
+            web:
+              - 'apps/web/**'
+            contracts:
+              - 'packages/contracts/**'
+            engine:
+              - 'packages/engine/**'
+            adapter_postgres:
+              - 'packages/adapter-postgres/**'
+            adapter_temporal:
+              - 'packages/adapter-temporal/**'
+            cli:
+              - 'packages/cli/**'
+
+      - name: Build matrix from affected workspaces
+        id: matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          include='[]'
+          add_item() {
+            local name="$1"
+            local pkg="$2"
+            include=$(jq --arg n "$name" --arg p "$pkg" '. + [{name:$n,pkg:$p}]' <<< "$include")
+          }
+
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            add_item "api" "dvt-api"
+            add_item "web" "@dvt/web"
+            add_item "contracts" "@dvt/contracts"
+            add_item "engine" "@dvt/engine"
+            add_item "adapter-postgres" "@dvt/adapter-postgres"
+            add_item "adapter-temporal" "@dvt/adapter-temporal"
+            add_item "cli" "@dvt/cli"
+          else
+            global='${{ steps.filter.outputs.global }}'
+
+            if [[ "$global" == "true" ]]; then
+              add_item "api" "dvt-api"
+              add_item "web" "@dvt/web"
+              add_item "contracts" "@dvt/contracts"
+              add_item "engine" "@dvt/engine"
+              add_item "adapter-postgres" "@dvt/adapter-postgres"
+              add_item "adapter-temporal" "@dvt/adapter-temporal"
+              add_item "cli" "@dvt/cli"
+            else
+              [[ '${{ steps.filter.outputs.api }}' == 'true' ]] && add_item "api" "dvt-api"
+              [[ '${{ steps.filter.outputs.web }}' == 'true' ]] && add_item "web" "@dvt/web"
+              [[ '${{ steps.filter.outputs.contracts }}' == 'true' ]] && add_item "contracts" "@dvt/contracts"
+              [[ '${{ steps.filter.outputs.engine }}' == 'true' ]] && add_item "engine" "@dvt/engine"
+              [[ '${{ steps.filter.outputs.adapter_postgres }}' == 'true' ]] && add_item "adapter-postgres" "@dvt/adapter-postgres"
+              [[ '${{ steps.filter.outputs.adapter_temporal }}' == 'true' ]] && add_item "adapter-temporal" "@dvt/adapter-temporal"
+              [[ '${{ steps.filter.outputs.cli }}' == 'true' ]] && add_item "cli" "@dvt/cli"
+            fi
+          fi
+
+          count=$(jq 'length' <<< "$include")
+          if [[ "$count" -gt 0 ]]; then
+            echo "any_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "matrix={\"include\":$include}" >> "$GITHUB_OUTPUT"
+
+  lint-and-format:
+    name: ESLint + Prettier (changed files)
+    needs: detect-affected
+    if: github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: '20'
 
       - name: Setup pnpm
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Cache pnpm store
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
@@ -59,24 +137,62 @@ jobs:
             pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Run ESLint
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: pnpm lint
+      - name: Run changed-file checks
+        run: node scripts/check-changed.cjs
 
-      - name: Check Prettier formatting
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: pnpm format:check
+  workspace-ci:
+    name: Workspace CI (${{ matrix.name }})
+    needs: detect-affected
+    if: github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect-affected.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Type check
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: pnpm type-check
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
 
-      - name: Skip heavy code-quality steps (docs-only PR)
-        if: github.event_name == 'pull_request' && steps.changes.outputs.code != 'true'
-        run: echo "Docs-only PR detected; skipping install/lint/type-check in this job."
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Cache pnpm store
+        uses: actions/cache@v5
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build affected workspace
+        run: pnpm --filter "${{ matrix.pkg }}" --if-present run build
+
+      - name: Test affected workspace
+        run: pnpm --filter "${{ matrix.pkg }}" --if-present run test
+
+      - name: Type-check affected workspace
+        run: pnpm --filter "${{ matrix.pkg }}" --if-present run typecheck
+
+  no-affected-workspaces:
+    name: No affected workspaces (PR)
+    needs: detect-affected
+    if: github.event_name == 'pull_request' && needs.detect-affected.outputs.any_changed != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No workspace changes detected; skipping workspace build/test jobs."
 
   markdown-lint:
     name: Markdown Documentation
