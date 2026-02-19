@@ -89,6 +89,15 @@ lowercase RFC 2119 normative keywords in prose (for example: `must`, `should`, `
 
 The script is intentionally warning-first and deterministic for CI logs.
 
+### `validate-executable-examples.cjs`
+
+Validates TypeScript examples embedded in contract markdown docs.
+
+**Scope:**
+
+- `docs/architecture/engine/contracts/**/*.md`
+- fenced code blocks tagged as `ts` / `typescript`
+
 **Usage:**
 
 ```bash
@@ -106,6 +115,20 @@ pnpm contracts:rfc2119:validate
 - Suggested uppercase replacement (`must` -> `MUST`)
 
 **Status:** Functional in warning mode (Issue #229).
+
+**Usage:**
+
+```bash
+pnpm contracts:examples:validate
+```
+
+**Behavior:**
+
+- Extracts code snippets from markdown fences
+- Attempts TypeScript parse/transpile validation with adaptive wrapping strategies
+- Fails with actionable diagnostics (`file`, `snippet index`, `line:column`, TS code)
+
+**Status:** Functional for Issue #230 executable examples validation.
 
 ## CI Integration
 
