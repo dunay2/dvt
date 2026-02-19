@@ -11,7 +11,7 @@ Use this template to author new contracts in a normalized, discoverable format.
 ```md
 # <Contract Name> (Normative v1)
 
-[← Back to Contracts Registry](../README.md)
+`../README.md`  <!-- example: use this in files inside a subfolder (engine/, security/, etc.) -->
 
 **Status**: DRAFT
 **Version**: v1
