@@ -1,6 +1,18 @@
 # DVT+ - dbt Visual Workflow Editor
 
-A high-fidelity clickable desktop web app prototype for DVT+, a dbt-compatible visual workflow editor and runner.
+Frontend web de DVT+ para edición visual de workflows dbt, planificación y operación de runs.
+
+## Estado actual (importante)
+
+Este frontend está en transición de **prototipo visual** a **cliente conectado a backend real**.
+
+- Hoy conviven vistas completas de producto con datos mock.
+- El backend actual (`apps/api`) ya ofrece endpoints de salud/diagnóstico (`/healthz`, `/readyz`, `/version`, `/db/ready`).
+- La integración de dominio (plan/run/events/artifacts) está planificada por fases.
+
+Documento de alineación recomendado:
+
+- `apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md`
 
 ## Features
 
@@ -149,12 +161,21 @@ All data is sourced from dbt artifacts (manifest.json, run_results.json, catalog
 
 ## Getting Started
 
-This is a prototype with mock data. No backend required.
+Modo actual por defecto: prototipo con datos mock.
 
 ```bash
 npm install
 npm run dev
 ```
+
+## Dirección de evolución
+
+Prioridad de evolución UX y técnica:
+
+1. Limpieza visual y foco en flujo principal (Canvas → Plan → Run).
+2. Conectividad real con backend para estados de salud y red.
+3. Integración progresiva de contratos de dominio (plan/run/monitor/artifacts).
+4. Activación gradual de vistas avanzadas (lineage/cost/plugins/admin).
 
 ## Navigation
 
