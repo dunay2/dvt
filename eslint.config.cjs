@@ -30,7 +30,7 @@ module.exports = [
   // Global language options for all TypeScript files
   {
     files: ['**/*.ts'],
-    ignores: ['packages/frontend/**'],
+    ignores: ['packages/frontend/**', 'packages/contracts/vitest.config.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
