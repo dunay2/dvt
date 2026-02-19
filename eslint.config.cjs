@@ -12,6 +12,7 @@ module.exports = {
     'packages/engine/legacy-top-level-engine/**',
     'packages/adapters-legacy/**',
     '*.d.ts',
+    'packages/contracts/vitest.config.ts',
   ],
   // ...existing config (add your rules, plugins, etc. here)
 }; // @ts-check
