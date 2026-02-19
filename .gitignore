@@ -57,6 +57,7 @@ docs-dist/
 # Private business/finance (must not be public)
 private/finance/
 private/business/
+private/neo4j/
 private/neo4j/data/
 private/neo4j/logs/
 private/neo4j/plugins/

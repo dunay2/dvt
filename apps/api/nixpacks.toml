@@ -1,0 +1,13 @@
+# Railway uses Nixpacks by default for Node projects.
+# This file makes build/start explicit and stable.
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
