@@ -45,6 +45,7 @@ jobs:
               - 'scripts/db-migrate.cjs'
               - 'scripts/neo4j/**'
               - 'scripts/validate-contracts.cjs'
+              - 'scripts/validate-rfc2119.cjs'
               - '.github/workflows/contracts.yml'
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -373,6 +374,9 @@ jobs:
         with:
           name: compiled-contracts
           path: .
+
+      - name: Validate RFC 2119 normative keywords (warning mode)
+        run: pnpm contracts:rfc2119:validate
 
       - name: Validate golden fixtures
         run: pnpm validate:contracts

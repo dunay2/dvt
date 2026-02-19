@@ -82,6 +82,31 @@ pnpm db:migrate
 
 **Status:** Functional (Issue #6 real PostgreSQL persistence enabled).
 
+### `validate-rfc2119.cjs`
+
+Scans contract markdown files under `docs/architecture/engine/contracts/**.md` and detects
+lowercase RFC 2119 normative keywords in prose (for example: `must`, `should`, `may`).
+
+The script is intentionally warning-first and deterministic for CI logs.
+
+**Usage:**
+
+```bash
+pnpm contracts:rfc2119:validate
+```
+
+**Modes:**
+
+- Default warning mode: `pnpm contracts:rfc2119:validate`
+- Error mode (future strict gate): `RFC2119_MODE=error node scripts/validate-rfc2119.cjs`
+
+**Output:**
+
+- Per-file findings with `line:column`
+- Suggested uppercase replacement (`must` -> `MUST`)
+
+**Status:** Functional in warning mode (Issue #229).
+
 ## CI Integration
 
 These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions workflow.
@@ -91,6 +116,8 @@ These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions w
 1. `contract-compile`: Validates types compile (`tsc --noEmit`)
 2. `contract-validate`: Validates golden JSON fixtures against schemas
 3. `contract-hashes`: Runs golden paths, compares snapshot hashes
+
+`contract-validate` also runs RFC 2119 scan in warning mode.
 
 **Required Checks:** All jobs must pass before merge to main branch.
 

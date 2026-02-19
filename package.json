@@ -46,6 +46,7 @@
     "db:migrate": "node scripts/db-migrate.cjs",
     "contracts:index:generate": "node scripts/generate-contract-index.cjs",
     "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- docs/architecture/engine/contracts/README.md",
+    "contracts:rfc2119:validate": "node scripts/validate-rfc2119.cjs",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
     "release": "echo \"Releases are managed by release-please workflow\"",
