@@ -33,6 +33,7 @@ module.exports = {
         'deps',
         'release',
         'api',
+        'web',
       ],
     ],
     'scope-empty': [1, 'never'],
