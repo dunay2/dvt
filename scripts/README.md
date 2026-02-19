@@ -145,6 +145,35 @@ pnpm contracts:references:validate
 
 **Status:** Functional in warning mode (Issue #228).
 
+### `validate-glossary-usage.cjs`
+
+Validates canonical glossary usage in contract markdown files using the prohibited-synonyms
+table from `GlossaryContract.v1.md`.
+
+**Checks:**
+
+- parse canonical terms and prohibited synonyms from glossary contract
+- detect prohibited synonym usage in prose
+- report canonical replacement recommendation
+
+**Usage:**
+
+```bash
+pnpm contracts:glossary:validate
+```
+
+**Modes:**
+
+- Default warning mode: `pnpm contracts:glossary:validate`
+- Error mode (hardened phase): `GLOSSARY_MODE=error node scripts/validate-glossary-usage.cjs`
+
+**Output:**
+
+- deterministic findings with `file:line:column`
+- prohibited term and suggested canonical term
+
+**Status:** Functional in warning mode (Issue #226).
+
 **Usage:**
 
 ```bash
@@ -172,6 +201,8 @@ These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions w
 `contract-validate` also runs RFC 2119 scan in warning mode.
 
 `contract-validate` also runs cross-reference validation in warning mode.
+
+`contract-validate` also runs glossary usage validation in warning mode.
 
 **Required Checks:** All jobs must pass before merge to main branch.
 
