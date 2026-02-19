@@ -387,14 +387,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     const transactionalStore = this.deps.stateStore as IRunStateStore & {
       appendAndEnqueueTx?: (
         runId: string,
-        envelopes: Omit<EventEnvelope, 'runSeq'>[],
-        outbox: IOutboxStorage
+        envelopes: Omit<EventEnvelope, 'runSeq'>[]
       ) => Promise<unknown>;
     };
 
     // Preferred path when store supports atomic append+enqueue.
     if (typeof transactionalStore.appendAndEnqueueTx === 'function') {
-      await transactionalStore.appendAndEnqueueTx(runId, [env], this.deps.outbox);
+      await transactionalStore.appendAndEnqueueTx(runId, [env]);
       return;
     }
 

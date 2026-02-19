@@ -231,4 +231,37 @@ When behavior changes affect deterministic execution:
 ---
 
 **Status**: Active and usable (with audited gaps tracked)
-**Last updated**: 2026-02-18
+**Last updated**: 2026-02-19 18:32 UTC
+
+## PostgreSQL Hardening Slice (2026-02-19 18:32 UTC)
+
+Scope executed as a prioritized hardening pass for `@dvt/adapter-postgres` and engine integration points.
+
+### P0 completed
+
+- Removed unused transactional parameter from adapter+engine transactional path:
+  - [`appendAndEnqueueTx()`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+  - [`WorkflowEngine.persistEvent()`](../../packages/engine/src/core/WorkflowEngine.ts)
+  - [`InMemoryTxStore.appendAndEnqueueTx()`](../../packages/engine/src/state/InMemoryTxStore.ts)
+- Added safe pending-outbox claiming in [`listPending()`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts) using `FOR UPDATE SKIP LOCKED` with stale-claim recovery (`claimed_at` timeout policy).
+
+### P1 completed
+
+- Added explicit integration schema teardown in [`packages/adapter-postgres/test/smoke.test.ts`](../../packages/adapter-postgres/test/smoke.test.ts) via `afterAll` and `DROP SCHEMA ... CASCADE`.
+- CI now executes Postgres integration smoke tests in [`contract-hashes` job](../../.github/workflows/contracts.yml) with PostgreSQL service and integration env flags.
+
+### P2 completed
+
+- Removed redundant index-creation path for `run_events(run_id, run_seq)` in adapter schema initialization (PK already covers access path).
+- Type-drift decision documented in [`packages/adapter-postgres/src/types.ts`](../../packages/adapter-postgres/src/types.ts): keep adapter-local transactional types for now; do not alias current `@dvt/contracts` state-store contracts yet because those represent canonical snapshot/projection contracts, not transactional outbox persistence semantics.
+
+### Validation evidence
+
+- `pnpm --filter @dvt/engine build` ✅
+- `pnpm --filter @dvt/adapter-postgres build` ✅
+- `pnpm --filter @dvt/adapter-postgres exec vitest run test/smoke.test.ts --config vitest.config.cjs` with `DVT_PG_INTEGRATION=1` + `DATABASE_URL` ✅ (3/3)
+
+### Current status
+
+- Hardening slice scope completed for requested P0/P1/P2 items.
+- Remaining higher-level track is full non-stub golden-path execution parity publication for issue-level closure criteria.

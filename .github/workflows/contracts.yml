@@ -443,6 +443,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
 
+      - name: Run adapter-postgres integration smoke tests
+        run: pnpm --filter @dvt/adapter-postgres test
+        env:
+          DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+          DVT_PG_INTEGRATION: '1'
+
       - name: Execute golden paths
         run: pnpm golden:validate
         env:

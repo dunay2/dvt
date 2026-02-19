@@ -72,8 +72,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
    */
   async appendAndEnqueueTx(
     runId: string,
-    envelopes: Omit<EventEnvelope, 'runSeq'>[],
-    _outbox: IOutboxStorage
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
   ): Promise<AppendResult> {
     return this.appendEventsTx(runId, envelopes);
   }

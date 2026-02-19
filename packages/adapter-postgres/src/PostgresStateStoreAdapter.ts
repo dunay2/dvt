@@ -96,8 +96,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async appendAndEnqueueTx(
     runId: RunId,
-    envelopes: Omit<EventEnvelope, 'runSeq'>[],
-    _outbox: IOutboxStorage
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
   ): Promise<AppendResult> {
     await this.ready();
     const client = await this.pool.connect();
@@ -247,31 +246,53 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
     await this.ready();
-    const result = await this.pool.query<OutboxRow>(
-      `
-        SELECT
-          id,
-          created_at,
-          idempotency_key,
-          payload,
-          attempts,
-          last_error
-        FROM ${quoteIdentifier(this.schema)}.outbox
-        WHERE delivered_at IS NULL
-        ORDER BY created_at ASC
-        LIMIT $1
-      `,
-      [Math.max(0, limit)]
-    );
+    const boundedLimit = Math.max(0, limit);
+    if (boundedLimit === 0) return [];
 
-    return result.rows.map((row: OutboxRow) => ({
-      id: row.id,
-      createdAt: row.created_at,
-      idempotencyKey: row.idempotency_key,
-      payload: row.payload as EventEnvelope,
-      attempts: Number(row.attempts),
-      lastError: row.last_error ?? undefined,
-    }));
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const now = this.now();
+
+      const result = await client.query<OutboxRow>(
+        `
+          WITH picked AS (
+            SELECT id
+            FROM ${quoteIdentifier(this.schema)}.outbox
+            WHERE delivered_at IS NULL
+              AND (claimed_at IS NULL OR claimed_at < ($2::timestamptz - INTERVAL '5 minutes'))
+            ORDER BY created_at ASC
+            LIMIT $1
+            FOR UPDATE SKIP LOCKED
+          ), claimed AS (
+            UPDATE ${quoteIdentifier(this.schema)}.outbox o
+            SET claimed_at = $2::timestamptz
+            FROM picked
+            WHERE o.id = picked.id
+            RETURNING o.id, o.created_at, o.idempotency_key, o.payload, o.attempts, o.last_error
+          )
+          SELECT * FROM claimed
+          ORDER BY created_at ASC
+        `,
+        [boundedLimit, now]
+      );
+
+      await client.query('COMMIT');
+
+      return result.rows.map((row: OutboxRow) => ({
+        id: row.id,
+        createdAt: row.created_at,
+        idempotencyKey: row.idempotency_key,
+        payload: row.payload as EventEnvelope,
+        attempts: Number(row.attempts),
+        lastError: row.last_error ?? undefined,
+      }));
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async markDelivered(ids: OutboxId[]): Promise<void> {
@@ -281,7 +302,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     await this.pool.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.outbox
-        SET delivered_at = $2
+        SET delivered_at = $2,
+            claimed_at = NULL
         WHERE id = ANY($1::text[])
       `,
       [ids, this.now()]
@@ -294,7 +316,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       `
         UPDATE ${quoteIdentifier(this.schema)}.outbox
         SET attempts = attempts + 1,
-            last_error = $2
+            last_error = $2,
+            claimed_at = NULL
         WHERE id = $1
       `,
       [id, error]
@@ -344,11 +367,6 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     `);
 
     await this.pool.query(`
-      CREATE INDEX IF NOT EXISTS run_events_run_id_run_seq_idx
-      ON ${quoteIdentifier(this.schema)}.run_events (run_id, run_seq)
-    `);
-
-    await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.outbox (
         id TEXT PRIMARY KEY,
         run_id TEXT NOT NULL,
@@ -358,14 +376,20 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         payload JSONB NOT NULL,
         attempts INTEGER NOT NULL DEFAULT 0,
         last_error TEXT,
+        claimed_at TIMESTAMPTZ,
         delivered_at TIMESTAMPTZ,
         UNIQUE (run_id, run_seq)
       )
     `);
 
     await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
+      ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ
+    `);
+
+    await this.pool.query(`
       CREATE INDEX IF NOT EXISTS outbox_pending_idx
-      ON ${quoteIdentifier(this.schema)}.outbox (created_at)
+      ON ${quoteIdentifier(this.schema)}.outbox (created_at, claimed_at)
       WHERE delivered_at IS NULL
     `);
   }
