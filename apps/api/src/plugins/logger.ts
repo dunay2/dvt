@@ -1,5 +1,3 @@
-import type { FastifyBaseLogger } from 'fastify';
-import pino from 'pino';
 import type { Env } from './env.js';
 
 export function buildLoggerOptions(env: Env) {

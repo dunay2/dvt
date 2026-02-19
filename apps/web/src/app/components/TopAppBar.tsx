@@ -14,11 +14,11 @@ import {
   PanelRightClose,
   TerminalSquare,
 } from 'lucide-react';
+
 import { useAppStore } from '../stores/appStore';
-import { Button } from './ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Input } from './ui/input';
+
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from './ui/dropdown-menu';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 export default function TopAppBar() {

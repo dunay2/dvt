@@ -1,4 +1,3 @@
-import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import {
   Database,
@@ -11,6 +10,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { memo, useState } from 'react';
+
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';

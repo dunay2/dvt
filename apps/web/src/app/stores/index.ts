@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+
 import { ConnectionStatus, Environment, DbtNode, ExecutionPlan, DbtRun } from '../types';
 
 // App state

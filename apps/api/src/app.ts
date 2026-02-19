@@ -1,14 +1,13 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
-import cors from '@fastify/cors';
+import Fastify, { type FastifyInstance } from 'fastify';
 
 import { loadEnv, type Env } from './plugins/env.js';
 import { buildLoggerOptions } from './plugins/logger.js';
-
+import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
 import { versionRoutes } from './routes/version.js';
-import { dbReadyRoutes } from './routes/dbReady.js';
 
 export type AppContext = {
   env: Env;

@@ -54,7 +54,10 @@ temp/
 docs-dist/
 .docusaurus/
 
-# Private business/finance (must not be public)
+# Private data (must not be public)
 private/finance/
 private/business/
 private/neo4j/
+
+# Monorepo-local private data (full path under dvt/)
+dvt/private/

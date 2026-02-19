@@ -1,10 +1,12 @@
+import { X, Info, Settings, Code, TestTube, Table, Clock, Shield } from 'lucide-react';
+
 import { DbtNode } from '../types/dbt';
+
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Badge } from './ui/badge';
-import { Card } from './ui/card';
-import { X, Info, Settings, Code, TestTube, Table, Clock, Shield } from 'lucide-react';
-import { Button } from './ui/button';
 import { cn } from './ui/utils';
 
 interface InspectorPanelProps {

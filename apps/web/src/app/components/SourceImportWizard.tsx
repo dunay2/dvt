@@ -1,22 +1,3 @@
-import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Checkbox } from './ui/checkbox';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { ScrollArea } from './ui/scroll-area';
-import { Badge } from './ui/badge';
-import { Card } from './ui/card';
-import { Separator } from './ui/separator';
 import {
   Database,
   Table,
@@ -26,7 +7,27 @@ import {
   ArrowRight,
   ArrowLeft,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { Checkbox } from './ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { ScrollArea } from './ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Separator } from './ui/separator';
 
 interface SourceImportWizardProps {
   open: boolean;
@@ -652,7 +653,10 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
               </Button>
 
               {currentStep === 'review' ? (
-                <Button onClick={handleImport} disabled={isProcessing || !canProceed()}>
+                <Button
+                  onClick={() => void handleImport()}
+                  disabled={isProcessing || !canProceed()}
+                >
                   {isProcessing ? (
                     <>
                       <Loader2 className="size-4 mr-2 animate-spin" />

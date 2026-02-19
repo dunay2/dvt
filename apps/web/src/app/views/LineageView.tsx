@@ -1,12 +1,13 @@
+import { Search, GitGraph, ArrowRight, Pin, Table, Columns } from 'lucide-react';
 import { useState } from 'react';
+
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { ScrollArea } from '../components/ui/scroll-area';
-import { Search, GitGraph, ArrowRight, Pin, Table, Columns } from 'lucide-react';
+import { Switch } from '../components/ui/switch';
 
 export default function LineageView() {
   const [searchQuery, setSearchQuery] = useState('fct_sales');

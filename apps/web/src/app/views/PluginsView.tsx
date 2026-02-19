@@ -1,13 +1,14 @@
+import { Puzzle, CheckCircle2, XCircle, Settings, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
-import { mockPlugins } from '../data/mockDbtData';
-import { Card } from '../components/ui/card';
+import { toast } from 'sonner';
+
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Switch } from '../components/ui/switch';
+import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
+import { Switch } from '../components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Puzzle, CheckCircle2, XCircle, Settings, ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
+import { mockPlugins } from '../data/mockDbtData';
 
 export default function PluginsView() {
   const [plugins, setPlugins] = useState(mockPlugins);

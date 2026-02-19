@@ -1,4 +1,3 @@
-import { useState, useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -14,18 +13,6 @@ import {
   MarkerType,
 } from '@xyflow/react';
 import dagre from 'dagre';
-import { toast } from 'sonner';
-import { useAppStore } from '../stores/appStore';
-import { mockNodes, mockEdges, mockExecutionPlan } from '../data/mockDbtData';
-import { DbtNode, DbtNodeType } from '../types/dbt';
-import DbtExplorer from '../components/DbtExplorer';
-import InspectorPanel from '../components/InspectorPanel';
-import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
-import { PlanPreviewModal, ConfirmEdgeModal } from '../components/Modals';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Separator } from '../components/ui/separator';
 import {
   Maximize,
   ZoomIn,
@@ -37,7 +24,21 @@ import {
   Columns,
   X,
 } from 'lucide-react';
+import { useState, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
+
+import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
+import DbtExplorer from '../components/DbtExplorer';
+import InspectorPanel from '../components/InspectorPanel';
+import { PlanPreviewModal, ConfirmEdgeModal } from '../components/Modals';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
+import { Separator } from '../components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
+import { mockNodes, mockEdges, mockExecutionPlan } from '../data/mockDbtData';
+import { useAppStore } from '../stores/appStore';
+import { DbtNode, DbtNodeType } from '../types/dbt';
 
 const nodeTypes = {
   dbtNode: DbtNodeComponent,

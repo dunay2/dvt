@@ -1,13 +1,3 @@
-import { useState } from 'react';
-import { useParams } from 'react-router';
-import { mockRun } from '../data/mockDbtData';
-import { useAppStore } from '../stores/appStore';
-import { Card } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { ScrollArea } from '../components/ui/scroll-area';
-import { Progress } from '../components/ui/progress';
 import {
   Play,
   Pause,
@@ -23,7 +13,18 @@ import {
   Code,
   Download,
 } from 'lucide-react';
+import { useState } from 'react';
+import { useParams } from 'react-router';
+
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { Progress } from '../components/ui/progress';
+import { ScrollArea } from '../components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
+import { mockRun } from '../data/mockDbtData';
+import { useAppStore } from '../stores/appStore';
 
 export default function RunsView() {
   const { runId } = useParams();

@@ -1,13 +1,4 @@
-import { Card } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
-import { ScrollArea } from '../components/ui/scroll-area';
+import { DollarSign, TrendingUp, TrendingDown, Activity, AlertTriangle } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -20,7 +11,17 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-import { DollarSign, TrendingUp, TrendingDown, Activity, AlertTriangle } from 'lucide-react';
+
+import { Badge } from '../components/ui/badge';
+import { Card } from '../components/ui/card';
+import { ScrollArea } from '../components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 
 const costByRun = [
   { name: 'Run 1', cost: 0.45 },

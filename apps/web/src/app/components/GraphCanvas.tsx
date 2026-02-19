@@ -1,4 +1,3 @@
-import { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -13,6 +12,7 @@ import {
   NodeTypes,
   MarkerType,
 } from '@xyflow/react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import {
@@ -25,13 +25,15 @@ import {
   Play,
   FileCheck,
 } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { useCanvasStore, useModalStore } from '../stores';
-import { mockNodes, mockExecutionPlan } from '../data/mockData';
-import { DbtNode, NodeType } from '../types';
-import { DbtNodeComponent } from './canvas/DbtNodeComponent';
 import { toast } from 'sonner';
+
+import { mockNodes, mockExecutionPlan } from '../data/mockData';
+import { useCanvasStore, useModalStore } from '../stores';
+import { DbtNode, NodeType } from '../types';
+
+import { DbtNodeComponent } from './canvas/DbtNodeComponent';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 
 // Convert dbt nodes to React Flow nodes
 const convertToFlowNodes = (dbtNodes: DbtNode[]): Node[] => {

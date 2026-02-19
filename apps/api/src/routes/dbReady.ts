@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import type { Env } from '../plugins/env.js';
+
 import { getPgPool } from '../db/pool.js';
+import type { Env } from '../plugins/env.js';
 
 export async function dbReadyRoutes(app: FastifyInstance, opts: { env: Env }): Promise<void> {
   app.get('/db/ready', async (_req, reply) => {

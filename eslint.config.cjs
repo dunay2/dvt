@@ -1,21 +1,4 @@
-// ESLint configuration file with ignores migrated from .eslintignore
-// See: https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
-
-/** @type {import('eslint').Linter.Config} */
-module.exports = {
-  ignores: [
-    '**/*.test.ts',
-    '**/*.spec.ts',
-    'engine/test/**',
-    'dist/',
-    'node_modules/',
-    'packages/engine/legacy-top-level-engine/**',
-    'packages/adapters-legacy/**',
-    '*.d.ts',
-    'packages/contracts/vitest.config.ts',
-  ],
-  // ...existing config (add your rules, plugins, etc. here)
-}; // @ts-check
+// @ts-check
 const eslint = require('@eslint/js');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
@@ -29,14 +12,25 @@ module.exports = [
 
   // Global language options for all TypeScript files
   {
-    files: ['**/*.ts'],
-    ignores: ['packages/frontend/**', 'packages/contracts/vitest.config.ts'],
+    files: ['packages/**/*.{ts,tsx}', 'apps/*/src/**/*.{ts,tsx}'],
+    ignores: [
+      'packages/frontend/**',
+      'packages/contracts/vitest.config.ts',
+      'docs/**',
+      'dist/**',
+      'coverage/**',
+      'node_modules/**',
+      'apps/web/dist/**',
+      'apps/api/dist/**',
+    ],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        project: './tsconfig.json',
+        // Default to package-level tsconfigs; specific overrides will narrow further
+        project: ['./packages/*/tsconfig.json'],
+        tsconfigRootDir: __dirname,
       },
       globals: {
         console: 'readonly',
@@ -62,7 +56,12 @@ module.exports = [
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: './tsconfig.json',
+          project: [
+            './tsconfig.json',
+            './packages/*/tsconfig.json',
+            './packages/*/tsconfig.eslint.json',
+            './apps/*/tsconfig.json',
+          ],
         },
       },
     },
@@ -109,6 +108,55 @@ module.exports = [
       'import/no-unresolved': 'error',
       'import/no-cycle': 'error',
 
+    },
+  },
+
+  // Project-specific parserOptions to avoid TS program graph ambiguity
+  {
+    files: ['packages/engine/src/**/*.ts', 'packages/engine/vitest.config.ts'],
+    languageOptions: {
+      parserOptions: { project: ['packages/engine/tsconfig.eslint.json'], tsconfigRootDir: __dirname },
+    },
+  },
+  {
+    files: ['packages/engine/test/**/*.ts'],
+    languageOptions: {
+      parserOptions: { project: ['packages/engine/tsconfig.test.eslint.json'], tsconfigRootDir: __dirname },
+      globals: { TextEncoder: 'readonly', TextDecoder: 'readonly' },
+    },
+  },
+  {
+    files: ['apps/api/src/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: { project: ['apps/api/tsconfig.json'], tsconfigRootDir: __dirname },
+    },
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
+  },
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: { project: ['apps/web/tsconfig.json'], tsconfigRootDir: __dirname },
+      globals: { window: 'readonly', document: 'readonly', navigator: 'readonly', React: 'readonly' },
+    },
+    rules: {
+      // UI app: relajar reglas estrictas que generan miles de warnings/errores sin valor
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'import/order': 'off',
+      'no-undef': 'off',
+      'no-console': 'off',
+      'no-case-declarations': 'off',
+      // Algunas reglas base pueden ser ruidosas en prototipos UI
+      'no-useless-assignment': 'off',
+    },
+  },
+  {
+    files: ['apps/web/vite.config.ts'],
+    languageOptions: {
+      parserOptions: { tsconfigRootDir: __dirname }, // no project => no type-aware for this file
     },
   },
 
@@ -240,7 +288,7 @@ module.exports = [
 
   // Test files configuration with Vitest
   {
-    files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts'],
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts', '**/*.test.tsx', '**/*.spec.tsx'],
     plugins: {
       vitest: vitestPlugin,
     },
@@ -271,24 +319,6 @@ module.exports = [
     },
   },
 
-  // Añadir overrides para TSConfig por carpeta
-  {
-    files: ['packages/engine/src/**/*.ts', 'packages/engine/vitest.config.ts'],
-    languageOptions: {
-      parserOptions: {
-        project: ['packages/engine/tsconfig.eslint.json'],
-      },
-    },
-  },
-  {
-    files: ['packages/engine/test/**/*.ts'],
-    languageOptions: {
-      parserOptions: {
-        project: ['packages/engine/tsconfig.test.eslint.json'],
-      },
-    },
-  },
-
   // Prettier should be last to override formatting rules
   prettier,
 
@@ -302,9 +332,28 @@ module.exports = [
       'packages/adapters-legacy/**',
       '**/*.d.ts',
       '.github/',
-      'docs/',
       '*.config.js',
       '*.config.ts',
+      '*.config.cjs',
+      'eslint.config.cjs',
+      // keep vite config linted via a light config block below to avoid warnings
     ],
+  },
+
+  // Lightweight config for config files to suppress warnings
+  {
+    files: ['**/vite.config.ts', '**/vitest.config.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+      globals: { __dirname: 'readonly', require: 'readonly', module: 'readonly', process: 'readonly' },
+    },
+    rules: {
+      'import/no-unresolved': 'off',
+      'no-undef': 'off',
+    },
   },
 ];

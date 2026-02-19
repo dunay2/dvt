@@ -1,9 +1,9 @@
+import { GitCompare, AlertTriangle, Info, Plus, Minus, Edit, Code } from 'lucide-react';
 import { useState } from 'react';
-import { mockDiffChanges } from '../data/mockDbtData';
-import { Card } from '../components/ui/card';
+
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
 import {
   Select,
@@ -12,8 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { GitCompare, AlertTriangle, Info, Plus, Minus, Edit, Code } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { cn } from '../components/ui/utils';
+import { mockDiffChanges } from '../data/mockDbtData';
 
 export default function DiffView() {
   const [compareMode, setCompareMode] = useState<'git' | 'run'>('git');

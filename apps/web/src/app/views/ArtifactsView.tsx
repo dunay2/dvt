@@ -1,9 +1,10 @@
-import { Card } from '../components/ui/card';
+import { FileText, Download, Eye, GitBranch } from 'lucide-react';
+
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { FileText, Download, Eye, GitBranch } from 'lucide-react';
 
 export default function ArtifactsView() {
   const artifacts = [

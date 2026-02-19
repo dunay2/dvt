@@ -1,12 +1,15 @@
-import { ExecutionPlan, DbtEdge } from '../types/dbt';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
+  CheckCircle2,
+  XCircle,
+  Clock,
+  DollarSign,
+  Zap,
+  AlertTriangle,
+  Download,
+} from 'lucide-react';
+
+import { ExecutionPlan, DbtEdge } from '../types/dbt';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,19 +20,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { ScrollArea } from './ui/scroll-area';
 import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  DollarSign,
-  Zap,
-  AlertTriangle,
-  Download,
-} from 'lucide-react';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
+import { ScrollArea } from './ui/scroll-area';
 
 interface PlanPreviewModalProps {
   open: boolean;

@@ -1,10 +1,12 @@
-import { useState } from 'react';
 import { Terminal, FileText, BarChart3, Radio, X } from 'lucide-react';
+import { useState } from 'react';
+
 import { useAppStore } from '../stores/appStore';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { ScrollArea } from './ui/scroll-area';
-import { Button } from './ui/button';
+
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { ScrollArea } from './ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 export default function Console() {
   const { setConsolePanelHeight, currentRun } = useAppStore();

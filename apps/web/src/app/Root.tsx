@@ -1,10 +1,11 @@
-import { Outlet } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import TopAppBar from './components/TopAppBar';
-import LeftNavigation from './components/LeftNavigation';
+import { Outlet } from 'react-router';
+
 import Console from './components/Console';
-import { useAppStore } from './stores/appStore';
+import LeftNavigation from './components/LeftNavigation';
+import TopAppBar from './components/TopAppBar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
+import { useAppStore } from './stores/appStore';
 import '@xyflow/react/dist/style.css';
 
 const queryClient = new QueryClient({
