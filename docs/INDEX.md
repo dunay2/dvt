@@ -44,8 +44,12 @@ This is the canonical entrypoint for project documentation.
 - [Frontend DVT+ epics and user stories](./planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md)
 - [Frontend DVT+ GitHub execution guide](./planning/BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md)
 
+
 ## Operations & Runbooks
 
+- [Infraestructura DVT](./runbooks/infra.README.md)
+- [Scripts DVT](./runbooks/scripts.README.md)
+- [Workflow Isolation Testing](./runbooks/WORKFLOW_ISOLATION_TESTING.md)
 - [SLOs (Service Level Objectives)](./architecture/engine/ops/SLOs.md)
 - [Severity matrix](./architecture/engine/ops/runbooks/severity_matrix.md)
 - [Incident response](./architecture/engine/ops/runbooks/incident_response.md)

@@ -34,6 +34,12 @@ pnpm test
 
 > **[Documentation Index](docs/INDEX.md)**
 
+### Operations & Runbooks
+
+> [Infraestructura DVT](docs/runbooks/infra.README.md)
+> [Scripts DVT](docs/runbooks/scripts.README.md)
+> [Workflow Isolation Testing](docs/runbooks/WORKFLOW_ISOLATION_TESTING.md)
+
 ### Architecture & Contracts
 
 > **[Engine Architecture Index](docs/architecture/engine/INDEX.md)** — Start here
