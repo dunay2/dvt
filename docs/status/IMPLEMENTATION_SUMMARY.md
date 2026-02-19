@@ -66,10 +66,10 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - #68: evidence posted for active Temporal adapter implementation in [`packages/adapter-temporal/src/TemporalAdapter.ts`](../../packages/adapter-temporal/src/TemporalAdapter.ts), workflows/activities, and tests; left as near-closure pending checklist alignment.
 - #14: evidence posted for engine core and projector implementation in [`packages/engine/src/core/WorkflowEngine.ts`](../../packages/engine/src/core/WorkflowEngine.ts) and [`packages/engine/src/core/SnapshotProjector.ts`](../../packages/engine/src/core/SnapshotProjector.ts); left open pending checklist/API wording refresh.
 
-### Updated in GitHub
+### Updated in GitHub (2026-02-19 18:43 UTC)
 
-- #67: **Substantially completed** (runtime boundary validation now wired in active engine entry points via `parsePlanRef`/`parseRunContext`/`parseEngineRunRef`/`parseSignalRequest` usage in `WorkflowEngine`, with regression tests covering invalid boundary payload rejection).
-- #68: **In progress / near-closure** (Temporal adapter is implemented on active `packages/*` paths with workflow, activities, provider selection, and integration test harness; pending final CI workflow closure + tracker publication alignment).
+- #67: **Closed** (runtime boundary validation delivered on active API boundaries).
+- #68: **Closed** (closure track finalized with CI alignment and canonical tracker publication).
 - #69: **Not started** (Conductor adapter package not present; engine Conductor adapter stub only).
 - #70: **Implemented and merged** (fixtures + baseline hashes + validation flow integrated via PR #201; GitHub issue remains open pending manual closure/update).
 - #71: **Blocked / not started** (depends on non-stub Conductor foundation).
@@ -81,13 +81,12 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - #6: **Foundation implemented and merged** in active adapter package (MVP base via PR #202 with `PostgresStateStoreAdapter`, contract-compatible types, and smoke coverage); follow-up required for full PostgreSQL persistence/runtime hardening.
 - #76 and #79: active repository-governance tracking for monorepo/path normalization and stale local reference cleanup.
 
-### Suggested canonical execution order
+### Suggested canonical execution order (updated 2026-02-19 18:43 UTC)
 
-1. Finalize #68 closure track (CI workflow update + publication of canonical tracker status).
-2. Complete #6 foundation (Postgres active implementation).
-3. Resolve #67 on active API boundaries.
-4. Complete #70 fixtures and executable golden-path runs.
-5. Progress #69 and #71 (Conductor + draining policies), then finalize #72 and expand #73 cross-adapter determinism.
+1. Complete #6 foundation (Postgres active implementation + closure evidence).
+2. Complete #70 fixtures and executable golden-path runs.
+3. Progress #69 and #71 (Conductor + draining policies).
+4. Finalize #72 and expand #73 cross-adapter determinism.
 
 ### Quality Debt Still Open
 
@@ -265,3 +264,28 @@ Scope executed as a prioritized hardening pass for `@dvt/adapter-postgres` and e
 
 - Hardening slice scope completed for requested P0/P1/P2 items.
 - Remaining higher-level track is full non-stub golden-path execution parity publication for issue-level closure criteria.
+
+### Type-drift strategy review (2026-02-19 18:37 UTC)
+
+Context: [`packages/adapter-postgres/src/types.ts`](../../packages/adapter-postgres/src/types.ts) currently defines local transactional adapter types while the package also depends on [`@dvt/contracts`](../../packages/contracts/index.ts).
+
+Evaluated strategies:
+
+1. **Direct import/alias from `@dvt/contracts` now**
+   - Pros: single source of truth for shared names.
+   - Cons: current exported contracts in [`packages/contracts/src/types/state-store.ts`](../../packages/contracts/src/types/state-store.ts) model canonical event projection (`appendEvent`, `fetchEvents`, snapshots), not transactional outbox persistence (`appendEventsTx`, `appendAndEnqueueTx`, claim/delivery lifecycle).
+   - Risk: forced casts and semantic mismatch.
+
+2. **Keep fully local adapter types (current state)**
+   - Pros: clean separation and no false coupling.
+   - Cons: long-term drift risk on overlapping fields (`eventType`, `RunMetadata`, envelope shape).
+
+3. **Introduce a dedicated shared transactional contract module (recommended)**
+   - Add a new contract surface in `@dvt/contracts` specifically for transactional state-store + outbox behavior.
+   - Adapter and engine import from that module while canonical snapshot/projection contracts stay separate.
+   - Preserves decoupling-by-boundary while eliminating duplicated type definitions.
+
+Decision at this timestamp:
+
+- Keep local types for now.
+- Plan a follow-up to extract **transactional** shared contracts into `@dvt/contracts` and migrate [`packages/adapter-postgres/src/types.ts`](../../packages/adapter-postgres/src/types.ts) and engine call sites together in one compatibility slice.

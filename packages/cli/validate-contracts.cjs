@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 const {
   parsePlanRef,
   parseRunContext,
@@ -28,6 +29,7 @@ const RESULTS_FILE = path.join(
   'results',
   'golden-paths-run.json'
 );
+const GLOSSARY_VALIDATOR = path.join(REPO_ROOT, 'scripts', 'validate-glossary-usage.cjs');
 
 function collectJsonFiles(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
@@ -240,6 +242,18 @@ function validateGoldenResultsFile(filePath) {
 
 function main() {
   console.log('🔍 Contract validation bundle (US-1.1 / #133)\n');
+
+  if (fs.existsSync(GLOSSARY_VALIDATOR)) {
+    const glossaryRun = spawnSync(process.execPath, [GLOSSARY_VALIDATOR, '--mode', 'warn'], {
+      cwd: REPO_ROOT,
+      stdio: 'inherit',
+      env: process.env,
+    });
+    if (glossaryRun.status !== 0) {
+      console.error('\n❌ Glossary validation execution failed');
+      process.exit(1);
+    }
+  }
 
   const planFiles = collectJsonFiles(PLANS_DIR);
   if (!planFiles.length) {

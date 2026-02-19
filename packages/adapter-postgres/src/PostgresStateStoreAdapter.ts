@@ -377,8 +377,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         attempts INTEGER NOT NULL DEFAULT 0,
         last_error TEXT,
         claimed_at TIMESTAMPTZ,
-        delivered_at TIMESTAMPTZ,
-        UNIQUE (run_id, run_seq)
+        delivered_at TIMESTAMPTZ
       )
     `);
 
@@ -387,11 +386,28 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ
     `);
 
+    // Backward-compat cleanup for older schema revisions:
+    // - drop redundant UNIQUE(run_id, run_seq) because id already encodes runId+runSeq
+    await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
+      DROP CONSTRAINT IF EXISTS outbox_run_id_run_seq_key
+    `);
+
+    // If an old pending index exists with outdated definition, recreate deterministically.
+    await this.pool.query(
+      `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('outbox_pending_idx')}`
+    );
+
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS outbox_pending_idx
       ON ${quoteIdentifier(this.schema)}.outbox (created_at, claimed_at)
       WHERE delivered_at IS NULL
     `);
+
+    // Backward-compat cleanup for previously created redundant run_events index.
+    await this.pool.query(
+      `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('run_events_run_id_run_seq_idx')}`
+    );
   }
 
   private async appendEventsTxWithClient(

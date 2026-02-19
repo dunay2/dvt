@@ -116,6 +116,33 @@ pnpm contracts:rfc2119:validate
 
 **Status:** Functional in warning mode (Issue #229).
 
+### `validate-glossary-usage.cjs`
+
+Validates terminology usage in contract markdown files against the canonical glossary:
+`docs/architecture/engine/contracts/engine/GlossaryContract.v1.md`.
+
+**Checks:**
+
+- parses canonical terms (section 2),
+- parses prohibited synonyms (section 10),
+- reports prohibited synonym usage in contract markdown files with deterministic
+  `file:line:column` output.
+
+**Usage:**
+
+```bash
+pnpm contracts:glossary:validate
+pnpm validate:glossary
+```
+
+**Modes:**
+
+- Warning mode (non-blocking): `pnpm contracts:glossary:validate`
+- Error mode (blocking): `pnpm validate:glossary`
+
+**Status:** Functional in warning mode for CI (`contracts.yml`) and wired into
+`validate:contracts` bundle (Issue #226).
+
 ### `validate-references.cjs`
 
 Validates cross-contract markdown references under
