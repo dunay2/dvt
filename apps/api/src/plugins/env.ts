@@ -9,6 +9,8 @@ const EnvSchema = z.object({
   // Railway: set this to your Vercel domain (comma-separated allowed)
   // Example: https://dbf.vercel.app,https://dbf-staging.vercel.app
   CORS_ORIGIN: z.string().default("*"),
+  // Postgres connection string used by /db/ready (and later persistence)
+  DATABASE_URL: z.string().optional(),
   SERVICE_NAME: z.string().default("dbf-api")
 });
 

@@ -8,6 +8,7 @@ import { buildLoggerOptions } from "./plugins/logger.js";
 
 import { healthRoutes } from "./routes/health.js";
 import { versionRoutes } from "./routes/version.js";
+import { dbReadyRoutes } from "./routes/dbReady.js";
 
 export type AppContext = {
   env: Env;
@@ -37,6 +38,7 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
 
   app.register(healthRoutes, { prefix: "/" });
   app.register(versionRoutes, { prefix: "/" });
+  app.register(dbReadyRoutes, { prefix: "/", env });
 
   app.get("/", async () => ({ service: env.SERVICE_NAME, ok: true }));
 
