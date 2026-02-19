@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from 'pg';
 
 let pool: Pool | null = null;
 
@@ -10,7 +10,7 @@ export function getPgPool(connectionString: string): Pool {
     // Conservative defaults for local dev; tune per workload later.
     max: 5,
     idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 5_000
+    connectionTimeoutMillis: 5_000,
   });
 
   return pool;
