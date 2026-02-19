@@ -43,6 +43,7 @@ jobs:
               - '.golden/**'
               - 'scripts/compare-hashes.cjs'
               - 'scripts/db-migrate.cjs'
+              - 'scripts/validate-executable-examples.cjs'
               - 'scripts/neo4j/**'
               - 'scripts/validate-contracts.cjs'
               - 'scripts/validate-rfc2119.cjs'
@@ -380,6 +381,9 @@ jobs:
 
       - name: Validate golden fixtures
         run: pnpm validate:contracts
+
+      - name: Validate executable TypeScript examples in contracts
+        run: pnpm contracts:examples:validate
 
   contract-hashes:
     name: Execute Golden Paths & Validate Hashes
