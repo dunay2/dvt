@@ -1,12 +1,27 @@
-import { describe, expect, test } from 'vitest';
+import { Client } from 'pg';
+import { afterAll, describe, expect, test } from 'vitest';
 
 import { PostgresStateStoreAdapter } from '../src/index.js';
+import { quoteIdentifier } from '../src/sqlUtils.js';
 
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
 const describeIfPg = runIntegration ? describe : describe.skip;
 
 describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
   const schema = `dvt_it_${Date.now()}`;
+
+  afterAll(async () => {
+    const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
+    if (!connectionString) return;
+
+    const client = new Client({ connectionString });
+    await client.connect();
+    try {
+      await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
+    } finally {
+      await client.end();
+    }
+  });
 
   test('stores run metadata and returns it by runId', async () => {
     const adapter = new PostgresStateStoreAdapter({
@@ -73,23 +88,19 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     });
 
     try {
-      const { appended } = await adapter.appendAndEnqueueTx(
-        'run-3',
-        [
-          {
-            eventType: 'RunQueued',
-            emittedAt: '2026-02-15T22:00:00.000Z',
-            tenantId: 't1',
-            projectId: 'p1',
-            environmentId: 'dev',
-            runId: 'run-3',
-            engineAttemptId: 1,
-            logicalAttemptId: 1,
-            idempotencyKey: 'k-queued',
-          },
-        ],
-        adapter
-      );
+      const { appended } = await adapter.appendAndEnqueueTx('run-3', [
+        {
+          eventType: 'RunQueued',
+          emittedAt: '2026-02-15T22:00:00.000Z',
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'dev',
+          runId: 'run-3',
+          engineAttemptId: 1,
+          logicalAttemptId: 1,
+          idempotencyKey: 'k-queued',
+        },
+      ]);
 
       expect(appended).toHaveLength(1);
 

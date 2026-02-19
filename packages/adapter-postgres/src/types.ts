@@ -1,3 +1,22 @@
+/**
+ * NOTE (P2 type-drift assessment):
+ *
+ * This adapter intentionally keeps local storage/event types instead of importing
+ * `IRunStateStore`-like contracts from `@dvt/contracts/src/types/state-store`.
+ *
+ * Rationale:
+ * - `@dvt/contracts` currently models canonical projection contracts
+ *   (`appendEvent`, `fetchEvents`, snapshots), while this adapter implements
+ *   transactional engine persistence and outbox semantics
+ *   (`appendEventsTx`, `appendAndEnqueueTx`, `listPending`, `markDelivered`).
+ * - Directly aliasing those contracts here would conflate two different layers
+ *   and force unsafe adapter-side casting.
+ *
+ * Decision:
+ * - Keep local adapter types for now.
+ * - Revisit extraction of shared transactional persistence contracts when
+ *   engine + adapter interfaces are formally unified.
+ */
 export type IsoUtcString = string;
 export type RunId = string;
 export type OutboxId = string;
