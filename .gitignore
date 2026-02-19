@@ -58,9 +58,3 @@ docs-dist/
 private/finance/
 private/business/
 private/neo4j/
-dvt/private/neo4j/
-private/neo4j/data/
-private/neo4j/logs/
-private/neo4j/plugins/
-private/neo4j/import/
-private/neo4j/output/
