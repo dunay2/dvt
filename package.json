@@ -50,6 +50,7 @@
     "contracts:rfc2119:validate": "node scripts/validate-rfc2119.cjs",
     "contracts:glossary:validate": "node scripts/validate-glossary-usage.cjs --mode warn",
     "contracts:references:validate": "node scripts/validate-references.cjs",
+    "contracts:idempotency:validate": "node scripts/validate-idempotency-vectors.cjs",
     "contracts:examples:validate": "node scripts/validate-executable-examples.cjs",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",

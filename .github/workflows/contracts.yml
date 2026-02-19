@@ -45,6 +45,8 @@ jobs:
               - 'scripts/db-migrate.cjs'
               - 'scripts/validate-executable-examples.cjs'
               - 'scripts/validate-references.cjs'
+              - 'scripts/validate-glossary-usage.cjs'
+              - 'scripts/validate-idempotency-vectors.cjs'
               - 'scripts/neo4j/**'
               - 'scripts/validate-contracts.cjs'
               - 'scripts/validate-rfc2119.cjs'
@@ -385,6 +387,12 @@ jobs:
 
       - name: Validate cross-contract markdown references (warning mode)
         run: pnpm contracts:references:validate
+
+      - name: Validate glossary canonical usage (warning mode)
+        run: pnpm contracts:glossary:validate
+
+      - name: Validate idempotency vectors (blocking)
+        run: pnpm contracts:idempotency:validate
 
       - name: Validate golden fixtures
         run: pnpm validate:contracts

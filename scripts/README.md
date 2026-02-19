@@ -172,6 +172,60 @@ pnpm contracts:references:validate
 
 **Status:** Functional in warning mode (Issue #228).
 
+### `validate-glossary-usage.cjs`
+
+Validates canonical glossary usage in contract markdown files using the prohibited-synonyms
+table from `GlossaryContract.v1.md`.
+
+**Checks:**
+
+- parse canonical terms and prohibited synonyms from glossary contract
+- detect prohibited synonym usage in prose
+- report canonical replacement recommendation
+
+**Usage:**
+
+```bash
+pnpm contracts:glossary:validate
+```
+
+**Modes:**
+
+- Default warning mode: `pnpm contracts:glossary:validate`
+- Error mode (hardened phase): `GLOSSARY_MODE=error node scripts/validate-glossary-usage.cjs`
+
+**Output:**
+
+- deterministic findings with `file:line:column`
+- prohibited term and suggested canonical term
+
+**Status:** Functional in warning mode (Issue #226).
+
+### `validate-idempotency-vectors.cjs`
+
+Validates versioned RunEvents idempotency vectors by recomputing SHA-256 digests using
+canonical field order and delimiter rules.
+
+**Scope:**
+
+- `docs/architecture/engine/contracts/engine/*.idempotency_vectors.json`
+
+**Checks:**
+
+- required vector fields
+- canonical `RUN` token for run-level vectors
+- delimiter guard (`|`) in input fields
+- SHA-256 digest equality against expected vectors
+- formula version handling (`v1` and `v2.0.1`)
+
+**Usage:**
+
+```bash
+pnpm contracts:idempotency:validate
+```
+
+**Status:** Blocking validator for correctness (Issue #227).
+
 **Usage:**
 
 ```bash
@@ -199,6 +253,10 @@ These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions w
 `contract-validate` also runs RFC 2119 scan in warning mode.
 
 `contract-validate` also runs cross-reference validation in warning mode.
+
+`contract-validate` also runs glossary usage validation in warning mode.
+
+`contract-validate` also runs idempotency vectors validation in blocking mode.
 
 **Required Checks:** All jobs must pass before merge to main branch.
 
