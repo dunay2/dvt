@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/schemas/provenance-event.schema.json",
+  "title": "ProvenanceEvent v1",
+  "description": "Auditable and immutable provenance envelope for domain events.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "eventType",
+    "occurredAtUtc",
+    "emittedAtUtc",
+    "actor",
+    "action",
+    "context",
+    "integrity"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "v1",
+      "description": "ProvenanceEvent schema version."
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique provenance event identifier."
+    },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "INGESTION",
+        "PLANNING",
+        "EXECUTION",
+        "SIGNAL",
+        "STATE_MUTATION",
+        "AUDIT",
+        "SYSTEM"
+      ],
+      "description": "High-level provenance category."
+    },
+    "occurredAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when the source action occurred."
+    },
+    "emittedAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when this provenance envelope was emitted."
+    },
+    "tenantId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional tenant scope for multi-tenant traceability."
+    },
+    "actor": {
+      "$ref": "#/$defs/actor"
+    },
+    "action": {
+      "$ref": "#/$defs/action"
+    },
+    "resource": {
+      "$ref": "#/$defs/resource"
+    },
+    "context": {
+      "$ref": "#/$defs/context"
+    },
+    "data": {
+      "type": "object",
+      "description": "Event-specific payload values for provenance consumers.",
+      "additionalProperties": true
+    },
+    "integrity": {
+      "$ref": "#/$defs/integrity"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Extensible metadata for non-breaking provenance evolution.",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["user", "service", "system"]
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["name", "result"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Action identifier (e.g., PLAN_CREATED, RUN_STARTED)."
+        },
+        "result": {
+          "type": "string",
+          "enum": ["SUCCESS", "FAILURE", "DENIED", "NOOP"]
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "required": ["type", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["graph", "canvas", "plan", "run", "step", "artifact", "config", "plugin"]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["source", "correlationId"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Origin component or module emitting the event."
+        },
+        "correlationId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "traceId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "required": ["payloadSha256", "producer"],
+      "additionalProperties": false,
+      "properties": {
+        "payloadSha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "description": "SHA-256 digest of canonical event payload."
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Producer identity that emitted this provenance event."
+        },
+        "previousEventSha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "description": "Optional hash-chain back reference for tamper-evidence."
+        },
+        "signature": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional signature/JWS payload if enabled by implementation policy."
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "v1",
+      "eventId": "prov_2026_02_19_0001",
+      "eventType": "STATE_MUTATION",
+      "occurredAtUtc": "2026-02-19T18:00:00.000Z",
+      "emittedAtUtc": "2026-02-19T18:00:00.210Z",
+      "tenantId": "tenant_acme",
+      "actor": {
+        "id": "svc-engine",
+        "type": "service",
+        "displayName": "Workflow Engine"
+      },
+      "action": {
+        "name": "RUN_STARTED",
+        "result": "SUCCESS"
+      },
+      "resource": {
+        "type": "run",
+        "id": "run-42",
+        "version": "v2"
+      },
+      "context": {
+        "source": "engine.core",
+        "correlationId": "corr-123",
+        "runId": "run-42",
+        "requestId": "req-888",
+        "traceId": "trace-456"
+      },
+      "data": {
+        "statusFrom": "QUEUED",
+        "statusTo": "RUNNING"
+      },
+      "integrity": {
+        "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "producer": "engine@v2.5.0",
+        "previousEventSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "metadata": {
+        "environmentId": "prod"
+      }
+    }
+  ]
+}

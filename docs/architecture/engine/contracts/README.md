@@ -33,6 +33,7 @@ This file tracks:
 | extensions | [Plugin Sandbox](./extensions/PluginSandbox.v1.md) | v1 | DRAFT | Extension | [extensions/PluginSandbox.v1.md](./extensions/PluginSandbox.v1.md) |
 | schemas | [CanvasState](./schemas/canvas-state.schema.json) | v1 | DRAFT | Schema | [schemas/canvas-state.schema.json](./schemas/canvas-state.schema.json) |
 | schemas | [LogicalGraph (GCM)](./schemas/logical-graph.schema.json) | v0.1 | DRAFT | Schema | [schemas/logical-graph.schema.json](./schemas/logical-graph.schema.json) |
+| schemas | [ProvenanceEvent](./schemas/provenance-event.schema.json) | v1 | DRAFT | Schema | [schemas/provenance-event.schema.json](./schemas/provenance-event.schema.json) |
 | security | [Audit Log](./security/AuditLog.v1.md) | v1 | DRAFT | Core | [security/AuditLog.v1.md](./security/AuditLog.v1.md) |
 | security | [Authorization](./security/IAuthorization.v1.md) | v1 | DRAFT | Core | [security/IAuthorization.v1.md](./security/IAuthorization.v1.md) |
 | state-store | [IRunStateStore](./state-store/IRunStateStore.v1.md) | v1 | DRAFT | Core | [state-store/IRunStateStore.v1.md](./state-store/IRunStateStore.v1.md) |
