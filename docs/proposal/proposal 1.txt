@@ -1,0 +1,122 @@
+Identificación de Zonas y su Función
+Basado en la disposición de los elementos, este mockup parece ser la interfaz principal de un producto de Observabilidad y Desarrollo de Pipelines de Datos (Data Observability/Development Tool). Aquí está el desglose:
+
+Panel Superior (Top Bar): Funciona como un Panel de Control Global y Contexto del Proyecto.
+
+DVTT+, View: Probablemente el nombre del producto y un menú para cambiar la vista (gráfico, lista, código).
+
+ACME Corp, dbt-analytics: Selectores para cambiar de organización y de proyecto de análisis.
+
+dev, main, a3f2b91: Selectores de entorno (desarrollo vs. producción) y de rama de control de versiones (Git).
+
+Search...: Una barra de búsqueda global de activos (modelos, tests, fuentes).
+
+REST OK / Live: Indicador del estado de la conexión y posiblemente un botón para cambiar a modo "live".
+
+Plan, Run: Acciones principales para compilar/planificar y ejecutar el pipeline.
+
+**Panel Izquierdo (Left Sidebar): Actúa como un Navegador de Activos y Linaje.
+
+dbt Explorer / Drag to canvas: Un nodo principal que probablemente abre un explorador más detallado o permite arrastrar elementos al lienzo.
+
+Sources, Models, Tests, Exposures: Categorías principales de activos en un proyecto dbt. La función principal es listarlos y permitir la navegación.
+
+**Área Central (Main Canvas): Es el Lienzo de Trabajo Principal o Diagrama de Linaje (Lineage Graph).
+
+Auto Layout, Impact, Columns: Controles para modificar la vista del gráfico (organizar automáticamente, resaltar impacto, mostrar columnas).
+
+El gráfico en sí (src_erp_orders conectado a stg_orders conectado a dim_store y fct_sales): Representación visual del flujo de datos. Los cuadros son nodos (modelos, fuentes) y las flechas las dependencias.
+
+**Panel Inferior (Bottom Panel): Funciona como un Panel de Información Detallada o "Inspector".
+
+model1 (2.3s $0.05), test_not_null_store_id, etc.: Listas o pestañas que muestran detalles de los elementos seleccionados en el lienzo o del proyecto en general.
+
+Parece haber pestañas o secciones para: Detalles de modelos (con métricas de ejecución como tiempo y costo), Tests, Datos de origen, y un gráfico de rendimiento.
+
+El contenido listado aquí (model1, test_not_null_store_id) parece redundante con la barra izquierda, pero probablemente se actualiza en función de la selección en el lienzo central.
+
+**Panel Derecho (Right Sidebar): Es un Inspector Contextual.
+
+Select a node to inspect: Un placeholder que indica que al hacer clic en un elemento del lienzo central, este panel mostrará sus propiedades, documentación, o código YAML/SQL asociado.
+
+Propuestas de Mejora desde el Punto de Vista de UX/Usabilidad
+El mockup tiene una estructura lógica, pero hay oportunidades para hacerlo más intuitivo, eficiente y menos confuso.
+
+1. Clarificar y Unificar las Áreas de Información (Reducir Redundancia y Confusión)
+Problema: Hay múltiples áreas que muestran listas de modelos y tests (Panel Izquierdo, Panel Inferior), lo que puede causar confusión sobre su propósito. ¿Cuál es la fuente de verdad para la navegación? ¿Cuál es el detalle?
+
+Mejora:
+
+El Panel Izquierdo debe ser el único navegador de activos. Debe permitir buscar y filtrar, y al hacer clic en un elemento, este debería resaltarse en el lienzo central y mostrar su detalle en el Panel Derecho.
+
+El Panel Inferior debería transformarse en un área de "Detalles de Ejecución y Resultados". En lugar de listar modelos estáticos, debería mostrar:
+
+Output de Runs: La salida en tiempo real de cuando se ejecuta un comando Run o Plan.
+
+Historial de Ejecuciones: Una lista de las últimas ejecuciones, su estado (éxito/fallo), duración y costo.
+
+Alertas: Notificaciones sobre tests fallidos o anomalías en los datos.
+
+Vista de Datos (Sample): Una previsualización de los datos de un nodo seleccionado.
+
+2. Mejorar la Claridad del Lienzo Principal (Lineage Graph)
+Problema: El gráfico es el corazón de la herramienta, pero puede volverse rápidamente complejo e inmanejable. Los controles (Auto Layout, Impact) son crípticos.
+
+Mejora:
+
+Iconografía y Tooltips: Añadir iconos pequeños a los controles (Auto Layout, Impact, Columns) y tooltips descriptivos que expliquen su función ("Organizar nodos automáticamente", "Resaltar el impacto aguas abajo del nodo seleccionado").
+
+Filtrado por Capas: Añadir una funcionalidad para filtrar el gráfico por tipo de nodo (ej. "Mostrar solo modelos marts" o "Ocultar fuentes"). Esto ayudaría a los usuarios a enfocarse.
+
+Mini-mapa (Minimap): En gráficos grandes, un mini-mapa en una esquina ayuda a navegar y saber qué parte del DAG se está visualizando.
+
+Diferenciación Visual: Los nodos ya tienen colores, pero se puede mejorar. Por ejemplo, que los nodos que son "fuentes" tengan un icono de fuente, los "modelos" un icono de tabla, etc., directamente en el nodo del gráfico.
+
+3. Hacer el Inspector Contextual más Inteligente y Potente
+Problema: Select a node to inspect es un placeholder. Necesita una propuesta de valor más clara.
+
+Mejora:
+
+Contenido por Contexto: Al seleccionar un nodo, este panel debería mostrar de forma clara y con pestañas:
+
+Documentación: La descripción del modelo.
+Definición: El código SQL subyacente.
+Metadatos: Propietario, fecha de creación, última actualización.
+Calidad: Resultados de los tests asociados a este nodo.
+Rendimiento: Estadísticas de ejecución (tiempo, costo, filas procesadas).
+4. Optimizar la Barra Superior (Global Controls)
+Problema: Mucha información y acciones importantes están apiñadas. "REST OK / Live" es confuso. ¿Qué significa "Live"? ¿Es un botón?
+
+Mejora:
+
+Agrupar por Contexto:
+
+Grupo 1 - Organización/Proyecto: (ACME Corp, dbt-analytics) juntos.
+
+Grupo 2 - Entorno/Versión: (dev, main, a3f2b91) juntos, quizás con un estilo de "etiquetas" (tags/chips).
+
+Grupo 3 - Acciones: (Plan, Run) juntos, con colores prominentes (azul para Plan, verde para Run).
+
+Mejorar el Indicador de Conexión: Cambiar "REST OK / Live" por un simple punto verde con el tooltip "Conexión activa (Modo Live)" si es necesario, o un botón "Activar Live Mode". El texto "REST OK" es demasiado técnico para la mayoría de los usuarios.
+
+5. Micro-interacciones y Feedback
+Problema: No hay feedback sobre el estado de carga, selección o acciones.
+
+Mejora:
+
+Estados Visuales Claros: Al hacer clic en un nodo del lienzo, este debe tener un borde o sombra más grueso. El inspector derecho debe animarse suavemente para mostrar la nueva información.
+
+Feedback de Acción: Al hacer clic en "Run", debería aparecer una notificación o el panel inferior debería abrirse automáticamente mostrando el progreso ("Running...", "Compiling...", etc.).
+
+Resumen de la Propuesta de Valor
+Con estas mejoras, la herramienta pasaría de ser un mockup funcional a una experiencia de usuario mucho más intuitiva y productiva:
+
+Navegación Clara: Sabes exactamente dónde buscar (izquierda) y dónde inspeccionar (derecha).
+
+Trabajo Contextual: El panel inferior se transforma en una herramienta dinámica que muestra lo relevante en cada momento (ejecuciones, logs, datos).
+
+Comprensión Visual: El gráfico de linaje es más fácil de navegar y entender gracias a mejores controles y filtros.
+
+Feedback Constante: Sabes qué está pasando en todo momento (selecciones, ejecuciones, errores).
+
+En definitiva, se trata de evolucionar de una "interfaz de herramientas" a un "espacio de trabajo centrado en el usuario", donde la complejidad de los datos se gestiona de forma visual e intuitiva.

@@ -37,5 +37,11 @@
     }
   },
   "include": ["packages/*/src/**/*.ts", "packages/*/index.ts"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "packages/frontend/**"
+  ]
 }

@@ -1,51 +1,51 @@
-# Mapa del Repositorio y Relaciones (Base de Conocimiento)
+# Repository Map and Relationships (Knowledge Base)
 
-## 1. Contexto rápido
+## 1. Quick context
 
-- Workspace monorepo con [`pnpm-workspace.yaml`](../../pnpm-workspace.yaml).
-- Paquetes canónicos en [`packages/*`](../../packages).
-- Contratos/documentación como fuente de verdad en [`docs/`](../INDEX.md).
+- Monorepo workspace with [`pnpm-workspace.yaml`](../../pnpm-workspace.yaml).
+- Canonical packages live under [`packages/*`](../../packages).
+- Contracts/documentation are the source of truth under [`docs/`](../INDEX.md).
 
 ---
 
-## 2. Capas principales
+## 2. Primary layers
 
-### 2.1 Contratos (`@dvt/contracts`)
+### 2.1 Contracts (`@dvt/contracts`)
 
-- Paquete: [`packages/contracts/package.json`](../../packages/contracts/package.json)
-- Exporta tipos, esquemas y validación en [`packages/contracts/index.ts`](../../packages/contracts/index.ts)
-- Es dependencia transversal de engine/adapters/cli.
+- Package: [`packages/contracts/package.json`](../../packages/contracts/package.json)
+- Exports types, schemas, and runtime validation in [`packages/contracts/index.ts`](../../packages/contracts/index.ts)
+- Shared dependency across engine/adapters/cli.
 
-### 2.2 Núcleo engine (`@dvt/engine`)
+### 2.2 Engine core (`@dvt/engine`)
 
-- Paquete: [`packages/engine/package.json`](../../packages/engine/package.json)
-- API pública en [`packages/engine/src/index.ts`](../../packages/engine/src/index.ts)
-- Orquestador central en [`WorkflowEngine`](../../packages/engine/src/core/WorkflowEngine.ts:93)
-- Proyección determinista en [`SnapshotProjector`](../../packages/engine/src/core/SnapshotProjector.ts:7)
-- Idempotencia en [`IdempotencyKeyBuilder`](../../packages/engine/src/core/idempotency.ts:19)
+- Package: [`packages/engine/package.json`](../../packages/engine/package.json)
+- Public API in [`packages/engine/src/index.ts`](../../packages/engine/src/index.ts)
+- Central orchestrator: [`WorkflowEngine`](../../packages/engine/src/core/WorkflowEngine.ts:93)
+- Deterministic projection: [`SnapshotProjector`](../../packages/engine/src/core/SnapshotProjector.ts:7)
+- Idempotency: [`IdempotencyKeyBuilder`](../../packages/engine/src/core/idempotency.ts:19)
 
-### 2.3 Adaptador Temporal (`@dvt/adapter-temporal`)
+### 2.3 Temporal adapter (`@dvt/adapter-temporal`)
 
-- Paquete: [`packages/adapter-temporal/package.json`](../../packages/adapter-temporal/package.json)
-- Implementación principal en [`TemporalAdapter`](../../packages/adapter-temporal/src/TemporalAdapter.ts:47)
-- Worker host en [`TemporalWorkerHost`](../../packages/adapter-temporal/src/TemporalWorkerHost.ts:22)
-- Actividades en [`createActivities()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:67)
-- Workflow en [`RunPlanWorkflow`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:31)
+- Package: [`packages/adapter-temporal/package.json`](../../packages/adapter-temporal/package.json)
+- Primary implementation: [`TemporalAdapter`](../../packages/adapter-temporal/src/TemporalAdapter.ts:47)
+- Worker host: [`TemporalWorkerHost`](../../packages/adapter-temporal/src/TemporalWorkerHost.ts:22)
+- Activities: [`createActivities()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:67)
+- Workflow: [`RunPlanWorkflow`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:31)
 
-### 2.4 Adaptador Postgres (`@dvt/adapter-postgres`)
+### 2.4 Postgres adapter (`@dvt/adapter-postgres`)
 
-- Paquete: [`packages/adapter-postgres/package.json`](../../packages/adapter-postgres/package.json)
-- Implementación principal en [`PostgresStateStoreAdapter`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts:24)
-- Estado actual: base MVP con cobertura smoke.
+- Package: [`packages/adapter-postgres/package.json`](../../packages/adapter-postgres/package.json)
+- Primary implementation: [`PostgresStateStoreAdapter`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts:24)
+- Current status: MVP baseline with smoke coverage.
 
 ### 2.5 CLI / tooling (`@dvt/cli`)
 
-- Paquete: [`packages/cli/package.json`](../../packages/cli/package.json)
-- Scripts operativos/validación en [`packages/cli/*.cjs`](../../packages/cli).
+- Package: [`packages/cli/package.json`](../../packages/cli/package.json)
+- Operational/validation scripts: [`packages/cli/*.cjs`](../../packages/cli).
 
 ---
 
-## 3. Relaciones entre paquetes (dependencias)
+## 3. Cross-package relationships (dependencies)
 
 ```mermaid
 graph TD
@@ -58,7 +58,7 @@ graph TD
   E --> L
 ```
 
-Evidencia en:
+Evidence:
 
 - [`packages/engine/package.json`](../../packages/engine/package.json)
 - [`packages/adapter-temporal/package.json`](../../packages/adapter-temporal/package.json)
@@ -67,42 +67,42 @@ Evidencia en:
 
 ---
 
-## 4. Relaciones clase/archivo más relevantes
+## 4. Key class/file relationships
 
-### 4.1 Flujo de inicio de ejecución
+### 4.1 Execution start flow
 
 1. [`WorkflowEngine.startRun()`](../../packages/engine/src/core/WorkflowEngine.ts:102)
-2. validaciones de contrato (`parse*` desde `@dvt/contracts`)
-3. autorización [`assertTenantAccess()`](../../packages/engine/src/security/authorizer.ts:2)
-4. integridad de plan [`PlanIntegrityValidator.fetchAndValidate()`](../../packages/engine/src/security/planIntegrity.ts:9)
-5. delegación a adapter (`startRun`)
-6. persistencia metadata/eventos en StateStore/Outbox
+2. Contract validation (`parse*` from `@dvt/contracts`)
+3. Authorization: [`assertTenantAccess()`](../../packages/engine/src/security/authorizer.ts:2)
+4. Plan integrity: [`PlanIntegrityValidator.fetchAndValidate()`](../../packages/engine/src/security/planIntegrity.ts:9)
+5. Delegation to adapter (`startRun`)
+6. Persist metadata/events into StateStore/Outbox
 
-### 4.2 Estado y proyección
+### 4.2 State and projection
 
-- Motor consulta eventos y reconstruye snapshot vía [`SnapshotProjector.rebuild()`](../../packages/engine/src/core/SnapshotProjector.ts:8)
-- Idempotencia para eventos/señales con [`IdempotencyKeyBuilder`](../../packages/engine/src/core/idempotency.ts:19)
+- Engine reads events and rebuilds snapshot via [`SnapshotProjector.rebuild()`](../../packages/engine/src/core/SnapshotProjector.ts:8)
+- Idempotency for events/signals via [`IdempotencyKeyBuilder`](../../packages/engine/src/core/idempotency.ts:19)
 
 ### 4.3 Adapter selection
 
-- Resolución de proveedor en [`resolveEngineProvider()`](../../packages/engine/src/application/providerSelection.ts:14)
-- Contrato de provider en [`IProviderAdapter`](../../packages/engine/src/adapters/IProviderAdapter.ts:10)
+- Provider resolution: [`resolveEngineProvider()`](../../packages/engine/src/application/providerSelection.ts:14)
+- Provider contract: [`IProviderAdapter`](../../packages/engine/src/adapters/IProviderAdapter.ts:10)
 
 ---
 
-## 5. Documentación/ADRs conectados a código
+## 5. Documentation/ADRs connected to code
 
 - ADR Temporal tests: [`ADR-0001`](../decisions/ADR-0001-temporal-integration-test-policy.md)
-  - conecta con [`packages/adapter-temporal/test/integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts)
+  - connected to [`packages/adapter-temporal/test/integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts)
 - ADR Neo4j KG: [`ADR-0002`](../decisions/ADR-0002-neo4j-knowledge-graph-context-repository.md)
-  - conecta con [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
-  - y scripts en [`scripts/neo4j`](../../scripts/neo4j)
+  - connected to [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
+  - and scripts under [`scripts/neo4j`](../../scripts/neo4j)
 
 ---
 
-## 6. Legacy y frontera canónica
+## 6. Legacy and canonical boundaries
 
-- Zona legacy explícita en [`packages/engine/legacy-top-level-engine`](../../packages/engine/legacy-top-level-engine).
-- La ruta activa/canónica está en [`packages/engine/src`](../../packages/engine/src).
+- Explicit legacy zone: [`packages/engine/legacy-top-level-engine`](../../packages/engine/legacy-top-level-engine).
+- Active/canonical path: [`packages/engine/src`](../../packages/engine/src).
 
-Referencia de consolidación: [`docs/REPO_STRUCTURE_SUMMARY.md`](../REPO_STRUCTURE_SUMMARY.md)
+Consolidation reference: [`docs/REPO_STRUCTURE_SUMMARY.md`](../REPO_STRUCTURE_SUMMARY.md)

@@ -1,0 +1,319 @@
+# ADR-0008: Source Import Wizard (Warehouse → dbt Sources)
+
+- **Status**: Accepted
+- **Date**: 2026-02-18
+- **Deciders**: DVT+ Architecture / Data UX
+- **Technical Owner**: Data Modeling Domain
+- **Scope**: Sources management (dbt integration layer)
+
+---
+
+## 1. Context
+
+DVT+ is a full dbt-compatible workflow editor and runner. To support fast onboarding and safe evolution of large analytics projects, DVT+ must allow users to create and manage **dbt sources** efficiently.
+
+Problem identified:
+
+- Manually defining sources in YAML is slow and error-prone.
+- Users typically already have tables in the warehouse.
+- Onboarding large projects requires importing many tables.
+- The product must differentiate from dbt CLI / dbt Cloud through superior UX.
+
+We therefore need the ability to:
+
+- Discover existing warehouse tables and automatically generate dbt source definitions.
+
+---
+
+## 2. Decision
+
+We will implement a **Source Import Wizard** guided by the following principles.
+
+### 2.1 Primary creation method
+
+Sources can be created via:
+
+- **Import from Warehouse** (primary)
+- **Manual creation** (secondary)
+- **Discover** (future)
+
+The **Import** wizard is the recommended default path.
+
+### 2.2 Default grouping
+
+Default grouping:
+
+- Group tables by **schema**
+
+Mapping:
+
+- `database.schema.table` → `source(schema)`
+
+Example:
+
+- `RAW.ERP.ORDERS` → `source: erp`
+- `RAW.ERP.CUSTOMERS` → `source: erp`
+
+Motivation:
+
+- Scales for enterprise projects
+- Aligns with common data domain organization
+- Avoids oversized “mega sources”
+- Keeps a consistent mental model across teams
+
+### 2.3 Default metadata options
+
+Defaults:
+
+| Feature                  | Default |
+| ------------------------ | ------- |
+| Include columns metadata | OFF     |
+| Add tests                | OFF     |
+| Add freshness            | OFF     |
+
+Motivation:
+
+- Minimize YAML noise
+- Avoid drift
+- Reduce unnecessary commits
+- Follow a “minimal dbt YAML” philosophy
+
+Advanced options will remain available.
+
+### 2.4 Persistence
+
+Source of truth:
+
+- **dbt YAML files**
+
+No proprietary storage will be introduced.
+
+Flow:
+
+`Warehouse metadata` → `Wizard` → `YAML` → `dbt parse` → `manifest.json` → `UI`
+
+### 2.5 Column metadata strategy
+
+If column metadata is included:
+
+- Store warehouse data types under `meta.warehouse_data_type`
+- Do **not** store them in standard dbt fields
+
+Motivation:
+
+- Future compatibility
+- Avoid conflicts with dbt docs behavior
+- Keep YAML clean and stable
+
+Example:
+
+```yml
+columns:
+  - name: order_id
+    meta:
+      warehouse_data_type: NUMBER
+```
+
+### 2.6 Merge strategy
+
+On import:
+
+- Merge sources by `(source.name, database, schema)`
+- Merge tables by `table.name`
+- Never delete existing configuration
+- Operation must be idempotent
+
+### 2.7 Internal identifiers
+
+Deterministic node IDs:
+
+- `source:{sourceName}:{tableName}`
+
+This enables:
+
+- UI idempotency
+- Stable re-rendering
+- Easy reconciliation
+
+---
+
+## 3. UX Decision
+
+Wizard steps:
+
+1. Connection selection
+2. Schema/Table selection
+3. Grouping configuration
+4. Metadata options
+5. Review & commit
+6. Result
+
+Entry point:
+
+- `Sources → Import`
+
+---
+
+## 4. Architecture Impact
+
+### 4.1 Backend
+
+New endpoint:
+
+- `POST /api/dbt/sources/import`
+
+Responsibilities:
+
+- Query warehouse metadata
+- Generate YAML
+- Perform safe merges
+- Execute `dbt parse`
+- Return results
+
+### 4.2 Frontend
+
+New module:
+
+- `SourceImportWizard`
+
+Integrations:
+
+- Connection service
+- Metadata service
+- Git service
+- Artifact refresh
+- Canvas placement
+
+### 4.3 Domain Model
+
+New aggregate:
+
+- `SourceImportSession`
+
+Properties:
+
+- `connectionId`
+- `selection[]`
+- `groupingStrategy`
+- `options`
+- `previewResult`
+
+---
+
+## 5. Alternatives Considered
+
+### Alternative A — Manual creation only
+
+Rejected:
+
+- Does not scale
+- Poor UX
+- Low product value
+
+### Alternative B — Automatic Discover only
+
+Rejected:
+
+- Insufficient user control
+- Higher initial complexity
+
+### Alternative C — Proprietary persistence
+
+Rejected:
+
+- Breaks dbt compatibility
+- Vendor lock-in risk
+- Unnecessary complexity
+
+---
+
+## 6. Consequences
+
+### Positive
+
+- Faster onboarding for large projects
+- Clear product differentiation
+- Fewer manual errors
+- Strong alignment with the dbt ecosystem
+- Enterprise scalability
+
+### Negative
+
+- Moderate backend complexity
+- Dependence on warehouse metadata availability/quality
+- Requires a robust YAML merge engine
+
+---
+
+## 7. Risks
+
+### Schema drift
+
+Mitigation:
+
+- Do not store columns by default
+- Provide manual refresh
+
+### YAML conflicts
+
+Mitigation:
+
+- Deterministic merge
+- Pre-commit validation
+
+### Warehouse permissions
+
+Mitigation:
+
+- Connection validation
+- Clear error handling
+
+---
+
+## 8. Future Extensions
+
+- Automatic discovery of undeclared tables
+- Incremental metadata sync
+- Import from external catalogs
+- Automatic PK/FK detection
+- Ownership governance
+- AI suggestions for tests
+
+---
+
+## 9. Strategic Importance
+
+High.
+
+This component:
+
+- Reduces initial product friction
+- Enables enterprise adoption
+- Is foundational for governance features
+- Differentiates against dbt Cloud
+
+---
+
+## 10. Implementation Priority
+
+Recommended order:
+
+1. Import Wizard MVP
+2. YAML merge engine
+3. Artifact refresh pipeline
+4. Canvas auto-placement
+5. Automatic Discover
+
+---
+
+## 11. References
+
+- dbt Sources Documentation: <https://docs.getdbt.com/docs/build/sources>
+- dbt `schema.yml` reference: <https://docs.getdbt.com/reference/dbt-yml/schema-yml>
+- Snowflake `INFORMATION_SCHEMA`: <https://docs.snowflake.com/en/sql-reference/info-schema>
+
+---
+
+## 12. Decision Summary
+
+DVT+ will implement a **Warehouse Source Import Wizard** with **schema-based default grouping**, **minimal metadata defaults**, **dbt YAML persistence** as the source of truth, and an integrated flow with artifacts and canvas.

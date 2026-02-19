@@ -32,6 +32,8 @@ module.exports = {
         'ci',
         'deps',
         'release',
+        'api',
+        'web',
       ],
     ],
     'scope-empty': [1, 'never'],

@@ -1,0 +1,23 @@
+name: dvt
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: dvt-postgres
+    environment:
+      POSTGRES_DB: dvt
+      POSTGRES_USER: dvt
+      POSTGRES_PASSWORD: dvt
+    ports:
+      - '5432:5432'
+    volumes:
+      - dvt_pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dvt -d dvt']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  dvt_pgdata:
