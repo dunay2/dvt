@@ -1,4 +1,8 @@
 export type IsoUtcString = string;
+export type RunId = string;
+export type OutboxId = string;
+export type ErrorMessage = string;
+export type SchemaName = string;
 
 export type EventType =
   | 'RunQueued'
@@ -58,14 +62,14 @@ export interface OutboxRecord {
 
 export interface IRunStateStore {
   saveRunMetadata(meta: RunMetadata): Promise<void>;
-  getRunMetadataByRunId(runId: string): Promise<RunMetadata | null>;
-  appendEventsTx(runId: string, envelopes: Omit<EventEnvelope, 'runSeq'>[]): Promise<AppendResult>;
-  listEvents(runId: string): Promise<EventEnvelope[]>;
+  getRunMetadataByRunId(runId: RunId): Promise<RunMetadata | null>;
+  appendEventsTx(runId: RunId, envelopes: Omit<EventEnvelope, 'runSeq'>[]): Promise<AppendResult>;
+  listEvents(runId: RunId): Promise<EventEnvelope[]>;
 }
 
 export interface IOutboxStorage {
-  enqueueTx(runId: string, events: EventEnvelope[]): Promise<void>;
+  enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void>;
   listPending(limit: number): Promise<OutboxRecord[]>;
-  markDelivered(ids: string[]): Promise<void>;
-  markFailed(id: string, error: string): Promise<void>;
+  markDelivered(ids: OutboxId[]): Promise<void>;
+  markFailed(id: OutboxId, error: ErrorMessage): Promise<void>;
 }

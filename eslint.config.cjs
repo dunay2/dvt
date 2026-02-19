@@ -63,6 +63,9 @@ module.exports = [
             './apps/*/tsconfig.json',
           ],
         },
+        node: {
+          extensions: ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts', '.json'],
+        },
       },
     },
     rules: {
