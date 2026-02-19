@@ -116,6 +116,35 @@ pnpm contracts:rfc2119:validate
 
 **Status:** Functional in warning mode (Issue #229).
 
+### `validate-references.cjs`
+
+Validates cross-contract markdown references under
+`docs/architecture/engine/contracts/**/*.md`.
+
+**Checks:**
+
+- local link targets exist
+- label/file version alignment when both include explicit `vX[.Y[.Z]]`
+- deprecated-reference heuristics (warning phase)
+
+**Usage:**
+
+```bash
+pnpm contracts:references:validate
+```
+
+**Modes:**
+
+- Default warning mode: `pnpm contracts:references:validate`
+- Error mode (hardened phase): `REFS_MODE=error node scripts/validate-references.cjs`
+
+**Output:**
+
+- grouped findings by category
+- `file:line:column` location per finding
+
+**Status:** Functional in warning mode (Issue #228).
+
 **Usage:**
 
 ```bash
@@ -141,6 +170,8 @@ These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions w
 3. `contract-hashes`: Runs golden paths, compares snapshot hashes
 
 `contract-validate` also runs RFC 2119 scan in warning mode.
+
+`contract-validate` also runs cross-reference validation in warning mode.
 
 **Required Checks:** All jobs must pass before merge to main branch.
 
