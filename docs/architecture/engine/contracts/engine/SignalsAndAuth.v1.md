@@ -328,7 +328,7 @@ Implementations SHOULD enforce per-tenant/per-run signal rate limits to prevent 
 
 - Parent Contract: [IWorkflowEngine.reference.v1.md](./IWorkflowEngine.reference.v1.md)
 - Run Events: [RunEvents.v1.md](./RunEvents.v1.md)
-- Execution Semantics: [ExecutionSemantics.v1.1.md](./ExecutionSemantics.v1.md)
+- Execution Semantics: [ExecutionSemantics.v1.md](./ExecutionSemantics.v1.md)
 - Approval Workflow (Draft): pending publication
 - UUID v4 (RFC 4122): https://www.rfc-editor.org/rfc/rfc4122
 
