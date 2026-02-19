@@ -72,8 +72,15 @@ pnpm db:migrate
 **Environment Variables:**
 
 - `DATABASE_URL`: PostgreSQL connection string (required)
+- `DVT_PG_SCHEMA`: target schema (optional, defaults to `dvt`)
 
-**Status:** Stub implementation until issue #6 (PostgresStateStoreAdapter) provides schema.
+**Current behavior:**
+
+- Executes ordered SQL files from `packages/adapter-postgres/migrations/*.sql`
+- Tracks applied versions in `<schema>.schema_migrations`
+- Replaces `__SCHEMA__` placeholders inside migration files
+
+**Status:** Functional (Issue #6 real PostgreSQL persistence enabled).
 
 ## CI Integration
 
@@ -90,11 +97,10 @@ These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions w
 ## Development Notes
 
 - **Blocked by issue #10**: Golden Paths examples must exist before full functionality
-- **Blocked by issue #6**: PostgresStateStoreAdapter schema needed for migrations
+- **Issue #6 implemented**: PostgresStateStoreAdapter now uses real SQL persistence + migration flow
 - **Blocked by issue #2**: TypeScript types needed for schema validation
 
-Scripts currently run in "stub mode" and will pass CI while awaiting dependencies.
-Once dependencies are resolved, scripts will perform full validation.
+`db-migrate.cjs` is no longer in stub mode. Remaining stubs are limited to flows blocked by unresolved feature issues.
 
 ## References
 

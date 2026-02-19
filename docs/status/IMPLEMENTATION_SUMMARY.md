@@ -32,6 +32,18 @@ The baseline infrastructure is in place and aligned with the monorepo layout.
 - Scripts and workflows reference package-scoped paths.
 - Determinism hash comparison is wired into CI checks.
 
+## Issue #6 Status Update (2026-02-19)
+
+- `@dvt/adapter-postgres` moved from in-memory foundation to real PostgreSQL persistence.
+- SQL migration baseline added for `run_metadata`, `run_events`, and `outbox` in [`packages/adapter-postgres/migrations/001_init.sql`](../../packages/adapter-postgres/migrations/001_init.sql).
+- Migration execution implemented in [`scripts/db-migrate.cjs`](../../scripts/db-migrate.cjs) (ordered SQL, schema placeholder replacement, migration tracking table).
+- Adapter runtime now uses `pg` queries and transactional append+enqueue behavior in [`PostgresStateStoreAdapter`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts).
+- Integration tests now support real DB validation via `DVT_PG_INTEGRATION=1` in [`packages/adapter-postgres/test/smoke.test.ts`](../../packages/adapter-postgres/test/smoke.test.ts).
+- Validation evidence:
+  - `pnpm --filter @dvt/adapter-postgres typecheck` ✅
+  - `pnpm db:migrate` (with `DATABASE_URL`) ✅
+  - `pnpm --filter @dvt/adapter-postgres test` with `DVT_PG_INTEGRATION=1` ✅ (3/3)
+
 ## Open Issues Summary
 
 ### Functional Work Still Open

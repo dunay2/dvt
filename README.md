@@ -24,7 +24,7 @@ pnpm build
 pnpm test
 ```
 
-**Installed tools**: Zod (contract validation), Prisma (DB migrations), Vitest (testing).
+**Installed tools**: Zod (contract validation), PostgreSQL (`pg`, SQL migrations), Vitest (testing).
 
 > See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development setup guide.
 
