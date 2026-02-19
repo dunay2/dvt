@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/schemas/canvas-state.schema.json",
+  "title": "CanvasState v1",
+  "description": "Stable workspace canvas state contract for deterministic reads/writes.",
+  "type": "object",
+  "required": ["schemaVersion", "canvasId", "revision", "viewport", "positions"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "v1",
+      "description": "CanvasState schema version."
+    },
+    "canvasId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this canvas state document."
+    },
+    "graphId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional related LogicalGraph snapshot identifier."
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonic canvas revision for deterministic persistence and compare-and-set workflows."
+    },
+    "viewport": {
+      "$ref": "#/$defs/viewport"
+    },
+    "positions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/nodePosition"
+      },
+      "description": "Canonical per-node position state in workspace coordinates."
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/group"
+      },
+      "default": [],
+      "description": "Optional user-defined node groups in the workspace."
+    },
+    "collapsed": {
+      "$ref": "#/$defs/collapsedState"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Extensible metadata for workspace-level preferences and annotations.",
+      "additionalProperties": true
+    },
+    "updatedAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp for last persisted mutation."
+    }
+  },
+  "$defs": {
+    "viewport": {
+      "type": "object",
+      "required": ["x", "y", "zoom"],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Current zoom factor."
+        }
+      }
+    },
+    "nodePosition": {
+      "type": "object",
+      "required": ["node_uuid", "x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "node_uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Node identity aligned with LogicalGraph node UUID."
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "pinned": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether node position is fixed and excluded from auto-layout moves."
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "required": ["groupId", "nodeUuids"],
+      "additionalProperties": false,
+      "properties": {
+        "groupId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodeUuids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "collapsedState": {
+      "type": "object",
+      "required": ["groupIds", "nodeUuids"],
+      "additionalProperties": false,
+      "properties": {
+        "groupIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "default": []
+        },
+        "nodeUuids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "v1",
+      "canvasId": "canvas_tenant_acme_prod",
+      "graphId": "gcm_2026_02_17_001",
+      "revision": 4,
+      "viewport": {
+        "x": -120.5,
+        "y": 48,
+        "zoom": 1.1
+      },
+      "positions": [
+        {
+          "node_uuid": "n_src_orders",
+          "x": 100,
+          "y": 120,
+          "pinned": false
+        },
+        {
+          "node_uuid": "n_model_fct_orders",
+          "x": 360,
+          "y": 120,
+          "pinned": true
+        }
+      ],
+      "groups": [
+        {
+          "groupId": "grp_orders",
+          "label": "Orders",
+          "nodeUuids": ["n_src_orders", "n_model_fct_orders"]
+        }
+      ],
+      "collapsed": {
+        "groupIds": ["grp_orders"],
+        "nodeUuids": []
+      },
+      "metadata": {
+        "tenantId": "tenant_acme",
+        "environmentId": "prod"
+      },
+      "updatedAtUtc": "2026-02-19T17:45:00.000Z"
+    }
+  ]
+}
