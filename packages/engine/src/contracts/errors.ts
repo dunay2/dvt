@@ -102,6 +102,20 @@ export class InvalidSchemaVersionError extends DvtError {
   }
 }
 
+export class RunMetadataNotFoundError extends DvtError {
+  constructor(runId: string) {
+    super('RUN_METADATA_NOT_FOUND', `Run metadata not found for runId: ${runId}`, runId);
+    this.name = 'RunMetadataNotFoundError';
+  }
+}
+
+export class SignalNotImplementedError extends DvtError {
+  constructor(signalType: string) {
+    super('SIGNAL_NOT_IMPLEMENTED', `NotImplemented: ${signalType} signals are Phase 2`);
+    this.name = 'SignalNotImplementedError';
+  }
+}
+
 export class OutboxRateLimitExceededError extends DvtError {
   constructor(tenantId: string) {
     super('OUTBOX_RATE_LIMIT_EXCEEDED', `Outbox rate limit exceeded for tenant: ${tenantId}`);
