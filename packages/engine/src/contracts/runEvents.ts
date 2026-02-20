@@ -10,36 +10,55 @@ export type EventType =
   | 'RunFailed'
   | 'StepStarted'
   | 'StepCompleted'
-  | 'StepFailed';
+  | 'StepFailed'
+  | 'StepSkipped';
 
-export interface EventEnvelopeBase {
+export interface RunEventInputBase {
+  eventId: string;
   eventType: EventType;
-  emittedAt: IsoUtcString;
+  runId: string;
   tenantId: string;
   projectId: string;
   environmentId: string;
-  runId: string;
-  engineAttemptId: number;
+  planId: string;
+  planVersion: string;
   logicalAttemptId: number;
-  runSeq: number; // assigned by StateStore
+  engineAttemptId: number;
+  emittedAt: IsoUtcString;
   idempotencyKey: string;
+  payload?: Record<string, unknown>;
 }
 
-export type StepEventEnvelope = EventEnvelopeBase & {
-  stepId: string;
-};
-
-export type RunEventEnvelope = EventEnvelopeBase & {
+export type RunLevelEventInput = RunEventInputBase & {
   stepId?: never;
 };
 
-export type EventEnvelope = StepEventEnvelope | RunEventEnvelope;
+export type StepLevelEventInput = RunEventInputBase & {
+  stepId: string;
+};
+
+export type RunEventInput = RunLevelEventInput | StepLevelEventInput;
+
+export type RunEventPersisted = RunEventInput & {
+  runSeq: number;
+  persistedAt: IsoUtcString;
+};
+
+// Backward-compat aliases used by existing packages.
+export type EventEnvelope = RunEventPersisted;
+
+export interface AppendResult {
+  appended: RunEventPersisted[];
+  deduped: RunEventPersisted[];
+}
 
 export interface RunMetadata {
   tenantId: string;
   projectId: string;
   environmentId: string;
   runId: string;
+  planId: string;
+  planVersion: string;
   provider: 'temporal' | 'conductor' | 'mock';
   providerWorkflowId: string;
   providerRunId: string;
