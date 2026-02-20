@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-02-20T09:12:43.687Z",
+  "dir": "packages/adapter-postgres",
+  "entries": [
+    {
+      "path": "DESIGN.md",
+      "title": "DESIGN.md",
+      "summary": "# PostgreSQL Adapter Design",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T17:56:40.798Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "package.json",
+      "title": "package.json",
+      "summary": "{ \"name\": \"@dvt/adapter-postgres\", \"version\": \"1.0.0\", \"main\": \"dist/index.js\", \"types\": \"dist/index.d.ts\", \"private\": false, \"license\": \"MIT\", \"dependencies\": { \"@dvt/contracts\": \"workspace:*\", \"@dvt/engine\": \"workspace:*\", \"pg\": \"^8.16.3\" }, \"scripts\": { \"build\": \"tsc -p tsconfig.json\", \"typecheck\": \"tsc --noEmit -p tsconfig.json\", \"test\": \"vitest run --passWithNoTests --config vitest.config.cjs\" }, \"devDependencies\": { \"@types/pg\": \"^8.15.5\", \"typescript\": \"5.9.3\", \"vitest\": \"3.2.4\" } }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T17:56:40.800Z",
+      "tokenCount": 67
+    },
+    {
+      "path": "src/index.ts",
+      "title": "index.ts",
+      "summary": "export type { AppendResult, EventEnvelope, EventType, IOutboxStorage, IRunStateStore, OutboxRecord, RunMetadata, } from './types.js'; export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.855Z",
+      "tokenCount": 27
+    },
+    {
+      "path": "src/PostgresStateStoreAdapter.ts",
+      "title": "PostgresStateStoreAdapter.ts",
+      "summary": "import { Pool, type PoolClient } from 'pg';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.148Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "src/sqlUtils.ts",
+      "title": "sqlUtils.ts",
+      "summary": "export function normalizeSchema(schema: string): string { if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(schema)) { throw new Error(`Invalid PostgreSQL schema: ${schema}`); } return schema; }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T17:56:40.802Z",
+      "tokenCount": 25
+    },
+    {
+      "path": "src/types.ts",
+      "title": "types.ts",
+      "summary": "/** * NOTE (P2 type-drift assessment): * * This adapter intentionally keeps local storage/event types instead of importing * `IRunStateStore`-like contracts from `@dvt/contracts/src/types/state-store`. * * Rationale: * - `@dvt/contracts` currently models canonical projection contracts * (`appendEvent`, `fetchEvents`, snapshots), while this adapter implements * transactional engine persistence and outbox semantics * (`appendEventsTx`, `appendAndEnqueueTx`, `listPending`, `markDelivered`). * - Directly aliasing those contracts here would conflate two different layers * and force unsafe adapter-s...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T18:36:41.538Z",
+      "tokenCount": 95
+    },
+    {
+      "path": "test/smoke.test.ts",
+      "title": "smoke.test.ts",
+      "summary": "import { Client } from 'pg'; import { afterAll, describe, expect, test } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T18:36:41.538Z",
+      "tokenCount": 20
+    },
+    {
+      "path": "tsconfig.json",
+      "title": "tsconfig.json",
+      "summary": "{ \"extends\": \"../../tsconfig.base.json\", \"compilerOptions\": { \"composite\": true, \"declaration\": true, \"declarationMap\": true, \"sourceMap\": true, \"outDir\": \"dist\", \"rootDir\": \"src\" }, \"include\": [\"src\"], \"exclude\": [\"node_modules\", \"dist\", \"test\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.013Z",
+      "tokenCount": 33
+    }
+  ]
+}

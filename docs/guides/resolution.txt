@@ -1,0 +1,333 @@
+You are implementing PR-1 for the DVT+ workflow engine. This PR fixes six P0 correctness
+defects in the event model and write path. Read every file listed before making any change.
+
+---
+
+## FILES TO READ FIRST
+
+packages/engine/src/core/idempotency.ts
+packages/engine/src/contracts/runEvents.ts
+packages/engine/src/state/IRunStateStore.ts
+packages/engine/src/state/InMemoryRunStateStore.ts
+packages/engine/src/state/InMemoryTxStore.ts
+packages/engine/src/core/WorkflowEngine.ts
+packages/engine/src/core/SnapshotProjector.ts
+packages/engine/src/adapters/mock/MockAdapter.ts
+packages/engine/src/adapters/IProviderAdapter.ts
+packages/engine/src/contracts/executionPlan.ts
+packages/engine/src/contracts/types.ts
+packages/adapter-postgres/src/PostgresStateStoreAdapter.ts
+packages/adapter-postgres/migrations/001_init.sql
+docs/architecture/engine/contracts/engine/RunEvents.v2.0.md
+docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md
+docs/architecture/engine/contracts/engine/RunEvents.v1.idempotency_vectors.json
+
+---
+
+## CHANGE 1 — Idempotency key formula
+
+File: packages/engine/src/core/idempotency.ts
+
+The current implementation is NON-CONFORMANT with RunEvents.v2.0.1 §3.1.
+Replace it entirely. The correct formula is:
+
+  SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planId | planVersion)
+
+Rules:
+- Delimiter: literal "|" character
+- stepIdNormalized: stepId for step-level events; literal string "RUN" for run-level events
+- logicalAttemptId: base-10 ASCII, no leading zeros
+- Hash algorithm: SHA-256, hex output
+- Fields: exactly these six, in this order. tenantId MUST NOT be included.
+- Encoding: UTF-8 throughout
+
+The IdempotencyKeyBuilder.runEventKey() method signature must change to accept planId and
+planVersion as required parameters. Update all callers.
+
+Add a test file packages/engine/test/idempotency.vectors.test.ts that validates the
+following five vectors exactly (these are the canonical golden vectors):
+
+Vector 1 (step-level):
+  runId="0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a", stepId="model.orders",
+  logicalAttemptId=1, eventType="StepStarted", planId="plan_abc", planVersion="2"
+  expected SHA-256: 7f4b974658a54fb2aee9ecb9cefebd2eec27f3fd01f0f8c0d031dfc4a5b96e3c
+
+Vector 2 (run-level):
+  runId="0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a",
+  logicalAttemptId=1, eventType="RunStarted", planId="plan_abc", planVersion="2"
+  expected SHA-256: 204197f81e5dc1a8491d8e411c440a730c51a741cd48a74863d3e5c4c452640d
+
+Vector 3 (step-level, attempt 2):
+  runId="0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a", stepId="model.orders",
+  logicalAttemptId=2, eventType="StepFailed", planId="plan_abc", planVersion="2"
+  expected SHA-256: 599945c1a8023ece5d2ae5132a4397b8cfbe9fa1c4c08d6fc4193a9bd9a2ebcd
+
+Vector 4 (run-level, planVersion=3):
+  runId="0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a",
+  logicalAttemptId=1, eventType="RunFailed", planId="plan_abc", planVersion="3"
+  expected SHA-256: b5a178e6f30962ca3d17b573c0d4c5f96d7623be5fe62a972644785fc05a003b
+
+Vector 5 (step-level, different stepId):
+  runId="0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a", stepId="seed.customers",
+  logicalAttemptId=1, eventType="StepSkipped", planId="plan_abc", planVersion="1"
+  expected SHA-256: 6bfdbe26d62eac0c00cf2683aae31115e76e4d33d515e39957627be091367b31
+
+These tests MUST run in CI and MUST be a required gate. If any vector fails, the build fails.
+
+---
+
+## CHANGE 2 — Event envelope type split
+
+File: packages/engine/src/contracts/runEvents.ts
+
+Replace the current EventEnvelope type with the following split:
+
+  interface RunEventInputBase {
+    eventId: string;               // UUID v4, producer-generated, stable across retries
+    eventType: EventType;
+    runId: string;
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    planId: string;                // REQUIRED — from PlanRef.planId
+    planVersion: string;           // REQUIRED — from PlanRef.planVersion
+    logicalAttemptId: number;      // domain attempt counter, starts at 1
+    engineAttemptId: number;       // REQUIRED; set to 1 if provider does not expose attempts
+    emittedAt: string;             // ISO 8601 UTC
+    idempotencyKey: string;        // SHA-256 derived per §3.1
+    payload?: Record<string, unknown>;
+  }
+
+  // Two-variant discriminated union for compile-time stepId enforcement
+  type RunLevelEventInput   = RunEventInputBase & { stepId?: never };
+  type StepLevelEventInput  = RunEventInputBase & { stepId: string };
+  type RunEventInput        = RunLevelEventInput | StepLevelEventInput;
+
+  // Store-assigned fields (returned by append authority)
+  type RunEventPersisted = RunEventInput & {
+    runSeq: number;      // monotonic per runId, assigned by store
+    persistedAt: string; // ISO 8601 UTC, store clock
+  };
+
+  // AppendResult preserves dedupe signal (outbox must only enqueue 'appended')
+  interface AppendResult {
+    appended: RunEventPersisted[];
+    deduped: RunEventPersisted[];
+  }
+
+Remove EventEnvelope and all Omit<EventEnvelope, 'runSeq'> workarounds.
+Update RunMetadata to include planId and planVersion as required string fields.
+Update EventType to include 'StepSkipped' (already in contract, missing from union).
+
+---
+
+## CHANGE 3 — IRunStateStore interface
+
+File: packages/engine/src/state/IRunStateStore.ts
+
+Replace the interface with:
+
+  interface RunBootstrapInput {
+    metadata: RunMetadata;
+    firstEvents: RunEventInput[];   // typically [RunQueued]
+  }
+
+  interface IRunStateStore {
+    // Atomic: persists run_metadata + firstEvents + outbox in one transaction.
+    // MUST fail with error code RUN_ALREADY_EXISTS if runId already has metadata.
+    bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
+
+    // Atomic: append events + outbox enqueue.
+    appendAndEnqueueTx(runId: string, events: RunEventInput[]): Promise<AppendResult>;
+
+    listEvents(runId: string): Promise<RunEventPersisted[]>;
+    getRunMetadataByRunId(runId: string): Promise<RunMetadata | null>;
+  }
+
+Remove the old appendEventsTx signature.
+The duck-typed appendAndEnqueueTx detection in WorkflowEngine.persistEvent MUST be removed.
+There is no fallback path. If a store does not implement appendAndEnqueueTx, it does not
+compile.
+
+---
+
+## CHANGE 4 — InMemoryRunStateStore implementation
+
+File: packages/engine/src/state/InMemoryRunStateStore.ts
+
+Implement the updated IRunStateStore interface:
+
+- bootstrapRunTx: check if runId exists in metadata map; if yes, throw
+  new Error('RUN_ALREADY_EXISTS'). Otherwise, atomically (synchronous block):
+  set metadata, append events with assigned runSeq, add to outbox.
+  Return AppendResult with the appended events.
+
+- appendAndEnqueueTx: append events (dedup on idempotencyKey), enqueue appended-only
+  to outbox, return AppendResult.
+
+- listEvents: return sorted by runSeq.
+
+- getRunMetadataByRunId: return from map or null.
+
+"Atomic" in the in-memory case means a single synchronous block with no await between
+the metadata write and event append. This ensures test coverage of the atomic path.
+
+---
+
+## CHANGE 5 — WorkflowEngine
+
+File: packages/engine/src/core/WorkflowEngine.ts
+
+Apply the following changes:
+
+5a. REMOVE planFetcher and planIntegrity from WorkflowEngineDeps.
+    The engine validates PlanRef metadata only; adapters own byte fetch and integrity.
+    Remove the fetchAndValidate call in startRun.
+    planId and planVersion come from validatedPlanRef.planId / validatedPlanRef.planVersion.
+
+5b. REMOVE emitRunEventFromContext(validatedContext, 'RunStarted') from startRun.
+    The engine emits RunQueued ONLY. RunStarted is adapter-owned.
+    Remove the RunStarted emission line entirely.
+
+5c. REPLACE saveRunMetadata + separate event emissions with a single bootstrapRunTx call.
+    The bootstrap must happen before the adapter call:
+
+      const firstEvent = buildRunQueuedEvent(validatedContext, validatedPlanRef, deps);
+      await deps.stateStore.bootstrapRunTx({
+        metadata: buildRunMetadata(validatedContext),  // no provider ref yet
+        firstEvents: [firstEvent],
+      });
+      const runRef = await adapter.startRun(validatedPlanRef, validatedContext);
+      // Update metadata with provider ref after adapter succeeds
+      await deps.stateStore.saveProviderRef(validatedContext.runId, runRef);
+
+    Note: saveProviderRef is a new method or an upsert on bootstrapped metadata.
+    Alternatively: bootstrap with empty providerRunId and update after adapter returns.
+    Choose the simpler option. Document which you chose.
+
+5d. ADD requiresCapabilities enforcement in startRun, before adapter call:
+    If plan.metadata.requiresCapabilities?.length > 0:
+      throw new Error('CAPABILITIES_NOT_SUPPORTED: Phase 1 does not evaluate requiresCapabilities');
+
+5e. ADD targetAdapter consistency check in startRun:
+    If plan.metadata.targetAdapter is set AND plan.metadata.targetAdapter !== 'any'
+    AND plan.metadata.targetAdapter !== validatedContext.targetAdapter:
+      throw new Error('TARGET_ADAPTER_MISMATCH: plan requires ' + plan.metadata.targetAdapter);
+
+5f. REMOVE the duck-typed persistEvent method entirely.
+    Replace all internal event emissions with appendAndEnqueueTx calls.
+
+5g. Update all idempotency key derivations to pass planId and planVersion.
+
+---
+
+## CHANGE 6 — SnapshotProjector
+
+File: packages/engine/src/core/SnapshotProjector.ts
+
+The exhaustive switch MUST NOT throw on unknown event types.
+
+Replace the default case:
+
+  // BEFORE (violates RunEvents.v2.0.1 §1.3 forward compatibility):
+  default: {
+    const _exhaustive: never = e.eventType;
+    throw new Error(`Unknown eventType: ${String(_exhaustive)}`);
+  }
+
+  // AFTER (Policy A — no-op + alert):
+  default: {
+    // Unknown event type: tolerate per forward-compatibility contract.
+    // Log a structured warning but do not mutate state.
+    console.warn('SnapshotProjector: unknown eventType skipped', {
+      eventType: (e as { eventType: string }).eventType,
+      runId: snap.runId,
+      runSeq: (e as { runSeq?: number }).runSeq,
+    });
+    break;
+  }
+
+The TypeScript exhaustive check can be removed or replaced with a type assertion.
+The projector MUST NOT crash. It MUST continue processing subsequent events after
+encountering an unknown type.
+
+---
+
+## CHANGE 7 — MockAdapter
+
+File: packages/engine/src/adapters/mock/MockAdapter.ts
+
+7a. Remove planIntegrity and planFetcher from MockAdapterDeps (adapter now owns this
+    internally; do not expose them via the engine's deps injection chain).
+    The mock adapter can perform a simplified integrity check internally if needed,
+    or skip it for mock purposes — document which.
+
+7b. MockAdapter.startRun MUST emit RunStarted as its first event after plan parsing:
+    After confirming the plan is valid, before executing any steps, emit RunStarted.
+    This makes MockAdapter compliant with ADR-0011.
+
+7c. Update all event emission calls to use RunEventInput (not EventEnvelope).
+    Pass planId and planVersion from the PlanRef.
+    Pass eventId (generate UUID v4 per emission, stable within a single attempt).
+
+---
+
+## CHANGE 8 — Postgres adapter
+
+File: packages/adapter-postgres/src/PostgresStateStoreAdapter.ts
+File: packages/adapter-postgres/migrations/ (add a new migration file)
+
+8a. Add a migration (e.g., 002_envelope_v2.sql) that:
+    - Adds planId TEXT column to run_metadata (nullable initially for backward compat)
+    - Adds planVersion TEXT column to run_metadata (nullable initially)
+    - Adds planId TEXT column to run_events (nullable initially)
+    - Adds planVersion TEXT column to run_events (nullable initially)
+    This migration must be safe to run against existing data (no NOT NULL without default).
+    Document that a follow-up migration will enforce NOT NULL after backfill.
+
+8b. Implement bootstrapRunTx atomically:
+    BEGIN;
+      INSERT INTO run_metadata (...) VALUES (...);
+      INSERT INTO run_events (...) VALUES (...) ON CONFLICT (run_id, idempotency_key) DO NOTHING;
+      INSERT INTO outbox (...) for appended events only;
+    COMMIT;
+    If run_metadata insert fails with unique violation on run_id, raise RUN_ALREADY_EXISTS.
+
+8c. Update appendAndEnqueueTx to use RunEventInput and return AppendResult.
+
+---
+
+## ACCEPTANCE CRITERIA
+
+The PR is complete when ALL of the following pass:
+
+1. pnpm type-check passes with zero errors across all packages.
+2. pnpm test passes for packages/engine and packages/adapter-postgres.
+3. Golden vector tests (5 vectors) pass and are a CI gate.
+4. A test for SnapshotProjector verifies that an unknown eventType is tolerated
+   (no throw, state unchanged for that event, subsequent events processed correctly).
+5. A test for WorkflowEngine.startRun verifies:
+   - RunStarted is NOT emitted by the engine
+   - RunQueued IS emitted
+   - If adapter.startRun throws, the sequence in stateStore is RunQueued → RunFailed
+     (no RunStarted present)
+6. A test for bootstrapRunTx verifies:
+   - Calling it twice for the same runId throws RUN_ALREADY_EXISTS
+   - Metadata and first event are always present together (no partial state)
+7. requiresCapabilities non-empty → startRun throws CAPABILITIES_NOT_SUPPORTED.
+8. targetAdapter mismatch → startRun throws TARGET_ADAPTER_MISMATCH.
+9. No Omit<..., 'runSeq'> remains in the codebase.
+10. No duck-typed appendAndEnqueueTx detection remains in the codebase.
+
+---
+
+## CONSTRAINTS
+
+- Do NOT change IWorkflowEngine interface (4 methods: startRun, cancelRun,
+  getRunStatus, signal). It is frozen.
+- Do NOT add Conductor or Temporal real implementations. Stubs remain stubs.
+- Do NOT change the golden path fixture JSON files unless runEventInput schema
+  requires it — and if you must, update the fixture and document why.
+- Do NOT introduce any Date.now(), new Date(), Math.random(), or process.env reads
+  inside packages/engine/src/. Use injected clock and explicit config.
+- Keep changes minimal. Do not refactor code unrelated to these six P0 items.

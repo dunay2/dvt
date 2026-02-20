@@ -1,0 +1,182 @@
+{
+  "generatedAt": "2026-02-20T09:12:45.639Z",
+  "dir": "apps/web",
+  "entries": [
+    {
+      "path": "ATTRIBUTIONS.md",
+      "title": "ATTRIBUTIONS.md",
+      "summary": "This Figma Make file includes components from [shadcn/ui](https://ui.shadcn.com/) used under the [MIT license](https://github.com/shadcn-ui/ui/blob/main/LICENSE.md).",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.136Z",
+      "tokenCount": 17
+    },
+    {
+      "path": "DOCUMENTATION_INDEX.md",
+      "title": "DOCUMENTATION_INDEX.md",
+      "summary": "# DVT+ Web Documentation Index",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.136Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "DVT_GRAPH_CANVAS_UX_OPTIMIZATION.md",
+      "title": "DVT_GRAPH_CANVAS_UX_OPTIMIZATION.md",
+      "summary": "# DVT+ Graph Canvas UX Optimization (State-Driven, Architecture-Preserving)",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.137Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "FRONTEND_PLAN_BACK_ALIGNMENT.md",
+      "title": "FRONTEND_PLAN_BACK_ALIGNMENT.md",
+      "summary": "# DVT+ Frontend — Clean Interface Plan Focused on Backend",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.138Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "FRONTEND_SPRINT_PLAN_TASKS_RISKS.md",
+      "title": "FRONTEND_SPRINT_PLAN_TASKS_RISKS.md",
+      "summary": "# DVT+ Frontend — Task, Sprint, and Phase Execution Plan",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.138Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "guidelines/Guidelines.md",
+      "title": "Guidelines.md",
+      "summary": "**Add your own guidelines here**",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.769Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "package-lock.json",
+      "title": "package-lock.json",
+      "summary": "{ \"name\": \"@figma/my-make-file\", \"version\": \"0.0.1\", \"lockfileVersion\": 3, \"requires\": true, \"packages\": { \"\": { \"name\": \"@figma/my-make-file\", \"version\": \"0.0.1\", \"dependencies\": { \"@emotion/react\": \"11.14.0\", \"@emotion/styled\": \"11.14.1\", \"@mui/icons-material\": \"7.3.5\", \"@mui/material\": \"7.3.5\", \"@octokit/rest\": \"^22.0.1\", \"@popperjs/core\": \"2.11.8\", \"@radix-ui/react-accordion\": \"1.2.3\", \"@radix-ui/react-alert-dialog\": \"1.1.6\", \"@radix-ui/react-aspect-ratio\": \"1.1.2\", \"@radix-ui/react-avatar\": \"1.1.3\", \"@radix-ui/react-checkbox\": \"1.1.4\", \"@radix-ui/react-collapsible\": \"1.1.3\", \"@radix-ui/re...",
+      "keywords": [],
+      "lastUpdated": "2026-02-18T12:17:51.320Z",
+      "tokenCount": 59
+    },
+    {
+      "path": "package.json",
+      "title": "package.json",
+      "summary": "{ \"name\": \"@dvt/web\", \"private\": true, \"version\": \"0.0.1\", \"type\": \"module\", \"scripts\": { \"build\": \"vite build\", \"dev\": \"vite\", \"typecheck\": \"tsc -p tsconfig.json --noEmit\" }, \"dependencies\": { \"react\": \"18.3.1\", \"react-dom\": \"18.3.1\", \"@emotion/react\": \"11.14.0\", \"@emotion/styled\": \"11.14.1\", \"@mui/icons-material\": \"7.3.5\", \"@mui/material\": \"7.3.5\", \"@octokit/rest\": \"^22.0.1\", \"@popperjs/core\": \"2.11.8\", \"@radix-ui/react-accordion\": \"1.2.3\", \"@radix-ui/react-alert-dialog\": \"1.1.6\", \"@radix-ui/react-aspect-ratio\": \"1.1.2\", \"@radix-ui/react-avatar\": \"1.1.3\", \"@radix-ui/react-checkbox\": \"1.1.4\",...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.790Z",
+      "tokenCount": 67
+    },
+    {
+      "path": "README.md",
+      "title": "README.md",
+      "summary": "# DVT+ - dbt Visual Workflow Editor",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.139Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/app/components/ui/settings.json",
+      "title": "settings.json",
+      "summary": "{ \"vitest.maximumConfigs\": 15 }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.608Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/app/components/ui/use-mobile.ts",
+      "title": "use-mobile.ts",
+      "summary": "import * as React from 'react';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.670Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/app/components/ui/utils.ts",
+      "title": "utils.ts",
+      "summary": "import { clsx, type ClassValue } from 'clsx'; import { twMerge } from 'tailwind-merge';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.671Z",
+      "tokenCount": 19
+    },
+    {
+      "path": "src/app/components/ui/vitest.workspace.ts",
+      "title": "vitest.workspace.ts",
+      "summary": "export default ['packages/*'];",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.671Z",
+      "tokenCount": 4
+    },
+    {
+      "path": "src/app/data/mockData.ts",
+      "title": "mockData.ts",
+      "summary": "import { DbtNode, ExecutionPlan, DbtRun, Plugin, Role, AuditLogEntry, DiffResult } from '../types';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.673Z",
+      "tokenCount": 16
+    },
+    {
+      "path": "src/app/data/mockDbtData.ts",
+      "title": "mockDbtData.ts",
+      "summary": "import { DbtNode, DbtEdge, ExecutionPlan, Run, Plugin, Role, AuditLogEntry, DiffChange, } from '../types/dbt';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.673Z",
+      "tokenCount": 17
+    },
+    {
+      "path": "src/app/routes.ts",
+      "title": "routes.ts",
+      "summary": "import { createBrowserRouter } from 'react-router';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.674Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/app/stores/appStore.ts",
+      "title": "appStore.ts",
+      "summary": "import { create } from 'zustand';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.675Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/app/stores/index.ts",
+      "title": "index.ts",
+      "summary": "import { create } from 'zustand';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.676Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/app/types/dbt.ts",
+      "title": "dbt.ts",
+      "summary": "// DBT Artifact Types",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.676Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/app/types/index.ts",
+      "title": "index.ts",
+      "summary": "// Node types in dbt export type NodeType = | 'SOURCE' | 'MODEL' | 'SEED' | 'SNAPSHOT' | 'TEST' | 'EXPOSURE' | 'METRIC' | 'MACRO';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.677Z",
+      "tokenCount": 33
+    },
+    {
+      "path": "tsconfig.json",
+      "title": "tsconfig.json",
+      "summary": "{ \"extends\": \"../../tsconfig.base.json\", \"compilerOptions\": { \"target\": \"ES2022\", \"module\": \"ESNext\", \"moduleResolution\": \"Bundler\", \"jsx\": \"react-jsx\", \"allowImportingTsExtensions\": true, \"strict\": true, \"baseUrl\": \".\", \"paths\": { \"@/*\": [\"src/*\"] }, \"types\": [\"vite/client\", \"react\", \"react-dom\"] }, \"include\": [\"src/**/*\"], \"exclude\": [\"node_modules\", \"dist\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.626Z",
+      "tokenCount": 47
+    },
+    {
+      "path": "vite.config.ts",
+      "title": "vite.config.ts",
+      "summary": "import { defineConfig } from 'vite'; import path from 'path'; import tailwindcss from '@tailwindcss/vite'; import react from '@vitejs/plugin-react';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.685Z",
+      "tokenCount": 24
+    }
+  ]
+}

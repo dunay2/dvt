@@ -33,6 +33,7 @@
     "test:replay": "pnpm --filter @dvt/engine test -- --grep replay || true",
     "test:coverage": "pnpm -r test -- --coverage",
     "validate:contracts": "pnpm --filter @dvt/cli validate-contracts",
+    "gen:ai-index": "node scripts/gen-ai-index.js",
     "validate:glossary": "node scripts/validate-glossary-usage.cjs --mode error",
     "kg:neo4j:up": "docker compose -f docker-compose.neo4j.yml up -d",
     "kg:neo4j:down": "docker compose -f docker-compose.neo4j.yml down",
