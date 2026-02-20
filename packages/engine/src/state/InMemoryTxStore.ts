@@ -3,24 +3,32 @@ import type {
   RunEventInput,
   RunEventPersisted,
   RunMetadata,
+  WorkflowSnapshot,
 } from '../contracts/runEvents.js';
-import type { IOutboxStorage, OutboxRecord } from '../outbox/types.js';
+import { applyRunEvent } from '../core/SnapshotProjector.js';
+import type { DeadLetterRecord, IOutboxStorage, OutboxRecord } from '../outbox/types.js';
+import { MAX_OUTBOX_ATTEMPTS } from '../outbox/types.js';
 
-import type { IRunStateStore, RunBootstrapInput } from './IRunStateStore.js';
+import type { IRunStateStore, ListRunsOptions, RunBootstrapInput } from './IRunStateStore.js';
 
 export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private readonly metadataByRunId = new Map<string, RunMetadata>();
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
+  private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
 
   private readonly pending: OutboxRecord[] = [];
+  private readonly deadLetters: DeadLetterRecord[] = [];
   private outboxCounter = 0;
 
   async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
     return this.metadataByRunId.get(runId) ?? null;
   }
 
-  // Backward-compatible helper for tests/adapters still migrating to bootstrapRunTx.
+  /**
+   * @deprecated Use bootstrapRunTx. This bypasses the atomicity guarantee that
+   * metadata + first events are written together. Scheduled for removal in Phase 3.
+   */
   async saveRunMetadata(meta: RunMetadata): Promise<void> {
     this.metadataByRunId.set(meta.runId, meta);
   }
@@ -54,6 +62,12 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
 
     // Atomic block (no awaits): write metadata + first events together.
     this.metadataByRunId.set(input.metadata.runId, input.metadata);
+    this.snapshotByRunId.set(input.metadata.runId, {
+      runId: input.metadata.runId,
+      status: 'PENDING',
+      paused: false,
+      steps: {},
+    });
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
   }
 
@@ -87,6 +101,20 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     this.eventsByRunId.set(runId, committed);
     this.idempIndexByRunId.set(runId, idx);
 
+    // Incrementally update the materialized snapshot.
+    if (appended.length > 0) {
+      const snap: WorkflowSnapshot = this.snapshotByRunId.get(runId) ?? {
+        runId,
+        status: 'PENDING',
+        paused: false,
+        steps: {},
+      };
+      for (const e of appended) {
+        applyRunEvent(snap, e);
+      }
+      this.snapshotByRunId.set(runId, snap);
+    }
+
     // Commit outbox in the same "transaction"
     for (const e of appended) {
       this.outboxCounter += 1;
@@ -102,13 +130,28 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     return { appended, deduped };
   }
 
-  // Backward-compatible helper for tests/adapters still migrating to appendAndEnqueueTx.
+  /**
+   * @deprecated Use appendAndEnqueueTx. Scheduled for removal in Phase 3.
+   * In this store the two are equivalent, but in Postgres appendEventsTx
+   * skips the outbox enqueue — a correctness hazard.
+   */
   async appendEventsTx(runId: string, envelopes: RunEventInput[]): Promise<AppendResult> {
     return this.appendAndEnqueueTx(runId, envelopes);
   }
 
   async listEvents(runId: string): Promise<RunEventPersisted[]> {
     return (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
+  }
+
+  async listRuns(options?: ListRunsOptions): Promise<RunMetadata[]> {
+    const limit = options?.limit ?? 50;
+    const all = Array.from(this.metadataByRunId.values());
+    const filtered = options?.tenantId ? all.filter((m) => m.tenantId === options.tenantId) : all;
+    return filtered.slice(-limit).reverse();
+  }
+
+  async getSnapshot(runId: string): Promise<WorkflowSnapshot | null> {
+    return this.snapshotByRunId.get(runId) ?? null;
   }
 
   async enqueueTx(_runId: string, _events: RunEventPersisted[]): Promise<void> {
@@ -129,9 +172,26 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   }
 
   async markFailed(id: string, error: string): Promise<void> {
-    const rec = this.pending.find((r) => r.id === id);
-    if (!rec) return;
+    const idx = this.pending.findIndex((r) => r.id === id);
+    if (idx === -1) return;
+    const rec = this.pending[idx]!;
     rec.attempts += 1;
     rec.lastError = error;
+
+    if (rec.attempts >= MAX_OUTBOX_ATTEMPTS) {
+      this.pending.splice(idx, 1);
+      this.deadLetters.push({
+        id: `dl_${rec.id}`,
+        originalId: rec.id,
+        runId: rec.payload.runId,
+        payload: rec.payload,
+        lastError: error,
+        deadLetteredAt: '1970-01-01T00:00:00.000Z',
+      });
+    }
+  }
+
+  async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
+    return this.deadLetters.slice(0, limit);
   }
 }

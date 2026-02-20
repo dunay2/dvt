@@ -4,45 +4,17 @@ import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js'
 import { jcsCanonicalize } from '../utils/jcs.js';
 import { sha256Hex } from '../utils/sha256.js';
 
-export class SnapshotProjector {
-  rebuild(runId: string, events: EventEnvelope[]): RunStatusSnapshot {
-    const snap: WorkflowSnapshot = {
-      runId,
-      status: 'PENDING',
-      paused: false,
-      steps: {},
-    };
-
-    for (const e of events) {
-      applyEvent(snap, e);
-    }
-
-    const logical = {
-      runId: snap.runId,
-      status: snap.status,
-      paused: snap.paused,
-      startedAt: snap.startedAt,
-      completedAt: snap.completedAt,
-      steps: snap.steps,
-    };
-
-    const canonical = jcsCanonicalize(logical);
-    const hash = sha256Hex(canonical);
-
-    return {
-      runId: snap.runId,
-      status: snap.status,
-      ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),
-      ...(snap.completedAt ? { completedAt: snap.completedAt } : {}),
-      hash,
-    };
-  }
-}
-
-function applyEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
+/**
+ * Pure function: applies a single event to a mutable WorkflowSnapshot.
+ *
+ * Exported so state store implementations can incrementally maintain a
+ * materialized snapshot without depending on SnapshotProjector as a class.
+ * Must remain a pure value transform — no I/O, no side effects.
+ */
+export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): WorkflowSnapshot {
   switch (e.eventType) {
     case 'RunQueued':
-      // stays pending
+      // stays PENDING
       break;
     case 'RunStarted':
       snap.status = 'RUNNING';
@@ -91,7 +63,6 @@ function applyEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       s.status = 'FAILED';
       s.completedAt = e.emittedAt;
       snap.steps[stepId] = s;
-      // In Phase 1 we leave run status updates to RunFailed event.
       break;
     }
     case 'StepSkipped': {
@@ -111,5 +82,52 @@ function applyEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       });
       break;
     }
+  }
+  return snap;
+}
+
+/**
+ * Pure function: converts a materialized WorkflowSnapshot into a RunStatusSnapshot
+ * (adds the deterministic JCS+SHA-256 hash).
+ *
+ * Exported so WorkflowEngine.getRunStatus can produce its response from a
+ * stored snapshot without a full event replay.
+ */
+export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
+  const logical = {
+    runId: snap.runId,
+    status: snap.status,
+    paused: snap.paused,
+    startedAt: snap.startedAt,
+    completedAt: snap.completedAt,
+    steps: snap.steps,
+  };
+
+  const canonical = jcsCanonicalize(logical);
+  const hash = sha256Hex(canonical);
+
+  return {
+    runId: snap.runId,
+    status: snap.status,
+    ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),
+    ...(snap.completedAt ? { completedAt: snap.completedAt } : {}),
+    hash,
+  };
+}
+
+export class SnapshotProjector {
+  rebuild(runId: string, events: EventEnvelope[]): RunStatusSnapshot {
+    const snap: WorkflowSnapshot = {
+      runId,
+      status: 'PENDING',
+      paused: false,
+      steps: {},
+    };
+
+    for (const e of events) {
+      applyRunEvent(snap, e);
+    }
+
+    return snapshotToStatus(snap);
   }
 }
