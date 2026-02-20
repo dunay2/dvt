@@ -37,10 +37,20 @@ SET m += { nombre: 'issue-117-prebrief.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: '.gh-comments/issue-117-prebrief.md' })
 SET a += { nombre: 'issue-117-prebrief.md', tipo: 'md', bytes: 1603, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/issue-14-close-2026-02-19.md' })
+SET m += { nombre: 'issue-14-close-2026-02-19.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/issue-14-close-2026-02-19.md' })
+SET a += { nombre: 'issue-14-close-2026-02-19.md', tipo: 'md', bytes: 2573, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gh-comments/issue-14-status-refresh-2026-02-15.md' })
 SET m += { nombre: 'issue-14-status-refresh-2026-02-15.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: '.gh-comments/issue-14-status-refresh-2026-02-15.md' })
 SET a += { nombre: 'issue-14-status-refresh-2026-02-15.md', tipo: 'md', bytes: 990, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/issue-15-close-2026-02-19.md' })
+SET m += { nombre: 'issue-15-close-2026-02-19.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/issue-15-close-2026-02-19.md' })
+SET a += { nombre: 'issue-15-close-2026-02-19.md', tipo: 'md', bytes: 2655, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gh-comments/issue-15-option-a-complete-2026-02-17.md' })
 SET m += { nombre: 'issue-15-option-a-complete-2026-02-17.md', lenguaje: 'markdown' }
@@ -62,10 +72,25 @@ SET m += { nombre: 'issue-219-prebrief.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: '.gh-comments/issue-219-prebrief.md' })
 SET a += { nombre: 'issue-219-prebrief.md', tipo: 'md', bytes: 3372, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/issue-220-prebrief.md' })
+SET m += { nombre: 'issue-220-prebrief.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/issue-220-prebrief.md' })
+SET a += { nombre: 'issue-220-prebrief.md', tipo: 'md', bytes: 3455, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/issue-221-prebrief.md' })
+SET m += { nombre: 'issue-221-prebrief.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/issue-221-prebrief.md' })
+SET a += { nombre: 'issue-221-prebrief.md', tipo: 'md', bytes: 3497, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gh-comments/issue-224-prebrief.md' })
 SET m += { nombre: 'issue-224-prebrief.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: '.gh-comments/issue-224-prebrief.md' })
 SET a += { nombre: 'issue-224-prebrief.md', tipo: 'md', bytes: 4149, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/issue-68-hardening-status-2026-02-19.md' })
+SET m += { nombre: 'issue-68-hardening-status-2026-02-19.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/issue-68-hardening-status-2026-02-19.md' })
+SET a += { nombre: 'issue-68-hardening-status-2026-02-19.md', tipo: 'md', bytes: 1363, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gh-comments/issue-9-prebrief.md' })
 SET m += { nombre: 'issue-9-prebrief.md', lenguaje: 'markdown' }
@@ -82,10 +107,30 @@ SET m += { nombre: 'pr-117.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: '.gh-comments/pr-117.md' })
 SET a += { nombre: 'pr-117.md', tipo: 'md', bytes: 1319, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/pr-221.md' })
+SET m += { nombre: 'pr-221.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/pr-221.md' })
+SET a += { nombre: 'pr-221.md', tipo: 'md', bytes: 1393, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md' })
+SET m += { nombre: 'pr-226-glossary-and-postgres-hardening-2026-02-19.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md' })
+SET a += { nombre: 'pr-226-glossary-and-postgres-hardening-2026-02-19.md', tipo: 'md', bytes: 1886, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gh-comments/pr-9.md' })
 SET m += { nombre: 'pr-9.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: '.gh-comments/pr-9.md' })
 SET a += { nombre: 'pr-9.md', tipo: 'md', bytes: 1431, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/pr-closure-notes-14-15.md' })
+SET m += { nombre: 'pr-closure-notes-14-15.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/pr-closure-notes-14-15.md' })
+SET a += { nombre: 'pr-closure-notes-14-15.md', tipo: 'md', bytes: 766, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md' })
+SET m += { nombre: 'pr-postgres-hardening-p0-p2-2026-02-19.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: '.gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md' })
+SET a += { nombre: 'pr-postgres-hardening-p0-p2-2026-02-19.md', tipo: 'md', bytes: 2539, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gh-comments/pr-roadmap-status-refresh-2026-02-15.md' })
 SET m += { nombre: 'pr-roadmap-status-refresh-2026-02-15.md', lenguaje: 'markdown' }
@@ -96,6 +141,16 @@ MERGE (m:Modulo { path: '.gh-comments/vuelossssss.txt' })
 SET m += { nombre: 'vuelossssss.txt', lenguaje: 'text' }
 MERGE (a:Archivo { path: '.gh-comments/vuelossssss.txt' })
 SET a += { nombre: 'vuelossssss.txt', tipo: 'txt', bytes: 75330, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.git.bfg-report/2026-02-19' })
+SET m += { nombre: '2026-02-19', lenguaje: 'text' }
+MERGE (a:Archivo { path: '.git.bfg-report/2026-02-19/14-48-28/cache-stats.txt' })
+SET a += { nombre: 'cache-stats.txt', tipo: 'txt', bytes: 538, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.git.bfg-report/2026-02-19' })
+SET m += { nombre: '2026-02-19', lenguaje: 'text' }
+MERGE (a:Archivo { path: '.git.bfg-report/2026-02-19/14-48-28/object-id-map.old-new.txt' })
+SET a += { nombre: 'object-id-map.old-new.txt', tipo: 'txt', bytes: 1558, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/CODEOWNERS' })
 SET m += { nombre: 'CODEOWNERS', lenguaje: 'text' }
@@ -195,12 +250,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/workflows/ci.yml' })
-SET a += { nombre: 'ci.yml', tipo: 'yml', bytes: 3262, topico: 'config' }
+SET a += { nombre: 'ci.yml', tipo: 'yml', bytes: 7182, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/workflows/contracts.yml' })
-SET a += { nombre: 'contracts.yml', tipo: 'yml', bytes: 14261, topico: 'config' }
+SET a += { nombre: 'contracts.yml', tipo: 'yml', bytes: 15521, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
@@ -230,7 +285,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gitignore' })
 SET m += { nombre: '.gitignore', lenguaje: 'text' }
 MERGE (a:Archivo { path: '.gitignore' })
-SET a += { nombre: '.gitignore', tipo: 'none', bytes: 875, topico: 'other' }
+SET a += { nombre: '.gitignore', tipo: 'none', bytes: 837, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.golden/README.md' })
 SET m += { nombre: 'README.md', lenguaje: 'markdown' }
@@ -300,17 +355,617 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'README.md' })
 SET m += { nombre: 'README.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'README.md' })
-SET a += { nombre: 'README.md', tipo: 'md', bytes: 6907, topico: 'doc' }
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 6918, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'ROADMAP.md' })
 SET m += { nombre: 'ROADMAP.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'ROADMAP.md' })
 SET a += { nombre: 'ROADMAP.md', tipo: 'md', bytes: 23241, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/api/.env.example' })
+SET a += { nombre: '.env.example', tipo: 'example', bytes: 154, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/api/.gitignore' })
+SET a += { nombre: '.gitignore', tipo: 'none', bytes: 39, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/api/Dockerfile' })
+SET a += { nombre: 'Dockerfile', tipo: 'none', bytes: 444, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/api/Procfile' })
+SET a += { nombre: 'Procfile', tipo: 'none', bytes: 20, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/api/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 1384, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/api/nixpacks.toml' })
+SET a += { nombre: 'nixpacks.toml', tipo: 'toml', bytes: 265, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'apps/api/package.json' })
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 616, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/app.ts' })
+SET a += { nombre: 'app.ts', tipo: 'ts', bytes: 1232, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/db/pool.ts' })
+SET a += { nombre: 'pool.ts', tipo: 'ts', bytes: 359, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/plugins/env.ts' })
+SET a += { nombre: 'env.ts', tipo: 'ts', bytes: 1107, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/plugins/logger.ts' })
+SET a += { nombre: 'logger.ts', tipo: 'ts', bytes: 170, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/routes/dbReady.ts' })
+SET a += { nombre: 'dbReady.ts', tipo: 'ts', bytes: 725, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/routes/health.ts' })
+SET a += { nombre: 'health.ts', tipo: 'ts', bytes: 221, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/routes/version.ts' })
+SET a += { nombre: 'version.ts', tipo: 'ts', bytes: 208, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/server.ts' })
+SET a += { nombre: 'server.ts', tipo: 'ts', bytes: 326, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'apps/api/tsconfig.json' })
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 453, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/web/ATTRIBUTIONS.md' })
+SET a += { nombre: 'ATTRIBUTIONS.md', tipo: 'md', bytes: 300, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/web/DOCUMENTATION_INDEX.md' })
+SET a += { nombre: 'DOCUMENTATION_INDEX.md', tipo: 'md', bytes: 1834, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/web/DVT_GRAPH_CANVAS_UX_OPTIMIZATION.md' })
+SET a += { nombre: 'DVT_GRAPH_CANVAS_UX_OPTIMIZATION.md', tipo: 'md', bytes: 6001, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md' })
+SET a += { nombre: 'FRONTEND_PLAN_BACK_ALIGNMENT.md', tipo: 'md', bytes: 6317, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/web/FRONTEND_SPRINT_PLAN_TASKS_RISKS.md' })
+SET a += { nombre: 'FRONTEND_SPRINT_PLAN_TASKS_RISKS.md', tipo: 'md', bytes: 7286, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/web/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 5240, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/cambios barra.txt' })
+SET a += { nombre: 'cambios barra.txt', tipo: 'txt', bytes: 1056, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/favicon/apple-touch-icon.png' })
+SET a += { nombre: 'apple-touch-icon.png', tipo: 'png', bytes: 28451, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/favicon/favicon-96x96.png' })
+SET a += { nombre: 'favicon-96x96.png', tipo: 'png', bytes: 7099, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/favicon/favicon.ico' })
+SET a += { nombre: 'favicon.ico', tipo: 'ico', bytes: 15086, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/favicon/favicon.svg' })
+SET a += { nombre: 'favicon.svg', tipo: 'svg', bytes: 2189384, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/favicon/site.webmanifest' })
+SET a += { nombre: 'site.webmanifest', tipo: 'webmanifest', bytes: 456, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/favicon/web-app-manifest-192x192.png' })
+SET a += { nombre: 'web-app-manifest-192x192.png', tipo: 'png', bytes: 32387, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/favicon/web-app-manifest-512x512.png' })
+SET a += { nombre: 'web-app-manifest-512x512.png', tipo: 'png', bytes: 209480, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'apps/web/guidelines/Guidelines.md' })
+SET a += { nombre: 'Guidelines.md', tipo: 'md', bytes: 2560, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 989, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'apps/web/package.json' })
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 2678, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'apps/web/postcss.config.mjs' })
+SET a += { nombre: 'postcss.config.mjs', tipo: 'mjs', bytes: 460, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/App.tsx' })
+SET a += { nombre: 'App.tsx', tipo: 'tsx', bytes: 279, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/Root.tsx' })
+SET a += { nombre: 'Root.tsx', tipo: 'tsx', bytes: 1947, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/Console.tsx' })
+SET a += { nombre: 'Console.tsx', tipo: 'tsx', bytes: 5920, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+SET a += { nombre: 'DbtExplorer.tsx', tipo: 'tsx', bytes: 5718, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/GraphCanvas.tsx' })
+SET a += { nombre: 'GraphCanvas.tsx', tipo: 'tsx', bytes: 9287, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+SET a += { nombre: 'InspectorPanel.tsx', tipo: 'tsx', bytes: 11507, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/LeftNavigation.tsx' })
+SET a += { nombre: 'LeftNavigation.tsx', tipo: 'tsx', bytes: 2143, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/Modals.tsx' })
+SET a += { nombre: 'Modals.tsx', tipo: 'tsx', bytes: 11025, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+SET a += { nombre: 'SourceImportWizard.tsx', tipo: 'tsx', bytes: 25817, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+SET a += { nombre: 'TopAppBar.tsx', tipo: 'tsx', bytes: 9458, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/canvas/DbtNodeComponent.tsx' })
+SET a += { nombre: 'DbtNodeComponent.tsx', tipo: 'tsx', bytes: 6324, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/figma/ImageWithFallback.tsx' })
+SET a += { nombre: 'ImageWithFallback.tsx', tipo: 'tsx', bytes: 1160, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/accordion.tsx' })
+SET a += { nombre: 'accordion.tsx', tipo: 'tsx', bytes: 2057, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/alert-dialog.tsx' })
+SET a += { nombre: 'alert-dialog.tsx', tipo: 'tsx', bytes: 3781, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/alert.tsx' })
+SET a += { nombre: 'alert.tsx', tipo: 'tsx', bytes: 1590, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/aspect-ratio.tsx' })
+SET a += { nombre: 'aspect-ratio.tsx', tipo: 'tsx', bytes: 282, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/avatar.tsx' })
+SET a += { nombre: 'avatar.tsx', tipo: 'tsx', bytes: 1046, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+SET a += { nombre: 'badge.tsx', tipo: 'tsx', bytes: 1591, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/breadcrumb.tsx' })
+SET a += { nombre: 'breadcrumb.tsx', tipo: 'tsx', bytes: 2357, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+SET a += { nombre: 'button.tsx', tipo: 'tsx', bytes: 2085, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/calendar.tsx' })
+SET a += { nombre: 'calendar.tsx', tipo: 'tsx', bytes: 2880, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+SET a += { nombre: 'card.tsx', tipo: 'tsx', bytes: 1892, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/carousel.tsx' })
+SET a += { nombre: 'carousel.tsx', tipo: 'tsx', bytes: 5524, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/chart.tsx' })
+SET a += { nombre: 'chart.tsx', tipo: 'tsx', bytes: 9693, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/checkbox.tsx' })
+SET a += { nombre: 'checkbox.tsx', tipo: 'tsx', bytes: 1239, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/collapsible.tsx' })
+SET a += { nombre: 'collapsible.tsx', tipo: 'tsx', bytes: 752, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/command.tsx' })
+SET a += { nombre: 'command.tsx', tipo: 'tsx', bytes: 4562, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/context-menu.tsx' })
+SET a += { nombre: 'context-menu.tsx', tipo: 'tsx', bytes: 8127, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/dialog.tsx' })
+SET a += { nombre: 'dialog.tsx', tipo: 'tsx', bytes: 3789, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/drawer.tsx' })
+SET a += { nombre: 'drawer.tsx', tipo: 'tsx', bytes: 4071, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/dropdown-menu.tsx' })
+SET a += { nombre: 'dropdown-menu.tsx', tipo: 'tsx', bytes: 8175, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/form.tsx' })
+SET a += { nombre: 'form.tsx', tipo: 'tsx', bytes: 3701, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/hover-card.tsx' })
+SET a += { nombre: 'hover-card.tsx', tipo: 'tsx', bytes: 1522, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/input-otp.tsx' })
+SET a += { nombre: 'input-otp.tsx', tipo: 'tsx', bytes: 2256, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/input.tsx' })
+SET a += { nombre: 'input.tsx', tipo: 'tsx', bytes: 962, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/label.tsx' })
+SET a += { nombre: 'label.tsx', tipo: 'tsx', bytes: 609, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/menubar.tsx' })
+SET a += { nombre: 'menubar.tsx', tipo: 'tsx', bytes: 8340, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/navigation-menu.tsx' })
+SET a += { nombre: 'navigation-menu.tsx', tipo: 'tsx', bytes: 6625, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/pagination.tsx' })
+SET a += { nombre: 'pagination.tsx', tipo: 'tsx', bytes: 2677, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/popover.tsx' })
+SET a += { nombre: 'popover.tsx', tipo: 'tsx', bytes: 1634, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/progress.tsx' })
+SET a += { nombre: 'progress.tsx', tipo: 'tsx', bytes: 718, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/radio-group.tsx' })
+SET a += { nombre: 'radio-group.tsx', tipo: 'tsx', bytes: 1470, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/resizable.tsx' })
+SET a += { nombre: 'resizable.tsx', tipo: 'tsx', bytes: 2008, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+SET a += { nombre: 'scroll-area.tsx', tipo: 'tsx', bytes: 1628, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/select.tsx' })
+SET a += { nombre: 'select.tsx', tipo: 'tsx', bytes: 6204, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/separator.tsx' })
+SET a += { nombre: 'separator.tsx', tipo: 'tsx', bytes: 706, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/settings.json' })
+SET a += { nombre: 'settings.json', tipo: 'json', bytes: 34, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/sheet.tsx' })
+SET a += { nombre: 'sheet.tsx', tipo: 'tsx', bytes: 4093, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+SET a += { nombre: 'sidebar.tsx', tipo: 'tsx', bytes: 21531, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/skeleton.tsx' })
+SET a += { nombre: 'skeleton.tsx', tipo: 'tsx', bytes: 275, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/slider.tsx' })
+SET a += { nombre: 'slider.tsx', tipo: 'tsx', bytes: 1962, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/sonner.tsx' })
+SET a += { nombre: 'sonner.tsx', tipo: 'tsx', bytes: 571, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/switch.tsx' })
+SET a += { nombre: 'switch.tsx', tipo: 'tsx', bytes: 1176, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/table.tsx' })
+SET a += { nombre: 'table.tsx', tipo: 'tsx', bytes: 2362, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+SET a += { nombre: 'tabs.tsx', tipo: 'tsx', bytes: 1927, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/textarea.tsx' })
+SET a += { nombre: 'textarea.tsx', tipo: 'tsx', bytes: 766, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/toggle-group.tsx' })
+SET a += { nombre: 'toggle-group.tsx', tipo: 'tsx', bytes: 1910, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/toggle.tsx' })
+SET a += { nombre: 'toggle.tsx', tipo: 'tsx', bytes: 1552, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/tooltip.tsx' })
+SET a += { nombre: 'tooltip.tsx', tipo: 'tsx', bytes: 1892, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/use-mobile.ts' })
+SET a += { nombre: 'use-mobile.ts', tipo: 'ts', bytes: 576, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+SET a += { nombre: 'utils.ts', tipo: 'ts', bytes: 169, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/ui/vitest.workspace.ts' })
+SET a += { nombre: 'vitest.workspace.ts', tipo: 'ts', bytes: 31, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+SET a += { nombre: 'RunView.tsx', tipo: 'tsx', bytes: 14398, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/data/mockData.ts' })
+SET a += { nombre: 'mockData.ts', tipo: 'ts', bytes: 11761, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/data/mockDbtData.ts' })
+SET a += { nombre: 'mockDbtData.ts', tipo: 'ts', bytes: 12252, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/routes.ts' })
+SET a += { nombre: 'routes.ts', tipo: 'ts', bytes: 1023, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+SET a += { nombre: 'appStore.ts', tipo: 'ts', bytes: 5692, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/stores/index.ts' })
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 6522, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/types/dbt.ts' })
+SET a += { nombre: 'dbt.ts', tipo: 'ts', bytes: 2865, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/types/index.ts' })
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 3816, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+SET a += { nombre: 'AdminView.tsx', tipo: 'tsx', bytes: 11207, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/ArtifactsView.tsx' })
+SET a += { nombre: 'ArtifactsView.tsx', tipo: 'tsx', bytes: 9004, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+SET a += { nombre: 'Canvas.tsx', tipo: 'tsx', bytes: 18008, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/CostView.tsx' })
+SET a += { nombre: 'CostView.tsx', tipo: 'tsx', bytes: 10386, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+SET a += { nombre: 'DiffView.tsx', tipo: 'tsx', bytes: 11850, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+SET a += { nombre: 'LineageView.tsx', tipo: 'tsx', bytes: 10164, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+SET a += { nombre: 'PluginsView.tsx', tipo: 'tsx', bytes: 7579, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+SET a += { nombre: 'RunsView.tsx', tipo: 'tsx', bytes: 14496, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/src/main.tsx' })
+SET a += { nombre: 'main.tsx', tipo: 'tsx', bytes: 173, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/src/styles/fonts.css' })
+SET a += { nombre: 'fonts.css', tipo: 'css', bytes: 0, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/src/styles/index.css' })
+SET a += { nombre: 'index.css', tipo: 'css', bytes: 621, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/src/styles/tailwind.css' })
+SET a += { nombre: 'tailwind.css', tipo: 'css', bytes: 102, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'apps/web/src/styles/theme.css' })
+SET a += { nombre: 'theme.css', tipo: 'css', bytes: 5629, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'apps/web/tsconfig.json' })
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 421, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/web' })
+SET m += { nombre: 'web', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/web/vite.config.ts' })
+SET a += { nombre: 'vite.config.ts', tipo: 'ts', bytes: 623, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'bfg.jar' })
+SET m += { nombre: 'bfg.jar', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'bfg.jar' })
+SET a += { nombre: 'bfg.jar', tipo: 'jar', bytes: 14483456, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'commitlint.config.cjs' })
 SET m += { nombre: 'commitlint.config.cjs', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'commitlint.config.cjs' })
-SET a += { nombre: 'commitlint.config.cjs', tipo: 'cjs', bytes: 851, topico: 'code' }
+SET a += { nombre: 'commitlint.config.cjs', tipo: 'cjs', bytes: 881, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'dev.sh' })
 SET m += { nombre: 'dev.sh', lenguaje: 'text' }
@@ -405,7 +1060,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/CONTRACT_TEMPLATE.v1.md' })
-SET a += { nombre: 'CONTRACT_TEMPLATE.v1.md', tipo: 'md', bytes: 1545, topico: 'doc' }
+SET a += { nombre: 'CONTRACT_TEMPLATE.v1.md', tipo: 'md', bytes: 1596, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
@@ -420,7 +1075,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/README.md' })
-SET a += { nombre: 'README.md', tipo: 'md', bytes: 9620, topico: 'doc' }
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 8986, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
@@ -498,6 +1153,11 @@ MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/engine/RunEventCata
 SET a += { nombre: 'RunEventCatalog.v1.md', tipo: 'md', bytes: 1442, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/engine/RunEvents.v1.idempotency_vectors.json' })
+SET a += { nombre: 'RunEvents.v1.idempotency_vectors.json', tipo: 'json', bytes: 1851, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/engine/RunEvents.v1.md' })
 SET a += { nombre: 'RunEvents.v1.md', tipo: 'md', bytes: 16972, topico: 'doc' }
@@ -510,7 +1170,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.md' })
-SET a += { nombre: 'SignalsAndAuth.v1.md', tipo: 'md', bytes: 18399, topico: 'doc' }
+SET a += { nombre: 'SignalsAndAuth.v1.md', tipo: 'md', bytes: 18397, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
@@ -549,8 +1209,18 @@ SET a += { nombre: 'PluginSandbox.v1.md', tipo: 'md', bytes: 6094, topico: 'doc'
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/schemas/canvas-state.schema.json' })
+SET a += { nombre: 'canvas-state.schema.json', tipo: 'json', bytes: 4975, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/schemas/logical-graph.schema.json' })
 SET a += { nombre: 'logical-graph.schema.json', tipo: 'json', bytes: 4596, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'docs/architecture/engine/contracts/schemas/provenance-event.schema.json' })
+SET a += { nombre: 'provenance-event.schema.json', tipo: 'json', bytes: 6293, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
@@ -747,6 +1417,11 @@ SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/frontend/security/RBAC_UI_RULES.v1.md' })
 SET a += { nombre: 'RBAC_UI_RULES.v1.md', tipo: 'md', bytes: 12785, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/architecture/infra/infra-architecture.md' })
+SET a += { nombre: 'infra-architecture.md', tipo: 'md', bytes: 1559, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/archive' })
 SET m += { nombre: 'archive', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/archive/ci/CI_ISOLATION_STRATEGY.md' })
@@ -804,8 +1479,13 @@ SET a += { nombre: 'ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md', 
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/decisions' })
 SET m += { nombre: 'decisions', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/decisions/ADR-TEMPLATE.md' })
+SET a += { nombre: 'ADR-TEMPLATE.md', tipo: 'md', bytes: 1261, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/decisions' })
+SET m += { nombre: 'decisions', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/decisions/INDEX.md' })
-SET a += { nombre: 'INDEX.md', tipo: 'md', bytes: 3426, topico: 'doc' }
+SET a += { nombre: 'INDEX.md', tipo: 'md', bytes: 3380, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/guides' })
 SET m += { nombre: 'guides', lenguaje: 'markdown' }
@@ -820,27 +1500,27 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/guides' })
 SET m += { nombre: 'guides', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/guides/TECHNICAL_DEBT_REGISTER.md' })
-SET a += { nombre: 'TECHNICAL_DEBT_REGISTER.md', tipo: 'md', bytes: 14747, topico: 'doc' }
+SET a += { nombre: 'TECHNICAL_DEBT_REGISTER.md', tipo: 'md', bytes: 14132, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/knowledge' })
 SET m += { nombre: 'knowledge', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/knowledge/INDEX.md' })
-SET a += { nombre: 'INDEX.md', tipo: 'md', bytes: 1873, topico: 'doc' }
+SET a += { nombre: 'INDEX.md', tipo: 'md', bytes: 1831, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/knowledge' })
 SET m += { nombre: 'knowledge', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/knowledge/REPOSITORY_MAP.md' })
-SET a += { nombre: 'REPOSITORY_MAP.md', tipo: 'md', bytes: 4760, topico: 'doc' }
+SET a += { nombre: 'REPOSITORY_MAP.md', tipo: 'md', bytes: 4665, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/knowledge' })
 SET m += { nombre: 'knowledge', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/knowledge/ROADMAP_AND_ISSUES_MAP.md' })
-SET a += { nombre: 'ROADMAP_AND_ISSUES_MAP.md', tipo: 'md', bytes: 4193, topico: 'doc' }
+SET a += { nombre: 'ROADMAP_AND_ISSUES_MAP.md', tipo: 'md', bytes: 3987, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md' })
-SET a += { nombre: 'BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md', tipo: 'md', bytes: 7226, topico: 'doc' }
+SET a += { nombre: 'BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md', tipo: 'md', bytes: 8128, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
@@ -871,6 +1551,11 @@ MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/DOCKER_COMPOSE_BACKEND_SPEC.v1.md' })
 SET a += { nombre: 'DOCKER_COMPOSE_BACKEND_SPEC.v1.md', tipo: 'md', bytes: 13004, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/DOCUMENTATION_INDEX.md' })
+SET a += { nombre: 'DOCUMENTATION_INDEX.md', tipo: 'md', bytes: 1462, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
@@ -907,6 +1592,26 @@ SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/PRODUCT_STRATEGY_GTM_AND_FINANCIALS.md' })
 SET a += { nombre: 'PRODUCT_STRATEGY_GTM_AND_FINANCIALS.md', tipo: 'md', bytes: 700, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/proposal' })
+SET m += { nombre: 'proposal', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/proposal/DVT_Architecture_v1.md' })
+SET a += { nombre: 'DVT_Architecture_v1.md', tipo: 'md', bytes: 3167, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/proposal' })
+SET m += { nombre: 'proposal', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/proposal/DVT_Infrastructure_Architecture_v1.md' })
+SET a += { nombre: 'DVT_Infrastructure_Architecture_v1.md', tipo: 'md', bytes: 3364, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/proposal' })
+SET m += { nombre: 'proposal', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'docs/proposal/image.png' })
+SET a += { nombre: 'image.png', tipo: 'png', bytes: 36204, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/proposal' })
+SET m += { nombre: 'proposal', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'docs/proposal/proposal 1.txt' })
+SET a += { nombre: 'proposal 1.txt', tipo: 'txt', bytes: 7569, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/runbooks' })
 SET m += { nombre: 'runbooks', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/runbooks/outbox_replay.md' })
@@ -935,12 +1640,52 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/status' })
 SET m += { nombre: 'status', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/status/IMPLEMENTATION_SUMMARY.md' })
-SET a += { nombre: 'IMPLEMENTATION_SUMMARY.md', tipo: 'md', bytes: 15830, topico: 'doc' }
+SET a += { nombre: 'IMPLEMENTATION_SUMMARY.md', tipo: 'md', bytes: 20321, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/status' })
+SET m += { nombre: 'status', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/status/ISSUE_226_PLAYBOOK_DRAFT.md' })
+SET a += { nombre: 'ISSUE_226_PLAYBOOK_DRAFT.md', tipo: 'md', bytes: 4142, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/status' })
+SET m += { nombre: 'status', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/status/ISSUE_227_PLAYBOOK_DRAFT.md' })
+SET a += { nombre: 'ISSUE_227_PLAYBOOK_DRAFT.md', tipo: 'md', bytes: 4744, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/status' })
+SET m += { nombre: 'status', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/status/ISSUE_228_PLAYBOOK_DRAFT.md' })
+SET a += { nombre: 'ISSUE_228_PLAYBOOK_DRAFT.md', tipo: 'md', bytes: 4089, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/status' })
+SET m += { nombre: 'status', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/status/ISSUE_229_PLAYBOOK_DRAFT.md' })
+SET a += { nombre: 'ISSUE_229_PLAYBOOK_DRAFT.md', tipo: 'md', bytes: 4150, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/status' })
+SET m += { nombre: 'status', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/status/ISSUE_6_PLAYBOOK_DRAFT.md' })
+SET a += { nombre: 'ISSUE_6_PLAYBOOK_DRAFT.md', tipo: 'md', bytes: 6495, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'eslint.config.cjs' })
 SET m += { nombre: 'eslint.config.cjs', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'eslint.config.cjs' })
-SET a += { nombre: 'eslint.config.cjs', tipo: 'cjs', bytes: 9954, topico: 'code' }
+SET a += { nombre: 'eslint.config.cjs', tipo: 'cjs', bytes: 12021, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'infra/README.md' })
+SET m += { nombre: 'README.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'infra/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 346, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'infra/docker' })
+SET m += { nombre: 'docker', lenguaje: 'yaml' }
+MERGE (a:Archivo { path: 'infra/docker/postgres/docker-compose.yml' })
+SET a += { nombre: 'docker-compose.yml', tipo: 'yml', bytes: 464, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'infra/docker' })
+SET m += { nombre: 'docker', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'infra/docker/postgres/init/001_bootstrap.sql' })
+SET a += { nombre: '001_bootstrap.sql', tipo: 'sql', bytes: 297, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'package-lock.json' })
 SET m += { nombre: 'package-lock.json', lenguaje: 'json' }
@@ -950,22 +1695,32 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'package.json' })
 SET m += { nombre: 'package.json', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 5463, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 6609, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'packages/adapter-postgres/DESIGN.md' })
-SET a += { nombre: 'DESIGN.md', tipo: 'md', bytes: 118, topico: 'doc' }
+SET a += { nombre: 'DESIGN.md', tipo: 'md', bytes: 2181, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/adapter-postgres' })
+SET m += { nombre: 'adapter-postgres', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'packages/adapter-postgres/migrations/001_init.sql' })
+SET a += { nombre: '001_init.sql', tipo: 'sql', bytes: 1515, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/adapter-postgres' })
+SET m += { nombre: 'adapter-postgres', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'packages/adapter-postgres/migrations/002_add_claimed_at.sql' })
+SET a += { nombre: '002_add_claimed_at.sql', tipo: 'sql', bytes: 642, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/adapter-postgres/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 480, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 555, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/adapter-postgres/src/PostgresStateStoreAdapter.ts' })
-SET a += { nombre: 'PostgresStateStoreAdapter.ts', tipo: 'ts', bytes: 3081, topico: 'code' }
+SET a += { nombre: 'PostgresStateStoreAdapter.ts', tipo: 'ts', bytes: 15030, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'typescript' }
@@ -974,13 +1729,18 @@ SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 302, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/adapter-postgres/src/sqlUtils.ts' })
+SET a += { nombre: 'sqlUtils.ts', tipo: 'ts', bytes: 305, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/adapter-postgres' })
+SET m += { nombre: 'adapter-postgres', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/adapter-postgres/src/types.ts' })
-SET a += { nombre: 'types.ts', tipo: 'ts', bytes: 1864, topico: 'code' }
+SET a += { nombre: 'types.ts', tipo: 'ts', bytes: 2819, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/adapter-postgres/test/smoke.test.ts' })
-SET a += { nombre: 'smoke.test.ts', tipo: 'ts', bytes: 2581, topico: 'code' }
+SET a += { nombre: 'smoke.test.ts', tipo: 'ts', bytes: 3613, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/adapter-postgres' })
 SET m += { nombre: 'adapter-postgres', lenguaje: 'json' }
@@ -1180,7 +1940,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/cli' })
 SET m += { nombre: 'cli', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'packages/cli/validate-contracts.cjs' })
-SET a += { nombre: 'validate-contracts.cjs', tipo: 'cjs', bytes: 7588, topico: 'code' }
+SET a += { nombre: 'validate-contracts.cjs', tipo: 'cjs', bytes: 8079, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'typescript' }
@@ -1200,7 +1960,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/contracts/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 372, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 551, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'typescript' }
@@ -1345,12 +2105,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/contracts/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 301, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 321, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/contracts/vitest.config.ts' })
-SET a += { nombre: 'vitest.config.ts', tipo: 'ts', bytes: 178, topico: 'code' }
+SET a += { nombre: 'vitest.config.ts', tipo: 'ts', bytes: 177, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/engine' })
 SET m += { nombre: 'engine', lenguaje: 'markdown' }
@@ -1510,7 +2270,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/engine' })
 SET m += { nombre: 'engine', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/engine/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 406, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 459, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/engine' })
 SET m += { nombre: 'engine', lenguaje: 'typescript' }
@@ -1575,7 +2335,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/engine' })
 SET m += { nombre: 'engine', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/engine/src/core/WorkflowEngine.ts' })
-SET a += { nombre: 'WorkflowEngine.ts', tipo: 'ts', bytes: 17784, topico: 'code' }
+SET a += { nombre: 'WorkflowEngine.ts', tipo: 'ts', bytes: 17734, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/engine' })
 SET m += { nombre: 'engine', lenguaje: 'typescript' }
@@ -1660,7 +2420,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/engine' })
 SET m += { nombre: 'engine', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/engine/src/state/InMemoryTxStore.ts' })
-SET a += { nombre: 'InMemoryTxStore.ts', tipo: 'ts', bytes: 3445, topico: 'code' }
+SET a += { nombre: 'InMemoryTxStore.ts', tipo: 'ts', bytes: 3416, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/engine' })
 SET m += { nombre: 'engine', lenguaje: 'typescript' }
@@ -1782,455 +2542,15 @@ SET m += { nombre: 'engine', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/engine/vitest.config.ts' })
 SET a += { nombre: 'vitest.config.ts', tipo: 'ts', bytes: 157, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'markdown' }
-MERGE (a:Archivo { path: 'packages/frontend/ATTRIBUTIONS.md' })
-SET a += { nombre: 'ATTRIBUTIONS.md', tipo: 'md', bytes: 304, topico: 'doc' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'markdown' }
-MERGE (a:Archivo { path: 'packages/frontend/README.md' })
-SET a += { nombre: 'README.md', tipo: 'md', bytes: 4473, topico: 'doc' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'packages/frontend/cambios barra.txt' })
-SET a += { nombre: 'cambios barra.txt', tipo: 'txt', bytes: 1056, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'markdown' }
-MERGE (a:Archivo { path: 'packages/frontend/guidelines/Guidelines.md' })
-SET a += { nombre: 'Guidelines.md', tipo: 'md', bytes: 2560, topico: 'doc' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'packages/frontend/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 357, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'json' }
-MERGE (a:Archivo { path: 'packages/frontend/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 2726, topico: 'config' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/frontend/postcss.config.mjs' })
-SET a += { nombre: 'postcss.config.mjs', tipo: 'mjs', bytes: 460, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/App.tsx' })
-SET a += { nombre: 'App.tsx', tipo: 'tsx', bytes: 278, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/Root.tsx' })
-SET a += { nombre: 'Root.tsx', tipo: 'tsx', bytes: 1946, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/Console.tsx' })
-SET a += { nombre: 'Console.tsx', tipo: 'tsx', bytes: 5918, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/DbtExplorer.tsx' })
-SET a += { nombre: 'DbtExplorer.tsx', tipo: 'tsx', bytes: 5890, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/GraphCanvas.tsx' })
-SET a += { nombre: 'GraphCanvas.tsx', tipo: 'tsx', bytes: 9285, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-SET a += { nombre: 'InspectorPanel.tsx', tipo: 'tsx', bytes: 11505, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/LeftNavigation.tsx' })
-SET a += { nombre: 'LeftNavigation.tsx', tipo: 'tsx', bytes: 2303, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/Modals.tsx' })
-SET a += { nombre: 'Modals.tsx', tipo: 'tsx', bytes: 11023, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-SET a += { nombre: 'TopAppBar.tsx', tipo: 'tsx', bytes: 6841, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/canvas/DbtNodeComponent.tsx' })
-SET a += { nombre: 'DbtNodeComponent.tsx', tipo: 'tsx', bytes: 4481, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/figma/ImageWithFallback.tsx' })
-SET a += { nombre: 'ImageWithFallback.tsx', tipo: 'tsx', bytes: 1160, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/accordion.tsx' })
-SET a += { nombre: 'accordion.tsx', tipo: 'tsx', bytes: 2057, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/alert-dialog.tsx' })
-SET a += { nombre: 'alert-dialog.tsx', tipo: 'tsx', bytes: 3781, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/alert.tsx' })
-SET a += { nombre: 'alert.tsx', tipo: 'tsx', bytes: 1590, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/aspect-ratio.tsx' })
-SET a += { nombre: 'aspect-ratio.tsx', tipo: 'tsx', bytes: 282, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/avatar.tsx' })
-SET a += { nombre: 'avatar.tsx', tipo: 'tsx', bytes: 1046, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-SET a += { nombre: 'badge.tsx', tipo: 'tsx', bytes: 1591, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/breadcrumb.tsx' })
-SET a += { nombre: 'breadcrumb.tsx', tipo: 'tsx', bytes: 2357, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-SET a += { nombre: 'button.tsx', tipo: 'tsx', bytes: 2085, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/calendar.tsx' })
-SET a += { nombre: 'calendar.tsx', tipo: 'tsx', bytes: 2880, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-SET a += { nombre: 'card.tsx', tipo: 'tsx', bytes: 1892, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/carousel.tsx' })
-SET a += { nombre: 'carousel.tsx', tipo: 'tsx', bytes: 5524, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/chart.tsx' })
-SET a += { nombre: 'chart.tsx', tipo: 'tsx', bytes: 9693, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/checkbox.tsx' })
-SET a += { nombre: 'checkbox.tsx', tipo: 'tsx', bytes: 1239, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/collapsible.tsx' })
-SET a += { nombre: 'collapsible.tsx', tipo: 'tsx', bytes: 752, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/command.tsx' })
-SET a += { nombre: 'command.tsx', tipo: 'tsx', bytes: 4562, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/context-menu.tsx' })
-SET a += { nombre: 'context-menu.tsx', tipo: 'tsx', bytes: 8127, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/dialog.tsx' })
-SET a += { nombre: 'dialog.tsx', tipo: 'tsx', bytes: 3789, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/drawer.tsx' })
-SET a += { nombre: 'drawer.tsx', tipo: 'tsx', bytes: 4071, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/dropdown-menu.tsx' })
-SET a += { nombre: 'dropdown-menu.tsx', tipo: 'tsx', bytes: 8175, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/form.tsx' })
-SET a += { nombre: 'form.tsx', tipo: 'tsx', bytes: 3701, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/hover-card.tsx' })
-SET a += { nombre: 'hover-card.tsx', tipo: 'tsx', bytes: 1522, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/input-otp.tsx' })
-SET a += { nombre: 'input-otp.tsx', tipo: 'tsx', bytes: 2256, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/input.tsx' })
-SET a += { nombre: 'input.tsx', tipo: 'tsx', bytes: 962, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/label.tsx' })
-SET a += { nombre: 'label.tsx', tipo: 'tsx', bytes: 609, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/menubar.tsx' })
-SET a += { nombre: 'menubar.tsx', tipo: 'tsx', bytes: 8340, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/navigation-menu.tsx' })
-SET a += { nombre: 'navigation-menu.tsx', tipo: 'tsx', bytes: 6625, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/pagination.tsx' })
-SET a += { nombre: 'pagination.tsx', tipo: 'tsx', bytes: 2677, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/popover.tsx' })
-SET a += { nombre: 'popover.tsx', tipo: 'tsx', bytes: 1634, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/progress.tsx' })
-SET a += { nombre: 'progress.tsx', tipo: 'tsx', bytes: 718, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/radio-group.tsx' })
-SET a += { nombre: 'radio-group.tsx', tipo: 'tsx', bytes: 1470, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/resizable.tsx' })
-SET a += { nombre: 'resizable.tsx', tipo: 'tsx', bytes: 2008, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-SET a += { nombre: 'scroll-area.tsx', tipo: 'tsx', bytes: 1628, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/select.tsx' })
-SET a += { nombre: 'select.tsx', tipo: 'tsx', bytes: 6204, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/separator.tsx' })
-SET a += { nombre: 'separator.tsx', tipo: 'tsx', bytes: 706, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/sheet.tsx' })
-SET a += { nombre: 'sheet.tsx', tipo: 'tsx', bytes: 4093, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-SET a += { nombre: 'sidebar.tsx', tipo: 'tsx', bytes: 21531, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/skeleton.tsx' })
-SET a += { nombre: 'skeleton.tsx', tipo: 'tsx', bytes: 275, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/slider.tsx' })
-SET a += { nombre: 'slider.tsx', tipo: 'tsx', bytes: 1962, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/sonner.tsx' })
-SET a += { nombre: 'sonner.tsx', tipo: 'tsx', bytes: 571, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/switch.tsx' })
-SET a += { nombre: 'switch.tsx', tipo: 'tsx', bytes: 1176, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/table.tsx' })
-SET a += { nombre: 'table.tsx', tipo: 'tsx', bytes: 2362, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-SET a += { nombre: 'tabs.tsx', tipo: 'tsx', bytes: 1927, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/textarea.tsx' })
-SET a += { nombre: 'textarea.tsx', tipo: 'tsx', bytes: 766, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/toggle-group.tsx' })
-SET a += { nombre: 'toggle-group.tsx', tipo: 'tsx', bytes: 1910, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/toggle.tsx' })
-SET a += { nombre: 'toggle.tsx', tipo: 'tsx', bytes: 1552, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/tooltip.tsx' })
-SET a += { nombre: 'tooltip.tsx', tipo: 'tsx', bytes: 1892, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/use-mobile.ts' })
-SET a += { nombre: 'use-mobile.ts', tipo: 'ts', bytes: 739, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-SET a += { nombre: 'utils.ts', tipo: 'ts', bytes: 169, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-SET a += { nombre: 'RunView.tsx', tipo: 'tsx', bytes: 14397, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/data/mockData.ts' })
-SET a += { nombre: 'mockData.ts', tipo: 'ts', bytes: 11761, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/data/mockDbtData.ts' })
-SET a += { nombre: 'mockDbtData.ts', tipo: 'ts', bytes: 12252, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-SET a += { nombre: 'routes.ts', tipo: 'ts', bytes: 1023, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/stores/appStore.ts' })
-SET a += { nombre: 'appStore.ts', tipo: 'ts', bytes: 4896, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/stores/index.ts' })
-SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 6564, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/types/dbt.ts' })
-SET a += { nombre: 'dbt.ts', tipo: 'ts', bytes: 2865, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/types/index.ts' })
-SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 3816, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-SET a += { nombre: 'AdminView.tsx', tipo: 'tsx', bytes: 11206, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/ArtifactsView.tsx' })
-SET a += { nombre: 'ArtifactsView.tsx', tipo: 'tsx', bytes: 9003, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-SET a += { nombre: 'Canvas.tsx', tipo: 'tsx', bytes: 16071, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/CostView.tsx' })
-SET a += { nombre: 'CostView.tsx', tipo: 'tsx', bytes: 10385, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-SET a += { nombre: 'DiffView.tsx', tipo: 'tsx', bytes: 11849, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-SET a += { nombre: 'LineageView.tsx', tipo: 'tsx', bytes: 10163, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-SET a += { nombre: 'PluginsView.tsx', tipo: 'tsx', bytes: 7578, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-SET a += { nombre: 'RunsView.tsx', tipo: 'tsx', bytes: 14495, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/src/main.tsx' })
-SET a += { nombre: 'main.tsx', tipo: 'tsx', bytes: 172, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'packages/frontend/src/styles/fonts.css' })
-SET a += { nombre: 'fonts.css', tipo: 'css', bytes: 0, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'packages/frontend/src/styles/index.css' })
-SET a += { nombre: 'index.css', tipo: 'css', bytes: 621, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'packages/frontend/src/styles/tailwind.css' })
-SET a += { nombre: 'tailwind.css', tipo: 'css', bytes: 102, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'packages/frontend/src/styles/theme.css' })
-SET a += { nombre: 'theme.css', tipo: 'css', bytes: 5629, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/frontend' })
-SET m += { nombre: 'frontend', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/frontend/vite.config.ts' })
-SET a += { nombre: 'vite.config.ts', tipo: 'ts', bytes: 618, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'pnpm-lock.yaml' })
 SET m += { nombre: 'pnpm-lock.yaml', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: 'pnpm-lock.yaml' })
-SET a += { nombre: 'pnpm-lock.yaml', tipo: 'yaml', bytes: 241903, topico: 'config' }
+SET a += { nombre: 'pnpm-lock.yaml', tipo: 'yaml', bytes: 419970, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'pnpm-workspace.yaml' })
 SET m += { nombre: 'pnpm-workspace.yaml', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: 'pnpm-workspace.yaml' })
-SET a += { nombre: 'pnpm-workspace.yaml', tipo: 'yaml', bytes: 27, topico: 'config' }
+SET a += { nombre: 'pnpm-workspace.yaml', tipo: 'yaml', bytes: 40, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'runbooks/WORKFLOW_ISOLATION_TESTING.md' })
 SET m += { nombre: 'WORKFLOW_ISOLATION_TESTING.md', lenguaje: 'markdown' }
@@ -2240,7 +2560,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/README.md' })
 SET m += { nombre: 'README.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'scripts/README.md' })
-SET a += { nombre: 'README.md', tipo: 'md', bytes: 3370, topico: 'doc' }
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 7856, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/check-changed.cjs' })
 SET m += { nombre: 'check-changed.cjs', lenguaje: 'javascript' }
@@ -2255,7 +2575,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/db-migrate.cjs' })
 SET m += { nombre: 'db-migrate.cjs', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/db-migrate.cjs' })
-SET a += { nombre: 'db-migrate.cjs', tipo: 'cjs', bytes: 1475, topico: 'code' }
+SET a += { nombre: 'db-migrate.cjs', tipo: 'cjs', bytes: 3087, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/enable-workflow.sh' })
 SET m += { nombre: 'enable-workflow.sh', lenguaje: 'text' }
@@ -2275,7 +2595,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'scripts/neo4j/generated-repo.cypher' })
-SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 258795, topico: 'other' }
+SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 263316, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
@@ -2322,6 +2642,31 @@ SET m += { nombre: 'validate-contracts.cjs', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/validate-contracts.cjs' })
 SET a += { nombre: 'validate-contracts.cjs', tipo: 'cjs', bytes: 3229, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/validate-executable-examples.cjs' })
+SET m += { nombre: 'validate-executable-examples.cjs', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/validate-executable-examples.cjs' })
+SET a += { nombre: 'validate-executable-examples.cjs', tipo: 'cjs', bytes: 6532, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/validate-glossary-usage.cjs' })
+SET m += { nombre: 'validate-glossary-usage.cjs', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/validate-glossary-usage.cjs' })
+SET a += { nombre: 'validate-glossary-usage.cjs', tipo: 'cjs', bytes: 4865, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/validate-idempotency-vectors.cjs' })
+SET m += { nombre: 'validate-idempotency-vectors.cjs', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/validate-idempotency-vectors.cjs' })
+SET a += { nombre: 'validate-idempotency-vectors.cjs', tipo: 'cjs', bytes: 4178, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/validate-references.cjs' })
+SET m += { nombre: 'validate-references.cjs', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/validate-references.cjs' })
+SET a += { nombre: 'validate-references.cjs', tipo: 'cjs', bytes: 6368, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/validate-rfc2119.cjs' })
+SET m += { nombre: 'validate-rfc2119.cjs', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/validate-rfc2119.cjs' })
+SET a += { nombre: 'validate-rfc2119.cjs', tipo: 'cjs', bytes: 4597, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'tsconfig.base.json' })
 SET m += { nombre: 'tsconfig.base.json', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'tsconfig.base.json' })
@@ -2349,6 +2694,597 @@ SET a += { nombre: 'vitest.config.ts', tipo: 'ts', bytes: 551, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 
 // File dependencies
+MATCH (src:Archivo { path: 'apps/web/src/app/App.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/sonner.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/App.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/routes.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/Root.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/Console.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/Root.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/LeftNavigation.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/Root.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/Root.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/resizable.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/Root.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Console.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Console.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Console.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Console.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Console.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/dbt.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/accordion.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/GraphCanvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/data/mockData.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/GraphCanvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/stores/index.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/GraphCanvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/index.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/GraphCanvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/canvas/DbtNodeComponent.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/GraphCanvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/GraphCanvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/dbt.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/LeftNavigation.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/LeftNavigation.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/LeftNavigation.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tooltip.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/LeftNavigation.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Modals.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/dbt.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Modals.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Modals.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Modals.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/Modals.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/checkbox.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/input.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/label.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/radio-group.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/select.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/SourceImportWizard.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/separator.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/input.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/select.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/TopAppBar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tooltip.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/canvas/DbtNodeComponent.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/dbt.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/canvas/DbtNodeComponent.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/canvas/DbtNodeComponent.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/canvas/DbtNodeComponent.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/accordion.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/alert-dialog.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/alert-dialog.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/alert.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/avatar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/breadcrumb.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/calendar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/calendar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/carousel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/carousel.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/chart.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/checkbox.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/command.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/dialog.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/command.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/context-menu.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/dialog.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/drawer.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/dropdown-menu.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/form.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/label.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/form.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/hover-card.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/input-otp.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/input.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/label.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/menubar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/navigation-menu.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/pagination.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/pagination.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/popover.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/progress.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/radio-group.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/resizable.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/select.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/separator.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sheet.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/input.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/separator.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/sheet.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/skeleton.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tooltip.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/use-mobile.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/sidebar.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/skeleton.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/slider.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/switch.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/table.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/textarea.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/toggle-group.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/toggle.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/toggle-group.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/toggle.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/ui/tooltip.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/data/mockData.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/progress.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/separator.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/components/views/RunView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/data/mockData.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/index.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/Root.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/ArtifactsView.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/CostView.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/routes.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/dbt.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/stores/index.ts' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/index.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/input.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/AdminView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/data/mockDbtData.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/ArtifactsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/ArtifactsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/ArtifactsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/ArtifactsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/ArtifactsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/canvas/DbtNodeComponent.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/DbtExplorer.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/InspectorPanel.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/Modals.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/resizable.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/separator.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tooltip.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/data/mockDbtData.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/Canvas.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/types/dbt.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/CostView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/CostView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/CostView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/DiffView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/data/mockDbtData.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/input.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/label.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/LineageView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/switch.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/switch.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/PluginsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/data/mockDbtData.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/badge.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/button.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/card.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/progress.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/scroll-area.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/tabs.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/components/ui/utils.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/data/mockDbtData.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/app/views/RunsView.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/stores/appStore.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'apps/web/src/main.tsx' })
+MATCH (dst:Archivo { path: 'apps/web/src/app/App.tsx' })
+MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/contracts/src/types/contracts.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
@@ -2562,574 +3498,28 @@ MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/engine/test/utils/clock.test.ts' })
 MATCH (dst:Archivo { path: 'packages/engine/src/utils/clock.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/App.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/App.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/sonner.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/Root.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/Root.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/LeftNavigation.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/Root.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/Console.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/Root.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/stores/appStore.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/Root.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/resizable.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Console.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/stores/appStore.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Console.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Console.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Console.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Console.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/DbtExplorer.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/dbt.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/DbtExplorer.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/DbtExplorer.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/DbtExplorer.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/accordion.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/DbtExplorer.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/GraphCanvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/GraphCanvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/GraphCanvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/stores/index.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/GraphCanvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/data/mockData.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/GraphCanvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/index.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/GraphCanvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/canvas/DbtNodeComponent.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/dbt.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/LeftNavigation.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tooltip.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/LeftNavigation.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Modals.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/dbt.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Modals.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Modals.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Modals.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/Modals.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/stores/appStore.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/select.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/input.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/TopAppBar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tooltip.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/canvas/DbtNodeComponent.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/dbt.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/canvas/DbtNodeComponent.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/canvas/DbtNodeComponent.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/accordion.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/alert-dialog.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/alert-dialog.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/alert.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/avatar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/breadcrumb.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/calendar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/calendar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/carousel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/carousel.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/chart.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/checkbox.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/command.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/command.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/dialog.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/context-menu.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/dialog.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/drawer.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/dropdown-menu.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/form.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/form.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/label.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/hover-card.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/input-otp.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/input.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/label.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/menubar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/navigation-menu.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/pagination.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/pagination.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/popover.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/progress.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/radio-group.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/resizable.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/select.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/separator.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sheet.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/use-mobile.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/input.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/separator.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/sheet.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/skeleton.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/sidebar.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tooltip.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/skeleton.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/slider.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/switch.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/table.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/textarea.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/toggle-group.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/toggle-group.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/toggle.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/toggle.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/ui/tooltip.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/progress.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/separator.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/components/views/RunView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/data/mockData.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/data/mockData.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/index.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/Root.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/ArtifactsView.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/CostView.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/routes.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/stores/appStore.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/dbt.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/stores/index.ts' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/index.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/data/mockDbtData.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/input.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/AdminView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/ArtifactsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/ArtifactsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/ArtifactsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/ArtifactsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/ArtifactsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/stores/appStore.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/data/mockDbtData.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/types/dbt.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/DbtExplorer.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/InspectorPanel.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/canvas/DbtNodeComponent.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/Modals.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/resizable.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/separator.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/Canvas.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tooltip.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/CostView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/CostView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/CostView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/data/mockDbtData.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/DiffView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/input.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/switch.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/label.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/LineageView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/data/mockDbtData.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/switch.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/PluginsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/data/mockDbtData.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/stores/appStore.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/card.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/badge.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/button.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/tabs.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/scroll-area.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/progress.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/app/views/RunsView.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/components/ui/utils.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/frontend/src/main.tsx' })
-MATCH (dst:Archivo { path: 'packages/frontend/src/app/App.tsx' })
-MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'scripts/neo4j/neo4j-generate-cypher.cjs' })
 MATCH (dst:Archivo { path: 'scripts/neo4j/neo4j-ingest-repo.cjs' })
 MERGE (src)-[:DEPENDE]->(dst);
 
 // Class/function definitions
 MERGE (f:Funcion { key: 'packages/adapter-postgres/src/PostgresStateStoreAdapter.ts::PostgresStateStoreAdapter' })
-SET f += { nombre: 'PostgresStateStoreAdapter', linea_inicio: 21, path: 'packages/adapter-postgres/src/PostgresStateStoreAdapter.ts' }
+SET f += { nombre: 'PostgresStateStoreAdapter', linea_inicio: 62, path: 'packages/adapter-postgres/src/PostgresStateStoreAdapter.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/adapter-postgres/src/PostgresStateStoreAdapter.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/adapter-temporal/src/TemporalAdapter.ts::TemporalAdapter' })
-SET f += { nombre: 'TemporalAdapter', linea_inicio: 45, path: 'packages/adapter-temporal/src/TemporalAdapter.ts' }
+SET f += { nombre: 'TemporalAdapter', linea_inicio: 46, path: 'packages/adapter-temporal/src/TemporalAdapter.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/adapter-temporal/src/TemporalAdapter.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/adapter-temporal/src/TemporalClient.ts::TemporalClientManager' })
-SET f += { nombre: 'TemporalClientManager', linea_inicio: 11, path: 'packages/adapter-temporal/src/TemporalClient.ts' }
+SET f += { nombre: 'TemporalClientManager', linea_inicio: 12, path: 'packages/adapter-temporal/src/TemporalClient.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/adapter-temporal/src/TemporalClient.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/adapter-temporal/src/TemporalWorkerHost.ts::TemporalWorkerHost' })
-SET f += { nombre: 'TemporalWorkerHost', linea_inicio: 20, path: 'packages/adapter-temporal/src/TemporalWorkerHost.ts' }
+SET f += { nombre: 'TemporalWorkerHost', linea_inicio: 21, path: 'packages/adapter-temporal/src/TemporalWorkerHost.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/adapter-temporal/src/TemporalWorkerHost.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -3139,7 +3529,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/contracts/src/errors.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/contracts/src/validation.ts::ContractValidationError' })
-SET f += { nombre: 'ContractValidationError', linea_inicio: 39, path: 'packages/contracts/src/validation.ts' }
+SET f += { nombre: 'ContractValidationError', linea_inicio: 40, path: 'packages/contracts/src/validation.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/contracts/src/validation.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -3194,12 +3584,12 @@ WITH f
 MATCH (a:Archivo { path: 'packages/engine/legacy-top-level-engine/src/workers/OutboxWorker.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/engine/src/adapters/conductor/ConductorAdapterStub.ts::ConductorAdapterStub' })
-SET f += { nombre: 'ConductorAdapterStub', linea_inicio: 16, path: 'packages/engine/src/adapters/conductor/ConductorAdapterStub.ts' }
+SET f += { nombre: 'ConductorAdapterStub', linea_inicio: 17, path: 'packages/engine/src/adapters/conductor/ConductorAdapterStub.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/adapters/conductor/ConductorAdapterStub.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/engine/src/adapters/mock/MockAdapter.ts::MockAdapter' })
-SET f += { nombre: 'MockAdapter', linea_inicio: 27, path: 'packages/engine/src/adapters/mock/MockAdapter.ts' }
+SET f += { nombre: 'MockAdapter', linea_inicio: 28, path: 'packages/engine/src/adapters/mock/MockAdapter.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/adapters/mock/MockAdapter.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -3209,7 +3599,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/adapters/temporal/TemporalAdapterStub.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/engine/src/core/SnapshotProjector.ts::SnapshotProjector' })
-SET f += { nombre: 'SnapshotProjector', linea_inicio: 5, path: 'packages/engine/src/core/SnapshotProjector.ts' }
+SET f += { nombre: 'SnapshotProjector', linea_inicio: 6, path: 'packages/engine/src/core/SnapshotProjector.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/core/SnapshotProjector.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -3219,7 +3609,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/core/WorkflowEngine.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/engine/src/core/idempotency.ts::IdempotencyKeyBuilder' })
-SET f += { nombre: 'IdempotencyKeyBuilder', linea_inicio: 16, path: 'packages/engine/src/core/idempotency.ts' }
+SET f += { nombre: 'IdempotencyKeyBuilder', linea_inicio: 17, path: 'packages/engine/src/core/idempotency.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/core/idempotency.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -3264,7 +3654,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/shims/node.d.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/engine/src/state/InMemoryRunStateStore.ts::InMemoryRunStateStore' })
-SET f += { nombre: 'InMemoryRunStateStore', linea_inicio: 3, path: 'packages/engine/src/state/InMemoryRunStateStore.ts' }
+SET f += { nombre: 'InMemoryRunStateStore', linea_inicio: 4, path: 'packages/engine/src/state/InMemoryRunStateStore.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/state/InMemoryRunStateStore.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -3274,7 +3664,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/state/InMemoryTxStore.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/engine/src/utils/clock.ts::SequenceClock' })
-SET f += { nombre: 'SequenceClock', linea_inicio: 150, path: 'packages/engine/src/utils/clock.ts' }
+SET f += { nombre: 'SequenceClock', linea_inicio: 151, path: 'packages/engine/src/utils/clock.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/engine/src/utils/clock.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -3285,6 +3675,16 @@ MATCH (a:Archivo { path: 'packages/engine/test/contracts/helpers.ts' })
 MERGE (a)-[:DEFINE]->(f);
 
 // Issue references from files
+MERGE (i:Issue { key: 'dunay2/dvt#14' })
+SET i += { number: 14, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/14' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-14-close-2026-02-19.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#15' })
+SET i += { number: 15, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/15' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-15-close-2026-02-19.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#15' })
 SET i += { number: 15, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/15' }
 WITH i
@@ -3320,10 +3720,45 @@ SET i += { number: 222, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/
 WITH i
 MATCH (a:Archivo { path: '.gh-comments/issue-219-prebrief.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#220' })
+SET i += { number: 220, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/220' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-220-prebrief.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#221' })
+SET i += { number: 221, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/221' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-220-prebrief.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#222' })
+SET i += { number: 222, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/222' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-220-prebrief.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#223' })
+SET i += { number: 223, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/223' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-220-prebrief.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#221' })
+SET i += { number: 221, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/221' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-221-prebrief.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#222' })
+SET i += { number: 222, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/222' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-221-prebrief.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#224' })
 SET i += { number: 224, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/224' }
 WITH i
 MATCH (a:Archivo { path: '.gh-comments/issue-224-prebrief.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#68' })
+SET i += { number: 68, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/68' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/issue-68-hardening-status-2026-02-19.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#9' })
 SET i += { number: 9, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/9' }
@@ -3350,10 +3785,40 @@ SET i += { number: 117, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/
 WITH i
 MATCH (a:Archivo { path: '.gh-comments/pr-117.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#221' })
+SET i += { number: 221, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/221' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/pr-221.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#226' })
+SET i += { number: 226, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/226' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#9' })
 SET i += { number: 9, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/9' }
 WITH i
 MATCH (a:Archivo { path: '.gh-comments/pr-9.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#14' })
+SET i += { number: 14, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/14' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/pr-closure-notes-14-15.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#15' })
+SET i += { number: 15, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/15' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/pr-closure-notes-14-15.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#221' })
+SET i += { number: 221, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/221' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/pr-closure-notes-14-15.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#68' })
+SET i += { number: 68, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/68' }
+WITH i
+MATCH (a:Archivo { path: '.gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#8' })
 SET i += { number: 8, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/8' }
@@ -3915,6 +4380,16 @@ SET i += { number: 15, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/i
 WITH i
 MATCH (a:Archivo { path: 'docs/guides/TECHNICAL_DEBT_REGISTER.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#220' })
+SET i += { number: 220, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/220' }
+WITH i
+MATCH (a:Archivo { path: 'docs/guides/TECHNICAL_DEBT_REGISTER.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#221' })
+SET i += { number: 221, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/221' }
+WITH i
+MATCH (a:Archivo { path: 'docs/guides/TECHNICAL_DEBT_REGISTER.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#2' })
 SET i += { number: 2, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/2' }
 WITH i
@@ -4260,6 +4735,61 @@ SET i += { number: 202, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/
 WITH i
 MATCH (a:Archivo { path: 'docs/status/IMPLEMENTATION_SUMMARY.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#226' })
+SET i += { number: 226, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/226' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_226_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#227' })
+SET i += { number: 227, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/227' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_227_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#228' })
+SET i += { number: 228, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/228' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_228_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#226' })
+SET i += { number: 226, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/226' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_229_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#227' })
+SET i += { number: 227, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/227' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_229_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#228' })
+SET i += { number: 228, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/228' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_229_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#229' })
+SET i += { number: 229, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/229' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_229_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#6' })
+SET i += { number: 6, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/6' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_6_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#14' })
+SET i += { number: 14, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/14' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_6_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#15' })
+SET i += { number: 15, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/15' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_6_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#68' })
+SET i += { number: 68, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/68' }
+WITH i
+MATCH (a:Archivo { path: 'docs/status/ISSUE_6_PLAYBOOK_DRAFT.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#6' })
 SET i += { number: 6, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/6' }
 WITH i
@@ -4310,15 +4840,35 @@ SET i += { number: 17, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/i
 WITH i
 MATCH (a:Archivo { path: 'scripts/README.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#226' })
+SET i += { number: 226, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/226' }
+WITH i
+MATCH (a:Archivo { path: 'scripts/README.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#227' })
+SET i += { number: 227, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/227' }
+WITH i
+MATCH (a:Archivo { path: 'scripts/README.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#228' })
+SET i += { number: 228, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/228' }
+WITH i
+MATCH (a:Archivo { path: 'scripts/README.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#229' })
+SET i += { number: 229, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/229' }
+WITH i
+MATCH (a:Archivo { path: 'scripts/README.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#230' })
+SET i += { number: 230, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/230' }
+WITH i
+MATCH (a:Archivo { path: 'scripts/README.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#10' })
 SET i += { number: 10, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/10' }
 WITH i
 MATCH (a:Archivo { path: 'scripts/compare-hashes.cjs' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#6' })
-SET i += { number: 6, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/6' }
-WITH i
-MATCH (a:Archivo { path: 'scripts/db-migrate.cjs' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#10' })
 SET i += { number: 10, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/10' }

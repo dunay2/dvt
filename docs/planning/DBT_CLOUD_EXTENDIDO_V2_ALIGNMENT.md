@@ -49,15 +49,15 @@ Este análisis compara la especificación fuente en [DBT_CLOUD_EXTENDIDO_V2_SPEC
 
 ### P1 — Producto
 
-4. Crear módulo `LogicalGraph` y `CanvasState` (separación explícita de modelos).
-5. Implementar `PolicyEngine` determinista (`evaluate(context) -> Decision[]`).
-6. Definir `RunApproval` y flujo `awaiting_approval` para operaciones críticas.
+1. Crear módulo `LogicalGraph` y `CanvasState` (separación explícita de modelos).
+2. Implementar `PolicyEngine` determinista (`evaluate(context) -> Decision[]`).
+3. Definir `RunApproval` y flujo `awaiting_approval` para operaciones críticas.
 
 ### P2 — Escalado
 
-7. Integrar FinOps: estimación pre-run + coste real post-run.
-8. Definir manifiesto de plugins y permisos.
-9. Iniciar frontend de workspace de grafo (React Flow + layout engine).
+1. Integrar FinOps: estimación pre-run + coste real post-run.
+2. Definir manifiesto de plugins y permisos.
+3. Iniciar frontend de workspace de grafo (React Flow + layout engine).
 
 ## Decisión recomendada
 

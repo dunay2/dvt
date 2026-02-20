@@ -259,8 +259,8 @@ function collectContracts() {
 
 function renderTable(rows) {
   const header = [
-    '| Area         | Contract | Version | Lifecycle | Type      | Path |',
-    '| ------------ | -------- | ------- | --------- | --------- | ---- |',
+    '| Area | Contract | Version | Lifecycle | Type | Path |',
+    '| --- | --- | --- | --- | --- | --- |',
   ];
 
   const lines = rows.map((row) => {

@@ -105,7 +105,8 @@ jobs:
             echo "any_changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "matrix={\"include\":$include}" >> "$GITHUB_OUTPUT"
+          include_compact=$(jq -c '.' <<< "$include")
+          echo "matrix={\"include\":$include_compact}" >> "$GITHUB_OUTPUT"
 
   lint-and-format:
     name: ESLint + Prettier (changed files)
