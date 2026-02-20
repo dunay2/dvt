@@ -1,7 +1,7 @@
-import type { IPlanFetcher } from '../../src/security/planIntegrity.js';
+import type { IRawPlanFetcher } from '../../src/security/planIntegrity.js';
 import type { PlanRef } from '../src/contracts/types.js';
 
-export class InMemoryPlanFetcher implements IPlanFetcher {
+export class InMemoryPlanFetcher implements IRawPlanFetcher {
   constructor(private readonly map: ReadonlyMap<string, Uint8Array>) {}
 
   async fetch(planRef: PlanRef): Promise<Uint8Array> {
