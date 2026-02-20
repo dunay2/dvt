@@ -1,197 +1,197 @@
-# DVT+ Frontend — Plan de interfaz limpia y enfocada a backend
+# DVT+ Frontend — Clean Interface Plan Focused on Backend
 
-## 1. Objetivo
+## 1. Objective
 
-Definir un plan práctico para evolucionar la UI de `apps/web` desde un prototipo amplio hacia una interfaz:
+Define a practical plan to evolve the `apps/web` UI from a broad prototype to an interface that is:
 
-- más limpia (menos ruido visual),
-- más ordenada (jerarquía clara de trabajo),
-- más enfocada (flujo principal Plan → Run → Monitor),
-- y alineada con la evolución real del backend actual.
+- cleaner (less visual noise),
+- more organized (clear work hierarchy),
+- more focused (main flow Plan → Run → Monitor),
+- and aligned with the real evolution of the backend.
 
-## 2. Diagnóstico actual
+## 2. Current Diagnosis
 
-### 2.1 Frontend hoy
+### 2.1 Frontend Today
 
-El frontend actual es un prototipo de alta fidelidad con cobertura amplia de vistas y componentes:
+The current frontend is a high-fidelity prototype with broad coverage of views and components:
 
-- Rutas múltiples (`/canvas`, `/runs`, `/artifacts`, `/diff`, `/lineage`, `/cost`, `/plugins`, `/admin`).
-- Estado local unificado con Zustand.
-- Simulación basada en datos mock (`mockDbtData.ts`) y acciones locales de plan/run.
-- Shell complejo con barra superior, barra lateral de iconos, panel explorador, panel inspector y consola.
+- Multiple routes (`/canvas`, `/runs`, `/artifacts`, `/diff`, `/lineage`, `/cost`, `/plugins`, `/admin`).
+- Unified local state with Zustand.
+- Simulation based on mock data (`mockDbtData.ts`) and local plan/run actions.
+- Complex shell with top bar, icon sidebar, explorer panel, inspector panel, and console.
 
-Conclusión: visualmente potente, pero todavía “producto demo-first” (centrado en mock UI) más que “workflow-first” (centrado en integración backend).
+Conclusion: visually powerful, but still a “demo-first product” (mock UI-centric) rather than “workflow-first” (backend integration-centric).
 
-### 2.2 Backend hoy (evolución disponible)
+### 2.2 Backend Today (Available Evolution)
 
-El backend en `apps/api` es una base operativa sólida pero mínima, con foco en infraestructura y salud de servicio:
+The backend in `apps/api` is a solid but minimal operational base, focused on infrastructure and service health:
 
-- `GET /healthz` y `GET /readyz`.
+- `GET /healthz` and `GET /readyz`.
 - `GET /version`.
-- `GET /db/ready` con chequeo real de PostgreSQL si existe `DATABASE_URL`.
-- CORS configurable, validación de entorno con Zod y arranque Fastify estricto.
+- `GET /db/ready` with real PostgreSQL check if `DATABASE_URL` exists.
+- Configurable CORS, environment validation with Zod, and strict Fastify startup.
 
-Conclusión: aún no hay endpoints de dominio para `plan`, `run`, `lineage`, `artifacts`, `cost` o `plugins`; por tanto el frontend debe priorizar integración gradual y evitar sobre-prometer UX sobre datos mock.
+Conclusion: there are still no domain endpoints for `plan`, `run`, `lineage`, `artifacts`, `cost`, or `plugins`; therefore, the frontend should prioritize gradual integration and avoid over-promising UX on mock data.
 
-## 3. Principio rector de producto (nuevo foco)
+## 3. Product Guiding Principle (New Focus)
 
-Pasar de **“UI con muchas vistas”** a **“UI operacional para ejecutar con backend real”**.
+Move from **“UI with many views”** to **“Operational UI to execute with real backend”**.
 
-Regla:
+Rule:
 
-1. Primero confiabilidad de shell + conectividad + estados de red.
-2. Después flujo core (Plan / Run / Monitor) con datos reales.
-3. Luego vistas secundarias (diff, lineage, cost, plugins, admin).
+1. First, shell reliability + connectivity + network states.
+2. Then, core flow (Plan / Run / Monitor) with real data.
+3. Then, secondary views (diff, lineage, cost, plugins, admin).
 
-## 4. Plan de limpieza y orden visual
+## 4. Visual Cleanup and Order Plan
 
-## 4.1 Simplificación de navegación (Fase UI-1)
+### 4.1 Navigation Simplification (UI-1 Phase)
 
-### Cambios
+**Changes:**
 
-- Mantener barra lateral izquierda solo con iconos + tooltip (sin textos permanentes).
-- Eliminar encabezados redundantes en barras laterales (`Projects`, `dbt explorer`) para ganar foco vertical.
-- Mantener ancho fijo tipo IDE (sin doble sistema de colapso ambiguo).
-- Reducir densidad de la barra superior: mover controles secundarios de “View” a menú contextual único.
+- Keep left sidebar with icons only + tooltip (no permanent texts).
+- Remove redundant headers in sidebars (`Projects`, `dbt explorer`) to gain vertical focus.
+- Keep fixed IDE-like width (no ambiguous double collapse system).
+- Reduce top bar density: move secondary “View” controls to a single contextual menu.
 
-### Resultado UX esperado
+**Expected UX Result:**
 
-- Menos ruido visual.
-- Más área útil de canvas.
-- Menos decisiones por pantalla.
+- Less visual noise.
+- More useful canvas area.
+- Fewer decisions per screen.
 
-## 4.2 Jerarquía de vistas por prioridad (Fase UI-2)
+### 4.2 View Hierarchy by Priority (UI-2 Phase)
 
-Definir vistas por niveles:
+Define views by levels:
 
-- **Nivel A (Core):** Canvas, Runs.
-- **Nivel B (Operación):** Artifacts, Diff.
-- **Nivel C (Avanzado/Admin):** Lineage, Cost, Plugins, Admin.
+- **Level A (Core):** Canvas, Runs.
+- **Level B (Operation):** Artifacts, Diff.
+- **Level C (Advanced/Admin):** Lineage, Cost, Plugins, Admin.
 
-Aplicar “progresive disclosure”:
+Apply “progressive disclosure”:
 
-- Nivel C oculto por defecto en modo básico.
-- Activable por feature flags o rol.
+- Level C hidden by default in basic mode.
+- Activatable by feature flags or role.
 
-### Resultado UX esperado
+**Expected UX Result:**
 
-- Interfaz más enfocada al trabajo diario.
-- Menor carga cognitiva en usuarios nuevos.
+- Interface more focused on daily work.
+- Lower cognitive load for new users.
 
-## 4.3 Layout orientado a tarea (Fase UI-3)
+### 4.3 Task-oriented Layout (UI-3 Phase)
 
-Estandarizar layout por contexto:
+Standardize layout by context:
 
-- **Modo Build (default):** Explorer + Canvas + Inspector.
-- **Modo Run:** Runs + Console prioritaria.
-- **Modo Focus:** Canvas casi completo.
+- **Build Mode (default):** Explorer + Canvas + Inspector.
+- **Run Mode:** Runs + prioritized Console.
+- **Focus Mode:** Almost full Canvas.
 
-Evitar que el usuario gestione demasiados paneles manualmente; el layout debe responder al contexto de ruta.
+Avoid making the user manage too many panels manually; layout should respond to route context.
 
-## 5. Plan de alineación con backend
+## 5. Backend Alignment Plan
 
-## 5.1 Contrato mínimo de conectividad (inmediato)
+### 5.1 Minimum Connectivity Contract (Immediate)
 
-Crear cliente API tipado para endpoints ya existentes:
+Create a typed API client for existing endpoints:
 
 - `GET /healthz`
 - `GET /readyz`
 - `GET /version`
 - `GET /db/ready`
 
-Uso en frontend:
+Frontend usage:
 
-- Indicador global de estado de plataforma en top bar.
-- Banner degradado/offline real (no mock).
-- “Service diagnostics” en panel de estado.
+- Global platform state indicator in top bar.
+- Real degraded/offline banner (not mock).
+- “Service diagnostics” in status panel.
 
-## 5.2 Estrategia anti-mock (corto plazo)
+### 5.2 Anti-mock Strategy (Short Term)
 
-Separar explícitamente fuentes de datos:
+Explicitly separate data sources:
 
-- `mock` (desarrollo/demo)
+- `mock` (development/demo)
 - `api` (real)
 
-Conmutación por variable de entorno (`VITE_DATA_SOURCE=mock|api`).
+Switch via environment variable (`VITE_DATA_SOURCE=mock|api`).
 
-Objetivo: mantener demo útil sin bloquear integración real.
+Goal: keep demo useful without blocking real integration.
 
-## 5.3 Contratos backend que el frontend necesita (siguiente evolución)
+### 5.3 Backend Contracts Needed by Frontend (Next Evolution)
 
-Propuesta priorizada para backend:
+Prioritized proposal for backend:
 
-1. `POST /plans/preview` (subgrafo/selección → plan inmutable).
-2. `POST /runs` (start run desde plan).
-3. `GET /runs/:id` + `GET /runs` (estado y listado).
-4. `GET /runs/:id/events` (SSE o polling equivalente).
-5. `GET /artifacts/:runId/*` (manifest/run_results/catalog mínimos).
+1. `POST /plans/preview` (subgraph/selection → immutable plan).
+2. `POST /runs` (start run from plan).
+3. `GET /runs/:id` + `GET /runs` (state and list).
+4. `GET /runs/:id/events` (SSE or equivalent polling).
+5. `GET /artifacts/:runId/*` (minimal manifest/run_results/catalog).
 
-El frontend debe prepararse con interfaces TypeScript para estos contratos desde ya, aunque el backend los entregue de forma incremental.
+Frontend should prepare with TypeScript interfaces for these contracts now, even if backend delivers them incrementally.
 
-## 6. Arquitectura frontend recomendada
+## 6. Recommended Frontend Architecture
 
-## 6.1 Stores por responsabilidad
+### 6.1 Stores by Responsibility
 
-Refactor progresivo del store global actual hacia:
+Progressive refactor of current global store towards:
 
-- `shellStore`: layout, paneles, foco, navegación.
-- `sessionStore`: tenant/proyecto/env/git/ref.
-- `graphStore`: nodos/edges/selección.
-- `runStore`: plan actual, run actual, timeline.
-- `statusStore`: salud de backend y conectividad.
+- `shellStore`: layout, panels, focus, navigation.
+- `sessionStore`: tenant/project/env/git/ref.
+- `graphStore`: nodes/edges/selection.
+- `runStore`: current plan, current run, timeline.
+- `statusStore`: backend health and connectivity.
 
-## 6.2 Capa de datos
+### 6.2 Data Layer
 
-Estandarizar con TanStack Query:
+Standardize with TanStack Query:
 
-- queries de estado (`health`, `version`, `dbReady`),
-- mutations de acciones (`plan`, `run`),
-- invalidación predecible por dominio.
+- State queries (`health`, `version`, `dbReady`),
+- Action mutations (`plan`, `run`),
+- Predictable invalidation by domain.
 
-## 6.3 Principio UI
+### 6.3 UI Principle
 
-Componentes de vista no consumen mock directamente; usan servicios (`app/services/*`) y view-models tipados.
+View components do not consume mock directly; they use services (`app/services/*`) and typed view-models.
 
-## 7. Roadmap propuesto (4 sprints)
+## 7. Proposed Roadmap (4 Sprints)
 
-## Sprint 1 — “Base limpia y conectada”
+### Sprint 1 — “Clean and Connected Base”
 
-- Limpieza visual shell (navegación y cabeceras redundantes).
-- Cliente API mínimo (`health`, `ready`, `version`, `db/ready`).
-- Estado de red real en top bar + banner global.
-- Documentar modo `mock` vs `api`.
+- Visual shell cleanup (navigation and redundant headers).
+- Minimal API client (`health`, `ready`, `version`, `db/ready`).
+- Real network state in top bar + global banner.
+- Document `mock` vs `api` mode.
 
-## Sprint 2 — “Flujo core real (v1)”
+### Sprint 2 — “Real Core Flow (v1)”
 
-- Integrar plan preview real (si backend disponible; si no, adapter temporal).
-- Integrar inicio de run.
-- Reforzar vista Runs como foco operativo.
+- Integrate real plan preview (if backend available; if not, temporary adapter).
+- Integrate run start.
+- Reinforce Runs view as operational focus.
 
-## Sprint 3 — “Monitor y trazabilidad”
+### Sprint 3 — “Monitor and Traceability”
 
-- Timeline de run con eventos reales/polling.
-- Consola unificada de eventos y logs.
-- Estados vacíos, errores, retry y degradación.
+- Run timeline with real/polling events.
+- Unified events and logs console.
+- Empty states, errors, retry, and degradation.
 
-## Sprint 4 — “Expansión controlada”
+### Sprint 4 — “Controlled Expansion”
 
-- Artifacts y Diff sobre datos reales.
-- Activación gradual de Lineage/Cost/Plugins/Admin por feature flag.
-- Hardening UX (accesibilidad + performance).
+- Artifacts and Diff on real data.
+- Gradual activation of Lineage/Cost/Plugins/Admin by feature flag.
+- UX hardening (accessibility + performance).
 
-## 8. Criterios de éxito
+## 8. Success Criteria
 
-1. Un usuario puede completar el flujo principal sin depender de datos mock.
-2. La UI muestra estado real del backend en todo momento.
-3. La navegación prioriza tareas core y reduce ruido.
-4. La base técnica permite escalar a contratos futuros sin rehacer shell.
+1. A user can complete the main flow without relying on mock data.
+2. The UI always shows real backend state.
+3. Navigation prioritizes core tasks and reduces noise.
+4. The technical base allows scaling to future contracts without redoing the shell.
 
-## 9. Entregables de documentación frontend
+## 9. Frontend Documentation Deliverables
 
-Este documento se complementa con:
+This document is complemented by:
 
-- Actualización de `apps/web/README.md` para reflejar estado real.
-- Roadmap de integración por fases para equipo frontend/backend.
+- Update of `apps/web/README.md` to reflect real state.
+- Phase-based integration roadmap for frontend/backend team.
 
-Estado: Propuesta operativa inicial.
-Fecha: 2026-02-19.
+Status: Initial operational proposal.
+Date: 2026-02-19.

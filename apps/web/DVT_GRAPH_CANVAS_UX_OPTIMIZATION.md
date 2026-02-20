@@ -2,187 +2,179 @@
 
 ## 1) UX Architecture Proposal (Overview)
 
-Objetivo: optimizar claridad cognitiva del canvas DAG sin tocar arquitectura ni contratos.
+Objective: Optimize cognitive clarity of the DAG canvas without changing architecture or contracts.
 
-Principios:
+Principles:
 
-- Separar capas semánticas por modo visual (no mezclar abstracciones).
-- Mantener el grafo estructural base estable entre modos.
-- Mostrar detalle bajo demanda (hover/inspector), no persistente.
-- Priorizar legibilidad inicial y escalabilidad (>300 nodos).
+- Separate semantic layers by visual mode (do not mix abstractions).
+- Keep the base structural graph stable between modes.
+- Show detail on demand (hover/inspector), not persistently.
+- Prioritize initial legibility and scalability (>300 nodes).
 
-Restricciones explícitas (se mantienen):
+Explicit restrictions (remain):
 
-- Sin cambios en Planner/Engine/State/artefactos dbt/plugins.
-- Sin nuevas capacidades de ejecución.
-- UI estrictamente state-driven.
+- No changes to Planner/Engine/State/dbt artifacts/plugins.
+- No new execution capabilities.
+- UI strictly state-driven.
 
 ## 2) Layer Model Specification
 
-## 2.1 Capas definidas
+### 2.1 Defined Layers
 
 1. **Core Pipeline Layer (default ON)**
    - Sources + Models.
-   - Es la única capa obligatoria por defecto.
-
-2. **Validation Layer (default OFF en vista limpia)**
-   - Tests representados de forma agregada (badges/inspector), no como nodos principales.
-
+   - The only mandatory layer by default.
+2. **Validation Layer (default OFF in clean view)**
+   - Tests represented in aggregate (badges/inspector), not as main nodes.
 3. **Exposure Layer (default OFF)**
-   - Exposures visibles solo al activar la capa.
-
+   - Exposures visible only when the layer is active.
 4. **Runtime Layer (default OFF)**
-   - Estado de ejecución + duración.
-
+   - Execution state + duration.
 5. **Cost Layer (default OFF)**
-   - Heatmap de coste sobre nodos core.
-
+   - Cost heatmap over core nodes.
 6. **Lineage/Impact Layer (default OFF)**
-   - Resaltado upstream/downstream sobre selección.
+   - Upstream/downstream highlighting on selection.
 
-## 2.2 Reglas de convivencia
+### 2.2 Coexistence Rules
 
-- Solo una capa “intensiva” activa simultáneamente: Runtime **o** Cost **o** Impact.
-- Validation y Exposure pueden combinarse con Core, pero no dominar visualmente.
-- La estructura base (nodos/edges core) no cambia al alternar capas.
+- Only one "intensive" layer active at a time: Runtime **or** Cost **or** Impact.
+- Validation and Exposure can combine with Core, but not dominate visually.
+- The base structure (core nodes/edges) does not change when toggling layers.
 
 ## 3) Interaction Model Specification
 
-## 3.1 Modos de trabajo
+### 3.1 Work Modes
 
-- **Design Mode (default):** Core limpio, sin métricas persistentes.
-- **Runtime Mode:** superpone estado/duración.
-- **Cost Mode:** superpone heatmap de coste.
-- **Impact Mode:** superpone impacto de selección.
+- **Design Mode (default):** Clean core, no persistent metrics.
+- **Runtime Mode:** Overlay execution state/duration.
+- **Cost Mode:** Overlay cost heatmap.
+- **Impact Mode:** Overlay selection impact.
 
-## 3.2 Rediseño de Tests
+### 3.2 Test Redesign
 
-Representación primaria:
+- Aggregated badge per node (`tests: pass/fail`).
+- Critical indicator (red) only when failure exists.
+- Full detail in side inspector (list of tests with status).
 
-- Badge agregado por nodo (`tests: pass/fail`).
-- Indicador crítico (rojo) solo cuando existe fallo.
-- Detalle completo en inspector lateral (lista de tests con estado).
+Test node visibility:
 
-Visibilidad de nodos de test:
-
-- Solo en “Validation Layer ON + zoom alto” o en vista dedicada de diagnóstico.
+- Only in “Validation Layer ON + high zoom” or in dedicated diagnostic view.
 
 Drill-down:
 
-- Click en badge de test abre inspector filtrado por nodo.
-- Desde inspector se navega al test individual sin saturar el canvas principal.
+- Click on test badge opens inspector filtered by node.
+- From inspector, navigate to individual test without saturating main canvas.
 
-## 3.3 Rediseño de Exposures
+### 3.3 Exposures Redesign
 
-- Estado por defecto: ocultas.
-- Al activar Exposure Layer:
-  - Estilo visual secundario (borde discontinuo, menor contraste que modelos).
-  - Conexiones finas y semitransparentes.
-- Exposures nunca compiten en tamaño/color con nodos core.
+- Default state: hidden.
+- When Exposure Layer is active:
+  - Secondary visual style (dashed border, lower contrast than models).
+  - Thin, semi-transparent connections.
+- Exposures never compete in size/color with core nodes.
 
-## 3.4 Runtime y métricas
+### 3.4 Runtime and Metrics
 
-- **Design Mode:** sin duración/coste visibles de forma persistente.
-- **Runtime Mode:** mostrar status + duración por nodo (persistente en este modo).
-- **Cost Mode:** mostrar mapa de color por coste (persistente en este modo).
-- Hover: revela tooltip contextual (detalle puntual) en cualquier modo.
+- **Design Mode:** No persistent duration/cost visible.
+- **Runtime Mode:** Show status + duration per node (persistent in this mode).
+- **Cost Mode:** Show cost color map (persistent in this mode).
+- Hover: reveals contextual tooltip (on-demand detail) in any mode.
 
-## 3.5 Inspector
+### 3.5 Inspector
 
-- Contextual al nodo seleccionado.
-- Secciones ordenadas: Summary → Runtime → Cost → Tests → Exposures.
-- Fuente principal para detalle; canvas reservado para señalización.
+- Contextual to selected node.
+- Ordered sections: Summary → Runtime → Cost → Tests → Exposures.
+- Main source for detail; canvas reserved for signaling.
 
-## 3.6 Actualizaciones y animación
+### 3.6 Updates and Animation
 
-- Transiciones suaves y cortas (150–250ms) en cambios de estado.
-- Sin animación decorativa continua.
-- Cambios de modo no reescriben layout; solo overlays/estilos.
+- Smooth, short transitions (150–250ms) on state changes.
+- No continuous decorative animation.
+- Mode changes do not rewrite layout; only overlays/styles.
 
 ## 4) Layout Rules
 
-## 4.1 Motor recomendado
+### 4.1 Recommended Engine
 
-- **ELK layered** como preferente para jerarquía legible y edge routing estable.
-- Mantener compatibilidad de fallback con layout actual (dagre) si aplica.
+- **ELK layered** preferred for legible hierarchy and stable edge routing.
+- Maintain fallback compatibility with current layout (dagre) if applicable.
 
-## 4.2 Orden y jerarquía
+### 4.2 Order and Hierarchy
 
-- Eje principal izquierda→derecha por dependencias.
-- Swimlanes opcionales por tipo (Source / Staging / Marts / Outputs).
-- Tests y exposures fuera del carril principal en modo limpio.
+- Main axis left→right by dependencies.
+- Optional swimlanes by type (Source / Staging / Marts / Outputs).
+- Tests and exposures outside main lane in clean mode.
 
-## 4.3 Reglas visuales
+### 4.3 Visual Rules
 
-- Tamaño base uniforme en core nodes.
-- Color por tipo semántico (pocos colores, contrastes consistentes).
-- Estado (éxito/fallo/en curso) como señal secundaria (badge/borde), no color de fondo dominante.
-- Routing de edges ortogonal/suave, minimizando cruces.
+- Uniform base size in core nodes.
+- Color by semantic type (few colors, consistent contrasts).
+- State (success/fail/in progress) as secondary signal (badge/border), not dominant background color.
+- Edge routing orthogonal/smooth, minimizing crossings.
 
-## 4.4 Reglas deterministas
+### 4.4 Deterministic Rules
 
-- Orden estable por tipo + nombre + dependencia para evitar “saltos”.
-- Inserción de nuevos nodos de manera incremental preservando layout existente.
+- Stable order by type + name + dependency to avoid "jumps".
+- Incremental insertion of new nodes preserving existing layout.
 
 ## 5) Scalability Guidelines
 
-## 5.1 Progressive reveal
+### 5.1 Progressive Reveal
 
-- Zoom bajo: solo etiquetas críticas y forma general.
-- Zoom medio: nombres + estado resumido.
-- Zoom alto: metadatos adicionales bajo demanda.
+- Low zoom: only critical labels and general shape.
+- Medium zoom: names + summarized state.
+- High zoom: additional metadata on demand.
 
-## 5.2 Agrupación y colapso
+### 5.2 Grouping and Collapse
 
-- Auto-group por dominio/tag/capa de transformación.
-- Clusters colapsables con contadores (nodos, fallos, coste agregado).
-- Expandir solo el grupo en foco para reducir carga visual.
+- Auto-group by domain/tag/transformation layer.
+- Collapsible clusters with counters (nodes, failures, aggregate cost).
+- Expand only the focused group to reduce visual load.
 
-## 5.3 Rendimiento visual
+### 5.3 Visual Performance
 
-- Virtualización/ocultación de detalles no visibles en viewport.
-- Minimizar re-render global; preferir actualización granular por nodo/capa.
+- Virtualize/hide details not visible in viewport.
+- Minimize global re-render; prefer granular update by node/layer.
 
 ## 6) Enumerated Optimization Tasks
 
-1. Implementar sistema de capas toggleables (Core/Validation/Exposure/Runtime/Cost/Impact).
-2. Migrar tests a representación agregada (badge + inspector) como default.
-3. Definir exposures como capa opcional de bajo peso visual.
-4. Introducir overlays de Runtime y Cost aislados por modo.
-5. Estandarizar jerarquía visual (tamaño, color, bordes, edges).
-6. Implementar selector de modo único (Design/Runtime/Cost/Impact).
-7. Añadir grouping colapsable + progressive reveal para grafos grandes.
-8. Adoptar layout determinista ELK layered y reglas de inserción incremental.
+1. Implement toggleable layer system (Core/Validation/Exposure/Runtime/Cost/Impact).
+2. Migrate tests to aggregated representation (badge + inspector) as default.
+3. Define exposures as optional, low-visual-weight layer.
+4. Introduce isolated Runtime and Cost overlays by mode.
+5. Standardize visual hierarchy (size, color, borders, edges).
+6. Implement single mode selector (Design/Runtime/Cost/Impact).
+7. Add collapsible grouping + progressive reveal for large graphs.
+8. Adopt deterministic ELK layered layout and incremental insertion rules.
 
 ## 7) Before/After (Conceptual)
 
-Antes:
+Before:
 
-- Todo visible simultáneamente (core + tests + exposures + métricas).
-- Competencia de señales y ruido en lectura inicial.
+- Everything visible simultaneously (core + tests + exposures + metrics).
+- Signal competition and noise in initial reading.
 
-Después:
+After:
 
-- Vista limpia por defecto (solo Core).
-- Señales especializadas por modo/capa.
-- Detalle trasladado a inspector/hover.
-- Estructura estable al cambiar de modo.
+- Clean view by default (Core only).
+- Specialized signals by mode/layer.
+- Detail moved to inspector/hover.
+- Stable structure when changing mode.
 
 ## 8) Acceptance Criteria
 
-- Un grafo de 50 nodos es legible “first glance” en Design Mode.
-- Tests no compiten visualmente con modelos en la vista principal.
-- Métricas runtime/coste no aparecen persistentes en modo diseño.
-- Cambiar a Runtime/Cost no altera la estructura del grafo base.
-- No hay cambios en arquitectura ni semántica de ejecución.
-- La UI se mantiene estrictamente state-driven.
+- A 50-node graph is legible “first glance” in Design Mode.
+- Tests do not visually compete with models in main view.
+- Runtime/cost metrics do not appear persistently in design mode.
+- Switching to Runtime/Cost does not alter base graph structure.
+- No changes in architecture or execution semantics.
+- UI remains strictly state-driven.
 
 ## 9) Explicit Non-Goals
 
-- Rediseñar Planner.
-- Cambiar semántica de ejecución.
-- Reemplazar React Flow.
-- Eliminar artefactos dbt.
-- Introducir lógica de orquestación nueva.
-- Añadir feature creep fuera de optimización UX.
-
+- Redesign Planner.
+- Change execution semantics.
+- Replace React Flow.
+- Remove dbt artifacts.
+- Introduce new orchestration logic.
+- Add feature creep outside UX optimization.

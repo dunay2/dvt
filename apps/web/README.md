@@ -1,16 +1,16 @@
 # DVT+ - dbt Visual Workflow Editor
 
-Frontend web de DVT+ para edición visual de workflows dbt, planificación y operación de runs.
+DVT+ web frontend for visual editing of dbt workflows, planning, and run operations.
 
-## Estado actual (importante)
+## Current Status (Important)
 
-Este frontend está en transición de **prototipo visual** a **cliente conectado a backend real**.
+This frontend is transitioning from a **visual prototype** to a **client connected to a real backend**.
 
-- Hoy conviven vistas completas de producto con datos mock.
-- El backend actual (`apps/api`) ya ofrece endpoints de salud/diagnóstico (`/healthz`, `/readyz`, `/version`, `/db/ready`).
-- La integración de dominio (plan/run/events/artifacts) está planificada por fases.
+- Currently, full product views coexist with mock data.
+- The current backend (`apps/api`) already provides health/diagnostic endpoints (`/healthz`, `/readyz`, `/version`, `/db/ready`).
+- Domain integration (plan/run/events/artifacts) is planned in phases.
 
-Documento de alineación recomendado:
+Recommended alignment document:
 
 - `apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md`
 
@@ -161,21 +161,21 @@ All data is sourced from dbt artifacts (manifest.json, run_results.json, catalog
 
 ## Getting Started
 
-Modo actual por defecto: prototipo con datos mock.
+Default mode: prototype with mock data.
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Dirección de evolución
+## Evolution Direction
 
-Prioridad de evolución UX y técnica:
+UX and technical evolution priorities:
 
-1. Limpieza visual y foco en flujo principal (Canvas → Plan → Run).
-2. Conectividad real con backend para estados de salud y red.
-3. Integración progresiva de contratos de dominio (plan/run/monitor/artifacts).
-4. Activación gradual de vistas avanzadas (lineage/cost/plugins/admin).
+1. Visual cleanup and focus on main flow (Canvas → Plan → Run).
+2. Real backend connectivity for health and network states.
+3. Progressive integration of domain contracts (plan/run/monitor/artifacts).
+4. Gradual activation of advanced views (lineage/cost/plugins/admin).
 
 ## Navigation
 
