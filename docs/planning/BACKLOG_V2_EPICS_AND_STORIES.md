@@ -1,213 +1,213 @@
-# Backlog V2 — Épicas + Historias de Usuario
+# Backlog V2 — Epics & User Stories
 
-> Objetivo: convertir esta propuesta en base operativa para milestones/issues de GitHub y verificar alineación con el estado actual del repositorio.
+> Objective: Turn this proposal into an operational base for GitHub milestones/issues and verify alignment with the current state of the repository.
 
-## Convención recomendada para GitHub
+## Recommended GitHub Convention
 
-- 1 milestone por épica (`EPICA-1 Foundation & Core Contracts`, etc.).
-- 1 issue por historia de usuario (`US-1.1 ...`, `US-1.2 ...`).
-- Etiquetas sugeridas: `epic`, `story`, `contracts`, `engine`, `runner`, `plugin`, `ui`, `security`, `testing`.
+- 1 milestone per epic (`EPIC-1 Foundation & Core Contracts`, etc.).
+- 1 issue per user story (`US-1.1 ...`, `US-1.2 ...`).
+- Suggested labels: `epic`, `story`, `contracts`, `engine`, `runner`, `plugin`, `ui`, `security`, `testing`.
 
-## Estado de alineación (resumen)
+## Alignment Status (Summary)
 
-- Alta alineación parcial en contratos de engine, versionado y seguridad base.
-- Alineación media en execution planning y plugin architecture.
-- Alineación baja en ingestión dbt, runner dbt aislado, UI workspace y multi-tenant operativo.
+- High partial alignment in engine contracts, versioning, and base security.
+- Medium alignment in execution planning and plugin architecture.
+- Low alignment in dbt ingestion, isolated dbt runner, UI workspace, and operational multi-tenancy.
 
-## ÉPICA 1 — Foundation & Core Contracts
+## EPIC 1 — Foundation & Core Contracts
 
-### US-1.1 — Definir contratos base de dominio
+### US-1.1 — Define Base Domain Contracts
 
-Como arquitecto, quiero contratos estables para el dominio para evitar churn.
+As an architect, I want stable domain contracts to avoid churn.
 
-**Entregables**
+**Deliverables**
 
 - JSON Schema: `LogicalGraph (GCM)`, `CanvasState`, `ProvenanceEvent`
-- Paquete compartido Zod ↔ JSON Schema
-- Versionado (`schemaVersion`)
+- Shared Zod ↔ JSON Schema package
+- Versioning (`schemaVersion`)
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-### US-1.2 — Ingestión de artefactos dbt
+### US-1.2 — dbt Artifacts Ingestion
 
-Como sistema, quiero convertir artefactos dbt en un grafo semántico estable.
+As a system, I want to convert dbt artifacts into a stable semantic graph.
 
-**Incluye**
+**Includes**
 
 - Parser `manifest.json` → GCM
 - Parser `catalog.json` → metadata
 - Parser `run_results.json` → run node stats
-- Golden tests con `jaffle_shop`
+- Golden tests with `jaffle_shop`
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-1.3 — Snapshot del grafo (CQRS)
+### US-1.3 — Graph Snapshot (CQRS)
 
-Como backend, quiero snapshots para lecturas rápidas.
+As a backend, I want snapshots for fast reads.
 
-**Incluye**
+**Includes**
 
-- Tabla `graph_snapshot`
-- Tabla `node_index` (search)
-- Tabla `impact_index`
-- Rebuild incremental
+- `graph_snapshot` table
+- `node_index` table (search)
+- `impact_index` table
+- Incremental rebuild
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-## ÉPICA 2 — Execution Planning (sin ejecución)
+## EPIC 2 — Execution Planning (no execution)
 
-### US-2.1 — ExecutionPlan V2 contract
+### US-2.1 — ExecutionPlan V2 Contract
 
-Como usuario, quiero ver exactamente qué se va a ejecutar y por qué.
+As a user, I want to see exactly what will be executed and why.
 
-**Incluye**
+**Includes**
 
 - JSON Schema `ExecutionPlan`
-- Acciones `RUN` / `SKIP` / `PARTIAL`
-- Explainability obligatoria
+- Actions `RUN` / `SKIP` / `PARTIAL`
+- Mandatory explainability
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
 ### US-2.2 — Selection Translator
 
-Como sistema, debo traducir el plan a dbt real.
+As a system, I must translate the plan to real dbt.
 
-**Incluye**
+**Includes**
 
 - `ExecutionPlan` → dbt selectors
-- Soporte `state:modified`
-- `--defer`, `--state` si aplica
+- Support for `state:modified`
+- `--defer`, `--state` if applicable
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-2.3 — Policy Engine plugin-based
+### US-2.3 — Policy Engine Plugin-based
 
-Como plataforma, quiero políticas extensibles y deterministas.
+As a platform, I want extensible and deterministic policies.
 
-**Incluye**
+**Includes**
 
 - Interface `Policy.evaluate(context)`
-- Prioridades/pesos
-- Resolución de conflictos
+- Priorities/weights
+- Conflict resolution
 - Plugin registration
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-## ÉPICA 3 — Runner & Execution
+## EPIC 3 — Runner & Execution
 
-### US-3.1 — Runner dbt Core aislado
+### US-3.1 — Isolated dbt Core Runner
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-3.2 — QUERY_TAG + correlación Snowflake
+### US-3.2 — QUERY_TAG + Snowflake Correlation
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-3.3 — Integración dbt Cloud API v2
+### US-3.3 — dbt Cloud API v2 Integration
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-## ÉPICA 4 — Cost & Guardrails (plugin)
+## EPIC 4 — Cost & Guardrails (plugin)
 
-### US-4.1 — Cost Provider interface
+### US-4.1 — Cost Provider Interface
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-4.2 — Cost Guardrails plugin
+### US-4.2 — Cost Guardrails Plugin
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-## ÉPICA 5 — Observabilidad E2E
+## EPIC 5 — E2E Observability
 
-### US-5.1 — OpenTelemetry tracing
+### US-5.1 — OpenTelemetry Tracing
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-### US-5.2 — Logs streaming + redaction
+### US-5.2 — Logs Streaming + Redaction
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-## ÉPICA 6 — Plugin Runtime (crítica)
+## EPIC 6 — Plugin Runtime (critical)
 
-### US-6.1 — Plugin manifest + apiVersion
+### US-6.1 — Plugin Manifest + apiVersion
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-### US-6.2 — Backend plugin execution
+### US-6.2 — Backend Plugin Execution
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-## ÉPICA 7 — UI Shell & Graph Workspace
+## EPIC 7 — UI Shell & Graph Workspace
 
-### US-7.1 — Graph read-only workspace
+### US-7.1 — Graph Read-only Workspace
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
 ### US-7.2 — Execution Plan UI
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-## ÉPICA 8 — Seguridad & Multi-Tenant
+## EPIC 8 — Security & Multi-Tenant
 
-### US-8.1 — Tenant/org/project/env model
+### US-8.1 — Tenant/org/project/env Model
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-### US-8.2 — RBAC con Casbin
+### US-8.2 — RBAC with Casbin
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-### US-8.3 — Secrets + audit inmutable
+### US-8.3 — Secrets + Immutable Audit
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-## ÉPICA 9 — Roundtrip Controlado
+## EPIC 9 — Controlled Roundtrip
 
-### US-9.1 — Drafts + optimistic locking
+### US-9.1 — Drafts + Optimistic Locking
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-9.2 — Managed assets (Nivel 1)
+### US-9.2 — Managed Assets (Level 1)
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-9.3 — Ownership explícito (Nivel 2)
+### US-9.3 — Explicit Ownership (Level 2)
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-## ÉPICA 10 — Testing & Quality Gates
+## EPIC 10 — Testing & Quality Gates
 
-### US-10.1 — Golden tests dbt
+### US-10.1 — Golden dbt Tests
 
-**Alineación actual:** 🟡 Parcial
+**Current Alignment:** 🟡 Partial
 
-### US-10.2 — Roundtrip tests
+### US-10.2 — Roundtrip Tests
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-### US-10.3 — Performance tests (50k nodos)
+### US-10.3 — Performance Tests (50k nodes)
 
-**Alineación actual:** 🔴 Baja
+**Current Alignment:** 🔴 Low
 
-## Orden recomendado de implementación
+## Recommended Implementation Order
 
-1. Épica 1
-2. Épica 2
-3. Épicas 6 y 3 en paralelo controlado
-4. Épicas 4, 5, 8
-5. Épicas 7 y 9
-6. Épica 10 como quality gate transversal
+1. Epic 1
+2. Epic 2
+3. Epics 6 and 3 in controlled parallel
+4. Epics 4, 5, 8
+5. Epics 7 and 9
+6. Epic 10 as transversal quality gate
 
-## DoR por historia
+## Definition of Ready (DoR) per Story
 
-- Contrato/versionado identificado.
-- Criterios de aceptación verificables.
-- Riesgos de seguridad/tenancy declarados.
-- Métricas mínimas de observabilidad definidas.
+- Contract/versioning identified.
+- Verifiable acceptance criteria.
+- Declared security/tenancy risks.
+- Minimum observability metrics defined.
 
-## DoD por historia
+## Definition of Done (DoD) per Story
 
-- Contrato y docs actualizados.
-- Pruebas automatizadas asociadas.
-- Evidencia de alineación arquitectura ↔ implementación.
-- Issue vinculado a milestone/épica y estado actualizado.
+- Contract and docs updated.
+- Associated automated tests.
+- Evidence of architecture ↔ implementation alignment.
+- Issue linked to milestone/epic and updated status.
