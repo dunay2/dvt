@@ -1,21 +1,21 @@
-import type { EventEnvelope } from '../contracts/runEvents.js';
+import type { RunEventPersisted } from '../contracts/runEvents.js';
 
 export interface OutboxRecord {
   id: string; // unique record id
   createdAt: string;
   idempotencyKey: string;
-  payload: EventEnvelope;
+  payload: RunEventPersisted;
   attempts: number;
   lastError?: string;
 }
 
 export interface IOutboxStorage {
-  enqueueTx(runId: string, events: EventEnvelope[]): Promise<void>;
+  enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void>;
   listPending(limit: number): Promise<OutboxRecord[]>;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
 }
 
 export interface IEventBus {
-  publish(events: EventEnvelope[]): Promise<void>;
+  publish(events: RunEventPersisted[]): Promise<void>;
 }

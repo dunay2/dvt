@@ -1,4 +1,4 @@
-import type { EventEnvelope } from '../contracts/runEvents.js';
+import type { RunEventPersisted } from '../contracts/runEvents.js';
 
 import type { OutboxRecord, IOutboxStorage } from './types.js';
 
@@ -6,7 +6,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   private readonly pending: OutboxRecord[] = [];
   private counter = 0;
 
-  async enqueueTx(_runId: string, events: EventEnvelope[]): Promise<void> {
+  async enqueueTx(_runId: string, events: RunEventPersisted[]): Promise<void> {
     for (const e of events) {
       this.counter += 1;
       this.pending.push({

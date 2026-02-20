@@ -25,30 +25,41 @@ export type EventType =
   | 'RunFailed'
   | 'StepStarted'
   | 'StepCompleted'
-  | 'StepFailed';
+  | 'StepFailed'
+  | 'StepSkipped';
 
-export interface EventEnvelopeBase {
+export interface RunEventInputBase {
+  eventId: string;
   eventType: EventType;
+  runId: string;
   emittedAt: IsoUtcString;
   tenantId: string;
   projectId: string;
   environmentId: string;
-  runId: string;
+  planId: string;
+  planVersion: string;
   engineAttemptId: number;
   logicalAttemptId: number;
-  runSeq: number;
   idempotencyKey: string;
+  payload?: Record<string, unknown>;
 }
 
-export type StepEventEnvelope = EventEnvelopeBase & { stepId: string };
-export type RunEventEnvelope = EventEnvelopeBase & { stepId?: never };
-export type EventEnvelope = StepEventEnvelope | RunEventEnvelope;
+export type StepEventInput = RunEventInputBase & { stepId: string };
+export type RunEventInput = RunEventInputBase & { stepId?: never };
+export type EventInput = StepEventInput | RunEventInput;
+
+export type EventEnvelope = EventInput & {
+  runSeq: number;
+  persistedAt: IsoUtcString;
+};
 
 export interface RunMetadata {
   tenantId: string;
   projectId: string;
   environmentId: string;
   runId: string;
+  planId: string;
+  planVersion: string;
   provider: 'temporal' | 'conductor' | 'mock';
   providerWorkflowId: string;
   providerRunId: string;
@@ -92,10 +103,25 @@ export interface AppendResult {
   deduped: EventEnvelope[];
 }
 
+export interface RunBootstrapInput {
+  metadata: RunMetadata;
+  firstEvents: EventInput[];
+}
+
 export interface IRunStateStore {
-  saveRunMetadata(meta: RunMetadata): Promise<void>;
+  bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
+  appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   getRunMetadataByRunId(runId: string): Promise<RunMetadata | null>;
-  appendEventsTx(runId: string, envelopes: Omit<EventEnvelope, 'runSeq'>[]): Promise<AppendResult>;
+  saveProviderRef(
+    runId: string,
+    runRef: {
+      providerWorkflowId: string;
+      providerRunId: string;
+      providerNamespace?: string;
+      providerTaskQueue?: string;
+      providerConductorUrl?: string;
+    }
+  ): Promise<void>;
   listEvents(runId: string): Promise<EventEnvelope[]>;
 }
 
@@ -121,14 +147,16 @@ export interface IClock {
 
 export interface EventIdempotencyInput {
   eventType: EventType;
-  tenantId: string;
   runId: string;
   logicalAttemptId: number;
+  planId: string;
+  planVersion: string;
   stepId?: string;
 }
 
 export interface IIdempotencyKeyBuilder {
   runEventKey(e: EventIdempotencyInput): string;
+  eventId(): string;
 }
 
 // ---------------------------------------------------------------------------

@@ -79,8 +79,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const uri = 'https://plans.example.com/hello-world.json';
     const planRef = makePlanRef(uri, plan);
 
-    const fetcher = new InMemoryPlanFetcher(new Map([[uri, utf8(JSON.stringify(plan))]]));
-
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
@@ -88,12 +86,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
     const mock = new MockAdapter({
       stateStore: store,
-      outbox: store,
       clock,
       idempotency,
       projector,
-      fetcher,
-      integrity: new PlanIntegrityValidator(),
     });
 
     const engine = new WorkflowEngine({
@@ -104,8 +99,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planIntegrity: new PlanIntegrityValidator(),
-      planFetcher: fetcher,
       adapters: new Map([['mock', mock]]),
     });
 
@@ -117,7 +110,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
     // Stable snapshot hash (acts as determinism canary)
     expect(snapshot.hash).toMatchInlineSnapshot(
-      '"a15315ec9d197acf56af5fd07ee373243259e8e882ff38c08faf09ea3e6092b1"'
+      '"105ffaed2c3b84fefaa065bd1d63504a4d12df49970f6f5ef8eb95238e8bba2b"'
     );
   });
 
@@ -126,8 +119,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const uri = 'https://plans.example.com/hello-world.json';
     const planRef = makePlanRef(uri, plan);
 
-    const fetcher = new InMemoryPlanFetcher(new Map([[uri, utf8(JSON.stringify(plan))]]));
-
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
@@ -135,12 +126,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
     const mock = new MockAdapter({
       stateStore: store,
-      outbox: store,
       clock,
       idempotency,
       projector,
-      fetcher,
-      integrity: new PlanIntegrityValidator(),
     });
 
     const engine = new WorkflowEngine({
@@ -151,8 +139,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planIntegrity: new PlanIntegrityValidator(),
-      planFetcher: fetcher,
       adapters: new Map([['mock', mock]]),
     });
 
@@ -182,8 +168,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const uri = 'https://plans.example.com/dag-plan.json';
     const planRef = makePlanRef(uri, plan);
 
-    const fetcher = new InMemoryPlanFetcher(new Map([[uri, utf8(JSON.stringify(plan))]]));
-
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
@@ -191,12 +175,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
     const mock = new MockAdapter({
       stateStore: store,
-      outbox: store,
       clock,
       idempotency,
       projector,
-      fetcher,
-      integrity: new PlanIntegrityValidator(),
     });
 
     const engine = new WorkflowEngine({
@@ -207,8 +188,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planIntegrity: new PlanIntegrityValidator(),
-      planFetcher: fetcher,
       adapters: new Map([['mock', mock]]),
     });
 
@@ -271,9 +250,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const authorizer = new AllowAllAuthorizer();
     const planRefPolicy = new PlanRefPolicy({ allowedSchemes: ['https'] });
-    const planIntegrity = new PlanIntegrityValidator();
-    const planFetcher = new InMemoryPlanFetcher(new Map());
-
     const engine = new WorkflowEngine({
       stateStore: store,
       outbox: store,
@@ -282,8 +258,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer,
       planRefPolicy,
-      planIntegrity,
-      planFetcher,
       adapters: new Map([['conductor', adapter]]),
     });
 
@@ -319,34 +293,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     );
     expect(startRunMock).not.toHaveBeenCalled();
 
-    // Case 3: sha256 mismatch
-    const plan = makeHelloWorldPlan();
-    const uri = 'https://plans.example.com/plan.json';
-    const bytes = utf8(JSON.stringify(plan));
-    const badPlanRef3: PlanRef = {
-      uri,
-      sha256: 'deadbeef',
-      schemaVersion: plan.metadata.schemaVersion,
-      planId: plan.metadata.planId,
-      planVersion: plan.metadata.planVersion,
-      sizeBytes: bytes.byteLength,
-    };
-    const planFetcher3 = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
-    const engine3 = new WorkflowEngine({
-      stateStore: store,
-      outbox: store,
-      projector,
-      idempotency,
-      clock,
-      authorizer,
-      planRefPolicy,
-      planIntegrity,
-      planFetcher: planFetcher3,
-      adapters: new Map([['conductor', adapter]]),
-    });
-    await expect(engine3.startRun(badPlanRef3, baseCtx)).rejects.toThrow(
-      /PLAN_INTEGRITY_VALIDATION_FAILED/
-    );
-    expect(startRunMock).not.toHaveBeenCalled();
+    // Integrity validation moved to adapters in this phase.
   });
 });

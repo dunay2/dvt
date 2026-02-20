@@ -71,15 +71,33 @@ In **every iteration** (issue/PR change or implementation cycle), the team MUST:
 
 ## Iteration history
 
-| date_utc   | iteration   | summary                                                                                                                             | evidence                                                                                                                                                                                                 |
-| ---------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-17 | bootstrap   | Created the technical debt register and defined mandatory iterative update flow.                                                    | `docs/guides/TECHNICAL_DEBT_REGISTER.md`, `docs/INDEX.md`                                                                                                                                                |
-| 2026-02-17 | iteration-1 | Integrated register governance into the playbook; updated TD-0001 and recorded no additional debt.                                  | `docs/guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md`                                                                                                                                                            |
-| 2026-02-17 | iteration-2 | Repository audit completed; added TD-0002..TD-0005 for stub exports, retry gap, legacy adapter area, and root placeholder cleanup.  | `packages/engine/src/index.ts`, `packages/engine/src/core/WorkflowEngine.ts`, `packages/adapter-temporal/src/TemporalAdapter.ts`, `packages/adapters-legacy/README.md`, `docs/REPO_STRUCTURE_SUMMARY.md` |
-| 2026-02-17 | iteration-3 | Added deterministic DAG-layer scheduler slice for `#15`; recorded new debt TD-0006 for shared-contract alignment of `dependsOn`.    | `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/adapter-temporal/src/engine-types.ts`, `packages/engine/src/contracts/executionPlan.ts`                                          |
-| 2026-02-17 | iteration-4 | Promoted `dependsOn` to shared engine execution plan contract and aligned mock adapter/test coverage; closed TD-0006.               | `packages/engine/src/contracts/executionPlan.ts`, `packages/engine/src/adapters/mock/MockAdapter.ts`, `packages/engine/test/contracts/engine.test.ts`                                                    |
-| 2026-02-17 | iteration-5 | Converted vague debt statements into explicit tracked entries TD-0007 (lint backlog routes) and TD-0008 (docs/path queue by file).  | `docs/status/IMPLEMENTATION_SUMMARY.md`, `docs/guides/TECHNICAL_DEBT_REGISTER.md`                                                                                                                        |
-| 2026-02-17 | iteration-6 | Completed issue `#15` Option A slices (retry/error + E2E golden path); no additional technical debt introduced in this iteration.   | `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/adapter-temporal/src/activities/stepActivities.ts`, `packages/adapter-temporal/test/integration.time-skipping.test.ts`           |
-| 2026-02-18 | iteration-7 | Captured post-closure hardening backlog for Temporal runtime: determinism linting CI guardrails and long-activity heartbeat policy. | `docs/decisions/ADR-0007-temporal-retry-policy-mvp.md`, `docs/guides/TECHNICAL_DEBT_REGISTER.md`, `docs/status/IMPLEMENTATION_SUMMARY.md`                                                                |
-| 2026-02-19 | iteration-8 | Implemented contracts-only slice for issue `#220` (`CanvasState` schema v1) and recorded no new technical debt.                    | `docs/architecture/engine/contracts/schemas/canvas-state.schema.json`, `docs/architecture/engine/contracts/README.md`, `.gh-comments/issue-220-prebrief.md`                                               |
-| 2026-02-19 | iteration-9 | Implemented contracts-only slice for issue `#221` (`ProvenanceEvent` schema v1) and recorded no new technical debt.                | `docs/architecture/engine/contracts/schemas/provenance-event.schema.json`, `docs/architecture/engine/contracts/README.md`, `.gh-comments/issue-221-prebrief.md`                                           |
+- 2026-02-17 · bootstrap
+  - Summary: Created the technical debt register and defined mandatory iterative update flow.
+  - Evidence: `docs/guides/TECHNICAL_DEBT_REGISTER.md`, `docs/INDEX.md`
+- 2026-02-17 · iteration-1
+  - Summary: Integrated register governance into the playbook; updated TD-0001 and recorded no additional debt.
+  - Evidence: `docs/guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md`
+- 2026-02-17 · iteration-2
+  - Summary: Repository audit completed; added TD-0002..TD-0005 for stub exports, retry gap, legacy adapter area, and root placeholder cleanup.
+  - Evidence: `packages/engine/src/index.ts`, `packages/engine/src/core/WorkflowEngine.ts`, `packages/adapter-temporal/src/TemporalAdapter.ts`, `packages/adapters-legacy/README.md`, `docs/REPO_STRUCTURE_SUMMARY.md`
+- 2026-02-17 · iteration-3
+  - Summary: Added deterministic DAG-layer scheduler slice for `#15`; recorded new debt TD-0006 for shared-contract alignment of `dependsOn`.
+  - Evidence: `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/adapter-temporal/src/engine-types.ts`, `packages/engine/src/contracts/executionPlan.ts`
+- 2026-02-17 · iteration-4
+  - Summary: Promoted `dependsOn` to shared engine execution plan contract and aligned mock adapter/test coverage; closed TD-0006.
+  - Evidence: `packages/engine/src/contracts/executionPlan.ts`, `packages/engine/src/adapters/mock/MockAdapter.ts`, `packages/engine/test/contracts/engine.test.ts`
+- 2026-02-17 · iteration-5
+  - Summary: Converted vague debt statements into explicit tracked entries TD-0007 (lint backlog routes) and TD-0008 (docs/path queue by file).
+  - Evidence: `docs/status/IMPLEMENTATION_SUMMARY.md`, `docs/guides/TECHNICAL_DEBT_REGISTER.md`
+- 2026-02-17 · iteration-6
+  - Summary: Completed issue `#15` Option A slices (retry/error + E2E golden path); no additional technical debt introduced in this iteration.
+  - Evidence: `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/adapter-temporal/src/activities/stepActivities.ts`, `packages/adapter-temporal/test/integration.time-skipping.test.ts`
+- 2026-02-18 · iteration-7
+  - Summary: Captured post-closure hardening backlog for Temporal runtime: determinism linting CI guardrails and long-activity heartbeat policy.
+  - Evidence: `docs/decisions/ADR-0007-temporal-retry-policy-mvp.md`, `docs/guides/TECHNICAL_DEBT_REGISTER.md`, `docs/status/IMPLEMENTATION_SUMMARY.md`
+- 2026-02-19 · iteration-8
+  - Summary: Implemented contracts-only slice for issue `#220` (`CanvasState` schema v1), no new technical debt.
+  - Evidence: `docs/architecture/engine/contracts/schemas/canvas-state.schema.json`, `docs/architecture/engine/contracts/README.md`, `.gh-comments/issue-220-prebrief.md`
+- 2026-02-19 · iteration-9
+  - Summary: Implemented contracts-only slice for issue `#221` (`ProvenanceEvent` schema v1), no new technical debt.
+  - Evidence: `docs/architecture/engine/contracts/schemas/provenance-event.schema.json`, `docs/architecture/engine/contracts/README.md`, `.gh-comments/issue-221-prebrief.md`

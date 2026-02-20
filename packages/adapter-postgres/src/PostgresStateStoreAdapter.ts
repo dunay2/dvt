@@ -4,11 +4,13 @@ import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import type {
   AppendResult,
   ErrorMessage,
+  EventInput,
   EventEnvelope,
   IOutboxStorage,
   IRunStateStore,
   OutboxId,
   OutboxRecord,
+  RunBootstrapInput,
   RunMetadata,
   RunId,
   SchemaName,
@@ -19,6 +21,8 @@ interface RunMetadataRow {
   project_id: string;
   environment_id: string;
   run_id: string;
+  plan_id: string;
+  plan_version: string;
   provider: RunMetadata['provider'];
   provider_workflow_id: string;
   provider_run_id: string;
@@ -94,10 +98,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   }
 
-  async appendAndEnqueueTx(
-    runId: RunId,
-    envelopes: Omit<EventEnvelope, 'runSeq'>[]
-  ): Promise<AppendResult> {
+  async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
     await this.ready();
     const client = await this.pool.connect();
     try {
@@ -114,6 +115,65 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   }
 
+  async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
+    await this.ready();
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await this.insertRunMetadataWithClient(client, input.metadata);
+      const append = await this.appendEventsTxWithClient(
+        client,
+        input.metadata.runId,
+        input.firstEvents
+      );
+      await this.enqueueTxWithClient(client, input.metadata.runId, append.appended);
+      await client.query('COMMIT');
+      return append;
+    } catch (error: unknown) {
+      await client.query('ROLLBACK');
+      if (isUniqueViolation(error)) {
+        const err = new Error('RUN_ALREADY_EXISTS');
+        (err as Error & { cause?: unknown }).cause = error;
+        throw err;
+      }
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async saveProviderRef(
+    runId: RunId,
+    runRef: {
+      providerWorkflowId: string;
+      providerRunId: string;
+      providerNamespace?: string;
+      providerTaskQueue?: string;
+      providerConductorUrl?: string;
+    }
+  ): Promise<void> {
+    await this.ready();
+    await this.pool.query(
+      `
+        UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+        SET provider_workflow_id = $2,
+            provider_run_id = $3,
+            provider_namespace = $4,
+            provider_task_queue = $5,
+            provider_conductor_url = $6
+        WHERE run_id = $1
+      `,
+      [
+        runId,
+        runRef.providerWorkflowId,
+        runRef.providerRunId,
+        runRef.providerNamespace ?? null,
+        runRef.providerTaskQueue ?? null,
+        runRef.providerConductorUrl ?? null,
+      ]
+    );
+  }
+
   async saveRunMetadata(meta: RunMetadata): Promise<void> {
     await this.ready();
     await this.pool.query(
@@ -123,6 +183,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           tenant_id,
           project_id,
           environment_id,
+          plan_id,
+          plan_version,
           provider,
           provider_workflow_id,
           provider_run_id,
@@ -130,11 +192,13 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           provider_task_queue,
           provider_conductor_url
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ON CONFLICT (run_id) DO UPDATE SET
           tenant_id = EXCLUDED.tenant_id,
           project_id = EXCLUDED.project_id,
           environment_id = EXCLUDED.environment_id,
+          plan_id = EXCLUDED.plan_id,
+          plan_version = EXCLUDED.plan_version,
           provider = EXCLUDED.provider,
           provider_workflow_id = EXCLUDED.provider_workflow_id,
           provider_run_id = EXCLUDED.provider_run_id,
@@ -147,6 +211,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         meta.tenantId,
         meta.projectId,
         meta.environmentId,
+        meta.planId,
+        meta.planVersion,
         meta.provider,
         meta.providerWorkflowId,
         meta.providerRunId,
@@ -166,6 +232,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           project_id,
           environment_id,
           run_id,
+          plan_id,
+          plan_version,
           provider,
           provider_workflow_id,
           provider_run_id,
@@ -186,6 +254,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       projectId: row.project_id,
       environmentId: row.environment_id,
       runId: row.run_id,
+      planId: row.plan_id,
+      planVersion: row.plan_version,
       provider: row.provider,
       providerWorkflowId: row.provider_workflow_id,
       providerRunId: row.provider_run_id,
@@ -195,10 +265,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     } as RunMetadata;
   }
 
-  async appendEventsTx(
-    runId: RunId,
-    envelopes: Omit<EventEnvelope, 'runSeq'>[]
-  ): Promise<AppendResult> {
+  async appendEventsTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
     await this.ready();
     const client = await this.pool.connect();
     try {
@@ -337,6 +404,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         tenant_id TEXT NOT NULL,
         project_id TEXT NOT NULL,
         environment_id TEXT NOT NULL,
+        plan_id TEXT,
+        plan_version TEXT,
         provider TEXT NOT NULL,
         provider_workflow_id TEXT NOT NULL,
         provider_run_id TEXT NOT NULL,
@@ -358,6 +427,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         environment_id TEXT NOT NULL,
         engine_attempt_id INTEGER NOT NULL,
         logical_attempt_id INTEGER NOT NULL,
+        plan_id TEXT,
+        plan_version TEXT,
+        persisted_at TIMESTAMPTZ,
         step_id TEXT,
         idempotency_key TEXT NOT NULL,
         payload JSONB NOT NULL,
@@ -384,6 +456,31 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     await this.pool.query(`
       ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
       ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ
+    `);
+
+    await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_metadata
+      ADD COLUMN IF NOT EXISTS plan_id TEXT
+    `);
+
+    await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_metadata
+      ADD COLUMN IF NOT EXISTS plan_version TEXT
+    `);
+
+    await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
+      ADD COLUMN IF NOT EXISTS plan_id TEXT
+    `);
+
+    await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
+      ADD COLUMN IF NOT EXISTS plan_version TEXT
+    `);
+
+    await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
+      ADD COLUMN IF NOT EXISTS persisted_at TIMESTAMPTZ
     `);
 
     // Backward-compat cleanup for older schema revisions:
@@ -413,7 +510,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private async appendEventsTxWithClient(
     client: PoolClient,
     runId: RunId,
-    envelopes: Omit<EventEnvelope, 'runSeq'>[]
+    envelopes: EventInput[]
   ): Promise<AppendResult> {
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [runId]);
 
@@ -427,9 +524,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const deduped: EventEnvelope[] = [];
 
     for (const envelope of envelopes) {
+      const persistedAt = this.now();
       const withSeq: EventEnvelope = {
         ...envelope,
         runSeq: nextRunSeq,
+        persistedAt,
       } as EventEnvelope;
 
       const inserted = await client.query<EventPayloadRow>(
@@ -444,11 +543,14 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
             environment_id,
             engine_attempt_id,
             logical_attempt_id,
+            plan_id,
+            plan_version,
+            persisted_at,
             step_id,
             idempotency_key,
             payload
           )
-          VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)
+          VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz, $13, $14, $15::jsonb)
           ON CONFLICT (run_id, idempotency_key) DO NOTHING
           RETURNING payload
         `,
@@ -462,6 +564,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           withSeq.environmentId,
           withSeq.engineAttemptId,
           withSeq.logicalAttemptId,
+          withSeq.planId,
+          withSeq.planVersion,
+          withSeq.persistedAt,
           'stepId' in withSeq ? withSeq.stepId : null,
           withSeq.idempotencyKey,
           JSON.stringify(withSeq),
@@ -490,6 +595,42 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
 
     return { appended, deduped };
+  }
+
+  private async insertRunMetadataWithClient(client: PoolClient, meta: RunMetadata): Promise<void> {
+    await client.query(
+      `
+        INSERT INTO ${quoteIdentifier(this.schema)}.run_metadata (
+          run_id,
+          tenant_id,
+          project_id,
+          environment_id,
+          plan_id,
+          plan_version,
+          provider,
+          provider_workflow_id,
+          provider_run_id,
+          provider_namespace,
+          provider_task_queue,
+          provider_conductor_url
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `,
+      [
+        meta.runId,
+        meta.tenantId,
+        meta.projectId,
+        meta.environmentId,
+        meta.planId,
+        meta.planVersion,
+        meta.provider,
+        meta.providerWorkflowId,
+        meta.providerRunId,
+        meta.providerNamespace ?? null,
+        meta.providerTaskQueue ?? null,
+        meta.providerConductorUrl ?? null,
+      ]
+    );
   }
 
   private async enqueueTxWithClient(
@@ -524,4 +665,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       );
     }
   }
+}
+
+function isUniqueViolation(error: unknown): error is { code: string } {
+  return (
+    typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505'
+  );
 }
