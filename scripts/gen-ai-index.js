@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global console, process */
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -47,7 +49,7 @@ async function genIndexFor(dir) {
       console.warn(`${dir} is not a directory, skipping`);
       return;
     }
-  } catch (e) {
+  } catch {
     console.warn(`${dir} not found, skipping`);
     return;
   }
@@ -71,7 +73,7 @@ async function genIndexFor(dir) {
         lastUpdated: m.mtime.toISOString(),
         tokenCount: tokenEstimate(summary),
       });
-    } catch (e) {
+    } catch {
       // skip unreadable
     }
   }
