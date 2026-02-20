@@ -8,7 +8,7 @@ This is the canonical entrypoint for project documentation.
 - [Frontend architecture index](./architecture/frontend/INDEX.md)
 - [Roadmap](../ROADMAP.md)
 - [Repository structure summary](./REPO_STRUCTURE_SUMMARY.md)
-- [Architecture analysis](./ARCHITECTURE_ANALYSIS.md)
+- [Architecture analysis](./architecture/ARCHITECTURE_ANALYSIS.md)
 - [Knowledge base index](./knowledge/INDEX.md)
 
 ## Contracts & automation
@@ -28,6 +28,7 @@ This is the canonical entrypoint for project documentation.
 
 - [Implementation summary](./status/IMPLEMENTATION_SUMMARY.md)
 - [Outbox worker implementation notes](./status/IMPLEMENTATION_NOTES_OUTBOX_WORKER.md)
+- [Changelog](./release/CHANGELOG.md)
 
 ## Planning
 
