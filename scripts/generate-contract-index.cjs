@@ -295,12 +295,26 @@ function replaceSection(content, newSection) {
   return `${before}${body}${after}`;
 }
 
-function run() {
+async function formatMarkdownIfPossible(content, filePath) {
+  try {
+    const prettier = require('prettier');
+    const resolved = (await prettier.resolveConfig(filePath)) || {};
+    return await prettier.format(content, {
+      ...resolved,
+      parser: 'markdown',
+    });
+  } catch {
+    return content;
+  }
+}
+
+async function run() {
   const rows = collectContracts();
   const table = renderTable(rows);
 
   const readme = fs.readFileSync(README_PATH, 'utf8');
-  const next = replaceSection(readme, table);
+  const nextRaw = replaceSection(readme, table);
+  const next = await formatMarkdownIfPossible(nextRaw, README_PATH);
 
   if (next !== readme) {
     fs.writeFileSync(README_PATH, next, 'utf8');
@@ -311,12 +325,10 @@ function run() {
 }
 
 if (require.main === module) {
-  try {
-    run();
-  } catch (error) {
+  run().catch((error) => {
     console.error(`❌ Contract index generation failed: ${error.message}`);
     process.exit(1);
-  }
+  });
 }
 
 module.exports = {
