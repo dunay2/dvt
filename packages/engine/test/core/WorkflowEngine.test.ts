@@ -231,7 +231,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const snapshot = await engine.getRunStatus(runRef);
 
     expect(snapshot.runId).toBe('status-fallback-1');
-    expect(snapshot.status).toBe('RUNNING');
+    expect(snapshot.status).toBe('PENDING');
   });
 
   it('healthCheck reports degraded when an adapter ping fails', async () => {

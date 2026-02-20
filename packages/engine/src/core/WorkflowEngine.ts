@@ -14,11 +14,9 @@ import {
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
-import type { EventEnvelope, RunMetadata } from '../contracts/runEvents.js';
+import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEvents.js';
 import type { IOutboxStorage } from '../outbox/types.js';
 import type { IAuthorizer } from '../security/authorizer.js';
-import type { IPlanFetcher } from '../security/planIntegrity.js';
-import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import { PlanRefPolicy } from '../security/planRefPolicy.js';
 import type { IRunStateStore } from '../state/IRunStateStore.js';
 import type { IClock } from '../utils/clock.js';
@@ -34,10 +32,6 @@ export interface WorkflowEngineDeps {
   clock: IClock;
   authorizer: IAuthorizer;
   planRefPolicy: PlanRefPolicy;
-
-  // PlanRef MUST be validated before any execution.
-  planIntegrity: PlanIntegrityValidator;
-  planFetcher: IPlanFetcher;
 
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
 
@@ -100,6 +94,9 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
+    const rawPlanRef = planRef as PlanRef & {
+      metadata?: { requiresCapabilities?: string[]; targetAdapter?: string };
+    };
     const validatedPlanRef = parsePlanRef(planRef);
     const validatedContext = parseRunContext(context);
 
@@ -122,17 +119,30 @@ export class WorkflowEngine implements IWorkflowEngine {
       validateRunIdOrThrow(validatedContext.runId);
       await this.ensureRunDoesNotExist(validatedContext.runId);
 
-      // 4) Integrity gate: MUST happen before any provider start (contract).
-      await this.deps.planIntegrity.fetchAndValidate(validatedPlanRef, this.deps.planFetcher);
+      const requiresCapabilities = rawPlanRef.metadata?.requiresCapabilities;
+      if (Array.isArray(requiresCapabilities) && requiresCapabilities.length > 0) {
+        throw new Error(
+          'CAPABILITIES_NOT_SUPPORTED: Phase 1 does not evaluate requiresCapabilities'
+        );
+      }
+
+      const targetAdapter = rawPlanRef.metadata?.targetAdapter;
+      if (
+        targetAdapter &&
+        targetAdapter !== 'any' &&
+        targetAdapter !== validatedContext.targetAdapter
+      ) {
+        throw new Error(`TARGET_ADAPTER_MISMATCH: plan requires ${targetAdapter}`);
+      }
+
+      const bootMeta: RunMetadata = buildRunMetadata(validatedContext, validatedPlanRef);
+      await this.deps.stateStore.bootstrapRunTx({
+        metadata: bootMeta,
+        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+      });
 
       const provider = validatedContext.targetAdapter;
       const adapter = this.getAdapterOrThrow(provider);
-
-      // MVP: immediate start.
-      await this.emitRunEventFromContext(validatedContext, 'RunQueued');
-
-      // Emit RunStarted *before* invoking provider so projection order is: RunQueued → RunStarted → Provider events → RunCompleted
-      await this.emitRunEventFromContext(validatedContext, 'RunStarted');
 
       const runRef = await this.withTimeout(
         adapter.startRun(validatedPlanRef, validatedContext),
@@ -140,9 +150,15 @@ export class WorkflowEngine implements IWorkflowEngine {
         'adapter.startRun'
       );
 
-      // Persist minimal metadata for correlation resolution.
-      const meta: RunMetadata = buildRunMetadata(validatedContext, runRef);
-      await this.deps.stateStore.saveRunMetadata(meta);
+      await this.deps.stateStore.saveProviderRef(validatedContext.runId, {
+        providerWorkflowId: runRef.workflowId,
+        providerRunId: runRef.runId,
+        ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
+        ...(runRef.provider === 'temporal' && runRef.taskQueue
+          ? { providerTaskQueue: runRef.taskQueue }
+          : {}),
+        ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
+      });
 
       return runRef;
     } catch (error) {
@@ -153,7 +169,12 @@ export class WorkflowEngine implements IWorkflowEngine {
         error: toErrorMessage(error),
       });
 
-      await this.emitRunEventFromContext(validatedContext, 'RunFailed').catch(() => undefined);
+      const failMeta = await this.deps.stateStore
+        .getRunMetadataByRunId(validatedContext.runId)
+        .catch(() => null);
+      if (failMeta) {
+        await this.emitRunEvent(failMeta, 'RunFailed').catch(() => undefined);
+      }
       throw error;
     }
   }
@@ -281,13 +302,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     return adapter;
   }
 
-  private mapSignalToRunEventType(type: SignalRequest['type']): EventEnvelope['eventType'] | null {
+  private mapSignalToRunEventType(type: SignalRequest['type']): EventType | null {
     if (type === 'RETRY_STEP' || type === 'RETRY_RUN') {
       // Phase 2: planner-driven deterministic retry semantics.
       throw new Error('NotImplemented: RETRY_* signals are Phase 2');
     }
 
-    const byType: Record<'PAUSE' | 'RESUME' | 'CANCEL', EventEnvelope['eventType']> = {
+    const byType: Record<'PAUSE' | 'RESUME' | 'CANCEL', EventType> = {
       PAUSE: 'RunPaused',
       RESUME: 'RunResumed',
       CANCEL: 'RunCancelled',
@@ -304,105 +325,56 @@ export class WorkflowEngine implements IWorkflowEngine {
     return m;
   }
 
-  private async emitRunEvent(
-    meta: RunMetadata,
-    eventType: EventEnvelope['eventType']
-  ): Promise<void> {
-    const base = {
-      eventType,
-      emittedAt: this.deps.clock.nowIsoUtc(),
-      tenantId: meta.tenantId,
-      projectId: meta.projectId,
-      environmentId: meta.environmentId,
-      runId: meta.runId,
-      engineAttemptId: 1,
-      logicalAttemptId: 1,
-    };
-
-    const idempotencyKey = this.deps.idempotency.runEventKey({
-      eventType,
-      tenantId: meta.tenantId,
-      runId: meta.runId,
-      logicalAttemptId: 1,
-    });
-
-    const env: Omit<EventEnvelope, 'runSeq'> = {
-      ...base,
-      idempotencyKey,
-    };
-
-    await this.persistEvent(meta.runId, env);
-  }
-
-  private async emitRunEventFromContext(
-    ctx: RunContext,
-    eventType: EventEnvelope['eventType']
-  ): Promise<void> {
-    const env: Omit<EventEnvelope, 'runSeq'> = {
-      eventType,
-      emittedAt: this.deps.clock.nowIsoUtc(),
-      tenantId: ctx.tenantId,
-      projectId: ctx.projectId,
-      environmentId: ctx.environmentId,
-      runId: ctx.runId,
-      engineAttemptId: 1,
-      logicalAttemptId: 1,
-      idempotencyKey: this.deps.idempotency.runEventKey({
-        eventType,
-        tenantId: ctx.tenantId,
-        runId: ctx.runId,
-        logicalAttemptId: 1,
-      }),
-    };
-    await this.persistEvent(ctx.runId, env);
+  private async emitRunEvent(meta: RunMetadata, eventType: EventType): Promise<void> {
+    await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [
+      this.buildRunEvent(meta, eventType),
+    ]);
   }
 
   private async emitSignalDerivedRunEvent(
     meta: RunMetadata,
     req: SignalRequest,
-    eventType: EventEnvelope['eventType']
+    eventType: EventType
   ): Promise<void> {
-    const base = {
+    const input: RunEventInput = {
+      eventId: this.deps.idempotency.eventId(),
       eventType,
       emittedAt: this.deps.clock.nowIsoUtc(),
       tenantId: meta.tenantId,
       projectId: meta.projectId,
       environmentId: meta.environmentId,
       runId: meta.runId,
+      planId: meta.planId,
+      planVersion: meta.planVersion,
       engineAttemptId: 1,
       logicalAttemptId: 1,
+      idempotencyKey: this.deps.idempotency.signalKey(meta.tenantId, meta.runId, req),
     };
 
-    const idempotencyKey = this.deps.idempotency.signalKey(meta.tenantId, meta.runId, req);
-
-    const env: Omit<EventEnvelope, 'runSeq'> = {
-      ...base,
-      idempotencyKey,
-    };
-
-    await this.persistEvent(meta.runId, env);
+    await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [input]);
   }
 
-  private async persistEvent(runId: string, env: Omit<EventEnvelope, 'runSeq'>): Promise<void> {
-    const transactionalStore = this.deps.stateStore as IRunStateStore & {
-      appendAndEnqueueTx?: (
-        runId: string,
-        envelopes: Omit<EventEnvelope, 'runSeq'>[]
-      ) => Promise<unknown>;
+  private buildRunEvent(meta: RunMetadata, eventType: EventType): RunEventInput {
+    return {
+      eventId: this.deps.idempotency.eventId(),
+      eventType,
+      emittedAt: this.deps.clock.nowIsoUtc(),
+      tenantId: meta.tenantId,
+      projectId: meta.projectId,
+      environmentId: meta.environmentId,
+      runId: meta.runId,
+      planId: meta.planId,
+      planVersion: meta.planVersion,
+      engineAttemptId: 1,
+      logicalAttemptId: 1,
+      idempotencyKey: this.deps.idempotency.runEventKey({
+        eventType,
+        runId: meta.runId,
+        logicalAttemptId: 1,
+        planId: meta.planId,
+        planVersion: meta.planVersion,
+      }),
     };
-
-    // Preferred path when store supports atomic append+enqueue.
-    if (typeof transactionalStore.appendAndEnqueueTx === 'function') {
-      await transactionalStore.appendAndEnqueueTx(runId, [env]);
-      return;
-    }
-
-    const { appended } = await this.deps.stateStore.appendEventsTx(runId, [env]);
-    await this.withTimeout(
-      this.deps.outbox.enqueueTx(runId, appended),
-      this.deps.timeouts?.outboxEnqueueMs ?? 30_000,
-      'outbox.enqueueTx'
-    );
   }
 
   private async ensureRunDoesNotExist(runId: string): Promise<void> {
@@ -470,8 +442,6 @@ export class WorkflowEngine implements IWorkflowEngine {
       ['clock', this.deps.clock],
       ['authorizer', this.deps.authorizer],
       ['planRefPolicy', this.deps.planRefPolicy],
-      ['planIntegrity', this.deps.planIntegrity],
-      ['planFetcher', this.deps.planFetcher],
       ['adapters', this.deps.adapters],
     ];
 
@@ -512,39 +482,16 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function buildRunMetadata(ctx: RunContext, runRef: EngineRunRef): RunMetadata {
-  if (runRef.provider === 'temporal') {
-    return {
-      tenantId: ctx.tenantId,
-      projectId: ctx.projectId,
-      environmentId: ctx.environmentId,
-      runId: ctx.runId,
-      provider: 'temporal',
-      providerWorkflowId: runRef.workflowId,
-      providerRunId: runRef.runId,
-      providerNamespace: runRef.namespace,
-      ...(runRef.taskQueue ? { providerTaskQueue: runRef.taskQueue } : {}),
-    };
-  }
-  if (runRef.provider === 'conductor') {
-    return {
-      tenantId: ctx.tenantId,
-      projectId: ctx.projectId,
-      environmentId: ctx.environmentId,
-      runId: ctx.runId,
-      provider: 'conductor',
-      providerWorkflowId: runRef.workflowId,
-      providerRunId: runRef.runId,
-      providerConductorUrl: runRef.conductorUrl,
-    };
-  }
+function buildRunMetadata(ctx: RunContext, planRef: PlanRef): RunMetadata {
   return {
     tenantId: ctx.tenantId,
     projectId: ctx.projectId,
     environmentId: ctx.environmentId,
     runId: ctx.runId,
-    provider: 'mock',
-    providerWorkflowId: runRef.workflowId,
-    providerRunId: runRef.runId,
+    planId: planRef.planId,
+    planVersion: planRef.planVersion,
+    provider: ctx.targetAdapter,
+    providerWorkflowId: '',
+    providerRunId: '',
   };
 }

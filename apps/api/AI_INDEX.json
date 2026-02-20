@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-02-20T09:12:45.390Z",
+  "dir": "apps/api",
+  "entries": [
+    {
+      "path": "package-lock.json",
+      "title": "package-lock.json",
+      "summary": "{ \"name\": \"dvt-api\", \"version\": \"0.1.0\", \"lockfileVersion\": 3, \"requires\": true, \"packages\": { \"\": { \"name\": \"dvt-api\", \"version\": \"0.1.0\", \"dependencies\": { \"@fastify/cors\": \"^10.0.0\", \"@fastify/helmet\": \"^12.0.0\", \"@fastify/sensible\": \"^6.0.0\", \"fastify\": \"^5.0.0\", \"pino\": \"^9.0.0\", \"zod\": \"^3.0.0\" }, \"devDependencies\": { \"@types/node\": \"^22.19.11\", \"tsx\": \"^4.0.0\", \"typescript\": \"^5.0.0\" } }, \"node_modules/@esbuild/aix-ppc64\": { \"version\": \"0.27.3\", \"resolved\": \"https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.27.3.tgz\", \"integrity\": \"sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T12:22:17.580Z",
+      "tokenCount": 67
+    },
+    {
+      "path": "package.json",
+      "title": "package.json",
+      "summary": "{ \"name\": \"dvt-api\", \"private\": true, \"type\": \"module\", \"version\": \"0.1.0\", \"scripts\": { \"dev\": \"tsx watch src/server.ts\", \"build\": \"tsc -p tsconfig.json\", \"start\": \"node dist/server.js\", \"typecheck\": \"tsc -p tsconfig.json --noEmit\" }, \"dependencies\": { \"@fastify/cors\": \"^10.0.0\", \"@fastify/helmet\": \"^12.0.0\", \"@fastify/sensible\": \"^6.0.0\", \"fastify\": \"^5.0.0\", \"pino\": \"^9.0.0\", \"zod\": \"^3.0.0\", \"pg\": \"^8.12.0\" }, \"devDependencies\": { \"@types/node\": \"^22.19.11\", \"tsx\": \"^4.0.0\", \"typescript\": \"^5.0.0\", \"@types/pg\": \"^8.11.10\" } }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.657Z",
+      "tokenCount": 76
+    },
+    {
+      "path": "README.md",
+      "title": "README.md",
+      "summary": "# dvt-api (Fastify + TypeScript) — Railway",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.622Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/app.ts",
+      "title": "app.ts",
+      "summary": "import cors from '@fastify/cors'; import helmet from '@fastify/helmet'; import sensible from '@fastify/sensible'; import Fastify, { type FastifyInstance } from 'fastify';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.600Z",
+      "tokenCount": 27
+    },
+    {
+      "path": "src/db/pool.ts",
+      "title": "pool.ts",
+      "summary": "import { Pool } from 'pg';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.600Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/plugins/env.ts",
+      "title": "env.ts",
+      "summary": "import { z } from 'zod';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.601Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/plugins/logger.ts",
+      "title": "logger.ts",
+      "summary": "import type { Env } from './env.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.602Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/routes/dbReady.ts",
+      "title": "dbReady.ts",
+      "summary": "import type { FastifyInstance } from 'fastify';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.602Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/routes/health.ts",
+      "title": "health.ts",
+      "summary": "import type { FastifyPluginAsync } from 'fastify';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.603Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/routes/version.ts",
+      "title": "version.ts",
+      "summary": "import type { FastifyPluginAsync } from 'fastify';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.603Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/server.ts",
+      "title": "server.ts",
+      "summary": "import { buildApp } from './app.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.604Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "tsconfig.json",
+      "title": "tsconfig.json",
+      "summary": "{ \"compilerOptions\": { \"target\": \"ES2022\", \"lib\": [\"ES2022\"], \"module\": \"NodeNext\", \"moduleResolution\": \"NodeNext\", \"types\": [\"node\"], \"outDir\": \"dist\", \"rootDir\": \"src\", \"strict\": true, \"noUncheckedIndexedAccess\": true, \"exactOptionalPropertyTypes\": true, \"forceConsistentCasingInFileNames\": true, \"skipLibCheck\": true }, \"include\": [\"src/**/*.ts\", \"src/**/*.js\", \"src/**/*.tsx\", \"src/**/*.jsx\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.676Z",
+      "tokenCount": 45
+    }
+  ]
+}

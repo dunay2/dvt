@@ -1,257 +1,285 @@
-# Backlog Frontend DVT+ — Épicas + Historias de Usuario
+# DVT+ Frontend Backlog — Epics & User Stories
 
-> Objetivo: convertir la especificación técnica frontend DVT+ en un backlog ejecutable con el mismo sistema de `EPICA-*` + `US-*` usado en el proyecto.
+> Objective: Convert the DVT+ frontend technical specification into an actionable backlog using the same `EPIC-*` + `US-*` system as the project.
 
-## Estado de ejecución (GitHub)
+## Table of Contents
 
-- Milestones creados: `EPICA-F1` a `EPICA-F9`.
-- Issues de épica creadas: `#160` a `#168`.
-- Issues de historias creadas: `#169` a `#188`.
-- Evidencia y registro detallado: `BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md`.
+- [Execution Status (GitHub)](#execution-status-github)
+- [GitHub Convention](#github-convention)
+- [Epics & User Stories](#epics--user-stories)
+  - [EPIC F1 — UI Shell & Navigation Foundation](#epic-f1--ui-shell--navigation-foundation)
+  - [EPIC F2 — Graph Workspace (React Flow + Layout)](#epic-f2--graph-workspace-react-flow--layout)
+  - [EPIC F3 — Execution Plan UX (Explainable Read-only)](#epic-f3--execution-plan-ux-explainable-read-only)
+  - [EPIC F4 — Run Monitoring & Live Status](#epic-f4--run-monitoring--live-status)
+  - [EPIC F5 — Diff, Lineage & Impact Analysis UX](#epic-f5--diff-lineage--impact-analysis-ux)
+  - [EPIC F6 — Cost, Guardrails & FinOps UX](#epic-f6--cost-guardrails--finops-ux)
+  - [EPIC F7 — Plugins & UI Extensibility](#epic-f7--plugins--ui-extensibility)
+  - [EPIC F8 — Security, RBAC & Admin UX](#epic-f8--security-rbac--admin-ux)
+  - [EPIC F9 — Frontend Observability, A11y & Performance](#epic-f9--frontend-observability-a11y--performance)
+- [Recommended Implementation Order](#recommended-implementation-order)
+- [Definition of Ready (DoR) per Story](#definition-of-ready-dor-per-story)
+- [Definition of Done (DoD) per Story](#definition-of-done-dod-per-story)
 
-## Convención para GitHub
+---
 
-- 1 milestone por épica (`EPICA-F1 ...`, `EPICA-F2 ...`).
-- 1 issue por historia (`US-F1.1 ...`, `US-F1.2 ...`).
-- Labels recomendados: `epic`, `story`, `frontend`, `ui`, `ux`, `security`, `observability`, `testing`.
+## Execution Status (GitHub)
 
-## ÉPICA F1 — UI Shell & Navigation Foundation
+- Created milestones: `EPIC-F1` to `EPIC-F9`.
+- Created epic issues: `#160` to `#168`.
+- Created user story issues: `#169` to `#188`.
+- Detailed evidence and log: `BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md`.
 
-### US-F1.1 — Definir shell principal y navegación lateral
+## GitHub Convention
 
-Como usuario técnico, quiero una shell consistente para navegar Graph, Plan, Run, Diff y Admin sin perder contexto.
+- 1 milestone per epic (`EPIC-F1 ...`, `EPIC-F2 ...`).
+- 1 issue per user story (`US-F1.1 ...`, `US-F1.2 ...`).
+- Recommended labels: `epic`, `story`, `frontend`, `ui`, `ux`, `security`, `observability`, `testing`.
 
-**Entregables**
+---
 
-- Layout base con áreas fijas (sidebar, topbar, workspace, panel contextual).
-- Enrutado de vistas principales.
-- Estado de navegación persistente por sesión.
+## Epics & User Stories
 
-### US-F1.2 — Sistema de paneles y modales global
+### EPIC F1 — UI Shell & Navigation Foundation
 
-Como usuario, quiero overlays predecibles para inspección, confirmaciones y configuración.
+#### US-F1.1 — Define Main Shell and Side Navigation
 
-**Entregables**
+As a technical user, I want a consistent shell to navigate Graph, Plan, Run, Diff, and Admin without losing context.
 
-- Manager de overlays/modales.
-- Reglas de foco y cierre (keyboard-first).
-- Estados `loading/success/error` homogéneos.
+**Deliverables**
 
-## ÉPICA F2 — Graph Workspace (React Flow + Layout)
+- Base layout with fixed areas (sidebar, topbar, workspace, contextual panel).
+- Routing for main views.
+- Persistent navigation state per session.
 
-### US-F2.1 — Render DAG con interacción base
+#### US-F1.2 — Global Panels and Modals System
 
-Como analista, quiero visualizar el DAG y navegarlo fluidamente.
+As a user, I want predictable overlays for inspection, confirmations, and configuration.
 
-**Entregables**
+**Deliverables**
 
-- Render de nodos/edges en React Flow.
+- Overlay/modal manager.
+- Focus and close rules (keyboard-first).
+- Homogeneous `loading/success/error` states.
+
+### EPIC F2 — Graph Workspace (React Flow + Layout)
+
+#### US-F2.1 — Render DAG with Basic Interaction
+
+As an analyst, I want to visualize the DAG and navigate it smoothly.
+
+**Deliverables**
+
+- Node/edge rendering in React Flow.
 - Zoom, pan, fitView, minimap.
-- Selección simple/múltiple y resaltado de contexto.
+- Simple/multi selection and context highlighting.
 
-### US-F2.2 — Auto-layout con ELK/dagre y nodos fijados
+#### US-F2.2 — Auto-layout with ELK/dagre and Pinned Nodes
 
-Como usuario, quiero ordenar grafos grandes sin perder posiciones críticas.
+As a user, I want to organize large graphs without losing critical positions.
 
-**Entregables**
+**Deliverables**
 
-- Auto-layout por tipo de grafo.
-- Soporte pinned nodes.
-- Re-layout incremental (sin reset total de viewport).
+- Auto-layout by graph type.
+- Support for pinned nodes.
+- Incremental re-layout (no total viewport reset).
 
-### US-F2.3 — Búsqueda y filtrado en grafo
+#### US-F2.3 — Graph Search and Filtering
 
-Como usuario, quiero ubicar nodos por nombre, tipo o estado rápidamente.
+As a user, I want to quickly locate nodes by name, type, or state.
 
-**Entregables**
+**Deliverables**
 
-- Search index frontend.
-- Filtros por dominio/estado/impacto.
-- Navegación de resultados (next/prev match).
+- Frontend search index.
+- Filters by domain/state/impact.
+- Result navigation (next/prev match).
 
-## ÉPICA F3 — Execution Plan UX (Read-only explicable)
+### EPIC F3 — Execution Plan UX (Explainable Read-only)
 
-### US-F3.1 — Plan Preview con acciones RUN/SKIP/PARTIAL
+#### US-F3.1 — Plan Preview with RUN/SKIP/PARTIAL Actions
 
-Como usuario, quiero ver el plan resultante antes de ejecutar.
+As a user, I want to see the resulting plan before executing.
 
-**Entregables**
+**Deliverables**
 
-- Tabla/vista de acciones por nodo.
-- Badges de estado y agrupación por tipo de acción.
-- Export/compartir snapshot de plan.
+- Table/view of actions per node.
+- Status badges and grouping by action type.
+- Export/share plan snapshot.
 
-### US-F3.2 — Explainability por decisión de plan
+#### US-F3.2 — Explainability by Plan Decision
 
-Como usuario, quiero comprender por qué un nodo cae en RUN/SKIP/PARTIAL.
+As a user, I want to understand why a node is RUN/SKIP/PARTIAL.
 
-**Entregables**
+**Deliverables**
 
-- Panel de “why” por nodo.
-- Trazas de regla/política aplicada.
-- Mensajería legible para troubleshooting.
+- "Why" panel per node.
+- Rule/policy trace.
+- Readable troubleshooting messages.
 
-## ÉPICA F4 — Run Monitoring & Live Status
+### EPIC F4 — Run Monitoring & Live Status
 
-### US-F4.1 — Timeline de ejecución con estados de step
+#### US-F4.1 — Execution Timeline with Step States
 
-Como operador, quiero seguimiento en tiempo real del run.
+As an operator, I want real-time run tracking.
 
-**Entregables**
+**Deliverables**
 
-- Timeline cronológico.
-- Estado run-level y step-level.
-- Sincronización con contrato de eventos del engine.
+- Chronological timeline.
+- Run-level and step-level state.
+- Sync with engine event contract.
 
-### US-F4.2 — Logs, progreso y reconexión resiliente
+#### US-F4.2 — Logs, Progress, and Resilient Reconnection
 
-Como operador, quiero continuidad de monitor incluso con red inestable.
+As an operator, I want monitoring continuity even with unstable network.
 
-**Entregables**
+**Deliverables**
 
-- Polling/streaming con fallback.
-- Banner `reconnecting/degraded/offline`.
-- Retry con backoff y circuit-break visual.
+- Polling/streaming with fallback.
+- `reconnecting/degraded/offline` banner.
+- Retry with backoff and visual circuit-breaker.
 
-## ÉPICA F5 — Diff, Lineage & Impact Analysis UX
+### EPIC F5 — Diff, Lineage & Impact Analysis UX
 
-### US-F5.1 — Diff view de cambios relevantes
+#### US-F5.1 — Diff View of Relevant Changes
 
-Como usuario, quiero comparar estados para decidir ejecución.
+As a user, I want to compare states to decide execution.
 
-**Entregables**
+**Deliverables**
 
-- Vista diff anterior vs actual.
-- Realce de cambios semánticos.
-- Filtros por severidad/tipo.
+- Previous vs current diff view.
+- Semantic change highlighting.
+- Filters by severity/type.
 
-### US-F5.2 — Lineage upstream/downstream
+#### US-F5.2 — Upstream/Downstream Lineage
 
-Como usuario, quiero entender dependencias e impacto.
+As a user, I want to understand dependencies and impact.
 
-**Entregables**
+**Deliverables**
 
-- Navegación de lineage en ambos sentidos.
-- Modo impacto con profundidad configurable.
-- Acciones de foco contextual.
+- Lineage navigation in both directions.
+- Impact mode with configurable depth.
+- Contextual focus actions.
 
-## ÉPICA F6 — Cost, Guardrails & FinOps UX
+### EPIC F6 — Cost, Guardrails & FinOps UX
 
-### US-F6.1 — Cost snapshot en frontend
+#### US-F6.1 — Cost Snapshot in Frontend
 
-Como owner, quiero ver coste estimado/observado por plan/run.
+As an owner, I want to see estimated/observed cost per plan/run.
 
-**Entregables**
+**Deliverables**
 
-- Panel de coste por unidad relevante.
-- Indicadores por nodo/etapa.
-- Historial mínimo de snapshots.
+- Cost panel by relevant unit.
+- Indicators per node/stage.
+- Minimal snapshot history.
 
-### US-F6.2 — Señales de guardrails y recomendaciones
+#### US-F6.2 — Guardrail Signals and Recommendations
 
-Como operador, quiero alertas accionables cuando un plan exceda políticas.
+As an operator, I want actionable alerts when a plan exceeds policies.
 
-**Entregables**
+**Deliverables**
 
-- Alertas por umbral.
-- Mensajes de mitigación/recomendación.
-- Estados de “bloqueado por política” visibles.
+- Threshold alerts.
+- Mitigation/recommendation messages.
+- Visible "blocked by policy" states.
 
-## ÉPICA F7 — Plugins & Extensibilidad UI
+### EPIC F7 — Plugins & UI Extensibility
 
-### US-F7.1 — Catálogo de plugins con estado/compatibilidad
+#### US-F7.1 — Plugin Catalog with State/Compatibility
 
-Como administrador, quiero gestionar plugins desde UI con visibilidad clara.
+As an admin, I want to manage plugins from the UI with clear visibility.
 
-**Entregables**
+**Deliverables**
 
-- Lista de plugins instalados/disponibles.
-- Estado (active, incompatible, error).
-- Compatibilidad por `apiVersion`.
+- List of installed/available plugins.
+- State (active, incompatible, error).
+- Compatibility by `apiVersion`.
 
-### US-F7.2 — Manejo seguro de fallos de plugin en UI
+#### US-F7.2 — Safe Handling of Plugin Failures in UI
 
-Como usuario, quiero que un fallo de plugin no degrade toda la app.
+As a user, I want a plugin failure not to degrade the whole app.
 
-**Entregables**
+**Deliverables**
 
-- Error boundaries por superficie plugin.
-- Fallback UI aislado.
-- Eventos auditables de fallo/recuperación.
+- Error boundaries per plugin surface.
+- Isolated fallback UI.
+- Auditable failure/recovery events.
 
-## ÉPICA F8 — Seguridad, RBAC y Admin UX
+### EPIC F8 — Security, RBAC & Admin UX
 
-### US-F8.1 — Reglas RBAC visuales (hide/disable/read-only)
+#### US-F8.1 — Visual RBAC Rules (hide/disable/read-only)
 
-Como organización, quiero que la UI respete permisos de backend de forma explícita.
+As an organization, I want the UI to explicitly respect backend permissions.
 
-**Entregables**
+**Deliverables**
 
-- Motor de render condicional por permiso.
-- Matriz de comportamiento por vista/acción.
-- Mensajería de acceso denegado coherente.
+- Conditional render engine by permission.
+- Behavior matrix by view/action.
+- Coherent access denied messaging.
 
-### US-F8.2 — Superficie admin restringida y auditada
+#### US-F8.2 — Restricted and Audited Admin Surface
 
-Como admin, quiero operar configuraciones críticas con trazabilidad.
+As an admin, I want to operate critical configurations with traceability.
 
-**Entregables**
+**Deliverables**
 
-- Vistas admin protegidas.
-- Registro de acciones privilegiadas.
-- Confirmaciones reforzadas en acciones sensibles.
+- Protected admin views.
+- Log of privileged actions.
+- Reinforced confirmations for sensitive actions.
 
-## ÉPICA F9 — Frontend Observability, A11y & Performance
+### EPIC F9 — Frontend Observability, A11y & Performance
 
-### US-F9.1 — Telemetría frontend con eventos clave
+#### US-F9.1 — Frontend Telemetry with Key Events
 
-Como equipo de plataforma, quiero métricas de salud UX y errores por vista.
+As a platform team, I want UX health metrics and errors per view.
 
-**Entregables**
+**Deliverables**
 
-- Instrumentación OTel de interacciones críticas.
-- Métricas: TTFMP, error-rate, latencia plan preview.
-- Correlación de sesión/trace con backend.
+- OTel instrumentation of critical interactions.
+- Metrics: TTFMP, error-rate, plan preview latency.
+- Session/trace correlation with backend.
 
-### US-F9.2 — Accesibilidad operativa de vistas críticas
+#### US-F9.2 — Operational Accessibility of Critical Views
 
-Como usuario, quiero operar por teclado y lector de pantalla en flujos principales.
+As a user, I want to operate via keyboard and screen reader in main flows.
 
-**Entregables**
+**Deliverables**
 
-- Navegación keyboard-first en shell/canvas/modales.
-- ARIA en componentes críticos.
-- Validación en golden paths de accesibilidad.
+- Keyboard-first navigation in shell/canvas/modals.
+- ARIA in critical components.
+- Validation in golden accessibility paths.
 
-### US-F9.3 — Performance budget para grafos grandes
+#### US-F9.3 — Performance Budget for Large Graphs
 
-Como usuario, quiero experiencia fluida con grafos de alta cardinalidad.
+As a user, I want a smooth experience with high-cardinality graphs.
 
-**Entregables**
+**Deliverables**
 
-- Definición y enforcement de budget UI.
-- Estrategias de virtualización/lazy rendering.
-- Benchmarks y alertas de regresión.
+- UI budget definition and enforcement.
+- Virtualization/lazy rendering strategies.
+- Benchmarks and regression alerts.
 
-## Orden recomendado de implementación
+---
 
-1. ÉPICA F1
-2. ÉPICA F2
-3. ÉPICAS F3 y F4 en paralelo controlado
-4. ÉPICAS F5 y F6
-5. ÉPICAS F7 y F8
-6. ÉPICA F9 como quality gate transversal
+## Recommended Implementation Order
 
-## DoR por historia
+1. EPIC F1
+2. EPIC F2
+3. EPICs F3 and F4 in controlled parallel
+4. EPICs F5 and F6
+5. EPICs F7 and F8
+6. EPIC F9 as a transversal quality gate
 
-- Contrato/view-model de referencia identificado.
-- Criterios de aceptación verificables.
-- Riesgos de seguridad/RBAC declarados.
-- Métricas mínimas de UX/observabilidad definidas.
+---
 
-## DoD por historia
+## Definition of Ready (DoR) per Story
 
-- Documentación actualizada y enlazada en índice.
-- Pruebas asociadas (unit/integration/e2e o contrato UI).
-- Evidencia en issue + milestone correspondiente.
-- Estado de trazabilidad spec ↔ historia actualizado.
+- Reference contract/view-model identified.
+- Verifiable acceptance criteria.
+- Declared security/RBAC risks.
+- Minimum UX/observability metrics defined.
+
+## Definition of Done (DoD) per Story
+
+- Documentation updated and linked in index.
+- Associated tests (unit/integration/e2e or UI contract).
+- Evidence in corresponding issue + milestone.
+- Spec ↔ story traceability status updated.

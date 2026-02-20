@@ -304,6 +304,29 @@ Use this baseline to reduce subjectivity in step 1:
 - Require template completeness checks (Template A before coding, Template B before closing) where automation is available.
 - Add/keep checks or bot reminders when implementation issues do not have a linked PR.
 
+### Repository AI Indexes
+
+- We maintain lightweight `AI_INDEX.json` files in key repository directories to help AI agents and devs find context quickly without reading every document. Typical locations:
+  - `docs/AI_INDEX.json`
+  - `packages/*/AI_INDEX.json`
+  - `apps/*/AI_INDEX.json`
+
+- These indexes contain per-file metadata (`path`, `title`, `summary`, `keywords`, `lastUpdated`, `tokenCount`) and are produced by the prototype script `scripts/gen-ai-index.js`.
+
+- Quick usage:
+
+```bash
+# generar índices por defecto
+pnpm run gen:ai-index
+
+# generar índices para directorios concretos
+node scripts/gen-ai-index.js apps/web packages/engine
+```
+
+- Notes:
+  - Current generator is a prototype (summary heuristics only). Production usage should add embeddings (pgvector/Weaviate) and a retriever service.
+  - Regenerar índices en cambios relevantes (docs/contracts/engine) mantiene la calidad de las respuestas automatizadas.
+
 ## Planned technical migration (approved before implementation)
 
 ### Objective

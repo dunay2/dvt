@@ -5,7 +5,7 @@ import { Context } from '@temporalio/activity';
 import { ApplicationFailure } from '@temporalio/activity';
 
 import type {
-  EventEnvelope,
+  EventInput,
   EventType,
   ExecutionPlan,
   IClock,
@@ -50,6 +50,7 @@ export interface StepResult {
 
 export interface EmitEventInput {
   ctx: RunContext;
+  planRef: PlanRef;
   eventType: EventType;
   stepId?: string;
   /** Optional planner-driven logical attempt id; defaults to 1. */
@@ -119,32 +120,35 @@ export function createActivities(deps: ActivityDeps): {
 
       const logicalAttemptId = input.logicalAttemptId ?? 1;
 
-      const envelope = {
+      const envelope: EventInput = {
+        eventId: deps.idempotency.eventId(),
         eventType,
         emittedAt: deps.clock.nowIsoUtc(),
         tenantId: ctx.tenantId,
         projectId: ctx.projectId,
         environmentId: ctx.environmentId,
         runId: ctx.runId,
+        planId: input.planRef.planId,
+        planVersion: input.planRef.planVersion,
         ...(stepId ? { stepId } : {}),
         engineAttemptId,
         logicalAttemptId,
         idempotencyKey: deps.idempotency.runEventKey({
           eventType,
-          tenantId: ctx.tenantId,
           runId: ctx.runId,
           logicalAttemptId,
+          planId: input.planRef.planId,
+          planVersion: input.planRef.planVersion,
           ...(stepId ? { stepId } : {}),
         }),
-      } as Omit<EventEnvelope, 'runSeq'>;
+      };
 
-      const { appended } = await deps.stateStore.appendEventsTx(ctx.runId, [envelope]);
-      await deps.outbox.enqueueTx(ctx.runId, appended);
+      await deps.stateStore.appendAndEnqueueTx(ctx.runId, [envelope]);
     },
 
     /** Persist run metadata for correlation queries. */
     async saveRunMetadata(meta: RunMetadata): Promise<void> {
-      await deps.stateStore.saveRunMetadata(meta);
+      await deps.stateStore.bootstrapRunTx({ metadata: meta, firstEvents: [] });
     },
   };
 }

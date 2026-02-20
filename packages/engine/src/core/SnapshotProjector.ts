@@ -94,9 +94,22 @@ function applyEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
       // In Phase 1 we leave run status updates to RunFailed event.
       break;
     }
+    case 'StepSkipped': {
+      const stepId = (e as { stepId: string }).stepId;
+      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      s.status = 'SKIPPED';
+      s.completedAt = e.emittedAt;
+      snap.steps[stepId] = s;
+      break;
+    }
     default: {
-      const _exhaustive: never = e.eventType;
-      throw new Error(`Unknown eventType: ${String(_exhaustive)}`);
+      // Forward-compatibility: tolerate unknown event types without mutating state.
+      console.warn('SnapshotProjector: unknown eventType skipped', {
+        eventType: (e as { eventType: string }).eventType,
+        runId: snap.runId,
+        runSeq: (e as { runSeq?: number }).runSeq,
+      });
+      break;
     }
   }
 }
