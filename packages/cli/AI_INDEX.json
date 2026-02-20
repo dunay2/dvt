@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-02-20T09:12:44.413Z",
+  "dir": "packages/cli",
+  "entries": [
+    {
+      "path": "package.json",
+      "title": "package.json",
+      "summary": "{ \"name\": \"@dvt/cli\", \"version\": \"1.0.0\", \"main\": \"dist/index.js\", \"types\": \"dist/index.d.ts\", \"private\": false, \"license\": \"MIT\", \"dependencies\": { \"@dvt/contracts\": \"workspace:*\", \"@dvt/engine\": \"workspace:*\" }, \"scripts\": { \"build\": \"tsc -p tsconfig.json\", \"test\": \"vitest run --passWithNoTests\", \"validate-contracts\": \"node validate-contracts.cjs\", \"run-golden-paths\": \"node run-golden-paths.cjs\" }, \"devDependencies\": { \"typescript\": \"5.9.3\", \"vitest\": \"3.2.4\" } }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.413Z",
+      "tokenCount": 60
+    },
+    {
+      "path": "README.md",
+      "title": "README.md",
+      "summary": "# CLI Tools for DVT",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.420Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "src/index.ts",
+      "title": "index.ts",
+      "summary": "// Placeholder source to ensure tsc has inputs for strict CI export const cliPlaceholder = true;",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.376Z",
+      "tokenCount": 21
+    },
+    {
+      "path": "test/smoke.test.ts",
+      "title": "smoke.test.ts",
+      "summary": "import { expect, test } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.382Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "tsconfig.json",
+      "title": "tsconfig.json",
+      "summary": "{ \"extends\": \"../../tsconfig.base.json\", \"compilerOptions\": { \"composite\": true, \"declaration\": true, \"declarationMap\": true, \"sourceMap\": true, \"outDir\": \"dist\", \"rootDir\": \"src\" }, \"include\": [\"src\"], \"exclude\": [\"node_modules\", \"dist\", \"test\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.387Z",
+      "tokenCount": 33
+    }
+  ]
+}
