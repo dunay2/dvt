@@ -1,7 +1,8 @@
-import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -18,7 +19,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       schemaVersion: 'v1.1',
       planId: 'p',
       planVersion: '1.0',
-    } as any;
+    };
   }
 
   function makeContext(runId = 'r1'): RunContext {
@@ -28,13 +29,29 @@ describe('WorkflowEngine (basic failure modes)', () => {
       environmentId: 'dev',
       runId,
       targetAdapter: 'temporal',
-    } as any;
+    };
+  }
+
+  function makeMockPlanFetcher() {
+    return {
+      async fetch(planRef: PlanRef): Promise<ExecutionPlan> {
+        return {
+          metadata: {
+            planId: planRef.planId ?? 'p',
+            planVersion: planRef.planVersion ?? '1.0',
+            schemaVersion: planRef.schemaVersion,
+            targetAdapter: 'temporal' as const,
+          },
+          steps: [{ stepId: 'step.1' }],
+        };
+      },
+    };
   }
 
   function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
     return {
       provider: 'temporal',
-      async startRun(_planRef, ctx) {
+      async startRun(_plan: ExecutionPlan, ctx) {
         return {
           provider: 'temporal',
           namespace: 'default',
@@ -44,7 +61,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       },
       async cancelRun() {},
       async getRunStatus(runRef) {
-        return { runId: runRef.runId, status: 'RUNNING' } as any;
+        return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
       },
       async signal() {},
       ...(overrides ?? {}),
@@ -65,19 +82,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planIntegrity: {
-        async fetchAndValidate() {
-          return new Uint8Array();
-        },
-      } as any,
-      planFetcher: {
-        async fetch() {
-          return new Uint8Array();
-        },
-      } as any,
+      planFetcher: makeMockPlanFetcher(),
       adapters: input?.adapters ?? new Map(),
       requiredProviders: input?.requiredProviders,
-    } as any);
+    });
 
     return { engine, store };
   }
@@ -162,7 +170,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       createEngine({
         requiredProviders: ['temporal'],
       })
-    ).toThrow(/No adapter registered for required provider: temporal/);
+    ).toThrow(/No adapter registered for provider: temporal/);
   });
 
   it.each([
