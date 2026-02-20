@@ -39,6 +39,13 @@ interface EventEnvelope {
 }
 
 class TestIdempotency {
+  private counter = 0;
+
+  eventId(): string {
+    this.counter += 1;
+    return `test-event-${this.counter}`;
+  }
+
   runEventKey(args: {
     eventType: EventType;
     tenantId: string;
@@ -93,6 +100,23 @@ class TestStateStore {
 
   async listEvents(runId: string): Promise<EventEnvelope[]> {
     return [...(this.eventsByRun.get(runId) ?? [])];
+  }
+
+  async appendAndEnqueueTx(
+    runId: string,
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+    return this.appendEventsTx(runId, envelopes);
+  }
+
+  async bootstrapRunTx(input: {
+    metadata: unknown;
+    firstEvents: Omit<EventEnvelope, 'runSeq'>[];
+  }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+    // metadata is a no-op in this stub; persist any first events normally.
+    if (input.firstEvents.length === 0) return { appended: [], deduped: [] };
+    const meta = input.metadata as { runId: string };
+    return this.appendEventsTx(meta.runId, input.firstEvents);
   }
 
   async enqueueTx(_runId: string, _events: EventEnvelope[]): Promise<void> {

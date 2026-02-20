@@ -2,12 +2,13 @@ import type { PlanRef } from '@dvt/contracts';
 
 import { sha256Hex } from '../utils/sha256.js';
 
-export interface IPlanFetcher {
+/** Fetches raw plan bytes for SHA-256 integrity validation. */
+export interface IRawPlanFetcher {
   fetch(planRef: PlanRef): Promise<Uint8Array>;
 }
 
 export class PlanIntegrityValidator {
-  async fetchAndValidate(planRef: PlanRef, fetcher: IPlanFetcher): Promise<Uint8Array> {
+  async fetchAndValidate(planRef: PlanRef, fetcher: IRawPlanFetcher): Promise<Uint8Array> {
     const bytes = await fetcher.fetch(planRef);
     const actual = sha256Hex(bytes);
     if (actual !== planRef.sha256) {
