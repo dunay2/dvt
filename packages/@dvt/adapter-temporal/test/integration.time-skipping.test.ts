@@ -22,6 +22,12 @@ import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
 import type { ActivityDeps } from '../src/activities/stepActivities.js';
+import type {
+  EventEnvelope as TemporalEventEnvelope,
+  EventIdempotencyInput,
+  EventInput,
+  RunMetadata,
+} from '../src/engine-types.js';
 import { loadTemporalAdapterConfig, TemporalAdapter, TemporalWorkerHost } from '../src/index.js';
 
 // Local outbox record type for test doubles — mirrors engine's OutboxRecord shape.
@@ -56,37 +62,12 @@ if (!existsSync(WORKFLOW_JS_PATH) && process.env.CI) {
 // Types
 // ============================================================================
 
-type EventType =
-  | 'RunQueued'
-  | 'RunStarted'
-  | 'RunPaused'
-  | 'RunResumed'
-  | 'RunCancelled'
-  | 'RunCompleted'
-  | 'RunFailed'
-  | 'StepStarted'
-  | 'StepCompleted'
-  | 'StepFailed';
-
-interface EventEnvelope {
-  eventId: string;
-  eventType: EventType;
-  emittedAt: string;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string;
-  engineAttemptId: number;
-  logicalAttemptId: number;
-  idempotencyKey: string;
-  runSeq: number;
-  stepId?: string;
-}
+type EventEnvelope = TemporalEventEnvelope;
 
 type RunStatusValue = 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
-type RunEventWrite = Omit<EventEnvelope, 'runSeq'>;
-type RunEventRecord = EventEnvelope & { persistedAt: string };
+type RunEventWrite = EventInput;
+type RunEventRecord = EventEnvelope;
 type RunEventPersisted = RunEventRecord;
 
 interface AppendResult {
@@ -119,13 +100,7 @@ class TestIdempotency {
     return `test-event-${this.counter}`;
   }
 
-  runEventKey(args: {
-    eventType: EventType;
-    tenantId: string;
-    runId: string;
-    logicalAttemptId: number;
-    stepId?: string;
-  }): string {
+  runEventKey(args: EventIdempotencyInput): string {
     // Simplified implementation but follows the principle:
     // provider retries do not change the key
     return [
@@ -133,6 +108,8 @@ class TestIdempotency {
       args.tenantId,
       args.runId,
       String(args.logicalAttemptId),
+      args.planId,
+      args.planVersion,
       args.stepId ?? '',
     ].join('|');
   }
@@ -178,7 +155,7 @@ class TestStateStore {
    * Used for projector state
    */
   private readonly snapshotsByRun = new Map<string, RunSnapshot>();
-  private readonly metadataByRun = new Map<string, { runId: string } & Record<string, unknown>>();
+  private readonly metadataByRun = new Map<string, RunMetadata>();
 
   /**
    * Appends a single event to the run's event log
@@ -286,33 +263,47 @@ class TestStateStore {
    */
   async projectSnapshot(runId: string): Promise<RunSnapshot> {
     const events = await this.fetchEvents(runId);
-
-    // Simple projection logic for testing
-    let status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED' = 'PENDING';
-
-    for (const e of events) {
-      if (e.eventType === 'RunStarted') status = 'RUNNING';
-      if (e.eventType === 'RunPaused') status = 'PAUSED';
-      if (e.eventType === 'RunResumed') status = 'RUNNING';
-      if (e.eventType === 'RunCompleted') status = 'COMPLETED';
-      if (e.eventType === 'RunFailed') status = 'FAILED';
-      if (e.eventType === 'RunCancelled') status = 'CANCELLED';
-    }
-
+    const status = this.calculateStatus(events);
     const snapshot: RunSnapshot = {
       runId,
       status,
       lastEventSeq: events.length > 0 ? events[events.length - 1].runSeq : 0,
       projectedAt: new Date().toISOString(),
     };
-
     this.snapshotsByRun.set(runId, snapshot);
     return snapshot;
   }
 
+  private calculateStatus(events: EventEnvelope[]): RunStatusValue {
+    let status: RunStatusValue = 'PENDING';
+    for (const e of events) {
+      switch (e.eventType) {
+        case 'RunStarted':
+          status = 'RUNNING';
+          break;
+        case 'RunPaused':
+          status = 'PAUSED';
+          break;
+        case 'RunResumed':
+          status = 'RUNNING';
+          break;
+        case 'RunCompleted':
+          status = 'COMPLETED';
+          break;
+        case 'RunFailed':
+          status = 'FAILED';
+          break;
+        case 'RunCancelled':
+          status = 'CANCELLED';
+          break;
+      }
+    }
+    return status;
+  }
+
   async bootstrapRunTx(input: {
-    metadata: { runId: string } & Record<string, unknown>;
-    firstEvents: RunEventWrite[];
+    metadata: RunMetadata;
+    firstEvents: EventInput[];
   }): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[] }> {
     this.metadataByRun.set(input.metadata.runId, input.metadata);
     const appended: RunEventPersisted[] = [];
@@ -330,7 +321,7 @@ class TestStateStore {
 
   async appendAndEnqueueTx(
     runId: string,
-    events: RunEventWrite[]
+    events: EventInput[]
   ): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[] }> {
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
@@ -344,13 +335,20 @@ class TestStateStore {
     return { appended, deduped };
   }
 
-  async getRunMetadataByRunId(
-    runId: string
-  ): Promise<({ runId: string } & Record<string, unknown>) | null> {
+  async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
     return this.metadataByRun.get(runId) ?? null;
   }
 
-  async saveProviderRef(_runId: string, _runRef: Record<string, unknown>): Promise<void> {
+  async saveProviderRef(
+    _runId: string,
+    _runRef: {
+      providerWorkflowId: string;
+      providerRunId: string;
+      providerNamespace?: string;
+      providerTaskQueue?: string;
+      providerConductorUrl?: string;
+    }
+  ): Promise<void> {
     // no-op for integration tests
   }
 
@@ -769,6 +767,7 @@ describe('temporal integration (time-skipping)', () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
 
       const store = new TestStateStore();
+      const outbox = new TestOutbox();
       const projector = new TestProjector();
       const plan = mkPlan(250);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
@@ -785,7 +784,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = new TemporalWorkerHost({
         temporalConfig,
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, planBytes),
+        activityDeps: createActivityDeps(store, outbox, planBytes),
       });
 
       await worker.start(env.nativeConnection); // ✅ usa env.nativeConnection
@@ -827,6 +826,7 @@ describe('temporal integration (time-skipping)', () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
 
       const store = new TestStateStore();
+      const outbox = new TestOutbox();
       const projector = new TestProjector();
       const plan = mkPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
@@ -842,7 +842,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = new TemporalWorkerHost({
         temporalConfig,
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, planBytes),
+        activityDeps: createActivityDeps(store, outbox, planBytes),
       });
 
       await worker.start(env.nativeConnection);
@@ -897,6 +897,7 @@ describe('temporal integration (time-skipping)', () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
 
       const store = new TestStateStore();
+      const outbox = new TestOutbox();
       const projector = new TestProjector();
       const plan = mkLinearThreeStepPlan();
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
@@ -916,7 +917,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = new TemporalWorkerHost({
         temporalConfig,
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, planBytes),
+        activityDeps: createActivityDeps(store, outbox, planBytes),
       });
 
       await worker.start(env.nativeConnection);
@@ -972,6 +973,7 @@ describe('temporal integration (time-skipping)', () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
 
       const store = new TestStateStore();
+      const outbox = new TestOutbox();
       const projector = new TestProjector();
       const plan = mkPermanentFailurePlan();
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
@@ -991,7 +993,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = new TemporalWorkerHost({
         temporalConfig,
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, planBytes),
+        activityDeps: createActivityDeps(store, outbox, planBytes),
       });
 
       await worker.start(env.nativeConnection);

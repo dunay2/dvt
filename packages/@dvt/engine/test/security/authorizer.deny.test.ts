@@ -70,16 +70,6 @@ function makeEngine(
     clock,
     authorizer,
     planRefPolicy,
-    planIntegrity: {
-      async fetchAndValidate() {
-        return new Uint8Array();
-      },
-    } as any,
-    planFetcher: {
-      async fetch() {
-        return new Uint8Array();
-      },
-    } as any,
     adapters: new Map([[adapter.provider, adapter]]),
   } as any);
 

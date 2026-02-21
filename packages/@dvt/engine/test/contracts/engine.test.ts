@@ -105,7 +105,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planFetcher: { fetch: async () => plan },
       adapters: new Map([['mock', mock]]),
     });
 
@@ -143,7 +142,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planFetcher: { fetch: async () => plan },
       adapters: new Map([['mock', mock]]),
     });
 
@@ -194,7 +192,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planFetcher: { fetch: async () => plan },
       adapters: new Map([['mock', mock]]),
     });
 
@@ -266,7 +263,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer,
       planRefPolicy,
-      planFetcher,
       adapters: new Map([['conductor', adapter]]),
     });
 

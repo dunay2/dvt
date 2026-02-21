@@ -3,10 +3,10 @@ import { describe, it, expect } from 'vitest';
 import type {
   RunContext,
   EngineRunRef,
+  PlanRef,
   RunStatusSnapshot,
   SignalRequest,
 } from '../../src/contracts/types.js';
-import type { PlanRef } from '../../src/contracts/types.js';
 
 describe('IWorkflowEngine contract types', () => {
   it('PlanRef must have the required fields', () => {
@@ -57,8 +57,8 @@ describe('IWorkflowEngine contract types', () => {
   });
 
   it('SignalRequest minimal complies with the contract', () => {
-    const req: SignalRequest = { signalType: 'PAUSE' };
-    expect(req.signalType).toBe('PAUSE');
+    const req: SignalRequest = { signalId: 's1', type: 'PAUSE' };
+    expect(req.type).toBe('PAUSE');
   });
 
   it('RunStatusSnapshot accepts status values', () => {
