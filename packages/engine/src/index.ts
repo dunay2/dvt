@@ -13,7 +13,6 @@ export * from './state/InMemoryTxStore.js';
 
 export * from './outbox/types.js';
 export * from './outbox/IOutboxRateLimiter.js';
-export * from './outbox/TokenBucketRateLimiter.js';
 export * from './outbox/OutboxWorker.js';
 export * from './outbox/InMemoryEventBus.js';
 

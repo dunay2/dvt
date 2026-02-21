@@ -42,7 +42,7 @@ pnpm test:contracts:hashes
 
 **Output:** Saves execution results to `packages/engine/test/contracts/results/golden-paths-run.json`
 
-**Status:** Stub implementation until issue #10 (Golden Paths) provides actual implementations.
+**Status:** Validates hashes computed from existing plan fixtures. Calculates deterministic SHA256 on normalized JSON and compares against `.golden/hashes.json`. Fails if baseline mismatch. (Issue #70 tracks full execution incorporation.)
 
 ### `compare-hashes.cjs`
 

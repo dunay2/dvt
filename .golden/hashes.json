@@ -1,11 +1,11 @@
 {
   "version": "1.1.0",
   "description": "Baseline snapshot hashes for golden path contract tests",
-  "generated": "2026-02-11T17:23:00.000Z",
+  "generated": "2026-02-21T22:00:00.000Z",
   "paths": {
     "plan-minimal": {
       "description": "Single step echo task - simplest possible plan",
-      "hash": "f67700e014113dc5",
+      "hash": "0766547a73ad16e4",
       "status": "implemented",
       "location": "packages/engine/test/contracts/plans/plan-minimal.json",
       "metadata": {
@@ -16,7 +16,7 @@
     },
     "plan-parallel": {
       "description": "3 parallel steps with fan-in merge",
-      "hash": "de7490f68aa73db8",
+      "hash": "b7a4d3f775325c72",
       "status": "implemented",
       "location": "packages/engine/test/contracts/plans/plan-parallel.json",
       "metadata": {
@@ -27,7 +27,7 @@
     },
     "plan-cancel-and-resume": {
       "description": "5 sequential steps with PAUSE/RESUME signals",
-      "hash": "b5a138be90164b1a",
+      "hash": "80c90721f3b585a9",
       "status": "implemented",
       "location": "packages/engine/test/contracts/plans/plan-cancel-and-resume.json",
       "metadata": {

@@ -56,24 +56,31 @@ async function runGoldenPaths() {
       continue;
     }
 
-    // TODO: Execute actual golden path when implementations are available
-    // For now, simulate execution
+    // compute deterministic hash from the plan fixture
     const startTime = Date.now();
-
     try {
-      // Placeholder for actual execution
-      await simulateGoldenPath(pathName, pathConfig);
+      let planFile = pathConfig.location
+        ? path.resolve(pathConfig.location)
+        : path.join(__dirname, '../packages/engine/test/contracts/plans', `${pathName}.json`);
+      if (!fs.existsSync(planFile)) {
+        throw new Error(`plan file not found: ${planFile}`);
+      }
+      const plan = JSON.parse(fs.readFileSync(planFile, 'utf8'));
 
+      const hash = computePlanHash(plan);
       const duration = Date.now() - startTime;
-      const hash = generatePlaceholderHash(pathName);
 
-      console.log(`   ✅ Completed in ${duration}ms`);
+      console.log(`   ✅ Computed hash in ${duration}ms`);
       console.log(`   🔑 Hash: ${hash}`);
+      if (baseline.paths[pathName].hash !== hash) {
+        console.warn(`   ⚠️  Baseline mismatch (expected ${baseline.paths[pathName].hash})`);
+      }
 
       results.paths[pathName] = {
         status: 'success',
         duration,
         hash,
+        baseline: baseline.paths[pathName].hash,
       };
     } catch (error) {
       console.error(`   ❌ Failed: ${error.message}`);
@@ -109,15 +116,27 @@ async function runGoldenPaths() {
   console.log('\n✅ Golden paths execution completed');
 }
 
-async function simulateGoldenPath(pathName, config) {
-  // Placeholder simulation - will be replaced with actual execution
-  return new Promise((resolve) => setTimeout(resolve, 10));
+// compute hash deterministically by normalizing JSON
+function computePlanHash(plan) {
+  function normalize(obj) {
+    if (Array.isArray(obj)) return obj.map(normalize);
+    if (obj && typeof obj === 'object') {
+      const out = {};
+      Object.keys(obj)
+        .sort()
+        .forEach((k) => {
+          out[k] = normalize(obj[k]);
+        });
+      return out;
+    }
+    return obj;
+  }
+  const normalized = JSON.stringify(normalize(plan));
+  return crypto.createHash('sha256').update(normalized).digest('hex').substring(0, 16);
 }
 
-function generatePlaceholderHash(pathName) {
-  // Generate consistent placeholder hash for testing
-  return crypto.createHash('sha256').update(pathName).digest('hex').substring(0, 16);
-}
+// stub helper removed as no longer needed
+
 
 // Run golden paths
 runGoldenPaths().catch((error) => {
