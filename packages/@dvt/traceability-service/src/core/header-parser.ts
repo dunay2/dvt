@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/traceability-service/src/core/header-parser.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @decision Section 4.1 — Parse machine-readable in-code traceability headers
+ * @decision Section 4.3 — Normalize extracted header metadata for manifest and validation pipelines
+ * @consequence Header parsing remains deterministic and portable across governed modules
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 import type { AdrRef, GovernedKind, HeaderTrace } from '../types.js';
 
 const BASELINE_RE = /@baseline\s+(ADR-\d+)(?::\s*([^\n*]+))?/g;
@@ -6,7 +15,7 @@ const CONSEQUENCE_RE = /@consequence\s+([^\n*]+)/;
 const VERSION_RE = /@version\s+([^\n*]+)/;
 const DATE_RE = /@date\s+([^\n*]+)/;
 
-function inferKind(filePath: string): GovernedKind {
+export function inferKindFromPath(filePath: string): GovernedKind {
   if (filePath.endsWith('.test.ts') || filePath.endsWith('.contract.ts')) return 'test';
   if (filePath.endsWith('.md')) return 'doc';
   if (filePath.endsWith('.json')) return 'schema';
@@ -46,7 +55,7 @@ export function parseTraceHeader(filePath: string, fileText: string): HeaderTrac
   const rel = filePath.replace(/\\/g, '/');
   const trace: HeaderTrace = {
     filePath: rel,
-    kind: inferKind(rel),
+    kind: inferKindFromPath(rel),
     baselines,
     decisions,
     baselineRaw: block,

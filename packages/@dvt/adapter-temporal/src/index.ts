@@ -1,3 +1,14 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/index.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
+ * @baseline ADR-0003: Execution Model
+ * @decision Section 3 — Expose a stable adapter boundary for client/worker/workflow mapping components
+ * @consequence Temporal adapter capabilities are consumed through a deterministic public module surface
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+
+export type { TemporalVersioning } from './versioning.js';
 export type { TemporalAdapterConfig } from './config.js';
 export { loadTemporalAdapterConfig, validateTemporalAdapterConfig } from './config.js';
 

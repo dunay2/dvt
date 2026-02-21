@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/traceability-service/src/types.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @decision Section 4.3 — Canonical machine-readable types for traceability metadata and validation
+ * @decision Section 4.5 — Stable graph-oriented identifiers for ADR/File relationships
+ * @consequence Typed governance payloads remain deterministic across scanner, validator, manifest and publisher
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 export type AdrStatus = 'Accepted' | 'Proposed' | 'Deprecated' | 'Superseded';
 
 export type GovernedKind = 'code' | 'schema' | 'doc' | 'test';
@@ -25,6 +34,7 @@ export type ValidationIssueCode =
   | 'MISSING_BASELINE'
   | 'ADR_NOT_FOUND'
   | 'ADR_NOT_ACCEPTED'
+  | 'NON_TEST_MISSING_DECISION'
   | 'MISSING_DECISION'
   | 'MISSING_VERSION'
   | 'INVALID_FORMAT'

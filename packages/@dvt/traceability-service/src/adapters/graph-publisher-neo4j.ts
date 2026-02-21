@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/traceability-service/src/adapters/graph-publisher-neo4j.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @baseline ADR-0002: Neo4j Knowledge Graph Context Repository
+ * @decision Section 4.5 — Publish deterministic ADR/File/Module graph via idempotent MERGE
+ * @consequence Re-running publication preserves stable graph state and supports impact analysis queries
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 import neo4j from 'neo4j-driver';
 import type { Driver } from 'neo4j-driver';
 

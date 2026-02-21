@@ -81,14 +81,6 @@ class NoopGraphPublisher implements IGraphPublisher {
   }
 }
 
-function asStringArray(v: string | boolean | undefined): string[] {
-  if (typeof v !== 'string') return [];
-  return v
-    .split(',')
-    .map((x) => x.trim())
-    .filter(Boolean);
-}
-
 function asString(v: string | boolean | undefined, name: string): string {
   if (typeof v !== 'string') throw new Error(`Missing --${name}`);
   return v;
@@ -118,11 +110,8 @@ async function main(): Promise<void> {
   const moduleName = asString(parsed.args['moduleName'], 'moduleName');
   const modulePath = asString(parsed.args['modulePath'], 'modulePath');
   const publishGraph = parsed.args['no-publish'] !== true;
-  const requiredFromArgs = asStringArray(parsed.args['requiredAdr']);
-  const requiredAdrs =
-    requiredFromArgs.length > 0
-      ? requiredFromArgs
-      : (cfg.adrPolicy?.requiredAdrs ?? []).map((x) => x.trim()).filter(Boolean);
+  const requireDecision = cfg.validation.requireDecision;
+  const failOnMissingVersion = cfg.validation.failOnMissingVersion;
   const generated = new Date().toISOString().slice(0, 10);
 
   const adrDir = path.resolve(repoRoot, cfg.adrCatalog.path);
@@ -163,8 +152,9 @@ async function main(): Promise<void> {
     moduleName,
     modulePath,
     generated,
-    requiredAdrs,
     publishGraph,
+    requireDecision,
+    failOnMissingVersion,
   });
 
   if (!result.validation.ok) {

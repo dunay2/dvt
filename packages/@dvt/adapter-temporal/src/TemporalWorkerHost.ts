@@ -1,3 +1,13 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
+ * @baseline ADR-0003: Execution Model
+ * @decision Section 2 — Worker lifecycle ownership is centralized in a single host
+ * @decision Section 3 — Worker startup binds deterministic workflow + activities wiring
+ * @consequence Temporal worker start/shutdown behavior remains predictable across integration and runtime paths
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { NativeConnection, Worker } from '@temporalio/worker';
 
 import type { ActivityDeps } from './activities/stepActivities.js';

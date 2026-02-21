@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/WorkflowMapper.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
+ * @decision Section 3 — Temporal runtime identifiers/status are mapped into canonical engine run references
+ * @consequence Provider-specific runtime state stays aligned with normalized run status contracts
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { EngineRunRef, RunStatus, RunStatusSnapshot } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';

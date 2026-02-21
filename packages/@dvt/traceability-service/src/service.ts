@@ -1,3 +1,13 @@
+/**
+ * @file packages/@dvt/traceability-service/src/service.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @decision Section 4.3 — Build manifest from scanned trace headers
+ * @decision Section 4.4 — Enforce reverse coverage for Accepted ADR catalog
+ * @decision Section 4.5 — Publish deterministic File/ADR/Module graph
+ * @consequence A single orchestration entrypoint enforces governance deterministically in CI
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 import type {
   IAdrCatalog,
   IGraphPublisher,
@@ -29,8 +39,9 @@ export class TraceabilityService implements ITraceabilityService {
     moduleName: string;
     modulePath: string;
     generated: string;
-    requiredAdrs?: string[];
     publishGraph?: boolean;
+    requireDecision?: boolean;
+    failOnMissingVersion?: boolean;
   }): Promise<{ validation: ValidationResult; manifest?: TraceabilityManifest }> {
     const traces = await this.deps.scanner.scan({
       repoRoot: input.repoRoot,
@@ -41,7 +52,12 @@ export class TraceabilityService implements ITraceabilityService {
     const validation = await this.deps.validator.validate({
       traces,
       adrCatalog: this.deps.adrCatalog,
-      ...(input.requiredAdrs ? { requiredAdrs: input.requiredAdrs } : {}),
+      ...(typeof input.requireDecision === 'boolean'
+        ? { requireDecision: input.requireDecision }
+        : {}),
+      ...(typeof input.failOnMissingVersion === 'boolean'
+        ? { failOnMissingVersion: input.failOnMissingVersion }
+        : {}),
     });
     if (!validation.ok) return { validation };
 
@@ -49,7 +65,6 @@ export class TraceabilityService implements ITraceabilityService {
     const reverse = await this.deps.validator.validateReverseCoverage({
       traces,
       acceptedAdrs: accepted,
-      ...(input.requiredAdrs ? { requiredAdrs: input.requiredAdrs } : {}),
     });
     if (!reverse.ok) return { validation: reverse };
 

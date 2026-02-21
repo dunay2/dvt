@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.ts
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @baseline ADR-0005: Contract Formalization Tooling
+ * @decision Section 2.2 — Projection adapter contract separates read-model projection concerns from write-side event log
+ * @consequence Read-side rebuild/query semantics are standardized across projector implementations
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { TenantId, RunId, StepId, EventId } from '../types/contracts';
 
 export interface ProjectedState {

@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0005: Contract Formalization Tooling
+ * @decision Section 2 — Provider adapter lifecycle/status/signal operations are formalized as a stable contract
+ * @consequence Engine orchestration can target heterogeneous providers through a deterministic interface boundary
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type {
   EngineRunRef,
   PlanRef,

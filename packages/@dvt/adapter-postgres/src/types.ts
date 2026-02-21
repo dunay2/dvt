@@ -1,4 +1,14 @@
 /**
+ * @file packages/@dvt/adapter-postgres/src/types.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Section 2.1 — Event envelope/state types preserve append-only and monotonic sequence semantics
+ * @decision Section 2.2 — State-store and outbox contracts separate write-side transactions from read projections
+ * @consequence Adapter typing enforces deterministic event persistence and outbox lifecycle consistency
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+/**
  * NOTE (P2 type-drift assessment):
  *
  * This adapter intentionally keeps local storage/event types instead of importing

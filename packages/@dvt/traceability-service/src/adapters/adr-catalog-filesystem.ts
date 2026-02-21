@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/traceability-service/src/adapters/adr-catalog-filesystem.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @decision Section 4.4 — Resolve and validate Accepted ADR catalog from docs filesystem
+ * @consequence Traceability validation uses canonical ADR metadata independent of filename suffix variations
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -34,17 +42,19 @@ function parseFrontMatter(md: string): {
   }
 
   const statusLine = lines.find(
-    (l) => /^-?\s*\*\*Status\*\*:\s*/i.test(l) || /^Status:\s*/i.test(l)
+    (l) => /^-?\s*\*\*Status\*\*:\s*/i.test(l) || /^-?\s*Status:\s*/i.test(l)
   );
   const status = statusLine
     ? (statusLine.split(':').slice(1).join(':').trim().replace(/\s+/g, ' ') as AdrStatus)
     : undefined;
 
-  const dateLine = lines.find((l) => /^-?\s*\*\*Date\*\*:\s*/i.test(l) || /^Date:\s*/i.test(l));
+  const dateLine = lines.find(
+    (l) => /^-?\s*\*\*Date\*\*:\s*/i.test(l) || /^-?\s*Date:\s*/i.test(l)
+  );
   const date = dateLine ? dateLine.split(':').slice(1).join(':').trim() : undefined;
 
   const updatedLine = lines.find(
-    (l) => /^-?\s*\*\*Updated\*\*:\s*/i.test(l) || /^Updated:\s*/i.test(l)
+    (l) => /^-?\s*\*\*Updated\*\*:\s*/i.test(l) || /^-?\s*Updated:\s*/i.test(l)
   );
   const updated = updatedLine ? updatedLine.split(':').slice(1).join(':').trim() : undefined;
 

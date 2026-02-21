@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/security/planIntegrity.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — Plan integrity is validated using SHA-256 before execution
+ * @consequence Executions against altered plans are prevented and trust in plan references is reinforced
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { PlanRef } from '@dvt/contracts';
 
 import { sha256Hex } from '../utils/sha256.js';

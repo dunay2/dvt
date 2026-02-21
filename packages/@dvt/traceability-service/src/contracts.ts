@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/traceability-service/src/contracts.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @decision Section 4.3 — Define explicit contracts for scanner/validator/manifest/graph publication
+ * @decision Section 4.4 — Service interfaces enforce machine-checkable governance boundaries
+ * @consequence Traceability pipeline remains composable and testable through stable interfaces
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 import type {
   AdrRef,
   AdrStatus,
@@ -23,12 +32,12 @@ export interface ITraceValidator {
   validate(input: {
     traces: HeaderTrace[];
     adrCatalog: IAdrCatalog;
-    requiredAdrs?: string[];
+    requireDecision?: boolean;
+    failOnMissingVersion?: boolean;
   }): Promise<ValidationResult>;
   validateReverseCoverage(input: {
     traces: HeaderTrace[];
     acceptedAdrs: AdrRef[];
-    requiredAdrs?: string[];
   }): Promise<ValidationResult>;
 }
 
@@ -63,7 +72,8 @@ export interface ITraceabilityService {
     moduleName: string;
     modulePath: string;
     generated: string;
-    requiredAdrs?: string[];
     publishGraph?: boolean;
+    requireDecision?: boolean;
+    failOnMissingVersion?: boolean;
   }): Promise<{ validation: ValidationResult; manifest?: TraceabilityManifest }>;
 }

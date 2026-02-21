@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/TemporalClient.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
+ * @baseline ADR-0003: Execution Model
+ * @decision Section 3 — Centralize Temporal client connection lifecycle in a single manager
+ * @consequence Adapter interactions reuse a deterministic client handle and controlled connect/close semantics
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { Client, Connection } from '@temporalio/client';
 
 import type { TemporalAdapterConfig } from './config.js';

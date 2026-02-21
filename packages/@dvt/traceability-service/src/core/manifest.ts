@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/traceability-service/src/core/manifest.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @decision Section 4.3 — Generate machine-readable traceability manifests from parsed headers
+ * @consequence ADR-to-file mappings are emitted deterministically for CI and downstream tooling
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 import type { IAdrCatalog, IManifestBuilder } from '../contracts.js';
 import type { HeaderTrace, TraceabilityManifest } from '../types.js';
 

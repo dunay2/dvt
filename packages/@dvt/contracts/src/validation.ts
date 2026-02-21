@@ -1,3 +1,13 @@
+/**
+ * @file packages/@dvt/contracts/src/validation.ts
+ * @baseline ADR-0005: Contract Formalization Tooling
+ * @baseline ADR-0006: Contract Tooling Governance
+ * @decision Section 2 — Contract validation functions are centralized at runtime boundaries
+ * @decision Section 3 — Validation errors are normalized into deterministic API-safe payloads
+ * @consequence Invalid contract payloads fail fast with canonical diagnostics across modules
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { ZodError, type ZodType } from 'zod';
 
 import type { ExecuteStepRequest, ExecuteStepResult } from './adapters/IWorkflowEngineAdapter.v1';

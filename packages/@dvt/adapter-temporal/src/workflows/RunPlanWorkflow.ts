@@ -1,4 +1,14 @@
 /**
+ * @file packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
+ * @baseline ADR-0003: Execution Model
+ * @decision Section 5 — Workflow remains deterministic and delegates side effects to activities
+ * @decision Section 3 — Lifecycle signaling/query handling follows canonical run state transitions
+ * @consequence Temporal workflow execution is replay-safe and aligned with engine lifecycle contracts
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+/**
  * RunPlanWorkflow — Temporal interpreter workflow (deterministic).
  *
  * Runs inside a Temporal V8 sandbox.  Only imports from

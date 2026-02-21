@@ -1,0 +1,181 @@
+DVT+ Architectural Review: Executive Summary
+This is a B+-grade architecture with A-grade conceptual foundations but significant implementation gaps. The system is 40-50% complete relative to its documented vision, with critical contradictions between ADRs, normative contracts, and implementation that must be resolved before production readiness.
+
+1. Conceptual Soundness: What's Working
+The append authority model (ADR-0010, ADR-0004) is genuinely excellent. The separation between producer (emittedAt) and store (runSeq/persistedAt) is textbook distributed systems hygiene. The two-phase RunEventWrite/RunEventRecord split is correct and well-reasoned.
+
+Three-layer transition enforcement (RunEvents.v2.0.1 §5.3) — producer guard + optional store validation + mandatory projector validation — is the right defense-in-depth strategy. Layer 3 at projector level ensures corrupt events never poison derived state.
+
+Idempotency key formula (SHA256 over ordered pipe-delimited fields) is precise and enforceable. Excluding engineAttemptId while including planId+planVersion is correct — prevents collisions across plan versions, separates domain retries from infrastructure retries.
+
+bootstrapRunTx (ADR-0013) solving metadata-before-events race demonstrates architectural maturity.
+
+2. Critical Contradictions (Must Fix Before Ship)
+Contradiction	Severity	Root Cause	Fix Required
+ADR-0012 not implemented — Engine fetches plan bytes	CRITICAL	ADR written to fix this; fix never applied	Implement ADR-0012: move fetch+validate to adapter, remove IPlanFetcher from engine
+IProviderAdapter.startRun contract mismatch — 3 docs contradict	CRITICAL	ADR-0012 vs ADR-0014 vs implementation	Adapter must accept PlanRef, not ExecutionPlan; engine must not fetch bytes
+ADR-0010 idempotency formula vs v2.0.1	CRITICAL	Payload-inclusion vs fixed field set	Deprecate ADR-0010 §4; mark v2.0.1 as superseding
+saveProviderRef after startRun — orphaned run window	HIGH	Two-phase write not atomic	Merge provider refs into bootstrapRunTx input
+getRunStatus calls provider synchronously	HIGH	ADR-0015 not implemented	Implement event-log-only read path
+Signal idempotency keys out of contract	HIGH	No normative contract for signals	Define SignalEvent idempotency derivation; align implementation
+logicalAttemptId hardcoded to 1	HIGH	ADR-0016 not implemented	Adapters must own and track logicalAttemptId
+3. Missing Layers: The Execution Planning Gap
+The Execution Planning layer does not exist. No IExecutionPlanner, no DAGAnalyzer, no CostImpactEstimator, no PartialExecResolver. The product principle assumes a three-tier model (planner → engine → state), but only two tiers (engine → state) are implemented.
+
+Impact: The system assumes plans are computed elsewhere and stored at URIs. This is acceptable short-term, but:
+
+requiresCapabilities validation throws on any non-empty array (capability rejection, not matching)
+
+fallbackBehavior: 'emulate' | 'degrade' is defined but unimplemented
+
+The planning layer as architected (5 subsystems) is over-scoped for current reality
+
+4. State & Metadata Layer: Event Sourcing With Leaks
+Postgres is sufficient for event log — ACID, advisory locks, unique constraints match requirements.
+
+But: IRunStateStore has two versions (normative v2.0.md vs implemented) that don't align. projectSnapshot() is missing from implemented interface; snapshots go stale immediately.
+
+Clean architecture violation: saveProviderRef is a mutable update outside event sourcing. Provider refs don't participate in replay model — replaying events won't reproduce full state. Provider refs should either be:
+
+Part of bootstrapRunTx input (requires adapter to return them synchronously — it does), OR
+
+Stored as ProviderRefAssigned events
+
+5. Engine Abstraction: Minimal Interface, Incomplete Implementation
+IWorkflowEngine is minimal (4 methods) — correct.
+
+But:
+
+startRun returns EngineRunRef (provider-specific) — bleeds topology into public contract. Should be opaque RunHandle.
+
+signal partially implemented — RETRY_STEP/RETRY_RUN throw SignalNotImplementedError. Interface promises unimplemented capability.
+
+No healthCheck on interface, yet exposed publicly — couples callers to concrete class
+
+Temporal-first is wise — deterministic replay aligns with event sourcing. The UUID v4 constraint (must use workflow-safe helper) shows someone thought through determinism.
+
+Conductor parity is unrealistic with current adapter model:
+
+cancelRun semantics differ (state transition vs hard interrupt)
+
+RunCancelled event premature for async cancellation
+
+logicalAttemptId not natively tracked — requires explicit state management in Conductor workflows
+
+6. Plugin System: Named But Empty
+IPluginRuntime is a named port with zero implementation. No sandbox, no registry, no manifest format. The "Plugin & Extensions" capability cannot be delivered until this exists.
+
+Isolation choice: vm2 has documented sandbox escapes — eliminate as option. Worker threads correct for Node.js in-process isolation; separate process for strong isolation with higher latency.
+
+7. What's Overbuilt
+Overbuilt Element	Why
+Duplicate boolean methods in WorkflowEngine (4 methods for capability/adapter checks)	Signals class growing without discipline
+V2 architecture diagram (10 subgraphs, 90 nodes, 4 flows)	Aspirational marketing, not development plan — creates false confidence
+Contract document proliferation (6+ normative docs, 14 ADRs, TypeScript interfaces)	3+ contradictions; documents outpacing implementation
+In-process circuit breaker	Useless in multi-instance deployments
+8. What's Underbuilt
+Underbuilt Element	Risk
+No contract migration strategy	v1→v2 event streams undefined; no version negotiation protocol
+No rollback guarantee	Idempotency formula changes break in-flight runs
+No concurrency model for startRun	Race between ensureRunDoesNotExist and bootstrapRunTx
+No distributed lock/lease on run execution	Crash recovery can't recover logicalAttemptId
+No backpressure	Outbox grows if event bus slow; no defined threshold behavior
+No run retention policy	Append-only log unbounded growth
+No SLA definition	RunQueued→RunStarted timeout undefined
+saveProviderRef distributed transaction	Orphaned runs if second write fails
+9. Scalability Outlook (3-Year Horizon)
+Assumption: 1000+ tenants, thousands concurrent runs, 1000+ node dbt projects
+
+Constraint	Risk	Mitigation
+Event log growth	200M events per full cycle; outbox doubles writes	Partition by tenantId+time; paginate listEvents
+Full-replay fallback	O(event count) on every cache miss	Snapshots must be maintained aggressively
+runSeq contention	Parallel steps serialize through sequence	Batch inserts with multiple NEXTVAL calls
+Multi-engine routing	In-memory Map fails in multi-instance	Configuration service for adapter registry
+Snowflake cost attribution	Synchronous per-run queries won't scale	Batch ingestion pipeline, not synchronous
+Single points of failure	Postgres run_events = single source of truth	Document replication/failover strategy
+10. Strategic Recommendations
+3 Structural Changes (Must Do)
+Implement ADR-0012 immediately
+
+Remove IPlanFetcher from WorkflowEngine.deps
+
+Change IProviderAdapter.startRun(plan: ExecutionPlan) to startRun(planRef: PlanRef)
+
+Create @dvt/plan-verifier with hash validation, schema parsing
+
+Until done, trust boundary is incorrect and normative contract not implemented
+
+Make saveProviderRef part of bootstrapRunTx
+
+Adapter returns provider refs synchronously (it does) — include in bootstrap input
+
+Eliminate orphaned-run window
+
+Implement ADR-0015: remove synchronous provider call from getRunStatus
+
+Default path returns projected state from event log only
+
+Create separate enrichRunStatus(engineRunRef) that calls provider and may fail
+
+Removes 30s timeout exposure from every status query
+
+3 Clarifications Needed
+Resolve ADR-0010 / v2.0.1 idempotency conflict
+
+Mark ADR-0010 §4 superseded by RunEvents.v2.0.1
+
+Implementation follows v2.0.1 with golden vectors — make official
+
+Define RunCancelled ownership
+
+ADR-0011 defines RunStarted ownership (adapter)
+
+No equivalent for RunCancelled — engine currently emits after adapter.cancelRun() returns
+
+For async cancellation, timing is wrong
+
+Define logicalAttemptId increment for retry signals
+
+ADR-0016 defers to Phase 2
+
+Until Phase 2, logicalAttemptId=1 for all events — retry signals produce identical keys, deduplicated as if never happened
+
+3 Things to Freeze
+Normative idempotency formula (v2.0.1) — correct, tested, implemented. Any change breaks all in-flight event logs.
+
+bootstrapRunTx atomicity model — run creation must atomically write metadata + first events + outbox. No paths creating metadata without events.
+
+Three-layer transition enforcement — projector-level enforcement (Layer 3) is mandatory defense. Don't make store-level validation mandatory — creates contention.
+
+3 Things to Delay
+Snowflake cost attribution — until production runs generate real query history, any model is speculative. Build batch ingestion later.
+
+Full UI Runtime Model — depends on dbt artifact pipeline and Execution Planning layer, neither exists. Building React Flow against nonexistent backends creates abandoned code.
+
+Multi-engine abstraction beyond Temporal — Conductor semantic differences (cancel timing, logicalAttemptId tracking) are non-trivial. Don't invest until Temporal adapter production-verified.
+
+Final Assessment
+Architectural maturity: 6/10
+
+Conceptual foundations: 9/10 (append authority, idempotency, transition enforcement)
+
+Implementation fidelity: 4/10 (critical ADRs unimplemented, contradictions accumulating)
+
+Operational realism: 4/10 (will not operate as described under load without 5-6 additional engineering tasks)
+
+Extensibility: 4/10 (plugin system absent, execution planner absent, capability check throws)
+
+Timeline to production readiness: 6-9 months with dedicated team focusing on:
+
+ADR-0012 implementation (2 months)
+
+ADR-0015 implementation (1 month)
+
+saveProviderRef fix + event sourcing integrity (1 month)
+
+Execution Planning Layer v1 (3 months)
+
+Operational scaffolding (retention, backpressure, SLAs) (2 months)
+
+Verdict: The architecture is fundamentally sound but 40-50% complete relative to documented vision. The append authority model is worth preserving; the execution planning layer must be rebuilt from scratch; the plugin system is entirely missing. Current implementation is not production-ready, but the foundation is strong enough to build upon.
+

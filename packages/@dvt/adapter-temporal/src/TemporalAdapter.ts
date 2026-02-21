@@ -1,3 +1,13 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
+ * @baseline ADR-0003: Execution Model
+ * @decision Section 3 — Provider adapter delegates run lifecycle to Temporal workflow primitives
+ * @decision Section 5 — Status reconstruction uses persisted events + projector for deterministic snapshots
+ * @consequence Temporal provider operations remain deterministic and aligned with engine lifecycle semantics
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type {
   EngineRunRef,
   PlanRef,

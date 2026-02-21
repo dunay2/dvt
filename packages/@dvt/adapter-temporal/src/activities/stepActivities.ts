@@ -1,3 +1,13 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Section 5 — All workflow side effects are mediated through deterministic activity boundaries
+ * @decision Section 2.1 — Emitted events preserve idempotency and append-only state-store semantics
+ * @consequence Activity execution keeps lifecycle/event persistence deterministic and replay-compatible
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { TextDecoder } from 'node:util';
 
 import type { PlanRef, RunContext } from '@dvt/contracts';

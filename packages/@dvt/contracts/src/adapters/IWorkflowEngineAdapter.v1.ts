@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0005: Contract Formalization Tooling
+ * @decision Section 2 — Workflow engine run/step lifecycle operations are formalized as a versioned adapter contract
+ * @consequence Engine implementations must expose deterministic run control and step execution semantics
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 export interface ExecuteStepRequest {
   tenantId: string;
   planId: string;
