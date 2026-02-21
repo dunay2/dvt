@@ -7,5 +7,6 @@
     { "path": "./packages/@dvt/adapter-postgres" },
     { "path": "./packages/@dvt/contracts" },
     { "path": "./packages/@dvt/cli" }
-  ]
+  ],
+  "include": ["packages/**/src/**/*.ts", "packages/**/index.ts"]
 }
