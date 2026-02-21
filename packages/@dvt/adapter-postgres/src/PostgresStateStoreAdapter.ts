@@ -1,3 +1,13 @@
+/**
+ * @file packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @baseline ADR-0003: Execution Model
+ * @decision Section 2.1 — Append-only event persistence with monotonic sequence semantics
+ * @decision Section 2.2 — Read model snapshot projection derived from persisted event stream
+ * @consequence PostgreSQL adapter preserves deterministic replay and transactional state consistency
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { Pool, type PoolClient } from 'pg';
 
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
@@ -193,8 +203,8 @@ export interface PostgresAdapterConfig {
 }
 
 /**
- * Foundation adapter for issue #6.
- *
+ * Foundation adapter for issue #6 (Postgres state store implementation).
+
  * SQL-backed implementation for run metadata, run events and outbox.
  *
  * - run metadata and event append are persisted in PostgreSQL
