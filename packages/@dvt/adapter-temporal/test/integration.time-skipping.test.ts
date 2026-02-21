@@ -17,12 +17,22 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { OutboxRecord, EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
 import type { ActivityDeps } from '../src/activities/stepActivities.js';
 import { loadTemporalAdapterConfig, TemporalAdapter, TemporalWorkerHost } from '../src/index.js';
+
+// Local outbox record type for test doubles — mirrors engine's OutboxRecord shape.
+interface OutboxRecord {
+  id: string;
+  createdAt: string;
+  idempotencyKey: string;
+  payload: unknown;
+  attempts: number;
+  lastError?: string;
+}
 
 // ============================================================================
 // Constants
