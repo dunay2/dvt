@@ -189,7 +189,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       );
       return runRef;
     } catch (error) {
-      await this.handleStartRunError(error, validatedContext, metricTags);
+      return this.handleStartRunError(error, validatedContext, metricTags);
     }
   }
 

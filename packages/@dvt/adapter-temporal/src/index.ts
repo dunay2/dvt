@@ -8,7 +8,7 @@
  * @date 2026-02-21
  */
 
-export type { TemporalVersioning } from './versioning.js';
+export { ADAPTER_SUPPORTED_SCHEMA } from './versioning.js';
 export type { TemporalAdapterConfig } from './config.js';
 export { loadTemporalAdapterConfig, validateTemporalAdapterConfig } from './config.js';
 

@@ -7,7 +7,13 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type { EngineRunRef, RunContext, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
+import type {
+  EngineRunRef,
+  PlanRef,
+  RunContext,
+  RunStatusSnapshot,
+  SignalRequest,
+} from '@dvt/contracts';
 
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import type { EventType, RunEventInput, RunMetadata } from '../../contracts/runEvents.js';
@@ -29,9 +35,19 @@ export class MockAdapter implements IProviderAdapter {
 
   constructor(private readonly deps: MockAdapterDeps) {}
 
-  async startRun(plan: ExecutionPlan, ctx: RunContext): Promise<EngineRunRef> {
+  async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
     const metadata = await this.deps.stateStore.getRunMetadataByRunId(ctx.runId);
     if (!metadata) throw new Error(`RUN_NOT_FOUND: ${ctx.runId}`);
+
+    // Mock adapter synthesizes a minimal execution plan from PlanRef.
+    const plan: ExecutionPlan = {
+      metadata: {
+        planId: planRef.planId,
+        planVersion: planRef.planVersion,
+        schemaVersion: planRef.schemaVersion,
+      },
+      steps: [],
+    };
 
     await this.emitRunEvent(metadata, 'RunStarted');
 

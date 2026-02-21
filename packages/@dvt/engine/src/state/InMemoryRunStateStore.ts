@@ -53,6 +53,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
       runId: input.metadata.runId,
       status: 'PENDING',
       paused: false,
+      cancelling: false,
       steps: {},
     });
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
@@ -90,6 +91,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
         runId,
         status: 'PENDING',
         paused: false,
+        cancelling: false,
         steps: {},
       };
       for (const e of appended) {

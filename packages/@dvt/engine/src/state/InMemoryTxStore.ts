@@ -66,6 +66,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
       runId: input.metadata.runId,
       status: 'PENDING',
       paused: false,
+      cancelling: false,
       steps: {},
     });
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
@@ -107,6 +108,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
         runId,
         status: 'PENDING',
         paused: false,
+        cancelling: false,
         steps: {},
       };
       for (const e of appended) {
