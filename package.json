@@ -9,7 +9,7 @@
     "lint": "eslint \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" --max-warnings 0",
     "lint:fix": "eslint \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" --fix",
     "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"README.md\" --ignore-path .markdownlintignore",
-    "lint:determinism": "eslint \"packages/engine/src/**/*.ts\" \"packages/adapter-temporal/src/**/*.ts\" --max-warnings 0",
+    "lint:determinism": "eslint \"packages/@dvt/engine/src/**/*.ts\" \"packages/@dvt/adapter-temporal/src/**/*.ts\" --max-warnings 0",
     "format": "prettier --write '**/*.{ts,tsx,js,jsx,json,md,yml,yaml}'",
     "format:check": "prettier --check '**/*.{ts,tsx,js,jsx,json,md,yml,yaml}'",
     "type-check": "tsc --noEmit",
@@ -61,11 +61,11 @@
     "precommit": "lint-staged && pnpm lint:determinism"
   },
   "lint-staged": {
-    "packages/*/src/**/*.{ts,tsx}": [
+    "packages/@dvt/*/src/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
-    "packages/*/test/**/*.{ts,tsx}": [
+    "packages/@dvt/*/test/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],

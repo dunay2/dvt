@@ -15,7 +15,7 @@ module.exports = [
     files: ['packages/**/*.{ts,tsx}', 'apps/*/src/**/*.{ts,tsx}'],
     ignores: [
       'packages/frontend/**',
-      'packages/contracts/vitest.config.ts',
+      'packages/@dvt/contracts/vitest.config.ts',
       'docs/**',
       'dist/**',
       'coverage/**',
@@ -116,16 +116,25 @@ module.exports = [
 
   // Project-specific parserOptions to avoid TS program graph ambiguity
   {
-    files: ['packages/engine/src/**/*.ts', 'packages/engine/vitest.config.ts'],
+    files: ['packages/@dvt/engine/src/**/*.ts', 'packages/@dvt/engine/vitest.config.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/engine/tsconfig.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { project: ['packages/@dvt/engine/tsconfig.eslint.json'], tsconfigRootDir: __dirname },
     },
   },
   {
-    files: ['packages/engine/test/**/*.ts'],
+    files: ['packages/@dvt/engine/test/**/*.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/engine/tsconfig.test.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { project: ['packages/@dvt/engine/tsconfig.test.eslint.json'], tsconfigRootDir: __dirname },
       globals: { TextEncoder: 'readonly', TextDecoder: 'readonly' },
+    },
+  },
+  {
+    files: ['packages/@dvt/adapter-temporal/src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['packages/@dvt/adapter-temporal/tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
     },
   },
   {
@@ -164,12 +173,12 @@ module.exports = [
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Determinism rules for engine source (packages/engine/src/**)
+  // Determinism rules for engine source (packages/@dvt/engine/src/**)
   // Forbidden: Date.now(), new Date(), Math.random(), process.env
   // See: CLAUDE.md "Determinism Rules" and docs/architecture/engine/dev/determinism-tooling.md
   // ──────────────────────────────────────────────────────────────────────────
   {
-    files: ['packages/engine/src/**/*.ts'],
+    files: ['packages/@dvt/engine/src/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -212,7 +221,7 @@ module.exports = [
   // See: https://docs.temporal.io/workflows#deterministic-constraints
   // ──────────────────────────────────────────────────────────────────────────
   {
-    files: ['packages/adapter-temporal/src/workflows/**/*.ts'],
+    files: ['packages/@dvt/adapter-temporal/src/workflows/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -331,7 +340,7 @@ module.exports = [
       'dist/',
       'coverage/',
       'node_modules/',
-      'packages/engine/legacy-top-level-engine/**',
+      'packages/@dvt/engine/legacy-top-level-engine/**',
       'packages/adapters-legacy/**',
       '**/*.d.ts',
       '.github/',
