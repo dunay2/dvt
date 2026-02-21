@@ -9,6 +9,14 @@ type AdrCatalogConfig = {
   pattern: RegExp; // e.g. /^ADR-\d+\.md$/
 };
 
+const ADR_NUMBER_RE = /(ADR-\d+)/i;
+
+function extractAdrNumber(fileName: string): string | null {
+  const match = fileName.match(ADR_NUMBER_RE);
+  if (!match?.[1]) return null;
+  return match[1].toUpperCase();
+}
+
 function parseFrontMatter(md: string): {
   status?: AdrStatus;
   title?: string;
@@ -51,14 +59,37 @@ function parseFrontMatter(md: string): {
 export class FileSystemAdrCatalog implements IAdrCatalog {
   constructor(private readonly cfg: AdrCatalogConfig) {}
 
+  private async resolveAdrPath(number: string): Promise<string | null> {
+    const normalized = number.toUpperCase();
+    const direct = path.join(this.cfg.adrDir, `${normalized}.md`);
+    try {
+      await fs.access(direct);
+      return direct;
+    } catch {
+      // fallback to pattern-based lookup for repos that suffix ADR filenames.
+    }
+
+    const entries = await fs.readdir(this.cfg.adrDir, { withFileTypes: true });
+    for (const e of entries) {
+      if (!e.isFile()) continue;
+      if (!this.cfg.pattern.test(e.name)) continue;
+      const fileNumber = extractAdrNumber(e.name);
+      if (!fileNumber) continue;
+      if (fileNumber === normalized) {
+        return path.join(this.cfg.adrDir, e.name);
+      }
+    }
+    return null;
+  }
+
   async getAdr(number: string): Promise<AdrRef | null> {
-    const file = `${number}.md`;
-    const p = path.join(this.cfg.adrDir, file);
+    const p = await this.resolveAdrPath(number);
+    if (!p) return null;
     try {
       const md = await fs.readFile(p, 'utf-8');
       const meta = parseFrontMatter(md);
       const adr: AdrRef = {
-        number,
+        number: number.toUpperCase(),
         sourcePath: p.replace(/\\/g, '/'),
       };
       if (meta.title) adr.title = meta.title;
@@ -77,7 +108,8 @@ export class FileSystemAdrCatalog implements IAdrCatalog {
     for (const e of entries) {
       if (!e.isFile()) continue;
       if (!this.cfg.pattern.test(e.name)) continue;
-      const number = e.name.replace(/\.md$/, '');
+      const number = extractAdrNumber(e.name);
+      if (!number) continue;
       const adr = await this.getAdr(number);
       if (!adr) continue;
       if (status && adr.status !== status) continue;

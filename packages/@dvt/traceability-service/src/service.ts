@@ -29,6 +29,8 @@ export class TraceabilityService implements ITraceabilityService {
     moduleName: string;
     modulePath: string;
     generated: string;
+    requiredAdrs?: string[];
+    publishGraph?: boolean;
   }): Promise<{ validation: ValidationResult; manifest?: TraceabilityManifest }> {
     const traces = await this.deps.scanner.scan({
       repoRoot: input.repoRoot,
@@ -39,6 +41,7 @@ export class TraceabilityService implements ITraceabilityService {
     const validation = await this.deps.validator.validate({
       traces,
       adrCatalog: this.deps.adrCatalog,
+      ...(input.requiredAdrs ? { requiredAdrs: input.requiredAdrs } : {}),
     });
     if (!validation.ok) return { validation };
 
@@ -46,6 +49,7 @@ export class TraceabilityService implements ITraceabilityService {
     const reverse = await this.deps.validator.validateReverseCoverage({
       traces,
       acceptedAdrs: accepted,
+      ...(input.requiredAdrs ? { requiredAdrs: input.requiredAdrs } : {}),
     });
     if (!reverse.ok) return { validation: reverse };
 
@@ -58,12 +62,14 @@ export class TraceabilityService implements ITraceabilityService {
       adrCatalog: this.deps.adrCatalog,
     });
 
-    await this.deps.graphPublisher.publish({
-      moduleName: input.moduleName,
-      modulePath: input.modulePath,
-      traces,
-      adrCatalog: this.deps.adrCatalog,
-    });
+    if (input.publishGraph !== false) {
+      await this.deps.graphPublisher.publish({
+        moduleName: input.moduleName,
+        modulePath: input.modulePath,
+        traces,
+        adrCatalog: this.deps.adrCatalog,
+      });
+    }
 
     return { validation: { ok: true, issues: [] }, manifest };
   }

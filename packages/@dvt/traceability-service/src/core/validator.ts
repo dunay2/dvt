@@ -9,8 +9,10 @@ export class TraceValidator implements ITraceValidator {
   async validate(input: {
     traces: HeaderTrace[];
     adrCatalog: IAdrCatalog;
+    requiredAdrs?: string[];
   }): Promise<ValidationResult> {
     const issues: ValidationIssue[] = [];
+    const required = new Set((input.requiredAdrs ?? []).map((x) => x.toUpperCase()));
 
     for (const t of input.traces) {
       if (!t.baselines || t.baselines.length === 0) {
@@ -24,6 +26,9 @@ export class TraceValidator implements ITraceValidator {
       }
 
       for (const b of t.baselines) {
+        if (required.size > 0 && !required.has(b.number.toUpperCase())) {
+          continue;
+        }
         const adr = await input.adrCatalog.getAdr(b.number);
         if (!adr) {
           issues.push({
@@ -53,11 +58,17 @@ export class TraceValidator implements ITraceValidator {
   async validateReverseCoverage(input: {
     traces: HeaderTrace[];
     acceptedAdrs: AdrRef[];
+    requiredAdrs?: string[];
   }): Promise<ValidationResult> {
     const implemented = new Set<string>();
     for (const t of input.traces) for (const b of t.baselines) implemented.add(b.number);
 
-    const orphaned = input.acceptedAdrs.filter((a) => !implemented.has(a.number));
+    const target =
+      input.requiredAdrs && input.requiredAdrs.length > 0
+        ? input.acceptedAdrs.filter((a) => input.requiredAdrs?.includes(a.number))
+        : input.acceptedAdrs;
+
+    const orphaned = target.filter((a) => !implemented.has(a.number));
     if (orphaned.length === 0) return ok();
 
     const issues: ValidationIssue[] = orphaned.map((a) => ({

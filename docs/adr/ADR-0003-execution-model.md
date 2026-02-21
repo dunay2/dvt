@@ -79,17 +79,17 @@ NOT define DVT+ semantics.
 graph TD
     subgraph "Domain Layer (DVT+ Sovereignty)"
         A[ADR-0003: Execution Model Sovereignty]
-        A --> B[Defines lifecycle states<br/>PENDING, RUNNING, COMPLETED, etc.]
-        A --> C[Defines valid transitions<br/>RunQueued → RunStarted → ...]
-        A --> D[Defines execution semantics<br/>What does 'start' mean?]
-        A --> E[Defines invariants<br/>Step order, retry policies]
+        A --> B[Defines lifecycle states<br/>PENDING, RUNNING, COMPLETED]
+        A --> C[Defines valid transitions<br/>RunQueued → RunStarted → RunCompleted]
+        A --> D[Defines execution semantics<br/>Meaning of lifecycle events]
+        A --> E[Defines invariants<br/>Retry, ordering, idempotency rules]
     end
 
-    subgraph "Engine Layer (Orchestration)"
+    subgraph "Engine Layer (Orchestration Boundary)"
         F[WorkflowEngine]
-        F --> G[Emits RunQueued<br/>(domain event)]
-        F --> H[Validates PlanRef metadata<br/>URI, schema version]
-        F --> I[Forwards to adapter<br/>with full context]
+        F --> G[Emits domain events<br/>RunQueued, StepStarted]
+        F --> H[Validates metadata<br/>PlanRef, schema version]
+        F --> I[Delegates execution to adapter]
     end
 
     subgraph "Adapter Layer (Infrastructure Mapping)"
@@ -97,62 +97,37 @@ graph TD
         K[ConductorAdapter]
         L[FutureAdapter]
 
-        J --> M[Maps domain semantics to Temporal:<br/>- Fetch plan bytes<br/>- Validate SHA256<br/>- Start workflow<br/>- Emit RunStarted]
-        K --> N[Maps domain semantics to Conductor:<br/>- Fetch plan bytes<br/>- Validate SHA256<br/>- Start workflow<br/>- Emit RunStarted]
+        J --> M[Maps to Temporal primitives<br/>Workflow + Activities]
+        K --> N[Maps to Conductor primitives<br/>Workflow + Tasks]
     end
 
-    subgraph "Execution Layer (Engine-Specific)"
-        O[Temporal Workflow Runtime]
-        P[Conductor Workflow Runtime]
-
-        O --> Q[Executes activities<br/>Handles retries<br/>Manages timeouts]
-        P --> R[Executes tasks<br/>Handles retries<br/>Manages timeouts]
+    subgraph "Execution Runtime (Engine Specific)"
+        O[Temporal Runtime]
+        P[Conductor Runtime]
     end
 
     subgraph "Event Store (Source of Truth)"
         S[(PostgreSQL)]
-        S --> T[Append-only event log<br/>RunEventPersisted]
-        S --> U[Monotonic runSeq<br/>per runId]
-        S --> V[Idempotency via<br/>(runId, idempotencyKey)]
+        S --> T[Append-only log<br/>RunEventPersisted]
+        S --> U[Monotonic runSeq]
+        S --> V[Idempotency via keys]
     end
 
-    subgraph "Projection Layer (Read Models)"
+    subgraph "Projection Layer"
         W[Projector]
-        W --> X[Rebuilds state from events]
-        W --> Y[Enforces transition invariants]
-        W --> Z[Provides snapshots<br/>for performance]
+        W --> X[Rebuilds state]
+        W --> Y[Enforces invariants]
+        W --> Z[Produces read models]
     end
 
     A -.-> F
-    A -.-> J
-    A -.-> K
-
-    F --> I
-    I --> J
-    I --> K
-
+    F --> J
+    F --> K
     J --> O
     K --> P
-
-    J --> S
-    K --> S
     O --> S
     P --> S
-
     S --> W
-    W --> X
-    W --> Y
-    W --> Z
-
-    style A fill:#f9f,stroke:#333,stroke-width:4px
-    style F fill:#bbf,stroke:#333
-    style J fill:#bfb,stroke:#333
-    style K fill:#bfb,stroke:#333
-    style L fill:#bfb,stroke:#333,stroke-dasharray: 5 5
-    style O fill:#fbb,stroke:#333
-    style P fill:#fbb,stroke:#333
-    style S fill:#ff9,stroke:#333
-    style W fill:#9cf,stroke:#333
 ```
 
 ---
@@ -161,38 +136,14 @@ graph TD
 
 ```mermaid
 graph LR
-    subgraph "Domain (What)"
-        A[Defines Semantics<br/>States, Transitions, Invariants]
-    end
-
-    subgraph "Engine (When)"
-        B[Orchestrates Flow<br/>Emits Domain Events]
-    end
-
-    subgraph "Adapter (How)"
-        C[Maps to Engine APIs<br/>Temporal, Conductor, etc.]
-    end
-
-    subgraph "Execution (Where)"
-        D[Runs Workflows<br/>Engine-Specific Runtime]
-    end
-
-    subgraph "Event Store (Facts)"
-        E[Persists Events<br/>Append-Only Log]
-    end
-
-    subgraph "Projection (Read)"
-        F[Rebuilds State<br/>From Event Stream]
-    end
+    A[Domain<br/>Defines Semantics]
+    B[Engine<br/>Orchestrates]
+    C[Adapter<br/>Maps to APIs]
+    D[Execution Runtime]
+    E[Event Store]
+    F[Projection / Read Model]
 
     A --> B --> C --> D --> E --> F --> A
-
-    style A fill:#f9f,stroke:#333,stroke-width:4px
-    style B fill:#bbf,stroke:#333
-    style C fill:#bfb,stroke:#333
-    style D fill:#fbb,stroke:#333
-    style E fill:#ff9,stroke:#333
-    style F fill:#9cf,stroke:#333
 ```
 
 ---
@@ -200,7 +151,7 @@ graph LR
 ## Code Ownership Example
 
 ```typescript
-// ❌ BAD: Engine behavior defines semantics
+// ❌ Anti-pattern: Engine defines behavior by I/O side effects
 class Engine_OLD {
   async startRun(planRef: PlanRef, ctx: RunContext) {
     const bytes = await this.planFetcher.fetch(planRef.uri);
@@ -208,10 +159,10 @@ class Engine_OLD {
   }
 }
 
-// ✅ GOOD: Domain defines semantics, engine orchestrates
+// ✅ Correct pattern: Domain defines semantics, adapter handles infrastructure
 class Engine {
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<RunRef> {
-    this.validateMetadata(planRef);
+    this.validateMetadata(planRef); // domain rule
     return this.adapter.executePlan(planRef, ctx);
   }
 }
@@ -229,11 +180,23 @@ class TemporalAdapter implements IWorkflowAdapter {
 
 ---
 
+## Additional Commentary
+
+- The **Engine does not fetch plans** --- that is infrastructure.
+- The **Planner defines ordering and retry policy** --- not the
+  engine.
+- The **State Store is the single source of truth** --- not Temporal
+  nor Conductor.
+- Engine adapters must remain stateless regarding business semantics.
+- Replacing Temporal with Conductor must not alter domain contracts.
+
+---
+
 ## References
 
-- ADR-0004-event-sourcing-strategy.md\
-- ADR-0011-run-started-ownership.md\
-- ADR-0012-plan-integrity-ownership.md\
-- ADR-0010-run-event-envelope-split.md\
-- Temporal docs: https://docs.temporal.io/\
+- [`ADR-0004-event-sourcing-strategy.md`](./ADR-0004-event-sourcing-strategy.md)
+- Temporal docs: https://docs.temporal.io/
 - Conductor docs: https://conductor.netflix.com/
+- ADR-0011-run-started-ownership.md
+- ADR-0012-plan-integrity-ownership.md
+- ADR-0010-run-event-envelope-split.md

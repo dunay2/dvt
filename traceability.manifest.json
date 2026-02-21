@@ -1,0 +1,59 @@
+{
+  "component": "@dvt/traceability-service",
+  "version": "0.1.0",
+  "generated": "2026-02-21",
+  "repo": {
+    "sha": "local"
+  },
+  "baseline_adrs": [
+    {
+      "number": "ADR-0000",
+      "decisions": [
+        "Section 4.3 — Manifest Generation",
+        "Section 4.4 — Reverse Enforcement",
+        "Section 4.5 — Architecture Graph Generation + Publication"
+      ],
+      "implemented_by": ["packages/@dvt/traceability-service/src/cli.ts"],
+      "title": "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+    },
+    {
+      "number": "ADR-0001",
+      "decisions": [
+        "Section 2 — Build precondition mandatory",
+        "Section 3 — Single teardown owner",
+        "Section 4 — Prefer environment-provided client",
+        "Section 5 — Time-skipping semantics"
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+      ],
+      "title": "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)"
+    },
+    {
+      "number": "ADR-0010",
+      "decisions": [
+        "Section 2 — Build precondition mandatory",
+        "Section 3 — Single teardown owner",
+        "Section 4 — Prefer environment-provided client",
+        "Section 5 — Time-skipping semantics"
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+      ],
+      "title": "ADR-0010 — Run Event Envelope Split, Idempotency, and Runtime Integrity Governance (Comprehensive Version)"
+    },
+    {
+      "number": "ADR-0011",
+      "decisions": [
+        "Section 2 — Build precondition mandatory",
+        "Section 3 — Single teardown owner",
+        "Section 4 — Prefer environment-provided client",
+        "Section 5 — Time-skipping semantics"
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+      ],
+      "title": "ADR-0011 — RunStarted Ownership"
+    }
+  ]
+}

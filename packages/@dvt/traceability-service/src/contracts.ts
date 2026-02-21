@@ -20,10 +20,15 @@ export interface ITraceHeaderScanner {
 }
 
 export interface ITraceValidator {
-  validate(input: { traces: HeaderTrace[]; adrCatalog: IAdrCatalog }): Promise<ValidationResult>;
+  validate(input: {
+    traces: HeaderTrace[];
+    adrCatalog: IAdrCatalog;
+    requiredAdrs?: string[];
+  }): Promise<ValidationResult>;
   validateReverseCoverage(input: {
     traces: HeaderTrace[];
     acceptedAdrs: AdrRef[];
+    requiredAdrs?: string[];
   }): Promise<ValidationResult>;
 }
 
@@ -58,5 +63,7 @@ export interface ITraceabilityService {
     moduleName: string;
     modulePath: string;
     generated: string;
+    requiredAdrs?: string[];
+    publishGraph?: boolean;
   }): Promise<{ validation: ValidationResult; manifest?: TraceabilityManifest }>;
 }

@@ -40,6 +40,9 @@ jobs:
               - 'commitlint.config.cjs'
               - '.prettierrc.json'
               - 'scripts/**'
+              - 'packages/@dvt/traceability-service/**'
+              - 'traceability.config.json'
+              - 'docs/adr/**'
             api:
               - 'apps/api/**'
             web:
@@ -142,6 +145,9 @@ jobs:
 
       - name: Run changed-file checks
         run: node scripts/check-changed.cjs
+
+      - name: ADR-0000 traceability gate
+        run: pnpm traceability:adr0
 
   workspace-ci:
     name: Workspace CI (${{ matrix.name }})

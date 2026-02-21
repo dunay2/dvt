@@ -1,9 +1,20 @@
+/**
+ * @file packages/@dvt/traceability-service/src/cli.ts
+ * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+ * @decision Section 4.3 — Manifest Generation
+ * @decision Section 4.4 — Reverse Enforcement
+ * @decision Section 4.5 — Architecture Graph Generation + Publication
+ * @consequence ADR governance can be executed in CI with or without live Neo4j publication
+ * @version 0.1.0
+ * @date 2026-02-21
+ */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import { FileSystemAdrCatalog } from './adapters/adr-catalog-filesystem.js';
 import { Neo4jGraphPublisher } from './adapters/graph-publisher-neo4j.js';
 import { GlobHeaderScanner } from './adapters/header-scanner-glob.js';
+import type { IGraphPublisher } from './contracts.js';
 import { ManifestBuilder } from './core/manifest.js';
 import { TraceValidator } from './core/validator.js';
 import { TraceabilityService } from './service.js';
@@ -42,7 +53,8 @@ async function loadConfig(configPath: string): Promise<{
     failOnMissingVersion: boolean;
   };
   adrCatalog: { path: string; pattern: string };
-  neo4j: { database?: string };
+  neo4j?: { uri?: string; user?: string; password?: string; database?: string };
+  adrPolicy?: { requiredAdrs?: string[] };
 }> {
   const text = await fs.readFile(configPath, 'utf-8');
   const cfg = JSON.parse(text) as unknown;
@@ -57,9 +69,24 @@ async function loadConfig(configPath: string): Promise<{
       failOnMissingVersion: boolean;
     };
     adrCatalog: { path: string; pattern: string };
-    neo4j: { database?: string };
+    neo4j?: { uri?: string; user?: string; password?: string; database?: string };
+    adrPolicy?: { requiredAdrs?: string[] };
   };
   return c;
+}
+
+class NoopGraphPublisher implements IGraphPublisher {
+  async publish(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+function asStringArray(v: string | boolean | undefined): string[] {
+  if (typeof v !== 'string') return [];
+  return v
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 function asString(v: string | boolean | undefined, name: string): string {
@@ -90,19 +117,34 @@ async function main(): Promise<void> {
   const repoSha = asString(parsed.args['repoSha'], 'repoSha');
   const moduleName = asString(parsed.args['moduleName'], 'moduleName');
   const modulePath = asString(parsed.args['modulePath'], 'modulePath');
+  const publishGraph = parsed.args['no-publish'] !== true;
+  const requiredFromArgs = asStringArray(parsed.args['requiredAdr']);
+  const requiredAdrs =
+    requiredFromArgs.length > 0
+      ? requiredFromArgs
+      : (cfg.adrPolicy?.requiredAdrs ?? []).map((x) => x.trim()).filter(Boolean);
   const generated = new Date().toISOString().slice(0, 10);
 
   const adrDir = path.resolve(repoRoot, cfg.adrCatalog.path);
   const adrPattern = new RegExp(cfg.adrCatalog.pattern);
+
+  const neo4jConfig = {
+    ...(cfg.neo4j?.uri ? { uri: cfg.neo4j.uri } : {}),
+    ...(cfg.neo4j?.user ? { user: cfg.neo4j.user } : {}),
+    ...(cfg.neo4j?.password ? { password: cfg.neo4j.password } : {}),
+    ...(cfg.neo4j?.database ? { database: cfg.neo4j.database } : {}),
+  };
+
+  const graphPublisher: IGraphPublisher = publishGraph
+    ? new Neo4jGraphPublisher(neo4jConfig)
+    : new NoopGraphPublisher();
 
   const svc = new TraceabilityService({
     adrCatalog: new FileSystemAdrCatalog({ adrDir, pattern: adrPattern }),
     scanner: new GlobHeaderScanner(),
     validator: new TraceValidator(),
     manifestBuilder: new ManifestBuilder(),
-    graphPublisher: new Neo4jGraphPublisher(
-      cfg.neo4j.database ? { database: cfg.neo4j.database } : undefined
-    ),
+    graphPublisher,
   });
 
   const includeGlobs = cfg.governedPaths.filter((g) => !g.startsWith('!'));
@@ -121,6 +163,8 @@ async function main(): Promise<void> {
     moduleName,
     modulePath,
     generated,
+    requiredAdrs,
+    publishGraph,
   });
 
   if (!result.validation.ok) {
