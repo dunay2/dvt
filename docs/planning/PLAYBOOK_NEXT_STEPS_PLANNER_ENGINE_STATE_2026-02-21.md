@@ -170,6 +170,25 @@
 
 - Positive/negative tests for required capabilities.
 
+### Preferred implementation variant: auto-generated capability matrix
+
+- Generate [`adapters.capabilities.json`](docs/architecture/engine/contracts/capabilities/adapters.capabilities.json:1) from adapter capability tests instead of manual edits.
+- Keep [`capabilities.schema.json`](docs/architecture/engine/contracts/capabilities/capabilities.schema.json:1) as the normative enum source, and fail generation if unknown capabilities appear.
+- Add generator script under [`scripts/`](scripts/AI_INDEX_README.md:1) and wire CI to fail when generated output is stale.
+- Runtime validation in [`WorkflowEngine`](packages/@dvt/engine/src/core/WorkflowEngine.ts:128) should consume the generated matrix and enforce `requiresCapabilities` deterministically.
+
+#### Guardrails
+
+- Generated file header must include timestamp + generator version + source test paths.
+- Capabilities marked `experimental` must include explicit metadata (`experimental: true`) and be blocked by default unless plan opt-in is explicit.
+- Capability removals require migration note + contract version bump gate.
+
+#### CI gates (mandatory)
+
+- `generate:capability-matrix` produces no diff on clean branch.
+- Contract compatibility check fails if generated matrix and adapter tests diverge.
+- PR comment bot reports matrix delta when capabilities changed.
+
 ## PR-4 — Runtime decoupling cleanup
 
 ### WHAT
@@ -228,3 +247,12 @@
 - Planner/Engine/State separation remains conceptually clear **and** operationally enforceable.
 - Contract drift becomes detectable in CI before merge.
 - Adapter/runtime-specific behavior no longer leaks silently into planner contract assumptions.
+
+graph TD
+A[Adapter Tests] -->|describeCapability| B[Generator Script]
+B -->|auto-genera| C[capabilities.json]
+C -->|valida| D[Schema]
+C -->|consume| E[WorkflowEngine]
+E -->|enforce| F[Runtime Validation]
+G[CI] -->|check stale| B
+H[PR] -->|diff comment| I[Reviewer]

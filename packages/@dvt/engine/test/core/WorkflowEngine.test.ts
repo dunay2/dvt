@@ -176,7 +176,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   it.each([
     {
       name: 'invalid runId format',
-      run: async (engine: WorkflowEngine) => {
+      run: async (engine: WorkflowEngine): Promise<void> => {
         await expect(engine.startRun(makePlanRef(), makeContext('bad run id'))).rejects.toThrow(
           /Invalid runId format/
         );
@@ -184,7 +184,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     },
     {
       name: 'duplicate runId',
-      run: async (engine: WorkflowEngine) => {
+      run: async (engine: WorkflowEngine): Promise<void> => {
         await engine.startRun(makePlanRef(), makeContext('dup-1'));
         await expect(engine.startRun(makePlanRef(), makeContext('dup-1'))).rejects.toThrow(
           /already exists/

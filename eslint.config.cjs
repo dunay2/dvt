@@ -305,7 +305,13 @@ module.exports = [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-function-return-type': [
+        'warn',
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+        },
+      ],
       'no-restricted-globals': 'off',
       'no-restricted-syntax': 'off',
       'no-restricted-properties': 'off',
