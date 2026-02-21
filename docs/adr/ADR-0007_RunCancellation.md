@@ -19,6 +19,7 @@ Cancellation in workflow engines (Temporal, Conductor) is asynchronous.
 when the workflow has actually stopped.
 
 If the Engine emits `RunCancelled` immediately:
+
 - State may transition prematurely
 - Projectors may enter CANCELLED while workflow is still running
 - Replay determinism is violated
@@ -47,7 +48,12 @@ If the Engine emits `RunCancelled` immediately:
 
 ### 4) Stuck cancellation detection (interaction with W3-1)
 
-If a run transitions to CANCELLING and no `RunCancelled` event is received
+Between `RunCancelRequested` and `RunCancelled`, the run's `status` remains
+`RUNNING`. The `substatus` MUST be set to `CANCELLING` (to be added to
+`RunSubstatus` in `types.ts`). Projectors MUST NOT advance to `CANCELLED`
+until `RunCancelled` is received.
+
+If `RunCancelRequested` has been emitted and no `RunCancelled` is received
 within a configurable SLA (e.g., 5 minutes), the platform SHOULD:
 
 - Emit an operational alert
@@ -66,14 +72,39 @@ If cancellation is implemented via signals:
 
 ---
 
+## Documents to Update (Normative Impact)
+
+1. **`packages/@dvt/engine/src/contracts/runEvents.ts`**
+   - Add `'RunCancelRequested'` to the `EventType` union.
+2. **`packages/@dvt/engine/src/contracts/types.ts`**
+   - Add `'CANCELLING'` to `RunSubstatus`.
+3. **`packages/@dvt/engine/src/core/SnapshotProjector.ts`**
+   - Add `case 'RunCancelRequested'`: set `substatus = 'CANCELLING'` on the snapshot
+     (no status change — run stays `RUNNING`).
+4. **`RunEvents.v2.0.1.md`** (or bump to v2.1.0)
+   - Add `RunCancelRequested` event definition and allowed transitions.
+
+---
+
 ## Verification
 
 ### Invariants
+
 - INV-CANCEL-001: Engine never emits RunCancelled
 - INV-CANCEL-002: RunCancelRequested only emitted on successful request
 - INV-CANCEL-003: Adapter emits RunCancelled only after real shutdown
-- INV-CANCEL-004: Projector transitions only on RunCancelled
+- INV-CANCEL-004: Projector transitions to CANCELLED only on RunCancelled
 - INV-CANCEL-005: Stuck detection does not synthesize RunCancelled
+- INV-CANCEL-006: Run status remains RUNNING with substatus CANCELLING between request and confirmation
+
+### Required Tests (mandatory CI)
+
+- `test/engine/cancel-requested-does-not-emit-cancelled.test.ts`
+- `test/projector/run-cancel-requested-sets-cancelling-substatus.test.ts`
+- `test/projector/run-cancelled-transitions-from-cancelling.test.ts`
+- `test/engine/stuck-cancellation-no-synthesize.test.ts`
+- `test/idempotency/cancel-request-idempotency.test.ts`
 
 ---
+
 End of ADR-0007

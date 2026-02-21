@@ -81,25 +81,47 @@ Reference:
 
 # 4. Idempotency Derivation (Normative)
 
+> **⚠ SUPERSEDED (partial) — 2026-02-21**
+>
+> The inclusion of `payload` in the hash preimage specified below is **superseded**
+> by RunEvents v2.0.1 and `IdempotencyKeyBuilder` v1.0.0.
+>
+> **Authoritative formula (run events):**
+> `SHA256(runId | stepIdOrRUN | logicalAttemptId | eventType | planId | planVersion)`
+>
+> `payload` is explicitly **excluded** from the hash.
+> Rationale: payload field names and serialization can drift across producers and
+> schema versions, making payload-inclusion non-deterministic at replay boundaries.
+> The logical identity of an event is fully captured by the fields above.
+>
+> For signal events the authoritative formula is defined in ADR-0008.
+>
+> The `payload` canonicalization rules in §5 remain informational for other
+> uses (e.g., store integrity checksums), but MUST NOT be used in idempotencyKey derivation.
+
 The idempotencyKey MUST be derived from canonical serialization of:
 
 - eventType
 - runId
-- stepId (if present)
+- stepId (if present, otherwise literal `RUN`)
 - logicalAttemptId
 - planId
 - planVersion
-- payload (recursively canonicalized)
+
+~~payload (recursively canonicalized)~~ — **excluded per RunEvents v2.0.1**
 
 The following MUST NOT participate:
 
 - eventId
 - emittedAt
 - engineAttemptId
+- payload (excluded — see supersession note above)
+- tenantId (envelope field, not identity field)
 
 Hash algorithm:
 
-- SHA-256 over canonical UTF-8 JSON bytes.
+- SHA-256 over pipe-delimited field concatenation (not JSON bytes).
+  See `IdempotencyKeyBuilder.runEventKey` in `packages/@dvt/engine/src/core/idempotency.ts`.
 
 Rationale:
 Provider retries must not create new logical events.
@@ -107,8 +129,10 @@ Only logicalAttemptId differentiates domain retries.
 
 Reference:
 
-- Idempotent Receiver Pattern  
+- Idempotent Receiver Pattern
   https://martinfowler.com/articles/patterns-of-distributed-systems/idempotent-receiver.html
+- `IdempotencyKeyBuilder` (normative implementation): `packages/@dvt/engine/src/core/idempotency.ts`
+- ADR-0008 (signal idempotency): `docs/adr/ADR-0008_Signal_Idempotency.md`
 
 ---
 

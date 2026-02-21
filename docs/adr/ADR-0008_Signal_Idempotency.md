@@ -3,6 +3,26 @@
 - **Status**: Proposed (Hardened)
 - **Date**: 2026-02-21
 - **Owners**: Engine Domain
+- **Related**:
+  - ADR-0007: Run Cancellation Semantics (cross-references this ADR for signal-based cancel)
+  - ADR-0004: Event Sourcing Strategy
+  - RunEvents.v2.0.1.md (envelope split — tenantId excluded from derivation)
+
+---
+
+## Context
+
+Signals are used to send out-of-band instructions to running workflows
+(PAUSE, RESUME, CANCEL, RETRY_STEP, RETRY_RUN).
+
+Without a deterministic idempotency key:
+
+- Duplicate signal deliveries may trigger duplicate state transitions.
+- Adapters may apply the same signal multiple times across retries.
+- No cross-adapter consistency guarantee for signal processing.
+
+The key MUST be deterministic from the signal's logical identity, not
+from infrastructure-level identifiers (message IDs, delivery timestamps).
 
 ---
 
@@ -11,14 +31,14 @@
 Signal idempotency key MUST be derived as:
 
 SHA256(
-  runId + '|' +
-  'SIGNAL' + '|' +
-  signalType + '|' +
-  signalId + '|' +
-  logicalAttemptId + '|' +
-  planId + '|' +
-  planVersion +
-  (stepId ? '|' + stepId : '')
+runId + '|' +
+'SIGNAL' + '|' +
+signalType + '|' +
+signalId + '|' +
+logicalAttemptId + '|' +
+planId + '|' +
+planVersion +
+(stepId ? '|' + stepId : '')
 )
 
 ### Notes
@@ -41,9 +61,28 @@ Implementations MUST match these SHA256 outputs exactly:
 ---
 
 ## Invariants
+
 - INV-SIGNAL-001: Same inputs → same hash
 - INV-SIGNAL-002: Different signalId → different hash
 - INV-SIGNAL-003: schemaVersion MUST NOT influence hash
+- INV-SIGNAL-004: tenantId MUST NOT influence hash
+
+## Documents to Update (Normative Impact)
+
+1. **`packages/@dvt/engine/src/core/idempotency.ts`**
+   - Replace `signalKey` implementation: current plain-string join including `tenantId`
+     is non-compliant. MUST use SHA256 with the formula above, excluding `tenantId`.
+
+## Required Tests (mandatory CI)
+
+- `test/idempotency/signal-idempotency-golden.test.ts`
+  - MUST verify all three golden vectors exactly.
+  - A failing golden test indicates the formula was changed without an ADR update.
+- `test/idempotency/signal-tenant-id-excluded.test.ts`
+  - Two signals differing only in tenantId MUST produce the same hash.
+- `test/idempotency/signal-schema-version-excluded.test.ts`
+  - Two signals differing only in schemaVersion MUST produce the same hash.
 
 ---
+
 End of ADR-0008
