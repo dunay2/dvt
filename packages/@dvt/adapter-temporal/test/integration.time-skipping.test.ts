@@ -1,16 +1,50 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0010: Run Event Envelope Split
+ * @baseline ADR-0011: RunStarted Ownership
+ * @decision Section 2 — Build precondition mandatory
+ * @decision Section 3 — Single teardown owner
+ * @decision Section 4 — Prefer environment-provided client
+ * @decision Section 5 — Time-skipping semantics
+ * @consequence Tests are deterministic, isolated, and follow Temporal best practices
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+
 import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
+import type { OutboxRecord, EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
 import type { ActivityDeps } from '../src/activities/stepActivities.js';
 import { loadTemporalAdapterConfig, TemporalAdapter, TemporalWorkerHost } from '../src/index.js';
 
+// ============================================================================
+// Constants
+// ============================================================================
+
 const TEST_DIR = dirname(fileURLToPath(import.meta.url));
 const WORKFLOW_PATH = resolve(TEST_DIR, '../src/workflows/RunPlanWorkflow.ts');
+const WORKFLOW_JS_PATH = WORKFLOW_PATH.replace(/\.ts$/, '.js');
+const INTEGRATION_TEST_TIMEOUT = 60_000;
+
+// Validación de artifact (ADR-0001 Sección 1)
+if (!existsSync(WORKFLOW_JS_PATH) && process.env.CI) {
+  console.error(`
+❌ Workflow artifact not found: ${WORKFLOW_JS_PATH}
+   Run 'pnpm build' first or ensure build completes successfully.
+  `);
+  process.exit(1);
+}
+
+// ============================================================================
+// Types
+// ============================================================================
 
 type EventType =
   | 'RunQueued'
@@ -25,6 +59,7 @@ type EventType =
   | 'StepFailed';
 
 interface EventEnvelope {
+  eventId: string;
   eventType: EventType;
   emittedAt: string;
   tenantId: string;
@@ -38,6 +73,34 @@ interface EventEnvelope {
   stepId?: string;
 }
 
+type RunStatusValue = 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+type RunEventWrite = Omit<EventEnvelope, 'runSeq'>;
+type RunEventRecord = EventEnvelope & { persistedAt: string };
+type RunEventPersisted = RunEventRecord;
+
+interface AppendResult {
+  runSeq: number;
+  idempotent: boolean;
+  persisted: boolean;
+  eventId: string;
+  persistedAt: string;
+}
+
+interface RunSnapshot {
+  runId: string;
+  status: RunStatusValue;
+  lastEventSeq: number;
+  projectedAt: string;
+}
+
+// ============================================================================
+// Test Doubles (Mocks/Stubs)
+// ============================================================================
+
+/**
+ * @baseline ADR-0010 Section 3.3 — Idempotency derivation
+ */
 class TestIdempotency {
   private counter = 0;
 
@@ -53,6 +116,8 @@ class TestIdempotency {
     logicalAttemptId: number;
     stepId?: string;
   }): string {
+    // Implementación simplificada pero que sigue el principio:
+    // provider retries no cambian la key
     return [
       args.eventType,
       args.tenantId,
@@ -63,84 +128,430 @@ class TestIdempotency {
   }
 }
 
+/**
+ * @baseline ADR-0010 Section 3.1 — Envelope split
+ */
 class TestClock {
   nowIsoUtc(): string {
     return '2026-01-01T00:00:00.000Z';
   }
 }
 
+/**
+ * Test implementation of IRunStateStore v1 for Temporal integration tests
+ *
+ * @baseline ADR-0004 - Event Sourcing Strategy
+ * @baseline ADR-0010 - Run Event Envelope Split
+ * @baseline ADR-0013 - bootstrapRunTx
+ *
+ * Implements the normative contract from IRunStateStore.v1.md with:
+ * - Append-only event log semantics
+ * - Monotonic runSeq per runId
+ * - Idempotency via (runId, idempotencyKey) uniqueness
+ * - Deterministic replay capability
+ */
 class TestStateStore {
-  private readonly eventsByRun = new Map<string, EventEnvelope[]>();
-  private readonly idempByRun = new Map<string, Map<string, EventEnvelope>>();
+  /**
+   * Map of runId -> array of persisted events
+   * Maintains strict append order with monotonic runSeq
+   */
+  private readonly eventsByRun = new Map<string, RunEventRecord[]>();
 
-  async appendEventsTx(
-    runId: string,
-    envelopes: Omit<EventEnvelope, 'runSeq'>[]
-  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+  /**
+   * Map of runId -> Map<idempotencyKey, RunEventRecord>
+   * Enforces idempotency uniqueness constraint
+   */
+  private readonly idempByRun = new Map<string, Map<string, RunEventRecord>>();
+
+  /**
+   * Map of runId -> latest snapshot
+   * Used for projector state
+   */
+  private readonly snapshotsByRun = new Map<string, RunSnapshot>();
+  private readonly metadataByRun = new Map<string, { runId: string } & Record<string, unknown>>();
+
+  /**
+   * Appends a single event to the run's event log
+   *
+   * @param event - Event to append (without runSeq)
+   * @returns AppendResult indicating outcome and assigned metadata
+   *
+   * @invariant INV-STATE-1: runSeq is strictly increasing per runId
+   * @invariant INV-STATE-3: (runId, idempotencyKey) uniqueness enforced
+   * @invariant INV-STATE-4: Event log is immutable after persist
+   */
+  async appendEvent(event: RunEventWrite): Promise<AppendResult> {
+    const runId = event.runId;
+
+    // Retrieve or initialize data structures for this run
     const events = this.eventsByRun.get(runId) ?? [];
-    const idx = this.idempByRun.get(runId) ?? new Map<string, EventEnvelope>();
-    const appended: EventEnvelope[] = [];
-    const deduped: EventEnvelope[] = [];
+    const idx = this.idempByRun.get(runId) ?? new Map<string, RunEventRecord>();
 
-    for (const env of envelopes) {
-      const found = idx.get(env.idempotencyKey);
-      if (found) {
-        deduped.push(found);
-        continue;
-      }
-      const withSeq: EventEnvelope = { ...env, runSeq: events.length + appended.length + 1 };
-      appended.push(withSeq);
-      idx.set(withSeq.idempotencyKey, withSeq);
+    // Check idempotency (INV-STATE-3)
+    const existing = idx.get(event.idempotencyKey);
+    if (existing) {
+      return {
+        runSeq: existing.runSeq,
+        idempotent: true,
+        persisted: false,
+        eventId: existing.eventId,
+        persistedAt: existing.persistedAt,
+      };
     }
 
-    this.eventsByRun.set(runId, events.concat(appended));
+    // Assign next runSeq (1-based, monotonic) (INV-STATE-1)
+    const nextRunSeq = events.length + 1;
+    const persistedAt = new Date().toISOString();
+
+    const record: RunEventRecord = {
+      ...event,
+      runSeq: nextRunSeq,
+      persistedAt,
+    };
+
+    // Persist atomically
+    events.push(record);
+    idx.set(event.idempotencyKey, record);
+
+    this.eventsByRun.set(runId, events);
     this.idempByRun.set(runId, idx);
-    return { appended, deduped };
+
+    return {
+      runSeq: nextRunSeq,
+      idempotent: false,
+      persisted: true,
+      eventId: `evt-${runId}-${nextRunSeq}`,
+      persistedAt,
+    };
   }
 
-  async listEvents(runId: string): Promise<EventEnvelope[]> {
-    return [...(this.eventsByRun.get(runId) ?? [])];
+  /**
+   * Fetches events for a run with optional pagination
+   *
+   * @param runId - The run identifier
+   * @param options - Optional pagination parameters
+   * @returns Array of events ordered by runSeq ascending
+   *
+   * @invariant INV-STATE-5: Returns events ordered by ascending runSeq
+   */
+  async fetchEvents(
+    runId: string,
+    options?: {
+      afterSeq?: number;
+      limit?: number;
+    }
+  ): Promise<RunEventRecord[]> {
+    const events = this.eventsByRun.get(runId) ?? [];
+
+    // Filter by afterSeq if provided
+    let filtered = events;
+    if (options?.afterSeq !== undefined) {
+      filtered = filtered.filter((e) => e.runSeq > options.afterSeq!);
+    }
+
+    // Apply limit if provided
+    if (options?.limit !== undefined) {
+      filtered = filtered.slice(0, options.limit);
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Retrieves the latest snapshot for a run
+   *
+   * @param runId - The run identifier
+   * @returns The latest snapshot or null if none exists
+   */
+  async getSnapshot(runId: string): Promise<RunSnapshot | null> {
+    return this.snapshotsByRun.get(runId) ?? null;
+  }
+
+  /**
+   * Projects a snapshot from events (test implementation)
+   * In real implementation, this would run the projector
+   *
+   * @param runId - The run identifier
+   * @returns A newly projected snapshot
+   */
+  async projectSnapshot(runId: string): Promise<RunSnapshot> {
+    const events = await this.fetchEvents(runId);
+
+    // Simple projection logic for testing
+    let status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED' = 'PENDING';
+
+    for (const e of events) {
+      if (e.eventType === 'RunStarted') status = 'RUNNING';
+      if (e.eventType === 'RunPaused') status = 'PAUSED';
+      if (e.eventType === 'RunResumed') status = 'RUNNING';
+      if (e.eventType === 'RunCompleted') status = 'COMPLETED';
+      if (e.eventType === 'RunFailed') status = 'FAILED';
+      if (e.eventType === 'RunCancelled') status = 'CANCELLED';
+    }
+
+    const snapshot: RunSnapshot = {
+      runId,
+      status,
+      lastEventSeq: events.length > 0 ? events[events.length - 1].runSeq : 0,
+      projectedAt: new Date().toISOString(),
+    };
+
+    this.snapshotsByRun.set(runId, snapshot);
+    return snapshot;
+  }
+
+  async bootstrapRunTx(input: {
+    metadata: { runId: string } & Record<string, unknown>;
+    firstEvents: RunEventWrite[];
+  }): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[] }> {
+    this.metadataByRun.set(input.metadata.runId, input.metadata);
+    const appended: RunEventPersisted[] = [];
+    const deduped: RunEventPersisted[] = [];
+    for (const event of input.firstEvents) {
+      const res = await this.appendEvent(event);
+      const events = await this.listEvents(input.metadata.runId);
+      const persisted = events.find((e) => e.runSeq === res.runSeq);
+      if (!persisted) continue;
+      if (res.idempotent) deduped.push(persisted);
+      else appended.push(persisted);
+    }
+    return { appended, deduped };
   }
 
   async appendAndEnqueueTx(
     runId: string,
-    envelopes: Omit<EventEnvelope, 'runSeq'>[]
-  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
-    return this.appendEventsTx(runId, envelopes);
+    events: RunEventWrite[]
+  ): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[] }> {
+    const appended: RunEventPersisted[] = [];
+    const deduped: RunEventPersisted[] = [];
+    for (const event of events) {
+      const res = await this.appendEvent({ ...event, runId });
+      const persisted = (await this.listEvents(runId)).find((e) => e.runSeq === res.runSeq);
+      if (!persisted) continue;
+      if (res.idempotent) deduped.push(persisted);
+      else appended.push(persisted);
+    }
+    return { appended, deduped };
   }
 
-  async bootstrapRunTx(input: {
-    metadata: unknown;
-    firstEvents: Omit<EventEnvelope, 'runSeq'>[];
-  }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
-    // metadata is a no-op in this stub; persist any first events normally.
-    if (input.firstEvents.length === 0) return { appended: [], deduped: [] };
-    const meta = input.metadata as { runId: string };
-    return this.appendEventsTx(meta.runId, input.firstEvents);
+  async getRunMetadataByRunId(
+    runId: string
+  ): Promise<({ runId: string } & Record<string, unknown>) | null> {
+    return this.metadataByRun.get(runId) ?? null;
   }
 
-  async enqueueTx(_runId: string, _events: EventEnvelope[]): Promise<void> {
-    // no-op for this integration test
+  async saveProviderRef(_runId: string, _runRef: Record<string, unknown>): Promise<void> {
+    // no-op for integration tests
   }
 
-  async saveRunMetadata(_meta: unknown): Promise<void> {
-    // no-op for this integration test
+  // Test helper methods (not part of IRunStateStore)
+
+  /**
+   * TEST HELPER: List all events for a run
+   */
+  async listEvents(runId: string): Promise<RunEventRecord[]> {
+    return this.eventsByRun.get(runId) ?? [];
   }
 
-  async getRunMetadataByRunId(_runId: string): Promise<null> {
-    return null;
+  /**
+   * TEST HELPER: Clear all data for a run
+   */
+  clearRun(runId: string): void {
+    this.eventsByRun.delete(runId);
+    this.idempByRun.delete(runId);
+    this.snapshotsByRun.delete(runId);
   }
 }
 
+/**
+ * Test implementation of IOutboxStorage for Temporal integration tests
+ *
+ * @baseline ADR-0013 - bootstrapRunTx (outbox semantics)
+ * @baseline ADR-0004 - Event Sourcing Strategy
+ * @baseline ADR-0010 - Run Event Envelope Split (idempotency)
+ *
+ * Simulates outbox behavior for testing with:
+ * - In-memory event storage using correct OutboxRecord structure
+ * - Pending events list with limit
+ * - Delivery tracking (markDelivered/markFailed)
+ * - Idempotency tracking via idempotencyKey
+ * - Verification helpers for test assertions
+ */
+class TestOutbox {
+  /**
+   * Map of outbox record ID -> OutboxRecord
+   * Simulates the outbox table in production
+   */
+  private readonly records = new Map<string, OutboxRecord>();
+
+  /**
+   * Counter for generating unique record IDs
+   */
+  private idCounter = 0;
+
+  /**
+   * Enqueues events to the outbox
+   *
+   * @param runId - The run identifier (used for logging/tracking)
+   * @param events - Events to enqueue (must be persisted with runSeq)
+   * @throws Error if any event lacks runSeq
+   *
+   * @invariant Creates OutboxRecord with:
+   *   - Unique ID (outbox-{counter})
+   *   - Current timestamp as createdAt
+   *   - Event's idempotencyKey for deduplication
+   *   - Initial attempts = 0
+   *   - No lastError
+   */
+  async enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void> {
+    // Verify events have required runSeq (production safety)
+    for (const event of events) {
+      if (event.runSeq === undefined) {
+        throw new Error('Events must have runSeq before enqueue');
+      }
+    }
+
+    // Create outbox records for each event
+    for (const event of events) {
+      const id = `outbox-${++this.idCounter}`;
+      const record: OutboxRecord = {
+        id,
+        createdAt: new Date().toISOString(),
+        idempotencyKey: event.idempotencyKey, // From the event
+        payload: event, // The complete persisted event
+        attempts: 0,
+        // lastError is undefined initially
+      };
+      this.records.set(id, record);
+    }
+  }
+
+  /**
+   * Lists pending outbox records with limit
+   *
+   * @param limit - Maximum number of records to return
+   * @returns Array of pending OutboxRecord
+   *
+   * @invariant Only returns records with attempts < maxRetries (implicitly via absence of success)
+   * @invariant Orders by createdAt ascending (FIFO)
+   * @invariant Does NOT return records that have been successfully processed
+   */
+  async listPending(limit: number): Promise<OutboxRecord[]> {
+    // In test implementation, we consider all records as pending
+    // since we don't have a separate 'delivered' status
+    // Records with attempts > 0 and lastError are still pending (retryable)
+
+    const pending = Array.from(this.records.values())
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .slice(0, limit);
+
+    return pending;
+  }
+
+  /**
+   * Marks outbox records as delivered (removes them from outbox)
+   *
+   * @param ids - Array of record IDs that were successfully delivered
+   * @invariant Removes records from the outbox (no longer pending)
+   */
+  async markDelivered(ids: string[]): Promise<void> {
+    for (const id of ids) {
+      this.records.delete(id);
+    }
+  }
+
+  /**
+   * Marks an outbox record as failed (increments attempts, stores error)
+   *
+   * @param id - Record ID that failed
+   * @param error - Error message or reason
+   * @invariant Increments attempts counter
+   * @invariant Stores error message in lastError
+   * @invariant Record remains in outbox for retry
+   */
+  async markFailed(id: string, error: string): Promise<void> {
+    const record = this.records.get(id);
+    if (record) {
+      record.attempts += 1;
+      record.lastError = error;
+      this.records.set(id, record);
+    }
+  }
+
+  // ============================================================================
+  // Test Helper Methods (not part of IOutboxStorage)
+  // ============================================================================
+
+  /**
+   * TEST HELPER: List all outbox records
+   */
+  listAll(): OutboxRecord[] {
+    return Array.from(this.records.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  /**
+   * TEST HELPER: Get record by ID
+   */
+  getRecord(id: string): OutboxRecord | undefined {
+    return this.records.get(id);
+  }
+
+  /**
+   * TEST HELPER: Find records by idempotencyKey
+   */
+  findByIdempotencyKey(key: string): OutboxRecord[] {
+    return Array.from(this.records.values()).filter((r) => r.idempotencyKey === key);
+  }
+
+  /**
+   * TEST HELPER: Get records with failed attempts
+   */
+  getFailedRecords(): OutboxRecord[] {
+    return Array.from(this.records.values()).filter((r) => r.lastError !== undefined);
+  }
+
+  /**
+   * TEST HELPER: Get records by attempt count
+   */
+  getRecordsByAttempts(attemptCount: number): OutboxRecord[] {
+    return Array.from(this.records.values()).filter((r) => r.attempts === attemptCount);
+  }
+
+  /**
+   * TEST HELPER: Count total records
+   */
+  get count(): number {
+    return this.records.size;
+  }
+
+  /**
+   * TEST HELPER: Clear all records
+   */
+  clear(): void {
+    this.records.clear();
+    this.idCounter = 0;
+  }
+
+  /**
+   * TEST HELPER: Check if specific event is in outbox
+   */
+  hasEventWithIdempotencyKey(key: string): boolean {
+    return this.findByIdempotencyKey(key).length > 0;
+  }
+}
+
+/**
+ * @baseline ADR-0011 — RunStarted Ownership
+ */
 class TestProjector {
   rebuild(
     runId: string,
     events: EventEnvelope[]
   ): {
     runId: string;
-    status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+    status: RunStatusValue;
   } {
-    let status: 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED' = 'PENDING';
+    let status: RunStatusValue = 'PENDING';
 
     for (const e of events) {
       if (e.eventType === 'RunStarted') status = 'RUNNING';
@@ -158,6 +569,9 @@ class TestProjector {
   }
 }
 
+/**
+ * @baseline ADR-0012 — Plan Integrity Ownership
+ */
 class TestIntegrity {
   async fetchAndValidate(
     planRef: PlanRef,
@@ -172,7 +586,9 @@ class TestIntegrity {
   }
 }
 
-type RunStatusValue = 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+// ============================================================================
+// Factories
+// ============================================================================
 
 function createPlanRef(planId: string, planBytes: Uint8Array): PlanRef {
   return {
@@ -195,10 +611,14 @@ function createRunContext(runId: string): RunContext {
   };
 }
 
-function createActivityDeps(store: TestStateStore, planBytes: Uint8Array): ActivityDeps {
+function createActivityDeps(
+  store: TestStateStore,
+  outbox: TestOutbox, // Now properly separated
+  planBytes: Uint8Array
+): ActivityDeps {
   return {
-    stateStore: store,
-    outbox: store,
+    stateStore: store, // Implements IRunStateStore
+    outbox: outbox, // Implements IOutboxStorage
     clock: new TestClock(),
     idempotency: new TestIdempotency(),
     fetcher: {
@@ -207,6 +627,10 @@ function createActivityDeps(store: TestStateStore, planBytes: Uint8Array): Activ
     integrity: new TestIntegrity(),
   };
 }
+
+// ============================================================================
+// Helpers
+// ============================================================================
 
 async function waitForTerminalStatus(
   adapter: TemporalAdapter,
@@ -296,7 +720,14 @@ function sha256Hex(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
 }
 
+// ============================================================================
+// Tests
+// ============================================================================
+
 describe('temporal integration (time-skipping)', () => {
+  /**
+   * Helper de espera determinística (no usa time-skipping internamente)
+   */
   async function waitForCondition<T>(
     fn: () => Promise<T>,
     predicate: (v: T) => boolean,
@@ -315,243 +746,277 @@ describe('temporal integration (time-skipping)', () => {
     }
   }
 
-  it('executes startRun -> status -> cancel against TestWorkflowEnvironment', async () => {
-    const env = await TestWorkflowEnvironment.createTimeSkipping();
+  /**
+   * @verifies ADR-0001 Section 2 — Build precondition
+   * @verifies ADR-0001 Section 3 — Single teardown owner
+   * @verifies ADR-0001 Section 4 — Environment client
+   * @verifies ADR-0001 Section 5 — Time-skipping semantics
+   */
+  it(
+    'executes startRun -> status -> cancel against TestWorkflowEnvironment',
+    async () => {
+      // Setup (ADR-0001 Section 4: usar environment-provided client)
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
 
-    const store = new TestStateStore();
-    const projector = new TestProjector();
-    const plan = mkPlan(250);
-    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+      const store = new TestStateStore();
+      const projector = new TestProjector();
+      const plan = mkPlan(250);
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-    const planRef = createPlanRef('it-plan', planBytes);
-    const ctx = createRunContext('run-it-1');
+      const planRef = createPlanRef('it-plan', planBytes);
+      const ctx = createRunContext('run-it-1');
 
-    const temporalConfig = loadTemporalAdapterConfig({
-      TEMPORAL_NAMESPACE: 'default',
-      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping',
-      TEMPORAL_IDENTITY: 'adapter-temporal-it',
-    });
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
 
-    const worker = new TemporalWorkerHost({
-      temporalConfig,
-      workflowsPath: WORKFLOW_PATH,
-      activityDeps: createActivityDeps(store, planBytes),
-    });
+      const worker = new TemporalWorkerHost({
+        temporalConfig,
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, planBytes),
+      });
 
-    await worker.start(env.nativeConnection);
+      await worker.start(env.nativeConnection); // ✅ usa env.nativeConnection
 
-    const adapter = new TemporalAdapter({
-      workflowClient: env.client.workflow,
-      config: temporalConfig,
-      stateStore: store,
-      projector,
-    });
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow, // ✅ usa env.client
+        config: temporalConfig,
+        stateStore: store,
+        projector,
+      });
 
-    try {
-      const runRef = await adapter.startRun(planRef, ctx);
+      try {
+        const runRef = await adapter.startRun(planRef, ctx);
 
-      // wait until the run is no longer RUNNING (deterministic wait helper)
-      const status = await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
-      expect(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).toContain(status);
+        // wait until the run is no longer RUNNING (deterministic wait helper)
+        const status = await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
+        expect(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).toContain(status);
 
-      await adapter.cancelRun(runRef);
+        await adapter.cancelRun(runRef);
 
-      const afterCancel = await waitForTerminalStatus(adapter, runRef, waitForCondition);
-      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel);
-    } finally {
-      await worker.shutdown();
-      await env.teardown();
-    }
-  }, 60_000);
+        const afterCancel = await waitForTerminalStatus(adapter, runRef, waitForCondition);
+        expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel);
+      } finally {
+        // Teardown (ADR-0001 Section 3: single teardown owner)
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
 
-  it('signal(CANCEL) and cancelRun() produce identical terminal behaviour with a single RunCancelled event', async () => {
-    const env = await TestWorkflowEnvironment.createTimeSkipping();
+  /**
+   * @verifies ADR-0001 Section 3 — Single teardown owner
+   * @verifies ADR-0011 — RunCancelled event semantics
+   */
+  it(
+    'signal(CANCEL) and cancelRun() produce identical terminal behaviour with a single RunCancelled event',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
 
-    const store = new TestStateStore();
-    const projector = new TestProjector();
-    const plan = mkPlan(10);
-    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+      const store = new TestStateStore();
+      const projector = new TestProjector();
+      const plan = mkPlan(10);
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-    const planRef = createPlanRef('it-plan-2', planBytes);
+      const planRef = createPlanRef('it-plan-2', planBytes);
 
-    const temporalConfig = loadTemporalAdapterConfig({
-      TEMPORAL_NAMESPACE: 'default',
-      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-cancel',
-      TEMPORAL_IDENTITY: 'adapter-temporal-it',
-    });
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-cancel',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
 
-    const worker = new TemporalWorkerHost({
-      temporalConfig,
-      workflowsPath: WORKFLOW_PATH,
-      activityDeps: createActivityDeps(store, planBytes),
-    });
+      const worker = new TemporalWorkerHost({
+        temporalConfig,
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, planBytes),
+      });
 
-    await worker.start(env.nativeConnection);
+      await worker.start(env.nativeConnection);
 
-    const adapter = new TemporalAdapter({
-      workflowClient: env.client.workflow,
-      config: temporalConfig,
-      stateStore: store,
-      projector,
-    });
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+        stateStore: store,
+        projector,
+      });
 
-    try {
-      const signalResult = await runCancelScenario(
-        'signal',
-        adapter,
-        planRef,
-        'run-it-cancel-1',
-        store,
-        waitForCondition
-      );
-      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
-      // Accept 0 or 1 persisted RunCancelled (cancellation may occur before any
-      // events are emitted). Critical invariant: there must NOT be >1 (no double
-      // terminal events).
-      expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
+      try {
+        const signalResult = await runCancelScenario(
+          'signal',
+          adapter,
+          planRef,
+          'run-it-cancel-1',
+          store,
+          waitForCondition
+        );
+        expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
+        expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
 
-      const cancelResult = await runCancelScenario(
-        'cancel',
-        adapter,
-        planRef,
-        'run-it-cancel-2',
-        store,
-        waitForCondition
-      );
-      expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
-      expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
+        const cancelResult = await runCancelScenario(
+          'cancel',
+          adapter,
+          planRef,
+          'run-it-cancel-2',
+          store,
+          waitForCondition
+        );
+        expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
+        expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
 
-      // Both paths should produce the same number of terminal RunCancelled events
-      // (0 or 1) — critically, never more than one.
-      expect(signalResult.cancelledCount).toBe(cancelResult.cancelledCount);
-    } finally {
-      await worker.shutdown();
-      await env.teardown();
-    }
-  }, 60_000);
+        expect(signalResult.cancelledCount).toBe(cancelResult.cancelledCount);
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
 
-  it('golden path: linear 3-step plan reaches COMPLETED with deterministic event order', async () => {
-    const env = await TestWorkflowEnvironment.createTimeSkipping();
+  /**
+   * @verifies ADR-0010 Section 3.2 — Ordering via runSeq
+   * @verifies ADR-0010 Section 3.6 — Atomic append
+   * @verifies ADR-0011 — RunStarted ownership
+   */
+  it(
+    'golden path: linear 3-step plan reaches COMPLETED with deterministic event order',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
 
-    const store = new TestStateStore();
-    const projector = new TestProjector();
-    const plan = mkLinearThreeStepPlan();
-    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+      const store = new TestStateStore();
+      const projector = new TestProjector();
+      const plan = mkLinearThreeStepPlan();
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-    const planRef = createPlanRef('it-plan-linear-3', planBytes);
-    const ctx: RunContext = {
-      ...createRunContext('run-it-linear-3'),
-      tenantId: '',
-    };
+      const planRef = createPlanRef('it-plan-linear-3', planBytes);
+      const ctx: RunContext = {
+        ...createRunContext('run-it-linear-3'),
+        tenantId: 't-it', // Explícito, no vacío
+      };
 
-    const temporalConfig = loadTemporalAdapterConfig({
-      TEMPORAL_NAMESPACE: 'default',
-      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-linear-3',
-      TEMPORAL_IDENTITY: 'adapter-temporal-it',
-    });
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-linear-3',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
 
-    const worker = new TemporalWorkerHost({
-      temporalConfig,
-      workflowsPath: WORKFLOW_PATH,
-      activityDeps: createActivityDeps(store, planBytes),
-    });
+      const worker = new TemporalWorkerHost({
+        temporalConfig,
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, planBytes),
+      });
 
-    await worker.start(env.nativeConnection);
+      await worker.start(env.nativeConnection);
 
-    const adapter = new TemporalAdapter({
-      workflowClient: env.client.workflow,
-      config: temporalConfig,
-      stateStore: store,
-      projector,
-    });
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+        stateStore: store,
+        projector,
+      });
 
-    try {
-      await adapter.startRun(planRef, ctx);
+      try {
+        await adapter.startRun(planRef, ctx);
 
-      await waitForCondition(
-        () => store.listEvents(ctx.runId),
-        (events) => events.some((e) => e.eventType === 'RunCompleted'),
-        { timeoutMs: 30_000 }
-      );
+        await waitForCondition(
+          () => store.listEvents(ctx.runId),
+          (events) => events.some((e) => e.eventType === 'RunCompleted'),
+          { timeoutMs: 30_000 }
+        );
 
-      const events = await store.listEvents(ctx.runId);
-      expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
-        'RunStarted:-',
-        'StepStarted:s-1',
-        'StepCompleted:s-1',
-        'StepStarted:s-2',
-        'StepCompleted:s-2',
-        'StepStarted:s-3',
-        'StepCompleted:s-3',
-        'RunCompleted:-',
-      ]);
-      expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
+        const events = await store.listEvents(ctx.runId);
+        expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
+          'RunStarted:-',
+          'StepStarted:s-1',
+          'StepCompleted:s-1',
+          'StepStarted:s-2',
+          'StepCompleted:s-2',
+          'StepStarted:s-3',
+          'StepCompleted:s-3',
+          'RunCompleted:-',
+        ]);
 
-      const projected = projector.rebuild(ctx.runId, events);
-      expect(projected.status).toBe('COMPLETED');
-    } finally {
-      await worker.shutdown();
-      await env.teardown();
-    }
-  }, 60_000);
+        // Verificar runSeq monotónico (ADR-0010 Section 3.2)
+        expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
 
-  it('retry/error path: permanent step failure emits StepFailed + RunFailed deterministically', async () => {
-    const env = await TestWorkflowEnvironment.createTimeSkipping();
+        const projected = projector.rebuild(ctx.runId, events);
+        expect(projected.status).toBe('COMPLETED');
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
 
-    const store = new TestStateStore();
-    const projector = new TestProjector();
-    const plan = mkPermanentFailurePlan();
-    const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+  /**
+   * @verifies ADR-0012 — Plan integrity validation
+   * @verifies ADR-0010 Section 3.5 — Retry semantics
+   */
+  it(
+    'retry/error path: permanent step failure emits StepFailed + RunFailed deterministically',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
 
-    const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
-    const ctx: RunContext = {
-      ...createRunContext('run-it-permanent-failure'),
-      tenantId: '',
-    };
+      const store = new TestStateStore();
+      const projector = new TestProjector();
+      const plan = mkPermanentFailurePlan();
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
-    const temporalConfig = loadTemporalAdapterConfig({
-      TEMPORAL_NAMESPACE: 'default',
-      TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-permanent-failure',
-      TEMPORAL_IDENTITY: 'adapter-temporal-it',
-    });
+      const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
+      const ctx: RunContext = {
+        ...createRunContext('run-it-permanent-failure'),
+        tenantId: 't-it', // Explícito, no vacío
+      };
 
-    const worker = new TemporalWorkerHost({
-      temporalConfig,
-      workflowsPath: WORKFLOW_PATH,
-      activityDeps: createActivityDeps(store, planBytes),
-    });
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-permanent-failure',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
 
-    await worker.start(env.nativeConnection);
+      const worker = new TemporalWorkerHost({
+        temporalConfig,
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, planBytes),
+      });
 
-    const adapter = new TemporalAdapter({
-      workflowClient: env.client.workflow,
-      config: temporalConfig,
-      stateStore: store,
-      projector,
-    });
+      await worker.start(env.nativeConnection);
 
-    try {
-      await adapter.startRun(planRef, ctx);
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+        stateStore: store,
+        projector,
+      });
 
-      await waitForCondition(
-        () => store.listEvents(ctx.runId),
-        (events) => events.some((e) => e.eventType === 'RunFailed'),
-        { timeoutMs: 30_000 }
-      );
+      try {
+        await adapter.startRun(planRef, ctx);
 
-      const events = await store.listEvents(ctx.runId);
-      expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
-        'RunStarted:-',
-        'StepStarted:s-fail',
-        'StepFailed:s-fail',
-        'RunFailed:-',
-      ]);
+        await waitForCondition(
+          () => store.listEvents(ctx.runId),
+          (events) => events.some((e) => e.eventType === 'RunFailed'),
+          { timeoutMs: 30_000 }
+        );
 
-      const projected = projector.rebuild(ctx.runId, events);
-      expect(projected.status).toBe('FAILED');
-    } finally {
-      await worker.shutdown();
-      await env.teardown();
-    }
-  }, 60_000);
+        const events = await store.listEvents(ctx.runId);
+        expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
+          'RunStarted:-',
+          'StepStarted:s-fail',
+          'StepFailed:s-fail',
+          'RunFailed:-',
+        ]);
+
+        const projected = projector.rebuild(ctx.runId, events);
+        expect(projected.status).toBe('FAILED');
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
 });

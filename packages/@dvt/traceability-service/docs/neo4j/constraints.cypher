@@ -1,0 +1,12 @@
+// Run once
+CREATE CONSTRAINT adr_number IF NOT EXISTS
+FOR (a:ADR) REQUIRE a.number IS UNIQUE;
+
+CREATE CONSTRAINT file_path IF NOT EXISTS
+FOR (f:File) REQUIRE f.path IS UNIQUE;
+
+CREATE CONSTRAINT module_name IF NOT EXISTS
+FOR (m:Module) REQUIRE m.name IS UNIQUE;
+
+CREATE INDEX adr_status IF NOT EXISTS FOR (a:ADR) ON (a.status);
+CREATE INDEX file_kind IF NOT EXISTS FOR (f:File) ON (f.kind);
