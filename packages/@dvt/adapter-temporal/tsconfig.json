@@ -6,8 +6,10 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {}
   },
-  "include": ["src/**/*.ts", "index.ts", "vitest.config.ts"],
+  "include": ["src", "vitest.config.cjs"],
   "exclude": ["node_modules", "dist", "test"]
 }
