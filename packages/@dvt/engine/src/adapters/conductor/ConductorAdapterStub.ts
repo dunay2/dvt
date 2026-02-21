@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/adapters/conductor/ConductorAdapterStub.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — The Conductor provider remains behind an adapter stub until full runtime integration is completed
+ * @consequence The engine preserves the run-driven contract without prematurely coupling to the Conductor SDK
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { EngineRunRef, RunContext, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
 
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';

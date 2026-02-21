@@ -1,4 +1,12 @@
 /**
+ * @file packages/@dvt/engine/src/outbox/IOutboxRateLimiter.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — El control de caudal del outbox se define por contrato para proteger la estabilidad multi-tenant
+ * @consequence The engine can enforce per-tenant limits without coupling to a specific rate-limiting strategy
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+/**
  * Per-tenant outbox rate limiter.
  *
  * Called at enqueue time (before writing to the outbox) to prevent a single

@@ -1,4 +1,12 @@
 /**
+ * @file packages/@dvt/engine/src/metrics/IMetricsCollector.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — The engine exposes an abstract metrics port for observability without coupling to a specific provider
+ * @consequence Separation between the execution domain and telemetry backend is preserved
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+/**
  * Minimal structured metrics interface for the DVT engine.
  *
  * Implementations can route calls to StatsD, Prometheus, OpenTelemetry, or

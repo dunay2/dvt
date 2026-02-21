@@ -1,4 +1,12 @@
 /**
+ * @file packages/@dvt/engine/src/contracts/errors.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — The engine's error hierarchy encodes domain failures with stable codes
+ * @consequence Integrations and observability can handle errors deterministically without fragile message parsing
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+/**
  * Typed error hierarchy for the DVT engine.
  *
  * Callers should assert on `.code` (stable string constant), not on `.message`

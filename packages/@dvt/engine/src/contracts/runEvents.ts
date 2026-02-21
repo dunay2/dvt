@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/engine/src/contracts/runEvents.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Decision — The run/step event model is append-only and typed for deterministic state replay
+ * @consequence Persistence, projection and outbox share a canonical envelope with idempotency semantics
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { IsoUtcString, RunStatus } from './types.js';
 
 export type EventType =

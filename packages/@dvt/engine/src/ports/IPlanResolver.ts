@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/ports/IPlanResolver.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — The plan resolver defines an explicit port for fetching bytes/text under domain control
+ * @consequence Integrity validation and parsing are decoupled from the plan transport/source
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { PlanRef } from '@dvt/contracts';
 
 export type ResolvedPlan = {

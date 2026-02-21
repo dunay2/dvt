@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/engine/src/core/SnapshotProjector.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Decision — The snapshot projection is derived exclusively from events for deterministic state reads
+ * @consequence getRunStatus and incremental stores reuse the same replay semantics without duplicating rules
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { RunStatusSnapshot } from '@dvt/contracts';
 
 import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';

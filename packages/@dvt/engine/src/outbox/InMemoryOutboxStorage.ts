@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/outbox/InMemoryOutboxStorage.ts
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Decision — The outbox storage maintains at-least-once delivery with explicit transition to dead-letter
+ * @consequence Event publication preserves durability and operational idempotency in the face of delivery failures
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { RunEventPersisted } from '../contracts/runEvents.js';
 
 import type { DeadLetterRecord, OutboxRecord, IOutboxStorage } from './types.js';

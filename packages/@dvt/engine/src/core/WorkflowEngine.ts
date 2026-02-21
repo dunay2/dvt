@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/engine/src/core/WorkflowEngine.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Decision — The engine orchestrates run lifecycle while preserving domain semantics and event-sourced persistence
+ * @consequence Execution remains deterministic and decoupled from provider runtimes via explicit ports
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type {
   EngineRunRef,
   PlanRef,

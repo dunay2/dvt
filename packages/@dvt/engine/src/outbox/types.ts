@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/outbox/types.ts
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Decision — The outbox defines explicit contracts for recording, dead-lettering and publishing to guarantee robust delivery
+ * @consequence Storage/bus implementations share a stable delivery and retry model
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { RunEventPersisted } from '../contracts/runEvents.js';
 
 export interface OutboxRecord {

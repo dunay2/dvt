@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/security/planRefPolicy.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — Plan URIs are restricted by an allowlist of schemes/hosts/prefixes as a security policy
+ * @consequence The engine avoids untrusted sources and reduces attack surface in plan resolution
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { URL } from 'node:url';
 
 export interface PlanRefAllowlist {

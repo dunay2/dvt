@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/outbox/TokenBucketRateLimiter.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Decision — The token-bucket rate limiter controls outbox write pressure per tenant in memory
+ * @consequence Bursts are limited per tenant, preventing global engine degradation from sudden overloads
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { IOutboxRateLimiter } from './IOutboxRateLimiter.js';
 
 interface BucketState {

@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/outbox/OutboxWorker.ts
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Decision — Outbox delivery is executed in batches with explicit marking of delivered/failed
+ * @consequence The publish cycle maintains operational consistency and tolerance to bus errors
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import type { IEventBus, IOutboxStorage } from './types.js';
 
 export interface OutboxWorkerConfig {

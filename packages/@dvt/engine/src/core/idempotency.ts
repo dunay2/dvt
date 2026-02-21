@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/engine/src/core/idempotency.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Decision — Idempotency keys are derived from the logical identity of the event and the logical attempt
+ * @consequence Prevents duplication of effects and preserves deterministic replay between storage and runtime
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
 import { randomUUID } from 'node:crypto';
 
 import type { SignalRequest } from '@dvt/contracts';
