@@ -315,6 +315,25 @@ module.exports = [
   // Prettier should be last to override formatting rules
   prettier,
 
+  // Node.js files (scripts, cjs, etc) should be linted with Node globals enabled
+  {
+    files: ['**/*.{js,cjs,mjs}'],
+    languageOptions: {
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+
   // Ignore patterns
   {
     ignores: [
