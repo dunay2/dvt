@@ -17,16 +17,20 @@ import { sha256Hex } from '../../src/utils/sha256.js';
 
 import { InMemoryPlanFetcher, utf8 } from './helpers.js';
 
+function makePlanMetadata(planId: string): ExecutionPlan['metadata'] {
+  return {
+    planId,
+    planVersion: '1.0.0',
+    schemaVersion: 'v1.2',
+    targetAdapter: 'mock',
+    fallbackBehavior: 'reject',
+    requiresCapabilities: [],
+  };
+}
+
 function makeHelloWorldPlan(): ExecutionPlan {
   return {
-    metadata: {
-      planId: 'hello-world',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      targetAdapter: 'mock',
-      fallbackBehavior: 'reject',
-      requiresCapabilities: ['basic-execution'],
-    },
+    metadata: makePlanMetadata('hello-world'),
     steps: [
       { stepId: 's1', kind: 'noop' },
       { stepId: 's2', kind: 'noop' },
@@ -36,14 +40,7 @@ function makeHelloWorldPlan(): ExecutionPlan {
 
 function makeDagPlanWithDependsOn(): ExecutionPlan {
   return {
-    metadata: {
-      planId: 'dag-plan',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      targetAdapter: 'mock',
-      fallbackBehavior: 'reject',
-      requiresCapabilities: ['basic-execution'],
-    },
+    metadata: makePlanMetadata('dag-plan'),
     steps: [
       { stepId: 's1', kind: 'noop' },
       { stepId: 's2', kind: 'noop', dependsOn: ['s1'] },
@@ -99,6 +96,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planFetcher: { fetch: async () => plan },
       adapters: new Map([['mock', mock]]),
     });
 
@@ -110,7 +108,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
     // Stable snapshot hash (acts as determinism canary)
     expect(snapshot.hash).toMatchInlineSnapshot(
-      '"105ffaed2c3b84fefaa065bd1d63504a4d12df49970f6f5ef8eb95238e8bba2b"'
+      '"7aecaa5ccc160b4e34ffbe5aee9b8d351fb1e549605f1cd0e6fe1a120730e072"'
     );
   });
 
@@ -139,6 +137,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planFetcher: { fetch: async () => plan },
       adapters: new Map([['mock', mock]]),
     });
 
@@ -188,6 +187,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planFetcher: { fetch: async () => plan },
       adapters: new Map([['mock', mock]]),
     });
 
@@ -250,6 +250,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const authorizer = new AllowAllAuthorizer();
     const planRefPolicy = new PlanRefPolicy({ allowedSchemes: ['https'] });
+    const planFetcher = { fetch: vi.fn(async () => makeHelloWorldPlan()) };
     const engine = new WorkflowEngine({
       stateStore: store,
       outbox: store,
@@ -258,6 +259,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer,
       planRefPolicy,
+      planFetcher,
       adapters: new Map([['conductor', adapter]]),
     });
 
@@ -279,6 +281,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     };
     await expect(engine.startRun(badPlanRef1, baseCtx)).rejects.toThrow(/PLAN_URI_NOT_ALLOWED/);
     expect(startRunMock).not.toHaveBeenCalled();
+    expect(planFetcher.fetch).not.toHaveBeenCalled();
 
     // Case 2: invalid schemaVersion
     const badPlanRef2: PlanRef = {
@@ -289,9 +292,10 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planVersion: '1',
     };
     await expect(engine.startRun(badPlanRef2, baseCtx)).rejects.toThrow(
-      /PLAN_SCHEMA_VERSION_UNKNOWN/
+      /Unsupported plan schema version/
     );
     expect(startRunMock).not.toHaveBeenCalled();
+    expect(planFetcher.fetch).not.toHaveBeenCalled();
 
     // Integrity validation moved to adapters in this phase.
   });

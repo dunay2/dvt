@@ -135,6 +135,7 @@ export function createActivities(deps: ActivityDeps): {
         logicalAttemptId,
         idempotencyKey: deps.idempotency.runEventKey({
           eventType,
+          tenantId: ctx.tenantId,
           runId: ctx.runId,
           logicalAttemptId,
           planId: input.planRef.planId,

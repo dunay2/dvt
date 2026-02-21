@@ -309,73 +309,46 @@ function countStepsBeforeLayer(
 }
 
 function normalizeNonNegativeInt(value: unknown): number {
-  if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
-    return value;
+  if (isNonNegativeInteger(value)) {
+    return value as number;
   }
 
-  if (typeof value === 'string' && value.trim().length > 0) {
-    const n = Number(value);
-    if (Number.isInteger(n) && n >= 0) {
-      return n;
-    }
+  if (isNonNegativeIntegerString(value)) {
+    return Number(value);
   }
 
   return 0;
 }
 
+function isNonNegativeInteger(val: unknown): boolean {
+  return typeof val === 'number' && Number.isInteger(val) && val >= 0;
+}
+
+function isNonNegativeIntegerString(val: unknown): boolean {
+  if (typeof val !== 'string' || val.trim().length === 0) {
+    return false;
+  }
+  const n = Number(val);
+  return Number.isInteger(n) && n >= 0;
+}
+
 export function planExecutionLayers(steps: ReadonlyArray<WorkflowStep>): WorkflowStep[][] {
-  if (steps.length === 0) {
-    return [];
-  }
+  if (steps.length === 0) return [];
 
-  // Validate duplicate IDs upfront (applies to both DAG and sequential fallback paths).
-  const seenStepIds = new Set<string>();
-  for (const step of steps) {
-    if (seenStepIds.has(step.stepId)) {
-      throw new Error(`INVALID_PLAN_SCHEMA: duplicate_step_id:${step.stepId}`);
-    }
-    seenStepIds.add(step.stepId);
-  }
+  validateNoDuplicateStepIds(steps);
 
-  // Backward-compatible fallback for legacy plans without explicit dependencies.
-  const hasExplicitDependencies = steps.some((step) => Array.isArray(step.dependsOn));
-  if (!hasExplicitDependencies) {
+  if (!hasExplicitDependencies(steps)) {
     return steps.map((step) => [step]);
   }
 
-  const byId = new Map<string, WorkflowStep>();
-  const remainingDeps = new Map<string, number>();
-  const dependents = new Map<string, string[]>();
-
-  for (const step of steps) {
-    byId.set(step.stepId, step);
-    remainingDeps.set(step.stepId, 0);
-    dependents.set(step.stepId, []);
-  }
-
-  for (const step of steps) {
-    for (const dep of normalizeDependsOn(step)) {
-      if (!byId.has(dep)) {
-        throw new Error(`INVALID_PLAN_SCHEMA: unknown_dependency:${step.stepId}->${dep}`);
-      }
-      if (dep === step.stepId) {
-        throw new Error(`INVALID_PLAN_SCHEMA: self_dependency:${step.stepId}`);
-      }
-
-      remainingDeps.set(step.stepId, (remainingDeps.get(step.stepId) ?? 0) + 1);
-      const nextDependents = dependents.get(dep)!;
-      nextDependents.push(step.stepId);
-    }
-  }
+  const { remainingDeps, dependents } = buildDagMaps(steps);
 
   const consumed = new Set<string>();
   const layers: WorkflowStep[][] = [];
-
   let ready = steps.filter((step) => (remainingDeps.get(step.stepId) ?? 0) === 0);
 
   while (ready.length > 0) {
     layers.push(ready);
-
     const nextReadyIds = new Set<string>();
     for (const step of ready) {
       consumed.add(step.stepId);
@@ -387,8 +360,6 @@ export function planExecutionLayers(steps: ReadonlyArray<WorkflowStep>): Workflo
         }
       }
     }
-
-    // Preserve declaration order inside the same frontier for deterministic history.
     ready = steps.filter((step) => nextReadyIds.has(step.stepId) && !consumed.has(step.stepId));
   }
 
@@ -397,6 +368,49 @@ export function planExecutionLayers(steps: ReadonlyArray<WorkflowStep>): Workflo
   }
 
   return layers;
+}
+
+function validateNoDuplicateStepIds(steps: ReadonlyArray<WorkflowStep>): void {
+  const seenStepIds = new Set<string>();
+  for (const step of steps) {
+    if (seenStepIds.has(step.stepId)) {
+      throw new Error(`INVALID_PLAN_SCHEMA: duplicate_step_id:${step.stepId}`);
+    }
+    seenStepIds.add(step.stepId);
+  }
+}
+
+function hasExplicitDependencies(steps: ReadonlyArray<WorkflowStep>): boolean {
+  return steps.some((step) => Array.isArray(step.dependsOn));
+}
+
+function buildDagMaps(steps: ReadonlyArray<WorkflowStep>): {
+  remainingDeps: Map<string, number>;
+  dependents: Map<string, string[]>;
+} {
+  const remainingDeps = new Map<string, number>();
+  const dependents = new Map<string, string[]>();
+
+  for (const step of steps) {
+    remainingDeps.set(step.stepId, 0);
+    dependents.set(step.stepId, []);
+  }
+
+  const stepIds = new Set(steps.map((step) => step.stepId));
+  for (const step of steps) {
+    for (const dep of normalizeDependsOn(step)) {
+      if (!stepIds.has(dep)) {
+        throw new Error(`INVALID_PLAN_SCHEMA: unknown_dependency:${step.stepId}->${dep}`);
+      }
+      if (dep === step.stepId) {
+        throw new Error(`INVALID_PLAN_SCHEMA: self_dependency:${step.stepId}`);
+      }
+      remainingDeps.set(step.stepId, (remainingDeps.get(step.stepId) ?? 0) + 1);
+      const nextDependents = dependents.get(dep)!;
+      nextDependents.push(step.stepId);
+    }
+  }
+  return { remainingDeps, dependents };
 }
 
 function normalizeDependsOn(step: WorkflowStep): string[] {

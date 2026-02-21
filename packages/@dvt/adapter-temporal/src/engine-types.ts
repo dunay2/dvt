@@ -147,6 +147,7 @@ export interface IClock {
 
 export interface EventIdempotencyInput {
   eventType: EventType;
+  tenantId: string;
   runId: string;
   logicalAttemptId: number;
   planId: string;

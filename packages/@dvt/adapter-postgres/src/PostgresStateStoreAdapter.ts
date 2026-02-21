@@ -80,68 +80,109 @@ interface MarkFailedRow {
 function applyEventToSnapshot(snap: WorkflowSnapshot, e: EventEnvelope): void {
   switch (e.eventType) {
     case 'RunQueued':
+      handleRunQueued(snap, e);
       break;
     case 'RunStarted':
-      snap.status = 'RUNNING';
-      snap.startedAt = snap.startedAt ?? e.emittedAt;
+      handleRunStarted(snap, e);
       break;
     case 'RunPaused':
-      snap.status = 'PAUSED';
-      snap.paused = true;
+      handleRunPaused(snap, e);
       break;
     case 'RunResumed':
-      snap.status = 'RUNNING';
-      snap.paused = false;
+      handleRunResumed(snap, e);
       break;
     case 'RunCancelled':
-      snap.status = 'CANCELLED';
-      snap.completedAt = e.emittedAt;
+      handleRunCancelled(snap, e);
       break;
     case 'RunCompleted':
-      snap.status = 'COMPLETED';
-      snap.completedAt = e.emittedAt;
+      handleRunCompleted(snap, e);
       break;
     case 'RunFailed':
-      snap.status = 'FAILED';
-      snap.completedAt = e.emittedAt;
+      handleRunFailed(snap, e);
       break;
-    case 'StepStarted': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'RUNNING';
-      s.startedAt = s.startedAt ?? e.emittedAt;
-      s.attempts += 1;
-      snap.steps[stepId] = s;
+    case 'StepStarted':
+      handleStepStarted(snap, e);
       break;
-    }
-    case 'StepCompleted': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'COMPLETED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
+    case 'StepCompleted':
+      handleStepCompleted(snap, e);
       break;
-    }
-    case 'StepFailed': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'FAILED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
+    case 'StepFailed':
+      handleStepFailed(snap, e);
       break;
-    }
-    case 'StepSkipped': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'SKIPPED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
+    case 'StepSkipped':
+      handleStepSkipped(snap, e);
       break;
-    }
     default:
       // Forward-compatibility: unknown event types do not mutate snapshot.
       break;
   }
+}
+
+function handleRunQueued(_snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  // No-op for RunQueued
+}
+
+function handleRunStarted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'RUNNING';
+  snap.startedAt = snap.startedAt ?? e.emittedAt;
+}
+
+function handleRunPaused(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  snap.status = 'PAUSED';
+  snap.paused = true;
+}
+
+function handleRunResumed(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  snap.status = 'RUNNING';
+  snap.paused = false;
+}
+
+function handleRunCancelled(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'CANCELLED';
+  snap.completedAt = e.emittedAt;
+}
+
+function handleRunCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'COMPLETED';
+  snap.completedAt = e.emittedAt;
+}
+
+function handleRunFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'FAILED';
+  snap.completedAt = e.emittedAt;
+}
+
+function handleStepStarted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'RUNNING';
+  s.startedAt = s.startedAt ?? e.emittedAt;
+  s.attempts += 1;
+  snap.steps[stepId] = s;
+}
+
+function handleStepCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'COMPLETED';
+  s.completedAt = e.emittedAt;
+  snap.steps[stepId] = s;
+}
+
+function handleStepFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'FAILED';
+  s.completedAt = e.emittedAt;
+  snap.steps[stepId] = s;
+}
+
+function handleStepSkipped(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s: StepSnapshot = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'SKIPPED';
+  s.completedAt = e.emittedAt;
+  snap.steps[stepId] = s;
 }
 
 export interface PostgresAdapterConfig {

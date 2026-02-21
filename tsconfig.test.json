@@ -3,6 +3,7 @@
   "include": [
     "packages/@dvt/engine/src/**/*.ts",
     "packages/@dvt/engine/test/**/*.ts",
+    "packages/@dvt/*/test/**/*.ts",
     "packages/*/test/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"]

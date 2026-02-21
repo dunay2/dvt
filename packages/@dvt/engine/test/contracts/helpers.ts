@@ -1,5 +1,6 @@
+import type { PlanRef } from '@dvt/contracts';
+
 import type { IRawPlanFetcher } from '../../src/security/planIntegrity.js';
-import type { PlanRef } from '../src/contracts/types.js';
 
 export class InMemoryPlanFetcher implements IRawPlanFetcher {
   constructor(private readonly map: ReadonlyMap<string, Uint8Array>) {}

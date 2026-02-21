@@ -350,29 +350,34 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
-    it('rejects step when dependsOn is not an array', async () => {
-      const deps = buildDeps();
-      const acts = createActivities(deps);
+    function expectExecuteStepRejects(step: any, expectedError: string) {
+      return async () => {
+        const deps = buildDeps();
+        const acts = createActivities(deps);
+        await expect(
+          acts.executeStep({
+            step,
+            ctx: CTX,
+          })
+        ).rejects.toThrow(expectedError);
+      };
+    }
 
-      await expect(
-        acts.executeStep({
-          step: { stepId: 's2', dependsOn: 's1' as unknown as string[] },
-          ctx: CTX,
-        })
-      ).rejects.toThrow('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
-    });
+    it(
+      'rejects step when dependsOn is not an array',
+      expectExecuteStepRejects(
+        { stepId: 's2', dependsOn: 's1' as unknown as string[] },
+        'INVALID_STEP_SCHEMA: dependsOn_must_be_array'
+      )
+    );
 
-    it('rejects step when dependsOn contains non-string values', async () => {
-      const deps = buildDeps();
-      const acts = createActivities(deps);
-
-      await expect(
-        acts.executeStep({
-          step: { stepId: 's2', dependsOn: ['s1', 2] as unknown as string[] },
-          ctx: CTX,
-        })
-      ).rejects.toThrow('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
-    });
+    it(
+      'rejects step when dependsOn contains non-string values',
+      expectExecuteStepRejects(
+        { stepId: 's2', dependsOn: ['s1', 2] as unknown as string[] },
+        'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string'
+      )
+    );
 
     it('rejects step with unknown fields', async () => {
       const deps = buildDeps();

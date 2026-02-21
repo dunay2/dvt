@@ -142,42 +142,10 @@ export class WorkflowEngine implements IWorkflowEngine {
     });
 
     try {
-      // 1) PlanRef allowlist + schemaVersion gate (contract).
-      this.deps.planRefPolicy.validateOrThrow(validatedPlanRef.uri);
-      validateSchemaVersionOrThrow(validatedPlanRef.schemaVersion);
-
-      // 2) Tenant boundary gate (contract).
-      await this.deps.authorizer.assertTenantAccess(validatedContext.tenantId);
-
-      // 3) Additional defensive checks.
-      validateRunIdOrThrow(validatedContext.runId);
-      await this.ensureRunDoesNotExist(validatedContext.runId);
-
-      // 4) Fetch the resolved plan — engine owns plan bytes, not the adapter.
+      await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
       const plan = await this.deps.planFetcher.fetch(validatedPlanRef);
-
-      // 5) Capability + target-adapter gates from plan (authoritative source).
-      const requiresCapabilities = plan.metadata.requiresCapabilities;
-      if (Array.isArray(requiresCapabilities) && requiresCapabilities.length > 0) {
-        throw new CapabilitiesNotSupportedError(requiresCapabilities);
-      }
-
-      const targetAdapter = plan.metadata.targetAdapter;
-      if (
-        targetAdapter &&
-        targetAdapter !== 'any' &&
-        targetAdapter !== validatedContext.targetAdapter
-      ) {
-        throw new TargetAdapterMismatchError(targetAdapter, validatedContext.targetAdapter);
-      }
-
-      // 6) Per-tenant outbox rate limit check.
-      if (
-        this.deps.outboxRateLimiter &&
-        !this.deps.outboxRateLimiter.tryAcquire(validatedContext.tenantId, 1)
-      ) {
-        throw new OutboxRateLimitExceededError(validatedContext.tenantId);
-      }
+      this.validatePlanCapabilities(plan, validatedContext);
+      this.checkOutboxRateLimit(validatedContext);
 
       const bootMeta: RunMetadata = buildRunMetadata(validatedContext, validatedPlanRef);
       await this.deps.stateStore.bootstrapRunTx({
@@ -194,15 +162,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         'adapter.startRun'
       );
 
-      await this.deps.stateStore.saveProviderRef(validatedContext.runId, {
-        providerWorkflowId: runRef.workflowId,
-        providerRunId: runRef.runId,
-        ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-        ...(runRef.provider === 'temporal' && runRef.taskQueue
-          ? { providerTaskQueue: runRef.taskQueue }
-          : {}),
-        ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
-      });
+      await this.saveProviderRef(validatedContext.runId, runRef);
 
       this.metrics.increment('dvt.run.started', metricTags);
       this.metrics.timing(
@@ -212,27 +172,140 @@ export class WorkflowEngine implements IWorkflowEngine {
       );
       return runRef;
     } catch (error) {
-      this.metrics.increment('dvt.run.start_failed', metricTags);
-      this.logger.error('startRun failed', {
-        runId: validatedContext.runId,
-        tenantId: validatedContext.tenantId,
-        provider: validatedContext.targetAdapter,
-        error: toErrorMessage(error),
-      });
-
-      const failMeta = await this.deps.stateStore
-        .getRunMetadataByRunId(validatedContext.runId)
-        .catch(() => null);
-      if (failMeta) {
-        await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
-          this.logger.error('RunFailed emission failed after startRun error', {
-            runId: validatedContext.runId,
-            error: toErrorMessage(emitErr),
-          });
-        });
-      }
-      throw error;
+      await this.handleStartRunError(error, validatedContext, metricTags);
     }
+  }
+
+  private async validateStartRunPreconditions(
+    planRef: PlanRef,
+    context: RunContext
+  ): Promise<void> {
+    this.deps.planRefPolicy.validateOrThrow(planRef.uri);
+    validateSchemaVersionOrThrow(planRef.schemaVersion);
+    await this.deps.authorizer.assertTenantAccess(context.tenantId);
+    validateRunIdOrThrow(context.runId);
+    await this.ensureRunDoesNotExist(context.runId);
+  }
+
+  private validatePlanCapabilities(
+    plan: {
+      metadata: {
+        requiresCapabilities?: unknown[];
+        targetAdapter?: string;
+      };
+    },
+    context: RunContext
+  ): void {
+    const requiresCapabilities = plan.metadata.requiresCapabilities;
+    // Complex conditional extracted for clarity
+    const hasUnsupportedCapabilities =
+      Array.isArray(requiresCapabilities) && requiresCapabilities.length > 0;
+    if (hasUnsupportedCapabilities) {
+      throw new CapabilitiesNotSupportedError(requiresCapabilities);
+    }
+
+    const targetAdapter = plan.metadata.targetAdapter;
+    // Complex conditional extracted for clarity
+    const isTargetAdapterMismatch =
+      typeof targetAdapter !== 'undefined' &&
+      targetAdapter !== 'any' &&
+      targetAdapter !== context.targetAdapter;
+    if (isTargetAdapterMismatch) {
+      throw new TargetAdapterMismatchError(targetAdapter, context.targetAdapter);
+    }
+  }
+
+  private shouldThrowForUnsupportedCapabilities(
+    requiresCapabilities: unknown[] | undefined
+  ): boolean {
+    // Complex conditional extracted for clarity
+    if (!Array.isArray(requiresCapabilities)) {
+      return false;
+    }
+    return requiresCapabilities.length > 0;
+  }
+
+  private shouldThrowForTargetAdapterMismatch(
+    targetAdapter: string | undefined,
+    contextTargetAdapter: string | undefined
+  ): boolean {
+    // Complex conditional extracted for clarity
+    if (typeof targetAdapter === 'undefined') {
+      return false;
+    }
+    if (targetAdapter === 'any') {
+      return false;
+    }
+    return targetAdapter !== contextTargetAdapter;
+  }
+
+  private hasUnsupportedCapabilities(requiresCapabilities: unknown[] | undefined): boolean {
+    if (!Array.isArray(requiresCapabilities)) {
+      return false;
+    }
+    return requiresCapabilities.length > 0;
+  }
+
+  private isTargetAdapterMismatch(
+    targetAdapter: string | undefined,
+    contextTargetAdapter: string | undefined
+  ): boolean {
+    // Refactored for clarity
+    if (typeof targetAdapter === 'undefined') {
+      return false;
+    }
+    if (targetAdapter === 'any') {
+      return false;
+    }
+    return targetAdapter !== contextTargetAdapter;
+  }
+
+  private checkOutboxRateLimit(context: RunContext): void {
+    if (
+      this.deps.outboxRateLimiter &&
+      !this.deps.outboxRateLimiter.tryAcquire(context.tenantId, 1)
+    ) {
+      throw new OutboxRateLimitExceededError(context.tenantId);
+    }
+  }
+
+  private async saveProviderRef(runId: string, runRef: EngineRunRef): Promise<void> {
+    await this.deps.stateStore.saveProviderRef(runId, {
+      providerWorkflowId: runRef.workflowId,
+      providerRunId: runRef.runId,
+      ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
+      ...(runRef.provider === 'temporal' && runRef.taskQueue
+        ? { providerTaskQueue: runRef.taskQueue }
+        : {}),
+      ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
+    });
+  }
+
+  private async handleStartRunError(
+    error: unknown,
+    validatedContext: RunContext,
+    metricTags: Record<string, unknown>
+  ): Promise<never> {
+    this.metrics.increment('dvt.run.start_failed', metricTags);
+    this.logger.error('startRun failed', {
+      runId: validatedContext.runId,
+      tenantId: validatedContext.tenantId,
+      provider: validatedContext.targetAdapter,
+      error: toErrorMessage(error),
+    });
+
+    const failMeta = await this.deps.stateStore
+      .getRunMetadataByRunId(validatedContext.runId)
+      .catch(() => null);
+    if (failMeta) {
+      await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
+        this.logger.error('RunFailed emission failed after startRun error', {
+          runId: validatedContext.runId,
+          error: toErrorMessage(emitErr),
+        });
+      });
+    }
+    throw error;
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {

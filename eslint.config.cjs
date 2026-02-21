@@ -132,6 +132,15 @@ module.exports = [
     },
   },
   {
+    files: ['packages/@dvt/adapter-postgres/src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['packages/@dvt/adapter-postgres/tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
+  },
+  {
     files: ['apps/api/src/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: { project: ['apps/api/tsconfig.json'], tsconfigRootDir: __dirname },
