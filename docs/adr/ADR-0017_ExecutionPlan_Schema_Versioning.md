@@ -1,15 +1,14 @@
-
 # ADR-0017: ExecutionPlan Schema Versioning & Compatibility
 
-- **Status**: Proposed 
+- **Status**: Proposed
 - **Date**: 2026-02-21
 - **Owners**: Planner / Engine Domain / Adapter Layer
 - **Related**:
   - ADR-0012 (Plan bytes boundary)
-  - IWorkflowEngine.v2.0.md *(update required)*
-  - ExecutionSemantics.v2.0.md *(update required)*
-  - AdapterDevelopmentGuide.md *(update required)*
-  - RunEvents.v2.0.1.md *(idempotency context)*
+  - IWorkflowEngine.v2.0.md _(update required)_
+  - ExecutionSemantics.v2.0.md _(update required)_
+  - AdapterDevelopmentGuide.md _(update required)_
+  - RunEvents.v2.0.1.md _(idempotency context)_
 
 ---
 
@@ -18,6 +17,7 @@
 `ExecutionPlan` is the canonical artifact produced by the planning layer and consumed by workflow engine adapters (Temporal, Conductor, future engines).
 
 The codebase already distinguishes:
+
 - `planVersion`: **revision** of a concrete plan instance (e.g. "1", "2", "3") and participates in idempotency
 - `schemaVersion`: **format/schema** version of the `ExecutionPlan` JSON structure (e.g. "v1.0") and does **not** participate in idempotency
 
@@ -57,12 +57,14 @@ These rules apply to **schemaVersion only**.
 - Schema compatibility checks MUST use `schemaVersion`.
 
 #### Major version
+
 - A change in `major` indicates a breaking schema change.
 - Adapters MUST reject any plan whose schema major is unsupported.
 - Phase 1 policy: adapters MUST accept **only the same major** they support.
   - If `planMajor != adapterMajor` → reject (including older majors).
 
 #### Minor version (Phase 1 strict mode with operational prerequisites)
+
 - Phase 1 comparison is strict but bounded:
   - If `planMinor > adapterSupportedMinor` → reject.
   - If `planMinor <= adapterSupportedMinor` → accept.
@@ -85,13 +87,14 @@ If validation fails, the Engine MUST fail fast and MUST NOT create a run record 
 ```ts
 class PlanRejectedError extends Error {
   code: 'UNSUPPORTED_PLAN_VERSION';
-  schemaVersion: string;      // e.g. "v1.1"
-  supportedVersion: string;   // e.g. "v1.0" or "v1.1"
-  adapterName: string;        // e.g. "TemporalAdapter"
+  schemaVersion: string; // e.g. "v1.1"
+  supportedVersion: string; // e.g. "v1.0" or "v1.1"
+  adapterName: string; // e.g. "TemporalAdapter"
 }
 ```
 
 If a version mismatch is detected **after** run creation (should not happen if §3 timing is followed), the Engine MUST:
+
 - emit `RunFailed` with reason `UNSUPPORTED_PLAN_VERSION`
 - close the run deterministically
 
@@ -104,6 +107,7 @@ But the normative design is to reject **pre-bootstrap**.
 A canonical compatibility helper MUST exist in `@dvt/plan-verifier`.
 
 It MUST:
+
 - parse `v<major>.<minor>`
 - throw a descriptive error on invalid format (no silent false)
 - enforce Phase 1 compatibility rules
@@ -197,10 +201,12 @@ To avoid runs-in-flight reading a different schema/bytes mid-execution:
 - Plan URIs MUST NOT be mutable “latest” endpoints.
 
 Preferred patterns:
+
 - `s3://.../plans/<planId>/<schemaVersion>/<sha256>/plan.json`
 - `https://.../plans/<planId>/<schemaVersion>/<sha256>`
 
 Forbidden patterns:
+
 - `.../plans/<planId>/latest`
 - any URI whose content can change without changing the URI
 
@@ -209,22 +215,26 @@ Forbidden patterns:
 ## Consequences
 
 ### Positive
+
 - Formalizes and aligns the existing `v<major>.<minor>` schemaVersion practice.
 - Prevents executing plans with unknown schema.
 - Makes compatibility auditable (JSON matrix) and enforceable (CI contract test).
 - Protects runs-in-flight via immutability requirement.
 
 ### Negative / Trade-offs
+
 - Requires coordinated rollout for minor bumps (or strict mode becomes an outage risk).
 - Adds governance artifacts (`plan-compat.json`, schema, contract tests) to maintain.
 - Phase 1 rejects older majors (simplifies correctness at the cost of explicit back-compat).
 
 ### Deployment / Rollback Note
+
 Rollback risk exists:
 
 - If planner generates `v1.1` and adapters are rolled back to support only `v1.0`, runs will fail with `UNSUPPORTED_PLAN_VERSION`.
 
 Mitigations (required to operate strict mode safely):
+
 - feature flags / dual emit
 - dual-support windows
 - blue/green deployments
@@ -235,13 +245,13 @@ Mitigations (required to operate strict mode safely):
 
 This ADR requires updates to:
 
-1) **IWorkflowEngine.v2.0.md**
+1. **IWorkflowEngine.v2.0.md**
    - require `schemaVersion` format `v<major>.<minor>`
    - specify pre-bootstrap validation timing
-2) **ExecutionSemantics.v2.0.md**
+2. **ExecutionSemantics.v2.0.md**
    - add Plan Compatibility section (schema vs plan revision)
    - add immutability requirements for PlanRef URI + hash
-3) **AdapterDevelopmentGuide.md**
+3. **AdapterDevelopmentGuide.md**
    - adapter MUST declare supported schema
    - adapter MUST use plan-verifier helpers (or equivalent)
    - document matrix-alignment CI contract test
@@ -251,6 +261,7 @@ This ADR requires updates to:
 ## Verification
 
 ### Invariants
+
 - **INV-PLAN-001**: Every ExecutionPlan includes `metadata.schemaVersion`
 - **INV-PLAN-001A**: `schemaVersion` format is `v<major>.<minor>`
 - **INV-PLAN-002**: Engine validates schemaVersion pre-bootstrap (no run created on mismatch)
@@ -261,6 +272,7 @@ This ADR requires updates to:
 - **INV-PLAN-007**: PlanRef URIs are immutable (no “latest”); hash validation enforced
 
 ### Required Tests (mandatory CI)
+
 - `test/plan/schemaVersion-required.test.ts`
 - `test/plan/schemaVersion-format-v-prefix.test.ts`
 - `test/engine/reject-unsupported-schema-pre-bootstrap.test.ts`
@@ -273,6 +285,7 @@ This ADR requires updates to:
 ---
 
 ## References
+
 - Semantic Versioning: https://semver.org/
 - Temporal workflows (general semantics; rollout awareness): https://docs.temporal.io/workflows
 - Martin Fowler — Idempotent Receiver: https://martinfowler.com/articles/patterns-of-distributed-systems/idempotent-receiver.html

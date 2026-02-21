@@ -2,7 +2,7 @@
 
 Version: Integrated Review v1.0 Generated: 2026-02-21T17:37:44.778563Z
 
-------------------------------------------------------------------------
+---
 
 # 1. Executive Summary
 
@@ -17,34 +17,34 @@ production-ready.
 Primary risk: continuing feature development on top of unresolved Wave 0
 defects.
 
-------------------------------------------------------------------------
+---
 
 # 2. Foundational Assessment
 
 ## 2.1 Strengths
 
--   Append authority model correctly implemented.
--   Separation of emittedAt vs persistedAt is clean.
--   bootstrapRunTx solves metadata-before-events race.
--   Three-layer transition enforcement is correct defense-in-depth.
--   Temporal-first strategy is aligned with deterministic execution.
--   Product principle boundaries are conceptually clean:
-    -   Planner decides
-    -   Engine executes
-    -   State persists
-    -   UI reflects
+- Append authority model correctly implemented.
+- Separation of emittedAt vs persistedAt is clean.
+- bootstrapRunTx solves metadata-before-events race.
+- Three-layer transition enforcement is correct defense-in-depth.
+- Temporal-first strategy is aligned with deterministic execution.
+- Product principle boundaries are conceptually clean:
+  - Planner decides
+  - Engine executes
+  - State persists
+  - UI reflects
 
 ## 2.2 Critical Gaps
 
--   ADR-0012 not implemented (engine still fetches plan bytes)
--   saveProviderRef outside event sourcing boundary
--   getRunStatus synchronous provider call
--   logicalAttemptId hardcoded
--   Missing Execution Planning layer
--   Plugin system defined but not implemented
--   No SLA/backpressure/retention model
+- ADR-0012 not implemented (engine still fetches plan bytes)
+- saveProviderRef outside event sourcing boundary
+- getRunStatus synchronous provider call
+- logicalAttemptId hardcoded
+- Missing Execution Planning layer
+- Plugin system defined but not implemented
+- No SLA/backpressure/retention model
 
-------------------------------------------------------------------------
+---
 
 # 3. Integrated Roadmap (Refined)
 
@@ -62,14 +62,14 @@ getRunStatus - W0-7 Snapshot integrity
 
 ### Completion Criteria
 
--   Engine does not fetch plan bytes.
--   All runs created atomically.
--   No synchronous provider status calls.
--   CI prevents regression.
+- Engine does not fetch plan bytes.
+- All runs created atomically.
+- No synchronous provider status calls.
+- CI prevents regression.
 
 Wave 0 must reach 100% before any adapter/state store expansion.
 
-------------------------------------------------------------------------
+---
 
 ## Wave 1 -- Contract Reconciliation
 
@@ -82,18 +82,18 @@ path.
 
 Goal: zero contradictions between docs and code.
 
-------------------------------------------------------------------------
+---
 
 ## Wave 2 -- Critical Path (Real Infrastructure)
 
--   PostgresStateStore MVP
--   TemporalAdapter MVP (3-step execution)
--   Golden path end-to-end run with real infra
+- PostgresStateStore MVP
+- TemporalAdapter MVP (3-step execution)
+- Golden path end-to-end run with real infra
 
 Add: - ExecutionPlan.schemaVersion - Adapter must reject unsupported
 plan versions.
 
-------------------------------------------------------------------------
+---
 
 ## Wave 3 -- Operational Foundations
 
@@ -116,28 +116,28 @@ Tests mandatory.
 
 ### W3-3 Pagination
 
--   listEvents paginated
--   getRunStatus must implement paginated replay
--   No full in-memory event loading
+- listEvents paginated
+- getRunStatus must implement paginated replay
+- No full in-memory event loading
 
 ### Outbox Ordering
 
 Guarantee per-run ordering on event bus: - Kafka partition key = runId -
 NATS subject scoped per runId
 
-------------------------------------------------------------------------
+---
 
 ## Wave 4 -- Hardening
 
 Load test additions:
 
--   100 concurrent runs
--   100 events each
--   Verify no global sequence contention
+- 100 concurrent runs
+- 100 events each
+- Verify no global sequence contention
 
 Target: p99 getRunStatus \< 100ms at 10K events.
 
-------------------------------------------------------------------------
+---
 
 ## Wave 5 -- Execution Planning Layer
 
@@ -145,7 +145,7 @@ Introduce BasicPlanner:
 
 RunSpec v1:
 
-``` ts
+```ts
 type RunSpec = {
   manifest: { uri: string; sha256: string };
   selection: {
@@ -161,7 +161,7 @@ partial execution yet
 
 Plugin system foundation starts here.
 
-------------------------------------------------------------------------
+---
 
 # 4. Risks & Mitigations
 
@@ -177,7 +177,7 @@ Mitigation: - Partition by runId - Ordering invariant test
 
 Mitigation: - ADR verification protocol - CI-enforced invariants
 
-------------------------------------------------------------------------
+---
 
 # 5. Governance Rules
 
@@ -186,7 +186,7 @@ Mitigation: - ADR verification protocol - CI-enforced invariants
 3.  Every invariant must have a failing test.
 4.  No undocumented behavior accepted into main branch.
 
-------------------------------------------------------------------------
+---
 
 # 6. Timeline Projection
 
@@ -196,7 +196,7 @@ Month 7: Wave 4 Months 8--9: Wave 5
 Primary failure mode: Starting infrastructure expansion before
 correctness stabilization.
 
-------------------------------------------------------------------------
+---
 
 # 7. Final Position
 
@@ -205,6 +205,6 @@ Roadmap quality: disciplined and realistic
 
 Recommendation: Enforce Wave 0 freeze immediately.
 
-------------------------------------------------------------------------
+---
 
 End of Integrated Document
