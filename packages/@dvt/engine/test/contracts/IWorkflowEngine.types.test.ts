@@ -6,7 +6,7 @@ import type {
   RunStatusSnapshot,
   SignalRequest,
 } from '../../src/contracts/types.js';
-import type { PlanRef } from '../../src/types/plan-ref';
+import type { PlanRef } from '../../src/contracts/types.js';
 
 describe('IWorkflowEngine contract types', () => {
   it('PlanRef must have the required fields', () => {

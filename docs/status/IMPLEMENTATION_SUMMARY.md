@@ -230,7 +230,36 @@ When behavior changes affect deterministic execution:
 ---
 
 **Status**: Active and usable (with audited gaps tracked)
-**Last updated**: 2026-02-19 18:32 UTC
+**Last updated**: 2026-02-21 22:55 UTC
+
+## Branch synchronization update (2026-02-21)
+
+This section records the latest branch-level hardening updates merged in `feat/ddd-cqrs-structure` before PR review.
+
+### Engine and contract-test hardening
+
+- Mock adapter start path adjusted to avoid `RUN_NOT_FOUND` bootstrap failures in contract test scenarios where provider metadata is not pre-seeded.
+- Contract coverage in [`packages/@dvt/engine/test/contracts/engine.test.ts`](../../packages/@dvt/engine/test/contracts/engine.test.ts) was refreshed to:
+  - keep deterministic replay/hash checks,
+  - align expected status semantics with projected model behavior in the mocked path,
+  - include explicit traceability header with issue impact context.
+
+### CI reliability hardening
+
+- Workspace CI build order was hardened in [`workspace-ci`](../../.github/workflows/ci.yml) to build target workspaces with their workspace dependencies first.
+- Change applied in [`Build affected workspace (including workspace dependencies)`](../../.github/workflows/ci.yml):
+  - from `pnpm --filter "${{ matrix.pkg }}" --if-present run build`
+  - to `pnpm --filter "...${{ matrix.pkg }}" --if-present run build`
+- This prevents package-entry resolution failures in CI (notably `@dvt/contracts` dist artifacts missing when downstream workspaces run tests).
+
+### Test hygiene
+
+- Removed orphan snapshot with no owning spec: [`packages/@dvt/engine/test/core/__snapshots__/WorkflowEngine.integration.test.ts.snap`](../../packages/@dvt/engine/test/core/__snapshots__/WorkflowEngine.integration.test.ts.snap).
+
+### Validation evidence (latest pass)
+
+- `pnpm -C packages/@dvt/engine test -- --run test/contracts/engine.test.ts` ✅
+- `pnpm --filter "...@dvt/engine" --if-present run build` + `pnpm --filter "@dvt/engine" --if-present run test` ✅
 
 ## PostgreSQL Hardening Slice (2026-02-19 18:32 UTC)
 
