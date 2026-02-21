@@ -8,8 +8,17 @@
 
 ## Relationships
 
+```mermaid
+graph TD
+    File[File] -->|BASELINED_ON| ADR[ADR]
+    Module[Module] -->|CONTAINS| File
+```
+
+```code
 - (:File)-\[:BASELINED_ON\]-\>(:ADR)
 - (:Module)-\[:CONTAINS\]-\>(:File)
+
+```
 
 ---
 
@@ -28,7 +37,7 @@ FOR (m:Module) REQUIRE m.name IS UNIQUE;
 
 ---
 
-## Example Query: Dead ADRs
+## Example Query: ADRs without baselined files
 
 ```cypher
 MATCH (a:ADR {status:"Accepted"})
@@ -38,7 +47,7 @@ RETURN a.number, a.title;
 
 ---
 
-## Example Query: Blast Radius
+## Example Query: Blast radius (files affected by ADR)
 
 ```cypher
 MATCH (a:ADR {number:$adr})<-[:BASELINED_ON]-(f:File)
