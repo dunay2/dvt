@@ -56,31 +56,31 @@ function buildPrompt(payload) {
   const personas = first.personas || [];
 
   return [
-    '# Contexto arquitectónico para IA',
+    '# Architectural context for AI',
     '',
-    '## Archivo objetivo',
-    `- path: ${archivo.path || payload.filePath || '(desconocido)'}`,
-    `- nombre: ${archivo.nombre || '(desconocido)'}`,
-    `- tipo: ${archivo.tipo || '(desconocido)'}`,
+    '## Target file',
+    `- path: ${archivo.path || payload.filePath || '(unknown)'}`,
+    `- name: ${archivo.nombre || '(unknown)'}`,
+    `- type: ${archivo.tipo || '(unknown)'}`,
     '',
-    '## Módulo contenedor',
-    `- path: ${modulo.path || '(desconocido)'}`,
-    `- nombre: ${modulo.nombre || '(desconocido)'}`,
+    '## Containing module',
+    `- path: ${modulo.path || '(unknown)'}`,
+    `- name: ${modulo.nombre || '(unknown)'}`,
     '',
-    '## Dependencias directas',
-    toBulletList(dependencias, (d) => `${d.path || '(sin path)'} (${d.nombre || 'sin nombre'})`),
+    '## Direct dependencies',
+    toBulletList(dependencias, (d) => `${d.path || '(no path)'} (${d.nombre || 'no name'})`),
     '',
-    '## Decisiones relacionadas (ADR)',
+    '## Related decisions (ADRs)',
     toBulletList(
       decisiones,
-      (d) => `${d.title || d.titulo || 'sin titulo'} | status=${d.status || d.estado || 'n/a'} | date=${d.date || d.fecha || 'n/a'}`
+      (d) => `${d.title || d.titulo || 'no title'} | status=${d.status || d.estado || 'n/a'} | date=${d.date || d.fecha || 'n/a'}`
     ),
     '',
-    '## Responsables / expertos',
-    toBulletList(personas, (p) => `${p.nombre || 'sin nombre'} (${p.rol || 'sin rol'})`),
+    '## Owners / experts',
+    toBulletList(personas, (p) => `${p.nombre || 'no name'} (${p.rol || 'no role'})`),
     '',
-    '## Instrucción sugerida para el asistente',
-    'Usa este contexto para proponer cambios compatibles con el ADR relacionado, minimizando impacto en contratos y preservando trazabilidad entre documentación y código.',
+    '## Suggested instruction for the assistant',
+    'Use this context to propose changes compatible with the related ADR, minimizing contract impact and preserving traceability between documentation and code.',
   ].join('\n');
 }
 
