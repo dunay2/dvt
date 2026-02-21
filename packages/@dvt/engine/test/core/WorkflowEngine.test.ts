@@ -2,7 +2,6 @@ import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot } from '@dvt/
 import { describe, expect, it } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -32,26 +31,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
     };
   }
 
-  function makeMockPlanFetcher(): { fetch(planRef: PlanRef): Promise<ExecutionPlan> } {
-    return {
-      async fetch(planRef: PlanRef): Promise<ExecutionPlan> {
-        return {
-          metadata: {
-            planId: planRef.planId ?? 'p',
-            planVersion: planRef.planVersion ?? '1.0',
-            schemaVersion: planRef.schemaVersion,
-            targetAdapter: 'temporal' as const,
-          },
-          steps: [{ stepId: 'step.1' }],
-        };
-      },
-    };
-  }
-
   function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
     return {
       provider: 'temporal',
-      async startRun(_plan: ExecutionPlan, ctx) {
+      async startRun(_planRef: PlanRef, ctx) {
         return {
           provider: 'temporal',
           namespace: 'default',
@@ -82,7 +65,6 @@ describe('WorkflowEngine (basic failure modes)', () => {
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      planFetcher: makeMockPlanFetcher(),
       adapters: input?.adapters ?? new Map(),
       requiredProviders: input?.requiredProviders,
     });
@@ -199,7 +181,9 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await run(engine);
   });
 
-  it('startRun emits RunFailed when adapter start throws', async () => {
+  it('startRun rejects and stores no events when adapter throws before bootstrap', async () => {
+    // ADR-0014: Adapter is called first. If it throws, bootstrapRunTx is never called,
+    // so no run metadata or events are stored.
     const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
       [
         'temporal',
@@ -218,7 +202,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     );
 
     const events = await store.listEvents('fail-1');
-    expect(events.some((event) => event.eventType === 'RunFailed')).toBe(true);
+    expect(events).toHaveLength(0);
   });
 
   it('getRunStatus falls back to projected snapshot when adapter status fails', async () => {

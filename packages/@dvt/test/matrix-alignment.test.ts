@@ -19,7 +19,9 @@ import path from 'node:path';
 
 import Ajv from 'ajv';
 
-import { ADAPTER_SUPPORTED_SCHEMA as TEMPORAL_SUPPORTED } from '../../packages/@dvt/adapter-temporal/src/versioning.ts';
+// ADAPTER_SUPPORTED_SCHEMA is added to versioning.ts as part of ADR-0017 implementation.
+// Shape: { major: number; minor: number } — e.g. { major: 1, minor: 1 }
+import { ADAPTER_SUPPORTED_SCHEMA as TEMPORAL_SUPPORTED } from '../adapter-temporal/src/versioning.ts';
 
 type CompatMatrix = {
   schema: 'ExecutionPlan';
@@ -34,19 +36,7 @@ function loadJson(p: string): unknown {
 }
 
 it('plan-compat.json conforms to plan-compat.schema.json', () => {
-  const ajv = new Ajv({ allErrors: true, strict: true
-  // Negative checks:
-  // If a row exists for an unsupported version, it MUST be explicitly false for this adapter.
-  // (We allow absence of the row as “not declared / not supported”.)
-  const unsupported = ['v1.2', 'v1.3', 'v2.0'];
-  for (const v of unsupported) {
-    const row = matrix.versions.find(r => r.version === v);
-    if (row) {
-      expect(row.adapters['TemporalAdapter']).toBe(false);
-    }
-  }
-});
-
+  const ajv = new Ajv({ allErrors: true, strict: true });
   const schema = loadJson(path.resolve('contracts/compat/plan-compat.schema.json'));
   const data = loadJson(path.resolve('contracts/compat/plan-compat.json'));
 
@@ -59,10 +49,22 @@ it('TemporalAdapter support matches plan-compat.json', () => {
   const matrix = loadJson(path.resolve('contracts/compat/plan-compat.json')) as CompatMatrix;
   const supported = TEMPORAL_SUPPORTED; // { major: 1, minor: 1 }
 
+  // Positive checks: all minor versions up to supported.minor must be declared true.
   for (let minor = 0; minor <= supported.minor; minor++) {
     const v = `v${supported.major}.${minor}`;
     const row = matrix.versions.find(r => r.version === v);
     expect(row).toBeTruthy();
     expect(row!.adapters['TemporalAdapter']).toBe(true);
+  }
+
+  // Negative checks:
+  // If a row exists for an unsupported version, it MUST be explicitly false for this adapter.
+  // (We allow absence of the row as "not declared / not supported".)
+  const unsupported = ['v1.2', 'v1.3', 'v2.0'];
+  for (const v of unsupported) {
+    const row = matrix.versions.find(r => r.version === v);
+    if (row) {
+      expect(row.adapters['TemporalAdapter']).toBe(false);
+    }
   }
 });
