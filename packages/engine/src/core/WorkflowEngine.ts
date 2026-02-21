@@ -21,6 +21,8 @@ import {
   InvalidSchemaVersionError,
   OutboxRateLimitExceededError,
   RunAlreadyExistsError,
+  RunMetadataNotFoundError,
+  SignalNotImplementedError,
   TargetAdapterMismatchError,
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
@@ -378,7 +380,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   private mapSignalToRunEventType(type: SignalRequest['type']): EventType | null {
     if (type === 'RETRY_STEP' || type === 'RETRY_RUN') {
       // Phase 2: planner-driven deterministic retry semantics.
-      throw new Error('NotImplemented: RETRY_* signals are Phase 2');
+      throw new SignalNotImplementedError(type);
     }
 
     const byType: Record<'PAUSE' | 'RESUME' | 'CANCEL', EventType> = {
@@ -393,7 +395,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   private async resolveMetaOrThrow(runRef: EngineRunRef): Promise<RunMetadata> {
     const m = await this.deps.stateStore.getRunMetadataByRunId(runRef.runId);
     if (!m) {
-      throw new Error(`Run metadata not found for runId: ${runRef.runId}`);
+      throw new RunMetadataNotFoundError(runRef.runId);
     }
     return m;
   }

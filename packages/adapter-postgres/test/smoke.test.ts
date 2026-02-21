@@ -30,6 +30,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     });
 
     try {
+      await adapter.migrate();
       await adapter.saveRunMetadata({
         tenantId: 't1',
         projectId: 'p1',
@@ -55,6 +56,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       now: () => '2026-02-19T00:00:00.000Z',
     });
 
+    await adapter.migrate();
     const base = {
       eventType: 'RunStarted' as const,
       emittedAt: '2026-02-15T22:00:00.000Z' as const,
@@ -88,6 +90,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     });
 
     try {
+      await adapter.migrate();
       const { appended } = await adapter.appendAndEnqueueTx('run-3', [
         {
           eventType: 'RunQueued',

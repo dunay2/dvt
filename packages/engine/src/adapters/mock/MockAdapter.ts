@@ -1,10 +1,4 @@
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunStatusSnapshot,
-  SignalRequest,
-} from '@dvt/contracts';
+import type { EngineRunRef, RunContext, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
 
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import type { EventType, RunEventInput, RunMetadata } from '../../contracts/runEvents.js';
@@ -26,7 +20,7 @@ export class MockAdapter implements IProviderAdapter {
 
   constructor(private readonly deps: MockAdapterDeps) {}
 
-  async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
+  async startRun(plan: ExecutionPlan, ctx: RunContext): Promise<EngineRunRef> {
     const metadata = await this.deps.stateStore.getRunMetadataByRunId(ctx.runId);
     if (!metadata) throw new Error(`RUN_NOT_FOUND: ${ctx.runId}`);
 
@@ -37,8 +31,6 @@ export class MockAdapter implements IProviderAdapter {
       workflowId: `mock_${ctx.runId}`,
       runId: ctx.runId,
     };
-
-    const plan = inferMockPlan(planRef, metadata.planId, metadata.planVersion);
 
     for (const step of plan.steps) {
       validateMockStep(step);
@@ -118,19 +110,6 @@ export class MockAdapter implements IProviderAdapter {
 
     await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [env]);
   }
-}
-
-function inferMockPlan(planRef: PlanRef, planId: string, planVersion: string): ExecutionPlan {
-  return {
-    metadata: {
-      planId,
-      planVersion,
-      schemaVersion: planRef.schemaVersion,
-      targetAdapter: 'mock',
-      fallbackBehavior: 'reject',
-    },
-    steps: [{ stepId: 'mock.step.1', kind: 'noop' }],
-  };
 }
 
 function validateMockStep(step: ExecutionPlan['steps'][number]): void {

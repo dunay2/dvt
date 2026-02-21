@@ -48,6 +48,13 @@ class TestClock {
 }
 
 class TestIdempotencyKeyBuilder implements IIdempotencyKeyBuilder {
+  private counter = 0;
+
+  eventId(): string {
+    this.counter += 1;
+    return `test-event-id-${this.counter}`;
+  }
+
   runEventKey(e: {
     eventType: EventType;
     tenantId: string;
@@ -100,6 +107,22 @@ class TestTxStore {
 
   async listEvents(runId: string): Promise<EventEnvelope[]> {
     return [...(this.eventsByRun.get(runId) ?? [])];
+  }
+
+  async appendAndEnqueueTx(
+    runId: string,
+    envelopes: Omit<EventEnvelope, 'runSeq'>[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+    return this.appendEventsTx(runId, envelopes);
+  }
+
+  async bootstrapRunTx(input: {
+    metadata: RunMetadata;
+    firstEvents: Omit<EventEnvelope, 'runSeq'>[];
+  }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+    await this.saveRunMetadata(input.metadata);
+    if (input.firstEvents.length === 0) return { appended: [], deduped: [] };
+    return this.appendEventsTx(input.metadata.runId, input.firstEvents);
   }
 
   async enqueueTx(_runId: string, _events: EventEnvelope[]): Promise<void> {
@@ -185,7 +208,7 @@ describe('stepActivities', () => {
       const deps = buildDeps();
       const acts = createActivities(deps);
 
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
 
       const events = await deps.stateStore.listEvents('run-1');
       expect(events).toHaveLength(1);
@@ -199,8 +222,8 @@ describe('stepActivities', () => {
       const deps = buildDeps();
       const acts = createActivities(deps);
 
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
 
       const events = await deps.stateStore.listEvents('run-1');
       expect(events.filter((e) => e.eventType === 'RunStarted')).toHaveLength(1);
@@ -210,8 +233,18 @@ describe('stepActivities', () => {
       const deps = buildDeps();
       const acts = createActivities(deps);
 
-      await acts.emitEvent({ ctx: CTX, eventType: 'StepStarted', stepId: 'step-a' });
-      await acts.emitEvent({ ctx: CTX, eventType: 'StepCompleted', stepId: 'step-a' });
+      await acts.emitEvent({
+        ctx: CTX,
+        planRef: PLAN_REF,
+        eventType: 'StepStarted',
+        stepId: 'step-a',
+      });
+      await acts.emitEvent({
+        ctx: CTX,
+        planRef: PLAN_REF,
+        eventType: 'StepCompleted',
+        stepId: 'step-a',
+      });
 
       const events = await deps.stateStore.listEvents('run-1');
       expect(events).toHaveLength(2);
@@ -224,12 +257,12 @@ describe('stepActivities', () => {
       const deps = buildDeps(store);
       const acts = createActivities(deps);
 
-      await expect(acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' })).rejects.toThrow(
-        'TRANSIENT_DB_ERROR'
-      );
+      await expect(
+        acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' })
+      ).rejects.toThrow('TRANSIENT_DB_ERROR');
 
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
 
       const events = await deps.stateStore.listEvents(CTX.runId);
       expectSingleRunStartedEvent(events);
@@ -240,7 +273,7 @@ describe('stepActivities', () => {
       deps.getEngineAttemptId = () => 7;
       const acts = createActivities(deps);
 
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
 
       const events = await deps.stateStore.listEvents(CTX.runId);
       expect(events).toHaveLength(1);
@@ -254,9 +287,9 @@ describe('stepActivities', () => {
       deps.getEngineAttemptId = () => attempt;
       const acts = createActivities(deps);
 
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
       attempt = 2;
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted' });
+      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
 
       const events = await deps.stateStore.listEvents(CTX.runId);
       expectSingleRunStartedEvent(events, { engineAttemptId: 1 });
@@ -267,7 +300,12 @@ describe('stepActivities', () => {
       deps.getEngineAttemptId = () => 9;
       const acts = createActivities(deps);
 
-      await acts.emitEvent({ ctx: CTX, eventType: 'RunStarted', logicalAttemptId: 3 });
+      await acts.emitEvent({
+        ctx: CTX,
+        planRef: PLAN_REF,
+        eventType: 'RunStarted',
+        logicalAttemptId: 3,
+      });
 
       const events = await deps.stateStore.listEvents(CTX.runId);
       expect(events).toHaveLength(1);
