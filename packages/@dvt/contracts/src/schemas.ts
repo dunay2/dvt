@@ -38,6 +38,7 @@ export const RunSubstatusSchema = z.enum([
   'CONTINUE_AS_NEW',
   'WAITING_APPROVAL',
   'RECOVERING',
+  'CANCELLING',
 ]);
 
 export const StepStatusSchema = z.enum(['PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'SKIPPED']);
