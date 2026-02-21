@@ -28,7 +28,15 @@ export interface MockAdapterDeps {
   clock: IClock;
   idempotency: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
+  planFetcher?: {
+    fetch(planRef: PlanRef): Promise<ExecutionPlan>;
+  };
 }
+
+type RunEventMeta = Pick<
+  RunMetadata,
+  'tenantId' | 'projectId' | 'environmentId' | 'runId' | 'planId' | 'planVersion'
+>;
 
 export class MockAdapter implements IProviderAdapter {
   readonly provider = 'mock' as const;
@@ -36,20 +44,27 @@ export class MockAdapter implements IProviderAdapter {
   constructor(private readonly deps: MockAdapterDeps) {}
 
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
-    const metadata = await this.deps.stateStore.getRunMetadataByRunId(ctx.runId);
-    if (!metadata) throw new Error(`RUN_NOT_FOUND: ${ctx.runId}`);
+    const plan: ExecutionPlan = this.deps.planFetcher
+      ? await this.deps.planFetcher.fetch(planRef)
+      : {
+          metadata: {
+            planId: planRef.planId,
+            planVersion: planRef.planVersion,
+            schemaVersion: planRef.schemaVersion,
+          },
+          steps: [],
+        };
 
-    // Mock adapter synthesizes a minimal execution plan from PlanRef.
-    const plan: ExecutionPlan = {
-      metadata: {
-        planId: planRef.planId,
-        planVersion: planRef.planVersion,
-        schemaVersion: planRef.schemaVersion,
-      },
-      steps: [],
+    const eventMeta: RunEventMeta = {
+      tenantId: ctx.tenantId,
+      projectId: ctx.projectId,
+      environmentId: ctx.environmentId,
+      runId: ctx.runId,
+      planId: planRef.planId,
+      planVersion: planRef.planVersion,
     };
 
-    await this.emitRunEvent(metadata, 'RunStarted');
+    await this.emitRunEvent(eventMeta, 'RunStarted');
 
     const runRef: EngineRunRef = {
       provider: 'mock',
@@ -59,11 +74,11 @@ export class MockAdapter implements IProviderAdapter {
 
     for (const step of plan.steps) {
       validateMockStep(step);
-      await this.emitStepEvent(metadata, step.stepId, 'StepStarted');
-      await this.emitStepEvent(metadata, step.stepId, 'StepCompleted');
+      await this.emitStepEvent(eventMeta, step.stepId, 'StepStarted');
+      await this.emitStepEvent(eventMeta, step.stepId, 'StepCompleted');
     }
 
-    await this.emitRunEvent(metadata, 'RunCompleted');
+    await this.emitRunEvent(eventMeta, 'RunCompleted');
     return runRef;
   }
 
@@ -80,7 +95,7 @@ export class MockAdapter implements IProviderAdapter {
     // For mock, signals are interpreted by engine (pause/resume/cancel events).
   }
 
-  private async emitRunEvent(meta: RunMetadata, eventType: EventType): Promise<void> {
+  private async emitRunEvent(meta: RunEventMeta, eventType: EventType): Promise<void> {
     const env: RunEventInput = {
       eventId: this.deps.idempotency.eventId(),
       eventType,
@@ -106,7 +121,7 @@ export class MockAdapter implements IProviderAdapter {
   }
 
   private async emitStepEvent(
-    meta: RunMetadata,
+    meta: RunEventMeta,
     stepId: string,
     eventType: 'StepStarted' | 'StepCompleted' | 'StepFailed'
   ): Promise<void> {
