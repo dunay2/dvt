@@ -9,6 +9,20 @@ export interface OutboxRecord {
   lastError?: string;
 }
 
+export interface DeadLetterRecord {
+  id: string;
+  originalId: string;
+  runId: string;
+  payload: RunEventPersisted;
+  lastError: string;
+  deadLetteredAt: string;
+}
+
+/**
+ * Maximum delivery attempts before an outbox record is dead-lettered.
+ */
+export const MAX_OUTBOX_ATTEMPTS = 10;
+
 export interface IOutboxStorage {
   enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void>;
   listPending(limit: number): Promise<OutboxRecord[]>;
