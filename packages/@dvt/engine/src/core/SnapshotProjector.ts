@@ -2,9 +2,10 @@
  * @file packages/@dvt/engine/src/core/SnapshotProjector.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @baseline ADR-0007: Run Cancellation Semantics (RunCancelRequested + cancelling substatus)
  * @decision Decision — The snapshot projection is derived exclusively from events for deterministic state reads
  * @consequence getRunStatus and incremental stores reuse the same replay semantics without duplicating rules
- * @version 1.0.0
+ * @version 1.1.0
  * @date 2026-02-21
  */
 import type { RunStatusSnapshot } from '@dvt/contracts';
@@ -37,8 +38,14 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): Workflo
       snap.status = 'RUNNING';
       snap.paused = false;
       break;
+    case 'RunCancelRequested':
+      // ADR-0007: Engine emits RunCancelRequested (intent only). Run stays RUNNING.
+      // Adapter emits RunCancelled from workflow context when cancellation completes.
+      snap.cancelling = true;
+      break;
     case 'RunCancelled':
       snap.status = 'CANCELLED';
+      snap.cancelling = false;
       snap.completedAt = e.emittedAt;
       break;
     case 'RunCompleted':
@@ -107,6 +114,7 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
     runId: snap.runId,
     status: snap.status,
     paused: snap.paused,
+    cancelling: snap.cancelling,
     startedAt: snap.startedAt,
     completedAt: snap.completedAt,
     steps: snap.steps,
@@ -118,6 +126,7 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
   return {
     runId: snap.runId,
     status: snap.status,
+    ...(snap.cancelling ? { substatus: 'CANCELLING' as const } : {}),
     ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),
     ...(snap.completedAt ? { completedAt: snap.completedAt } : {}),
     hash,
@@ -130,6 +139,7 @@ export class SnapshotProjector {
       runId,
       status: 'PENDING',
       paused: false,
+      cancelling: false,
       steps: {},
     };
 

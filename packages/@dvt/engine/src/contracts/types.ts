@@ -27,7 +27,8 @@ export type RunSubstatus =
   | 'RETRYING'
   | 'CONTINUE_AS_NEW'
   | 'WAITING_APPROVAL'
-  | 'RECOVERING';
+  | 'RECOVERING'
+  | 'CANCELLING';
 
 export type AdapterScopedSubstatus = `${Provider}/${string}`;
 

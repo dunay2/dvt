@@ -43,9 +43,30 @@ export class IdempotencyKeyBuilder {
     return sha256Hex(preimage);
   }
 
-  signalKey(tenantId: string, runId: string, req: SignalRequest): string {
-    // Contract: (tenantId, runId, signalId)
-    return ['sig', tenantId, runId, req.signalId].join('|');
+  /**
+   * Derives the idempotency key for a signal event.
+   *
+   * ADR-0008: SHA256(runId | 'SIGNAL' | signalType | signalId | logicalAttemptId | planId | planVersion [| stepId])
+   *
+   * Invariants:
+   * - INV-SIGNAL-003: schemaVersion MUST NOT influence hash
+   * - INV-SIGNAL-004: tenantId MUST NOT influence hash (envelope field, not identity field)
+   */
+  signalKey(
+    params: { runId: string; logicalAttemptId: number; planId: string; planVersion: string },
+    req: SignalRequest
+  ): string {
+    const preimage = [
+      params.runId,
+      'SIGNAL',
+      req.type,
+      req.signalId,
+      String(params.logicalAttemptId),
+      params.planId,
+      params.planVersion,
+      ...(req.stepId ? [req.stepId] : []),
+    ].join('|');
+    return sha256Hex(preimage);
   }
 
   eventId(): string {

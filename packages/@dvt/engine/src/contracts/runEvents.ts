@@ -14,6 +14,7 @@ export type EventType =
   | 'RunStarted'
   | 'RunPaused'
   | 'RunResumed'
+  | 'RunCancelRequested'
   | 'RunCancelled'
   | 'RunCompleted'
   | 'RunFailed'
@@ -82,6 +83,8 @@ export interface WorkflowSnapshot {
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
   paused: boolean;
+  /** True between RunCancelRequested and RunCancelled. ADR-0007. */
+  cancelling: boolean;
   steps: Record<
     string,
     {

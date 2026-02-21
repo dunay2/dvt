@@ -4,7 +4,10 @@
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @decision Decision — The engine orchestrates run lifecycle while preserving domain semantics and event-sourced persistence
  * @consequence Execution remains deterministic and decoupled from provider runtimes via explicit ports
- * @version 1.0.0
+ * @baseline ADR-0012: Plan Integrity Ownership (adapter receives PlanRef, not ExecutionPlan)
+ * @baseline ADR-0013: bootstrapRunTx atomicity (provider refs included in bootstrap)
+ * @baseline ADR-0014: Run-Driven Adapter Model
+ * @version 2.0.0
  * @date 2026-02-21
  */
 import type {
@@ -21,18 +24,15 @@ import {
   parseSignalRequest,
 } from '@dvt/contracts';
 
-import type { IPlanFetcher } from '../adapters/IPlanFetcher.js';
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import {
   AdapterNotRegisteredError,
-  CapabilitiesNotSupportedError,
   InvalidRunIdError,
   InvalidSchemaVersionError,
   OutboxRateLimitExceededError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
   SignalNotImplementedError,
-  TargetAdapterMismatchError,
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEvents.js';
@@ -55,8 +55,6 @@ export interface WorkflowEngineDeps {
   clock: IClock;
   authorizer: IAuthorizer;
   planRefPolicy: PlanRefPolicy;
-  planFetcher: IPlanFetcher;
-
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
 
   /** Optional providers that MUST be registered at boot time. */
@@ -152,26 +150,36 @@ export class WorkflowEngine implements IWorkflowEngine {
 
     try {
       await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
-      const plan = await this.deps.planFetcher.fetch(validatedPlanRef);
-      this.validatePlanCapabilities(plan, validatedContext);
       this.checkOutboxRateLimit(validatedContext);
-
-      const bootMeta: RunMetadata = buildRunMetadata(validatedContext, validatedPlanRef);
-      await this.deps.stateStore.bootstrapRunTx({
-        metadata: bootMeta,
-        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
-      });
 
       const provider = validatedContext.targetAdapter;
       const adapter = this.getAdapterOrThrow(provider);
 
+      // ADR-0012: Adapter receives PlanRef, owns plan bytes fetch + SHA-256 verification.
+      // ADR-0014: Adapter is called first so provider refs are available for atomic bootstrap.
       const runRef = await this.withTimeout(
-        adapter.startRun(plan, validatedContext),
+        adapter.startRun(validatedPlanRef, validatedContext),
         this.deps.timeouts?.adapterCallMs ?? 30_000,
         'adapter.startRun'
       );
 
-      await this.saveProviderRef(validatedContext.runId, runRef);
+      // ADR-0013: provider refs included in bootstrapRunTx — eliminates two-phase write gap.
+      const bootMeta: RunMetadata = buildRunMetadata(validatedContext, validatedPlanRef, runRef);
+      try {
+        await this.deps.stateStore.bootstrapRunTx({
+          metadata: bootMeta,
+          firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+        });
+      } catch (bootstrapError) {
+        // Compensate: cancel the adapter run to avoid an orphaned workflow.
+        await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
+          this.logger.error('Compensation cancelRun failed after bootstrap error', {
+            runId: validatedContext.runId,
+            error: toErrorMessage(cancelErr),
+          });
+        });
+        throw bootstrapError;
+      }
 
       this.metrics.increment('dvt.run.started', metricTags);
       this.metrics.timing(
@@ -196,79 +204,6 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.ensureRunDoesNotExist(context.runId);
   }
 
-  private validatePlanCapabilities(
-    plan: {
-      metadata: {
-        requiresCapabilities?: unknown[];
-        targetAdapter?: string;
-      };
-    },
-    context: RunContext
-  ): void {
-    const requiresCapabilities = plan.metadata.requiresCapabilities;
-    // Complex conditional extracted for clarity
-    const hasUnsupportedCapabilities =
-      Array.isArray(requiresCapabilities) && requiresCapabilities.length > 0;
-    if (hasUnsupportedCapabilities) {
-      throw new CapabilitiesNotSupportedError(requiresCapabilities);
-    }
-
-    const targetAdapter = plan.metadata.targetAdapter;
-    // Complex conditional extracted for clarity
-    const isTargetAdapterMismatch =
-      typeof targetAdapter !== 'undefined' &&
-      targetAdapter !== 'any' &&
-      targetAdapter !== context.targetAdapter;
-    if (isTargetAdapterMismatch) {
-      throw new TargetAdapterMismatchError(targetAdapter, context.targetAdapter);
-    }
-  }
-
-  private shouldThrowForUnsupportedCapabilities(
-    requiresCapabilities: unknown[] | undefined
-  ): boolean {
-    // Complex conditional extracted for clarity
-    if (!Array.isArray(requiresCapabilities)) {
-      return false;
-    }
-    return requiresCapabilities.length > 0;
-  }
-
-  private shouldThrowForTargetAdapterMismatch(
-    targetAdapter: string | undefined,
-    contextTargetAdapter: string | undefined
-  ): boolean {
-    // Complex conditional extracted for clarity
-    if (typeof targetAdapter === 'undefined') {
-      return false;
-    }
-    if (targetAdapter === 'any') {
-      return false;
-    }
-    return targetAdapter !== contextTargetAdapter;
-  }
-
-  private hasUnsupportedCapabilities(requiresCapabilities: unknown[] | undefined): boolean {
-    if (!Array.isArray(requiresCapabilities)) {
-      return false;
-    }
-    return requiresCapabilities.length > 0;
-  }
-
-  private isTargetAdapterMismatch(
-    targetAdapter: string | undefined,
-    contextTargetAdapter: string | undefined
-  ): boolean {
-    // Refactored for clarity
-    if (typeof targetAdapter === 'undefined') {
-      return false;
-    }
-    if (targetAdapter === 'any') {
-      return false;
-    }
-    return targetAdapter !== contextTargetAdapter;
-  }
-
   private checkOutboxRateLimit(context: RunContext): void {
     if (
       this.deps.outboxRateLimiter &&
@@ -278,22 +213,10 @@ export class WorkflowEngine implements IWorkflowEngine {
     }
   }
 
-  private async saveProviderRef(runId: string, runRef: EngineRunRef): Promise<void> {
-    await this.deps.stateStore.saveProviderRef(runId, {
-      providerWorkflowId: runRef.workflowId,
-      providerRunId: runRef.runId,
-      ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-      ...(runRef.provider === 'temporal' && runRef.taskQueue
-        ? { providerTaskQueue: runRef.taskQueue }
-        : {}),
-      ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
-    });
-  }
-
   private async handleStartRunError(
     error: unknown,
     validatedContext: RunContext,
-    metricTags: Record<string, unknown>
+    metricTags: Record<string, string>
   ): Promise<never> {
     this.metrics.increment('dvt.run.start_failed', metricTags);
     this.logger.error('startRun failed', {
@@ -337,8 +260,9 @@ export class WorkflowEngine implements IWorkflowEngine {
       this.deps.timeouts?.adapterCallMs ?? 30_000,
       'adapter.cancelRun'
     );
-    await this.emitRunEvent(meta, 'RunCancelled');
-    this.metrics.increment('dvt.run.cancelled', metricTags);
+    // ADR-0007: Engine emits RunCancelRequested (intent). Adapter emits RunCancelled from workflow context.
+    await this.emitRunEvent(meta, 'RunCancelRequested');
+    this.metrics.increment('dvt.run.cancel_requested', metricTags);
     this.metrics.timing(
       'dvt.run.cancel_duration_ms',
       Date.parse(this.deps.clock.nowIsoUtc()) - startMs,
@@ -465,10 +389,11 @@ export class WorkflowEngine implements IWorkflowEngine {
       throw new SignalNotImplementedError(type);
     }
 
+    // ADR-0007: CANCEL signal maps to RunCancelRequested (intent). Adapter emits RunCancelled.
     const byType: Record<'PAUSE' | 'RESUME' | 'CANCEL', EventType> = {
       PAUSE: 'RunPaused',
       RESUME: 'RunResumed',
-      CANCEL: 'RunCancelled',
+      CANCEL: 'RunCancelRequested',
     };
 
     return byType[type as 'PAUSE' | 'RESUME' | 'CANCEL'] ?? null;
@@ -505,7 +430,15 @@ export class WorkflowEngine implements IWorkflowEngine {
       planVersion: meta.planVersion,
       engineAttemptId: 1,
       logicalAttemptId: 1,
-      idempotencyKey: this.deps.idempotency.signalKey(meta.tenantId, meta.runId, req),
+      idempotencyKey: this.deps.idempotency.signalKey(
+        {
+          runId: meta.runId,
+          logicalAttemptId: 1,
+          planId: meta.planId,
+          planVersion: meta.planVersion,
+        },
+        req
+      ),
     };
 
     await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [input]);
@@ -597,7 +530,6 @@ export class WorkflowEngine implements IWorkflowEngine {
       ['clock', this.deps.clock],
       ['authorizer', this.deps.authorizer],
       ['planRefPolicy', this.deps.planRefPolicy],
-      ['planFetcher', this.deps.planFetcher],
       ['adapters', this.deps.adapters],
     ];
 
@@ -632,7 +564,8 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function buildRunMetadata(ctx: RunContext, planRef: PlanRef): RunMetadata {
+// ADR-0013: runRef is passed in so provider refs are included in the atomic bootstrapRunTx.
+function buildRunMetadata(ctx: RunContext, planRef: PlanRef, runRef: EngineRunRef): RunMetadata {
   return {
     tenantId: ctx.tenantId,
     projectId: ctx.projectId,
@@ -641,7 +574,12 @@ function buildRunMetadata(ctx: RunContext, planRef: PlanRef): RunMetadata {
     planId: planRef.planId,
     planVersion: planRef.planVersion,
     provider: ctx.targetAdapter,
-    providerWorkflowId: '',
-    providerRunId: '',
+    providerWorkflowId: runRef.workflowId,
+    providerRunId: runRef.runId,
+    ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
+    ...(runRef.provider === 'temporal' && runRef.taskQueue
+      ? { providerTaskQueue: runRef.taskQueue }
+      : {}),
+    ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
   };
 }
