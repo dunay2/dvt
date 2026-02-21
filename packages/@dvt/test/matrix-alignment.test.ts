@@ -52,7 +52,7 @@ it('TemporalAdapter support matches plan-compat.json', () => {
   // Positive checks: all minor versions up to supported.minor must be declared true.
   for (let minor = 0; minor <= supported.minor; minor++) {
     const v = `v${supported.major}.${minor}`;
-    const row = matrix.versions.find(r => r.version === v);
+    const row = matrix.versions.find((r) => r.version === v);
     expect(row).toBeTruthy();
     expect(row!.adapters['TemporalAdapter']).toBe(true);
   }
@@ -62,7 +62,7 @@ it('TemporalAdapter support matches plan-compat.json', () => {
   // (We allow absence of the row as "not declared / not supported".)
   const unsupported = ['v1.2', 'v1.3', 'v2.0'];
   for (const v of unsupported) {
-    const row = matrix.versions.find(r => r.version === v);
+    const row = matrix.versions.find((r) => r.version === v);
     if (row) {
       expect(row.adapters['TemporalAdapter']).toBe(false);
     }
