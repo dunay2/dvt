@@ -51,12 +51,12 @@ under `docs/adr/`.
 
 ## 4.1 Foundation ADRs
 
-| ADR      | Title                        | Status   | Implementation            | Verification         | Dependencies |
-| -------- | ---------------------------- | -------- | ------------------------- | -------------------- | ------------ |
-| ADR-0000 | Code Generation Traceability | Accepted | ❌ Not started            | ❌ No                | None         |
-| ADR-0003 | Execution Model Sovereignty  | Accepted | ✅ Architecture principle | ✅ Documented        | None         |
-| ADR-0004 | Event Sourcing Strategy      | Accepted | ✅ TestStateStore         | ✅ Verified in tests | ADR-0003     |
-| ADR-0005 | Contract Formalization       | Accepted | 🟡 Schemas exist          | 🟡 Missing vectors   | ADR-0004     |
+| ADR      | Title                        | Status   | Implementation                           | Verification         | Dependencies |
+| -------- | ---------------------------- | -------- | ---------------------------------------- | -------------------- | ------------ |
+| ADR-0000 | Code Generation Traceability | Accepted | 🟡 Initial tooling + manifest generation | ❌ Partial           | None         |
+| ADR-0003 | Execution Model Sovereignty  | Accepted | ✅ Architecture principle                | ✅ Documented        | None         |
+| ADR-0004 | Event Sourcing Strategy      | Accepted | ✅ TestStateStore                        | ✅ Verified in tests | ADR-0003     |
+| ADR-0005 | Contract Formalization       | Accepted | 🟡 Schemas exist                         | 🟡 Missing vectors   | ADR-0004     |
 
 ## 4.2 Execution ADRs
 
@@ -79,14 +79,17 @@ under `docs/adr/`.
 - ✅ Concept defined
 - ✅ Graph model designed (Neo4j)
 - ✅ Automation guide documented
+- ✅ Initial manifest generation and config (`traceability.manifest.json`, `traceability.config.json`) via `@dvt/traceability-service`
 
-**Missing deliverables:**
+**Missing deliverables / Notes:**
 
-- ❌ Header validation script (`tools/traceability/validate-headers.js`)
-- ❌ Manifest generator (`tools/traceability/generate-manifest.js`)
+- ✅ Manifest generation added (initial tooling produces `traceability.manifest.json`) — implemented in this phase
+- ❌ Header validation script (`tools/traceability/validate-headers.js`) — required to fix missing baselines
 - ❌ Reverse coverage validator (`tools/traceability/validate-adr-coverage.js`)
-- ❌ CI integration (GitHub Actions workflow)
-- ❌ Neo4j publisher
+- ❌ CI workflow deployment (workflow file may be referenced in docs but needs to be added under `.github/workflows` to enable PR gating)
+- ❌ Neo4j publisher (requires secrets and CI enable; `--no-publish` mode used to avoid blocking)
+
+**Observed validation output:** Local run produced multiple `MISSING_BASELINE` errors and `ADR_NOT_ACCEPTED` entries (ver `traceability-check.log`). Recomendación: crear follow-up para corregir cabeceras faltantes y desplegar el workflow en CI.
 
 ## 5.2 ADR-0005 — Contract Formalization
 

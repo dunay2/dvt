@@ -26,11 +26,13 @@ Incluye:
 
 ## Verificación
 
-Comando validado en local:
+Comando ejecutado en local:
 
 `pnpm traceability:adr0`
 
-Resultado: OK y generación de `traceability.manifest.json`.
+Resultado: Se generó `traceability.manifest.json`, pero la validación devolvió errores (p. ej. cabeceras faltantes y referencias ADR no aceptadas). Consulte `traceability-check.log` para detalles.
+
+Recomendado: abrir un follow-up para corregir cabeceras faltantes en los archivos gobernados, revisar `governedPaths` en `traceability.config.json` y desplegar el workflow de CI para validación automática en PRs.
 
 ## Nota de evolución
 
