@@ -45,13 +45,13 @@ jobs:
             web:
               - 'apps/web/**'
             contracts:
-              - 'packages/contracts/**'
+              - 'packages/@dvt/contracts/**'
             engine:
-              - 'packages/engine/**'
+              - 'packages/@dvt/engine/**'
             adapter_postgres:
-              - 'packages/adapter-postgres/**'
+              - 'packages/@dvt/adapter-postgres/**'
             adapter_temporal:
-              - 'packages/adapter-temporal/**'
+              - 'packages/@dvt/adapter-temporal/**'
             cli:
               - 'packages/cli/**'
 

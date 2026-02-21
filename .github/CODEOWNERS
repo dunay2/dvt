@@ -26,24 +26,24 @@
 # === Engine Implementation ===
 
 # Engine core (determinism-critical)
-/packages/engine/src/ @dunay2
-/packages/engine/core/ @dunay2
+/packages/@dvt/engine/src/ @dunay2
+/packages/@dvt/engine/core/ @dunay2
 
 # Adapters (Temporal, Postgres - multi-platform impact)
-/packages/engine/src/adapters/temporal/ @dunay2
-/packages/engine/src/adapters/state-store/ @dunay2
-/packages/adapter-temporal/ @dunay2
-/packages/adapter-postgres/ @dunay2
+/packages/@dvt/engine/src/adapters/temporal/ @dunay2
+/packages/@dvt/engine/src/adapters/state-store/ @dunay2
+/packages/@dvt/adapter-temporal/ @dunay2
+/packages/@dvt/adapter-postgres/ @dunay2
 
 # Outbox delivery worker (at-least-once delivery guarantee)
-/packages/engine/src/outbox/ @dunay2
+/packages/@dvt/engine/src/outbox/ @dunay2
 
 # === Contract Tests & Golden Paths ===
 # Validates determinism and cross-adapter compatibility
 
 /.golden/ @dunay2
-/packages/engine/test/contracts/ @dunay2
-/packages/engine/test/determinism/ @dunay2
+/packages/@dvt/engine/test/contracts/ @dunay2
+/packages/@dvt/engine/test/determinism/ @dunay2
 
 # === Determinism Tooling ===
 
@@ -52,7 +52,7 @@
 /linting/ @dunay2
 
 # Determinism-specific tests
-/packages/engine/test/determinism/ @dunay2
+/packages/@dvt/engine/test/determinism/ @dunay2
 
 # === CI/CD & Infrastructure ===
 

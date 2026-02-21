@@ -29,13 +29,13 @@ jobs:
         with:
           filters: |
             engine:
-              - 'packages/engine/**'
+              - 'packages/@dvt/engine/**'
             contracts:
-              - 'packages/contracts/**'
+              - 'packages/@dvt/contracts/**'
             adapter_postgres:
-              - 'packages/adapter-postgres/**'
+              - 'packages/@dvt/adapter-postgres/**'
             adapter_temporal:
-              - 'packages/adapter-temporal/**'
+              - 'packages/@dvt/adapter-temporal/**'
             cli:
               - 'packages/cli/**'
             root_config:
@@ -163,8 +163,8 @@ jobs:
         with:
           filters: |
             determinism_relevant:
-              - 'packages/engine/**'
-              - 'packages/contracts/**'
+              - 'packages/@dvt/engine/**'
+              - 'packages/@dvt/contracts/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -206,13 +206,13 @@ jobs:
       - name: Run determinism tests
         if:
           (github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true') && hashFiles('packages/engine/test/determinism/**/*.test.ts') != ''
+          'true') && hashFiles('packages/@dvt/engine/test/determinism/**/*.test.ts') != ''
         run: pnpm test:determinism
 
       - name: Verify replay consistency
         if:
           (github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true') && hashFiles('packages/engine/test/replay/**/*.test.ts') != ''
+          'true') && hashFiles('packages/@dvt/engine/test/replay/**/*.test.ts') != ''
         run: pnpm test:replay
 
       - name: Skip determinism checks (PR without relevant changes)
