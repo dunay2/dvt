@@ -146,12 +146,14 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
         projectId: ctx.projectId,
         environmentId: ctx.environmentId,
         runId: ctx.runId,
+        planId: planRef.planId,
+        planVersion: planRef.planVersion,
         provider: 'temporal',
         providerWorkflowId: ctx.runId,
         providerRunId: ctx.runId,
       });
 
-      await activities.emitEvent({ ctx, eventType: 'RunStarted' });
+      await activities.emitEvent({ ctx, planRef, eventType: 'RunStarted' });
     }
 
     // 2. Fetch & validate plan via activity
@@ -178,28 +180,28 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
       // Check cancellation before each layer
       if (state.cancelled) {
-        await activities.emitEvent({ ctx, eventType: 'RunCancelled' });
+        await activities.emitEvent({ ctx, planRef, eventType: 'RunCancelled' });
         state.status = 'CANCELLED';
         return { runId: ctx.runId, status: 'CANCELLED', continuedAsNewCount };
       }
 
       // Block while paused
       if (state.paused) {
-        await activities.emitEvent({ ctx, eventType: 'RunPaused' });
+        await activities.emitEvent({ ctx, planRef, eventType: 'RunPaused' });
         await condition(() => !state.paused || state.cancelled);
 
         if (state.cancelled) {
-          await activities.emitEvent({ ctx, eventType: 'RunCancelled' });
+          await activities.emitEvent({ ctx, planRef, eventType: 'RunCancelled' });
           state.status = 'CANCELLED';
           return { runId: ctx.runId, status: 'CANCELLED', continuedAsNewCount };
         }
 
-        await activities.emitEvent({ ctx, eventType: 'RunResumed' });
+        await activities.emitEvent({ ctx, planRef, eventType: 'RunResumed' });
       }
 
       // Emit StepStarted in stable order, then execute the whole layer.
       for (const step of layer) {
-        await activities.emitEvent({ ctx, eventType: 'StepStarted', stepId: step.stepId });
+        await activities.emitEvent({ ctx, planRef, eventType: 'StepStarted', stepId: step.stepId });
       }
 
       const layerResults = await Promise.all(
@@ -223,14 +225,14 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
       for (const { stepId, result } of layerResults) {
         if (result.status === 'COMPLETED') {
-          await activities.emitEvent({ ctx, eventType: 'StepCompleted', stepId });
+          await activities.emitEvent({ ctx, planRef, eventType: 'StepCompleted', stepId });
           completedSteps += 1;
           state.currentStepIndex = completedSteps;
           continue;
         }
 
-        await activities.emitEvent({ ctx, eventType: 'StepFailed', stepId });
-        await activities.emitEvent({ ctx, eventType: 'RunFailed' });
+        await activities.emitEvent({ ctx, planRef, eventType: 'StepFailed', stepId });
+        await activities.emitEvent({ ctx, planRef, eventType: 'RunFailed' });
         state.status = 'FAILED';
         return { runId: ctx.runId, status: 'FAILED', continuedAsNewCount };
       }
@@ -256,14 +258,14 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     }
 
     // 4. All steps completed
-    await activities.emitEvent({ ctx, eventType: 'RunCompleted' });
+    await activities.emitEvent({ ctx, planRef, eventType: 'RunCompleted' });
     state.status = 'COMPLETED';
     return { runId: ctx.runId, status: 'COMPLETED', continuedAsNewCount };
   } catch (err) {
     // Unexpected error — emit RunFailed if not already terminal
     if (state.status !== 'CANCELLED' && state.status !== 'FAILED') {
       try {
-        await activities.emitEvent({ ctx, eventType: 'RunFailed' });
+        await activities.emitEvent({ ctx, planRef, eventType: 'RunFailed' });
       } catch {
         // best-effort; do not mask the original error
       }

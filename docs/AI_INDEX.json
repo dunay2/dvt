@@ -1,0 +1,1150 @@
+{
+  "generatedAt": "2026-02-20T09:12:45.939Z",
+  "dir": "docs",
+  "entries": [
+    {
+      "path": "AI_INDEX.json",
+      "title": "AI_INDEX.json",
+      "summary": "{ \"generatedAt\": \"2026-02-20T09:11:37.451Z\", \"dir\": \"docs\", \"entries\": [ { \"path\": \"AI_INDEX.json\", \"title\": \"AI_INDEX.json\", \"summary\": \"{ \\\"generatedAt\\\": \\\"2026-02-20T00:00:00.000Z\\\", \\\"dir\\\": \\\"docs\\\", \\\"entries\\\": [ { \\\"path\\\": \\\"INDEX.md\\\", \\\"title\\\": \\\"INDEX.md\\\", \\\"summary\\\": \\\"Repositorio DVT: documentación principal y guías de arquitectura. Contiene análisis de arquitectura, contratos, y guías de contribución.\\\", \\\"keywords\\\": [\\\"docs\\\",\\\"architecture\\\",\\\"contracts\\\"], \\\"lastUpdated\\\": \\\"2026-02-01T00:00:00.000Z\\\", \\\"tokenCount\\\": 60 } ] }\", \"keywords\": [], \"lastUpdated\": \"2026-02-20...",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:11:37.453Z",
+      "tokenCount": 75
+    },
+    {
+      "path": "architecture/engine/adapters/conductor/ConductorAdapter.spec.md",
+      "title": "ConductorAdapter.spec.md",
+      "summary": "# ConductorAdapter Specification (DRAFT v0.8 — Phase 2)",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.364Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md",
+      "title": "StateStoreAdapter.md",
+      "summary": "# Postgres State Store Adapter",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.397Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/adapters/state-store/snowflake/StateStoreAdapter.md",
+      "title": "StateStoreAdapter.md",
+      "summary": "# Snowflake State Store Adapter",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.437Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/adapters/temporal/EnginePolicies.md",
+      "title": "EnginePolicies.md",
+      "summary": "# Temporal Engine Policies",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.352Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/engine/adapters/temporal/TemporalAdapter.spec.md",
+      "title": "TemporalAdapter.spec.md",
+      "summary": "# TemporalAdapter Specification (Normative v1.0)",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.658Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/capabilities/adapters.capabilities.json",
+      "title": "adapters.capabilities.json",
+      "summary": "{ \"$schema\": \"http://json-schema.org/draft-07/schema#\", \"title\": \"Adapter Capability Matrix\", \"description\": \"Declares which capabilities each adapter implements. Source of truth for capability validation.\", \"type\": \"object\", \"properties\": { \"temporal\": { \"type\": \"object\", \"properties\": { \"name\": { \"type\": \"string\", \"const\": \"temporal\" }, \"version\": { \"type\": \"string\", \"enum\": [\"1.0+\", \"1.5+\", \"1.26+\"] }, \"capabilities\": { \"type\": \"array\", \"items\": { \"type\": \"string\" }, \"description\": \"List of capability identifiers this adapter supports\", \"uniqueItems\": true, \"default\": [ \"signal.pause.native...",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.672Z",
+      "tokenCount": 91
+    },
+    {
+      "path": "architecture/engine/contracts/capabilities/capabilities.schema.json",
+      "title": "capabilities.schema.json",
+      "summary": "{ \"$schema\": \"http://json-schema.org/draft-07/schema#\", \"title\": \"Capability Enum\", \"description\": \"Universal enum of capabilities across adapters. This is source-of-truth for capability validation.\", \"type\": \"object\", \"properties\": { \"capabilities\": { \"type\": \"object\", \"properties\": { \"signaling\": { \"type\": \"object\", \"properties\": { \"PAUSE_NATIVE\": { \"type\": \"string\", \"const\": \"signal.pause.native\", \"description\": \"Native pause via workflow signal (Temporal)\" }, \"PAUSE_EMULATED\": { \"type\": \"string\", \"const\": \"signal.pause.emulated\", \"description\": \"Pause via polling/callbacks (Conductor)\" } }...",
+      "keywords": [],
+      "lastUpdated": "2026-02-11T19:30:53.238Z",
+      "tokenCount": 83
+    },
+    {
+      "path": "architecture/engine/contracts/capabilities/README.md",
+      "title": "README.md",
+      "summary": "# Capabilities: Executable Contracts",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.500Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/engine/contracts/capabilities/validation-report.schema.json",
+      "title": "validation-report.schema.json",
+      "summary": "{ \"$schema\": \"http://json-schema.org/draft-07/schema#\", \"title\": \"ValidationReport\", \"description\": \"Report generated when engine validates plan against target adapter capabilities.\", \"type\": \"object\", \"properties\": { \"planId\": { \"type\": \"string\" }, \"planVersion\": { \"type\": \"string\" }, \"generatedAt\": { \"type\": \"string\", \"format\": \"date-time\" }, \"targetAdapter\": { \"type\": \"string\", \"enum\": [\"temporal\", \"conductor\", \"auto\"] }, \"adapterVersion\": { \"type\": \"string\" }, \"adapterCapabilities\": { \"type\": \"array\", \"items\": { \"type\": \"string\" }, \"uniqueItems\": true, \"description\": \"Capabilities supporte...",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.730Z",
+      "tokenCount": 87
+    },
+    {
+      "path": "architecture/engine/contracts/CONTRACT_TEMPLATE.v1.md",
+      "title": "CONTRACT_TEMPLATE.v1.md",
+      "summary": "# Contract Template (v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T17:56:40.789Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/engine/contracts/DECISION_AND_RISK_LOG_v2.0.0.md",
+      "title": "DECISION_AND_RISK_LOG_v2.0.0.md",
+      "summary": "# Decision & Risk Log — Contracts v2.0.0",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.545Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "architecture/engine/contracts/engine/AgnosticEventLayerStrategy.v2.0.1.md",
+      "title": "AgnosticEventLayerStrategy.v2.0.1.md",
+      "summary": "# Agnostic Event Layer Strategy (v2.0.1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.559Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/contracts/engine/events/RunEventRecord.v2.0.schema.json",
+      "title": "RunEventRecord.v2.0.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://dvt.local/contracts/engine/events/RunEventRecord.v2.0.schema.json\", \"title\": \"RunEventRecord v2.0.0\", \"allOf\": [ { \"$ref\": \"./RunEventWrite.v2.0.schema.json\" }, { \"type\": \"object\", \"required\": [\"runSeq\", \"persistedAt\"], \"properties\": { \"runSeq\": { \"type\": \"integer\", \"minimum\": 1 }, \"persistedAt\": { \"type\": \"string\", \"format\": \"date-time\" } } } ] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.567Z",
+      "tokenCount": 53
+    },
+    {
+      "path": "architecture/engine/contracts/engine/events/RunEventWrite.v2.0.schema.json",
+      "title": "RunEventWrite.v2.0.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://dvt.local/contracts/engine/events/RunEventWrite.v2.0.schema.json\", \"title\": \"RunEventWrite v2.0.0\", \"type\": \"object\", \"required\": [ \"eventId\", \"eventType\", \"emittedAt\", \"tenantId\", \"projectId\", \"environmentId\", \"runId\", \"planId\", \"planVersion\", \"engineAttemptId\", \"logicalAttemptId\", \"idempotencyKey\" ], \"properties\": { \"eventId\": { \"type\": \"string\", \"pattern\": \"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$\" }, \"eventType\": { \"type\": \"string\" }, \"emittedAt\": { \"type\": \"string\", \"...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.574Z",
+      "tokenCount": 59
+    },
+    {
+      "path": "architecture/engine/contracts/engine/events/RunStarted.schema.json",
+      "title": "RunStarted.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/RunStarted.schema.json\", \"title\": \"RunStarted Event\", \"description\": \"Emitted by the Engine when a workflow execution begins in the target orchestrator (Temporal, Conductor, etc.)\", \"type\": \"object\", \"required\": [ \"eventType\", \"eventId\", \"runId\", \"runSeq\", \"idempotencyKey\", \"emittedAt\", \"emittedBy\", \"status\", \"engineRunRef\", \"engineType\", \"planRef\", \"context\", \"startedAt\" ], \"additionalProperties\": false, \"properties\": { \"eventType\": { \"type\": \"str...",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.744Z",
+      "tokenCount": 68
+    },
+    {
+      "path": "architecture/engine/contracts/engine/events/StepCompleted.schema.json",
+      "title": "StepCompleted.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/StepCompleted.schema.json\", \"title\": \"StepCompleted Event\", \"description\": \"Emitted by Activity when step execution succeeds\", \"type\": \"object\", \"required\": [ \"eventType\", \"eventId\", \"runId\", \"runSeq\", \"idempotencyKey\", \"emittedAt\", \"emittedBy\", \"stepId\", \"logicalAttemptId\", \"completedAt\", \"artifactRefs\" ], \"additionalProperties\": false, \"properties\": { \"eventType\": { \"type\": \"string\", \"const\": \"StepCompleted\", \"description\": \"Event type discrimina...",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.754Z",
+      "tokenCount": 61
+    },
+    {
+      "path": "architecture/engine/contracts/engine/events/StepFailed.schema.json",
+      "title": "StepFailed.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/StepFailed.schema.json\", \"title\": \"StepFailed Event\", \"description\": \"Emitted by Activity when step execution fails\", \"type\": \"object\", \"required\": [ \"eventType\", \"eventId\", \"runId\", \"runSeq\", \"idempotencyKey\", \"emittedAt\", \"emittedBy\", \"stepId\", \"logicalAttemptId\", \"failedAt\", \"error\" ], \"additionalProperties\": false, \"properties\": { \"eventType\": { \"type\": \"string\", \"const\": \"StepFailed\", \"description\": \"Event type discriminator\" }, \"eventId\": { \"...",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.767Z",
+      "tokenCount": 67
+    },
+    {
+      "path": "architecture/engine/contracts/engine/events/StepStarted.schema.json",
+      "title": "StepStarted.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/StepStarted.schema.json\", \"title\": \"StepStarted Event\", \"description\": \"Emitted by Activity when step execution begins\", \"type\": \"object\", \"required\": [ \"eventType\", \"eventId\", \"runId\", \"runSeq\", \"idempotencyKey\", \"emittedAt\", \"emittedBy\", \"stepId\", \"logicalAttemptId\", \"startedAt\" ], \"additionalProperties\": false, \"properties\": { \"eventType\": { \"type\": \"string\", \"const\": \"StepStarted\", \"description\": \"Event type discriminator\" }, \"eventId\": { \"type...",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:45.775Z",
+      "tokenCount": 65
+    },
+    {
+      "path": "architecture/engine/contracts/engine/ExecutionSemantics.v1.md",
+      "title": "ExecutionSemantics.v1.md",
+      "summary": "# Execution Semantics Contract (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.757Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/contracts/engine/ExecutionSemantics.v2.0.md",
+      "title": "ExecutionSemantics.v2.0.md",
+      "summary": "# Execution Semantics Contract (Normative v2.0.0)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.775Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/contracts/engine/GlossaryContract.v1.md",
+      "title": "GlossaryContract.v1.md",
+      "summary": "# Glossary Contract (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.825Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/engine/GlossaryContract.v2.0.md",
+      "title": "GlossaryContract.v2.0.md",
+      "summary": "# Glossary Contract (Normative v2.0.0)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.844Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/engine/IProviderAdapter.v1.md",
+      "title": "IProviderAdapter.v1.md",
+      "summary": "# IProviderAdapter Contract (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.867Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/engine/IWorkflowEngine.reference.v1.md",
+      "title": "IWorkflowEngine.reference.v1.md",
+      "summary": "# IWorkflowEngine Contract (Reference v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.940Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/engine/IWorkflowEngine.v1.md",
+      "title": "IWorkflowEngine.v1.md",
+      "summary": "# IWorkflowEngine Contract (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.969Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md",
+      "title": "IWorkflowEngine.v2.0.md",
+      "summary": "# IWorkflowEngine Contract (Normative v2.0.0)",
+      "keywords": [],
+      "lastUpdated": "2026-02-17T14:57:48.048Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/engine/PlanIntegrityAndPause.v1.md",
+      "title": "PlanIntegrityAndPause.v1.md",
+      "summary": "# Plan Integrity & Conductor Pause Semantics (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.006Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "architecture/engine/contracts/engine/RunEventCatalog.v1.md",
+      "title": "RunEventCatalog.v1.md",
+      "summary": "# Run Event Catalog (Normative Alias v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.018Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/contracts/engine/RunEvents.v1.idempotency_vectors.json",
+      "title": "RunEvents.v1.idempotency_vectors.json",
+      "summary": "{ \"schemaVersion\": \"1.0.0\", \"contractVersion\": \"v1\", \"formulaVersion\": \"v1\", \"formula\": \"SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planVersion)\", \"vectors\": [ { \"name\": \"step-started-attempt-1\", \"eventScope\": \"step\", \"runId\": \"run-001\", \"stepIdNormalized\": \"model.orders\", \"logicalAttemptId\": 1, \"eventType\": \"StepStarted\", \"planVersion\": \"1.2.0\", \"expectedDigest\": \"6c99484df8a52a1dc3f2533b796f7257c11f57149d3fe3277d4c7ab98433d033\" }, { \"name\": \"run-started-uses-run-token\", \"eventScope\": \"run\", \"runId\": \"run-001\", \"stepIdNormalized\": \"RUN\", \"logicalAttemptId\": 1, \"eventType...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T21:41:59.641Z",
+      "tokenCount": 65
+    },
+    {
+      "path": "architecture/engine/contracts/engine/RunEvents.v1.md",
+      "title": "RunEvents.v1.md",
+      "summary": "# Run Events Contract (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.094Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/contracts/engine/RunEvents.v2.0.md",
+      "title": "RunEvents.v2.0.md",
+      "summary": "# Run Events Contract (Normative v2.0.1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-17T14:57:59.876Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/contracts/engine/SignalsAndAuth.v1.md",
+      "title": "SignalsAndAuth.v1.md",
+      "summary": "# Signals and Authorization Contract (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.142Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/contracts/extensions/PluginSandbox.v1.md",
+      "title": "PluginSandbox.v1.md",
+      "summary": "# Plugin Sandbox Contract (Extension, Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.303Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/contracts/MIGRATION_v1.1.1_to_v2.0.0.md",
+      "title": "MIGRATION_v1.1.1_to_v2.0.0.md",
+      "summary": "# Migration Guide: v1.1.1 → v2.0.0",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.323Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/contracts/README.md",
+      "title": "README.md",
+      "summary": "# Engine Contracts Registry",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:07:52.725Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/engine/contracts/schemas/canvas-state.schema.json",
+      "title": "canvas-state.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://github.com/dunay2/dvt/docs/architecture/engine/contracts/schemas/canvas-state.schema.json\", \"title\": \"CanvasState v1\", \"description\": \"Stable workspace canvas state contract for deterministic reads/writes.\", \"type\": \"object\", \"required\": [\"schemaVersion\", \"canvasId\", \"revision\", \"viewport\", \"positions\"], \"additionalProperties\": false, \"properties\": { \"schemaVersion\": { \"type\": \"string\", \"const\": \"v1\", \"description\": \"CanvasState schema version.\" }, \"canvasId\": { \"type\": \"string\", \"minLength\": 1, \"description\": \"Unique...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T17:56:40.791Z",
+      "tokenCount": 64
+    },
+    {
+      "path": "architecture/engine/contracts/schemas/logical-graph.schema.json",
+      "title": "logical-graph.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://github.com/dunay2/dvt/docs/architecture/engine/contracts/schemas/logical-graph.schema.json\", \"title\": \"LogicalGraph (GCM) v0.1\", \"description\": \"Canonical graph contract for dbt artifact ingestion/planning compatibility.\", \"type\": \"object\", \"required\": [\"schemaVersion\", \"graphId\", \"nodes\", \"edges\"], \"additionalProperties\": false, \"properties\": { \"schemaVersion\": { \"type\": \"string\", \"const\": \"v0.1\", \"description\": \"LogicalGraph schema version.\" }, \"graphId\": { \"type\": \"string\", \"minLength\": 1, \"description\": \"Unique id...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.365Z",
+      "tokenCount": 65
+    },
+    {
+      "path": "architecture/engine/contracts/schemas/provenance-event.schema.json",
+      "title": "provenance-event.schema.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://github.com/dunay2/dvt/docs/architecture/engine/contracts/schemas/provenance-event.schema.json\", \"title\": \"ProvenanceEvent v1\", \"description\": \"Auditable and immutable provenance envelope for domain events.\", \"type\": \"object\", \"required\": [ \"schemaVersion\", \"eventId\", \"eventType\", \"occurredAtUtc\", \"emittedAtUtc\", \"actor\", \"action\", \"context\", \"integrity\" ], \"additionalProperties\": false, \"properties\": { \"schemaVersion\": { \"type\": \"string\", \"const\": \"v1\", \"description\": \"ProvenanceEvent schema version.\" }, \"eventId\": { ...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T18:11:27.983Z",
+      "tokenCount": 65
+    },
+    {
+      "path": "architecture/engine/contracts/security/AuditLog.v1.md",
+      "title": "AuditLog.v1.md",
+      "summary": "# AuditLog.v1.md - Audit Log Contract",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.418Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/contracts/security/IAuthorization.v1.md",
+      "title": "IAuthorization.v1.md",
+      "summary": "# IAuthorization.v1.md - Authorization Contract",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.462Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/state-store/IRunStateStore.v1.md",
+      "title": "IRunStateStore.v1.md",
+      "summary": "# IRunStateStore Contract (Normative v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.492Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/state-store/IRunStateStore.v2.0.md",
+      "title": "IRunStateStore.v2.0.md",
+      "summary": "# IRunStateStore Contract (Normative v2.0.0)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.512Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/contracts/state-store/README.md",
+      "title": "README.md",
+      "summary": "# State Store Contract (Normative)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.556Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1.md",
+      "title": "CONTRACT_TOOLING_PROPOSAL.v1.md",
+      "summary": "# Contract Tooling Proposal (v1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.613Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/dev/determinism-tooling.md",
+      "title": "determinism-tooling.md",
+      "summary": "# Determinism Tooling Guide (Developer)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.673Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/INDEX.md",
+      "title": "INDEX.md",
+      "summary": "# DVT Engine Architecture Index (v1.0)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.746Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/ops/observability.md",
+      "title": "observability.md",
+      "summary": "# Observability Guide (Operational)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.781Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/engine/ops/runbooks/incident_response.md",
+      "title": "incident_response.md",
+      "summary": "# Incident Response Runbook",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.808Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/engine/ops/runbooks/severity_matrix.md",
+      "title": "severity_matrix.md",
+      "summary": "# Severity Matrix",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.840Z",
+      "tokenCount": 4
+    },
+    {
+      "path": "architecture/engine/ops/SLOs.md",
+      "title": "SLOs.md",
+      "summary": "# Service Level Objectives (SLOs)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:54.865Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/PHASE2_PROJECTOR_ENGINE_CONTRACTS.md",
+      "title": "PHASE2_PROJECTOR_ENGINE_CONTRACTS.md",
+      "summary": "# Phase 2: Projector & Engine Contracts",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.559Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/roadmap/engine-phases.md",
+      "title": "engine-phases.md",
+      "summary": "# Engine Roadmap: Phases & Milestones",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.668Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/engine/schemas/signal/Cancel.v1.json",
+      "title": "Cancel.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/Cancel.v1.json\", \"title\": \"Cancel Signal Payload\", \"type\": \"object\", \"properties\": { \"reason\": { \"type\": \"string\", \"maxLength\": 500 } }, \"additionalProperties\": false }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.676Z",
+      "tokenCount": 32
+    },
+    {
+      "path": "architecture/engine/schemas/signal/EmergencyStop.v1.json",
+      "title": "EmergencyStop.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/EmergencyStop.v1.json\", \"title\": \"EmergencyStop Signal Payload\", \"type\": \"object\", \"properties\": { \"reason\": { \"type\": \"string\", \"minLength\": 1, \"maxLength\": 1000 }, \"forceKill\": { \"type\": \"boolean\" } }, \"additionalProperties\": false, \"required\": [\"reason\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.681Z",
+      "tokenCount": 44
+    },
+    {
+      "path": "architecture/engine/schemas/signal/EscalateAlert.v1.json",
+      "title": "EscalateAlert.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/EscalateAlert.v1.json\", \"title\": \"EscalateAlert Signal Payload\", \"type\": \"object\", \"properties\": { \"level\": { \"type\": \"string\", \"enum\": [\"INFO\", \"WARNING\", \"CRITICAL\", \"P1\"] }, \"note\": { \"type\": \"string\", \"maxLength\": 1000 } }, \"additionalProperties\": false, \"required\": [\"level\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.686Z",
+      "tokenCount": 48
+    },
+    {
+      "path": "architecture/engine/schemas/signal/InjectOverride.v1.json",
+      "title": "InjectOverride.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/InjectOverride.v1.json\", \"title\": \"InjectOverride Signal Payload\", \"type\": \"object\", \"properties\": { \"stepId\": { \"type\": \"string\" }, \"override\": { \"type\": \"object\" } }, \"additionalProperties\": false, \"required\": [\"stepId\", \"override\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.690Z",
+      "tokenCount": 40
+    },
+    {
+      "path": "architecture/engine/schemas/signal/Pause.v1.json",
+      "title": "Pause.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/Pause.v1.json\", \"title\": \"Pause Signal Payload\", \"type\": \"object\", \"properties\": { \"reason\": { \"type\": \"string\", \"maxLength\": 500 } }, \"additionalProperties\": false }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.697Z",
+      "tokenCount": 32
+    },
+    {
+      "path": "architecture/engine/schemas/signal/Resume.v1.json",
+      "title": "Resume.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/Resume.v1.json\", \"title\": \"Resume Signal Payload\", \"type\": \"object\", \"properties\": {}, \"additionalProperties\": false }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.701Z",
+      "tokenCount": 21
+    },
+    {
+      "path": "architecture/engine/schemas/signal/RetryRun.v1.json",
+      "title": "RetryRun.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/RetryRun.v1.json\", \"title\": \"RetryRun Signal Payload\", \"type\": \"object\", \"properties\": { \"reason\": { \"type\": \"string\", \"maxLength\": 500 }, \"force\": { \"type\": \"boolean\" } }, \"additionalProperties\": false }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.706Z",
+      "tokenCount": 39
+    },
+    {
+      "path": "architecture/engine/schemas/signal/RetryStep.v1.json",
+      "title": "RetryStep.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/RetryStep.v1.json\", \"title\": \"RetryStep Signal Payload\", \"type\": \"object\", \"properties\": { \"stepId\": { \"type\": \"string\" }, \"force\": { \"type\": \"boolean\" } }, \"additionalProperties\": false, \"required\": [\"stepId\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.711Z",
+      "tokenCount": 39
+    },
+    {
+      "path": "architecture/engine/schemas/signal/SkipStep.v1.json",
+      "title": "SkipStep.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/SkipStep.v1.json\", \"title\": \"SkipStep Signal Payload\", \"type\": \"object\", \"properties\": { \"stepId\": { \"type\": \"string\" }, \"reason\": { \"type\": \"string\", \"maxLength\": 500 } }, \"additionalProperties\": false, \"required\": [\"stepId\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.715Z",
+      "tokenCount": 41
+    },
+    {
+      "path": "architecture/engine/schemas/signal/UpdateParams.v1.json",
+      "title": "UpdateParams.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/UpdateParams.v1.json\", \"title\": \"UpdateParams Signal Payload\", \"type\": \"object\", \"properties\": { \"params\": { \"type\": \"object\" } }, \"additionalProperties\": false, \"required\": [\"params\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.721Z",
+      "tokenCount": 32
+    },
+    {
+      "path": "architecture/engine/schemas/signal/UpdateTarget.v1.json",
+      "title": "UpdateTarget.v1.json",
+      "summary": "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://example.com/schemas/signal/UpdateTarget.v1.json\", \"title\": \"UpdateTarget Signal Payload\", \"type\": \"object\", \"properties\": { \"stepId\": { \"type\": \"string\" }, \"newTarget\": { \"type\": \"object\" } }, \"additionalProperties\": false, \"required\": [\"stepId\", \"newTarget\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.727Z",
+      "tokenCount": 40
+    },
+    {
+      "path": "architecture/engine/security/PLUGIN_PROVENANCE_POLICY.APPENDICES.md",
+      "title": "PLUGIN_PROVENANCE_POLICY.APPENDICES.md",
+      "summary": "# PLUGIN_PROVENANCE_POLICY - Non-normative Appendices",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.864Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/engine/security/PLUGIN_PROVENANCE_POLICY.v1.md",
+      "title": "PLUGIN_PROVENANCE_POLICY.v1.md",
+      "summary": "# PLUGIN_PROVENANCE_POLICY.v1.md - Plugin Supply Chain Security",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:46.940Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/security/SECURITY_INVARIANTS.v1.md",
+      "title": "SECURITY_INVARIANTS.v1.md",
+      "summary": "# SECURITY_INVARIANTS.v1.md - DVT Engine Security Invariants",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:47.199Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/security/TENANT_ISOLATION_TESTS.v1.md",
+      "title": "TENANT_ISOLATION_TESTS.v1.md",
+      "summary": "# TENANT_ISOLATION_TESTS.v1.md - Tenant Isolation Test Suite",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:47.449Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/security/THREAT_MODEL.md",
+      "title": "THREAT_MODEL.md",
+      "summary": "# THREAT_MODEL.md - DVT Engine Security Analysis",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:47.602Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/engine/VERSIONING.md",
+      "title": "VERSIONING.md",
+      "summary": "# Contract Versioning Policy",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:47.661Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/frontend/contracts/UI_API_CONTRACT.v1.md",
+      "title": "UI_API_CONTRACT.v1.md",
+      "summary": "# UI_API_CONTRACT.v1.md - Frontend API Contract",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:47.747Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/frontend/contracts/VIEW_MODELS.v1.md",
+      "title": "VIEW_MODELS.v1.md",
+      "summary": "# VIEW_MODELS.v1.md - UI View Models",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:47.786Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/frontend/golden-paths/GOLDEN_PATHS_UI.v1.md",
+      "title": "GOLDEN_PATHS_UI.v1.md",
+      "summary": "# GOLDEN_PATHS_UI.v1.md - UI Golden Paths",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:47.856Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/frontend/INDEX.md",
+      "title": "INDEX.md",
+      "summary": "# Frontend Architecture Index",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.232Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "architecture/frontend/quality/A11Y_GUIDELINES.md",
+      "title": "A11Y_GUIDELINES.md",
+      "summary": "# A11Y_GUIDELINES.md - Accessibility Guidelines",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:48.020Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "architecture/frontend/quality/PERF_BUDGET.md",
+      "title": "PERF_BUDGET.md",
+      "summary": "# PERF_BUDGET.md - Frontend Performance Budget",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:48.092Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/frontend/quality/TEST_STRATEGY_FRONT.md",
+      "title": "TEST_STRATEGY_FRONT.md",
+      "summary": "# TEST_STRATEGY_FRONT.md - Frontend Testing Strategy",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:48.203Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/frontend/security/AUDIT_VIEWER_UX.v1.md",
+      "title": "AUDIT_VIEWER_UX.v1.md",
+      "summary": "# AUDIT_VIEWER_UX.v1.md - Audit Viewer User Experience",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:48.255Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/frontend/security/RBAC_UI_RULES.v1.md",
+      "title": "RBAC_UI_RULES.v1.md",
+      "summary": "# RBAC_UI_RULES.v1.md - Frontend Authorization Rules",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T17:32:48.316Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "architecture/infra/infra-architecture.md",
+      "title": "infra-architecture.md",
+      "summary": "# DVT+ Local Infra + API Readiness (Dev Baseline)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.693Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "architecture/temporal/TD-0012-pr1-p0-conformance.md",
+      "title": "TD-0012-pr1-p0-conformance.md",
+      "summary": "# TD-0012 — PR-1 P0 Conformance Checklist",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.658Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "architecture/temporal/worker-topology.md",
+      "title": "worker-topology.md",
+      "summary": "# Temporal Worker Topology",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.712Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "ARCHITECTURE_ANALYSIS.md",
+      "title": "ARCHITECTURE_ANALYSIS.md",
+      "summary": "# DVT Architecture Analysis",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:53.173Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "archive/ci/CI_ISOLATION_STRATEGY.md",
+      "title": "CI_ISOLATION_STRATEGY.md",
+      "summary": "# CI Workflow Isolation Strategy (Archive)",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:52.545Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "archive/ci/WORKFLOW_ISOLATION_TESTING.md",
+      "title": "WORKFLOW_ISOLATION_TESTING.md",
+      "summary": "# Workflow Isolation Testing Strategy",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.701Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "CAPABILITY_VERSIONING.md",
+      "title": "CAPABILITY_VERSIONING.md",
+      "summary": "# Capability versioning policy (CAPABILITY_VERSIONING.md)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.712Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "CONTRACTS_AUTOMATION_INDEX.md",
+      "title": "CONTRACTS_AUTOMATION_INDEX.md",
+      "summary": "# Contract Schemas Automation Index",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:52.581Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "title": "CONTRIBUTING.md",
+      "summary": "# Contributing to DVT Engine Documentation",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.796Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "decisions/ADR-0000-Generación de código con trazabilidad normativa obligatoria.md",
+      "title": "ADR-0000-Generación de código con trazabilidad normativa obligatoria.md",
+      "summary": "# ADR-0000: ADR-0000-Generación de código con trazabilidad normativa obligatoria",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.843Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "decisions/ADR-0001-temporal-integration-test-policy.md",
+      "title": "ADR-0001-temporal-integration-test-policy.md",
+      "summary": "# ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.860Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "decisions/ADR-0002-neo4j-knowledge-graph-context-repository.md",
+      "title": "ADR-0002-neo4j-knowledge-graph-context-repository.md",
+      "summary": "# ADR-0002: Neo4j as Central Knowledge Graph Repository",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.877Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "decisions/ADR-0003-execution-model.md",
+      "title": "ADR-0003-execution-model.md",
+      "summary": "# ADR-0003: Execution Model Sovereignty",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.889Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "decisions/ADR-0004-event-sourcing-strategy.md",
+      "title": "ADR-0004-event-sourcing-strategy.md",
+      "summary": "# ADR-0004: Event Sourcing Strategy",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.902Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "decisions/ADR-0005-contract-formalization-tooling.md",
+      "title": "ADR-0005-contract-formalization-tooling.md",
+      "summary": "# ADR-0005: Contract Formalization Tooling",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.916Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "decisions/ADR-0006-contract-tooling-governance.md",
+      "title": "ADR-0006-contract-tooling-governance.md",
+      "summary": "# ADR-0006: Contract Tooling Governance (Repository-Authoritative, Editor-Supportive)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.930Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "decisions/ADR-0007-temporal-retry-policy-mvp.md",
+      "title": "ADR-0007-temporal-retry-policy-mvp.md",
+      "summary": "# ADR-0007: Temporal Retry Policy for MVP Interpreter Runtime",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:56.943Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "decisions/ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md",
+      "title": "ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md",
+      "summary": "# ADR-0008: Source Import Wizard (Warehouse → dbt Sources)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.817Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "decisions/ADR-0010-run-event-envelope-split.md",
+      "title": "ADR-0010-run-event-envelope-split.md",
+      "summary": "# ADR-0010 — Run Event Envelope Split",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.366Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "decisions/ADR-0011-run-started-ownership.md",
+      "title": "ADR-0011-run-started-ownership.md",
+      "summary": "# ADR-0011 — RunStarted Ownership",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.404Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "decisions/ADR-0012-plan-integrity-ownership.md",
+      "title": "ADR-0012-plan-integrity-ownership.md",
+      "summary": "# ADR-0012 — Plan Integrity Ownership",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.444Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "decisions/ADR-0013-run-state-store-bootstrapRunTx.md",
+      "title": "ADR-0013-run-state-store-bootstrapRunTx.md",
+      "summary": "# ADR-0013 — IRunStateStore.bootstrapRunTx",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.489Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "decisions/ADR-0014-run-driven-adapter-model.md",
+      "title": "ADR-0014-run-driven-adapter-model.md",
+      "summary": "# ADR-0014 — Run-Driven Adapter Model",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.530Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "decisions/ADR-0015-getRunStatus-read-model-separation.md",
+      "title": "ADR-0015-getRunStatus-read-model-separation.md",
+      "summary": "# ADR-0015 — getRunStatus Read Model Separation",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.569Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "decisions/ADR-0016-logicalAttemptId-adapter-ownership.md",
+      "title": "ADR-0016-logicalAttemptId-adapter-ownership.md",
+      "summary": "# ADR-0016 — logicalAttemptId Ownership by Adapter",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T02:03:42.610Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "decisions/ADR-TEMPLATE.md",
+      "title": "ADR-TEMPLATE.md",
+      "summary": "# ADR-XXXX: [Título descriptivo de la decisión]",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.142Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "decisions/INDEX.md",
+      "title": "INDEX.md",
+      "summary": "# Architecture Decision Records (ADR) Index",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.852Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "ExecutionSemantics.v1.md",
+      "title": "ExecutionSemantics.v1.md",
+      "summary": "# Worker Architecture Diagram (Legacy Note)",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:52.648Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md",
+      "title": "AI_ISSUE_RESOLUTION_PLAYBOOK.md",
+      "summary": "# AI Issue Resolution Playbook",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.078Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "guides/QUALITY.md",
+      "title": "QUALITY.md",
+      "summary": "# Quality Assurance Summary",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.141Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "guides/TECHNICAL_DEBT_REGISTER.md",
+      "title": "TECHNICAL_DEBT_REGISTER.md",
+      "summary": "# Technical Debt Register (Iterative)",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T01:15:13.290Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "INDEX.md",
+      "title": "INDEX.md",
+      "summary": "# Documentation Index",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.188Z",
+      "tokenCount": 4
+    },
+    {
+      "path": "knowledge/INDEX.md",
+      "title": "INDEX.md",
+      "summary": "# DVT Knowledge Base — Index",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.877Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "knowledge/REPOSITORY_MAP.md",
+      "title": "REPOSITORY_MAP.md",
+      "summary": "# Repository Map and Relationships (Knowledge Base)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.908Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "knowledge/ROADMAP_AND_ISSUES_MAP.md",
+      "title": "ROADMAP_AND_ISSUES_MAP.md",
+      "summary": "# Roadmap, Status, and Issues — Knowledge Map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.945Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md",
+      "title": "BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md",
+      "summary": "# DVT+ Frontend Backlog — Epics & User Stories",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.143Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "planning/BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md",
+      "title": "BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md",
+      "summary": "# Backlog Frontend DVT+ — Ejecución en GitHub (Milestones + Issues + Evidencia)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.296Z",
+      "tokenCount": 17
+    },
+    {
+      "path": "planning/BACKLOG_V2_EPICS_AND_STORIES.md",
+      "title": "BACKLOG_V2_EPICS_AND_STORIES.md",
+      "summary": "# Backlog V2 — Épicas + Historias de Usuario",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.321Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "planning/BACKLOG_V2_GITHUB_EXECUTION.md",
+      "title": "BACKLOG_V2_GITHUB_EXECUTION.md",
+      "summary": "# Backlog V2 — Ejecución en GitHub (Milestones + Issues + Evidencia)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.354Z",
+      "tokenCount": 16
+    },
+    {
+      "path": "planning/DBT_CLOUD_EXTENDIDO_V2_ALIGNMENT.md",
+      "title": "DBT_CLOUD_EXTENDIDO_V2_ALIGNMENT.md",
+      "summary": "# Alineación DVT vs Especificación «DBT Cloud Extendido V2»",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T01:04:22.865Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "planning/DBT_CLOUD_EXTENDIDO_V2_SPEC_SOURCE.md",
+      "title": "DBT_CLOUD_EXTENDIDO_V2_SPEC_SOURCE.md",
+      "summary": "# ESPECIFICACIÓN TÉCNICA COMPLETA — PLATAFORMA «DBT CLOUD EXTENDIDO» V2",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.414Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "planning/DOCKER_COMPOSE_BACKEND_SPEC.v1.md",
+      "title": "DOCKER_COMPOSE_BACKEND_SPEC.v1.md",
+      "summary": "# DOCKER_COMPOSE_BACKEND_SPEC.v1.md — DVT+ Backend (Node) Dockerization",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T20:01:20.348Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "planning/DOCUMENTATION_INDEX.md",
+      "title": "DOCUMENTATION_INDEX.md",
+      "summary": "# DVT+ Planning Documentation Index",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.144Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "planning/FRONTEND_DVT_PLUS_TECHNICAL_SPEC.md",
+      "title": "FRONTEND_DVT_PLUS_TECHNICAL_SPEC.md",
+      "summary": "# DVT+ Frontend — Technical Specification (V1)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.492Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "planning/GTM_PLAN_DVT.md",
+      "title": "GTM_PLAN_DVT.md",
+      "summary": "# Go-to-Market Plan (DVT)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.501Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "planning/ISSUE_5_TEMPORAL_ADAPTER_STATUS_AND_IMPLEMENTATION_PROPOSAL.md",
+      "title": "ISSUE_5_TEMPORAL_ADAPTER_STATUS_AND_IMPLEMENTATION_PROPOSAL.md",
+      "summary": "# Issue #5 / #68 — Status, Achievements, and Temporal Implementation Proposal",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.546Z",
+      "tokenCount": 16
+    },
+    {
+      "path": "planning/NEXT_ISSUES_TEMPLATES.md",
+      "title": "NEXT_ISSUES_TEMPLATES.md",
+      "summary": "# Next Issues Templates",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:52.867Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "planning/PRODUCT_OPERATIONS_APPENDIX_DVT.md",
+      "title": "PRODUCT_OPERATIONS_APPENDIX_DVT.md",
+      "summary": "# Product Operations Appendix (DVT)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.587Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "planning/PRODUCT_STRATEGY_DVT.md",
+      "title": "PRODUCT_STRATEGY_DVT.md",
+      "summary": "# Product Strategy (DVT)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.595Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "planning/PRODUCT_STRATEGY_GTM_AND_FINANCIALS.md",
+      "title": "PRODUCT_STRATEGY_GTM_AND_FINANCIALS.md",
+      "summary": "# Product Strategy & GTM (DVT) — Hub",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.601Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "proposal/DVT_Architecture_v1.md",
+      "title": "DVT_Architecture_v1.md",
+      "summary": "# DVT+ Architecture (Strategy B → Meta A)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.970Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "proposal/DVT_Infrastructure_Architecture_v1.md",
+      "title": "DVT_Infrastructure_Architecture_v1.md",
+      "summary": "# DVT+ Infrastructure Architecture Proposal",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:04.991Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "REPO_STRUCTURE_SUMMARY.md",
+      "title": "REPO_STRUCTURE_SUMMARY.md",
+      "summary": "# Repository structure — current vs recommended",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.645Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "runbooks/outbox_replay.md",
+      "title": "outbox_replay.md",
+      "summary": "# Runbook: Outbox Replay",
+      "keywords": [],
+      "lastUpdated": "2026-02-12T10:16:54.641Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "runbooks/plugin_quarantine.md",
+      "title": "plugin_quarantine.md",
+      "summary": "# Runbook: Plugin Quarantine & Recovery",
+      "keywords": [],
+      "lastUpdated": "2026-02-12T10:16:54.656Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "runbooks/rollback_and_restore.md",
+      "title": "rollback_and_restore.md",
+      "summary": "# Runbook: Engine Rollback & Restore",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:52.921Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "status/DVT_PLUS_ENGINE_TEMPORAL_QUALITY_PACK_2026-02-14.md",
+      "title": "DVT_PLUS_ENGINE_TEMPORAL_QUALITY_PACK_2026-02-14.md",
+      "summary": "# DVT+ — Engine & Temporal Quality Pack (Gaps + Antipatterns + Capability Versioning Policy)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.751Z",
+      "tokenCount": 20
+    },
+    {
+      "path": "status/IMPLEMENTATION_NOTES_OUTBOX_WORKER.md",
+      "title": "IMPLEMENTATION_NOTES_OUTBOX_WORKER.md",
+      "summary": "# Implementation Notes: Outbox Delivery Worker",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:52.933Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "status/IMPLEMENTATION_SUMMARY.md",
+      "title": "IMPLEMENTATION_SUMMARY.md",
+      "summary": "# Contract Testing Pipeline - Implementation Status",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.145Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "status/ISSUE_226_PLAYBOOK_DRAFT.md",
+      "title": "ISSUE_226_PLAYBOOK_DRAFT.md",
+      "summary": "# Issue #226 Playbook Draft (Local)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T18:47:21.412Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "status/ISSUE_227_PLAYBOOK_DRAFT.md",
+      "title": "ISSUE_227_PLAYBOOK_DRAFT.md",
+      "summary": "# Issue #227 Playbook Draft (Local)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T21:41:59.642Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "status/ISSUE_228_PLAYBOOK_DRAFT.md",
+      "title": "ISSUE_228_PLAYBOOK_DRAFT.md",
+      "summary": "# Issue #228 Playbook Draft (Local)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T18:36:41.535Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "status/ISSUE_229_PLAYBOOK_DRAFT.md",
+      "title": "ISSUE_229_PLAYBOOK_DRAFT.md",
+      "summary": "# Issue #229 Playbook Draft (Local)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T18:29:42.642Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "status/ISSUE_6_PLAYBOOK_DRAFT.md",
+      "title": "ISSUE_6_PLAYBOOK_DRAFT.md",
+      "summary": "# Issue #6 Playbook Draft (Local Review)",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T17:56:40.795Z",
+      "tokenCount": 9
+    }
+  ]
+}

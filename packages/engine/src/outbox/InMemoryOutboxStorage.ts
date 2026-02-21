@@ -1,12 +1,14 @@
-import type { EventEnvelope } from '../contracts/runEvents.js';
+import type { RunEventPersisted } from '../contracts/runEvents.js';
 
-import type { OutboxRecord, IOutboxStorage } from './types.js';
+import type { DeadLetterRecord, OutboxRecord, IOutboxStorage } from './types.js';
+import { MAX_OUTBOX_ATTEMPTS } from './types.js';
 
 export class InMemoryOutboxStorage implements IOutboxStorage {
   private readonly pending: OutboxRecord[] = [];
+  private readonly deadLetters: DeadLetterRecord[] = [];
   private counter = 0;
 
-  async enqueueTx(_runId: string, events: EventEnvelope[]): Promise<void> {
+  async enqueueTx(_runId: string, events: RunEventPersisted[]): Promise<void> {
     for (const e of events) {
       this.counter += 1;
       this.pending.push({
@@ -33,9 +35,26 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 
   async markFailed(id: string, error: string): Promise<void> {
-    const rec = this.pending.find((r) => r.id === id);
-    if (!rec) return;
+    const idx = this.pending.findIndex((r) => r.id === id);
+    if (idx === -1) return;
+    const rec = this.pending[idx]!;
     rec.attempts += 1;
     rec.lastError = error;
+
+    if (rec.attempts >= MAX_OUTBOX_ATTEMPTS) {
+      this.pending.splice(idx, 1);
+      this.deadLetters.push({
+        id: `dl_${rec.id}`,
+        originalId: rec.id,
+        runId: rec.payload.runId,
+        payload: rec.payload,
+        lastError: error,
+        deadLetteredAt: '1970-01-01T00:00:00.000Z',
+      });
+    }
+  }
+
+  async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
+    return this.deadLetters.slice(0, limit);
   }
 }

@@ -1,0 +1,31 @@
+site_name: DVT Documentation
+site_description: Documentation site for DVT (engine, contracts, runbooks)
+site_url: https://dunay2.github.io/dvt
+repo_url: https://github.com/dunay2/dvt
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+plugins:
+  - search
+nav:
+  - Home: index.md
+  - Contracts:
+      - Overview: contracts/README.md
+  - ADR:
+      - Overview: adr/README.md
+  - Architecture:
+      - Overview: architecture/README.md
+  - Runbooks:
+      - Overview: runbooks/README.md
+  - API:
+      - Overview: api/README.md
+extra:
+  language: en

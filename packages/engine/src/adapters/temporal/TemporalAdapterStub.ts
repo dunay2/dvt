@@ -1,11 +1,6 @@
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunStatusSnapshot,
-  SignalRequest,
-} from '@dvt/contracts';
+import type { EngineRunRef, RunContext, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
 
+import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import type { IProviderAdapter } from '../IProviderAdapter.js';
 
 /**
@@ -17,7 +12,7 @@ import type { IProviderAdapter } from '../IProviderAdapter.js';
 export class TemporalAdapterStub implements IProviderAdapter {
   readonly provider = 'temporal' as const;
 
-  async startRun(_planRef: PlanRef, _ctx: RunContext): Promise<EngineRunRef> {
+  async startRun(_plan: ExecutionPlan, _ctx: RunContext): Promise<EngineRunRef> {
     throw new Error('NotImplemented: TemporalAdapter (Phase 2+)');
   }
   async cancelRun(_runRef: EngineRunRef): Promise<void> {
