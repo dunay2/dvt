@@ -32,7 +32,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     };
   }
 
-  function makeMockPlanFetcher() {
+  function makeMockPlanFetcher(): { fetch(planRef: PlanRef): Promise<ExecutionPlan> } {
     return {
       async fetch(planRef: PlanRef): Promise<ExecutionPlan> {
         return {

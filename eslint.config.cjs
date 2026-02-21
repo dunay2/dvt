@@ -28,7 +28,7 @@ module.exports = [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        // Single project graph via TS project references to avoid multiple-program ambiguity.
+        // Use a dedicated ESLint TSConfig that includes src/test entrypoints.
         project: ['./tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
       },
@@ -112,13 +112,13 @@ module.exports = [
   {
     files: ['packages/@dvt/engine/src/**/*.ts', 'packages/@dvt/engine/vitest.config.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/@dvt/engine/tsconfig.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { tsconfigRootDir: __dirname },
     },
   },
   {
     files: ['packages/@dvt/engine/test/**/*.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/@dvt/engine/tsconfig.test.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { tsconfigRootDir: __dirname },
       globals: { TextEncoder: 'readonly', TextDecoder: 'readonly' },
     },
   },
@@ -126,7 +126,6 @@ module.exports = [
     files: ['packages/@dvt/adapter-temporal/src/**/*.ts'],
     languageOptions: {
       parserOptions: {
-        project: ['packages/@dvt/adapter-temporal/tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
       },
     },
@@ -135,7 +134,6 @@ module.exports = [
     files: ['packages/@dvt/adapter-postgres/src/**/*.ts'],
     languageOptions: {
       parserOptions: {
-        project: ['packages/@dvt/adapter-postgres/tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
       },
     },
@@ -143,7 +141,7 @@ module.exports = [
   {
     files: ['apps/api/src/**/*.{ts,tsx}'],
     languageOptions: {
-      parserOptions: { project: ['apps/api/tsconfig.json'], tsconfigRootDir: __dirname },
+      parserOptions: { tsconfigRootDir: __dirname },
     },
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -152,7 +150,7 @@ module.exports = [
   {
     files: ['apps/web/src/**/*.{ts,tsx}'],
     languageOptions: {
-      parserOptions: { project: ['apps/web/tsconfig.json'], tsconfigRootDir: __dirname },
+      parserOptions: { tsconfigRootDir: __dirname },
       globals: { window: 'readonly', document: 'readonly', navigator: 'readonly', React: 'readonly' },
     },
     rules: {
@@ -286,9 +284,7 @@ module.exports = [
       vitest: vitestPlugin,
     },
     languageOptions: {
-      parserOptions: {
-        project: './tsconfig.test.json',
-      },
+      parserOptions: {},
       globals: {
         describe: 'readonly',
         it: 'readonly',
