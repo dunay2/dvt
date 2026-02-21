@@ -28,8 +28,8 @@ module.exports = [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        // Default to package-level tsconfigs; specific overrides will narrow further
-        project: ['./packages/*/tsconfig.json'],
+        // Single project graph via TS project references to avoid multiple-program ambiguity.
+        project: ['./tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
       },
       globals: {
@@ -56,12 +56,7 @@ module.exports = [
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: [
-            './tsconfig.json',
-            './packages/*/tsconfig.json',
-            './packages/*/tsconfig.eslint.json',
-            './apps/*/tsconfig.json',
-          ],
+          project: ['./tsconfig.eslint.json'],
         },
         node: {
           extensions: ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts', '.json'],
@@ -110,11 +105,10 @@ module.exports = [
       ],
       'import/no-unresolved': 'error',
       'import/no-cycle': 'error',
-
     },
   },
 
-  // Project-specific parserOptions to avoid TS program graph ambiguity
+  // Project-specific parserOptions (kept) — optional, but harmless.
   {
     files: ['packages/@dvt/engine/src/**/*.ts', 'packages/@dvt/engine/vitest.config.ts'],
     languageOptions: {
@@ -184,13 +178,11 @@ module.exports = [
         'error',
         {
           selector: "NewExpression[callee.name='Date']",
-          message:
-            'new Date() is non-deterministic in engine code. Use the injected IClock interface.',
+          message: 'new Date() is non-deterministic in engine code. Use the injected IClock interface.',
         },
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
-          message:
-            'process.env is forbidden in engine code. Pass configuration explicitly via dependency injection.',
+          message: 'process.env is forbidden in engine code. Pass configuration explicitly via dependency injection.',
         },
       ],
       'no-restricted-properties': [
@@ -227,13 +219,11 @@ module.exports = [
         'error',
         {
           selector: "NewExpression[callee.name='Date']",
-          message:
-            'new Date() is non-deterministic in workflows. Use workflow SDK time utilities.',
+          message: 'new Date() is non-deterministic in workflows. Use workflow SDK time utilities.',
         },
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
-          message:
-            'process.env is forbidden in workflows. Configuration must come from workflow arguments.',
+          message: 'process.env is forbidden in workflows. Configuration must come from workflow arguments.',
         },
       ],
       'no-restricted-properties': [
@@ -268,30 +258,12 @@ module.exports = [
         'error',
         {
           paths: [
-            {
-              name: 'fs',
-              message: 'File system access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'fs/promises',
-              message: 'File system access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'http',
-              message: 'Network access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'https',
-              message: 'Network access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'net',
-              message: 'Network access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'child_process',
-              message: 'Process spawning is forbidden in workflows. Delegate to activities.',
-            },
+            { name: 'fs', message: 'File system access is forbidden in workflows. Delegate to activities.' },
+            { name: 'fs/promises', message: 'File system access is forbidden in workflows. Delegate to activities.' },
+            { name: 'http', message: 'Network access is forbidden in workflows. Delegate to activities.' },
+            { name: 'https', message: 'Network access is forbidden in workflows. Delegate to activities.' },
+            { name: 'net', message: 'Network access is forbidden in workflows. Delegate to activities.' },
+            { name: 'child_process', message: 'Process spawning is forbidden in workflows. Delegate to activities.' },
           ],
         },
       ],

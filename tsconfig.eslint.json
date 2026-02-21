@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "files": [],
+  "references": [
+    { "path": "./packages/@dvt/engine" },
+    { "path": "./packages/@dvt/adapter-temporal" },
+    { "path": "./packages/@dvt/adapter-postgres" },
+    { "path": "./packages/@dvt/contracts" },
+    { "path": "./packages/@dvt/cli" }
+  ]
+}
