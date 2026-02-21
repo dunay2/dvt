@@ -1,5 +1,12 @@
 # DVT+ Frontend — Technical Specification (V1)
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/FRONTEND_DVT_PLUS_TECHNICAL_SPEC.md
+-->
+
 > Objetivo: definir el marco técnico y operativo del frontend DVT+ para implementación incremental, pruebas y trazabilidad de backlog en GitHub.
 
 ## 1) Alcance

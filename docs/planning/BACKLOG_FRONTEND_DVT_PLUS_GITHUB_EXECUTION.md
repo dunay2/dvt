@@ -1,5 +1,12 @@
 # Backlog Frontend DVT+ — Ejecución en GitHub (Milestones + Issues + Evidencia)
 
+<!--
+Status: derived
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md
+-->
+
 Este documento convierte el backlog frontend en un **plan ejecutable en GitHub** con formato auditable de evidencia.
 
 ## 1) Milestones a crear (1 por épica frontend)

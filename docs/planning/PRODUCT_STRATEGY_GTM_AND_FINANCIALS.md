@@ -1,5 +1,11 @@
 # Product Strategy & GTM (DVT) — Hub
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+-->
+
 Este documento queda como índice para separar información pública por dominio y sacar finanzas/modelo de negocio fuera del repositorio público.
 
 ## Documentos públicos

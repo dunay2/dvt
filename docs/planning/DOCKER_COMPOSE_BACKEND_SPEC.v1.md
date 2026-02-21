@@ -1,5 +1,12 @@
 # DOCKER_COMPOSE_BACKEND_SPEC.v1.md — DVT+ Backend (Node) Dockerization
 
+<!--
+Status: normative
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/DOCKER_COMPOSE_BACKEND_SPEC.v1.md
+-->
+
 **Version**: 1.0  
 **Date**: 2026-02-13  
 **Status**: Normative (MVP)  

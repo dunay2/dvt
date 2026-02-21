@@ -1,5 +1,12 @@
 # DVT+ Frontend Backlog — Epics & User Stories
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md
+-->
+
 > Objective: Convert the DVT+ frontend technical specification into an actionable backlog using the same `EPIC-*` + `US-*` system as the project.
 
 ## Table of Contents

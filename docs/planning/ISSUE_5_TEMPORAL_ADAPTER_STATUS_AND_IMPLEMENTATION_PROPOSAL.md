@@ -1,5 +1,12 @@
 # Issue #5 / #68 — Status, Achievements, and Temporal Implementation Proposal
 
+<!--
+Status: operational
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md
+-->
+
 **Date**: 2026-02-13  
 **Branch**: `docs/issue-5-implementation-proposal`  
 **Scope**: Execution documentation to unblock Temporal implementation on active `packages/*` paths

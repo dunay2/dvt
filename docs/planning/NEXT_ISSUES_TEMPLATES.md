@@ -1,5 +1,11 @@
 # Next Issues Templates
 
+<!--
+Status: template
+Last-updated: 2026-02-21
+Owner: dunay2
+-->
+
 This document provides ready-to-use issue templates for the next implementation phases.
 
 ---

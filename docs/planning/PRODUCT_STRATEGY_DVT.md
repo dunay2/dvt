@@ -1,5 +1,11 @@
 # Product Strategy (DVT)
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+-->
+
 ## Propósito
 
 DVT proporciona una plataforma de orquestación determinista para ejecutar workflows críticos con trazabilidad por eventos, contratos normativos y operación multi-adapter.
