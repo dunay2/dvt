@@ -203,6 +203,7 @@ gantt
 - **Open — critical path**: #14, #15, #6, #68
 - **Open — supporting scope**: #66, #67, #70, #72, #73
 - **Audit note (2026-02-14)**: Core engine and CI foundation exist, but active adapter/runtime parity and fixture hardening remain as main blockers
+- **Update (2026-02-21)**: Added/updated contract coverage in `packages/@dvt/engine/test/contracts/engine.test.ts` for WorkflowEngine + MockAdapter to prevent `RUN_NOT_FOUND` regressions and lock deterministic replay/hash expectations in the mocked path (issue #14).
 - **Dependency risk**: #6 + #68 + #70 currently gate reliable executable end-to-end validation
 
 ### Phase 1.5: Hardening

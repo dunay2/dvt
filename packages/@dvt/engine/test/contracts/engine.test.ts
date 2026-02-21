@@ -1,3 +1,11 @@
+/**
+ * Traceability header
+ * - Purpose: Contract coverage for WorkflowEngine + MockAdapter in the Phase 1 path.
+ * - Scope: Golden path hash determinism, replay/idempotency stability, PlanRef policy checks,
+ *   and adapter invocation guards when preconditions fail.
+ * - Issue impact: #14 (IWorkflowEngine + SnapshotProjector), specifically read-model/status
+ *   expectations in the mocked adapter path (`PENDING` until completion events are present).
+ */
 import { describe, it, expect } from 'vitest';
 import { vi } from 'vitest';
 
