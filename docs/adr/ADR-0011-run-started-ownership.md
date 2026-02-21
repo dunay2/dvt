@@ -1,6 +1,6 @@
 # ADR-0011 — RunStarted Ownership
 
-Status: Proposed  
+Status: Approved
 Date: 2026-02-20
 
 ## Context

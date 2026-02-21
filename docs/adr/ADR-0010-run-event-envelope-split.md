@@ -1,6 +1,6 @@
 # ADR-0010 — Run Event Envelope Split, Idempotency, and Runtime Integrity Governance (Comprehensive Version)
 
-Status: Pending Implementation  
+Status: Approved  
 Date: 2026-02-20 (updated: 2026-02-21)
 
 ---
