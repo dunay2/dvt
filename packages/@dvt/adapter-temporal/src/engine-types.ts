@@ -1,4 +1,14 @@
 /**
+ * @file packages/@dvt/adapter-temporal/src/engine-types.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Section 2.1 — Shared event/state contracts preserve append-only and idempotent execution semantics
+ * @decision Section 2.2 — Adapter type surface mirrors engine/state-store boundaries without runtime coupling
+ * @consequence Temporal adapter activity and workflow layers remain structurally compatible with the canonical engine contracts
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+/**
  * Minimal type surface from @dvt/engine re-declared locally.
  *
  * These are structurally compatible with the real engine types so that
