@@ -10,7 +10,7 @@ yarn.lock
 coverage/
 .nyc_output/
 *.lcov
-packages/engine/test/contracts/results/
+packages/@dvt/engine/test/contracts/results/
 
 # Build outputs
 dist/

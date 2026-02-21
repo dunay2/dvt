@@ -8,7 +8,7 @@ Uso rápido:
 # instalar dependencias si es necesario
 pnpm install
 
-# generar índices para los directorios por defecto (docs, packages/contracts, packages/engine)
+# generar índices para los directorios por defecto (docs, packages/@dvt/contracts, packages/engine)
 pnpm run gen:ai-index
 
 # o pasar directorios explícitos

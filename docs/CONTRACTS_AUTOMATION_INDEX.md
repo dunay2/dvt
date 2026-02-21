@@ -17,8 +17,8 @@ This document tracks the contract automation strategy and current implementation
 
 | Area                                | Status         | Notes                                                              |
 | ----------------------------------- | -------------- | ------------------------------------------------------------------ |
-| Contract package structure          | ✅ Implemented | Canonical source under `packages/contracts`                        |
-| Engine contract tests               | ✅ Implemented | Contract and type tests in `packages/engine/test/contracts`        |
+| Contract package structure          | ✅ Implemented | Canonical source under `packages/@dvt/contracts`                   |
+| Engine contract tests               | ✅ Implemented | Contract and type tests in `packages/@dvt/engine/test/contracts`   |
 | Golden-path execution scripts       | ✅ Implemented | CLI/scripts and CI aligned to package paths                        |
 | Hash baseline and comparison        | ✅ Implemented | Baseline in `.golden/hashes.json`, comparison script in `scripts/` |
 | Runtime boundary validation rollout | ⏳ In progress | Final integration per adapter/API boundary                         |
@@ -30,14 +30,14 @@ This document tracks the contract automation strategy and current implementation
 
 ### Contracts and Types
 
-- `packages/contracts/src/adapters/`
-- `packages/contracts/src/types/`
+- `packages/@dvt/contracts/src/adapters/`
+- `packages/@dvt/contracts/src/types/`
 
 ### Engine Tests and Golden Paths
 
-- `packages/engine/test/contracts/plans/`
-- `packages/engine/test/contracts/fixtures/`
-- `packages/engine/test/contracts/results/`
+- `packages/@dvt/engine/test/contracts/plans/`
+- `packages/@dvt/engine/test/contracts/fixtures/`
+- `packages/@dvt/engine/test/contracts/results/`
 
 ### Scripts and Tooling
 

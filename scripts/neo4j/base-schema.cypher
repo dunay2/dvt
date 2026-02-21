@@ -107,98 +107,98 @@ MATCH (adr:Decision {titulo: 'ADR-0002: Adopcion de Neo4j como repositorio centr
 MERGE (kRoadmap)-[:IMPLEMENTA_DECISION]->(adr);
 
 // Engine module + key files
-MERGE (emod:Modulo {path: 'packages/engine/src'})
+MERGE (emod:Modulo {path: 'packages/@dvt/engine/src'})
 SET emod.nombre = 'Engine Core',
     emod.lenguaje = 'typescript';
 
-MERGE (wfFile:Archivo {path: 'packages/engine/src/core/WorkflowEngine.ts'})
+MERGE (wfFile:Archivo {path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts'})
 SET wfFile.nombre = 'WorkflowEngine.ts',
     wfFile.tipo = 'ts';
 
-MERGE (spFile:Archivo {path: 'packages/engine/src/core/SnapshotProjector.ts'})
+MERGE (spFile:Archivo {path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts'})
 SET spFile.nombre = 'SnapshotProjector.ts',
     spFile.tipo = 'ts';
 
-MERGE (idFile:Archivo {path: 'packages/engine/src/core/idempotency.ts'})
+MERGE (idFile:Archivo {path: 'packages/@dvt/engine/src/core/idempotency.ts'})
 SET idFile.nombre = 'idempotency.ts',
     idFile.tipo = 'ts';
 
-MATCH (emod:Modulo {path: 'packages/engine/src'})
-MATCH (wfFile:Archivo {path: 'packages/engine/src/core/WorkflowEngine.ts'})
+MATCH (emod:Modulo {path: 'packages/@dvt/engine/src'})
+MATCH (wfFile:Archivo {path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts'})
 MERGE (emod)-[:CONTIENE]->(wfFile);
 
-MATCH (emod:Modulo {path: 'packages/engine/src'})
-MATCH (spFile:Archivo {path: 'packages/engine/src/core/SnapshotProjector.ts'})
+MATCH (emod:Modulo {path: 'packages/@dvt/engine/src'})
+MATCH (spFile:Archivo {path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts'})
 MERGE (emod)-[:CONTIENE]->(spFile);
 
-MATCH (emod:Modulo {path: 'packages/engine/src'})
-MATCH (idFile:Archivo {path: 'packages/engine/src/core/idempotency.ts'})
+MATCH (emod:Modulo {path: 'packages/@dvt/engine/src'})
+MATCH (idFile:Archivo {path: 'packages/@dvt/engine/src/core/idempotency.ts'})
 MERGE (emod)-[:CONTIENE]->(idFile);
 
 MERGE (wfCls:Funcion {nombre: 'WorkflowEngine', linea_inicio: 93, linea_fin: 583});
 MERGE (spCls:Funcion {nombre: 'SnapshotProjector', linea_inicio: 7, linea_fin: 200});
 MERGE (idCls:Funcion {nombre: 'IdempotencyKeyBuilder', linea_inicio: 19, linea_fin: 120});
 
-MATCH (wfFile:Archivo {path: 'packages/engine/src/core/WorkflowEngine.ts'})
+MATCH (wfFile:Archivo {path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts'})
 MATCH (wfCls:Funcion {nombre: 'WorkflowEngine'})
 MERGE (wfFile)-[:DEFINE]->(wfCls);
 
-MATCH (spFile:Archivo {path: 'packages/engine/src/core/SnapshotProjector.ts'})
+MATCH (spFile:Archivo {path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts'})
 MATCH (spCls:Funcion {nombre: 'SnapshotProjector'})
 MERGE (spFile)-[:DEFINE]->(spCls);
 
-MATCH (idFile:Archivo {path: 'packages/engine/src/core/idempotency.ts'})
+MATCH (idFile:Archivo {path: 'packages/@dvt/engine/src/core/idempotency.ts'})
 MATCH (idCls:Funcion {nombre: 'IdempotencyKeyBuilder'})
 MERGE (idFile)-[:DEFINE]->(idCls);
 
-MATCH (wfFile:Archivo {path: 'packages/engine/src/core/WorkflowEngine.ts'})
-MATCH (spFile:Archivo {path: 'packages/engine/src/core/SnapshotProjector.ts'})
+MATCH (wfFile:Archivo {path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts'})
+MATCH (spFile:Archivo {path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts'})
 MERGE (wfFile)-[:DEPENDE]->(spFile);
 
-MATCH (wfFile:Archivo {path: 'packages/engine/src/core/WorkflowEngine.ts'})
-MATCH (idFile:Archivo {path: 'packages/engine/src/core/idempotency.ts'})
+MATCH (wfFile:Archivo {path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts'})
+MATCH (idFile:Archivo {path: 'packages/@dvt/engine/src/core/idempotency.ts'})
 MERGE (wfFile)-[:DEPENDE]->(idFile);
 
-MATCH (wfFile:Archivo {path: 'packages/engine/src/core/WorkflowEngine.ts'})
+MATCH (wfFile:Archivo {path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts'})
 MATCH (adr:Decision {titulo: 'ADR-0002: Adopcion de Neo4j como repositorio central de conocimiento'})
 MERGE (wfFile)-[:IMPLEMENTA_DECISION]->(adr);
 
 // Adapter temporal module + key files
-MERGE (tmod:Modulo {path: 'packages/adapter-temporal/src'})
+MERGE (tmod:Modulo {path: 'packages/@dvt/adapter-temporal/src'})
 SET tmod.nombre = 'Temporal Adapter',
     tmod.lenguaje = 'typescript';
 
-MERGE (taFile:Archivo {path: 'packages/adapter-temporal/src/TemporalAdapter.ts'})
+MERGE (taFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts'})
 SET taFile.nombre = 'TemporalAdapter.ts',
     taFile.tipo = 'ts';
 
-MERGE (twFile:Archivo {path: 'packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
+MERGE (twFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
 SET twFile.nombre = 'RunPlanWorkflow.ts',
     twFile.tipo = 'ts';
 
-MATCH (tmod:Modulo {path: 'packages/adapter-temporal/src'})
-MATCH (taFile:Archivo {path: 'packages/adapter-temporal/src/TemporalAdapter.ts'})
+MATCH (tmod:Modulo {path: 'packages/@dvt/adapter-temporal/src'})
+MATCH (taFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts'})
 MERGE (tmod)-[:CONTIENE]->(taFile);
 
-MATCH (tmod:Modulo {path: 'packages/adapter-temporal/src'})
-MATCH (twFile:Archivo {path: 'packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
+MATCH (tmod:Modulo {path: 'packages/@dvt/adapter-temporal/src'})
+MATCH (twFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
 MERGE (tmod)-[:CONTIENE]->(twFile);
 
 MERGE (taCls:Funcion {nombre: 'TemporalAdapter', linea_inicio: 47, linea_fin: 420});
 MERGE (twCls:Funcion {nombre: 'RunPlanWorkflow', linea_inicio: 31, linea_fin: 320});
 
-MATCH (taFile:Archivo {path: 'packages/adapter-temporal/src/TemporalAdapter.ts'})
+MATCH (taFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts'})
 MATCH (taCls:Funcion {nombre: 'TemporalAdapter'})
 MERGE (taFile)-[:DEFINE]->(taCls);
 
-MATCH (twFile:Archivo {path: 'packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
+MATCH (twFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
 MATCH (twCls:Funcion {nombre: 'RunPlanWorkflow'})
 MERGE (twFile)-[:DEFINE]->(twCls);
 
-MATCH (taFile:Archivo {path: 'packages/adapter-temporal/src/TemporalAdapter.ts'})
-MATCH (wfFile:Archivo {path: 'packages/engine/src/core/WorkflowEngine.ts'})
+MATCH (taFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts'})
+MATCH (wfFile:Archivo {path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts'})
 MERGE (taFile)-[:DEPENDE]->(wfFile);
 
-MATCH (twFile:Archivo {path: 'packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
+MATCH (twFile:Archivo {path: 'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts'})
 MATCH (adr:Decision {titulo: 'ADR-0002: Adopcion de Neo4j como repositorio central de conocimiento'})
 MERGE (twFile)-[:IMPLEMENTA_DECISION]->(adr);

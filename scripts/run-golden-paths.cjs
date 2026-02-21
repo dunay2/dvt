@@ -15,7 +15,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const GOLDEN_HASHES = path.join(__dirname, '../.golden/hashes.json');
-const RESULTS_DIR = path.join(__dirname, '../packages/engine/test/contracts/results');
+const RESULTS_DIR = path.join(__dirname, '../packages/@dvt/engine/test/contracts/results');
 
 async function runGoldenPaths() {
   console.log('🚀 Executing golden paths...\n');

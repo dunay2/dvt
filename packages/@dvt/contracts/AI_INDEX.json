@@ -1,11 +1,11 @@
 {
   "generatedAt": "2026-02-20T09:12:44.652Z",
-  "dir": "packages/contracts",
+  "dir": "packages/@dvt/contracts",
   "entries": [
     {
       "path": "AI_INDEX.json",
       "title": "AI_INDEX.json",
-      "summary": "{ \"generatedAt\": \"2026-02-20T09:11:37.476Z\", \"dir\": \"packages/contracts\", \"entries\": [ { \"path\": \"AI_INDEX.json\", \"title\": \"AI_INDEX.json\", \"summary\": \"{ \\\"generatedAt\\\": \\\"2026-02-20T00:00:00.000Z\\\", \\\"dir\\\": \\\"packages/contracts\\\", \\\"entries\\\": [ { \\\"path\\\": \\\"README.md\\\", \\\"title\\\": \\\"README.md\\\", \\\"summary\\\": \\\"Tipos compartidos, esquemas Zod y utilidades para la definición de contratos entre adaptadores y el motor.\\\", \\\"keywords\\\": [\\\"contracts\\\",\\\"zod\\\",\\\"schemas\\\"], \\\"lastUpdated\\\": \\\"2026-01-15T00:00:00.000Z\\\", \\\"tokenCount\\\": 40 } ] }\", \"keywords\": [], \"lastUpdated\": \"2026-02-20T09:10...",
+      "summary": "{ \"generatedAt\": \"2026-02-20T09:11:37.476Z\", \"dir\": \"packages/@dvt/contracts\", \"entries\": [ { \"path\": \"AI_INDEX.json\", \"title\": \"AI_INDEX.json\", \"summary\": \"{ \\\"generatedAt\\\": \\\"2026-02-20T00:00:00.000Z\\\", \\\"dir\\\": \\\"packages/@dvt/contracts\\\", \\\"entries\\\": [ { \\\"path\\\": \\\"README.md\\\", \\\"title\\\": \\\"README.md\\\", \\\"summary\\\": \\\"Tipos compartidos, esquemas Zod y utilidades para la definición de contratos entre adaptadores y el motor.\\\", \\\"keywords\\\": [\\\"contracts\\\",\\\"zod\\\",\\\"schemas\\\"], \\\"lastUpdated\\\": \\\"2026-01-15T00:00:00.000Z\\\", \\\"tokenCount\\\": 40 } ] }\", \"keywords\": [], \"lastUpdated\": \"2026-02-20T09:10...",
       "keywords": [],
       "lastUpdated": "2026-02-20T09:11:37.476Z",
       "tokenCount": 73

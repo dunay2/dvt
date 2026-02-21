@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-02-20T09:12:44.164Z",
-  "dir": "packages/adapter-temporal",
+  "dir": "packages/@dvt/adapter-temporal",
   "entries": [
     {
       "path": "package.json",

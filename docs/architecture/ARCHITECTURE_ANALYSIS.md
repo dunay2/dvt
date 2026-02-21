@@ -88,7 +88,7 @@ The current architecture is **adequate for the project context** (contracts-firs
    - Monorepo package split (`contracts`, `engine`, adapters, `cli`) remains coherent with domain responsibilities.
 
 2. **Core dependency injection and testability**
-   - The engine core uses explicit dependency contracts via [`WorkflowEngineDeps`](../../packages/engine/src/core/WorkflowEngine.ts), improving isolation and unit/integration testing.
+   - The engine core uses explicit dependency contracts via [`WorkflowEngineDeps`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts), improving isolation and unit/integration testing.
 
 3. **Security and contract guards happen early**
    - Run start flow enforces plan policy, tenant authorization, and integrity validation before provider execution.

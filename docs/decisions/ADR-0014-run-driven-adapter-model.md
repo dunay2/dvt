@@ -21,7 +21,7 @@ These define incompatible execution models and create integration confusion.
 
 The step-driven interface is deprecated and removed from the published contracts surface:
 
-- `packages/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts`
+- `packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts`
 
 ## Consequences
 

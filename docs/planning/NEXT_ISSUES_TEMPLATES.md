@@ -36,9 +36,9 @@ Integrate runtime validators at all API entry points to validate input payloads 
 
 ## Suggested Files
 
-- `packages/contracts/src/`
-- `packages/engine/src/`
-- `packages/engine/test/`
+- `packages/@dvt/contracts/src/`
+- `packages/@dvt/engine/src/`
+- `packages/@dvt/engine/test/`
 
 ## Labels
 
@@ -127,8 +127,8 @@ Expand the golden-path fixture set and strengthen deterministic hash verificatio
 
 ## Acceptance Criteria
 
-- [ ] Add new plans under `packages/engine/test/contracts/plans/`.
-- [ ] Add/refresh fixtures under `packages/engine/test/contracts/fixtures/`.
+- [ ] Add new plans under `packages/@dvt/engine/test/contracts/plans/`.
+- [ ] Add/refresh fixtures under `packages/@dvt/engine/test/contracts/fixtures/`.
 - [ ] Validate with `pnpm validate:contracts` and `pnpm golden:validate`.
 - [ ] Update `.golden/hashes.json` only with intentional baseline changes.
 

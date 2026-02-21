@@ -35,9 +35,9 @@ This index centralizes operational/technical knowledge for the repository to acc
 
 ## 5) Packages (workspace)
 
-- [`packages/contracts`](../../packages/contracts)
+- [`packages/@dvt/contracts`](../../packages/@dvt/contracts)
 - [`packages/engine`](../../packages/engine)
-- [`packages/adapter-temporal`](../../packages/adapter-temporal)
+- [`packages/@dvt/adapter-temporal`](../../packages/@dvt/adapter-temporal)
 - [`packages/adapter-postgres`](../../packages/adapter-postgres)
 - [`packages/cli`](../../packages/cli)
 

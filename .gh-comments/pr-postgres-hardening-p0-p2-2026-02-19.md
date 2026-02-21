@@ -13,23 +13,23 @@ Implemented scope:
 
 ## Technical changes
 
-- [`packages/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+- [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
   - `appendAndEnqueueTx` signature cleanup.
   - `listPending()` uses `FOR UPDATE SKIP LOCKED` + `claimed_at` claim/update flow.
   - `markDelivered()` / `markFailed()` clear `claimed_at`.
   - schema bootstrap includes `claimed_at` and updated pending index.
   - redundant `run_events(run_id, run_seq)` index path removed.
 
-- [`packages/engine/src/core/WorkflowEngine.ts`](../packages/engine/src/core/WorkflowEngine.ts)
+- [`packages/@dvt/engine/src/core/WorkflowEngine.ts`](../packages/@dvt/engine/src/core/WorkflowEngine.ts)
   - aligned optional transactional method signature and invocation.
 
-- [`packages/engine/src/state/InMemoryTxStore.ts`](../packages/engine/src/state/InMemoryTxStore.ts)
+- [`packages/@dvt/engine/src/state/InMemoryTxStore.ts`](../packages/@dvt/engine/src/state/InMemoryTxStore.ts)
   - aligned transactional signature.
 
-- [`packages/adapter-postgres/test/smoke.test.ts`](../packages/adapter-postgres/test/smoke.test.ts)
+- [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../packages/@dvt/adapter-postgres/test/smoke.test.ts)
   - added `afterAll` schema teardown (`DROP SCHEMA ... CASCADE`).
 
-- [`packages/adapter-postgres/src/types.ts`](../packages/adapter-postgres/src/types.ts)
+- [`packages/@dvt/adapter-postgres/src/types.ts`](../packages/@dvt/adapter-postgres/src/types.ts)
   - added timestamped P2 decision note on type-drift handling.
 
 - [`.github/workflows/contracts.yml`](../.github/workflows/contracts.yml)

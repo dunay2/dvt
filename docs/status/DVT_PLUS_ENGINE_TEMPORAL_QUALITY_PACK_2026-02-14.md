@@ -1,7 +1,7 @@
 # DVT+ — Engine & Temporal Quality Pack (Gaps + Antipatterns + Capability Versioning Policy)
 
 **Date**: 2026-02-14  
-**Scope**: `packages/engine`, `packages/adapter-temporal`, capability registry/contracts  
+**Scope**: `packages/engine`, `packages/@dvt/adapter-temporal`, capability registry/contracts  
 **Audience**: Engine/Adapter maintainers, Planner/UI implementers  
 **Status**: Mixed — clearly marked per section (**NORMATIVE / POLICY** vs informative)
 
@@ -93,7 +93,7 @@
 
 ## 3) Temporal / Engine Antipatterns (quality + efficiency) — Informative
 
-**Reviewed scope**: `packages/adapter-temporal` + adapter selection in engine.
+**Reviewed scope**: `packages/@dvt/adapter-temporal` + adapter selection in engine.
 
 ### 3.1 Full state rebuild per query (O(n) per `getRunStatus`) — **High**
 

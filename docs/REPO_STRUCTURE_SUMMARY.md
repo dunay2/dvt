@@ -28,7 +28,7 @@ This document summarizes the repository's _current file layout_ and the _recomme
 Notes:
 
 - `packages/*` is the canonical location for implementation and tests.
-- Legacy material is now handled under package-scoped archival folders (for example `packages/engine/legacy-top-level-engine/` and `packages/adapters-legacy/`).
+- Legacy material is now handled under package-scoped archival folders (for example `packages/@dvt/engine/legacy-top-level-engine/` and `packages/adapters-legacy/`).
 
 ---
 
@@ -64,7 +64,7 @@ Notes:
   - scripts/ # dev scripts (can be converted to @dvt/cli)
   - pnpm-workspace.yaml
   - tsconfig.base.json
-  - package-level Vitest configs (e.g. `packages/engine/vitest.config.ts`, `packages/adapter-temporal/vitest.config.cjs`)
+  - package-level Vitest configs (e.g. `packages/@dvt/engine/vitest.config.ts`, `packages/@dvt/adapter-temporal/vitest.config.cjs`)
 
 Guiding rules:
 
@@ -77,7 +77,7 @@ Guiding rules:
 ## 3) Migration checklist (practical steps)
 
 1. Ensure `@dvt/contracts` is complete and exported — compile & tests. ✅
-2. Move engine core to `packages/engine/src` (already done for most files). ✅
+2. Move engine core to `packages/@dvt/engine/src` (already done for most files). ✅
 3. Move each adapter into `packages/adapter-*` and wire package.json deps. ✅
 4. Update root and per-package `tsconfig.json` & `tsconfig.test.json` entries. ✅
 5. Update `eslint.config.cjs` parserOptions.project to include package tsconfigs as needed. ✅

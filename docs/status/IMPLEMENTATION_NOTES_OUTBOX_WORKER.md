@@ -12,10 +12,10 @@ It follows the roadmap anchor decision for transactional outbox semantics and de
 
 ## Current Code Locations
 
-- Worker: `packages/engine/src/workers/OutboxWorker.ts`
-- In-memory event bus: `packages/engine/src/outbox/InMemoryEventBus.ts`
-- In-memory outbox storage: `packages/engine/src/outbox/InMemoryOutboxStorage.ts`
-- Contract-related tests: `packages/engine/test/contracts/`
+- Worker: `packages/@dvt/engine/src/workers/OutboxWorker.ts`
+- In-memory event bus: `packages/@dvt/engine/src/outbox/InMemoryEventBus.ts`
+- In-memory outbox storage: `packages/@dvt/engine/src/outbox/InMemoryOutboxStorage.ts`
+- Contract-related tests: `packages/@dvt/engine/test/contracts/`
 
 ## Implemented Behavior
 

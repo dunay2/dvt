@@ -13,11 +13,11 @@ This document captures the **actual policies implemented today** in `@dvt/adapte
 
 Primary implementation references:
 
-- Adapter API surface: `packages/adapter-temporal/src/TemporalAdapter.ts`
-- Workflow interpreter: `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
-- Activities: `packages/adapter-temporal/src/activities/stepActivities.ts`
-- Worker lifecycle: `packages/adapter-temporal/src/TemporalWorkerHost.ts`
-- Mapper/config: `packages/adapter-temporal/src/WorkflowMapper.ts`, `packages/adapter-temporal/src/config.ts`
+- Adapter API surface: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`
+- Workflow interpreter: `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
+- Activities: `packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`
+- Worker lifecycle: `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
+- Mapper/config: `packages/@dvt/adapter-temporal/src/WorkflowMapper.ts`, `packages/@dvt/adapter-temporal/src/config.ts`
 
 ---
 
@@ -212,7 +212,7 @@ The following were previously documented as normative but are **not implemented*
 - Per-step activity timeout override matrix.
 - Implemented runtime handling for `RETRY_STEP` / `RETRY_RUN`.
 
-These should be treated as backlog policies until corresponding code lands in `packages/adapter-temporal/src`.
+These should be treated as backlog policies until corresponding code lands in `packages/@dvt/adapter-temporal/src`.
 
 ---
 

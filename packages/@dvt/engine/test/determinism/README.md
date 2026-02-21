@@ -5,7 +5,7 @@ This directory contains determinism-related tests and documentation for the DVT 
 ## Overview
 
 The DVT engine requires **deterministic execution** to guarantee workflow replay correctness.
-The following APIs are **forbidden** inside `packages/@dvt/engine/src/` and `packages/adapter-temporal/src/workflows/`:
+The following APIs are **forbidden** inside `packages/@dvt/engine/src/` and `packages/@dvt/adapter-temporal/src/workflows/`:
 
 | Forbidden API        | Reason                          | Alternative                      |
 | -------------------- | ------------------------------- | -------------------------------- |
@@ -15,7 +15,7 @@ The following APIs are **forbidden** inside `packages/@dvt/engine/src/` and `pac
 | `process.env`        | Implicit external dependency    | Explicit configuration injection |
 | `crypto.randomBytes` | Non-deterministic randomness    | Deterministic UUID generation    |
 
-Additionally, inside **Temporal workflow files** (`packages/adapter-temporal/src/workflows/`):
+Additionally, inside **Temporal workflow files** (`packages/@dvt/adapter-temporal/src/workflows/`):
 
 | Forbidden API                | Reason                       | Alternative             |
 | ---------------------------- | ---------------------------- | ----------------------- |
@@ -48,11 +48,11 @@ Determinism is enforced via ESLint rules in `eslint.config.cjs`:
 
 ### Scoping
 
-| Scope          | Files                                             | Rules Applied                                                                    |
-| -------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Engine source  | `packages/@dvt/engine/src/**/*.ts`                | `new Date()`, `Date.now()`, `Math.random()`, `process.env`, `crypto.randomBytes` |
-| Workflow files | `packages/adapter-temporal/src/workflows/**/*.ts` | All engine rules + `setTimeout`, `setInterval`, I/O imports                      |
-| Test files     | `**/*.test.ts`, `**/test/**/*.ts`                 | All determinism rules **disabled**                                               |
+| Scope          | Files                                                  | Rules Applied                                                                    |
+| -------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Engine source  | `packages/@dvt/engine/src/**/*.ts`                     | `new Date()`, `Date.now()`, `Math.random()`, `process.env`, `crypto.randomBytes` |
+| Workflow files | `packages/@dvt/adapter-temporal/src/workflows/**/*.ts` | All engine rules + `setTimeout`, `setInterval`, I/O imports                      |
+| Test files     | `**/*.test.ts`, `**/test/**/*.ts`                      | All determinism rules **disabled**                                               |
 
 ### Exceptions
 

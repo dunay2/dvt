@@ -18,7 +18,7 @@ DVT proporciona una plataforma de orquestación determinista para ejecutar workf
 
 ## Alcance del producto
 
-- Engine core: [WorkflowEngine](../../packages/engine/src/core/WorkflowEngine.ts)
+- Engine core: [WorkflowEngine](../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
 - Contrato principal: [IWorkflowEngine.v1.1.md](../architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md)
 - Semántica de ejecución: [ExecutionSemantics.v1.md](../architecture/engine/contracts/engine/ExecutionSemantics.v1.md)
 

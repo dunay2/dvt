@@ -45,8 +45,8 @@ The DVT project implements a **multi-layered quality assurance strategy** ensuri
 #### Vitest
 
 - **Config (monorepo real)**:
-  - [`packages/engine/vitest.config.ts`](../../packages/engine/vitest.config.ts)
-  - [`packages/adapter-temporal/vitest.config.cjs`](../../packages/adapter-temporal/vitest.config.cjs)
+  - [`packages/@dvt/engine/vitest.config.ts`](../../packages/@dvt/engine/vitest.config.ts)
+  - [`packages/@dvt/adapter-temporal/vitest.config.cjs`](../../packages/@dvt/adapter-temporal/vitest.config.cjs)
 - **Coverage Requirements**: 80%+ (lines, statements, functions, branches)
 - **Features**:
   - Native TypeScript and ESM support
@@ -281,8 +281,8 @@ Configure in GitHub Settings → Branches → Add rule:
 - **Auto-assigns** reviewers based on file paths
 - **High scrutiny** for:
   - `/docs/architecture/engine/contracts/` (normative contracts)
-  - `/packages/engine/src/` (determinism-critical code)
-  - `/packages/contracts/` (shared contract package)
+  - `/packages/@dvt/engine/src/` (determinism-critical code)
+  - `/packages/@dvt/contracts/` (shared contract package)
 
 ---
 

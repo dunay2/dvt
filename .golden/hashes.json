@@ -7,7 +7,7 @@
       "description": "Single step echo task - simplest possible plan",
       "hash": "f67700e014113dc5",
       "status": "implemented",
-      "location": "packages/engine/test/contracts/plans/plan-minimal.json",
+      "location": "packages/@dvt/engine/test/contracts/plans/plan-minimal.json",
       "metadata": {
         "steps": 1,
         "expectedDuration": "< 5s",
@@ -18,7 +18,7 @@
       "description": "3 parallel steps with fan-in merge",
       "hash": "de7490f68aa73db8",
       "status": "implemented",
-      "location": "packages/engine/test/contracts/plans/plan-parallel.json",
+      "location": "packages/@dvt/engine/test/contracts/plans/plan-parallel.json",
       "metadata": {
         "steps": 4,
         "expectedDuration": "< 15s",
@@ -29,7 +29,7 @@
       "description": "5 sequential steps with PAUSE/RESUME signals",
       "hash": "b5a138be90164b1a",
       "status": "implemented",
-      "location": "packages/engine/test/contracts/plans/plan-cancel-and-resume.json",
+      "location": "packages/@dvt/engine/test/contracts/plans/plan-cancel-and-resume.json",
       "metadata": {
         "steps": 5,
         "pauseAfterStep": 3,
@@ -68,8 +68,8 @@
     }
   },
   "notes": [
-    "Golden path fixtures are stored under packages/engine/test/contracts/plans/",
-    "Implemented/deprecated hashes are synchronized with packages/engine/test/contracts/results/golden-paths-run.json",
+    "Golden path fixtures are stored under packages/@dvt/engine/test/contracts/plans/",
+    "Implemented/deprecated hashes are synchronized with packages/@dvt/engine/test/contracts/results/golden-paths-run.json",
     "Status 'implemented' indicates golden path files exist and are valid",
     "Status 'deprecated' indicates golden path has been replaced by a newer version",
     "CI validates JSON structure and schema versions for implemented golden paths"

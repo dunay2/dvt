@@ -4,8 +4,8 @@
 - **Date**: 2026-02-14
 - **Owners**: Engine/Adapters maintainers
 - **Related files**:
-  - [`packages/adapter-temporal/package.json`](../../packages/adapter-temporal/package.json)
-  - [`packages/adapter-temporal/test/integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts)
+  - [`packages/@dvt/adapter-temporal/package.json`](../../packages/@dvt/adapter-temporal/package.json)
+  - [`packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts)
 
 ---
 
@@ -24,13 +24,13 @@ The adapter test suite depends on compiled workflow output in `dist/workflows/` 
 
 ### 1) Build precondition is mandatory and explicit
 
-Integration tests MUST be executed via [`test:integration`](../../packages/adapter-temporal/package.json), and this script MUST run build explicitly before the test runner.
+Integration tests MUST be executed via [`test:integration`](../../packages/@dvt/adapter-temporal/package.json), and this script MUST run build explicitly before the test runner.
 
 Integration tests MUST fail fast with a clear error message when `dist/workflows/RunPlanWorkflow.js` is missing.
 
 ### 2) Single teardown owner
 
-Worker shutdown + `runPromise` await MUST be centralized in `afterAll` in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts).
+Worker shutdown + `runPromise` await MUST be centralized in `afterAll` in [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts).
 
 Test body MUST NOT trigger additional shutdown calls.
 
@@ -68,9 +68,9 @@ In time-skipping environment, prefer `execute()/result()` style where tests rely
 
 ## Acceptance Criteria
 
-1. [`test:integration`](../../packages/adapter-temporal/package.json) includes explicit build before test execution.
-2. [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts) has a single teardown owner (`afterAll`) with no duplicate shutdown in test body.
-3. [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts) fails fast with a targeted message if the workflow artifact is missing.
+1. [`test:integration`](../../packages/@dvt/adapter-temporal/package.json) includes explicit build before test execution.
+2. [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) has a single teardown owner (`afterAll`) with no duplicate shutdown in test body.
+3. [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) fails fast with a targeted message if the workflow artifact is missing.
 4. `pnpm --filter @dvt/adapter-temporal test:integration` passes in CI/local with compiled workflow resolution.
 
 ---
