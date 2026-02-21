@@ -1,5 +1,12 @@
 # Issue #5 / #68 — Status, Achievements, and Temporal Implementation Proposal
 
+<!--
+Status: operational
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md
+-->
+
 **Date**: 2026-02-13  
 **Branch**: `docs/issue-5-implementation-proposal`  
 **Scope**: Execution documentation to unblock Temporal implementation on active `packages/*` paths
@@ -12,13 +19,13 @@
 
 1. Active monorepo structure under `packages/*`.
 2. Functional engine core with tests in `packages/engine`.
-3. Centralized contracts in `packages/contracts`.
-4. `packages/adapter-temporal` package created (existing workspace base).
+3. Centralized contracts in `packages/@dvt/contracts`.
+4. `packages/@dvt/adapter-temporal` package created (existing workspace base).
 
 ### Blocking gaps (Issue #5)
 
-1. In `packages/engine/src/adapters/temporal/TemporalAdapterStub.ts`, real execution is still `NotImplemented`.
-2. `packages/adapter-temporal/src/index.ts` is still a placeholder.
+1. In `packages/@dvt/engine/src/adapters/temporal/TemporalAdapterStub.ts`, real execution is still `NotImplemented`.
+2. `packages/@dvt/adapter-temporal/src/index.ts` is still a placeholder.
 3. Full Temporal SDK wiring (Client + Worker + Workflow + Activities) does not yet exist on active paths.
 4. Missing real adapter+engine Temporal integration test suite.
 5. Drift exists between #5 and #68 (legacy scope vs current monorepo scope).
@@ -60,10 +67,10 @@
 
 **Key files**
 
-- `packages/adapter-temporal/src/config.ts`
-- `packages/adapter-temporal/src/TemporalClient.ts`
-- `packages/adapter-temporal/src/WorkflowMapper.ts`
-- `packages/adapter-temporal/src/index.ts`
+- `packages/@dvt/adapter-temporal/src/config.ts`
+- `packages/@dvt/adapter-temporal/src/TemporalClient.ts`
+- `packages/@dvt/adapter-temporal/src/WorkflowMapper.ts`
+- `packages/@dvt/adapter-temporal/src/index.ts`
 
 **Done**
 
@@ -74,9 +81,9 @@
 
 **Key files**
 
-- `packages/adapter-temporal/src/TemporalWorkerHost.ts`
-- `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
-- `packages/adapter-temporal/src/activities/StepActivity.ts`
+- `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
+- `packages/@dvt/adapter-temporal/src/activities/StepActivity.ts`
 
 **Done**
 
@@ -130,8 +137,8 @@
 
 ## 5) Global acceptance criteria (MVP)
 
-1. `packages/adapter-temporal/src/index.ts` is no longer a placeholder.
-2. `packages/engine/src/adapters/temporal/TemporalAdapterStub.ts` is removed from the normal production flow.
+1. `packages/@dvt/adapter-temporal/src/index.ts` is no longer a placeholder.
+2. `packages/@dvt/engine/src/adapters/temporal/TemporalAdapterStub.ts` is removed from the normal production flow.
 3. Minimum validated flow: `startRun -> signal/query/status -> cancel`.
 4. Idempotency proven under activity retries.
 5. Run state derived from persisted events.
@@ -168,7 +175,7 @@ New source of truth:
 Blocker solved by #68:
 
 - Remove `TemporalAdapterStub` from normal flow.
-- Add real Temporal SDK wiring in `packages/adapter-temporal` + engine integration.
+- Add real Temporal SDK wiring in `packages/@dvt/adapter-temporal` + engine integration.
 - Integration test suite (Temporal + engine) and idempotent semantics (at-least-once).
 ```
 
@@ -221,14 +228,14 @@ Blocker solved by #68:
 
 ### PR-1 executed in code
 
-- Config foundation implemented in `packages/adapter-temporal/src/config.ts`.
-- Client wrapper lifecycle implemented in `packages/adapter-temporal/src/TemporalClient.ts`.
-- Base mapper implemented in `packages/adapter-temporal/src/WorkflowMapper.ts`.
-- Public exports enabled in `packages/adapter-temporal/src/index.ts`.
+- Config foundation implemented in `packages/@dvt/adapter-temporal/src/config.ts`.
+- Client wrapper lifecycle implemented in `packages/@dvt/adapter-temporal/src/TemporalClient.ts`.
+- Base mapper implemented in `packages/@dvt/adapter-temporal/src/WorkflowMapper.ts`.
+- Public exports enabled in `packages/@dvt/adapter-temporal/src/index.ts`.
 
 ### Technical validation
 
-- Package tests updated and green (`4 passed`) in `packages/adapter-temporal/test/smoke.test.ts`.
+- Package tests updated and green (`4 passed`) in `packages/@dvt/adapter-temporal/test/smoke.test.ts`.
 - Package TypeScript build green (`tsc -p tsconfig.json`).
 
 ### Scope note
@@ -244,21 +251,21 @@ This progress covers the PR-1 objective (foundation). Real workflow/activity exe
 
 ### PR-2 executed in code
 
-- Activity factory implemented in `packages/adapter-temporal/src/activities/stepActivities.ts`.
+- Activity factory implemented in `packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`.
   - `fetchPlan`: integrity validation + JSON parse + PlanRef metadata match.
   - `executeStep`: MVP step shape validation (stepId, kind only).
   - `emitEvent`: idempotent event emission to state store + outbox.
   - `saveRunMetadata`: run correlation persistence.
-- Deterministic interpreter workflow in `packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts`.
+- Deterministic interpreter workflow in `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`.
   - Signals: `pause`, `resume`, `cancel`.
   - Query: `status` (returns `WorkflowState`).
   - Logic: fetch plan → walk steps → emit lifecycle events.
   - Zero `Date.now`/`Math.random`/`process.env`/Node.js APIs.
-- Worker lifecycle manager in `packages/adapter-temporal/src/TemporalWorkerHost.ts`.
+- Worker lifecycle manager in `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`.
   - `start(connection)` → creates Worker with bundled workflow + injected activities.
   - `shutdown()` → graceful drain.
-- Local engine type surface in `packages/adapter-temporal/src/engine-types.ts` (structurally compatible with `@dvt/engine`).
-- Public exports updated in `packages/adapter-temporal/src/index.ts`.
+- Local engine type surface in `packages/@dvt/adapter-temporal/src/engine-types.ts` (structurally compatible with `@dvt/engine`).
+- Public exports updated in `packages/@dvt/adapter-temporal/src/index.ts`.
 - New dependencies: `@temporalio/worker`, `@temporalio/workflow`, `@temporalio/activity`.
 
 ### PR-2 technical validation

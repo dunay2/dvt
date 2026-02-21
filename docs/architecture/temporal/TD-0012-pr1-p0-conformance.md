@@ -29,20 +29,20 @@ Out of scope for PR-1 unless explicitly pulled in:
 
 ### Run bootstrap correctness
 
-6. RunMetadata includes planId + planVersion.
-7. Initial write is atomic: RunMetadata + first events + outbox enqueue in one transaction via `bootstrapRunTx`.
-8. Engine emits RunQueued only; RunStarted is adapter-owned (ADR-0011).
-9. Projectors MUST treat RunQueued→RunFailed / RunQueued→RunCancelled as valid terminal sequences.
+1. RunMetadata includes planId + planVersion.
+2. Initial write is atomic: RunMetadata + first events + outbox enqueue in one transaction via `bootstrapRunTx`.
+3. Engine emits RunQueued only; RunStarted is adapter-owned (ADR-0011).
+4. Projectors MUST treat RunQueued→RunFailed / RunQueued→RunCancelled as valid terminal sequences.
 
 ### Plan metadata fields (Phase 1)
 
-10. If plan.metadata.requiresCapabilities is non-empty, startRun hard-fails with CAPABILITIES_NOT_SUPPORTED.
-11. If plan.metadata.targetAdapter conflicts with context.targetAdapter, startRun hard-fails with a field-specific error.
-12. ADR-0012: Remove `planFetcher` and `planIntegrity` from `WorkflowEngineDeps`; engine validates PlanRef metadata only; adapters fetch+validate bytes.
+1. If plan.metadata.requiresCapabilities is non-empty, startRun hard-fails with CAPABILITIES_NOT_SUPPORTED.
+2. If plan.metadata.targetAdapter conflicts with context.targetAdapter, startRun hard-fails with a field-specific error.
+3. ADR-0012: Remove `planFetcher` and `planIntegrity` from `WorkflowEngineDeps`; engine validates PlanRef metadata only; adapters fetch+validate bytes.
 
 ### Forward compatibility
 
-13. Projector unknown event policy: **Policy A** (no-op + alert, continue projection).
+1. Projector unknown event policy: **Policy A** (no-op + alert, continue projection).
 
 ## Deployment constraint
 

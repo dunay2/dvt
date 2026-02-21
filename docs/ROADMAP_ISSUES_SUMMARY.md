@@ -5,6 +5,8 @@ generated: 2026-02-20
 
 # Resumen de issues referenciadas en ROADMAP.md y CHANGELOG.md
 
+## Resumen de issues referenciadas en ROADMAP.md y CHANGELOG.md
+
 Generado automáticamente desde `ROADMAP.md` y `CHANGELOG.md` (repositorio local).
 
 ## Camino crítico — Phase 1 (prioridad crítica)

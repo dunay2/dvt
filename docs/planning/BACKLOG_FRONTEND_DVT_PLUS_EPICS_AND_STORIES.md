@@ -1,24 +1,53 @@
 # DVT+ Frontend Backlog — Epics & User Stories
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md
+-->
+
 > Objective: Convert the DVT+ frontend technical specification into an actionable backlog using the same `EPIC-*` + `US-*` system as the project.
 
 ## Table of Contents
 
-- [Execution Status (GitHub)](#execution-status-github)
-- [GitHub Convention](#github-convention)
-- [Epics & User Stories](#epics--user-stories)
-  - [EPIC F1 — UI Shell & Navigation Foundation](#epic-f1--ui-shell--navigation-foundation)
-  - [EPIC F2 — Graph Workspace (React Flow + Layout)](#epic-f2--graph-workspace-react-flow--layout)
-  - [EPIC F3 — Execution Plan UX (Explainable Read-only)](#epic-f3--execution-plan-ux-explainable-read-only)
-  - [EPIC F4 — Run Monitoring & Live Status](#epic-f4--run-monitoring--live-status)
-  - [EPIC F5 — Diff, Lineage & Impact Analysis UX](#epic-f5--diff-lineage--impact-analysis-ux)
-  - [EPIC F6 — Cost, Guardrails & FinOps UX](#epic-f6--cost-guardrails--finops-ux)
-  - [EPIC F7 — Plugins & UI Extensibility](#epic-f7--plugins--ui-extensibility)
-  - [EPIC F8 — Security, RBAC & Admin UX](#epic-f8--security-rbac--admin-ux)
-  - [EPIC F9 — Frontend Observability, A11y & Performance](#epic-f9--frontend-observability-a11y--performance)
-- [Recommended Implementation Order](#recommended-implementation-order)
-- [Definition of Ready (DoR) per Story](#definition-of-ready-dor-per-story)
-- [Definition of Done (DoD) per Story](#definition-of-done-dod-per-story)
+- [DVT+ Frontend Backlog — Epics \& User Stories](#dvt-frontend-backlog--epics--user-stories)
+  - [Table of Contents](#table-of-contents)
+  - [Execution Status (GitHub)](#execution-status-github)
+  - [GitHub Convention](#github-convention)
+  - [Epics \& User Stories](#epics--user-stories)
+    - [EPIC F1 — UI Shell \& Navigation Foundation](#epic-f1--ui-shell--navigation-foundation)
+      - [US-F1.1 — Define Main Shell and Side Navigation](#us-f11--define-main-shell-and-side-navigation)
+      - [US-F1.2 — Global Panels and Modals System](#us-f12--global-panels-and-modals-system)
+    - [EPIC F2 — Graph Workspace (React Flow + Layout)](#epic-f2--graph-workspace-react-flow--layout)
+      - [US-F2.1 — Render DAG with Basic Interaction](#us-f21--render-dag-with-basic-interaction)
+      - [US-F2.2 — Auto-layout with ELK/dagre and Pinned Nodes](#us-f22--auto-layout-with-elkdagre-and-pinned-nodes)
+      - [US-F2.3 — Graph Search and Filtering](#us-f23--graph-search-and-filtering)
+    - [EPIC F3 — Execution Plan UX (Explainable Read-only)](#epic-f3--execution-plan-ux-explainable-read-only)
+      - [US-F3.1 — Plan Preview with RUN/SKIP/PARTIAL Actions](#us-f31--plan-preview-with-runskippartial-actions)
+      - [US-F3.2 — Explainability by Plan Decision](#us-f32--explainability-by-plan-decision)
+    - [EPIC F4 — Run Monitoring \& Live Status](#epic-f4--run-monitoring--live-status)
+      - [US-F4.1 — Execution Timeline with Step States](#us-f41--execution-timeline-with-step-states)
+      - [US-F4.2 — Logs, Progress, and Resilient Reconnection](#us-f42--logs-progress-and-resilient-reconnection)
+    - [EPIC F5 — Diff, Lineage \& Impact Analysis UX](#epic-f5--diff-lineage--impact-analysis-ux)
+      - [US-F5.1 — Diff View of Relevant Changes](#us-f51--diff-view-of-relevant-changes)
+      - [US-F5.2 — Upstream/Downstream Lineage](#us-f52--upstreamdownstream-lineage)
+    - [EPIC F6 — Cost, Guardrails \& FinOps UX](#epic-f6--cost-guardrails--finops-ux)
+      - [US-F6.1 — Cost Snapshot in Frontend](#us-f61--cost-snapshot-in-frontend)
+      - [US-F6.2 — Guardrail Signals and Recommendations](#us-f62--guardrail-signals-and-recommendations)
+    - [EPIC F7 — Plugins \& UI Extensibility](#epic-f7--plugins--ui-extensibility)
+      - [US-F7.1 — Plugin Catalog with State/Compatibility](#us-f71--plugin-catalog-with-statecompatibility)
+      - [US-F7.2 — Safe Handling of Plugin Failures in UI](#us-f72--safe-handling-of-plugin-failures-in-ui)
+    - [EPIC F8 — Security, RBAC \& Admin UX](#epic-f8--security-rbac--admin-ux)
+      - [US-F8.1 — Visual RBAC Rules (hide/disable/read-only)](#us-f81--visual-rbac-rules-hidedisableread-only)
+      - [US-F8.2 — Restricted and Audited Admin Surface](#us-f82--restricted-and-audited-admin-surface)
+    - [EPIC F9 — Frontend Observability, A11y \& Performance](#epic-f9--frontend-observability-a11y--performance)
+      - [US-F9.1 — Frontend Telemetry with Key Events](#us-f91--frontend-telemetry-with-key-events)
+      - [US-F9.2 — Operational Accessibility of Critical Views](#us-f92--operational-accessibility-of-critical-views)
+      - [US-F9.3 — Performance Budget for Large Graphs](#us-f93--performance-budget-for-large-graphs)
+  - [Recommended Implementation Order](#recommended-implementation-order)
+  - [Definition of Ready (DoR) per Story](#definition-of-ready-dor-per-story)
+  - [Definition of Done (DoD) per Story](#definition-of-done-dod-per-story)
 
 ---
 

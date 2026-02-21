@@ -16,8 +16,8 @@ The baseline infrastructure is in place and aligned with the monorepo layout.
 
 ### Package/Test Paths
 
-- Plans and fixtures: `packages/engine/test/contracts/`
-- Results: `packages/engine/test/contracts/results/`
+- Plans and fixtures: `packages/@dvt/engine/test/contracts/`
+- Results: `packages/@dvt/engine/test/contracts/results/`
 - Baseline hashes: `.golden/hashes.json`
 
 ### CI Alignment
@@ -35,10 +35,10 @@ The baseline infrastructure is in place and aligned with the monorepo layout.
 ## Issue #6 Status Update (2026-02-19)
 
 - `@dvt/adapter-postgres` moved from in-memory foundation to real PostgreSQL persistence.
-- SQL migration baseline added for `run_metadata`, `run_events`, and `outbox` in [`packages/adapter-postgres/migrations/001_init.sql`](../../packages/adapter-postgres/migrations/001_init.sql).
+- SQL migration baseline added for `run_metadata`, `run_events`, and `outbox` in [`packages/@dvt/adapter-postgres/migrations/001_init.sql`](../../packages/@dvt/adapter-postgres/migrations/001_init.sql).
 - Migration execution implemented in [`scripts/db-migrate.cjs`](../../scripts/db-migrate.cjs) (ordered SQL, schema placeholder replacement, migration tracking table).
-- Adapter runtime now uses `pg` queries and transactional append+enqueue behavior in [`PostgresStateStoreAdapter`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts).
-- Integration tests now support real DB validation via `DVT_PG_INTEGRATION=1` in [`packages/adapter-postgres/test/smoke.test.ts`](../../packages/adapter-postgres/test/smoke.test.ts).
+- Adapter runtime now uses `pg` queries and transactional append+enqueue behavior in [`PostgresStateStoreAdapter`](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts).
+- Integration tests now support real DB validation via `DVT_PG_INTEGRATION=1` in [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../packages/@dvt/adapter-postgres/test/smoke.test.ts).
 - Validation evidence:
   - `pnpm --filter @dvt/adapter-postgres typecheck` ✅
   - `pnpm db:migrate` (with `DATABASE_URL`) ✅
@@ -63,8 +63,8 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 ### Tracker comments updated (state refinement without closure)
 
-- #68: evidence posted for active Temporal adapter implementation in [`packages/adapter-temporal/src/TemporalAdapter.ts`](../../packages/adapter-temporal/src/TemporalAdapter.ts), workflows/activities, and tests; left as near-closure pending checklist alignment.
-- #14: evidence posted for engine core and projector implementation in [`packages/engine/src/core/WorkflowEngine.ts`](../../packages/engine/src/core/WorkflowEngine.ts) and [`packages/engine/src/core/SnapshotProjector.ts`](../../packages/engine/src/core/SnapshotProjector.ts); left open pending checklist/API wording refresh.
+- #68: evidence posted for active Temporal adapter implementation in [`packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`](../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts), workflows/activities, and tests; left as near-closure pending checklist alignment.
+- #14: evidence posted for engine core and projector implementation in [`packages/@dvt/engine/src/core/WorkflowEngine.ts`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts) and [`packages/@dvt/engine/src/core/SnapshotProjector.ts`](../../packages/@dvt/engine/src/core/SnapshotProjector.ts); left open pending checklist/API wording refresh.
 
 ### Updated in GitHub (2026-02-19 18:43 UTC)
 
@@ -92,8 +92,8 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 - Workspace lint debt (concrete backlog):
   - `packages/adapters-legacy/src/**` — normalize import order and unresolved references; target gate: `eslint --max-warnings 0` on package scope.
-  - `packages/adapter-postgres/test/**` — align parser project boundaries and test-lint rules; target gate: package test-lint clean run.
-  - `packages/engine/legacy-top-level-engine/**` — legacy lint drift cleanup or archive decision with explicit owner.
+  - `packages/@dvt/adapter-postgres/test/**` — align parser project boundaries and test-lint rules; target gate: package test-lint clean run.
+  - `packages/@dvt/engine/legacy-top-level-engine/**` — legacy lint drift cleanup or archive decision with explicit owner.
 - Docs/path normalization backlog (explicit files):
   - `docs/REPO_STRUCTURE_SUMMARY.md` — reconcile active vs legacy package maps after latest adapter/engine changes.
   - `docs/planning/ISSUE_5_TEMPORAL_ADAPTER_STATUS_AND_IMPLEMENTATION_PROPOSAL.md` — refresh status links to current PR/issue trail.
@@ -110,7 +110,7 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 ## Recent Low-Priority Completed Task (2026-02-14)
 
 - Issue [#82](https://github.com/dunay2/dvt/issues/82) closed.
-- Change applied in [`validateStepShape()`](packages/adapter-temporal/src/activities/stepActivities.ts:172): hoisted allowed step fields to module-level constant to avoid per-call `Set` allocation.
+- Change applied in [`validateStepShape()`](packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:172): hoisted allowed step fields to module-level constant to avoid per-call `Set` allocation.
 - Validation evidence: `pnpm --filter @dvt/adapter-temporal test` passed (19 tests).
 
 ## Recent High-Priority Completed Task (2026-02-17)
@@ -118,22 +118,22 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - Scope: align logical attempts vs infrastructure attempts in Temporal activity event emission.
 - Problem addressed: `logicalAttemptId` defaulted to infrastructure attempt under retries, risking duplicate logical events and non-canonical idempotency behavior.
 - Runtime changes:
-  - [`emitEvent()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:92) now defaults `logicalAttemptId` to `1` (unless explicitly provided).
-  - [`resolveTemporalAttemptFromContext()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:140) centralizes safe extraction of Temporal activity attempt for `engineAttemptId` only.
-  - [`EventIdempotencyInput`](../../packages/adapter-temporal/src/engine-types.ts:112) no longer includes `engineAttemptId`, reinforcing idempotency derivation from logical attempt dimensions.
+  - [`emitEvent()`](../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:92) now defaults `logicalAttemptId` to `1` (unless explicitly provided).
+  - [`resolveTemporalAttemptFromContext()`](../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:140) centralizes safe extraction of Temporal activity attempt for `engineAttemptId` only.
+  - [`EventIdempotencyInput`](../../packages/@dvt/adapter-temporal/src/engine-types.ts:112) no longer includes `engineAttemptId`, reinforcing idempotency derivation from logical attempt dimensions.
 - Regression tests added/updated:
-  - [`activities.test.ts`](../../packages/adapter-temporal/test/activities.test.ts:221) now validates:
+  - [`activities.test.ts`](../../packages/@dvt/adapter-temporal/test/activities.test.ts:221) now validates:
     - logical attempt defaults to `1` even when engine attempt > 1,
     - dedupe remains stable across infrastructure retries with unchanged logical attempt,
     - explicit logical attempt remains independent from engine attempt.
-  - [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:41) test idempotency fixture aligned with logical-attempt-based derivation.
+  - [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:41) test idempotency fixture aligned with logical-attempt-based derivation.
 - Validation evidence:
   - `pnpm --filter @dvt/adapter-temporal test` ✅
   - Result: 4 test files passed, 24 tests passed.
 
 ### Residual Risks / Follow-up
 
-- Engine package (`packages/engine`) still emits fixed attempt values in several paths ([`WorkflowEngine.emitRunEvent*`](../../packages/engine/src/core/WorkflowEngine.ts:307)); this task only closes the active Temporal activity emission gap.
+- Engine package (`packages/engine`) still emits fixed attempt values in several paths ([`WorkflowEngine.emitRunEvent*`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts:307)); this task only closes the active Temporal activity emission gap.
 - Conductor path remains pending and should adopt the same logical-vs-engine-attempt invariants before parity testing.
 
 ## Recent High-Priority Progress Slice (2026-02-17)
@@ -141,13 +141,13 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 - Scope: `#15` incremental interpreter upgrade with deterministic DAG-layer scheduling primitives.
 - Problem addressed: workflow execution was strictly sequential with no explicit DAG dependency planning path.
 - Runtime changes:
-  - Added optional DAG dependency support (`dependsOn`) in adapter-local execution plan typing via [`ExecutionPlan`](../../packages/adapter-temporal/src/engine-types.ts:64).
-  - Extended step validation in [`validateStepShape()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:182) to allow and validate `dependsOn` arrays.
-  - Added deterministic DAG-layer planner in [`planExecutionLayers()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:213), including validation for duplicate step IDs, unknown dependencies, self-dependencies, invalid dependency values, and cycles.
-  - Updated [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:92) to execute by deterministic layers (parallelizable frontier via `Promise.all`) while preserving declaration-order fallback for legacy plans.
+  - Added optional DAG dependency support (`dependsOn`) in adapter-local execution plan typing via [`ExecutionPlan`](../../packages/@dvt/adapter-temporal/src/engine-types.ts:64).
+  - Extended step validation in [`validateStepShape()`](../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:182) to allow and validate `dependsOn` arrays.
+  - Added deterministic DAG-layer planner in [`planExecutionLayers()`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:213), including validation for duplicate step IDs, unknown dependencies, self-dependencies, invalid dependency values, and cycles.
+  - Updated [`runPlanWorkflow()`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:92) to execute by deterministic layers (parallelizable frontier via `Promise.all`) while preserving declaration-order fallback for legacy plans.
 - Tests added/updated:
-  - New scheduler-focused unit suite in [`workflow-dag-scheduler.test.ts`](../../packages/adapter-temporal/test/workflow-dag-scheduler.test.ts:1) covering linear fallback, layered DAG ordering, and invalid-graph error paths.
-  - Extended activity validation coverage in [`activities.test.ts`](../../packages/adapter-temporal/test/activities.test.ts:278) for `dependsOn` acceptance and invalid-shape rejection.
+  - New scheduler-focused unit suite in [`workflow-dag-scheduler.test.ts`](../../packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts:1) covering linear fallback, layered DAG ordering, and invalid-graph error paths.
+  - Extended activity validation coverage in [`activities.test.ts`](../../packages/@dvt/adapter-temporal/test/activities.test.ts:278) for `dependsOn` acceptance and invalid-shape rejection.
 - Validation evidence:
   - `pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-dag-scheduler.test.ts` ✅
   - `pnpm --filter @dvt/adapter-temporal test` ✅
@@ -163,10 +163,10 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 - Scope: continue `#15` by promoting DAG dependency shape (`dependsOn`) from adapter-local typing to shared engine contract surfaces.
 - Runtime changes:
-  - Added optional `dependsOn?: string[]` to shared engine execution plan contract in [`ExecutionPlan`](../../packages/engine/src/contracts/executionPlan.ts:1).
-  - Updated mock adapter step validation in [`validateMockStep()`](../../packages/engine/src/adapters/mock/MockAdapter.ts:157) to accept/validate `dependsOn`.
+  - Added optional `dependsOn?: string[]` to shared engine execution plan contract in [`ExecutionPlan`](../../packages/@dvt/engine/src/contracts/executionPlan.ts:1).
+  - Updated mock adapter step validation in [`validateMockStep()`](../../packages/@dvt/engine/src/adapters/mock/MockAdapter.ts:157) to accept/validate `dependsOn`.
 - Tests:
-  - Added engine contract regression coverage in [`engine.test.ts`](../../packages/engine/test/contracts/engine.test.ts:37) with a DAG-shaped plan using `dependsOn`.
+  - Added engine contract regression coverage in [`engine.test.ts`](../../packages/@dvt/engine/test/contracts/engine.test.ts:37) with a DAG-shaped plan using `dependsOn`.
 - Validation evidence:
   - `pnpm --filter @dvt/contracts build` ✅
   - `pnpm --filter @dvt/engine test -- --run test/contracts/engine.test.ts` ✅
@@ -176,13 +176,13 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 - Scope: add deterministic continue-as-new policy to Temporal interpreter workflow (`#15`).
 - Runtime changes:
-  - Added adapter config parameter `continueAsNewAfterLayerCount` in [`TemporalAdapterConfig`](../../packages/adapter-temporal/src/config.ts:1), sourced from `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS` with safe default `0` (disabled).
-  - Workflow input/state upgraded in [`RunPlanWorkflow`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:29) with resume cursor and `continuedAsNewCount` tracking.
-  - Added deterministic rollover policy helper [`shouldTriggerContinueAsNew()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:278) and integrated `continueAsNew(...)` trigger after configured layer threshold.
-  - Adapter start payload now passes threshold to workflow in [`TemporalAdapter.startRun()`](../../packages/adapter-temporal/src/TemporalAdapter.ts:52).
+  - Added adapter config parameter `continueAsNewAfterLayerCount` in [`TemporalAdapterConfig`](../../packages/@dvt/adapter-temporal/src/config.ts:1), sourced from `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS` with safe default `0` (disabled).
+  - Workflow input/state upgraded in [`RunPlanWorkflow`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:29) with resume cursor and `continuedAsNewCount` tracking.
+  - Added deterministic rollover policy helper [`shouldTriggerContinueAsNew()`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:278) and integrated `continueAsNew(...)` trigger after configured layer threshold.
+  - Adapter start payload now passes threshold to workflow in [`TemporalAdapter.startRun()`](../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts:52).
 - Tests added/updated:
-  - New policy tests in [`workflow-continue-as-new.test.ts`](../../packages/adapter-temporal/test/workflow-continue-as-new.test.ts:1).
-  - Config coverage extended in [`smoke.test.ts`](../../packages/adapter-temporal/test/smoke.test.ts:68).
+  - New policy tests in [`workflow-continue-as-new.test.ts`](../../packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts:1).
+  - Config coverage extended in [`smoke.test.ts`](../../packages/@dvt/adapter-temporal/test/smoke.test.ts:68).
 - Validation evidence:
   - `pnpm --filter @dvt/adapter-temporal test` ✅
   - Result: adapter-temporal suite passed (6 files, 39 tests).
@@ -191,17 +191,17 @@ Repository audit was reconciled against active package paths (`packages/*`) and 
 
 - Scope: complete Option A parity closure for `#15` with retry/error handling + E2E golden-path coverage.
 - Runtime changes:
-  - Added controlled failure simulation in [`executeStep()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:85) via `simulateError: 'transient' | 'permanent'` for deterministic retry/error-path testing.
-  - Expanded step validation allowlist in [`validateStepShape()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:200) to accept `simulateError` in test plans.
-  - Updated workflow activity retry policy in [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:88) to:
+  - Added controlled failure simulation in [`executeStep()`](../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:85) via `simulateError: 'transient' | 'permanent'` for deterministic retry/error-path testing.
+  - Expanded step validation allowlist in [`validateStepShape()`](../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:200) to accept `simulateError` in test plans.
+  - Updated workflow activity retry policy in [`runPlanWorkflow()`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:88) to:
     - `maximumInterval: '60s'`
     - `maximumAttempts: 3`
     - `nonRetryableErrorTypes: ['PermanentStepError']`
-  - Added explicit activity error mapping in [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:205) to convert terminal activity failures into deterministic `StepFailed` + `RunFailed` event emission.
+  - Added explicit activity error mapping in [`runPlanWorkflow()`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:205) to convert terminal activity failures into deterministic `StepFailed` + `RunFailed` event emission.
 - Tests added/updated:
-  - Added failure-simulation unit coverage in [`activities.test.ts`](../../packages/adapter-temporal/test/activities.test.ts:351) for transient and permanent error branches.
-  - Added linear 3-step golden-path E2E in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:417) asserting deterministic event order and `runSeq` continuity.
-  - Added permanent-failure E2E in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:476) asserting deterministic `StepFailed` + `RunFailed` terminal path.
+  - Added failure-simulation unit coverage in [`activities.test.ts`](../../packages/@dvt/adapter-temporal/test/activities.test.ts:351) for transient and permanent error branches.
+  - Added linear 3-step golden-path E2E in [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:417) asserting deterministic event order and `runSeq` continuity.
+  - Added permanent-failure E2E in [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:476) asserting deterministic `StepFailed` + `RunFailed` terminal path.
 - Validation evidence:
   - `pnpm --filter @dvt/adapter-temporal test -- --run test/integration.time-skipping.test.ts` ✅
   - `pnpm --filter @dvt/adapter-temporal test` ✅
@@ -239,20 +239,20 @@ Scope executed as a prioritized hardening pass for `@dvt/adapter-postgres` and e
 ### P0 completed
 
 - Removed unused transactional parameter from adapter+engine transactional path:
-  - [`appendAndEnqueueTx()`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-  - [`WorkflowEngine.persistEvent()`](../../packages/engine/src/core/WorkflowEngine.ts)
-  - [`InMemoryTxStore.appendAndEnqueueTx()`](../../packages/engine/src/state/InMemoryTxStore.ts)
-- Added safe pending-outbox claiming in [`listPending()`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts) using `FOR UPDATE SKIP LOCKED` with stale-claim recovery (`claimed_at` timeout policy).
+  - [`appendAndEnqueueTx()`](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+  - [`WorkflowEngine.persistEvent()`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+  - [`InMemoryTxStore.appendAndEnqueueTx()`](../../packages/@dvt/engine/src/state/InMemoryTxStore.ts)
+- Added safe pending-outbox claiming in [`listPending()`](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts) using `FOR UPDATE SKIP LOCKED` with stale-claim recovery (`claimed_at` timeout policy).
 
 ### P1 completed
 
-- Added explicit integration schema teardown in [`packages/adapter-postgres/test/smoke.test.ts`](../../packages/adapter-postgres/test/smoke.test.ts) via `afterAll` and `DROP SCHEMA ... CASCADE`.
+- Added explicit integration schema teardown in [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../packages/@dvt/adapter-postgres/test/smoke.test.ts) via `afterAll` and `DROP SCHEMA ... CASCADE`.
 - CI now executes Postgres integration smoke tests in [`contract-hashes` job](../../.github/workflows/contracts.yml) with PostgreSQL service and integration env flags.
 
 ### P2 completed
 
 - Removed redundant index-creation path for `run_events(run_id, run_seq)` in adapter schema initialization (PK already covers access path).
-- Type-drift decision documented in [`packages/adapter-postgres/src/types.ts`](../../packages/adapter-postgres/src/types.ts): keep adapter-local transactional types for now; do not alias current `@dvt/contracts` state-store contracts yet because those represent canonical snapshot/projection contracts, not transactional outbox persistence semantics.
+- Type-drift decision documented in [`packages/@dvt/adapter-postgres/src/types.ts`](../../packages/@dvt/adapter-postgres/src/types.ts): keep adapter-local transactional types for now; do not alias current `@dvt/contracts` state-store contracts yet because those represent canonical snapshot/projection contracts, not transactional outbox persistence semantics.
 
 ### Validation evidence
 
@@ -267,13 +267,13 @@ Scope executed as a prioritized hardening pass for `@dvt/adapter-postgres` and e
 
 ### Type-drift strategy review (2026-02-19 18:37 UTC)
 
-Context: [`packages/adapter-postgres/src/types.ts`](../../packages/adapter-postgres/src/types.ts) currently defines local transactional adapter types while the package also depends on [`@dvt/contracts`](../../packages/contracts/index.ts).
+Context: [`packages/@dvt/adapter-postgres/src/types.ts`](../../packages/@dvt/adapter-postgres/src/types.ts) currently defines local transactional adapter types while the package also depends on [`@dvt/contracts`](../../packages/@dvt/contracts/index.ts).
 
 Evaluated strategies:
 
 1. **Direct import/alias from `@dvt/contracts` now**
    - Pros: single source of truth for shared names.
-   - Cons: current exported contracts in [`packages/contracts/src/types/state-store.ts`](../../packages/contracts/src/types/state-store.ts) model canonical event projection (`appendEvent`, `fetchEvents`, snapshots), not transactional outbox persistence (`appendEventsTx`, `appendAndEnqueueTx`, claim/delivery lifecycle).
+   - Cons: current exported contracts in [`packages/@dvt/contracts/src/types/state-store.ts`](../../packages/@dvt/contracts/src/types/state-store.ts) model canonical event projection (`appendEvent`, `fetchEvents`, snapshots), not transactional outbox persistence (`appendEventsTx`, `appendAndEnqueueTx`, claim/delivery lifecycle).
    - Risk: forced casts and semantic mismatch.
 
 2. **Keep fully local adapter types (current state)**
@@ -288,4 +288,4 @@ Evaluated strategies:
 Decision at this timestamp:
 
 - Keep local types for now.
-- Plan a follow-up to extract **transactional** shared contracts into `@dvt/contracts` and migrate [`packages/adapter-postgres/src/types.ts`](../../packages/adapter-postgres/src/types.ts) and engine call sites together in one compatibility slice.
+- Plan a follow-up to extract **transactional** shared contracts into `@dvt/contracts` and migrate [`packages/@dvt/adapter-postgres/src/types.ts`](../../packages/@dvt/adapter-postgres/src/types.ts) and engine call sites together in one compatibility slice.

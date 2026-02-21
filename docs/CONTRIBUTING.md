@@ -329,7 +329,7 @@ markdown-link-check docs/architecture/engine/INDEX.md
 
 ### Troubleshooting: ESLint / TypeScript parser errors ⚠️
 
-If CI shows errors like `@typescript-eslint/parser` complaining that files listed in `parserOptions.project` cannot be found (for example `packages/engine/legacy-top-level-engine/...`), clean up stale references using the steps below.
+If CI shows errors like `@typescript-eslint/parser` complaining that files listed in `parserOptions.project` cannot be found (for example `packages/@dvt/engine/legacy-top-level-engine/...`), clean up stale references using the steps below.
 
 ---
 
@@ -342,7 +342,7 @@ To reduce duplication and prevent CJS/TS mismatch issues, follow these rules:
 - Prefer a shared `tsconfig.eslint.base.json` (root) and extend it with a small `packages/<pkg>/tsconfig.eslint.json` when package-specific includes are required.
 - Do not create multiple runtime/testing configs for the same package (this prevents ESM/CommonJS resolution errors in CI).
 
-Example: `packages/adapter-temporal/tsconfig.json` should include `"vitest.config.cjs"` and a package-level `tsconfig.eslint.json` should `extends` the repo base.
+Example: `packages/@dvt/adapter-temporal/tsconfig.json` should include `"vitest.config.cjs"` and a package-level `tsconfig.eslint.json` should `extends` the repo base.
 
 1. Inspect the failing ESLint/TypeScript config referenced in the error log (`parserOptions.project` / `tsconfig.json`).
 2. Remove or update any `include` / `files` entries that point to deleted or moved folders (e.g. `legacy-*`).
@@ -353,7 +353,7 @@ Example: `packages/adapter-temporal/tsconfig.json` should include `"vitest.confi
    {
      "include": [
        "packages/*/src/**/*.ts"
-       // "packages/engine/legacy-top-level-engine/src/**"  <-- remove stale reference
+       // "packages/@dvt/engine/legacy-top-level-engine/src/**"  <-- remove stale reference
      ]
    }
    ```

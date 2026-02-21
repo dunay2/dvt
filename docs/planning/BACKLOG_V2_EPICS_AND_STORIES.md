@@ -1,5 +1,12 @@
 # Backlog V2 — Épicas + Historias de Usuario
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md
+-->
+
 > Objetivo: convertir esta propuesta en base operativa para milestones/issues de GitHub y verificar alineación con el estado actual del repositorio.
 
 ## Convención recomendada para GitHub

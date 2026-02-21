@@ -1,5 +1,11 @@
 # Go-to-Market Plan (DVT)
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+-->
+
 ## Fases de lanzamiento
 
 ```mermaid

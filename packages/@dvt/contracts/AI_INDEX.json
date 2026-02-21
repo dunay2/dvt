@@ -1,0 +1,286 @@
+{
+  "generatedAt": "2026-02-20T09:12:44.652Z",
+  "dir": "packages/@dvt/contracts",
+  "entries": [
+    {
+      "path": "AI_INDEX.json",
+      "title": "AI_INDEX.json",
+      "summary": "{ \"generatedAt\": \"2026-02-20T09:11:37.476Z\", \"dir\": \"packages/@dvt/contracts\", \"entries\": [ { \"path\": \"AI_INDEX.json\", \"title\": \"AI_INDEX.json\", \"summary\": \"{ \\\"generatedAt\\\": \\\"2026-02-20T00:00:00.000Z\\\", \\\"dir\\\": \\\"packages/@dvt/contracts\\\", \\\"entries\\\": [ { \\\"path\\\": \\\"README.md\\\", \\\"title\\\": \\\"README.md\\\", \\\"summary\\\": \\\"Tipos compartidos, esquemas Zod y utilidades para la definición de contratos entre adaptadores y el motor.\\\", \\\"keywords\\\": [\\\"contracts\\\",\\\"zod\\\",\\\"schemas\\\"], \\\"lastUpdated\\\": \\\"2026-01-15T00:00:00.000Z\\\", \\\"tokenCount\\\": 40 } ] }\", \"keywords\": [], \"lastUpdated\": \"2026-02-20T09:10...",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:11:37.476Z",
+      "tokenCount": 73
+    },
+    {
+      "path": "index.d.ts",
+      "title": "index.d.ts",
+      "summary": "export * from './src/types/contracts'; export * from './src/types/artifacts'; export * from './src/types/state-store'; export * from './src/adapters/IOutboxStorageAdapter.v1'; export * from './src/adapters/IProjectorAdapter.v1'; export * from './src/adapters/IStateStoreAdapter.v1'; export * from './src/adapters/IWorkflowEngineAdapter.v1'; //# sourceMappingURL=index.d.ts.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.450Z",
+      "tokenCount": 40
+    },
+    {
+      "path": "index.js",
+      "title": "index.js",
+      "summary": "'use strict'; var __createBinding = (this && this.__createBinding) || (Object.create ? function (o, m, k, k2) { if (k2 === undefined) k2 = k; var desc = Object.getOwnPropertyDescriptor(m, k); if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) { desc = { enumerable: true, get: function () { return m[k]; }, }; } Object.defineProperty(o, k2, desc); } : function (o, m, k, k2) { if (k2 === undefined) k2 = k; o[k2] = m[k]; }); var __exportStar = (this && this.__exportStar) || function (m, exports) { for (var p in m) if (p !== 'default' && !Object.prototype.hasOwnPrope...",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:53:29.769Z",
+      "tokenCount": 133
+    },
+    {
+      "path": "index.ts",
+      "title": "index.ts",
+      "summary": "export * from './src/types/contracts'; export * from './src/types/artifacts'; export * from './src/types/state-store'; export * from './src/workflows'; export * from './src/adapters/IOutboxStorageAdapter.v1'; export * from './src/adapters/IProjectorAdapter.v1'; export * from './src/adapters/IStateStoreAdapter.v1'; export * from './src/adapters/IWorkflowEngineAdapter.v1'; export * from './src/adapters/IProviderAdapter.v1'; export * from './src/errors'; export * from './src/schemas'; export * from './src/validation';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.466Z",
+      "tokenCount": 64
+    },
+    {
+      "path": "package.json",
+      "title": "package.json",
+      "summary": "{ \"name\": \"@dvt/contracts\", \"version\": \"1.0.0\", \"main\": \"dist/index.js\", \"types\": \"dist/index.d.ts\", \"exports\": { \".\": { \"types\": \"./dist/index.d.ts\", \"require\": \"./dist/index.js\", \"import\": \"./dist/index.js\", \"default\": \"./dist/index.js\" } }, \"private\": false, \"license\": \"MIT\", \"scripts\": { \"build\": \"tsc -p tsconfig.json\", \"test\": \"vitest run --passWithNoTests\" }, \"devDependencies\": { \"typescript\": \"5.9.3\", \"vitest\": \"3.2.4\" }, \"dependencies\": { \"zod\": \"^4.3.6\" } }",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.374Z",
+      "tokenCount": 68
+    },
+    {
+      "path": "src/adapters/IOutboxStorageAdapter.v1.d.ts",
+      "title": "IOutboxStorageAdapter.v1.d.ts",
+      "summary": "import { TenantId, EventId, IdempotencyKey } from '../types/contracts'; export interface OutboxEventRecord { readonly outboxId: string; readonly tenantId: TenantId; readonly eventId: EventId; readonly eventData: unknown; readonly targetSystem: string; readonly idempotencyKey: IdempotencyKey; readonly createdAt: number; readonly deliveredAt?: number; readonly status: 'pending' | 'delivered' | 'failed'; } export interface IOutboxStorageAdapter { appendOutbox( tenantId: TenantId, eventId: EventId, eventData: unknown, targetSystem: string, idempotencyKey: IdempotencyKey ): Promise<OutboxEventRecor...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.484Z",
+      "tokenCount": 81
+    },
+    {
+      "path": "src/adapters/IOutboxStorageAdapter.v1.js",
+      "title": "IOutboxStorageAdapter.v1.js",
+      "summary": "'use strict'; Object.defineProperty(exports, '__esModule', { value: true }); //# sourceMappingURL=IOutboxStorageAdapter.v1.js.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.489Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "src/adapters/IOutboxStorageAdapter.v1.ts",
+      "title": "IOutboxStorageAdapter.v1.ts",
+      "summary": "import { TenantId, EventId, IdempotencyKey } from '../types/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.445Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "src/adapters/IProjectorAdapter.v1.d.ts",
+      "title": "IProjectorAdapter.v1.d.ts",
+      "summary": "import { TenantId, RunId, StepId, EventId } from '../types/contracts'; export interface ProjectedState { tenantId: TenantId; runId: RunId; eventId: EventId; projectedAt: number; data: Record<string, unknown>; } export interface ProjectionEvent { eventId: EventId; tenantId: TenantId; runId: RunId; stepId?: StepId; eventType: string; eventData: Record<string, unknown>; sequence: number; occurredAt: number; } export interface ProjectionQuery { tenantId: TenantId; runId?: RunId; stepId?: StepId; filter?: Record<string, unknown>; limit?: number; offset?: number; } export interface IProjectorAdapter...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.508Z",
+      "tokenCount": 91
+    },
+    {
+      "path": "src/adapters/IProjectorAdapter.v1.js",
+      "title": "IProjectorAdapter.v1.js",
+      "summary": "'use strict'; Object.defineProperty(exports, '__esModule', { value: true }); //# sourceMappingURL=IProjectorAdapter.v1.js.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.517Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "src/adapters/IProjectorAdapter.v1.ts",
+      "title": "IProjectorAdapter.v1.ts",
+      "summary": "import { TenantId, RunId, StepId, EventId } from '../types/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.468Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "src/adapters/IProviderAdapter.v1.ts",
+      "title": "IProviderAdapter.v1.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, } from '../types/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.536Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/adapters/IStateStoreAdapter.v1.d.ts",
+      "title": "IStateStoreAdapter.v1.d.ts",
+      "summary": "import { TenantId, IdempotencyKey } from '../types/contracts'; export interface IStateStoreAdapter { read<T>(tenantId: TenantId, key: string): Promise<T | undefined>; write<T>( tenantId: TenantId, key: string, value: T, idempotencyKey?: IdempotencyKey ): Promise<void>; health(): Promise<boolean>; close(): Promise<void>; } //# sourceMappingURL=IStateStoreAdapter.v1.d.ts.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.544Z",
+      "tokenCount": 48
+    },
+    {
+      "path": "src/adapters/IStateStoreAdapter.v1.js",
+      "title": "IStateStoreAdapter.v1.js",
+      "summary": "'use strict'; Object.defineProperty(exports, '__esModule', { value: true }); //# sourceMappingURL=IStateStoreAdapter.v1.js.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.553Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "src/adapters/IStateStoreAdapter.v1.ts",
+      "title": "IStateStoreAdapter.v1.ts",
+      "summary": "import { TenantId, IdempotencyKey } from '../types/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.485Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/adapters/IWorkflowEngineAdapter.v1.d.ts",
+      "title": "IWorkflowEngineAdapter.v1.d.ts",
+      "summary": "export interface ExecuteStepRequest { tenantId: string; planId: string; runId: string; stepId: string; stepType: string; stepData: Record<string, unknown>; idempotencyKey?: string; timeout?: number; } export interface ExecuteStepResult { runId: string; stepId: string; status: string; output?: Record<string, unknown>; error?: { code: string; message: string; retryable: boolean; }; duration: number; executedAt: number; } export interface WorkflowRunState { tenantId: string; planId: string; runId: string; status: string; currentStep?: string; completedSteps: Map<string, string>; failedSteps: Map<...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.581Z",
+      "tokenCount": 91
+    },
+    {
+      "path": "src/adapters/IWorkflowEngineAdapter.v1.js",
+      "title": "IWorkflowEngineAdapter.v1.js",
+      "summary": "'use strict'; Object.defineProperty(exports, '__esModule', { value: true }); //# sourceMappingURL=IWorkflowEngineAdapter.v1.js.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.587Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "src/adapters/IWorkflowEngineAdapter.v1.ts",
+      "title": "IWorkflowEngineAdapter.v1.ts",
+      "summary": "export interface ExecuteStepRequest { tenantId: string; planId: string; runId: string; stepId: string; stepType: string; stepData: Record<string, unknown>; idempotencyKey?: string; timeout?: number; }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.515Z",
+      "tokenCount": 29
+    },
+    {
+      "path": "src/errors.ts",
+      "title": "errors.ts",
+      "summary": "export class AuthorizationError extends Error { public readonly code = 'AUTHZ_DENIED' as const;",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.609Z",
+      "tokenCount": 17
+    },
+    {
+      "path": "src/schemas.ts",
+      "title": "schemas.ts",
+      "summary": "/** * Zod Schemas for DVT Contracts (v1.0) * * Runtime validation schemas that mirror the TypeScript types in this package. * Use the parse* helpers from ./validation.ts at API boundaries. */ import { z } from 'zod';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.663Z",
+      "tokenCount": 51
+    },
+    {
+      "path": "src/types/artifacts.d.ts",
+      "title": "artifacts.d.ts",
+      "summary": "/** * Artifact Types (v1.0) * * TypeScript types for artifact references and step outputs */ export interface ArtifactRef { uri: string; kind: string; sha256?: string; sizeBytes?: number; expiresAt?: string; } export interface StepError { category: string; code?: string; message: string; retryable?: boolean; } export interface StepOutput { status: 'SUCCESS' | 'FAILED' | 'SKIPPED'; artifactRefs: ArtifactRef[]; error?: StepError; } export interface SecretRef { secretId: string; key: string; version?: string; } export interface ISecretsProvider { resolve( refs: SecretRef[], ctx: { tenantId: strin...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.680Z",
+      "tokenCount": 108
+    },
+    {
+      "path": "src/types/artifacts.js",
+      "title": "artifacts.js",
+      "summary": "'use strict'; /** * Artifact Types (v1.0) * * TypeScript types for artifact references and step outputs */ Object.defineProperty(exports, '__esModule', { value: true }); //# sourceMappingURL=artifacts.js.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.687Z",
+      "tokenCount": 35
+    },
+    {
+      "path": "src/types/artifacts.ts",
+      "title": "artifacts.ts",
+      "summary": "/** * Artifact Types (v1.0) * * TypeScript types for artifact references and step outputs */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.544Z",
+      "tokenCount": 21
+    },
+    {
+      "path": "src/types/contracts.d.ts",
+      "title": "contracts.d.ts",
+      "summary": "export type IsoUtcString = string; export type TenantId = string & { readonly __brand: 'TenantId'; }; export type RunId = string & { readonly __brand: 'RunId'; }; export type StepId = string & { readonly __brand: 'StepId'; }; export type EventId = string & { readonly __brand: 'EventId'; }; export type IdempotencyKey = string & { readonly __brand: 'IdempotencyKey'; }; export type Provider = 'temporal' | 'conductor' | 'mock'; export type RunStatus = | 'PENDING' | 'APPROVED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED'; export type RunSubstatus = | 'DRAINING' | 'RETRYING' | 'CONT...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.706Z",
+      "tokenCount": 129
+    },
+    {
+      "path": "src/types/contracts.js",
+      "title": "contracts.js",
+      "summary": "'use strict'; // Contracts: types.ts // Version: v1.1.1 (subset needed for this implementation) Object.defineProperty(exports, '__esModule', { value: true }); //# sourceMappingURL=contracts.js.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.713Z",
+      "tokenCount": 28
+    },
+    {
+      "path": "src/types/contracts.ts",
+      "title": "contracts.ts",
+      "summary": "// Contracts: types.ts // Version: v1.1.1 (subset needed for this implementation)",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.573Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/types/state-store.d.ts",
+      "title": "state-store.d.ts",
+      "summary": "/** * State Store Contract Types (v1.0) */ export type AppendResult = { runSeq: number; appended: unknown[]; }; export interface CanonicalEngineEvent { runId: string; runSeq: number; eventId: string; stepId?: string; engineAttemptId?: string; logicalAttemptId?: string; eventType: string; eventData: unknown; idempotencyKey: string; emittedAt: string; persistedAt?: string; adapterVersion?: string; engineRunRef?: unknown; causedBySignalId?: string; parentEventId?: string; } export type StepStatus = 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'SKIPPED'; export interface StepSnapshot { stepId: s...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.736Z",
+      "tokenCount": 96
+    },
+    {
+      "path": "src/types/state-store.js",
+      "title": "state-store.js",
+      "summary": "'use strict'; /** * State Store Contract Types (v1.0) */ Object.defineProperty(exports, '__esModule', { value: true }); //# sourceMappingURL=state-store.js.map",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.742Z",
+      "tokenCount": 24
+    },
+    {
+      "path": "src/types/state-store.ts",
+      "title": "state-store.ts",
+      "summary": "/** * State Store Contract Types (v1.0) */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.603Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "src/validation.ts",
+      "title": "validation.ts",
+      "summary": "import { ZodError, type ZodType } from 'zod';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.848Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "src/workflows.ts",
+      "title": "workflows.ts",
+      "summary": "/** Canonical workflow names and signals used across engine & adapters */ export const RUN_PLAN_WORKFLOW = 'runPlanWorkflow' as const;",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.854Z",
+      "tokenCount": 25
+    },
+    {
+      "path": "test/errors.test.ts",
+      "title": "errors.test.ts",
+      "summary": "import { describe, expect, it } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.881Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "test/validation.test.ts",
+      "title": "validation.test.ts",
+      "summary": "import { describe, expect, it } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.895Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "tsconfig.json",
+      "title": "tsconfig.json",
+      "summary": "{ \"extends\": \"../../tsconfig.base.json\", \"compilerOptions\": { \"composite\": true, \"declaration\": true, \"declarationMap\": true, \"sourceMap\": true, \"outDir\": \"dist\", \"rootDir\": \".\" }, \"include\": [\"src/**/*.ts\", \"index.ts\", \"vitest.config.ts\"], \"exclude\": [\"node_modules\", \"dist\", \"test\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:29:05.053Z",
+      "tokenCount": 36
+    },
+    {
+      "path": "vitest.config.ts",
+      "title": "vitest.config.ts",
+      "summary": "import { defineConfig } from 'vitest/config';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T15:28:40.844Z",
+      "tokenCount": 8
+    }
+  ]
+}

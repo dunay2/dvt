@@ -32,7 +32,7 @@ pnpm lint           # ESLint
 
 ## Determinism Rules (Engine Core)
 
-Inside `packages/engine/src/` the following are **forbidden**:
+Inside `packages/@dvt/engine/src/` the following are **forbidden**:
 
 - `Date.now()` / `new Date()` — use the injected clock.
 - `Math.random()` — use the injected RNG.

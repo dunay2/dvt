@@ -1,5 +1,11 @@
 # DVT+ Planning Documentation Index
 
+<!--
+Status: index
+Last-updated: 2026-02-21
+Owner: dunay2
+-->
+
 This index provides a navigable overview of all key planning and backlog documents for the DVT+ project. Use the links below to explore the project structure, roadmap, and execution details.
 
 ---

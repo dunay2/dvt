@@ -155,9 +155,9 @@ jobs:
             // Temporal integration can be affected by adapter, engine, contracts,
             // shared root config, and workflow definitions.
             const patterns = [
-              'packages/adapter-temporal/',
-              'packages/engine/',
-              'packages/contracts/',
+              'packages/@dvt/adapter-temporal/',
+              'packages/@dvt/engine/',
+              'packages/@dvt/contracts/',
               'package.json',
               'pnpm-lock.yaml',
               'pnpm-workspace.yaml',

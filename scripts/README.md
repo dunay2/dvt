@@ -10,9 +10,9 @@ Validates contract fixtures and core runtime envelopes used by the base-contract
 
 Current checks include:
 
-- plan fixtures under `packages/engine/test/contracts/plans/*.json`,
+- plan fixtures under `packages/@dvt/engine/test/contracts/plans/*.json`,
 - contract envelope parsers (`PlanRef`, `RunContext`, `SignalRequest`, `EngineRunRef`, `RunStatusSnapshot`, `CanonicalEngineEvent`, `RunSnapshot`, `ExecuteStepRequest`, `ExecuteStepResult`),
-- result artifact structure at `packages/engine/test/contracts/results/golden-paths-run.json` (if present).
+- result artifact structure at `packages/@dvt/engine/test/contracts/results/golden-paths-run.json` (if present).
 
 **Usage:**
 
@@ -40,7 +40,7 @@ pnpm test:contracts:hashes
 
 - `DATABASE_URL`: PostgreSQL connection string (optional until issue #6)
 
-**Output:** Saves execution results to `packages/engine/test/contracts/results/golden-paths-run.json`
+**Output:** Saves execution results to `packages/@dvt/engine/test/contracts/results/golden-paths-run.json`
 
 **Status:** Stub implementation until issue #10 (Golden Paths) provides actual implementations.
 
@@ -76,7 +76,7 @@ pnpm db:migrate
 
 **Current behavior:**
 
-- Executes ordered SQL files from `packages/adapter-postgres/migrations/*.sql`
+- Executes ordered SQL files from `packages/@dvt/adapter-postgres/migrations/*.sql`
 - Tracks applied versions in `<schema>.schema_migrations`
 - Replaces `__SCHEMA__` placeholders inside migration files
 

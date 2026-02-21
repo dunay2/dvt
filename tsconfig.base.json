@@ -13,13 +13,13 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@dvt/contracts": ["packages/contracts/index.ts"],
-      "@dvt/contracts/*": ["packages/contracts/src/*"],
-      "@dvt/engine": ["packages/engine/src/index.ts"],
-      "@dvt/engine/*": ["packages/engine/src/*"],
-      "@dvt/adapter-postgres/*": ["packages/adapter-postgres/src/*"],
-      "@dvt/adapter-temporal/*": ["packages/adapter-temporal/src/*"],
-      "@dvt/cli/*": ["packages/cli/src/*"]
+      "@dvt/contracts": ["packages/@dvt/contracts/index.ts"],
+      "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
+      "@dvt/engine": ["packages/@dvt/engine/src/index.ts"],
+      "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
+      "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
+      "@dvt/adapter-temporal/*": ["packages/@dvt/adapter-temporal/src/*"],
+      "@dvt/cli/*": ["packages/@dvt/cli/src/*"]
     }
   },
   "include": ["packages/*/src"],

@@ -15,7 +15,7 @@ module.exports = [
     files: ['packages/**/*.{ts,tsx}', 'apps/*/src/**/*.{ts,tsx}'],
     ignores: [
       'packages/frontend/**',
-      'packages/contracts/vitest.config.ts',
+      'packages/@dvt/contracts/vitest.config.ts',
       'docs/**',
       'dist/**',
       'coverage/**',
@@ -28,8 +28,8 @@ module.exports = [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        // Default to package-level tsconfigs; specific overrides will narrow further
-        project: ['./packages/*/tsconfig.json'],
+        // Single project graph via TS project references to avoid multiple-program ambiguity.
+        project: ['./tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
       },
       globals: {
@@ -56,12 +56,7 @@ module.exports = [
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: [
-            './tsconfig.json',
-            './packages/*/tsconfig.json',
-            './packages/*/tsconfig.eslint.json',
-            './apps/*/tsconfig.json',
-          ],
+          project: ['./tsconfig.eslint.json'],
         },
         node: {
           extensions: ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts', '.json'],
@@ -110,22 +105,39 @@ module.exports = [
       ],
       'import/no-unresolved': 'error',
       'import/no-cycle': 'error',
-
     },
   },
 
-  // Project-specific parserOptions to avoid TS program graph ambiguity
+  // Project-specific parserOptions (kept) — optional, but harmless.
   {
-    files: ['packages/engine/src/**/*.ts', 'packages/engine/vitest.config.ts'],
+    files: ['packages/@dvt/engine/src/**/*.ts', 'packages/@dvt/engine/vitest.config.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/engine/tsconfig.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { project: ['packages/@dvt/engine/tsconfig.eslint.json'], tsconfigRootDir: __dirname },
     },
   },
   {
-    files: ['packages/engine/test/**/*.ts'],
+    files: ['packages/@dvt/engine/test/**/*.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/engine/tsconfig.test.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { project: ['packages/@dvt/engine/tsconfig.test.eslint.json'], tsconfigRootDir: __dirname },
       globals: { TextEncoder: 'readonly', TextDecoder: 'readonly' },
+    },
+  },
+  {
+    files: ['packages/@dvt/adapter-temporal/src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['packages/@dvt/adapter-temporal/tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
+  },
+  {
+    files: ['packages/@dvt/adapter-postgres/src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['packages/@dvt/adapter-postgres/tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
     },
   },
   {
@@ -164,24 +176,22 @@ module.exports = [
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Determinism rules for engine source (packages/engine/src/**)
+  // Determinism rules for engine source (packages/@dvt/engine/src/**)
   // Forbidden: Date.now(), new Date(), Math.random(), process.env
   // See: CLAUDE.md "Determinism Rules" and docs/architecture/engine/dev/determinism-tooling.md
   // ──────────────────────────────────────────────────────────────────────────
   {
-    files: ['packages/engine/src/**/*.ts'],
+    files: ['packages/@dvt/engine/src/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector: "NewExpression[callee.name='Date']",
-          message:
-            'new Date() is non-deterministic in engine code. Use the injected IClock interface.',
+          message: 'new Date() is non-deterministic in engine code. Use the injected IClock interface.',
         },
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
-          message:
-            'process.env is forbidden in engine code. Pass configuration explicitly via dependency injection.',
+          message: 'process.env is forbidden in engine code. Pass configuration explicitly via dependency injection.',
         },
       ],
       'no-restricted-properties': [
@@ -212,19 +222,17 @@ module.exports = [
   // See: https://docs.temporal.io/workflows#deterministic-constraints
   // ──────────────────────────────────────────────────────────────────────────
   {
-    files: ['packages/adapter-temporal/src/workflows/**/*.ts'],
+    files: ['packages/@dvt/adapter-temporal/src/workflows/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector: "NewExpression[callee.name='Date']",
-          message:
-            'new Date() is non-deterministic in workflows. Use workflow SDK time utilities.',
+          message: 'new Date() is non-deterministic in workflows. Use workflow SDK time utilities.',
         },
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
-          message:
-            'process.env is forbidden in workflows. Configuration must come from workflow arguments.',
+          message: 'process.env is forbidden in workflows. Configuration must come from workflow arguments.',
         },
       ],
       'no-restricted-properties': [
@@ -259,30 +267,12 @@ module.exports = [
         'error',
         {
           paths: [
-            {
-              name: 'fs',
-              message: 'File system access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'fs/promises',
-              message: 'File system access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'http',
-              message: 'Network access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'https',
-              message: 'Network access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'net',
-              message: 'Network access is forbidden in workflows. Delegate to activities.',
-            },
-            {
-              name: 'child_process',
-              message: 'Process spawning is forbidden in workflows. Delegate to activities.',
-            },
+            { name: 'fs', message: 'File system access is forbidden in workflows. Delegate to activities.' },
+            { name: 'fs/promises', message: 'File system access is forbidden in workflows. Delegate to activities.' },
+            { name: 'http', message: 'Network access is forbidden in workflows. Delegate to activities.' },
+            { name: 'https', message: 'Network access is forbidden in workflows. Delegate to activities.' },
+            { name: 'net', message: 'Network access is forbidden in workflows. Delegate to activities.' },
+            { name: 'child_process', message: 'Process spawning is forbidden in workflows. Delegate to activities.' },
           ],
         },
       ],
@@ -315,6 +305,7 @@ module.exports = [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       'no-restricted-globals': 'off',
       'no-restricted-syntax': 'off',
       'no-restricted-properties': 'off',
@@ -325,13 +316,32 @@ module.exports = [
   // Prettier should be last to override formatting rules
   prettier,
 
+  // Node.js files (scripts, cjs, etc) should be linted with Node globals enabled
+  {
+    files: ['**/*.{js,cjs,mjs}'],
+    languageOptions: {
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+
   // Ignore patterns
   {
     ignores: [
       'dist/',
       'coverage/',
       'node_modules/',
-      'packages/engine/legacy-top-level-engine/**',
+      'packages/@dvt/engine/legacy-top-level-engine/**',
       'packages/adapters-legacy/**',
       '**/*.d.ts',
       '.github/',

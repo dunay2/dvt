@@ -4,10 +4,10 @@
 - **Date**: 2026-02-18
 - **Owners**: Engine/Temporal adapter maintainers
 - **Related files**:
-  - [`RunPlanWorkflow.ts`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
-  - [`stepActivities.ts`](../../packages/adapter-temporal/src/activities/stepActivities.ts)
-  - [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts)
-  - [`workflow-retry-policy.test.ts`](../../packages/adapter-temporal/test/workflow-retry-policy.test.ts)
+  - [`RunPlanWorkflow.ts`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
+  - [`stepActivities.ts`](../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts)
+  - [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts)
+  - [`workflow-retry-policy.test.ts`](../../packages/@dvt/adapter-temporal/test/workflow-retry-policy.test.ts)
 
 ---
 
@@ -27,7 +27,7 @@ For production-facing resilience, the workflow needed a clear, deterministic ret
 
 ### 1) Retry defaults at workflow activity boundary
 
-Activity proxy retry policy in [`runPlanWorkflow()`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:103) is pinned to:
+Activity proxy retry policy in [`runPlanWorkflow()`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:103) is pinned to:
 
 - `initialInterval: '1s'`
 - `maximumInterval: '60s'`
@@ -37,7 +37,7 @@ Activity proxy retry policy in [`runPlanWorkflow()`](../../packages/adapter-temp
 
 ### 2) Permanent failure classification
 
-Activities may raise `PermanentStepError` (non-retryable) from [`executeStep()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:85).
+Activities may raise `PermanentStepError` (non-retryable) from [`executeStep()`](../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:85).
 
 When surfaced to workflow-level execution, failure is mapped deterministically to:
 
@@ -47,7 +47,7 @@ When surfaced to workflow-level execution, failure is mapped deterministically t
 
 ### 3) Deterministic replay-safe verification
 
-Policy literals are guarded in [`workflow-retry-policy.test.ts`](../../packages/adapter-temporal/test/workflow-retry-policy.test.ts:1), and E2E behavior is validated in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:474).
+Policy literals are guarded in [`workflow-retry-policy.test.ts`](../../packages/@dvt/adapter-temporal/test/workflow-retry-policy.test.ts:1), and E2E behavior is validated in [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:474).
 
 ---
 
@@ -80,6 +80,6 @@ These remain explicitly tracked in [`TECHNICAL_DEBT_REGISTER.md`](../guides/TECH
 
 ## Acceptance Criteria
 
-1. Retry literals remain pinned and covered by tests in [`workflow-retry-policy.test.ts`](../../packages/adapter-temporal/test/workflow-retry-policy.test.ts:1).
-2. Permanent failure path emits deterministic `StepFailed` + `RunFailed` in [`integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts:474).
+1. Retry literals remain pinned and covered by tests in [`workflow-retry-policy.test.ts`](../../packages/@dvt/adapter-temporal/test/workflow-retry-policy.test.ts:1).
+2. Permanent failure path emits deterministic `StepFailed` + `RunFailed` in [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:474).
 3. Full package suite passes via `pnpm --filter @dvt/adapter-temporal test`.

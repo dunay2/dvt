@@ -5,19 +5,19 @@ defects in the event model and write path. Read every file listed before making 
 
 ## FILES TO READ FIRST
 
-packages/engine/src/core/idempotency.ts
-packages/engine/src/contracts/runEvents.ts
-packages/engine/src/state/IRunStateStore.ts
-packages/engine/src/state/InMemoryRunStateStore.ts
-packages/engine/src/state/InMemoryTxStore.ts
-packages/engine/src/core/WorkflowEngine.ts
-packages/engine/src/core/SnapshotProjector.ts
-packages/engine/src/adapters/mock/MockAdapter.ts
-packages/engine/src/adapters/IProviderAdapter.ts
-packages/engine/src/contracts/executionPlan.ts
-packages/engine/src/contracts/types.ts
-packages/adapter-postgres/src/PostgresStateStoreAdapter.ts
-packages/adapter-postgres/migrations/001_init.sql
+packages/@dvt/engine/src/core/idempotency.ts
+packages/@dvt/engine/src/contracts/runEvents.ts
+packages/@dvt/engine/src/state/IRunStateStore.ts
+packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
+packages/@dvt/engine/src/state/InMemoryTxStore.ts
+packages/@dvt/engine/src/core/WorkflowEngine.ts
+packages/@dvt/engine/src/core/SnapshotProjector.ts
+packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
+packages/@dvt/engine/src/adapters/IProviderAdapter.ts
+packages/@dvt/engine/src/contracts/executionPlan.ts
+packages/@dvt/engine/src/contracts/types.ts
+packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
+packages/@dvt/adapter-postgres/migrations/001_init.sql
 docs/architecture/engine/contracts/engine/RunEvents.v2.0.md
 docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md
 docs/architecture/engine/contracts/engine/RunEvents.v1.idempotency_vectors.json
@@ -26,7 +26,7 @@ docs/architecture/engine/contracts/engine/RunEvents.v1.idempotency_vectors.json
 
 ## CHANGE 1 — Idempotency key formula
 
-File: packages/engine/src/core/idempotency.ts
+File: packages/@dvt/engine/src/core/idempotency.ts
 
 The current implementation is NON-CONFORMANT with RunEvents.v2.0.1 §3.1.
 Replace it entirely. The correct formula is:
@@ -44,7 +44,7 @@ Rules:
 The IdempotencyKeyBuilder.runEventKey() method signature must change to accept planId and
 planVersion as required parameters. Update all callers.
 
-Add a test file packages/engine/test/idempotency.vectors.test.ts that validates the
+Add a test file packages/@dvt/engine/test/idempotency.vectors.test.ts that validates the
 following five vectors exactly (these are the canonical golden vectors):
 
 Vector 1 (step-level):
@@ -78,7 +78,7 @@ These tests MUST run in CI and MUST be a required gate. If any vector fails, the
 
 ## CHANGE 2 — Event envelope type split
 
-File: packages/engine/src/contracts/runEvents.ts
+File: packages/@dvt/engine/src/contracts/runEvents.ts
 
 Replace the current EventEnvelope type with the following split:
 
@@ -123,7 +123,7 @@ Update EventType to include 'StepSkipped' (already in contract, missing from uni
 
 ## CHANGE 3 — IRunStateStore interface
 
-File: packages/engine/src/state/IRunStateStore.ts
+File: packages/@dvt/engine/src/state/IRunStateStore.ts
 
 Replace the interface with:
 
@@ -153,7 +153,7 @@ compile.
 
 ## CHANGE 4 — InMemoryRunStateStore implementation
 
-File: packages/engine/src/state/InMemoryRunStateStore.ts
+File: packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
 
 Implement the updated IRunStateStore interface:
 
@@ -176,7 +176,7 @@ the metadata write and event append. This ensures test coverage of the atomic pa
 
 ## CHANGE 5 — WorkflowEngine
 
-File: packages/engine/src/core/WorkflowEngine.ts
+File: packages/@dvt/engine/src/core/WorkflowEngine.ts
 
 Apply the following changes:
 
@@ -223,7 +223,7 @@ Apply the following changes:
 
 ## CHANGE 6 — SnapshotProjector
 
-File: packages/engine/src/core/SnapshotProjector.ts
+File: packages/@dvt/engine/src/core/SnapshotProjector.ts
 
 The exhaustive switch MUST NOT throw on unknown event types.
 
@@ -255,7 +255,7 @@ encountering an unknown type.
 
 ## CHANGE 7 — MockAdapter
 
-File: packages/engine/src/adapters/mock/MockAdapter.ts
+File: packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
 
 7a. Remove planIntegrity and planFetcher from MockAdapterDeps (adapter now owns this
     internally; do not expose them via the engine's deps injection chain).
@@ -274,8 +274,8 @@ File: packages/engine/src/adapters/mock/MockAdapter.ts
 
 ## CHANGE 8 — Postgres adapter
 
-File: packages/adapter-postgres/src/PostgresStateStoreAdapter.ts
-File: packages/adapter-postgres/migrations/ (add a new migration file)
+File: packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
+File: packages/@dvt/adapter-postgres/migrations/ (add a new migration file)
 
 8a. Add a migration (e.g., 002_envelope_v2.sql) that:
     - Adds planId TEXT column to run_metadata (nullable initially for backward compat)
@@ -329,5 +329,5 @@ The PR is complete when ALL of the following pass:
 - Do NOT change the golden path fixture JSON files unless runEventInput schema
   requires it — and if you must, update the fixture and document why.
 - Do NOT introduce any Date.now(), new Date(), Math.random(), or process.env reads
-  inside packages/engine/src/. Use injected clock and explicit config.
+  inside packages/@dvt/engine/src/. Use injected clock and explicit config.
 - Keep changes minimal. Do not refactor code unrelated to these six P0 items.

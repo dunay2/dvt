@@ -36,8 +36,8 @@ jobs:
         with:
           filters: |
             contracts_relevant:
-              - 'packages/contracts/**'
-              - 'packages/engine/test/contracts/**'
+              - 'packages/@dvt/contracts/**'
+              - 'packages/@dvt/engine/test/contracts/**'
               - 'docs/architecture/engine/contracts/**'
               - 'docs/decisions/**'
               - '.golden/**'
@@ -55,14 +55,14 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
             determinism_relevant:
-              - 'packages/engine/**'
-              - 'packages/contracts/**'
+              - 'packages/@dvt/engine/**'
+              - 'packages/@dvt/contracts/**'
               - '.github/workflows/contracts.yml'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
             golden_relevant:
-              - 'packages/engine/test/contracts/**'
+              - 'packages/@dvt/engine/test/contracts/**'
               - 'docs/architecture/engine/contracts/**'
               - '.golden/**'
               - 'scripts/compare-hashes.cjs'
@@ -254,7 +254,7 @@ jobs:
       - name: Check for Date.now()
         run: |
           echo "🔍 Scanning for Date.now() in engine workflows..."
-          if grep -r "Date\.now()" packages/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
+          if grep -r "Date\.now()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
             echo "❌ Found Date.now() calls (use workflow.now() in Temporal workflows)"
             exit 1
           else
@@ -264,7 +264,7 @@ jobs:
       - name: Check for Math.random()
         run: |
           echo "🔍 Scanning for Math.random() in engine workflows..."
-          if grep -r "Math\.random()" packages/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
+          if grep -r "Math\.random()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
             echo "❌ Found Math.random() calls (use workflow-seeded RNG)"
             exit 1
           else
@@ -274,7 +274,7 @@ jobs:
       - name: Check for crypto.randomBytes()
         run: |
           echo "🔍 Scanning for crypto.randomBytes() in engine workflows..."
-          if grep -r "crypto\.randomBytes" packages/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
+          if grep -r "crypto\.randomBytes" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
             echo "❌ Found crypto.randomBytes() calls (use deterministic UUID generation)"
             exit 1
           else
@@ -319,15 +319,15 @@ jobs:
       - name: Check for 'any' types
         run: |
           echo "Checking for TypeScript 'any' types in contracts..."
-          if [ -d "packages/contracts/src" ]; then
-            if grep -rE ":\s*any" packages/contracts/src 2>/dev/null | grep -q .; then
+          if [ -d "packages/@dvt/contracts/src" ]; then
+            if grep -rE ":\s*any" packages/@dvt/contracts/src 2>/dev/null | grep -q .; then
               echo "❌ Found 'any' types in contracts (violates strict mode)"
               exit 1
             else
               echo "✅ No 'any' types found"
             fi
           else
-            echo "⚠️  packages/contracts/src directory not found"
+            echo "⚠️  packages/@dvt/contracts/src directory not found"
             echo "✅ Check passed (stub mode)"
           fi
 
@@ -337,9 +337,9 @@ jobs:
         with:
           name: compiled-contracts
           path: |
-            packages/contracts/dist/
-            packages/contracts/src/**/*.js
-            packages/contracts/src/**/*.d.ts
+            packages/@dvt/contracts/dist/
+            packages/@dvt/contracts/src/**/*.js
+            packages/@dvt/contracts/src/**/*.d.ts
 
   contract-validate:
     name: Validate Golden JSON Fixtures
@@ -480,5 +480,5 @@ jobs:
         with:
           name: contract-test-results
           path: |
-            packages/engine/test/contracts/results/
+            packages/@dvt/engine/test/contracts/results/
             .golden/hashes.json

@@ -1,0 +1,302 @@
+import { describe, it, expect } from 'vitest';
+import { vi } from 'vitest';
+
+import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
+import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
+import type { EngineRunRef, PlanRef, RunContext } from '../../src/contracts/types.js';
+import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
+import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
+import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
+import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
+import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import { SequenceClock } from '../../src/utils/clock.js';
+import { sha256Hex } from '../../src/utils/sha256.js';
+
+import { InMemoryPlanFetcher, utf8 } from './helpers.js';
+
+function makePlanMetadata(planId: string): ExecutionPlan['metadata'] {
+  return {
+    planId,
+    planVersion: '1.0.0',
+    schemaVersion: 'v1.2',
+    targetAdapter: 'mock',
+    fallbackBehavior: 'reject',
+    requiresCapabilities: [],
+  };
+}
+
+function makeHelloWorldPlan(): ExecutionPlan {
+  return {
+    metadata: makePlanMetadata('hello-world'),
+    steps: [
+      { stepId: 's1', kind: 'noop' },
+      { stepId: 's2', kind: 'noop' },
+    ],
+  };
+}
+
+function makeDagPlanWithDependsOn(): ExecutionPlan {
+  return {
+    metadata: makePlanMetadata('dag-plan'),
+    steps: [
+      { stepId: 's1', kind: 'noop' },
+      { stepId: 's2', kind: 'noop', dependsOn: ['s1'] },
+    ],
+  };
+}
+
+function makePlanRef(uri: string, plan: ExecutionPlan): PlanRef {
+  const bytes = utf8(JSON.stringify(plan));
+  return {
+    uri,
+    sha256: sha256Hex(bytes),
+    schemaVersion: plan.metadata.schemaVersion,
+    planId: plan.metadata.planId,
+    planVersion: plan.metadata.planVersion,
+    sizeBytes: bytes.byteLength,
+  };
+}
+
+function makeCtx(runId: string): RunContext {
+  return {
+    tenantId: 't1',
+    projectId: 'p1',
+    environmentId: 'dev',
+    runId,
+    targetAdapter: 'mock',
+  };
+}
+
+describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
+  it('golden path: submit hello-world plan → completes with deterministic hash', async () => {
+    const plan = makeHelloWorldPlan();
+    const uri = 'https://plans.example.com/hello-world.json';
+    const planRef = makePlanRef(uri, plan);
+
+    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const idempotency = new IdempotencyKeyBuilder();
+
+    const mock = new MockAdapter({
+      stateStore: store,
+      clock,
+      idempotency,
+      projector,
+    });
+
+    const engine = new WorkflowEngine({
+      stateStore: store,
+      outbox: store,
+      projector,
+      idempotency,
+      clock,
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planFetcher: { fetch: async () => plan },
+      adapters: new Map([['mock', mock]]),
+    });
+
+    const runRef = await engine.startRun(planRef, makeCtx('run-1'));
+    const snapshot = await engine.getRunStatus(runRef);
+
+    expect(snapshot.status).toBe('COMPLETED');
+    expect(snapshot.hash).toBeTypeOf('string');
+
+    // Stable snapshot hash (acts as determinism canary)
+    expect(snapshot.hash).toMatchInlineSnapshot(
+      '"7aecaa5ccc160b4e34ffbe5aee9b8d351fb1e549605f1cd0e6fe1a120730e072"'
+    );
+  });
+
+  it('idempotency test: replay same events 100x → same snapshot hash', async () => {
+    const plan = makeHelloWorldPlan();
+    const uri = 'https://plans.example.com/hello-world.json';
+    const planRef = makePlanRef(uri, plan);
+
+    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const idempotency = new IdempotencyKeyBuilder();
+
+    const mock = new MockAdapter({
+      stateStore: store,
+      clock,
+      idempotency,
+      projector,
+    });
+
+    const engine = new WorkflowEngine({
+      stateStore: store,
+      outbox: store,
+      projector,
+      idempotency,
+      clock,
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planFetcher: { fetch: async () => plan },
+      adapters: new Map([['mock', mock]]),
+    });
+
+    const runRef = await engine.startRun(planRef, makeCtx('run-2'));
+    const first = await engine.getRunStatus(runRef);
+
+    // Replay: attempt to append duplicates of all events repeatedly.
+    const events = await store.listEvents('run-2');
+    for (let i = 0; i < 100; i += 1) {
+      // Strip runSeq and re-append. Dedup is by idempotencyKey.
+      await store.appendEventsTx(
+        'run-2',
+        events.map((e) => {
+          const { runSeq: _runSeq, ...rest } = e;
+          return rest;
+        })
+      );
+    }
+
+    const after = await engine.getRunStatus(runRef);
+    expect(after.hash).toBe(first.hash);
+    expect(after.status).toBe('COMPLETED');
+  });
+
+  it('accepts ExecutionPlan steps with dependsOn in mock adapter path', async () => {
+    const plan = makeDagPlanWithDependsOn();
+    const uri = 'https://plans.example.com/dag-plan.json';
+    const planRef = makePlanRef(uri, plan);
+
+    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const idempotency = new IdempotencyKeyBuilder();
+
+    const mock = new MockAdapter({
+      stateStore: store,
+      clock,
+      idempotency,
+      projector,
+    });
+
+    const engine = new WorkflowEngine({
+      stateStore: store,
+      outbox: store,
+      projector,
+      idempotency,
+      clock,
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planFetcher: { fetch: async () => plan },
+      adapters: new Map([['mock', mock]]),
+    });
+
+    const runRef = await engine.startRun(planRef, makeCtx('run-dag-1'));
+    const snapshot = await engine.getRunStatus(runRef);
+
+    expect(snapshot.status).toBe('COMPLETED');
+  });
+
+  it('PlanRef policy: rejects dangerous schemes (file://)', async () => {
+    const policy = new PlanRefPolicy({ allowedSchemes: ['https'] });
+    expect(() => policy.validateOrThrow('file:///etc/passwd')).toThrowError(/PLAN_URI_NOT_ALLOWED/);
+  });
+
+  it('Plan integrity validation: sha256 mismatch fails', async () => {
+    const plan = makeHelloWorldPlan();
+    const uri = 'https://plans.example.com/bad.json';
+    const bytes = utf8(JSON.stringify(plan));
+
+    const badRef: PlanRef = {
+      uri,
+      sha256: 'deadbeef',
+      schemaVersion: plan.metadata.schemaVersion,
+      planId: plan.metadata.planId,
+      planVersion: plan.metadata.planVersion,
+      sizeBytes: bytes.byteLength,
+    };
+
+    const fetcher = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
+    const integrity = new PlanIntegrityValidator();
+
+    await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
+      /PLAN_INTEGRITY_VALIDATION_FAILED/
+    );
+  });
+
+  it('does not call adapter.startRun when PlanRef validation fails', async () => {
+    const startRunMock: IProviderAdapter['startRun'] = vi.fn(
+      async (_planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> => ({
+        provider: 'conductor',
+        workflowId: 'wf',
+        runId: ctx.runId,
+        conductorUrl: 'http://conductor',
+      })
+    );
+
+    const adapter: IProviderAdapter = {
+      provider: 'conductor',
+      startRun: startRunMock,
+      cancelRun: async () => {},
+      getRunStatus: async () => {
+        throw new Error('noop');
+      },
+      signal: async () => {},
+    };
+
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const idempotency = new IdempotencyKeyBuilder();
+    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+    const authorizer = new AllowAllAuthorizer();
+    const planRefPolicy = new PlanRefPolicy({ allowedSchemes: ['https'] });
+    const planFetcher = { fetch: vi.fn(async () => makeHelloWorldPlan()) };
+    const engine = new WorkflowEngine({
+      stateStore: store,
+      outbox: store,
+      projector,
+      idempotency,
+      clock,
+      authorizer,
+      planRefPolicy,
+      planFetcher,
+      adapters: new Map([['conductor', adapter]]),
+    });
+
+    const baseCtx: RunContext = {
+      tenantId: 't1',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId: 'run-x',
+      targetAdapter: 'conductor',
+    };
+
+    // Case 1: URI not allowlisted
+    const badPlanRef1: PlanRef = {
+      uri: 'file:///etc/passwd',
+      sha256: '0'.repeat(64),
+      schemaVersion: 'v1.2',
+      planId: 'p',
+      planVersion: '1',
+    };
+    await expect(engine.startRun(badPlanRef1, baseCtx)).rejects.toThrow(/PLAN_URI_NOT_ALLOWED/);
+    expect(startRunMock).not.toHaveBeenCalled();
+    expect(planFetcher.fetch).not.toHaveBeenCalled();
+
+    // Case 2: invalid schemaVersion
+    const badPlanRef2: PlanRef = {
+      uri: 'https://plans.example.com/plan.json',
+      sha256: '0'.repeat(64),
+      schemaVersion: 'v2.0', // invalid
+      planId: 'p',
+      planVersion: '1',
+    };
+    await expect(engine.startRun(badPlanRef2, baseCtx)).rejects.toThrow(
+      /Unsupported plan schema version/
+    );
+    expect(startRunMock).not.toHaveBeenCalled();
+    expect(planFetcher.fetch).not.toHaveBeenCalled();
+
+    // Integrity validation moved to adapters in this phase.
+  });
+});

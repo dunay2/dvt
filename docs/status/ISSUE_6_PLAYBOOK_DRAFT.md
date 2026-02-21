@@ -53,10 +53,10 @@ Status: Draft for maintainer review before publishing to GitHub issue comments.
 ### Scope touched
 
 - Changed:
-  - [`packages/adapter-postgres/src/PostgresStateStoreAdapter.ts`](packages/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-  - [`packages/adapter-postgres/migrations/001_init.sql`](packages/adapter-postgres/migrations/001_init.sql)
-  - [`packages/adapter-postgres/test/smoke.test.ts`](packages/adapter-postgres/test/smoke.test.ts)
-  - [`packages/adapter-postgres/package.json`](packages/adapter-postgres/package.json)
+  - [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+  - [`packages/@dvt/adapter-postgres/migrations/001_init.sql`](packages/@dvt/adapter-postgres/migrations/001_init.sql)
+  - [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](packages/@dvt/adapter-postgres/test/smoke.test.ts)
+  - [`packages/@dvt/adapter-postgres/package.json`](packages/@dvt/adapter-postgres/package.json)
   - [`scripts/db-migrate.cjs`](scripts/db-migrate.cjs)
   - [`package.json`](package.json)
   - [`pnpm-lock.yaml`](pnpm-lock.yaml)
@@ -127,12 +127,12 @@ Status: Draft for maintainer review before publishing to GitHub issue comments.
 
 ### WHAT changed
 
-- SQL persistence implemented in [`PostgresStateStoreAdapter`](packages/adapter-postgres/src/PostgresStateStoreAdapter.ts).
-- Transactional append+enqueue path added in [`appendAndEnqueueTx()`](packages/adapter-postgres/src/PostgresStateStoreAdapter.ts:89).
-- Initial migration added in [`001_init.sql`](packages/adapter-postgres/migrations/001_init.sql).
+- SQL persistence implemented in [`PostgresStateStoreAdapter`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts).
+- Transactional append+enqueue path added in [`appendAndEnqueueTx()`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:89).
+- Initial migration added in [`001_init.sql`](packages/@dvt/adapter-postgres/migrations/001_init.sql).
 - Migration runner implemented in [`db-migrate.cjs`](scripts/db-migrate.cjs).
 - Root script added in [`db:migrate`](package.json:47).
-- Integration tests updated in [`smoke.test.ts`](packages/adapter-postgres/test/smoke.test.ts).
+- Integration tests updated in [`smoke.test.ts`](packages/@dvt/adapter-postgres/test/smoke.test.ts).
 
 ### WHY this approach
 

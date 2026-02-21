@@ -66,20 +66,20 @@ Este documento describe la estructura de ficheros del repositorio DVT y qué con
 
 ## Ficheros y puntos clave (detalle selecto)
 
-- `packages/adapter-postgres/src/PostgresStateStoreAdapter.ts`:
+- `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`:
   - Implementa la persistencia del estado con `pg` (sin Prisma). Incluye creación de esquemas, tablas `run_events`/`runs`/`outbox`, funciones para `appendEventsTxWithClient`, `enqueueTxWithClient`, `listPending`, `markDelivered`.
 
-- `packages/contracts/src/schemas.ts` y `src/validation.ts`:
-  - Definen los contratos de dominio con Zod (p.ej. `schemaVersion`, `planVersion`), validadores y utilidades para mapear errores a respuestas legibles. Tests en `packages/contracts/test/validation.test.ts`.
+- `packages/@dvt/contracts/src/schemas.ts` y `src/validation.ts`:
+  - Definen los contratos de dominio con Zod (p.ej. `schemaVersion`, `planVersion`), validadores y utilidades para mapear errores a respuestas legibles. Tests en `packages/@dvt/contracts/test/validation.test.ts`.
 
-- `packages/engine/src/core/WorkflowEngine.ts`:
+- `packages/@dvt/engine/src/core/WorkflowEngine.ts`:
   - Motor de ejecución: validación de `PlanRef`, `validateSchemaVersionOrThrow` (actualmente acepta `v1.*`), lógica de ejecución y coordinación con adaptadores.
 
 - `eslint.config.cjs`:
   - Reglas de determinismo: `no-date-now`, `no-math-random`, prohibición de `process.env` en código de engine/workflows; mensajes y selectores AST para detectar usos prohibidos.
 
 - `package.json` (raíz):
-  - Scripts útiles: `lint:determinism` (`eslint` sobre `packages/engine/src` y `packages/adapter-temporal/src`), `test:determinism`, `precommit` que ejecuta `lint-staged && pnpm lint:determinism`.
+  - Scripts útiles: `lint:determinism` (`eslint` sobre `packages/@dvt/engine/src` y `packages/@dvt/adapter-temporal/src`), `test:determinism`, `precommit` que ejecuta `lint-staged && pnpm lint:determinism`.
 
 - `.github/workflows/contracts.yml`:
   - Incluye pasos para escanear llamadas a `Date.now()` y `Math.random()` y bloquear PRs que las introduzcan en código de workflows/engine.
@@ -87,7 +87,7 @@ Este documento describe la estructura de ficheros del repositorio DVT y qué con
 ## Notas sobre determinismo y versionado
 
 - Las reglas de determinismo están documentadas en `docs/architecture/engine/dev/determinism-tooling.md` y reforzadas por ESLint y CI. Sin embargo hay código de pruebas/integración y utilidades/scripts que usan `Date.now()` en contexto de test o scripts (aceptado cuando es test-only).
-- La política de `schemaVersion`/`planVersion` se aplica en runtime (ver `validateSchemaVersionOrThrow`) y también en los validators de `packages/contracts`.
+- La política de `schemaVersion`/`planVersion` se aplica en runtime (ver `validateSchemaVersionOrThrow`) y también en los validators de `packages/@dvt/contracts`.
 
 ---
 

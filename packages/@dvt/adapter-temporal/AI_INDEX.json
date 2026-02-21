@@ -1,0 +1,158 @@
+{
+  "generatedAt": "2026-02-20T09:12:44.164Z",
+  "dir": "packages/@dvt/adapter-temporal",
+  "entries": [
+    {
+      "path": "package.json",
+      "title": "package.json",
+      "summary": "{ \"name\": \"@dvt/adapter-temporal\", \"version\": \"1.0.0\", \"main\": \"dist/index.js\", \"types\": \"dist/index.d.ts\", \"private\": false, \"license\": \"MIT\", \"dependencies\": { \"@temporalio/activity\": \"1.14.1\", \"@temporalio/client\": \"1.14.1\", \"@temporalio/worker\": \"1.14.1\", \"@temporalio/workflow\": \"1.14.1\", \"@dvt/contracts\": \"workspace:*\", \"@dvt/engine\": \"workspace:*\" }, \"scripts\": { \"build\": \"tsc -p tsconfig.json\", \"pretest\": \"pnpm --filter @dvt/contracts build && pnpm build\", \"pretest:integration\": \"pnpm --filter @dvt/contracts build && pnpm build\", \"test\": \"vitest run ./test/\", \"test:integration\": \"pnpm b...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.913Z",
+      "tokenCount": 76
+    },
+    {
+      "path": "src/activities/stepActivities.ts",
+      "title": "stepActivities.ts",
+      "summary": "import { TextDecoder } from 'node:util';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.949Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/config.ts",
+      "title": "config.ts",
+      "summary": "export interface TemporalAdapterConfig { address: string; namespace: string; taskQueue: string; identity?: string; connectTimeoutMs: number; requestTimeoutMs: number; /** * Number of execution layers processed in a single workflow run before * triggering continue-as-new. `0` disables rollover. */ continueAsNewAfterLayerCount: number; }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.962Z",
+      "tokenCount": 52
+    },
+    {
+      "path": "src/engine-types.ts",
+      "title": "engine-types.ts",
+      "summary": "/** * Minimal type surface from @dvt/engine re-declared locally. * * These are structurally compatible with the real engine types so that * callers can pass real engine instances (InMemoryTxStore, IdempotencyKeyBuilder, etc.) * without a compile-time dependency on the engine dist artefacts. * * When the engine package has stable build output, these can be replaced * with direct imports from '@dvt/engine'. */",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.974Z",
+      "tokenCount": 84
+    },
+    {
+      "path": "src/index.ts",
+      "title": "index.ts",
+      "summary": "export type { TemporalAdapterConfig } from './config.js'; export { loadTemporalAdapterConfig, validateTemporalAdapterConfig } from './config.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.980Z",
+      "tokenCount": 19
+    },
+    {
+      "path": "src/TemporalAdapter.ts",
+      "title": "TemporalAdapter.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, IProviderAdapter, } from '@dvt/contracts'; import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:57.998Z",
+      "tokenCount": 25
+    },
+    {
+      "path": "src/TemporalClient.ts",
+      "title": "TemporalClient.ts",
+      "summary": "import { Client, Connection } from '@temporalio/client';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.008Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/TemporalWorkerHost.ts",
+      "title": "TemporalWorkerHost.ts",
+      "summary": "import { NativeConnection, Worker } from '@temporalio/worker';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.021Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/WorkflowMapper.ts",
+      "title": "WorkflowMapper.ts",
+      "summary": "import type { EngineRunRef, RunStatus, RunStatusSnapshot } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.031Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "src/workflows/RunPlanWorkflow.ts",
+      "title": "RunPlanWorkflow.ts",
+      "summary": "/** * RunPlanWorkflow — Temporal interpreter workflow (deterministic). * * Runs inside a Temporal V8 sandbox. Only imports from * `@temporalio/workflow` and type-only references are allowed. * * Determinism rules enforced: * - Zero `Date.now()` / `new Date()` * - Zero `Math.random()` * - Zero `process.env` * - Zero Node.js / DOM APIs */ import { ApplicationFailure, continueAsNew, condition, defineQuery, defineSignal, proxyActivities, setHandler, } from '@temporalio/workflow';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.077Z",
+      "tokenCount": 88
+    },
+    {
+      "path": "test/activities.test.ts",
+      "title": "activities.test.ts",
+      "summary": "import type { PlanRef, RunContext } from '@dvt/contracts'; import { describe, expect, it, vi } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.131Z",
+      "tokenCount": 23
+    },
+    {
+      "path": "test/integration.time-skipping.test.ts",
+      "title": "integration.time-skipping.test.ts",
+      "summary": "import { createHash } from 'node:crypto'; import { dirname, resolve } from 'node:path'; import { fileURLToPath } from 'node:url';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.190Z",
+      "tokenCount": 25
+    },
+    {
+      "path": "test/smoke.test.ts",
+      "title": "smoke.test.ts",
+      "summary": "import { describe, expect, it, vi } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.209Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "test/workflow-continue-as-new.test.ts",
+      "title": "workflow-continue-as-new.test.ts",
+      "summary": "import { describe, expect, it } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.217Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "test/workflow-dag-scheduler.test.ts",
+      "title": "workflow-dag-scheduler.test.ts",
+      "summary": "import { describe, expect, it } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.230Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "test/workflow-literals.test.ts",
+      "title": "workflow-literals.test.ts",
+      "summary": "import { readFileSync } from 'node:fs'; import { resolve } from 'node:path';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.243Z",
+      "tokenCount": 16
+    },
+    {
+      "path": "test/workflow-retry-policy.test.ts",
+      "title": "workflow-retry-policy.test.ts",
+      "summary": "import { readFileSync } from 'node:fs'; import { resolve } from 'node:path';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.250Z",
+      "tokenCount": 16
+    },
+    {
+      "path": "tsconfig.eslint.json",
+      "title": "tsconfig.eslint.json",
+      "summary": "{ \"extends\": \"../../tsconfig.eslint.base.json\", \"include\": [\"src/**/*.ts\", \"vitest.config.cjs\"], \"exclude\": [\"dist\", \"node_modules\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.254Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "tsconfig.json",
+      "title": "tsconfig.json",
+      "summary": "{ \"extends\": \"../../tsconfig.base.json\", \"compilerOptions\": { \"composite\": true, \"declaration\": true, \"declarationMap\": true, \"sourceMap\": true, \"outDir\": \"dist\", \"rootDir\": \"src\", \"baseUrl\": \".\", \"paths\": {} }, \"include\": [\"src\", \"vitest.config.cjs\"], \"exclude\": [\"node_modules\", \"dist\", \"test\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:58.260Z",
+      "tokenCount": 40
+    }
+  ]
+}

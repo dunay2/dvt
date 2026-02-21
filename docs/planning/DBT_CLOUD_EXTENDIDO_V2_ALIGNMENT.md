@@ -1,5 +1,12 @@
 # Alineación DVT vs Especificación «DBT Cloud Extendido V2»
 
+<!--
+Status: derived
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/DBT_CLOUD_EXTENDIDO_V2_SPEC_SOURCE.md
+-->
+
 ## Alcance
 
 Este análisis compara la especificación fuente en [DBT_CLOUD_EXTENDIDO_V2_SPEC_SOURCE.md](./DBT_CLOUD_EXTENDIDO_V2_SPEC_SOURCE.md) contra el estado actual de DVT.

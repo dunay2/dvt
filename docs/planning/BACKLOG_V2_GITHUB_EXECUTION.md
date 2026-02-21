@@ -1,5 +1,12 @@
 # Backlog V2 — Ejecución en GitHub (Milestones + Issues + Evidencia)
 
+<!--
+Status: derived
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md
+-->
+
 Este documento baja el backlog funcional a un **plan ejecutable en GitHub** y deja el formato de **evidencia** para auditoría.
 
 ## 1) Milestones a crear (1 por épica)

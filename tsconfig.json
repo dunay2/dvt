@@ -30,13 +30,13 @@
     "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@dvt/engine/*": ["packages/engine/src/*"],
-      "@dvt/contracts/*": ["packages/contracts/src/*"],
-      "@dvt/adapter-postgres/*": ["packages/adapter-postgres/src/*"],
-      "@dvt/adapter-temporal/*": ["packages/adapter-temporal/src/*"]
+      "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
+      "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
+      "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
+      "@dvt/adapter-temporal/*": ["packages/@dvt/adapter-temporal/src/*"]
     }
   },
-  "include": ["packages/*/src/**/*.ts", "packages/*/index.ts"],
+  "include": ["packages/**/src/**/*.ts", "packages/**/index.ts"],
   "exclude": [
     "node_modules",
     "dist",

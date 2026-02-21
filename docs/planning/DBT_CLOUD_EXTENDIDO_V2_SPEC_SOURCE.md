@@ -1,5 +1,12 @@
 # ESPECIFICACIÓN TÉCNICA COMPLETA — PLATAFORMA «DBT CLOUD EXTENDIDO» V2
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+Source-of-truth: docs/planning/DBT_CLOUD_EXTENDIDO_V2_SPEC_SOURCE.md
+-->
+
 Documento autocontenido y explícito, diseñado para ser consumido por una IA o equipo técnico sin conocimiento previo. No asume contexto externo. No omite herramientas, conceptos ni decisiones.
 
 ---

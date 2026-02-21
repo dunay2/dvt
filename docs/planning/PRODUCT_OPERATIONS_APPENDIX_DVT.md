@@ -1,5 +1,11 @@
 # Product Operations Appendix (DVT)
 
+<!--
+Status: canonical
+Last-updated: 2026-02-21
+Owner: dunay2
+-->
+
 ## Glosario técnico extendido
 
 | Término         | Definición                                                    | Contexto             |
