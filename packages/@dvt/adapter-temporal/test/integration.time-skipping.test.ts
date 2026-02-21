@@ -33,7 +33,7 @@ const WORKFLOW_PATH = resolve(TEST_DIR, '../src/workflows/RunPlanWorkflow.ts');
 const WORKFLOW_JS_PATH = WORKFLOW_PATH.replace(/\.ts$/, '.js');
 const INTEGRATION_TEST_TIMEOUT = 60_000;
 
-// Validación de artifact (ADR-0001 Sección 1)
+// Artifact validation (ADR-0001 Section 1)
 if (!existsSync(WORKFLOW_JS_PATH) && process.env.CI) {
   console.error(`
 ❌ Workflow artifact not found: ${WORKFLOW_JS_PATH}
@@ -116,8 +116,8 @@ class TestIdempotency {
     logicalAttemptId: number;
     stepId?: string;
   }): string {
-    // Implementación simplificada pero que sigue el principio:
-    // provider retries no cambian la key
+    // Simplified implementation but follows the principle:
+    // provider retries do not change the key
     return [
       args.eventType,
       args.tenantId,
@@ -726,7 +726,7 @@ function sha256Hex(bytes: Uint8Array): string {
 
 describe('temporal integration (time-skipping)', () => {
   /**
-   * Helper de espera determinística (no usa time-skipping internamente)
+   * Deterministic waiting helper (does not use time-skipping internally)
    */
   async function waitForCondition<T>(
     fn: () => Promise<T>,
@@ -894,7 +894,7 @@ describe('temporal integration (time-skipping)', () => {
       const planRef = createPlanRef('it-plan-linear-3', planBytes);
       const ctx: RunContext = {
         ...createRunContext('run-it-linear-3'),
-        tenantId: 't-it', // Explícito, no vacío
+        tenantId: 't-it', // Explicit, non-empty
       };
 
       const temporalConfig = loadTemporalAdapterConfig({
@@ -939,7 +939,7 @@ describe('temporal integration (time-skipping)', () => {
           'RunCompleted:-',
         ]);
 
-        // Verificar runSeq monotónico (ADR-0010 Section 3.2)
+        // Verify monotonic runSeq (ADR-0010 Section 3.2)
         expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
 
         const projected = projector.rebuild(ctx.runId, events);
@@ -969,7 +969,7 @@ describe('temporal integration (time-skipping)', () => {
       const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
       const ctx: RunContext = {
         ...createRunContext('run-it-permanent-failure'),
-        tenantId: 't-it', // Explícito, no vacío
+        tenantId: 't-it', // Explicit, non-empty
       };
 
       const temporalConfig = loadTemporalAdapterConfig({
