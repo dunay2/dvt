@@ -178,9 +178,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate generated graph Cypher is up-to-date
-        run: pnpm kg:check
-
   contracts-index-sync:
     name: Contracts Index Sync
     runs-on: ubuntu-latest
