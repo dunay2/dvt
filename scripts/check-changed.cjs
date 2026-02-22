@@ -167,7 +167,7 @@ if (existingEslintFiles.length) {
   console.log(existingEslintFiles.join('\n'));
   const status = runToolBatched(
     (args) => runNodeCli('ESLint', ESLINT_CLI, args),
-    ['--max-warnings', '0'],
+    ['--max-warnings', '0', '--no-warn-ignored'],
     existingEslintFiles,
     'ESLint files'
   );
