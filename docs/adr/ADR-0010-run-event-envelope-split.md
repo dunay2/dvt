@@ -5,7 +5,7 @@ Date: 2026-02-20 (updated: 2026-02-21)
 
 ---
 
-# 1. Executive Summary
+## 1. Executive Summary
 
 This ADR formalizes the separation between producer-assigned and store-assigned
 event fields, defines canonical idempotency derivation, enforces deterministic

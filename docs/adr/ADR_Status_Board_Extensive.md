@@ -7,7 +7,7 @@ and defines concrete evidence required to transition each ADR to Accepted.
 
 ---
 
-# ADR-0010 — Run Event Envelope Split
+## ADR-0010 — Run Event Envelope Split
 
 Status: Pending Implementation
 
@@ -25,7 +25,7 @@ High — foundational to event correctness
 
 ---
 
-# ADR-0011 — RunStarted Ownership
+## ADR-0011 — RunStarted Ownership
 
 Status: Proposed
 
@@ -40,7 +40,7 @@ If implementation matches ADR → mark Accepted.
 
 ---
 
-# ADR-0012 — Plan Integrity Ownership
+## ADR-0012 — Plan Integrity Ownership
 
 Status: Pending Implementation
 
@@ -56,7 +56,7 @@ High — execution trust boundary
 
 ---
 
-# ADR-0012a — Canonical Error Code Strategy
+## ADR-0012a — Canonical Error Code Strategy
 
 Status: Proposed
 
@@ -72,7 +72,7 @@ Medium — observability consistency
 
 ---
 
-# ADR-0013 — bootstrapRunTx
+## ADR-0013 — bootstrapRunTx
 
 Status: Proposed
 
@@ -87,7 +87,7 @@ High — durability & correctness
 
 ---
 
-# Governance Principle
+## Governance Principle
 
 An ADR moves to Accepted only when:
 
