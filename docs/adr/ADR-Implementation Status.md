@@ -243,20 +243,20 @@ ADR-0012a requires ADR-0012 implementation
 ADR-0011 depends on ADR-0010 event types
 
 8. Risk Assessment
-Risk	Impact	Probability	Mitigation	Owner
-ADR-0012 delays due to adapter changes	High	Medium	Pilot with InMemory adapter first	Adapters Lead
-Idempotency drift across services	Medium	Low	Central builder + contract tests	Contracts Lead
-Outbox atomicity bugs in production	High	Medium	Crash recovery tests + Transactional outbox pattern	Engine Lead
-Traceability overhead rejected by devs	Low	Medium	Full automation, make it CI-enforced	DevEx Lead
-Missing deadlines due to scope creep	Medium	Medium	Strict phase gates, weekly sync	Architecture Lead
+Risk    Impact    Probability    Mitigation    Owner
+ADR-0012 delays due to adapter changes    High    Medium    Pilot with InMemory adapter first    Adapters Lead
+Idempotency drift across services    Medium    Low    Central builder + contract tests    Contracts Lead
+Outbox atomicity bugs in production    High    Medium    Crash recovery tests + Transactional outbox pattern    Engine Lead
+Traceability overhead rejected by devs    Low    Medium    Full automation, make it CI-enforced    DevEx Lead
+Missing deadlines due to scope creep    Medium    Medium    Strict phase gates, weekly sync    Architecture Lead
 9. Success Metrics
-Metric	Current	Target	Measurement Method	Owner
-ADR Implementation coverage	~30%	100%	validate-adr-coverage.js	Architecture
-Files with traceability headers	0%	100%	validate-headers.js	DevEx
-Contract test coverage	~40%	90%	Jest coverage reports	Contracts
-CI validation time	N/A	< 2 min	GitHub Actions timing	DevEx
-Adapters passing contract tests	1/3	3/3	Contract test suite	Adapters
-Neo4j graph freshness	N/A	< 1 hour	Last updated timestamp	DevEx
+Metric    Current    Target    Measurement Method    Owner
+ADR Implementation coverage    ~30%    100%    validate-adr-coverage.js    Architecture
+Files with traceability headers    0%    100%    validate-headers.js    DevEx
+Contract test coverage    ~40%    90%    Jest coverage reports    Contracts
+CI validation time    N/A    < 2 min    GitHub Actions timing    DevEx
+Adapters passing contract tests    1/3    3/3    Contract test suite    Adapters
+Neo4j graph freshness    N/A    < 1 hour    Last updated timestamp    DevEx
 10. Validation Criteria
 This document is considered complete when:
 
