@@ -32,22 +32,23 @@ class CountingAdapter implements IProviderAdapter {
   public cancelCalls = 0;
 
   async startRun(
-    _planRef: unknown,
+    planRef: any,
     ctx: RunContext
-  ): Promise<{ provider: string; workflowId: string; runId: string }> {
+  ): Promise<{ provider: 'mock'; workflowId: string; runId: string }> {
     this.startCalls += 1;
-    return { provider: 'mock', workflowId: 'wf', runId: ctx.runId } as const;
+    // Debe devolver un EngineRunRef válido para provider 'mock'
+    return { provider: 'mock', workflowId: 'wf', runId: ctx.runId };
   }
 
-  async cancelRun(_runRef: any): Promise<void> {
+  async cancelRun(_runRef: { provider: 'mock'; workflowId: string; runId: string }): Promise<void> {
     this.cancelCalls += 1;
   }
 
-  async getRunStatus(_runRef: any): Promise<any> {
-    return { runId: 'r', status: 'PENDING' } as any;
+  async getRunStatus(_runRef: { provider: 'mock'; workflowId: string; runId: string }): Promise<{ runId: string; status: 'PENDING' }> {
+    return { runId: 'r', status: 'PENDING' };
   }
 
-  async signal(_runRef: any, _request: any): Promise<void> {
+  async signal(_runRef: { provider: 'mock'; workflowId: string; runId: string }, _request: any): Promise<void> {
     this.signalCalls += 1;
   }
 }
