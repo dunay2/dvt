@@ -31,7 +31,7 @@ import { mockNodes, mockExecutionPlan } from '../data/mockData';
 import { useCanvasStore, useModalStore } from '../stores';
 import { DbtNode, NodeType } from '../types';
 
-import { DbtNodeComponent } from './canvas/DbtNodeComponent';
+import DbtNodeComponent from './canvas/DbtNodeComponent';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 
@@ -41,7 +41,15 @@ const convertToFlowNodes = (dbtNodes: DbtNode[]): Node[] => {
     id: node.id,
     type: 'dbtNode',
     position: { x: 0, y: 0 }, // Will be set by auto-layout
-    data: { node },
+    data: {
+      name: node.name,
+      type: node.type,
+      status: node.status,
+      lastDuration: node.lastDuration,
+      lastCost: node.lastCost,
+      showColumns: false,
+      columns: node.columns,
+    },
   }));
 };
 
@@ -242,7 +250,15 @@ export function GraphCanvas() {
         id: node.id,
         type: 'dbtNode',
         position,
-        data: { node },
+        data: {
+          name: node.name,
+          type: node.type,
+          status: node.status,
+          lastDuration: node.lastDuration,
+          lastCost: node.lastCost,
+          showColumns: false,
+          columns: node.columns,
+        },
       };
 
       setNodes((nds) => [...nds, newNode]);

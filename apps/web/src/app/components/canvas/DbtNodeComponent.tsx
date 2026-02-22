@@ -152,7 +152,7 @@ function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
 
             {columnsExpanded && (
               <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
-                {columns.map((col, idx) => (
+                {columns.map((col: { name: string; type: string }, idx: number) => (
                   <div
                     key={idx}
                     className="flex items-center justify-between text-[10px] px-2 py-1 bg-[#1a1d23] rounded"
