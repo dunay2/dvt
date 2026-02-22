@@ -185,7 +185,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build affected workspace (including workspace dependencies)
-        run: pnpm --filter "...${{ matrix.pkg }}" --if-present run build
+        run: pnpm --filter "${{ matrix.pkg }}..." --if-present run build
 
       - name: Test affected workspace
         run: pnpm --filter "${{ matrix.pkg }}" --if-present run test
