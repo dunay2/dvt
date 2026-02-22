@@ -162,7 +162,7 @@ export function GraphCanvas() {
 
   const nodeTypes: NodeTypes = useMemo(
     () => ({
-      dbtNode: DbtNodeComponent,
+      dbtNode: DbtNodeComponent as React.ComponentType<import('@xyflow/react').NodeProps<any>>,
     }),
     []
   );

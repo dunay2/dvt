@@ -1,3 +1,4 @@
+import styles from './DbtNodeComponent.module.css';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import {
   Database,
@@ -49,7 +50,9 @@ const statusColors: Record<NodeStatus, string> = {
   warn: 'bg-orange-500',
 };
 
-function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
+function DbtNodeComponent(props: NodeProps<DbtNodeData>) {
+  const data = props.data as DbtNodeData;
+  const { selected } = props;
   const config = nodeTypeConfig[data.type];
   const Icon = config.icon;
   const [columnsExpanded, setColumnsExpanded] = useState(false);
@@ -76,12 +79,12 @@ function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
   return (
     <div
       className={cn(
+        styles.root,
         'relative rounded-lg border-2 transition-all bg-[#0f1116]',
         selected ? 'border-white shadow-lg' : config.borderColor,
         data.isHighlighted && 'ring-2 ring-white ring-offset-2 ring-offset-[#1a1d23]',
         impactBorderColor && impactBorderColor
       )}
-      style={{ minWidth: 200, minHeight: 80 }}
     >
       {/* Target Handle (input) */}
       {shouldShowTargetHandle && (
