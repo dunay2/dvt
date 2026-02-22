@@ -10,10 +10,10 @@
 /** Canonical workflow names and signals used across engine & adapters */
 export const RUN_PLAN_WORKFLOW = 'runPlanWorkflow';
 export const WorkflowSignals = {
-    PAUSE: 'pause',
-    RESUME: 'resume',
-    CANCEL: 'cancel',
-    RETRY_STEP: 'retry_step',
-    RETRY_RUN: 'retry_run',
+  PAUSE: 'pause',
+  RESUME: 'resume',
+  CANCEL: 'cancel',
+  RETRY_STEP: 'retry_step',
+  RETRY_RUN: 'retry_run',
 };
 //# sourceMappingURL=workflows.js.map

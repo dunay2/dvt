@@ -102,7 +102,10 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
 
     // Atomic block (no awaits): write metadata + first events together.
     this.metadataByRunId.set(input.metadata.runId, input.metadata);
-    this.snapshotByRunId.set(input.metadata.runId, this.createDefaultSnapshot(input.metadata.runId));
+    this.snapshotByRunId.set(
+      input.metadata.runId,
+      this.createDefaultSnapshot(input.metadata.runId)
+    );
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
   }
 
@@ -120,7 +123,8 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     }
 
     const existingEvents = this.eventsByRunId.get(runId) ?? [];
-    const idempotencyIndex = this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
+    const idempotencyIndex =
+      this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
     const baseRunSeq = existingEvents.length;
 
     const appended: RunEventPersisted[] = [];
@@ -156,7 +160,8 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
 
     // Incrementally update the materialized snapshot.
     if (appended.length > 0) {
-      const snap: WorkflowSnapshot = this.snapshotByRunId.get(runId) ?? this.createDefaultSnapshot(runId);
+      const snap: WorkflowSnapshot =
+        this.snapshotByRunId.get(runId) ?? this.createDefaultSnapshot(runId);
       for (const e of appended) {
         applyRunEvent(snap, e);
       }

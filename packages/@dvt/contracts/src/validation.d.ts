@@ -1,24 +1,30 @@
 import type { ExecuteStepRequest, ExecuteStepResult } from './adapters/IWorkflowEngineAdapter.v1';
 import type { ArtifactRef, StepOutput } from './types/artifacts';
-import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest } from './types/contracts';
+import type {
+  EngineRunRef,
+  PlanRef,
+  RunContext,
+  RunStatusSnapshot,
+  SignalRequest,
+} from './types/contracts';
 import type { CanonicalEngineEvent, RunSnapshot, StepSnapshot } from './types/state-store';
 export interface ValidationIssue {
-    path: string;
-    code: string;
-    message: string;
+  path: string;
+  code: string;
+  message: string;
 }
 export interface ValidationErrorResponse {
-    statusCode: 400;
-    error: 'Bad Request';
-    message: 'Validation failed';
-    details: ValidationIssue[];
+  statusCode: 400;
+  error: 'Bad Request';
+  message: 'Validation failed';
+  details: ValidationIssue[];
 }
 export declare class ContractValidationError extends Error {
-    readonly statusCode: 400;
-    readonly error: 'Bad Request';
-    readonly details: ValidationIssue[];
-    constructor(details: ValidationIssue[]);
-    toResponse(): ValidationErrorResponse;
+  readonly statusCode: 400;
+  readonly error: 'Bad Request';
+  readonly details: ValidationIssue[];
+  constructor(details: ValidationIssue[]);
+  toResponse(): ValidationErrorResponse;
 }
 export declare function toValidationErrorResponse(error: unknown): ValidationErrorResponse;
 export declare function parsePlanRef(input: unknown): PlanRef;

@@ -8,11 +8,11 @@
  * @date 2026-02-21
  */
 export class AuthorizationError extends Error {
-    code = 'AUTHZ_DENIED';
-    constructor(message = 'Authorization denied') {
-        super(message);
-        this.name = 'AuthorizationError';
-        Object.setPrototypeOf(this, AuthorizationError.prototype);
-    }
+  code = 'AUTHZ_DENIED';
+  constructor(message = 'Authorization denied') {
+    super(message);
+    this.name = 'AuthorizationError';
+    Object.setPrototypeOf(this, AuthorizationError.prototype);
+  }
 }
 //# sourceMappingURL=errors.js.map

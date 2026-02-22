@@ -8,7 +8,7 @@
  * @date 2026-02-21
  */
 export declare class AuthorizationError extends Error {
-    readonly code: "AUTHZ_DENIED";
-    constructor(message?: string);
+  readonly code: 'AUTHZ_DENIED';
+  constructor(message?: string);
 }
 //# sourceMappingURL=errors.d.ts.map
