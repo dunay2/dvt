@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import Ajv from 'ajv';
+import { it, expect } from 'vitest';
 
 // ADAPTER_SUPPORTED_SCHEMA is added to versioning.ts as part of ADR-0017 implementation.
 // Shape: { major: number; minor: number } — e.g. { major: 1, minor: 1 }
