@@ -24,7 +24,7 @@ operational safeguards, and formal references.
 
 ---
 
-# 2. Architectural Context
+## 2. Architectural Context
 
 The original EventEnvelope mixed producer-controlled and store-controlled fields.
 This allowed callers to fabricate ordering metadata (`runSeq`) and weakened the
@@ -43,7 +43,7 @@ References:
 
 ---
 
-# 3. Core Decisions
+## 3. Core Decisions
 
 ## 3.1 Authority Split
 
@@ -79,7 +79,7 @@ Reference:
 
 ---
 
-# 4. Idempotency Derivation (Normative)
+## 4. Idempotency Derivation (Normative)
 
 > **⚠ SUPERSEDED (partial) — 2026-02-21**
 >
@@ -136,7 +136,7 @@ Reference:
 
 ---
 
-# 5. Canonicalization Rules
+## 5. Canonicalization Rules
 
 Canonicalization MUST:
 
@@ -155,7 +155,7 @@ Reference:
 
 ---
 
-# 6. Retry Semantics
+## 6. Retry Semantics
 
 logicalAttemptId:
 
@@ -173,7 +173,7 @@ Provider retries represent execution retries, not logical domain retries.
 
 ---
 
-# 7. Atomic Append Guarantee
+## 7. Atomic Append Guarantee
 
 appendEventsTx MUST be atomic.
 
@@ -191,7 +191,7 @@ Reference:
 
 ---
 
-# 8. Dedup-Aware Append API
+## 8. Dedup-Aware Append API
 
 AppendResult:
 
@@ -208,7 +208,7 @@ Reference:
 
 ---
 
-# 9. Runtime Idempotency Verification (Optional but Recommended)
+## 9. Runtime Idempotency Verification (Optional but Recommended)
 
 The store MAY recompute idempotencyKey and compare with input.
 
@@ -230,7 +230,7 @@ Reference:
 
 ---
 
-# 10. Logging & Security Constraints
+## 10. Logging & Security Constraints
 
 On mismatch:
 
@@ -257,7 +257,7 @@ Reference:
 
 ---
 
-# 11. Mismatch Metrics & Governance (Phase 5 Refinement)
+## 11. Mismatch Metrics & Governance (Phase 5 Refinement)
 
 To safely transition from warn → reject mode, the system MUST track:
 
@@ -293,7 +293,7 @@ This prevents cascading production failures.
 
 ---
 
-# 12. Implementation Phases
+## 12. Implementation Phases
 
 Phase 1 — Implement IdempotencyKeyBuilder  
 Phase 2 — Migrate producers  
@@ -304,7 +304,7 @@ Phase 6 — Optionally switch to reject mode
 
 ---
 
-# 13. Acceptance Criteria
+## 13. Acceptance Criteria
 
 - No manual idempotency key construction
 - Canonicalization recursively tested
@@ -317,7 +317,7 @@ Phase 6 — Optionally switch to reject mode
 
 ---
 
-# 14. Architectural Justification Summary
+## 14. Architectural Justification Summary
 
 This ADR enforces:
 
@@ -335,7 +335,7 @@ to operationally enforceable correctness.
 
 ---
 
-# 15. ADR Governance Principle
+## 15. ADR Governance Principle
 
 An ADR transitions to Accepted only when:
 

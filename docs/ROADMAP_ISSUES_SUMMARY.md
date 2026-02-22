@@ -3,7 +3,7 @@ title: Resumen de issues (Roadmap)
 generated: 2026-02-20
 ---
 
-# Resumen de issues referenciadas en ROADMAP.md y CHANGELOG.md
+## Resumen de issues referenciadas en ROADMAP.md y CHANGELOG.md
 
 ## Resumen de issues referenciadas en ROADMAP.md y CHANGELOG.md
 

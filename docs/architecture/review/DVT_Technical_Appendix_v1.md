@@ -4,7 +4,7 @@ Version: Technical Appendix v1.0 Generated: 2026-02-21T17:41:00.845423Z
 
 ---
 
-# 1. Purpose
+## 1. Purpose
 
 This appendix preserves operational nuance, document-level
 contradictions, verification protocols, and execution metrics that are
@@ -15,7 +15,7 @@ stakeholder-facing.
 
 ---
 
-# 2. Full Matrix of Documentary Contradictions
+## 2. Full Matrix of Documentary Contradictions
 
 ---
 
@@ -46,7 +46,7 @@ All rows must be resolved before Wave 2 begins.
 
 ---
 
-# 3. Detailed Verification Protocol
+## 3. Detailed Verification Protocol
 
 ADR Verification Requirements:
 
@@ -68,7 +68,7 @@ for 1 week minimum. - If no regression is detected, mark ADR as
 
 ---
 
-# 4. Wave-Level Operational Metrics
+## 4. Wave-Level Operational Metrics
 
 ## Wave 0
 
@@ -104,7 +104,7 @@ for 1 week minimum. - If no regression is detected, mark ADR as
 
 ---
 
-# 5. logicalAttemptId --- Persistence Invariant
+## 5. logicalAttemptId --- Persistence Invariant
 
 logicalAttemptId must:
 
@@ -122,7 +122,7 @@ Mandatory Tests:
 
 ---
 
-# 6. Outbox Ordering --- Detailed Risk
+## 6. Outbox Ordering --- Detailed Risk
 
 Risk: Outbox writes are atomic, but publishing workers may run
 concurrently.
@@ -139,7 +139,7 @@ Invariant Test:
 
 ---
 
-# 7. Hidden Dependencies (Example: Wave 0)
+## 7. Hidden Dependencies (Example: Wave 0)
 
 Example:
 
@@ -152,7 +152,7 @@ Conclusion: W0-5 must not begin until W0-2 is complete.
 
 ---
 
-# 8. Rollback & Contingency Plans
+## 8. Rollback & Contingency Plans
 
 Each Wave must define:
 
@@ -165,7 +165,7 @@ infrastructure expansion
 
 ---
 
-# 9. ADR Migration Governance Risk
+## 9. ADR Migration Governance Risk
 
 Risk: ADRs marked Accepted without enforcement.
 
@@ -182,7 +182,7 @@ formula changes - Event model changes
 
 ---
 
-# 10. Timeline Clarification
+## 10. Timeline Clarification
 
 Month 1 means: Month 1 after freezing all unrelated development.
 
@@ -191,7 +191,7 @@ CI.
 
 ---
 
-# 11. Cross-Linking Requirement
+## 11. Cross-Linking Requirement
 
 The Executive Review document must include:
 
