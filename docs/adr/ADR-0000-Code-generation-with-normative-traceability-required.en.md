@@ -518,14 +518,17 @@ name: ADR Governance
 
 on: [pull_request]
 
-jobs:
-governance:
-runs-on: ubuntu-latest
-steps: - uses: actions/checkout@v3
 
+```yaml
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
       - run: node tools/traceability/validate-headers.js
       - run: node tools/traceability/generate-manifest.js
       - run: node tools/traceability/validate-adr-coverage.js
+```
 
 7. Architecture Graph Generator
 
