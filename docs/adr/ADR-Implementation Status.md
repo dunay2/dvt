@@ -290,7 +290,7 @@ Neo4j: https://neo4j.com/
 OpenTelemetry: https://opentelemetry.io/
 
 12. Document Sign-off
-Role	Name	Date	Signature
+Role    Name    Date    Signature
 Architecture Lead
 Engineering Manager
 DevEx Lead
