@@ -70,7 +70,6 @@ const PLANS_DIR = path.resolve(__dirname, 'plans');
 // ────────────────────────────────────────────────────────────────────────────
 
 describe('golden path baseline hashes', () => {
-
   const baseline: GoldenBaseline | null = (() => {
     try {
       return JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')) as GoldenBaseline;
