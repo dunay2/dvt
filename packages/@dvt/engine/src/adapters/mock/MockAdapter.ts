@@ -16,7 +16,6 @@ import type {
 } from '@dvt/contracts';
 
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';
-import type { EventType, RunEventInput, RunMetadata } from '../../contracts/runEvents.js';
 import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
 import type { IRunStateStore } from '../../state/IRunStateStore.js';
@@ -25,18 +24,15 @@ import type { IProviderAdapter } from '../IProviderAdapter.js';
 
 export interface MockAdapterDeps {
   stateStore: IRunStateStore;
-  clock: IClock;
-  idempotency: IdempotencyKeyBuilder;
+  /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */
+  clock?: IClock;
+  /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */
+  idempotency?: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
   planFetcher?: {
     fetch(planRef: PlanRef): Promise<ExecutionPlan>;
   };
 }
-
-type RunEventMeta = Pick<
-  RunMetadata,
-  'tenantId' | 'projectId' | 'environmentId' | 'runId' | 'planId' | 'planVersion'
->;
 
 export class MockAdapter implements IProviderAdapter {
   readonly provider = 'mock' as const;
@@ -55,17 +51,6 @@ export class MockAdapter implements IProviderAdapter {
           steps: [],
         };
 
-    const eventMeta: RunEventMeta = {
-      tenantId: ctx.tenantId,
-      projectId: ctx.projectId,
-      environmentId: ctx.environmentId,
-      runId: ctx.runId,
-      planId: planRef.planId,
-      planVersion: planRef.planVersion,
-    };
-
-    await this.emitRunEvent(eventMeta, 'RunStarted');
-
     const runRef: EngineRunRef = {
       provider: 'mock',
       workflowId: `mock_${ctx.runId}`,
@@ -74,11 +59,8 @@ export class MockAdapter implements IProviderAdapter {
 
     for (const step of plan.steps) {
       validateMockStep(step);
-      await this.emitStepEvent(eventMeta, step.stepId, 'StepStarted');
-      await this.emitStepEvent(eventMeta, step.stepId, 'StepCompleted');
     }
 
-    await this.emitRunEvent(eventMeta, 'RunCompleted');
     return runRef;
   }
 
@@ -93,62 +75,6 @@ export class MockAdapter implements IProviderAdapter {
 
   async signal(_runRef: EngineRunRef, _request: SignalRequest): Promise<void> {
     // For mock, signals are interpreted by engine (pause/resume/cancel events).
-  }
-
-  private async emitRunEvent(meta: RunEventMeta, eventType: EventType): Promise<void> {
-    const env: RunEventInput = {
-      eventId: this.deps.idempotency.eventId(),
-      eventType,
-      emittedAt: this.deps.clock.nowIsoUtc(),
-      tenantId: meta.tenantId,
-      projectId: meta.projectId,
-      environmentId: meta.environmentId,
-      runId: meta.runId,
-      planId: meta.planId,
-      planVersion: meta.planVersion,
-      engineAttemptId: 1,
-      logicalAttemptId: 1,
-      idempotencyKey: this.deps.idempotency.runEventKey({
-        eventType,
-        runId: meta.runId,
-        logicalAttemptId: 1,
-        planId: meta.planId,
-        planVersion: meta.planVersion,
-      }),
-    };
-
-    await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [env]);
-  }
-
-  private async emitStepEvent(
-    meta: RunEventMeta,
-    stepId: string,
-    eventType: 'StepStarted' | 'StepCompleted' | 'StepFailed'
-  ): Promise<void> {
-    const env: RunEventInput = {
-      eventId: this.deps.idempotency.eventId(),
-      eventType,
-      emittedAt: this.deps.clock.nowIsoUtc(),
-      tenantId: meta.tenantId,
-      projectId: meta.projectId,
-      environmentId: meta.environmentId,
-      runId: meta.runId,
-      planId: meta.planId,
-      planVersion: meta.planVersion,
-      stepId,
-      engineAttemptId: 1,
-      logicalAttemptId: 1,
-      idempotencyKey: this.deps.idempotency.runEventKey({
-        eventType,
-        runId: meta.runId,
-        logicalAttemptId: 1,
-        planId: meta.planId,
-        planVersion: meta.planVersion,
-        stepId,
-      }),
-    };
-
-    await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [env]);
   }
 }
 
