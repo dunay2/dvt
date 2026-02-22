@@ -46,21 +46,14 @@ Technical Debt: https://martinfowler.com/bliki/TechnicalDebt.html
 
 We require a mechanism that:
 
-Binds implementation artifacts to accepted ADRs.
-
-Survives refactoring and file movement.
-
-Is machine-verifiable in CI.
-
-Supports impact analysis.
-
-Generates an architecture dependency graph.
-
-Detects both:
-
-Code without ADR
-
-ADR without implementation
+1. Binds implementation artifacts to accepted ADRs.
+1. Survives refactoring and file movement.
+1. Is machine-verifiable in CI.
+1. Supports impact analysis.
+1. Generates an architecture dependency graph.
+1. Detects both:
+  - Code without ADR
+  - ADR without implementation
 
 This system must not rely on manual discipline alone.
 
@@ -259,8 +252,8 @@ We require a mechanism that:
 1. Supports impact analysis.\
 1. Generates an architecture dependency graph.\
 1. Detects both:
-  - Code without ADR
-  - ADR without implementation
+    - Code without ADR
+    - ADR without implementation
 
 This system must not rely on manual discipline alone.
 
