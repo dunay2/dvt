@@ -1,6 +1,6 @@
 # ADR-0017: ExecutionPlan Schema Versioning & Compatibility
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-02-21
 - **Owners**: Planner / Engine Domain / Adapter Layer
 - **Related**:
