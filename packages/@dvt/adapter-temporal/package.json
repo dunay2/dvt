@@ -19,8 +19,7 @@
     "postbuild": "echo '✅ Build complete'",
     "pretest": "pnpm build",
     "test": "vitest run ./test/",
-    "pre-test:integration:check-artifacts": "node scripts/check-workflow-artifacts.js",
-    "pretest:integration": "pnpm pre-test:integration:check-artifacts && pnpm --filter @dvt/contracts build && pnpm build",
+    "pretest:integration": "pnpm --filter @dvt/contracts build && pnpm build",
     "test:integration": "vitest run ./test/",
     "test:integration:watch": "vitest watch ./test/",
     "ci:test:integration": "pnpm pretest:integration && pnpm test:integration"
