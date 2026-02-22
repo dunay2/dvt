@@ -14,6 +14,10 @@ function ok(): ValidationResult {
   return { ok: true, issues: [] };
 }
 
+function hasErrors(issues: ValidationIssue[]): boolean {
+  return issues.some((issue) => issue.severity === 'error');
+}
+
 export class TraceValidator implements ITraceValidator {
   async validate(input: {
     traces: HeaderTrace[];
@@ -26,59 +30,16 @@ export class TraceValidator implements ITraceValidator {
     const failOnMissingVersion = input.failOnMissingVersion ?? false;
 
     for (const t of input.traces) {
-      if (!t.baselines || t.baselines.length === 0) {
-        issues.push({
-          code: 'MISSING_BASELINE',
-          severity: 'error',
-          filePath: t.filePath,
-          message: 'Missing @baseline ADR-xxxx header.',
-        });
+      if (this.pushMissingBaselineIssue(t, issues)) {
         continue;
       }
 
-      for (const b of t.baselines) {
-        const adr = await input.adrCatalog.getAdr(b.number);
-        if (!adr) {
-          issues.push({
-            code: 'ADR_NOT_FOUND',
-            severity: 'error',
-            filePath: t.filePath,
-            adrNumber: b.number,
-            message: `Referenced ADR not found: ${b.number}`,
-          });
-          continue;
-        }
-        if (adr.status !== 'Accepted') {
-          issues.push({
-            code: 'ADR_NOT_ACCEPTED',
-            severity: 'error',
-            filePath: t.filePath,
-            adrNumber: b.number,
-            message: `Referenced ADR is not Accepted: ${b.number} (status=${adr.status ?? 'unknown'})`,
-          });
-        }
-      }
-
-      if (requireDecision && t.kind !== 'test' && t.decisions.length === 0) {
-        issues.push({
-          code: 'NON_TEST_MISSING_DECISION',
-          severity: 'error',
-          filePath: t.filePath,
-          message: 'Non-test governed artifact must include at least one @decision.',
-        });
-      }
-
-      if (failOnMissingVersion && t.kind !== 'test' && !t.version) {
-        issues.push({
-          code: 'MISSING_VERSION',
-          severity: 'error',
-          filePath: t.filePath,
-          message: 'Non-test governed artifact must include @version.',
-        });
-      }
+      await this.validateBaselines(t, input.adrCatalog, issues);
+      this.pushDecisionRequirementIssue(t, requireDecision, issues);
+      this.pushVersionRequirementIssue(t, failOnMissingVersion, issues);
     }
 
-    return { ok: issues.filter((i) => i.severity === 'error').length === 0, issues };
+    return { ok: !hasErrors(issues), issues };
   }
 
   async validateReverseCoverage(input: {
@@ -99,5 +60,80 @@ export class TraceValidator implements ITraceValidator {
     }));
 
     return { ok: false, issues };
+  }
+
+  private pushMissingBaselineIssue(trace: HeaderTrace, issues: ValidationIssue[]): boolean {
+    if (trace.baselines.length > 0) return false;
+
+    issues.push({
+      code: 'MISSING_BASELINE',
+      severity: 'error',
+      filePath: trace.filePath,
+      message: 'Missing @baseline ADR-xxxx header.',
+    });
+
+    return true;
+  }
+
+  private async validateBaselines(
+    trace: HeaderTrace,
+    adrCatalog: IAdrCatalog,
+    issues: ValidationIssue[]
+  ): Promise<void> {
+    for (const baseline of trace.baselines) {
+      const adr = await adrCatalog.getAdr(baseline.number);
+      if (!adr) {
+        issues.push({
+          code: 'ADR_NOT_FOUND',
+          severity: 'error',
+          filePath: trace.filePath,
+          adrNumber: baseline.number,
+          message: `Referenced ADR not found: ${baseline.number}`,
+        });
+        continue;
+      }
+
+      if (adr.status !== 'Accepted') {
+        issues.push({
+          code: 'ADR_NOT_ACCEPTED',
+          severity: 'error',
+          filePath: trace.filePath,
+          adrNumber: baseline.number,
+          message: `Referenced ADR is not Accepted: ${baseline.number} (status=${adr.status ?? 'unknown'})`,
+        });
+      }
+    }
+  }
+
+  private pushDecisionRequirementIssue(
+    trace: HeaderTrace,
+    requireDecision: boolean,
+    issues: ValidationIssue[]
+  ): void {
+    if (!requireDecision || trace.kind === 'test' || trace.decisions.length > 0) return;
+
+    issues.push({
+      code: 'NON_TEST_MISSING_DECISION',
+      severity: 'error',
+      filePath: trace.filePath,
+      message: 'Non-test governed artifact must include at least one @decision.',
+    });
+  }
+
+  private pushVersionRequirementIssue(
+    trace: HeaderTrace,
+    failOnMissingVersion: boolean,
+    issues: ValidationIssue[]
+  ): void {
+    if (!failOnMissingVersion) return;
+    if (trace.kind === 'test') return;
+    if (trace.version) return;
+
+    issues.push({
+      code: 'MISSING_VERSION',
+      severity: 'error',
+      filePath: trace.filePath,
+      message: 'Non-test governed artifact must include @version.',
+    });
   }
 }

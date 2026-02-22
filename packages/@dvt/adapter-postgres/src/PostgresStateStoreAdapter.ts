@@ -252,7 +252,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
    */
   async migrate(): Promise<void> {
     if (!this.migratePromise) {
-      this.migratePromise = this.ensureSchema();
+      this.migratePromise = this.ensureSchema().catch((error: unknown) => {
+        // Allow retry if migration fails once (transient DB/network issue).
+        this.migratePromise = null;
+        throw error;
+      });
     }
     return this.migratePromise;
   }
@@ -704,9 +708,26 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   private async ensureSchema(): Promise<void> {
-    await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await this.ensureSchemaObjects(client);
+      await this.ensureCompatibilityColumns(client);
+      await this.ensureCompatibilityCleanup(client);
+      await this.ensureIndexes(client);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 
-    await this.pool.query(`
+  private async ensureSchemaObjects(client: PoolClient): Promise<void> {
+    await client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_metadata (
         run_id TEXT PRIMARY KEY,
         tenant_id TEXT NOT NULL,
@@ -724,7 +745,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       )
     `);
 
-    await this.pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_events (
         run_id TEXT NOT NULL,
         run_seq INTEGER NOT NULL,
@@ -746,7 +767,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       )
     `);
 
-    await this.pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.outbox (
         id TEXT PRIMARY KEY,
         run_id TEXT NOT NULL,
@@ -761,61 +782,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       )
     `);
 
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
-      ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ
-    `);
-
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.run_metadata
-      ADD COLUMN IF NOT EXISTS plan_id TEXT
-    `);
-
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.run_metadata
-      ADD COLUMN IF NOT EXISTS plan_version TEXT
-    `);
-
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
-      ADD COLUMN IF NOT EXISTS plan_id TEXT
-    `);
-
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
-      ADD COLUMN IF NOT EXISTS plan_version TEXT
-    `);
-
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
-      ADD COLUMN IF NOT EXISTS persisted_at TIMESTAMPTZ
-    `);
-
-    // Backward-compat cleanup for older schema revisions:
-    // - drop redundant UNIQUE(run_id, run_seq) because id already encodes runId+runSeq
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
-      DROP CONSTRAINT IF EXISTS outbox_run_id_run_seq_key
-    `);
-
-    // If an old pending index exists with outdated definition, recreate deterministically.
-    await this.pool.query(
-      `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('outbox_pending_idx')}`
-    );
-
-    await this.pool.query(`
-      CREATE INDEX IF NOT EXISTS outbox_pending_idx
-      ON ${quoteIdentifier(this.schema)}.outbox (created_at, claimed_at)
-      WHERE delivered_at IS NULL
-    `);
-
-    // Backward-compat cleanup for previously created redundant run_events index.
-    await this.pool.query(
-      `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('run_events_run_id_run_seq_idx')}`
-    );
-
     // Materialized snapshot table: O(1) read path for getRunStatus.
-    await this.pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_snapshots (
         run_id TEXT PRIMARY KEY,
         snapshot JSONB NOT NULL,
@@ -826,7 +794,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
     // Dead-letter table for outbox records that exceeded MAX_OUTBOX_ATTEMPTS.
     // Records here are never retried automatically; use manual replay tooling.
-    await this.pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.outbox_dead_letter (
         id TEXT PRIMARY KEY,
         original_id TEXT NOT NULL,
@@ -836,8 +804,67 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         dead_lettered_at TIMESTAMPTZ NOT NULL
       )
     `);
+  }
 
-    await this.pool.query(`
+  private async ensureCompatibilityColumns(client: PoolClient): Promise<void> {
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
+      ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_metadata
+      ADD COLUMN IF NOT EXISTS plan_id TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_metadata
+      ADD COLUMN IF NOT EXISTS plan_version TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
+      ADD COLUMN IF NOT EXISTS plan_id TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
+      ADD COLUMN IF NOT EXISTS plan_version TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
+      ADD COLUMN IF NOT EXISTS persisted_at TIMESTAMPTZ
+    `);
+  }
+
+  private async ensureCompatibilityCleanup(client: PoolClient): Promise<void> {
+    // Backward-compat cleanup for older schema revisions:
+    // - drop redundant UNIQUE(run_id, run_seq) because id already encodes runId+runSeq
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
+      DROP CONSTRAINT IF EXISTS outbox_run_id_run_seq_key
+    `);
+
+    // If an old pending index exists with outdated definition, recreate deterministically.
+    await client.query(
+      `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('outbox_pending_idx')}`
+    );
+
+    // Backward-compat cleanup for previously created redundant run_events index.
+    await client.query(
+      `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('run_events_run_id_run_seq_idx')}`
+    );
+  }
+
+  private async ensureIndexes(client: PoolClient): Promise<void> {
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS outbox_pending_idx
+      ON ${quoteIdentifier(this.schema)}.outbox (created_at, claimed_at)
+      WHERE delivered_at IS NULL
+    `);
+
+    await client.query(`
       CREATE INDEX IF NOT EXISTS outbox_dead_letter_run_id_idx
       ON ${quoteIdentifier(this.schema)}.outbox_dead_letter (run_id)
     `);

@@ -12,6 +12,8 @@ import { MAX_OUTBOX_ATTEMPTS } from '../outbox/types.js';
 import type { IRunStateStore, ListRunsOptions, RunBootstrapInput } from './IRunStateStore.js';
 
 export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
+  private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
+
   private readonly metadataByRunId = new Map<string, RunMetadata>();
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
@@ -20,6 +22,37 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private readonly pending: OutboxRecord[] = [];
   private readonly deadLetters: DeadLetterRecord[] = [];
   private outboxCounter = 0;
+
+  private createDefaultSnapshot(runId: string): WorkflowSnapshot {
+    return {
+      runId,
+      status: 'PENDING',
+      paused: false,
+      cancelling: false,
+      steps: {},
+    };
+  }
+
+  private assertRunExists(runId: string): void {
+    if (!runId) {
+      throw new Error('INVALID_RUN_ID');
+    }
+    if (!this.metadataByRunId.has(runId)) {
+      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    }
+  }
+
+  private assertEventInput(event: RunEventInput, index: number): void {
+    if (!event?.idempotencyKey) {
+      throw new Error(`INVALID_EVENT: missing idempotencyKey at index ${index}`);
+    }
+    if (!event?.runId) {
+      throw new Error(`INVALID_EVENT: missing runId at index ${index}`);
+    }
+    if (event.runId.trim() === '') {
+      throw new Error(`INVALID_EVENT: empty runId at index ${index}`);
+    }
+  }
 
   async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
     return this.metadataByRunId.get(runId) ?? null;
@@ -45,14 +78,21 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   ): Promise<void> {
     const current = this.metadataByRunId.get(runId);
     if (!current) throw new Error(`RUN_NOT_FOUND: ${runId}`);
-    this.metadataByRunId.set(runId, {
+    const updated = {
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,
       providerRunId: runRef.providerRunId,
-      ...(runRef.providerNamespace ? { providerNamespace: runRef.providerNamespace } : {}),
-      ...(runRef.providerTaskQueue ? { providerTaskQueue: runRef.providerTaskQueue } : {}),
-      ...(runRef.providerConductorUrl ? { providerConductorUrl: runRef.providerConductorUrl } : {}),
-    });
+    };
+    if (runRef.providerNamespace) {
+      updated.providerNamespace = runRef.providerNamespace;
+    }
+    if (runRef.providerTaskQueue) {
+      updated.providerTaskQueue = runRef.providerTaskQueue;
+    }
+    if (runRef.providerConductorUrl) {
+      updated.providerConductorUrl = runRef.providerConductorUrl;
+    }
+    this.metadataByRunId.set(runId, updated);
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
@@ -62,55 +102,61 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
 
     // Atomic block (no awaits): write metadata + first events together.
     this.metadataByRunId.set(input.metadata.runId, input.metadata);
-    this.snapshotByRunId.set(input.metadata.runId, {
-      runId: input.metadata.runId,
-      status: 'PENDING',
-      paused: false,
-      cancelling: false,
-      steps: {},
-    });
+    this.snapshotByRunId.set(input.metadata.runId, this.createDefaultSnapshot(input.metadata.runId));
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
   }
 
   /**
    * Atomic in this in-memory implementation: assigning runSeq, appending, and enqueueing to outbox
-   * happen as a single mutation.
+   * happen as a single synchronous mutation (no awaits in the critical section).
+   *
+   * Note: this atomicity guarantee is process-local and only applies to this in-memory store.
    */
-  async appendAndEnqueueTx(runId: string, envelopes: RunEventInput[]): Promise<AppendResult> {
-    const events = this.eventsByRunId.get(runId) ?? [];
-    const idx = this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
+  async appendAndEnqueueTx(runId: string, eventsToAppend: RunEventInput[]): Promise<AppendResult> {
+    this.assertRunExists(runId);
+
+    if (eventsToAppend.length === 0) {
+      return { appended: [], deduped: [] };
+    }
+
+    const existingEvents = this.eventsByRunId.get(runId) ?? [];
+    const idempotencyIndex = this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
+    const baseRunSeq = existingEvents.length;
 
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
-    const persistedAt = '1970-01-01T00:00:00.000Z';
+    const persistedAt = InMemoryTxStore.EPOCH_ISO;
 
-    for (const env of envelopes) {
-      const existing = idx.get(env.idempotencyKey);
+    for (const [i, event] of eventsToAppend.entries()) {
+      this.assertEventInput(event, i);
+      if (event.runId !== runId) {
+        throw new Error(`INVALID_EVENT: runId mismatch at index ${i}`);
+      }
+
+      const existing = idempotencyIndex.get(event.idempotencyKey);
       if (existing) {
         deduped.push(existing);
         continue;
       }
 
-      const runSeq = events.length + appended.length + 1;
-      const withSeq: RunEventPersisted = { ...env, runSeq, persistedAt };
+      const runSeq = baseRunSeq + appended.length + 1;
+      if (runSeq > Number.MAX_SAFE_INTEGER) {
+        throw new Error(`RUN_SEQUENCE_OVERFLOW: ${runId}`);
+      }
+
+      const withSeq: RunEventPersisted = { ...event, runSeq, persistedAt };
       appended.push(withSeq);
-      idx.set(withSeq.idempotencyKey, withSeq);
+      idempotencyIndex.set(withSeq.idempotencyKey, withSeq);
     }
 
     // Commit events
-    const committed = events.concat(appended);
+    const committed = [...existingEvents, ...appended];
     this.eventsByRunId.set(runId, committed);
-    this.idempIndexByRunId.set(runId, idx);
+    this.idempIndexByRunId.set(runId, idempotencyIndex);
 
     // Incrementally update the materialized snapshot.
     if (appended.length > 0) {
-      const snap: WorkflowSnapshot = this.snapshotByRunId.get(runId) ?? {
-        runId,
-        status: 'PENDING',
-        paused: false,
-        cancelling: false,
-        steps: {},
-      };
+      const snap: WorkflowSnapshot = this.snapshotByRunId.get(runId) ?? this.createDefaultSnapshot(runId);
       for (const e of appended) {
         applyRunEvent(snap, e);
       }
@@ -122,7 +168,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
       this.outboxCounter += 1;
       this.pending.push({
         id: `outbox_${this.outboxCounter}`,
-        createdAt: '1970-01-01T00:00:00.000Z',
+        createdAt: InMemoryTxStore.EPOCH_ISO,
         idempotencyKey: e.idempotencyKey,
         payload: e,
         attempts: 0,
@@ -157,7 +203,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   }
 
   async enqueueTx(_runId: string, _events: RunEventPersisted[]): Promise<void> {
-    // No-op: enqueue is already performed inside appendEventsTx for this store.
+    // No-op: enqueue is already performed inside appendAndEnqueueTx for this store.
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
@@ -188,7 +234,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
         runId: rec.payload.runId,
         payload: rec.payload,
         lastError: error,
-        deadLetteredAt: '1970-01-01T00:00:00.000Z',
+        deadLetteredAt: InMemoryTxStore.EPOCH_ISO,
       });
     }
   }

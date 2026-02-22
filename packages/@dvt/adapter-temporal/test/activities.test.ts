@@ -78,6 +78,29 @@ class TestTxStore {
     return this.metadataByRun.get(runId) ?? null;
   }
 
+  async saveProviderRef(
+    runId: string,
+    runRef: {
+      providerWorkflowId: string;
+      providerRunId: string;
+      providerNamespace?: string;
+      providerTaskQueue?: string;
+      providerConductorUrl?: string;
+    }
+  ): Promise<void> {
+    const current = this.metadataByRun.get(runId);
+    if (!current) return;
+
+    this.metadataByRun.set(runId, {
+      ...current,
+      providerWorkflowId: runRef.providerWorkflowId,
+      providerRunId: runRef.providerRunId,
+      ...(runRef.providerNamespace ? { providerNamespace: runRef.providerNamespace } : {}),
+      ...(runRef.providerTaskQueue ? { providerTaskQueue: runRef.providerTaskQueue } : {}),
+      ...(runRef.providerConductorUrl ? { providerConductorUrl: runRef.providerConductorUrl } : {}),
+    });
+  }
+
   async appendEventsTx(
     runId: string,
     envelopes: Omit<EventEnvelope, 'runSeq'>[]
@@ -379,41 +402,29 @@ describe('stepActivities', () => {
       )
     );
 
-    it('rejects step with unknown fields', async () => {
-      const deps = buildDeps();
-      const acts = createActivities(deps);
+    it(
+      'rejects step with unknown fields',
+      expectExecuteStepRejects(
+        { stepId: 's1', kind: 'test', forbidden: 'field' },
+        'INVALID_STEP_SCHEMA: field_not_allowed:forbidden'
+      )
+    );
 
-      await expect(
-        acts.executeStep({
-          step: { stepId: 's1', kind: 'test', forbidden: 'field' },
-          ctx: CTX,
-        })
-      ).rejects.toThrow('INVALID_STEP_SCHEMA: field_not_allowed:forbidden');
-    });
+    it(
+      'simulates transient error when step requests transient failure',
+      expectExecuteStepRejects(
+        { stepId: 's1', kind: 'test', simulateError: 'transient' },
+        'TRANSIENT_STEP_ERROR:s1'
+      )
+    );
 
-    it('simulates transient error when step requests transient failure', async () => {
-      const deps = buildDeps();
-      const acts = createActivities(deps);
-
-      await expect(
-        acts.executeStep({
-          step: { stepId: 's1', kind: 'test', simulateError: 'transient' },
-          ctx: CTX,
-        })
-      ).rejects.toThrow('TRANSIENT_STEP_ERROR:s1');
-    });
-
-    it('simulates permanent error when step requests permanent failure', async () => {
-      const deps = buildDeps();
-      const acts = createActivities(deps);
-
-      await expect(
-        acts.executeStep({
-          step: { stepId: 's1', kind: 'test', simulateError: 'permanent' },
-          ctx: CTX,
-        })
-      ).rejects.toThrow('PERMANENT_STEP_ERROR:s1');
-    });
+    it(
+      'simulates permanent error when step requests permanent failure',
+      expectExecuteStepRejects(
+        { stepId: 's1', kind: 'test', simulateError: 'permanent' },
+        'PERMANENT_STEP_ERROR:s1'
+      )
+    );
   });
 
   describe('saveRunMetadata', () => {
@@ -426,6 +437,8 @@ describe('stepActivities', () => {
         projectId: 'proj-1',
         environmentId: 'env-1',
         runId: 'run-1',
+        planId: 'p1',
+        planVersion: 'v1',
         provider: 'temporal',
         providerWorkflowId: 'run-1',
         providerRunId: 'run-1',

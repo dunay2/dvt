@@ -1,3 +1,2 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
+export {};
 //# sourceMappingURL=IOutboxStorageAdapter.v1.js.map

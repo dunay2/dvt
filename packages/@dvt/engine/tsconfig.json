@@ -18,8 +18,8 @@
     "declaration": true,
     "sourceMap": true,
     "paths": {
-      "@dvt/contracts": ["../contracts/dist/index.d.ts"],
-      "@dvt/contracts/*": ["../contracts/dist/*"]
+      "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/contracts/*": ["packages/@dvt/contracts/dist/*"]
     }
   },
   "include": ["src/**/*"],

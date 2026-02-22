@@ -1,3 +1,2 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
+export {};
 //# sourceMappingURL=IStateStoreAdapter.v1.js.map
