@@ -138,16 +138,16 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-const prettierFiles = changed.filter(f => /\.(ts|js|json|md|yml|yaml|tsx)$/.test(f));
+const prettierFiles = changed.filter((f) => /\.(ts|js|json|md|yml|yaml|tsx)$/.test(f));
 const eslintFiles = changed
-  .filter(f => /\.(ts|tsx|js)$/.test(f))
+  .filter((f) => /\.(ts|tsx|js)$/.test(f))
   // Frontend is not yet part of the repo's root TypeScript/ESLint project setup.
   // Exclude it from pre-push checks until it has its own tsconfig + eslint config integration.
-  .filter(f => !f.startsWith('packages/frontend/'));
+  .filter((f) => !f.startsWith('packages/frontend/'));
 
 // remove deleted files from the lists
-const existingPrettierFiles = prettierFiles.filter(f => fs.existsSync(f));
-const existingEslintFiles = eslintFiles.filter(f => fs.existsSync(f));
+const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(f));
+const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(f));
 
 if (existingPrettierFiles.length) {
   console.log('Running Prettier check on changed files:');

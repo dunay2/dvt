@@ -39,7 +39,8 @@ function toBulletList(items, formatter) {
 }
 
 function buildPrompt(payload) {
-  const first = Array.isArray(payload.results) && payload.results.length > 0 ? payload.results[0] : null;
+  const first =
+    Array.isArray(payload.results) && payload.results.length > 0 ? payload.results[0] : null;
 
   if (!first) {
     return [
@@ -73,7 +74,8 @@ function buildPrompt(payload) {
     '## Related decisions (ADRs)',
     toBulletList(
       decisiones,
-      (d) => `${d.title || d.titulo || 'no title'} | status=${d.status || d.estado || 'n/a'} | date=${d.date || d.fecha || 'n/a'}`
+      (d) =>
+        `${d.title || d.titulo || 'no title'} | status=${d.status || d.estado || 'n/a'} | date=${d.date || d.fecha || 'n/a'}`
     ),
     '',
     '## Owners / experts',

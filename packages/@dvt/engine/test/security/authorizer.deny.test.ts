@@ -44,11 +44,18 @@ class CountingAdapter implements IProviderAdapter {
     this.cancelCalls += 1;
   }
 
-  async getRunStatus(_runRef: { provider: 'mock'; workflowId: string; runId: string }): Promise<{ runId: string; status: 'PENDING' }> {
+  async getRunStatus(_runRef: {
+    provider: 'mock';
+    workflowId: string;
+    runId: string;
+  }): Promise<{ runId: string; status: 'PENDING' }> {
     return { runId: 'r', status: 'PENDING' };
   }
 
-  async signal(_runRef: { provider: 'mock'; workflowId: string; runId: string }, _request: import('@dvt/contracts').SignalRequest): Promise<void> {
+  async signal(
+    _runRef: { provider: 'mock'; workflowId: string; runId: string },
+    _request: import('@dvt/contracts').SignalRequest
+  ): Promise<void> {
     this.signalCalls += 1;
   }
 }
@@ -112,12 +119,18 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-1',
+      planId: 'p',
+      planVersion: '1',
       provider: 'mock',
       providerWorkflowId: 'wf',
       providerRunId: 'run-1',
     });
 
-    const runRef: import('@dvt/contracts').EngineRunRef = { provider: 'mock', workflowId: 'wf', runId: 'run-1' };
+    const runRef: import('@dvt/contracts').EngineRunRef = {
+      provider: 'mock',
+      workflowId: 'wf',
+      runId: 'run-1',
+    };
     const req: import('@dvt/contracts').SignalRequest = { signalId: 's1', type: 'PAUSE' };
 
     await expect(engine.signal(runRef, req)).rejects.toBeInstanceOf(AuthorizationError);

@@ -34,7 +34,9 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log('Usage: node scripts/neo4j/neo4j-query-context.cjs [--file <repo/path>] [--out <file>]');
+  console.log(
+    'Usage: node scripts/neo4j/neo4j-query-context.cjs [--file <repo/path>] [--out <file>]'
+  );
 }
 
 async function run() {
@@ -62,14 +64,24 @@ async function run() {
     const rows = result.records.map((record) => ({
       archivo: record.get('a') ? record.get('a').properties : null,
       modulo: record.get('m') ? record.get('m').properties : null,
-      dependencias: (record.get('dependencias') || []).map((n) => (n ? n.properties : null)).filter(Boolean),
-      decisiones: (record.get('decisiones') || []).map((n) => (n ? n.properties : null)).filter(Boolean),
-      personas: (record.get('personas') || []).map((n) => (n ? n.properties : null)).filter(Boolean),
+      dependencias: (record.get('dependencias') || [])
+        .map((n) => (n ? n.properties : null))
+        .filter(Boolean),
+      decisiones: (record.get('decisiones') || [])
+        .map((n) => (n ? n.properties : null))
+        .filter(Boolean),
+      personas: (record.get('personas') || [])
+        .map((n) => (n ? n.properties : null))
+        .filter(Boolean),
     }));
 
     const outPath = path.resolve(args.out);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, JSON.stringify({ filePath: args.filePath, results: rows }, null, 2), 'utf-8');
+    fs.writeFileSync(
+      outPath,
+      JSON.stringify({ filePath: args.filePath, results: rows }, null, 2),
+      'utf-8'
+    );
 
     console.log(`✅ Context query completed. Output: ${args.out}`);
   } finally {
@@ -82,4 +94,3 @@ run().catch((error) => {
   console.error('❌ Query failed:', error.message);
   process.exit(1);
 });
-

@@ -151,7 +151,12 @@ module.exports = [
     files: ['apps/web/src/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: { tsconfigRootDir: __dirname },
-      globals: { window: 'readonly', document: 'readonly', navigator: 'readonly', React: 'readonly' },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        React: 'readonly',
+      },
     },
     rules: {
       // UI app: relajar reglas estrictas que generan miles de warnings/errores sin valor
@@ -185,11 +190,13 @@ module.exports = [
         'error',
         {
           selector: "NewExpression[callee.name='Date']",
-          message: 'new Date() is non-deterministic in engine code. Use the injected IClock interface.',
+          message:
+            'new Date() is non-deterministic in engine code. Use the injected IClock interface.',
         },
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
-          message: 'process.env is forbidden in engine code. Pass configuration explicitly via dependency injection.',
+          message:
+            'process.env is forbidden in engine code. Pass configuration explicitly via dependency injection.',
         },
       ],
       'no-restricted-properties': [
@@ -197,7 +204,8 @@ module.exports = [
         {
           object: 'Date',
           property: 'now',
-          message: 'Date.now() is non-deterministic in engine code. Use the injected IClock interface.',
+          message:
+            'Date.now() is non-deterministic in engine code. Use the injected IClock interface.',
         },
         {
           object: 'Math',
@@ -230,7 +238,8 @@ module.exports = [
         },
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
-          message: 'process.env is forbidden in workflows. Configuration must come from workflow arguments.',
+          message:
+            'process.env is forbidden in workflows. Configuration must come from workflow arguments.',
         },
       ],
       'no-restricted-properties': [
@@ -265,12 +274,30 @@ module.exports = [
         'error',
         {
           paths: [
-            { name: 'fs', message: 'File system access is forbidden in workflows. Delegate to activities.' },
-            { name: 'fs/promises', message: 'File system access is forbidden in workflows. Delegate to activities.' },
-            { name: 'http', message: 'Network access is forbidden in workflows. Delegate to activities.' },
-            { name: 'https', message: 'Network access is forbidden in workflows. Delegate to activities.' },
-            { name: 'net', message: 'Network access is forbidden in workflows. Delegate to activities.' },
-            { name: 'child_process', message: 'Process spawning is forbidden in workflows. Delegate to activities.' },
+            {
+              name: 'fs',
+              message: 'File system access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'fs/promises',
+              message: 'File system access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'http',
+              message: 'Network access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'https',
+              message: 'Network access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'net',
+              message: 'Network access is forbidden in workflows. Delegate to activities.',
+            },
+            {
+              name: 'child_process',
+              message: 'Process spawning is forbidden in workflows. Delegate to activities.',
+            },
           ],
         },
       ],
@@ -364,7 +391,12 @@ module.exports = [
         ecmaVersion: 2022,
         sourceType: 'module',
       },
-      globals: { __dirname: 'readonly', require: 'readonly', module: 'readonly', process: 'readonly' },
+      globals: {
+        __dirname: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        process: 'readonly',
+      },
     },
     rules: {
       'import/no-unresolved': 'off',

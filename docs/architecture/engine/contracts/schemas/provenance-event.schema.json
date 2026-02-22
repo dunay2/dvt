@@ -128,7 +128,16 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["graph", "canvas", "plan", "run", "step", "artifact", "config", "plugin"]
+          "enum": [
+            "graph",
+            "canvas",
+            "plan",
+            "run",
+            "step",
+            "artifact",
+            "config",
+            "plugin"
+          ]
         },
         "id": {
           "type": "string",

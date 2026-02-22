@@ -52,8 +52,9 @@ We require a mechanism that:
 1. Supports impact analysis.
 1. Generates an architecture dependency graph.
 1. Detects both:
-  - Code without ADR
-  - ADR without implementation
+
+- Code without ADR
+- ADR without implementation
 
 This system must not rely on manual discipline alone.
 
@@ -252,8 +253,8 @@ We require a mechanism that:
 1. Supports impact analysis.\
 1. Generates an architecture dependency graph.\
 1. Detects both:
-    - Code without ADR
-    - ADR without implementation
+   - Code without ADR
+   - ADR without implementation
 
 This system must not rely on manual discipline alone.
 
@@ -510,7 +511,6 @@ Fail if orphaned ADR.
 name: ADR Governance
 
 on: [pull_request]
-
 
 ```yaml
 jobs:

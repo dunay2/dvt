@@ -4,11 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  SCHEMA_CONSTRAINTS,
-  collectGraphRows,
-  chunk,
-} = require('./neo4j-ingest-repo.cjs');
+const { SCHEMA_CONSTRAINTS, collectGraphRows, chunk } = require('./neo4j-ingest-repo.cjs');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const DEFAULT_OUTPUT = path.join(__dirname, 'generated-repo.cypher');
@@ -44,7 +40,11 @@ function cypherValue(value) {
   if (value === null || value === undefined) return 'null';
   if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'null';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
-  const str = String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r/g, '').replace(/\n/g, '\\n');
+  const str = String(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, '')
+    .replace(/\n/g, '\\n');
   return `'${str}'`;
 }
 
@@ -96,78 +96,105 @@ function generateCypher({ includeReset }) {
 
   if (includeReset) {
     lines.push('// Optional reset block');
-    for (const label of ['Archivo', 'Modulo', 'Issue', 'Decision', 'Funcion', 'Persona', 'Roadmap', 'FaseRoadmap']) {
+    for (const label of [
+      'Archivo',
+      'Modulo',
+      'Issue',
+      'Decision',
+      'Funcion',
+      'Persona',
+      'Roadmap',
+      'FaseRoadmap',
+    ]) {
       lines.push(`MATCH (n:${label}) DETACH DELETE n;`);
     }
     lines.push('');
   }
 
   lines.push('// Modules + files');
-  lines.push(...buildBatchStatements(files, 300, (row) => {
-    const moduleMatch = `MERGE (m:Modulo ${propsToCypher({ path: row.moduloPath })})`;
-    const moduleSet = `SET m += ${propsToCypher({ nombre: row.moduloNombre, lenguaje: row.moduloLenguaje })}`;
-    const fileMatch = `MERGE (a:Archivo ${propsToCypher({ path: row.path })})`;
-    const fileSet = `SET a += ${propsToCypher({
-      nombre: row.nombre,
-      tipo: row.tipo,
-      bytes: row.bytes,
-      topico: row.topico,
-    })}`;
-    const rel = 'MERGE (m)-[:CONTIENE]->(a)';
-    return `${moduleMatch}\n${moduleSet}\n${fileMatch}\n${fileSet}\n${rel};`;
-  }));
+  lines.push(
+    ...buildBatchStatements(files, 300, (row) => {
+      const moduleMatch = `MERGE (m:Modulo ${propsToCypher({ path: row.moduloPath })})`;
+      const moduleSet = `SET m += ${propsToCypher({ nombre: row.moduloNombre, lenguaje: row.moduloLenguaje })}`;
+      const fileMatch = `MERGE (a:Archivo ${propsToCypher({ path: row.path })})`;
+      const fileSet = `SET a += ${propsToCypher({
+        nombre: row.nombre,
+        tipo: row.tipo,
+        bytes: row.bytes,
+        topico: row.topico,
+      })}`;
+      const rel = 'MERGE (m)-[:CONTIENE]->(a)';
+      return `${moduleMatch}\n${moduleSet}\n${fileMatch}\n${fileSet}\n${rel};`;
+    })
+  );
   lines.push('');
 
   lines.push('// File dependencies');
-  lines.push(...buildBatchStatements(deps, 500, (row) => {
-    return `MATCH (src:Archivo ${propsToCypher({ path: row.src })})\nMATCH (dst:Archivo ${propsToCypher({ path: row.dst })})\nMERGE (src)-[:DEPENDE]->(dst);`;
-  }));
+  lines.push(
+    ...buildBatchStatements(deps, 500, (row) => {
+      return `MATCH (src:Archivo ${propsToCypher({ path: row.src })})\nMATCH (dst:Archivo ${propsToCypher({ path: row.dst })})\nMERGE (src)-[:DEPENDE]->(dst);`;
+    })
+  );
   lines.push('');
 
   lines.push('// Class/function definitions');
-  lines.push(...buildBatchStatements(classRows, 500, (row) => {
-    return `MERGE (f:Funcion ${propsToCypher({ key: row.key })})\nSET f += ${propsToCypher({ nombre: row.nombre, linea_inicio: row.line, path: row.file })}\nWITH f\nMATCH (a:Archivo ${propsToCypher({ path: row.file })})\nMERGE (a)-[:DEFINE]->(f);`;
-  }));
+  lines.push(
+    ...buildBatchStatements(classRows, 500, (row) => {
+      return `MERGE (f:Funcion ${propsToCypher({ key: row.key })})\nSET f += ${propsToCypher({ nombre: row.nombre, linea_inicio: row.line, path: row.file })}\nWITH f\nMATCH (a:Archivo ${propsToCypher({ path: row.file })})\nMERGE (a)-[:DEFINE]->(f);`;
+    })
+  );
   lines.push('');
 
   lines.push('// Issue references from files');
-  lines.push(...buildBatchStatements(issues, 500, (row) => {
-    return `MERGE (i:Issue ${propsToCypher({ key: row.key })})\nSET i += ${propsToCypher({ number: row.number, repo: 'dunay2/dvt', url: row.url })}\nWITH i\nMATCH (a:Archivo ${propsToCypher({ path: row.file })})\nMERGE (a)-[:REFERENCIA_ISSUE]->(i);`;
-  }));
+  lines.push(
+    ...buildBatchStatements(issues, 500, (row) => {
+      return `MERGE (i:Issue ${propsToCypher({ key: row.key })})\nSET i += ${propsToCypher({ number: row.number, repo: 'dunay2/dvt', url: row.url })}\nWITH i\nMATCH (a:Archivo ${propsToCypher({ path: row.file })})\nMERGE (a)-[:REFERENCIA_ISSUE]->(i);`;
+    })
+  );
   lines.push('');
 
   lines.push('// Roadmap root nodes');
-  lines.push(...buildBatchStatements(roadmapNodes, 20, (row) => {
-    return `MERGE (r:Roadmap ${propsToCypher({ id: row.id })})\nSET r += ${propsToCypher({ path: row.path, nombre: row.name, topico: row.topico })};`;
-  }));
+  lines.push(
+    ...buildBatchStatements(roadmapNodes, 20, (row) => {
+      return `MERGE (r:Roadmap ${propsToCypher({ id: row.id })})\nSET r += ${propsToCypher({ path: row.path, nombre: row.name, topico: row.topico })};`;
+    })
+  );
   lines.push('');
 
   lines.push('// Roadmap phase nodes');
-  lines.push(...buildBatchStatements(phaseNodes, 50, (row) => {
-    return `MERGE (p:FaseRoadmap ${propsToCypher({ id: row.id })})\nSET p += ${propsToCypher({ numero: row.number, nombre: row.name, orden: row.order, path: row.sourcePath })};`;
-  }));
+  lines.push(
+    ...buildBatchStatements(phaseNodes, 50, (row) => {
+      return `MERGE (p:FaseRoadmap ${propsToCypher({ id: row.id })})\nSET p += ${propsToCypher({ numero: row.number, nombre: row.name, orden: row.order, path: row.sourcePath })};`;
+    })
+  );
   lines.push('');
 
   lines.push('// Roadmap containment and unlock links');
-  lines.push(...buildBatchStatements(phaseLinks, 100, (row) => {
-    if (row.relation === 'DESBLOQUEA') {
-      return `MATCH (p1:FaseRoadmap ${propsToCypher({ id: row.roadmapId })})\nMATCH (p2:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (p1)-[rel:DESBLOQUEA]->(p2)\nSET rel += ${propsToCypher({ orden: row.order })};`;
-    }
+  lines.push(
+    ...buildBatchStatements(phaseLinks, 100, (row) => {
+      if (row.relation === 'DESBLOQUEA') {
+        return `MATCH (p1:FaseRoadmap ${propsToCypher({ id: row.roadmapId })})\nMATCH (p2:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (p1)-[rel:DESBLOQUEA]->(p2)\nSET rel += ${propsToCypher({ orden: row.order })};`;
+      }
 
-    return `MATCH (r:Roadmap ${propsToCypher({ id: row.roadmapId })})\nMATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (r)-[rel:CONTIENE_FASE]->(p)\nSET rel += ${propsToCypher({ orden: row.order })};`;
-  }));
+      return `MATCH (r:Roadmap ${propsToCypher({ id: row.roadmapId })})\nMATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (r)-[rel:CONTIENE_FASE]->(p)\nSET rel += ${propsToCypher({ orden: row.order })};`;
+    })
+  );
   lines.push('');
 
   lines.push('// Roadmap phase issue tracking');
-  lines.push(...buildBatchStatements(phaseIssueRows, 200, (row) => {
-    return `MATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (i:Issue ${propsToCypher({ key: row.key })})\nSET i += ${propsToCypher({ number: row.number, repo: 'dunay2/dvt', url: row.url })}\nMERGE (p)-[:TRACKED_BY]->(i);`;
-  }));
+  lines.push(
+    ...buildBatchStatements(phaseIssueRows, 200, (row) => {
+      return `MATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nMERGE (i:Issue ${propsToCypher({ key: row.key })})\nSET i += ${propsToCypher({ number: row.number, repo: 'dunay2/dvt', url: row.url })}\nMERGE (p)-[:TRACKED_BY]->(i);`;
+    })
+  );
   lines.push('');
 
   lines.push('// Roadmap phase status from progress metrics');
-  lines.push(...buildBatchStatements(roadmapStatusRows, 50, (row) => {
-    return `MATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nSET p += ${propsToCypher({ estado: row.status })};`;
-  }));
+  lines.push(
+    ...buildBatchStatements(roadmapStatusRows, 50, (row) => {
+      return `MATCH (p:FaseRoadmap ${propsToCypher({ id: row.phaseId })})\nSET p += ${propsToCypher({ estado: row.status })};`;
+    })
+  );
   lines.push('');
 
   lines.push('// Roadmap source file links to roadmap root');
@@ -177,15 +204,19 @@ function generateCypher({ includeReset }) {
   lines.push('');
 
   lines.push('// ADR decision nodes');
-  lines.push(...buildBatchStatements(adrRows, 100, (row) => {
-    return `MERGE (d:Decision ${propsToCypher({ id: row.id })})\nSET d += ${propsToCypher({ title: row.title, date: row.date, status: row.status, path: row.path })}\nREMOVE d.titulo, d.fecha, d.estado\nWITH d\nMATCH (a:Archivo ${propsToCypher({ path: row.path })})\nMERGE (a)-[:IMPLEMENTA_DECISION]->(d);`;
-  }));
+  lines.push(
+    ...buildBatchStatements(adrRows, 100, (row) => {
+      return `MERGE (d:Decision ${propsToCypher({ id: row.id })})\nSET d += ${propsToCypher({ title: row.title, date: row.date, status: row.status, path: row.path })}\nREMOVE d.titulo, d.fecha, d.estado\nWITH d\nMATCH (a:Archivo ${propsToCypher({ path: row.path })})\nMERGE (a)-[:IMPLEMENTA_DECISION]->(d);`;
+    })
+  );
   lines.push('');
 
   lines.push('// ADR tracked-by issues');
-  lines.push(...buildBatchStatements(adrIssueRows, 500, (row) => {
-    return `MATCH (d:Decision ${propsToCypher({ id: row.adrId })})\nMERGE (i:Issue ${propsToCypher({ key: row.key })})\nSET i += ${propsToCypher({ number: row.number, repo: 'dunay2/dvt', url: row.url })}\nMERGE (d)-[:TRACKED_BY]->(i);`;
-  }));
+  lines.push(
+    ...buildBatchStatements(adrIssueRows, 500, (row) => {
+      return `MATCH (d:Decision ${propsToCypher({ id: row.adrId })})\nMERGE (i:Issue ${propsToCypher({ key: row.key })})\nSET i += ${propsToCypher({ number: row.number, repo: 'dunay2/dvt', url: row.url })}\nMERGE (d)-[:TRACKED_BY]->(i);`;
+    })
+  );
   lines.push('');
 
   lines.push('// Derived roadmap phase links to artifacts and decisions');
@@ -244,4 +275,3 @@ module.exports = {
   propsToCypher,
   cypherValue,
 };
-

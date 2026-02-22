@@ -105,7 +105,9 @@ function inferVersionFromJson(content, relPath) {
     const json = JSON.parse(content);
 
     if (typeof json.schemaVersion === 'string' && json.schemaVersion.trim()) {
-      return json.schemaVersion.trim().startsWith('v') ? json.schemaVersion.trim() : `v${json.schemaVersion.trim()}`;
+      return json.schemaVersion.trim().startsWith('v')
+        ? json.schemaVersion.trim()
+        : `v${json.schemaVersion.trim()}`;
     }
 
     if (typeof json.title === 'string') {
@@ -233,7 +235,10 @@ function collectContracts() {
     const contract = normalizeContractLabel(inferDisplayName(rel, ext, content));
     const baseType = inferType(rel, ext);
     const type = inferTypeFromLabel(contract, baseType);
-    const version = ext === '.json' ? inferVersionFromJson(content, rel) : normalizeVersion(meta.version, rel, content);
+    const version =
+      ext === '.json'
+        ? inferVersionFromJson(content, rel)
+        : normalizeVersion(meta.version, rel, content);
 
     rows.push({
       area,
@@ -283,14 +288,7 @@ function replaceSection(content, newSection) {
   const before = content.slice(0, start);
   const after = content.slice(end);
 
-  const body = [
-    START_MARKER,
-    '',
-    newSection,
-    '',
-    '---',
-    '',
-  ].join('\n');
+  const body = [START_MARKER, '', newSection, '', '---', ''].join('\n');
 
   return `${before}${body}${after}`;
 }
@@ -318,7 +316,9 @@ async function run() {
 
   if (next !== readme) {
     fs.writeFileSync(README_PATH, next, 'utf8');
-    console.log(`✅ Updated ${toPosix(path.relative(REPO_ROOT, README_PATH))} with ${rows.length} contracts`);
+    console.log(
+      `✅ Updated ${toPosix(path.relative(REPO_ROOT, README_PATH))} with ${rows.length} contracts`
+    );
   } else {
     console.log(`✅ No changes. Contract index is up-to-date (${rows.length} contracts)`);
   }

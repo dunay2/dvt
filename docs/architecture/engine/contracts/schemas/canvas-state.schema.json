@@ -4,7 +4,13 @@
   "title": "CanvasState v1",
   "description": "Stable workspace canvas state contract for deterministic reads/writes.",
   "type": "object",
-  "required": ["schemaVersion", "canvasId", "revision", "viewport", "positions"],
+  "required": [
+    "schemaVersion",
+    "canvasId",
+    "revision",
+    "viewport",
+    "positions"
+  ],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": {
