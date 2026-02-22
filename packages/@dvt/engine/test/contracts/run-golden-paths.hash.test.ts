@@ -70,13 +70,14 @@ const PLANS_DIR = path.resolve(__dirname, 'plans');
 // ────────────────────────────────────────────────────────────────────────────
 
 describe('golden path baseline hashes', () => {
-  let baseline: GoldenBaseline | null = null;
 
-  try {
-    baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')) as GoldenBaseline;
-  } catch {
-    baseline = null;
-  }
+  const baseline: GoldenBaseline | null = (() => {
+    try {
+      return JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')) as GoldenBaseline;
+    } catch {
+      return null;
+    }
+  })();
 
   if (!baseline) {
     it('baseline file must exist at .golden/hashes.json', () => {
