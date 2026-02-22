@@ -28,7 +28,12 @@ import type {
   EventInput,
   RunMetadata,
 } from '../src/engine-types.js';
-import { loadTemporalAdapterConfig, TemporalAdapter, TemporalWorkerHost } from '../src/index.js';
+import {
+  loadTemporalAdapterConfig,
+  TemporalAdapter,
+  TemporalWorkerHost,
+  toTemporalTaskQueue,
+} from '../src/index.js';
 
 // Local outbox record type for test doubles — mirrors engine's OutboxRecord shape.
 interface OutboxRecord {
@@ -47,12 +52,13 @@ interface OutboxRecord {
 const TEST_DIR = dirname(fileURLToPath(import.meta.url));
 const WORKFLOW_PATH = resolve(TEST_DIR, '../src/workflows/RunPlanWorkflow.ts');
 const WORKFLOW_JS_PATH = WORKFLOW_PATH.replace(/\.ts$/, '.js');
+const WORKFLOW_DIST_JS_PATH = resolve(TEST_DIR, '../dist/workflows/RunPlanWorkflow.js');
 const INTEGRATION_TEST_TIMEOUT = 60_000;
 
 // Artifact validation (ADR-0001 Section 1)
-if (!existsSync(WORKFLOW_JS_PATH) && process.env.CI) {
+if (!existsSync(WORKFLOW_JS_PATH) && !existsSync(WORKFLOW_DIST_JS_PATH) && process.env.CI) {
   console.error(`
-❌ Workflow artifact not found: ${WORKFLOW_JS_PATH}
+❌ Workflow artifact not found: ${WORKFLOW_JS_PATH} (or ${WORKFLOW_DIST_JS_PATH})
    Run 'pnpm build' first or ensure build completes successfully.
   `);
   process.exit(1);
@@ -782,7 +788,10 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       const worker = new TemporalWorkerHost({
-        temporalConfig,
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+        },
         workflowsPath: WORKFLOW_PATH,
         activityDeps: createActivityDeps(store, outbox, planBytes),
       });
@@ -840,7 +849,10 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       const worker = new TemporalWorkerHost({
-        temporalConfig,
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
+        },
         workflowsPath: WORKFLOW_PATH,
         activityDeps: createActivityDeps(store, outbox, planBytes),
       });
@@ -915,7 +927,10 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       const worker = new TemporalWorkerHost({
-        temporalConfig,
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+        },
         workflowsPath: WORKFLOW_PATH,
         activityDeps: createActivityDeps(store, outbox, planBytes),
       });
@@ -991,7 +1006,10 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       const worker = new TemporalWorkerHost({
-        temporalConfig,
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+        },
         workflowsPath: WORKFLOW_PATH,
         activityDeps: createActivityDeps(store, outbox, planBytes),
       });

@@ -1,7 +1,7 @@
 markdown
 % DVT+ ADR Implementation Status & Roadmap % Architecture / Engineering
 % Version 1.2 % Date: 2026-02-21
-                    
+
 ---
 
 # 1. Document Control
