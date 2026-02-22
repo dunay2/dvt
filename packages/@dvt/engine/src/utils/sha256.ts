@@ -1,3 +1,6 @@
+/**
+ * @baseline ADR-0003
+ */
 import { createHash } from 'node:crypto';
 
 export function sha256Hex(data: Uint8Array | string): string {

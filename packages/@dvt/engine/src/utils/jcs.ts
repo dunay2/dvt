@@ -1,4 +1,7 @@
 /**
+ * @baseline ADR-0003
+ */
+/**
  * RFC 8785 JSON Canonicalization Scheme (JCS) implementation.
  *
  * Notes:

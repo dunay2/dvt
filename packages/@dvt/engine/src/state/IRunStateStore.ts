@@ -1,3 +1,6 @@
+/**
+ * @baseline ADR-0003
+ */
 import type {
   AppendResult,
   RunEventInput,

@@ -1,6 +1,7 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/versioning.ts
  * @baseline ADR-0017: ExecutionPlan Schema Versioning
+ * @version 0.1.0
  * @decision Adapters MUST declare their supported schemaVersion as a typed constant
  * @consequence matrix-alignment.test.ts imports this constant to validate plan-compat.json alignment in CI
  */
