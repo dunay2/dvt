@@ -32,7 +32,7 @@ class CountingAdapter implements IProviderAdapter {
   public cancelCalls = 0;
 
   async startRun(
-    planRef: any,
+    planRef: import('@dvt/contracts').PlanRef,
     ctx: RunContext
   ): Promise<{ provider: 'mock'; workflowId: string; runId: string }> {
     this.startCalls += 1;
@@ -48,13 +48,13 @@ class CountingAdapter implements IProviderAdapter {
     return { runId: 'r', status: 'PENDING' };
   }
 
-  async signal(_runRef: { provider: 'mock'; workflowId: string; runId: string }, _request: any): Promise<void> {
+  async signal(_runRef: { provider: 'mock'; workflowId: string; runId: string }, _request: import('@dvt/contracts').SignalRequest): Promise<void> {
     this.signalCalls += 1;
   }
 }
 
 function makeEngine(
-  authorizer: any,
+  authorizer: unknown,
   adapter: IProviderAdapter
 ): { engine: WorkflowEngine; store: InMemoryTxStore } {
   const store = new InMemoryTxStore();
@@ -72,7 +72,7 @@ function makeEngine(
     authorizer,
     planRefPolicy,
     adapters: new Map([[adapter.provider, adapter]]),
-  } as any);
+  } as unknown as ConstructorParameters<typeof WorkflowEngine>[0]);
 
   return { engine, store };
 }
@@ -82,13 +82,13 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const adapter = new CountingAdapter();
     const { engine } = makeEngine(new DenyAuthorizer(), adapter);
 
-    const planRef = {
+    const planRef: import('@dvt/contracts').PlanRef = {
       uri: 'https://plans/example.json',
       sha256: 'deadbeef',
       schemaVersion: 'v1.2',
       planId: 'p',
       planVersion: '1',
-    } as any;
+    };
 
     const ctx: RunContext = {
       tenantId: 't1',
@@ -115,10 +115,10 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       provider: 'mock',
       providerWorkflowId: 'wf',
       providerRunId: 'run-1',
-    } as any);
+    });
 
-    const runRef = { provider: 'mock', workflowId: 'wf', runId: 'run-1' } as any;
-    const req = { signalId: 's1', type: 'PAUSE' } as any;
+    const runRef: import('@dvt/contracts').EngineRunRef = { provider: 'mock', workflowId: 'wf', runId: 'run-1' };
+    const req: import('@dvt/contracts').SignalRequest = { signalId: 's1', type: 'PAUSE' };
 
     await expect(engine.signal(runRef, req)).rejects.toBeInstanceOf(AuthorizationError);
     expect(adapter.signalCalls).toBe(0);
@@ -129,13 +129,13 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const authorizer = new TenantScopeAuthorizer('tenant-B');
     const { engine } = makeEngine(authorizer, adapter);
 
-    const planRef = {
+    const planRef: import('@dvt/contracts').PlanRef = {
       uri: 'https://plans/example.json',
       sha256: 'deadbeef',
       schemaVersion: 'v1.2',
       planId: 'p',
       planVersion: '1',
-    } as any;
+    };
 
     const ctx: RunContext = {
       tenantId: 'tenant-A',
