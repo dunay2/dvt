@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* global console, process, __dirname, Buffer */
 
 const fs = require('fs');
 const path = require('path');
@@ -18,11 +17,12 @@ const {
   ContractValidationError,
 } = require('../contracts/dist/index.js');
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const PLANS_DIR = path.join(REPO_ROOT, 'packages', 'engine', 'test', 'contracts', 'plans');
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+const PLANS_DIR = path.join(REPO_ROOT, 'packages', '@dvt', 'engine', 'test', 'contracts', 'plans');
 const RESULTS_FILE = path.join(
   REPO_ROOT,
   'packages',
+  '@dvt',
   'engine',
   'test',
   'contracts',
