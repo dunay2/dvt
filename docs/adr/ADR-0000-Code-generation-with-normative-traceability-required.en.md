@@ -253,14 +253,14 @@ must be programmatically enforced.
 
 We require a mechanism that:
 
-1.  Binds implementation artifacts to accepted ADRs.\
-2.  Survives refactoring and file movement.\
-3.  Is machine-verifiable in CI.\
-4.  Supports impact analysis.\
-5.  Generates an architecture dependency graph.\
-6.  Detects both:
-    - Code without ADR
-    - ADR without implementation
+1. Binds implementation artifacts to accepted ADRs.\
+1. Survives refactoring and file movement.\
+1. Is machine-verifiable in CI.\
+1. Supports impact analysis.\
+1. Generates an architecture dependency graph.\
+1. Detects both:
+  - Code without ADR
+  - ADR without implementation
 
 This system must not rely on manual discipline alone.
 
