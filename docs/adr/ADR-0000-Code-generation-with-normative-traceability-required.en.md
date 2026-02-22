@@ -42,7 +42,7 @@ Architectural erosion: https://www.oreilly.com/library/view/software-architectur
 
 Technical Debt: https://martinfowler.com/bliki/TechnicalDebt.html
 
-2. Problem Statement
+1. Problem Statement
 
 We require a mechanism that:
 
@@ -58,7 +58,7 @@ We require a mechanism that:
 
 This system must not rely on manual discipline alone.
 
-3. Scope (Important Constraint)
+1. Scope (Important Constraint)
 
 This requirement applies to:
 
@@ -92,7 +92,7 @@ Tests unrelated to architectural decisions
 
 This prevents traceability noise.
 
-4. Decision
+1. Decision
    4.1 Mandatory In-Code Traceability Header
 
 Every governed artifact MUST begin with:
