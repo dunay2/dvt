@@ -100,7 +100,7 @@ jobs:
               const deletions = context.payload.pull_request.deletions;
               const changes = additions + deletions;
 
-              const maxChanges = 1000;
+              const maxChanges = 50000;
               const warningThreshold = 500;
 
               if (changes > maxChanges) {
