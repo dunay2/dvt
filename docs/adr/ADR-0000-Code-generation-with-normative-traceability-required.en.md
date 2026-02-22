@@ -408,13 +408,13 @@ Add a new “done when” item in Acceptance Criteria:
 
 Neo4j contains (:ADR)-[:IMPLEMENTED_BY]-(:File) and (:Module)-[:CONTAINS]->(:File) for all governed files.
 
-5. Automation (Mandatory)
+1. Automation (Mandatory)
 
 Traceability without automation is ritual.
 
 We introduce automated enforcement.
 
-6. Automation Strategy
+1. Automation Strategy
    6.1 Header Validation
 
 Use:
@@ -523,7 +523,7 @@ jobs:
       - run: node tools/traceability/validate-adr-coverage.js
 ```
 
-7. Architecture Graph Generator
+1. Architecture Graph Generator
 
 Now we formalize it.
 
@@ -609,7 +609,7 @@ RETURN f
 
 You instantly get blast radius.
 
-9. Consequences
+1. Consequences
 
 Positive:
 
@@ -641,7 +641,7 @@ IDE snippets
 
 Autofix ESLint rule
 
-10. Acceptance Criteria
+1. Acceptance Criteria
 
 ADR-0000 is complete when:
 
