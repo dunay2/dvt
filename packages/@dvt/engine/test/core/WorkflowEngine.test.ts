@@ -205,25 +205,75 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(events).toHaveLength(0);
   });
 
-  it('getRunStatus falls back to projected snapshot when adapter status fails', async () => {
+  // ADR-0015: getRunStatus must not call the adapter under any circumstances.
+  it('getRunStatus returns projected state without calling the adapter', async () => {
+    let adapterCalled = false;
     const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
       [
         'temporal',
         makeTemporalAdapter({
           async getRunStatus() {
-            throw new Error('status unavailable');
+            adapterCalled = true;
+            return { runId: 'x', status: 'RUNNING' } as RunStatusSnapshot;
           },
         }),
       ],
     ]);
 
     const { engine } = createEngine({ adapters });
-
-    const runRef = await engine.startRun(makePlanRef(), makeContext('status-fallback-1'));
+    const runRef = await engine.startRun(makePlanRef(), makeContext('status-pure-1'));
     const snapshot = await engine.getRunStatus(runRef);
 
-    expect(snapshot.runId).toBe('status-fallback-1');
+    expect(adapterCalled).toBe(false);
+    expect(snapshot.runId).toBe('status-pure-1');
     expect(snapshot.status).toBe('PENDING');
+  });
+
+  it('enrichRunStatus calls adapter and merges substatus onto projected base', async () => {
+    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+      [
+        'temporal',
+        makeTemporalAdapter({
+          async getRunStatus(runRef) {
+            return {
+              runId: runRef.runId,
+              status: 'RUNNING',
+              substatus: 'DRAINING',
+              message: 'graceful shutdown in progress',
+            } as RunStatusSnapshot;
+          },
+        }),
+      ],
+    ]);
+
+    const { engine } = createEngine({ adapters });
+    const runRef = await engine.startRun(makePlanRef(), makeContext('enrich-1'));
+    const enriched = await engine.enrichRunStatus(runRef);
+
+    expect(enriched.runId).toBe('enrich-1');
+    // Base status comes from event log (PENDING after RunQueued).
+    expect(enriched.status).toBe('PENDING');
+    // Adapter-provided enrichment is merged on top.
+    expect(enriched.substatus).toBe('DRAINING');
+    expect(enriched.message).toBe('graceful shutdown in progress');
+  });
+
+  it('enrichRunStatus throws when adapter call fails (no silent swallow)', async () => {
+    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+      [
+        'temporal',
+        makeTemporalAdapter({
+          async getRunStatus() {
+            throw new Error('provider unavailable');
+          },
+        }),
+      ],
+    ]);
+
+    const { engine } = createEngine({ adapters });
+    const runRef = await engine.startRun(makePlanRef(), makeContext('enrich-err-1'));
+
+    await expect(engine.enrichRunStatus(runRef)).rejects.toThrow(/provider unavailable/);
   });
 
   it('healthCheck reports degraded when an adapter ping fails', async () => {

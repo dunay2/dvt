@@ -17,6 +17,19 @@ import type {
 export interface IWorkflowEngine {
   startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;
   cancelRun(engineRunRef: EngineRunRef): Promise<void>;
+
+  /**
+   * ADR-0015: Returns status from the event log + materialized snapshot only.
+   * MUST NOT call the provider adapter. Latency is independent of adapter availability.
+   */
   getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot>;
+
+  /**
+   * ADR-0015: Calls the provider adapter for real-time substatus/message enrichment.
+   * Use for diagnostic / UI polling endpoints where adapter latency is acceptable.
+   * Circuit breaking is the infrastructure layer's responsibility.
+   */
+  enrichRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot>;
+
   signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>;
 }

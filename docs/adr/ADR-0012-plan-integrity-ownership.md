@@ -1,6 +1,6 @@
 # ADR-0012 — Plan Integrity Ownership
 
-Status: Pending Implementation
+Status: Accepted
 Date: 2026-02-20 (updated: 2026-02-21)
 
 ---

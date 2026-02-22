@@ -1,299 +1,188 @@
-markdown
-% DVT+ ADR Implementation Status & Roadmap % Architecture / Engineering
-% Version 1.2 % Date: 2026-02-21
+# ADR Implementation Status
+
+**Document ID:** `ARCH-ADR-STATUS`  
+**Version:** `1.3`  
+**Status:** Active  
+**Owner:** Architecture Team  
+**Updated:** 2026-02-22
 
 ---
 
-# 1. Document Control
+## 1) Executive Summary (code-based)
 
-| Field        | Value             |
-| ------------ | ----------------- |
-| Document ID  | ARCH-ADR-STATUS   |
-| Version      | 1.2               |
-| Status       | Active            |
-| Owner        | Architecture Team |
-| Review Cycle | Weekly ADR Sync   |
-| Next Review  | 2026-02-28        |
+| Area                                              | Current Status            | Evidence in code                                                                                                                                                                                                                                                                                                                                                                     | Notes                                                                                                                         |
+| ------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| ADR-0000 Code-generation traceability             | 🟡 Partial                | [`traceability:adr0`](package.json:39), [`gen-ai-index`](package.json:36)                                                                                                                                                                                                                                                                                                            | Tooling exists; full CI enforcement still partial.                                                                            |
+| ADR-0001 Temporal integration test policy         | 🟡 Partial                | [`test:adapter-temporal`](package.json:30), [`pr-quality-gate` temporal integration](.github/workflows/pr-quality-gate.yml:205)                                                                                                                                                                                                                                                      | Integration tests exist; policy hardening remains iterative.                                                                  |
+| ADR-0002 Neo4j knowledge graph context repository | 🟡 Partial                | [`kg:generate`](package.json:42), [`kg:seed`](package.json:44), [`kg:ingest`](package.json:45)                                                                                                                                                                                                                                                                                       | Generation/seed/ingest implemented; governance flow still evolving.                                                           |
+| ADR-0003 Execution model sovereignty              | ✅ Implemented            | [`WorkflowEngine`](packages/@dvt/engine/src/core/WorkflowEngine.ts:124)                                                                                                                                                                                                                                                                                                              | Core execution orchestration centralized in engine.                                                                           |
+| ADR-0004 Event sourcing strategy                  | ✅ Implemented            | [`InMemoryTxStore.appendAndEnqueueTx()`](packages/@dvt/engine/src/state/InMemoryTxStore.ts:121), [`PostgresStateStoreAdapter.appendAndEnqueueTx()`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:291)                                                                                                                                                             | Append-only events + outbox path implemented in both stores.                                                                  |
+| ADR-0005 Contract formalization tooling           | 🟡 Partial                | [`@dvt/contracts`](packages/@dvt/contracts/package.json:2), [`contracts` workflow](.github/workflows/contracts.yml:1)                                                                                                                                                                                                                                                                | Strong baseline, but full conformance matrix still pending.                                                                   |
+| ADR-0006 Contract tooling governance              | 🟡 Partial                | [`contracts.yml`](.github/workflows/contracts.yml:1), [`contracts:index:check`](package.json:52)                                                                                                                                                                                                                                                                                     | Governance pipeline exists; still under active tuning.                                                                        |
+| ADR-0007 Run cancellation                         | ✅ Implemented            | [`cancelRun()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:243)                                                                                                                                                                                                                                                                                                                 | Engine cancellation flow and run event emission implemented.                                                                  |
+| ADR-0008 Signal idempotency                       | 🟡 Partial                | [`emitSignalDerivedRunEvent()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:416), [`IdempotencyKeyBuilder.signalKey()`](packages/@dvt/engine/src/core/idempotency.ts:42)                                                                                                                                                                                                         | Idempotent keying present; broader provider parity is pending.                                                                |
+| ADR-0009 Outbox ordering                          | ✅ Implemented            | [`listPending()` ordering](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:566), [`outbox_pending_idx`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:862)                                                                                                                                                                                         | Ordered fetch + claiming strategy implemented.                                                                                |
+| ADR-0010 Run event envelope split                 | ✅ Implemented            | [`RunEventInput`/`RunEventPersisted`](packages/@dvt/engine/src/state/InMemoryTxStore.ts:3), [`AppendResult` usage](packages/@dvt/engine/src/state/IRunStateStore.ts:25)                                                                                                                                                                                                              | Input/persisted envelope split in place.                                                                                      |
+| ADR-0011 RunStarted ownership                     | ✅ Implemented            | [`startRun()` + bootstrap](packages/@dvt/engine/src/core/WorkflowEngine.ts:169)                                                                                                                                                                                                                                                                                                      | Engine owns bootstrap sequence and initial event flow.                                                                        |
+| ADR-0012 Plan Integrity Ownership                 | 🟡 Partial                | [`WorkflowEngine.startRun()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:135), [`PlanIntegrityValidator`](packages/@dvt/engine/src/security/planIntegrity.ts:18), [`MockAdapter.startRun()`](packages/@dvt/engine/src/adapters/mock/MockAdapter.ts:42)                                                                                                                          | Engine validates metadata/preconditions; adapter path owns plan fetch in mock tests. Shared package extraction still pending. |
+| ADR-0012a Canonical Error Codes                   | 🟡 Partial                | [`RunAlreadyExistsError`](packages/@dvt/engine/src/contracts/errors.js:1), [`RunMetadataNotFoundError`](packages/@dvt/engine/src/contracts/errors.js:1), [`OutboxRateLimitExceededError`](packages/@dvt/engine/src/contracts/errors.js:1)                                                                                                                                            | Canonical engine-domain errors exist; cross-adapter normalization not fully unified.                                          |
+| ADR-0013 bootstrapRunTx atomicity                 | ✅ Implemented            | [`bootstrapRunTx()`](packages/@dvt/engine/src/state/IRunStateStore.ts:25), [`WorkflowEngine` bootstrap usage](packages/@dvt/engine/src/core/WorkflowEngine.ts:169), [`PostgresStateStoreAdapter.bootstrapRunTx()`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:308), [`InMemoryTxStore.bootstrapRunTx()`](packages/@dvt/engine/src/state/InMemoryTxStore.ts:101) | Implemented in engine contract + in-memory + postgres adapters.                                                               |
+| ADR-0014 Run-driven Adapter Model                 | ✅ Implemented            | [`WorkflowEngine.startRun()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:135), [`MockAdapter.startRun()`](packages/@dvt/engine/src/adapters/mock/MockAdapter.ts:42)                                                                                                                                                                                                             | Adapter returns `runRef`; engine persists run via bootstrap transaction.                                                      |
+| ADR-0015 getRunStatus read-model separation       | ✅ Implemented            | [`getRunStatus()` snapshot-first path](packages/@dvt/engine/src/core/WorkflowEngine.ts:273), [`snapshotToStatus`](packages/@dvt/engine/src/core/SnapshotProjector.ts:1), [`Postgres run_snapshots`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:786)                                                                                                             | O(1) snapshot path with replay fallback.                                                                                      |
+| ADR-0016 logicalAttemptId adapter ownership       | 🟡 Partial                | [`buildRunEvent()` fixed logicalAttemptId](packages/@dvt/engine/src/core/WorkflowEngine.ts:447), adapter activity contracts in temporal adapter                                                                                                                                                                                                                                      | Baseline present but ownership boundaries still evolving by adapter/runtime.                                                  |
+| ADR-0017 ExecutionPlan schema versioning          | ✅ Implemented (baseline) | planRef checks in [`validateStartRunPreconditions()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:196), contract tests in [`engine.test.ts`](packages/@dvt/engine/test/contracts/engine.test.ts:289)                                                                                                                                                                             | Schema version gate enforced in engine preconditions.                                                                         |
 
----
-
-# 2. Purpose
-
-This document provides:
-
-- Consolidated implementation status of all ADRs.
-- Gap analysis per ADR with specific missing deliverables.
-- Phased implementation roadmap with owners.
-- Risk and dependency mapping.
-- Success metrics and verification criteria.
-
-This document is governance-facing and traceable to individual ADR files
-under `docs/adr/`.
-
----
-
-# 3. Executive Summary
-
-| Area                  | Status         | Next Milestone               | Risk Level |
-| --------------------- | -------------- | ---------------------------- | ---------- |
-| Core ADRs (0000-0005) | ✅ Defined     | Implement ADR-0000 tooling   | Low        |
-| Event Model (0010)    | 🟡 Partial     | Idempotency specification    | Medium     |
-| Run Ownership (0011)  | ✅ Implemented | Final verification           | Low        |
-| Plan Integrity (0012) | ❌ Not Started | High priority implementation | High       |
-| Error Codes (0012a)   | ❌ Not Started | Depends on ADR-0012          | Medium     |
-| Bootstrap TX (0013)   | 🟡 Partial     | Outbox verification          | Medium     |
-
-**Legend:** ✅ Complete | 🟡 Partial | ❌ Not Started
+Legend: ✅ Implemented · 🟡 Partial · ❌ Not started
 
 ---
 
-# 4. ADR Status Dashboard
+## 1.1) Full ADR index (0000–0017)
 
-## 4.1 Foundation ADRs
+| ADR       | Scope                              | Status         | Reference                                                                                                                                                                                                                |
+| --------- | ---------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ADR-0000  | Trazabilidad normativa             | 🟡 Partial     | [`ADR-0000`](docs/adr/ADR-0000-Generación%20de%20código%20con%20trazabilidad%20normativa%20obligatoria.md)                                                                                                               |
+| ADR-0001  | Temporal integration test policy   | 🟡 Partial     | [`ADR-0001`](docs/adr/ADR-0001-temporal-integration-test-policy.md)                                                                                                                                                      |
+| ADR-0002  | Neo4j knowledge graph              | 🟡 Partial     | [`ADR-0002`](docs/adr/ADR-0002-neo4j-knowledge-graph-context-repository.md)                                                                                                                                              |
+| ADR-0003  | Execution model                    | ✅ Implemented | [`WorkflowEngine`](packages/@dvt/engine/src/core/WorkflowEngine.ts:124)                                                                                                                                                  |
+| ADR-0004  | Event sourcing                     | ✅ Implemented | [`InMemoryTxStore.appendAndEnqueueTx()`](packages/@dvt/engine/src/state/InMemoryTxStore.ts:121), [`PostgresStateStoreAdapter.appendAndEnqueueTx()`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:291) |
+| ADR-0005  | Contract formalization tooling     | 🟡 Partial     | [`@dvt/contracts`](packages/@dvt/contracts/package.json:2)                                                                                                                                                               |
+| ADR-0006  | Contract tooling governance        | 🟡 Partial     | [`contracts workflow`](.github/workflows/contracts.yml:1)                                                                                                                                                                |
+| ADR-0007  | Run cancellation                   | ✅ Implemented | [`cancelRun()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:243)                                                                                                                                                     |
+| ADR-0008  | Signal idempotency                 | 🟡 Partial     | [`emitSignalDerivedRunEvent()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:416)                                                                                                                                     |
+| ADR-0009  | Outbox ordering                    | ✅ Implemented | [`listPending()` ordering](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:566)                                                                                                                          |
+| ADR-0010  | Run event envelope split           | ✅ Implemented | [`RunEventInput/RunEventPersisted usage`](packages/@dvt/engine/src/state/InMemoryTxStore.ts:3)                                                                                                                           |
+| ADR-0011  | RunStarted ownership               | ✅ Implemented | [`startRun()` bootstraps and emits RunQueued](packages/@dvt/engine/src/core/WorkflowEngine.ts:169)                                                                                                                       |
+| ADR-0012  | Plan integrity ownership           | 🟡 Partial     | [`validateStartRunPreconditions()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:196), [`PlanIntegrityValidator`](packages/@dvt/engine/src/security/planIntegrity.ts:18)                                              |
+| ADR-0012a | Canonical error codes              | 🟡 Partial     | [`engine errors`](packages/@dvt/engine/src/contracts/errors.js:1)                                                                                                                                                        |
+| ADR-0013  | bootstrapRunTx                     | ✅ Implemented | [`bootstrapRunTx`](packages/@dvt/engine/src/state/IRunStateStore.ts:25), [`WorkflowEngine` use](packages/@dvt/engine/src/core/WorkflowEngine.ts:169)                                                                     |
+| ADR-0014  | Run-driven adapter model           | ✅ Implemented | [`MockAdapter.startRun()`](packages/@dvt/engine/src/adapters/mock/MockAdapter.ts:42)                                                                                                                                     |
+| ADR-0015  | getRunStatus read-model separation | ✅ Implemented | [`getRunStatus()` snapshot-first](packages/@dvt/engine/src/core/WorkflowEngine.ts:273)                                                                                                                                   |
+| ADR-0016  | logicalAttemptId ownership         | 🟡 Partial     | [`buildRunEvent()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:447)                                                                                                                                                 |
+| ADR-0017  | ExecutionPlan schema versioning    | ✅ Implemented | [`validateStartRunPreconditions()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:196)                                                                                                                                 |
 
-| ADR      | Title                        | Status   | Implementation                           | Verification         | Dependencies |
-| -------- | ---------------------------- | -------- | ---------------------------------------- | -------------------- | ------------ |
-| ADR-0000 | Code Generation Traceability | Accepted | 🟡 Initial tooling + manifest generation | ❌ Partial           | None         |
-| ADR-0003 | Execution Model Sovereignty  | Accepted | ✅ Architecture principle                | ✅ Documented        | None         |
-| ADR-0004 | Event Sourcing Strategy      | Accepted | ✅ TestStateStore                        | ✅ Verified in tests | ADR-0003     |
-| ADR-0005 | Contract Formalization       | Accepted | 🟡 Schemas exist                         | 🟡 Missing vectors   | ADR-0004     |
-
-## 4.2 Execution ADRs
-
-| ADR       | Title                    | Status   | Implementation             | Verification                   | Dependencies       |
-| --------- | ------------------------ | -------- | -------------------------- | ------------------------------ | ------------------ |
-| ADR-0010  | Run Event Envelope Split | Pending  | 🟡 Types exist             | 🟡 Missing idempotency spec    | ADR-0004, ADR-0005 |
-| ADR-0011  | RunStarted Ownership     | Proposed | ✅ Implemented in Temporal | ✅ Verified in tests           | ADR-0003, ADR-0010 |
-| ADR-0012  | Plan Integrity Ownership | Pending  | ❌ Not implemented         | ❌ No                          | ADR-0003, ADR-0005 |
-| ADR-0012a | Canonical Error Codes    | Proposed | ❌ Not implemented         | ❌ No                          | ADR-0012           |
-| ADR-0013  | bootstrapRunTx           | Proposed | 🟡 TestStateStore          | 🟡 Missing outbox verification | ADR-0004, ADR-0010 |
-
----
-
-# 5. Gap Analysis
-
-## 5.1 ADR-0000 — Traceability
-
-**What we have:**
-
-- ✅ Concept defined
-- ✅ Graph model designed (Neo4j)
-- ✅ Automation guide documented
-- ✅ Initial manifest generation and config (`traceability.manifest.json`, `traceability.config.json`) via `@dvt/traceability-service`
-
-**Missing deliverables / Notes:**
-
-- ✅ Manifest generation added (initial tooling produces `traceability.manifest.json`) — implemented in this phase
-- ❌ Header validation script (`tools/traceability/validate-headers.js`) — required to fix missing baselines
-- ❌ Reverse coverage validator (`tools/traceability/validate-adr-coverage.js`)
-- ❌ CI workflow deployment (workflow file may be referenced in docs but needs to be added under `.github/workflows` to enable PR gating)
-- ❌ Neo4j publisher (requires secrets and CI enable; `--no-publish` mode used to avoid blocking)
-
-**Observed validation output:** Local run produced multiple `MISSING_BASELINE` errors and `ADR_NOT_ACCEPTED` entries (ver `traceability-check.log`). Recomendación: crear follow-up para corregir cabeceras faltantes y desplegar el workflow en CI.
-
-## 5.2 ADR-0005 — Contract Formalization
-
-**What we have:**
-
-- ✅ Zod schemas for core types
-- ✅ Type inference working
-- ✅ Discriminated unions for providers
-
-**Missing deliverables:**
-
-- ❌ `RunEventWrite` schema
-- ❌ `RunEventRecord` schema
-- ❌ `OutboxRecord` schema
-- ❌ Conformance vectors (positive/negative tests)
-- ❌ Property-based idempotency tests
-- ❌ JSON Schema export
-- ❌ CI validation gate
-
-## 5.3 ADR-0010 — Event Envelope Split
-
-**What we have:**
-
-- ✅ `RunEventInput` / `RunEventPersisted` types
-- ✅ Two-variant stepId union
-- ✅ `AppendResult` with appended/deduped
-
-**Missing deliverables:**
-
-- ❌ Idempotency key specification (Section 3.3)
-- ❌ Centralized `IdempotencyKeyBuilder`
-- ❌ Canonical serialization implementation
-- ❌ Contract tests for idempotency
-
-## 5.4 ADR-0012 — Plan Integrity Ownership
-
-**What we have:**
-
-- ✅ ADR finalized with shared verifier requirement
-
-**Missing deliverables:**
-
-- ❌ Engine metadata-only validation
-- ❌ Removal of `planFetcher` from `WorkflowEngineDeps`
-- ❌ `@dvt/plan-verifier` package
-- ❌ Adapter implementations using verifier
-- ❌ Contract tests for hash mismatch, schema failure
-
-## 5.5 ADR-0013 — bootstrapRunTx
-
-**What we have:**
-
-- ✅ `TestStateStore.bootstrapRunTx()` implemented
-- ✅ `appendAndEnqueueTx()` exists
-- ✅ Basic outbox simulation in tests
-
-**Missing deliverables:**
-
-- ❌ Proper `TestOutbox` with `OutboxRecord`
-- ❌ Atomic append+enqueue verification
-- ❌ Crash recovery tests
-- ❌ PostgreSQL production integration
+> Nota: este documento es de estado de implementación, no reemplaza el contenido de cada ADR fuente.
 
 ---
 
-# 6. Implementation Roadmap
+## 2) Notable updates since last plan revision
 
-## Phase 1 — Traceability Foundation (Weeks 1-2)
+1. **Resolved run bootstrap ordering issue (`RUN_NOT_FOUND`)**
+   - Mock adapter no longer appends run events before bootstrap.
+   - Current flow aligns with run-driven model: adapter returns run ref, engine persists via bootstrap.
+   - Evidence: [`MockAdapter.startRun()`](packages/@dvt/engine/src/adapters/mock/MockAdapter.ts:42), [`WorkflowEngine.startRun()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:135), [`InMemoryTxStore.assertRunExists()`](packages/@dvt/engine/src/state/InMemoryTxStore.ts:36).
 
-**Owner:** DevEx Team
+2. **CI affected-workspace build filter fixed**
+   - Build now includes workspace dependencies in the intended direction.
+   - Evidence: [`Build affected workspace`](.github/workflows/ci.yml:187).
 
-| Deliverable                | Description                             | Due    |
-| -------------------------- | --------------------------------------- | ------ |
-| `validate-headers.js`      | Script to validate ADR headers in files | Week 1 |
-| `generate-manifest.js`     | Generate traceability manifest          | Week 1 |
-| `validate-adr-coverage.js` | Reverse coverage validation             | Week 2 |
-| CI workflow                | GitHub Actions for PR validation        | Week 2 |
-| Neo4j initial graph        | Seed graph with ADR nodes               | Week 2 |
+3. **Changed-file ESLint check hardened**
+   - Ignored-file warnings no longer fail CI with `--max-warnings 0`.
+   - Evidence: [`check-changed.cjs` ESLint args](scripts/check-changed.cjs:168).
 
-## Phase 2 — Contract Completion (Weeks 3-4)
-
-**Owner:** Contracts Team
-
-| Deliverable               | Description                     | Due    |
-| ------------------------- | ------------------------------- | ------ |
-| `run-event-write` schema  | Zod schema for event writes     | Week 3 |
-| `run-event-record` schema | Zod schema for persisted events | Week 3 |
-| `outbox-record` schema    | Zod schema for outbox           | Week 3 |
-| Conformance vectors       | Positive/negative test cases    | Week 4 |
-| Property-based tests      | fast-check for idempotency      | Week 4 |
-| JSON Schema export        | Generate JSON Schema from Zod   | Week 4 |
-
-## Phase 3 — Plan Integrity (Weeks 5-6)
-
-**Owner:** Engine Team + Adapters Team
-
-| Deliverable                | Description                   | Due    |
-| -------------------------- | ----------------------------- | ------ |
-| `@dvt/plan-verifier`       | Shared verification library   | Week 5 |
-| Engine metadata validation | Update `WorkflowEngine`       | Week 5 |
-| Plan error codes           | `PlanErrorCode` enum          | Week 6 |
-| Adapter error mapping      | Map legacy to canonical       | Week 6 |
-| Contract tests             | Hash mismatch, schema failure | Week 6 |
-
-## Phase 4 — Bootstrap & Outbox (Weeks 7-8)
-
-**Owner:** Adapters Team
-
-| Deliverable           | Description                          | Due    |
-| --------------------- | ------------------------------------ | ------ |
-| Complete `TestOutbox` | Full `IOutboxStorage` implementation | Week 7 |
-| Atomicity tests       | Verify append+enqueue atomic         | Week 7 |
-| Crash recovery suite  | Simulate crashes during tx           | Week 8 |
-| PostgreSQL store      | Production-ready implementation      | Week 8 |
-
-## Phase 5 — Verification & Acceptance (Weeks 9-10)
-
-**Owner:** Architecture Team
-
-| Deliverable                | Description                   | Due     |
-| -------------------------- | ----------------------------- | ------- |
-| ADR status updates         | Mark all as **Implemented**   | Week 9  |
-| Full traceability          | 100% header coverage          | Week 9  |
-| Neo4j implementation graph | Complete graph with all files | Week 10 |
-| Architecture review        | Final validation of all ADRs  | Week 10 |
+4. **`kg:check` gate removed from contracts workflow**
+   - The explicit generated graph drift check step was removed as requested.
+   - Evidence: workflow section around [`contracts.yml`](.github/workflows/contracts.yml:178).
 
 ---
 
-# 7. Critical Dependencies
+## 3) ADR-by-ADR status details
 
-```mermaid
-graph TD
-    A[ADR-0000: Traceability] --> B[ADR-0005: Contract Schemas]
-    B --> C[ADR-0010: Event Envelope]
-    B --> D[ADR-0012: Plan Integrity]
+### ADR-0012 — Plan Integrity Ownership
 
-    C --> E[ADR-0011: RunStarted Ownership]
-    D --> F[ADR-0012a: Error Codes]
+**Current:** 🟡 Partial  
+**Implemented:**
 
-    A --> G[ADR-0013: bootstrapRunTx]
+- Engine validates plan metadata and context preconditions before adapter dispatch in [`validateStartRunPreconditions()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:196).
+- Integrity validator exists in [`PlanIntegrityValidator`](packages/@dvt/engine/src/security/planIntegrity.ts:18).
 
-    style A fill:#f9f,stroke:#333,stroke-width:4px
-    style B fill:#bbf,stroke:#333
-    style D fill:#fbb,stroke:#333
-Hard Constraints:
+**Pending:**
 
-Phase 3 requires Phase 1 (traceability) and Phase 2 (schemas)
+- Extract and adopt shared verifier package across adapters (single canonical implementation).
+- Complete adapter-level consistency checks and error mapping for all providers.
 
-ADR-0012a requires ADR-0012 implementation
+### ADR-0012a — Canonical Error Code Strategy
 
-ADR-0011 depends on ADR-0010 event types
+**Current:** 🟡 Partial  
+**Implemented:**
 
-8. Risk Assessment
-Risk    Impact    Probability    Mitigation    Owner
-ADR-0012 delays due to adapter changes    High    Medium    Pilot with InMemory adapter first    Adapters Lead
-Idempotency drift across services    Medium    Low    Central builder + contract tests    Contracts Lead
-Outbox atomicity bugs in production    High    Medium    Crash recovery tests + Transactional outbox pattern    Engine Lead
-Traceability overhead rejected by devs    Low    Medium    Full automation, make it CI-enforced    DevEx Lead
-Missing deadlines due to scope creep    Medium    Medium    Strict phase gates, weekly sync    Architecture Lead
-9. Success Metrics
-Metric    Current    Target    Measurement Method    Owner
-ADR Implementation coverage    ~30%    100%    validate-adr-coverage.js    Architecture
-Files with traceability headers    0%    100%    validate-headers.js    DevEx
-Contract test coverage    ~40%    90%    Jest coverage reports    Contracts
-CI validation time    N/A    < 2 min    GitHub Actions timing    DevEx
-Adapters passing contract tests    1/3    3/3    Contract test suite    Adapters
-Neo4j graph freshness    N/A    < 1 hour    Last updated timestamp    DevEx
-10. Validation Criteria
-This document is considered complete when:
+- Engine raises typed domain errors (exists in [`errors.js`](packages/@dvt/engine/src/contracts/errors.js:1)).
 
-Each ADR has an implementation reference in code headers.
+**Pending:**
 
-Each ADR has automated verification in CI.
+- End-to-end canonical mapping matrix for adapter/provider native errors.
+- Explicit conformance tests across all adapters.
 
-validate-adr-coverage.js reports 100% coverage of Accepted ADRs.
+### ADR-0013 — `bootstrapRunTx`
 
-CI enforces header + coverage checks on every PR.
+**Current:** ✅ Implemented  
+**Implemented:**
 
-Neo4j graph contains all relationships (:File)-[:BASELINED_ON]->(:ADR).
+- Contract surface in [`IRunStateStore`](packages/@dvt/engine/src/state/IRunStateStore.ts:24).
+- Engine uses atomic bootstrap in [`startRun()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:169).
+- In-memory and postgres adapters implement bootstrap and append+enqueue.
 
-All adapters pass contract test suite for their implemented ADRs.
+**Follow-up:**
 
-11. References
-ADR methodology: https://adr.github.io/
+- Keep expanding crash-recovery and failure-mode tests in integration suites.
 
-C4 Model: https://c4model.com/
+### ADR-0014 — Run-driven Adapter Model
 
-Temporal: https://temporal.io/
+**Current:** ✅ Implemented  
+**Implemented:**
 
-Conductor: https://conductor.netflix.com/
+- Adapter-first execution returns provider run reference, persistence performed by engine bootstrap.
+- Mock adapter aligned to this model in [`MockAdapter.startRun()`](packages/@dvt/engine/src/adapters/mock/MockAdapter.ts:42).
 
-Zod: https://zod.dev/
+### ADR-0015 — `getRunStatus` Read-model Separation
 
-JSON Schema: https://json-schema.org/
+**Current:** ✅ Implemented  
+**Implemented:**
 
-Neo4j: https://neo4j.com/
+- Snapshot-first status retrieval with replay fallback in [`getRunStatus()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:273).
+- Snapshot persistence in postgres adapter (`run_snapshots`) via [`ensureSchemaObjects()`](packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:727).
 
-OpenTelemetry: https://opentelemetry.io/
+### ADR-0016 — `logicalAttemptId` Adapter Ownership
 
-12. Document Sign-off
-Role    Name    Date    Signature
-Architecture Lead
-Engineering Manager
-DevEx Lead
-Contracts Lead
-End of Document
-```
+**Current:** 🟡 Partial  
+**Implemented:**
+
+- Events include `logicalAttemptId` in engine-generated envelopes in [`buildRunEvent()`](packages/@dvt/engine/src/core/WorkflowEngine.ts:447).
+
+**Pending:**
+
+- Tighten ownership boundary documentation/tests for provider-emitted events and retries.
+
+### ADR-0017 — ExecutionPlan Schema Versioning
+
+**Current:** ✅ Implemented (baseline)  
+**Implemented:**
+
+- Schema version validation enforced in start preconditions.
+- Test coverage includes invalid schema version rejection in [`engine.test.ts`](packages/@dvt/engine/test/contracts/engine.test.ts:289).
+
+---
+
+## 4) Updated roadmap (short horizon)
+
+### Phase A (Now)
+
+- Stabilize ADR-0012/0012a cross-adapter parity.
+- Add adapter conformance tests for canonical error normalization.
+
+### Phase B (Next)
+
+- Expand resilience tests for ADR-0013 (bootstrap failure, compensation, retries).
+- Strengthen ADR-0016 contracts for attempt ownership per runtime.
+
+### Phase C
+
+- Governance cleanup: sync ADR status docs and architecture index files.
+
+---
+
+## 5) Verification checklist
+
+- [x] Status updated from concrete code references.
+- [x] Recent CI/workflow changes reflected.
+- [x] Run bootstrap ordering fix reflected.
+- [ ] Cross-adapter error normalization fully complete (tracked as pending).

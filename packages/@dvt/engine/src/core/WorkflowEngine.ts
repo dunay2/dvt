@@ -7,6 +7,7 @@
  * @baseline ADR-0012: Plan Integrity Ownership (adapter receives PlanRef, not ExecutionPlan)
  * @baseline ADR-0013: bootstrapRunTx atomicity (provider refs included in bootstrap)
  * @baseline ADR-0014: Run-Driven Adapter Model
+ * @baseline ADR-0015: getRunStatus read-model separation (no provider call on default path)
  * @version 2.0.0
  * @date 2026-02-21
  */
@@ -78,12 +79,6 @@ export interface WorkflowEngineDeps {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
   };
-
-  /** Optional circuit breaker settings for adapter calls. */
-  circuitBreaker?: {
-    failureThreshold?: number;
-    resetTimeoutMs?: number;
-  };
 }
 
 export interface WorkflowEngineLogger {
@@ -105,11 +100,6 @@ interface HealthCheckable {
   ping?: () => Promise<void>;
 }
 
-interface CircuitState {
-  failures: number;
-  openedUntilEpochMs: number;
-}
-
 const NOOP_LOGGER: WorkflowEngineLogger = {
   info: () => {},
   warn: () => {},
@@ -124,7 +114,6 @@ const NOOP_METRICS: IMetricsCollector = {
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly logger: WorkflowEngineLogger;
   private readonly metrics: IMetricsCollector;
-  private readonly circuitStateByProvider = new Map<EngineRunRef['provider'], CircuitState>();
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
@@ -275,50 +264,54 @@ export class WorkflowEngine implements IWorkflowEngine {
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = { provider: meta.provider, tenantId: meta.tenantId };
 
-    // Snapshot-first read path (O(1)). Falls back to full replay only when no
-    // snapshot exists — e.g. runs written before snapshot support was added.
+    // ADR-0015: default read path MUST NOT call the provider.
+    // Latency must be independent of adapter availability.
+    // Snapshot-first (O(1)). Falls back to full replay only when no snapshot exists
+    // — e.g. runs predating snapshot support.
     const storedSnap = await this.deps.stateStore.getSnapshot(meta.runId);
-    const projected = storedSnap
+    const result = storedSnap
       ? snapshotToStatus(storedSnap)
       : this.deps.projector.rebuild(meta.runId, await this.deps.stateStore.listEvents(meta.runId));
-
-    // If adapter can enrich with substatus/message, merge without changing hash.
-    const adapter = this.deps.adapters.get(meta.provider);
-    let result: RunStatusSnapshot = projected;
-
-    if (adapter) {
-      try {
-        const providerView = await this.withCircuitBreaker(meta.provider, async () =>
-          this.withTimeout(
-            adapter.getRunStatus(validatedRunRef),
-            this.deps.timeouts?.adapterCallMs ?? 30_000,
-            'adapter.getRunStatus'
-          )
-        );
-        const mergedSubstatus = providerView.substatus ?? projected.substatus;
-        const mergedMessage = providerView.message ?? projected.message;
-        result = {
-          ...projected,
-          ...(mergedSubstatus !== undefined ? { substatus: mergedSubstatus } : {}),
-          ...(mergedMessage !== undefined ? { message: mergedMessage } : {}),
-        };
-      } catch (error) {
-        this.logger.error('Adapter getRunStatus failed, using projected state', {
-          runId: meta.runId,
-          provider: meta.provider,
-          error: toErrorMessage(error),
-        });
-      }
-    }
 
     this.metrics.timing(
       'dvt.run.status_duration_ms',
       Date.parse(this.deps.clock.nowIsoUtc()) - startMs,
-      metricTags
+      { provider: meta.provider, tenantId: meta.tenantId }
     );
     return result;
+  }
+
+  /**
+   * ADR-0015: Provider-enriched status. Calls the adapter for real-time substatus/message.
+   *
+   * Use for UI polling or diagnostic endpoints where provider latency is acceptable.
+   * MUST NOT be used on the default status read path.
+   * Circuit breaking is the caller's responsibility at the infrastructure layer.
+   */
+  async enrichRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
+    const validatedRunRef = parseEngineRunRef(engineRunRef);
+    const meta = await this.resolveMetaOrThrow(validatedRunRef);
+    await this.deps.authorizer.assertTenantAccess(meta.tenantId);
+
+    const adapter = this.getAdapterOrThrow(meta.provider);
+
+    const storedSnap = await this.deps.stateStore.getSnapshot(meta.runId);
+    const base = storedSnap
+      ? snapshotToStatus(storedSnap)
+      : this.deps.projector.rebuild(meta.runId, await this.deps.stateStore.listEvents(meta.runId));
+
+    const providerView = await this.withTimeout(
+      adapter.getRunStatus(validatedRunRef),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.getRunStatus'
+    );
+
+    return {
+      ...base,
+      ...(providerView.substatus !== undefined ? { substatus: providerView.substatus } : {}),
+      ...(providerView.message !== undefined ? { message: providerView.message } : {}),
+    };
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
@@ -470,36 +463,6 @@ export class WorkflowEngine implements IWorkflowEngine {
   private async ensureRunDoesNotExist(runId: string): Promise<void> {
     const existing = await this.deps.stateStore.getRunMetadataByRunId(runId);
     if (existing) throw new RunAlreadyExistsError(runId);
-  }
-
-  private async withCircuitBreaker<T>(
-    provider: EngineRunRef['provider'],
-    operation: () => Promise<T>
-  ): Promise<T> {
-    const failureThreshold = this.deps.circuitBreaker?.failureThreshold ?? 3;
-    const resetTimeoutMs = this.deps.circuitBreaker?.resetTimeoutMs ?? 30_000;
-    const now = Date.parse(this.deps.clock.nowIsoUtc());
-
-    const state = this.circuitStateByProvider.get(provider) ?? {
-      failures: 0,
-      openedUntilEpochMs: 0,
-    };
-
-    if (state.openedUntilEpochMs > now) {
-      throw new Error(`Circuit open for provider ${provider} until ${state.openedUntilEpochMs}`);
-    }
-
-    try {
-      const result = await operation();
-      this.circuitStateByProvider.set(provider, { failures: 0, openedUntilEpochMs: 0 });
-      return result;
-    } catch (error) {
-      const failures = state.failures + 1;
-      const openedUntilEpochMs = failures >= failureThreshold ? now + resetTimeoutMs : 0;
-
-      this.circuitStateByProvider.set(provider, { failures, openedUntilEpochMs });
-      throw error;
-    }
   }
 
   private async withTimeout<T>(

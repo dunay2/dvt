@@ -1,6 +1,6 @@
 # ADR-0016 — logicalAttemptId Ownership by Adapter
 
-Status: Proposed  
+Status: Accepted  
 Date: 2026-02-20
 
 ## Context

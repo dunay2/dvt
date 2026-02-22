@@ -1,6 +1,6 @@
 # ADR-0007: Run Cancellation Semantics and Event Ownership
 
-- **Status**: Proposed (Hardened revB)
+- **Status**: Accepted
 - **Date**: 2026-02-21
 - **Owners**: Engine Domain / Adapter Layer
 - **Related**:

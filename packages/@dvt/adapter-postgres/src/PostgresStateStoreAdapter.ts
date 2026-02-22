@@ -101,6 +101,9 @@ function applyEventToSnapshot(snap: WorkflowSnapshot, e: EventEnvelope): void {
     case 'RunResumed':
       handleRunResumed(snap, e);
       break;
+    case 'RunCancelRequested':
+      handleRunCancelRequested(snap);
+      break;
     case 'RunCancelled':
       handleRunCancelled(snap, e);
       break;
@@ -145,6 +148,10 @@ function handleRunPaused(snap: WorkflowSnapshot, _e: EventEnvelope): void {
 function handleRunResumed(snap: WorkflowSnapshot, _e: EventEnvelope): void {
   snap.status = 'RUNNING';
   snap.paused = false;
+}
+
+function handleRunCancelRequested(snap: WorkflowSnapshot): void {
+  snap.cancelling = true;
 }
 
 function handleRunCancelled(snap: WorkflowSnapshot, e: EventEnvelope): void {
@@ -868,6 +875,12 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       CREATE INDEX IF NOT EXISTS outbox_dead_letter_run_id_idx
       ON ${quoteIdentifier(this.schema)}.outbox_dead_letter (run_id)
     `);
+
+    // Tenant-scoped listing: listRuns(tenantId) requires this to avoid full scan.
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS run_metadata_tenant_created_idx
+      ON ${quoteIdentifier(this.schema)}.run_metadata (tenant_id, created_at DESC)
+    `);
   }
 
   private async appendEventsTxWithClient(
@@ -972,6 +985,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         runId,
         status: 'PENDING',
         paused: false,
+        cancelling: false,
         steps: {},
       };
       for (const e of appended) {

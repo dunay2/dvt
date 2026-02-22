@@ -1,6 +1,6 @@
 # ADR-0013 — IRunStateStore.bootstrapRunTx
 
-Status: Approved  
+Status: Accepted  
 Date: 2026-02-20
 
 ## Context

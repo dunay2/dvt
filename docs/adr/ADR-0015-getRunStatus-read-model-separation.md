@@ -1,6 +1,6 @@
 # ADR-0015 — getRunStatus Read Model Separation
 
-Status: Proposed  
+Status: Accepted  
 Date: 2026-02-20
 
 ## Context

@@ -122,16 +122,6 @@ export interface IRunStateStore {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   getRunMetadataByRunId(runId: string): Promise<RunMetadata | null>;
-  saveProviderRef(
-    runId: string,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void>;
   listEvents(runId: string): Promise<EventEnvelope[]>;
 }
 

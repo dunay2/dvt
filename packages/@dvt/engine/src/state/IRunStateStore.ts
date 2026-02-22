@@ -26,16 +26,6 @@ export interface IRunStateStore {
   appendAndEnqueueTx(runId: string, events: RunEventInput[]): Promise<AppendResult>;
 
   getRunMetadataByRunId(runId: string): Promise<RunMetadata | null>;
-  saveProviderRef(
-    runId: string,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void>;
   listEvents(runId: string): Promise<RunEventPersisted[]>;
 
   /**

@@ -1,6 +1,6 @@
 # ADR-0014 — Run-Driven Adapter Model
 
-Status: Proposed  
+Status: Accepted  
 Date: 2026-02-20
 
 ## Context

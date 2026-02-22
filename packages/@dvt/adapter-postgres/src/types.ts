@@ -38,6 +38,7 @@ export type EventType =
   | 'RunStarted'
   | 'RunPaused'
   | 'RunResumed'
+  | 'RunCancelRequested'
   | 'RunCancelled'
   | 'RunCompleted'
   | 'RunFailed'
@@ -118,6 +119,8 @@ export interface WorkflowSnapshot {
   startedAt?: IsoUtcString;
   completedAt?: IsoUtcString;
   paused: boolean;
+  /** True between RunCancelRequested and RunCancelled. ADR-0007. */
+  cancelling: boolean;
   steps: Record<string, StepSnapshot>;
 }
 
@@ -130,16 +133,6 @@ export interface IRunStateStore {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: RunId, events: EventInput[]): Promise<AppendResult>;
   getRunMetadataByRunId(runId: RunId): Promise<RunMetadata | null>;
-  saveProviderRef(
-    runId: RunId,
-    runRef: {
-      providerWorkflowId: string;
-      providerRunId: string;
-      providerNamespace?: string;
-      providerTaskQueue?: string;
-      providerConductorUrl?: string;
-    }
-  ): Promise<void>;
   listEvents(runId: RunId): Promise<EventEnvelope[]>;
   listRuns(options?: ListRunsOptions): Promise<RunMetadata[]>;
   getSnapshot(runId: RunId): Promise<WorkflowSnapshot | null>;

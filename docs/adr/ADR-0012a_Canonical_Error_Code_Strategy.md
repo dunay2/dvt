@@ -1,6 +1,6 @@
 # ADR-0012a — Canonical Plan Error Code Strategy
 
-Status: Proposed
+Status: Accepted
 Date: 2026-02-21
 
 ---

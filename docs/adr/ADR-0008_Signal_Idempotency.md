@@ -1,6 +1,6 @@
 # ADR-0008: Signal Idempotency Key Derivation
 
-- **Status**: Proposed (Hardened)
+- **Status**: Accepted
 - **Date**: 2026-02-21
 - **Owners**: Engine Domain
 - **Related**:
