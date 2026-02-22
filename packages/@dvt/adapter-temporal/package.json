@@ -17,7 +17,7 @@
     "build": "tsc -p tsconfig.json",
     "prebuild": "echo '🔨 Building adapter-temporal...'",
     "postbuild": "echo '✅ Build complete'",
-    "pretest": "pnpm build",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/engine build && pnpm build",
     "test": "vitest run ./test/",
     "pretest:integration": "pnpm --filter @dvt/contracts build && pnpm build",
     "test:integration": "vitest run ./test/",
