@@ -171,11 +171,11 @@ Risk: ADRs marked Accepted without enforcement.
 
 Mitigation Process:
 
-1.  Implement change.
-2.  Write invariant test.
-3.  Run in CI shadow mode.
-4.  Update ADR with verification section.
-5.  Merge only after review by Architecture owner.
+1. Implement change.
+2. Write invariant test.
+3. Run in CI shadow mode.
+4. Update ADR with verification section.
+5. Merge only after review by Architecture owner.
 
 Architecture owner must sign-off on: - Contract changes - Idempotency
 formula changes - Event model changes

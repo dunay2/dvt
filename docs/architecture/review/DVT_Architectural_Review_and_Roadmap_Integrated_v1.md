@@ -181,10 +181,10 @@ Mitigation: - ADR verification protocol - CI-enforced invariants
 
 ## 5. Governance Rules
 
-1.  No Wave 2 before Wave 0 completion.
-2.  No UI expansion before State & Engine are stable.
-3.  Every invariant must have a failing test.
-4.  No undocumented behavior accepted into main branch.
+1. No Wave 2 before Wave 0 completion.
+2. No UI expansion before State & Engine are stable.
+3. Every invariant must have a failing test.
+4. No undocumented behavior accepted into main branch.
 
 ---
 

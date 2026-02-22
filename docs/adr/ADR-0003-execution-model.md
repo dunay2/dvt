@@ -64,12 +64,9 @@ NOT define DVT+ semantics.
 
 ## Acceptance Criteria
 
-1.  Run and step transitions are defined by DVT+ contracts, not adapter
-    internals.
-2.  Adapter specs map to domain semantics without introducing
-    engine-specific lifecycle semantics.
-3.  Deterministic replay and audit behavior are engine-agnostic by
-    contract.
+1. Run and step transitions are defined by DVT+ contracts, not adapter internals.
+2. Adapter specs map to domain semantics without introducing engine-specific lifecycle semantics.
+3. Deterministic replay and audit behavior are engine-agnostic by contract.
 
 ---
 
