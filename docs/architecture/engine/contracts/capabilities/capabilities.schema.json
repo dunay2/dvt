@@ -7,6 +7,16 @@
     "capabilities": {
       "type": "object",
       "properties": {
+        "execution": {
+          "type": "object",
+          "properties": {
+            "BASIC_EXECUTION": {
+              "type": "string",
+              "const": "basic-execution",
+              "description": "Baseline capability: execute steps in a plan. Required by all plans."
+            }
+          }
+        },
         "signaling": {
           "type": "object",
           "properties": {

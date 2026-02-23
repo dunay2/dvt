@@ -53,6 +53,7 @@ export interface PlanRef {
   planVersion: string;
   sizeBytes?: number;
   expiresAt?: IsoUtcString;
+  requiresCapabilities?: string[];
 }
 
 export interface RunContext {

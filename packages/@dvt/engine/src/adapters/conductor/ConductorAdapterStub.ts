@@ -24,6 +24,17 @@ import type { IProviderAdapter } from '../IProviderAdapter.js';
  * References:
  * - Conductor: https://github.com/netflix/conductor/wiki
  */
+/** Capabilities declared by the Conductor adapter. Must stay in sync with adapters.capabilities.json. */
+const CONDUCTOR_CAPABILITIES = [
+  'basic-execution',
+  'signal.pause.emulated',
+  'cancel.forced',
+  'workflow.fan.parallel',
+  'query.task.state',
+  'replay.task',
+  'signals.rate.limit',
+] as const;
+
 export class ConductorAdapterStub implements IProviderAdapter {
   readonly provider = 'conductor' as const;
 
@@ -38,5 +49,9 @@ export class ConductorAdapterStub implements IProviderAdapter {
   }
   async signal(_runRef: EngineRunRef, _request: SignalRequest): Promise<void> {
     throw new Error('NotImplemented: ConductorAdapter (Phase 2+)');
+  }
+
+  capabilities(): readonly string[] {
+    return CONDUCTOR_CAPABILITIES;
   }
 }

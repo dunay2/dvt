@@ -61,6 +61,12 @@ export interface PlanRef {
   planVersion: string;
   sizeBytes?: number;
   expiresAt?: IsoUtcString;
+  /**
+   * Capabilities this plan requires from the target adapter.
+   * Strings MUST be drawn from the normative enum in capabilities.schema.json.
+   * The engine rejects the run if the adapter does not declare all required capabilities.
+   */
+  requiresCapabilities?: string[];
 }
 
 export interface RunContext {

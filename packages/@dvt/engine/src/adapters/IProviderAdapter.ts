@@ -34,4 +34,12 @@ export interface IProviderAdapter {
   getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
   ping?(): Promise<void>;
+
+  /**
+   * Returns the capability identifiers this adapter implements.
+   * Used by the engine to enforce `PlanRef.requiresCapabilities` before starting a run.
+   * Strings MUST be from capabilities.schema.json.
+   * Optional: adapters that omit this method skip capability validation.
+   */
+  capabilities?(): readonly string[];
 }

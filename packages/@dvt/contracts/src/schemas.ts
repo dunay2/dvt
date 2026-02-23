@@ -57,6 +57,7 @@ export const PlanRefSchema = z.object({
   planVersion: z.string().min(1),
   sizeBytes: z.number().int().nonnegative().optional(),
   expiresAt: z.string().optional(),
+  requiresCapabilities: z.array(z.string().min(1)).optional(),
 });
 
 export const RunContextSchema = z.object({

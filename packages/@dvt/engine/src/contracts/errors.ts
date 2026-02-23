@@ -77,10 +77,15 @@ export class TenantAccessDeniedError extends DvtError {
 }
 
 export class CapabilitiesNotSupportedError extends DvtError {
-  constructor(capabilities: string[]) {
+  constructor(capabilities: string[], provider?: string) {
+    const who = provider ? ` by adapter '${provider}'` : '';
+    const details: Record<string, unknown> = { unsupported: capabilities };
+    if (provider !== undefined) details['provider'] = provider;
     super(
       'CAPABILITIES_NOT_SUPPORTED',
-      `Phase 1 does not evaluate requiresCapabilities: [${capabilities.join(', ')}]`
+      `Required capabilities not supported${who}: [${capabilities.join(', ')}]`,
+      undefined,
+      { details }
     );
     this.name = 'CapabilitiesNotSupportedError';
   }

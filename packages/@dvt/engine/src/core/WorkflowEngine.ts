@@ -28,6 +28,7 @@ import {
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import {
   AdapterNotRegisteredError,
+  CapabilitiesNotSupportedError,
   InvalidRunIdError,
   InvalidSchemaVersionError,
   OutboxRateLimitExceededError,
@@ -143,6 +144,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 
       const provider = validatedContext.targetAdapter;
       const adapter = this.getAdapterOrThrow(provider);
+      this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
 
       // ADR-0012: Adapter receives PlanRef, owns plan bytes fetch + SHA-256 verification.
       // ADR-0014: Adapter is called first so provider refs are available for atomic bootstrap.
@@ -191,6 +193,20 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.deps.authorizer.assertTenantAccess(context.tenantId);
     validateRunIdOrThrow(context.runId);
     await this.ensureRunDoesNotExist(context.runId);
+  }
+
+  private validateCapabilitiesOrThrow(planRef: PlanRef, adapter: IProviderAdapter): void {
+    const required = planRef.requiresCapabilities ?? [];
+    if (required.length === 0) return;
+
+    const adapterCaps = adapter.capabilities?.();
+    if (adapterCaps === undefined) return; // adapter omits capabilities() — skip validation
+
+    const supported = new Set(adapterCaps);
+    const unsupported = required.filter((c) => !supported.has(c));
+    if (unsupported.length > 0) {
+      throw new CapabilitiesNotSupportedError(unsupported, adapter.provider);
+    }
   }
 
   private checkOutboxRateLimit(context: RunContext): void {
