@@ -155,7 +155,12 @@ export class WorkflowEngine implements IWorkflowEngine {
       );
 
       // ADR-0013: provider refs included in bootstrapRunTx — eliminates two-phase write gap.
-      const bootMeta: RunMetadata = buildRunMetadata(validatedContext, validatedPlanRef, runRef);
+      const bootMeta: RunMetadata = buildRunMetadata(
+        validatedContext,
+        validatedPlanRef,
+        runRef,
+        this.deps.clock.nowIsoUtc()
+      );
       try {
         await this.deps.stateStore.bootstrapRunTx({
           metadata: bootMeta,
@@ -453,7 +458,11 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [input]);
   }
 
-  private buildRunEvent(meta: RunMetadata, eventType: EventType): RunEventInput {
+  private buildRunEvent(
+    meta: RunMetadata,
+    eventType: EventType,
+    payload?: Record<string, unknown>
+  ): RunEventInput {
     return {
       eventId: this.deps.idempotency.eventId(),
       eventType,
@@ -473,7 +482,52 @@ export class WorkflowEngine implements IWorkflowEngine {
         planId: meta.planId,
         planVersion: meta.planVersion,
       }),
+      ...(payload !== undefined ? { payload } : {}),
     };
+  }
+
+  /**
+   * Scans for runs stuck in PENDING longer than `options.thresholdMs` and emits
+   * `RunFailed` (payload.reason = 'QUEUED_TIMEOUT') for each.
+   *
+   * Intended to be called from a scheduled job (e.g., every 30 s).
+   * The caller is responsible for circuit-breaking and back-pressure.
+   *
+   * @returns runIds that were transitioned to FAILED.
+   */
+  async detectStuckRuns(options: {
+    /** Runs in PENDING for longer than this many milliseconds are considered stuck. */
+    thresholdMs: number;
+    /** Restrict scan to a single tenant. Omit to scan all tenants. */
+    tenantId?: string;
+    /** Maximum candidates to inspect per call (default: 100). */
+    limit?: number;
+  }): Promise<string[]> {
+    const { thresholdMs, tenantId, limit } = options;
+    const nowMs = Date.parse(this.deps.clock.nowIsoUtc());
+
+    const candidates = await this.deps.stateStore.listRuns({
+      tenantId,
+      status: 'PENDING',
+      limit: limit ?? 100,
+    });
+
+    const stuckRunIds: string[] = [];
+    for (const meta of candidates) {
+      if (!meta.createdAt) continue; // skip runs without timestamp (backward compat)
+      if (nowMs - Date.parse(meta.createdAt) < thresholdMs) continue;
+
+      await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [
+        this.buildRunEvent(meta, 'RunFailed', { reason: 'QUEUED_TIMEOUT' }),
+      ]);
+      this.metrics.increment('dvt.run.queued_timeout', {
+        provider: meta.provider,
+        tenantId: meta.tenantId,
+      });
+      stuckRunIds.push(meta.runId);
+    }
+
+    return stuckRunIds;
   }
 
   private async ensureRunDoesNotExist(runId: string): Promise<void> {
@@ -544,7 +598,12 @@ function toErrorMessage(error: unknown): string {
 }
 
 // ADR-0013: runRef is passed in so provider refs are included in the atomic bootstrapRunTx.
-function buildRunMetadata(ctx: RunContext, planRef: PlanRef, runRef: EngineRunRef): RunMetadata {
+function buildRunMetadata(
+  ctx: RunContext,
+  planRef: PlanRef,
+  runRef: EngineRunRef,
+  createdAt: string
+): RunMetadata {
   return {
     tenantId: ctx.tenantId,
     projectId: ctx.projectId,
@@ -562,5 +621,6 @@ function buildRunMetadata(ctx: RunContext, planRef: PlanRef, runRef: EngineRunRe
       ? { providerTaskQueue: runRef.taskQueue }
       : {}),
     ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
+    createdAt,
   };
 }

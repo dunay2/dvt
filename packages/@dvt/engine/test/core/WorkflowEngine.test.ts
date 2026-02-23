@@ -301,4 +301,113 @@ describe('WorkflowEngine (basic failure modes)', () => {
       ])
     );
   });
+
+  // detectStuckRuns: runs stranded in PENDING longer than the SLA threshold.
+  describe('detectStuckRuns', () => {
+    function makeAdapters() {
+      return new Map<EngineRunRef['provider'], IProviderAdapter>([
+        ['temporal', makeTemporalAdapter()],
+      ]);
+    }
+
+    it('returns empty array when no runs are PENDING', async () => {
+      const { engine } = createEngine({ adapters: makeAdapters() });
+      const stuck = await engine.detectStuckRuns({ thresholdMs: 0 });
+      expect(stuck).toEqual([]);
+    });
+
+    it('returns empty array when PENDING run is younger than threshold', async () => {
+      const { engine } = createEngine({ adapters: makeAdapters() });
+      await engine.startRun(makePlanRef(), makeContext('young-1'));
+      // thresholdMs large enough that the run (created ms ago) is not stuck yet.
+      const stuck = await engine.detectStuckRuns({ thresholdMs: 999_999 });
+      expect(stuck).toEqual([]);
+    });
+
+    it('marks a PENDING run as RunFailed when it exceeds the threshold', async () => {
+      const { engine, store } = createEngine({ adapters: makeAdapters() });
+      await engine.startRun(makePlanRef(), makeContext('stuck-1'));
+
+      // thresholdMs: 0 → any PENDING run (regardless of age) is treated as stuck.
+      const stuck = await engine.detectStuckRuns({ thresholdMs: 0 });
+
+      expect(stuck).toEqual(['stuck-1']);
+      const events = await store.listEvents('stuck-1');
+      const failedEvent = events.find((e) => e.eventType === 'RunFailed');
+      expect(failedEvent).toBeDefined();
+      expect(failedEvent?.payload).toMatchObject({ reason: 'QUEUED_TIMEOUT' });
+    });
+
+    it('transitions snapshot to FAILED after detection', async () => {
+      const { engine, store } = createEngine({ adapters: makeAdapters() });
+      const runRef = await engine.startRun(makePlanRef(), makeContext('stuck-snap-1'));
+
+      expect((await engine.getRunStatus(runRef)).status).toBe('PENDING');
+
+      await engine.detectStuckRuns({ thresholdMs: 0 });
+
+      const snap = await store.getSnapshot('stuck-snap-1');
+      expect(snap?.status).toBe('FAILED');
+    });
+
+    it('only marks PENDING runs — ignores RUNNING/COMPLETED runs', async () => {
+      const { engine } = createEngine({ adapters: makeAdapters() });
+      // Run 1: start but leave PENDING.
+      await engine.startRun(makePlanRef(), makeContext('pending-only-1'));
+      // Run 2: stays PENDING (engine never emits RunStarted — adapter owns that).
+      await engine.startRun(makePlanRef(), makeContext('pending-only-2'));
+
+      const stuck = await engine.detectStuckRuns({ thresholdMs: 0 });
+      // Both runs are PENDING, so both should be detected.
+      expect(stuck.sort()).toEqual(['pending-only-1', 'pending-only-2'].sort());
+    });
+
+    it('respects tenantId filter — does not mark other tenants runs', async () => {
+      const { engine } = createEngine({ adapters: makeAdapters() });
+
+      const ctxA: RunContext = { ...makeContext('run-t-a'), tenantId: 'tenant-a' };
+      const ctxB: RunContext = { ...makeContext('run-t-b'), tenantId: 'tenant-b' };
+      await engine.startRun(makePlanRef(), ctxA);
+      await engine.startRun(makePlanRef(), ctxB);
+
+      const stuck = await engine.detectStuckRuns({ thresholdMs: 0, tenantId: 'tenant-a' });
+
+      expect(stuck).toEqual(['run-t-a']);
+    });
+
+    it('respects limit — scans at most N candidates per call', async () => {
+      const { engine } = createEngine({ adapters: makeAdapters() });
+      await engine.startRun(makePlanRef(), makeContext('limit-1'));
+      await engine.startRun(makePlanRef(), makeContext('limit-2'));
+      await engine.startRun(makePlanRef(), makeContext('limit-3'));
+
+      const stuck = await engine.detectStuckRuns({ thresholdMs: 0, limit: 1 });
+      // With limit:1 only one run should be processed.
+      expect(stuck).toHaveLength(1);
+    });
+
+    it('skips runs with missing createdAt (backward compat)', async () => {
+      const { engine, store } = createEngine({ adapters: makeAdapters() });
+      // Manually bootstrap a run without createdAt (simulates pre-migration rows).
+      await store.bootstrapRunTx({
+        metadata: {
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          runId: 'no-created-at',
+          planId: 'plan',
+          planVersion: '1',
+          logicalAttemptId: 1,
+          provider: 'temporal',
+          providerWorkflowId: 'wf-no-created-at',
+          providerRunId: 'no-created-at',
+          // createdAt intentionally absent
+        },
+        firstEvents: [],
+      });
+
+      const stuck = await engine.detectStuckRuns({ thresholdMs: 0 });
+      expect(stuck).not.toContain('no-created-at');
+    });
+  });
 });

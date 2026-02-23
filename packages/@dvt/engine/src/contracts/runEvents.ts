@@ -81,6 +81,12 @@ export interface RunMetadata {
   providerNamespace?: string;
   providerTaskQueue?: string;
   providerConductorUrl?: string;
+  /**
+   * ISO UTC timestamp when bootstrapRunTx was called (= when the run entered PENDING).
+   * Used by detectStuckRuns to compute time-in-PENDING against a SLA threshold.
+   * Optional for backward compatibility with runs bootstrapped before this field was added.
+   */
+  createdAt?: IsoUtcString;
 }
 
 export interface WorkflowSnapshot {

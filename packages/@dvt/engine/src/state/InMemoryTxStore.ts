@@ -202,8 +202,12 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   async listRuns(options?: ListRunsOptions): Promise<RunMetadata[]> {
     const limit = options?.limit ?? 50;
     const all = Array.from(this.metadataByRunId.values());
-    const filtered = options?.tenantId ? all.filter((m) => m.tenantId === options.tenantId) : all;
-    return filtered.slice(-limit).reverse();
+    const byTenant = options?.tenantId ? all.filter((m) => m.tenantId === options.tenantId) : all;
+    const byStatus =
+      options?.status !== undefined
+        ? byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status)
+        : byTenant;
+    return byStatus.slice(-limit).reverse();
   }
 
   async getSnapshot(runId: string): Promise<WorkflowSnapshot | null> {

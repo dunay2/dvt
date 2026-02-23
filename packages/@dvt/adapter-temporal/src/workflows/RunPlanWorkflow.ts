@@ -158,6 +158,8 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
         runId: ctx.runId,
         planId: planRef.planId,
         planVersion: planRef.planVersion,
+        // Phase 1: always 1. Phase 2: planner supplies via workflow input on retry.
+        logicalAttemptId: 1,
         provider: 'temporal',
         providerWorkflowId: ctx.runId,
         providerRunId: ctx.runId,

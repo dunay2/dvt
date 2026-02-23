@@ -78,6 +78,8 @@ export interface RunMetadata {
   providerNamespace?: string;
   providerTaskQueue?: string;
   providerConductorUrl?: string;
+  /** ISO UTC timestamp when bootstrapRunTx was called. Used by detectStuckRuns. */
+  createdAt?: IsoUtcString;
 }
 
 // ---------------------------------------------------------------------------

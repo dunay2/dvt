@@ -10,7 +10,12 @@ import type {
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
 
-import type { IRunStateStore, ListRunsOptions, RunBootstrapInput } from './IRunStateStore.js';
+import type {
+  IRunStateStore,
+  ListEventsOptions,
+  ListRunsOptions,
+  RunBootstrapInput,
+} from './IRunStateStore.js';
 
 export class InMemoryRunStateStore implements IRunStateStore {
   private readonly metadataByRunId = new Map<string, RunMetadata>();
@@ -106,15 +111,22 @@ export class InMemoryRunStateStore implements IRunStateStore {
     return { appended, deduped };
   }
 
-  async listEvents(runId: string): Promise<RunEventPersisted[]> {
-    return (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
+  async listEvents(runId: string, options?: ListEventsOptions): Promise<RunEventPersisted[]> {
+    const all = (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
+    const afterSeq = options?.afterSeq;
+    const filtered = afterSeq !== undefined ? all.filter((e) => e.runSeq > afterSeq) : all;
+    return options?.limit !== undefined ? filtered.slice(0, options.limit) : filtered;
   }
 
   async listRuns(options?: ListRunsOptions): Promise<RunMetadata[]> {
     const limit = options?.limit ?? 50;
     const all = Array.from(this.metadataByRunId.values());
-    const filtered = options?.tenantId ? all.filter((m) => m.tenantId === options.tenantId) : all;
-    return filtered.slice(-limit).reverse();
+    const byTenant = options?.tenantId ? all.filter((m) => m.tenantId === options.tenantId) : all;
+    const byStatus =
+      options?.status !== undefined
+        ? byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status)
+        : byTenant;
+    return byStatus.slice(-limit).reverse();
   }
 
   async getSnapshot(runId: string): Promise<WorkflowSnapshot | null> {
