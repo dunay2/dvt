@@ -121,6 +121,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       runId: 'run-1',
       planId: 'p',
       planVersion: '1',
+      logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
       providerRunId: 'run-1',

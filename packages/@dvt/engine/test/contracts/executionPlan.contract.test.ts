@@ -43,7 +43,13 @@ function makePlanRef(uri: string, plan: ExecutionPlan): PlanRef {
   };
 }
 
-function makeCtx(runId: string) {
+function makeCtx(runId: string): {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string;
+  targetAdapter: 'mock';
+} {
   return {
     tenantId: 't1',
     projectId: 'p1',

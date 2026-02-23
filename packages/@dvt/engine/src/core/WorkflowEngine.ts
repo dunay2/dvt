@@ -438,11 +438,11 @@ export class WorkflowEngine implements IWorkflowEngine {
       planId: meta.planId,
       planVersion: meta.planVersion,
       engineAttemptId: 1,
-      logicalAttemptId: 1,
+      logicalAttemptId: meta.logicalAttemptId,
       idempotencyKey: this.deps.idempotency.signalKey(
         {
           runId: meta.runId,
-          logicalAttemptId: 1,
+          logicalAttemptId: meta.logicalAttemptId,
           planId: meta.planId,
           planVersion: meta.planVersion,
         },
@@ -465,11 +465,11 @@ export class WorkflowEngine implements IWorkflowEngine {
       planId: meta.planId,
       planVersion: meta.planVersion,
       engineAttemptId: 1,
-      logicalAttemptId: 1,
+      logicalAttemptId: meta.logicalAttemptId,
       idempotencyKey: this.deps.idempotency.runEventKey({
         eventType,
         runId: meta.runId,
-        logicalAttemptId: 1,
+        logicalAttemptId: meta.logicalAttemptId,
         planId: meta.planId,
         planVersion: meta.planVersion,
       }),
@@ -552,6 +552,8 @@ function buildRunMetadata(ctx: RunContext, planRef: PlanRef, runRef: EngineRunRe
     runId: ctx.runId,
     planId: planRef.planId,
     planVersion: planRef.planVersion,
+    // Phase 1: always 1. Phase 2: planner supplies via RunContext on retry.
+    logicalAttemptId: 1,
     provider: ctx.targetAdapter,
     providerWorkflowId: runRef.workflowId,
     providerRunId: runRef.runId,

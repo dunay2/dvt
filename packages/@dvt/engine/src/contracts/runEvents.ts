@@ -69,6 +69,12 @@ export interface RunMetadata {
   runId: string;
   planId: string;
   planVersion: string;
+  /**
+   * Planner-driven retry counter. Must be included in all idempotency key preimages
+   * so that events from different logical attempts do not collide.
+   * Phase 1: always 1. Phase 2: planner increments on retry.
+   */
+  logicalAttemptId: number;
   provider: 'temporal' | 'conductor' | 'mock';
   providerWorkflowId: string;
   providerRunId: string;

@@ -70,6 +70,8 @@ export interface RunMetadata {
   runId: string;
   planId: string;
   planVersion: string;
+  /** Planner-driven retry counter. Must match engine's RunMetadata.logicalAttemptId. */
+  logicalAttemptId: number;
   provider: 'temporal' | 'conductor' | 'mock';
   providerWorkflowId: string;
   providerRunId: string;

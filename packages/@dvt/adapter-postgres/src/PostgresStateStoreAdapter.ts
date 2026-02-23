@@ -459,6 +459,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       runId: row.run_id,
       planId: row.plan_id,
       planVersion: row.plan_version,
+      // Phase 1: column not yet in schema. Phase 2: read from row.logical_attempt_id.
+      logicalAttemptId: 1,
       provider: row.provider,
       providerWorkflowId: row.provider_workflow_id,
       providerRunId: row.provider_run_id,
@@ -505,6 +507,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       runId: row.run_id,
       planId: row.plan_id,
       planVersion: row.plan_version,
+      // Phase 1: column not yet in schema. Phase 2: read from row.logical_attempt_id.
+      logicalAttemptId: 1,
       provider: row.provider,
       providerWorkflowId: row.provider_workflow_id,
       providerRunId: row.provider_run_id,

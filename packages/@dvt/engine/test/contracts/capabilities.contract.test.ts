@@ -57,7 +57,13 @@ function makePlanRef(requiresCapabilities?: string[]): PlanRef {
   };
 }
 
-function makeCtx(runId: string) {
+function makeCtx(runId: string): {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string;
+  targetAdapter: 'mock';
+} {
   return {
     tenantId: 't1',
     projectId: 'p1',
@@ -100,15 +106,18 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
 
   it('accepts a run when PlanRef.requiresCapabilities is empty', async () => {
     const { engine } = createEngine();
-    await expect(
-      engine.startRun(makePlanRef([]), makeCtx('cap-empty-1'))
-    ).resolves.toMatchObject({ provider: 'mock' });
+    await expect(engine.startRun(makePlanRef([]), makeCtx('cap-empty-1'))).resolves.toMatchObject({
+      provider: 'mock',
+    });
   });
 
   it('accepts a run when adapter supports all required capabilities', async () => {
     const { engine } = createEngine();
     await expect(
-      engine.startRun(makePlanRef(['basic-execution', 'workflow.fan.parallel']), makeCtx('cap-ok-1'))
+      engine.startRun(
+        makePlanRef(['basic-execution', 'workflow.fan.parallel']),
+        makeCtx('cap-ok-1')
+      )
     ).resolves.toMatchObject({ provider: 'mock' });
   });
 
