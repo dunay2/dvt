@@ -34,6 +34,16 @@ export interface MockAdapterDeps {
   };
 }
 
+/** Contract versions this adapter implementation can execute. */
+const SUPPORTED_CONTRACT_VERSIONS = ['1.0.0'] as const;
+
+/** Capabilities declared by the mock adapter. Must stay in sync with adapters.capabilities.json. */
+const MOCK_CAPABILITIES = [
+  'basic-execution',
+  'signal.pause.native',
+  'workflow.fan.parallel',
+] as const;
+
 export class MockAdapter implements IProviderAdapter {
   readonly provider = 'mock' as const;
 
@@ -47,9 +57,12 @@ export class MockAdapter implements IProviderAdapter {
             planId: planRef.planId,
             planVersion: planRef.planVersion,
             schemaVersion: planRef.schemaVersion,
+            contractVersion: '1.0.0',
           },
           steps: [],
         };
+
+    validateMockPlanMetadata(plan.metadata);
 
     const runRef: EngineRunRef = {
       provider: 'mock',
@@ -75,6 +88,18 @@ export class MockAdapter implements IProviderAdapter {
 
   async signal(_runRef: EngineRunRef, _request: SignalRequest): Promise<void> {
     // For mock, signals are interpreted by engine (pause/resume/cancel events).
+  }
+
+  capabilities(): readonly string[] {
+    return MOCK_CAPABILITIES;
+  }
+}
+
+function validateMockPlanMetadata(metadata: ExecutionPlan['metadata']): void {
+  if (!(SUPPORTED_CONTRACT_VERSIONS as readonly string[]).includes(metadata.contractVersion)) {
+    throw new Error(
+      `PLAN_CONTRACT_VERSION_UNKNOWN: ${metadata.contractVersion}. Supported: ${SUPPORTED_CONTRACT_VERSIONS.join(', ')}`
+    );
   }
 }
 

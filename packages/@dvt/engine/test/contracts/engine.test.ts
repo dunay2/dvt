@@ -30,6 +30,7 @@ function makePlanMetadata(planId: string): ExecutionPlan['metadata'] {
     planId,
     planVersion: '1.0.0',
     schemaVersion: 'v1.2',
+    contractVersion: '1.0.0',
     targetAdapter: 'mock',
     fallbackBehavior: 'reject',
     requiresCapabilities: [],

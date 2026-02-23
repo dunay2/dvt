@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(node_modules/.bin/tsc:*)",
-      "Bash(node_modules/.bin/vitest run --reporter=verbose test/core/WorkflowEngine.test.ts)"
+      "Bash(node_modules/.bin/vitest run --reporter=verbose test/core/WorkflowEngine.test.ts)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm test)"
     ]
   }
 }
