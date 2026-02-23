@@ -380,6 +380,9 @@ importers:
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine
+      '@dvt/plan-interpreter':
+        specifier: workspace:*
+        version: link:../plan-interpreter
       '@temporalio/activity':
         specifier: 1.14.1
         version: 1.14.1
@@ -441,6 +444,15 @@ importers:
       '@types/node':
         specifier: 22.19.11
         version: 22.19.11
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/plan-interpreter:
+    devDependencies:
       typescript:
         specifier: 5.9.3
         version: 5.9.3

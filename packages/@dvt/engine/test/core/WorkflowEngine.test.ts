@@ -304,7 +304,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   // detectStuckRuns: runs stranded in PENDING longer than the SLA threshold.
   describe('detectStuckRuns', () => {
-    function makeAdapters() {
+    function makeAdapters(): Map<EngineRunRef['provider'], IProviderAdapter> {
       return new Map<EngineRunRef['provider'], IProviderAdapter>([
         ['temporal', makeTemporalAdapter()],
       ]);

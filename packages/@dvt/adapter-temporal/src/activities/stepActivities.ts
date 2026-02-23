@@ -157,9 +157,22 @@ export function createActivities(deps: ActivityDeps): {
       await deps.stateStore.appendAndEnqueueTx(ctx.runId, [envelope]);
     },
 
-    /** Persist run metadata for correlation queries. */
+    /**
+     * Persist run metadata for correlation queries.
+     *
+     * Idempotent: when the WorkflowEngine has already called bootstrapRunTx (the normal
+     * production path per ADR-0013/0014), the state store throws RUN_ALREADY_EXISTS.
+     * The activity silently succeeds — the engine-owned bootstrap is the authoritative
+     * write, and the workflow continuing from resumeFromLayerIndex>0 (continue-as-new)
+     * should not re-bootstrap an already-existing run.
+     */
     async saveRunMetadata(meta: RunMetadata): Promise<void> {
-      await deps.stateStore.bootstrapRunTx({ metadata: meta, firstEvents: [] });
+      try {
+        await deps.stateStore.bootstrapRunTx({ metadata: meta, firstEvents: [] });
+      } catch (err) {
+        if (err instanceof Error && err.message === 'RUN_ALREADY_EXISTS') return;
+        throw err;
+      }
     },
   };
 }

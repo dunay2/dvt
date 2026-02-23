@@ -8,6 +8,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+
 import { NativeConnection, Worker } from '@temporalio/worker';
 
 import type { ActivityDeps } from './activities/stepActivities.js';
@@ -15,6 +16,7 @@ import { createActivities } from './activities/stepActivities.js';
 import type { TemporalAdapterConfig } from './config.js';
 
 // ---------------------------------------------------------------------------
+
 // Configuration
 // ---------------------------------------------------------------------------
 

@@ -54,6 +54,14 @@ export interface TemporalAdapterDeps {
   projector: SnapshotProjectorLike;
 }
 
+/** Capabilities declared by the Temporal adapter. Must stay in sync with adapters.capabilities.json. */
+const TEMPORAL_CAPABILITIES = [
+  'basic-execution',
+  'signal.pause.native',
+  'workflow.fan.parallel',
+  'history.rotation',
+] as const;
+
 export class TemporalAdapter implements IProviderAdapter {
   readonly provider = 'temporal' as const;
 
@@ -125,6 +133,25 @@ export class TemporalAdapter implements IProviderAdapter {
         throw new Error(`Unknown signal type: ${String(_never)}`);
       }
     }
+  }
+
+  capabilities(): readonly string[] {
+    return TEMPORAL_CAPABILITIES;
+  }
+
+  /**
+   * Verifies the Temporal connection is alive.
+   * Called by WorkflowEngine.healthCheck() to report adapter liveness.
+   */
+  async ping(): Promise<void> {
+    if (!this.deps.clientManager) {
+      // workflowClient injected directly (test mode) — treat as up.
+      return;
+    }
+    if (!this.deps.clientManager.isConnected()) {
+      throw new Error('TEMPORAL_CLIENT_NOT_CONNECTED');
+    }
+    await this.deps.clientManager.ensureConnected();
   }
 
   private async getClient(): Promise<WorkflowClientLike> {

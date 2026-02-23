@@ -17,6 +17,8 @@
       "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
       "@dvt/engine": ["packages/@dvt/engine/src/index.ts"],
       "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
+      "@dvt/plan-interpreter": ["packages/@dvt/plan-interpreter/src/index.ts"],
+      "@dvt/plan-interpreter/*": ["packages/@dvt/plan-interpreter/src/*"],
       "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
       "@dvt/adapter-temporal/*": ["packages/@dvt/adapter-temporal/src/*"],
       "@dvt/cli/*": ["packages/@dvt/cli/src/*"]

@@ -5,14 +5,15 @@
  * @decision Section 5 — Workflow remains deterministic and delegates side effects to activities
  * @decision Section 3 — Lifecycle signaling/query handling follows canonical run state transitions
  * @consequence Temporal workflow execution is replay-safe and aligned with engine lifecycle contracts
- * @version 1.0.0
- * @date 2026-02-21
+ * @version 1.1.0
+ * @date 2026-02-23
  */
 /**
  * RunPlanWorkflow — Temporal interpreter workflow (deterministic).
  *
  * Runs inside a Temporal V8 sandbox.  Only imports from
  * `@temporalio/workflow` and type-only references are allowed.
+ * `@dvt/plan-interpreter` is safe: pure functions, no Node.js APIs.
  *
  * Determinism rules enforced:
  *  - Zero `Date.now()` / `new Date()`
@@ -20,6 +21,7 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
+import { planExecutionLayers } from '@dvt/plan-interpreter';
 import {
   ApplicationFailure,
   continueAsNew,
@@ -342,101 +344,4 @@ function isNonNegativeIntegerString(val: unknown): boolean {
   }
   const n = Number(val);
   return Number.isInteger(n) && n >= 0;
-}
-
-export function planExecutionLayers(steps: ReadonlyArray<WorkflowStep>): WorkflowStep[][] {
-  if (steps.length === 0) return [];
-
-  validateNoDuplicateStepIds(steps);
-
-  if (!hasExplicitDependencies(steps)) {
-    return steps.map((step) => [step]);
-  }
-
-  const { remainingDeps, dependents } = buildDagMaps(steps);
-
-  const consumed = new Set<string>();
-  const layers: WorkflowStep[][] = [];
-  let ready = steps.filter((step) => (remainingDeps.get(step.stepId) ?? 0) === 0);
-
-  while (ready.length > 0) {
-    layers.push(ready);
-    const nextReadyIds = new Set<string>();
-    for (const step of ready) {
-      consumed.add(step.stepId);
-      for (const dependentId of dependents.get(step.stepId) ?? []) {
-        const nextCount = (remainingDeps.get(dependentId) ?? 0) - 1;
-        remainingDeps.set(dependentId, nextCount);
-        if (nextCount === 0) {
-          nextReadyIds.add(dependentId);
-        }
-      }
-    }
-    ready = steps.filter((step) => nextReadyIds.has(step.stepId) && !consumed.has(step.stepId));
-  }
-
-  if (consumed.size !== steps.length) {
-    throw new Error('INVALID_PLAN_SCHEMA: cyclic_dependencies_detected');
-  }
-
-  return layers;
-}
-
-function validateNoDuplicateStepIds(steps: ReadonlyArray<WorkflowStep>): void {
-  const seenStepIds = new Set<string>();
-  for (const step of steps) {
-    if (seenStepIds.has(step.stepId)) {
-      throw new Error(`INVALID_PLAN_SCHEMA: duplicate_step_id:${step.stepId}`);
-    }
-    seenStepIds.add(step.stepId);
-  }
-}
-
-function hasExplicitDependencies(steps: ReadonlyArray<WorkflowStep>): boolean {
-  return steps.some((step) => Array.isArray(step.dependsOn));
-}
-
-function buildDagMaps(steps: ReadonlyArray<WorkflowStep>): {
-  remainingDeps: Map<string, number>;
-  dependents: Map<string, string[]>;
-} {
-  const remainingDeps = new Map<string, number>();
-  const dependents = new Map<string, string[]>();
-
-  for (const step of steps) {
-    remainingDeps.set(step.stepId, 0);
-    dependents.set(step.stepId, []);
-  }
-
-  const stepIds = new Set(steps.map((step) => step.stepId));
-  for (const step of steps) {
-    for (const dep of normalizeDependsOn(step)) {
-      if (!stepIds.has(dep)) {
-        throw new Error(`INVALID_PLAN_SCHEMA: unknown_dependency:${step.stepId}->${dep}`);
-      }
-      if (dep === step.stepId) {
-        throw new Error(`INVALID_PLAN_SCHEMA: self_dependency:${step.stepId}`);
-      }
-      remainingDeps.set(step.stepId, (remainingDeps.get(step.stepId) ?? 0) + 1);
-      const nextDependents = dependents.get(dep)!;
-      nextDependents.push(step.stepId);
-    }
-  }
-  return { remainingDeps, dependents };
-}
-
-function normalizeDependsOn(step: WorkflowStep): string[] {
-  if (!Array.isArray(step.dependsOn)) {
-    return [];
-  }
-
-  const deduped = new Set<string>();
-  for (const dep of step.dependsOn) {
-    if (typeof dep !== 'string' || dep.length === 0) {
-      throw new Error(`INVALID_PLAN_SCHEMA: invalid_dependency_value:${step.stepId}`);
-    }
-    deduped.add(dep);
-  }
-
-  return [...deduped];
 }

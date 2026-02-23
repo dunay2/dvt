@@ -1,6 +1,5 @@
+import { planExecutionLayers } from '@dvt/plan-interpreter';
 import { describe, expect, it } from 'vitest';
-
-import { planExecutionLayers } from '../src/workflows/RunPlanWorkflow.js';
 
 type Step = {
   stepId: string;
