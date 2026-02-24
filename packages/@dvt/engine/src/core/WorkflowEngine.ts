@@ -507,7 +507,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const nowMs = Date.parse(this.deps.clock.nowIsoUtc());
 
     const candidates = await this.deps.stateStore.listRuns({
-      tenantId,
+      ...(tenantId !== undefined && { tenantId }),
       status: 'PENDING',
       limit: limit ?? 100,
     });
