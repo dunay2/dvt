@@ -32,6 +32,11 @@ export interface ExecutionPlan {
      * Used for staleness checks and audit trails.
      */
     generatedAt?: string;
+    /**
+     * SHA-256 hex of the JCS-canonicalized PlannerInputEnvelope.
+     * Informational for traceability/reproducibility.
+     */
+    inputHashSha256?: string;
     requiresCapabilities?: string[];
     fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
     targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
@@ -40,6 +45,11 @@ export interface ExecutionPlan {
     {
       stepId: string;
       kind?: string;
+      type?: 'task' | 'gateway';
+      gateway?: {
+        dslVersion: '1.0';
+        expression: string;
+      };
       /**
        * Optional DAG dependencies for interpreter execution.
        * If omitted, consumers may execute in declaration order.

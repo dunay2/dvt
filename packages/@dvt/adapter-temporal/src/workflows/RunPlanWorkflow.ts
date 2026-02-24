@@ -21,6 +21,7 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
+import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { planExecutionLayers } from '@dvt/plan-interpreter';
 import {
   ApplicationFailure,
@@ -82,6 +83,7 @@ export interface WorkflowState {
   cancelReason?: string;
   currentStepIndex: number;
   continuedAsNewCount: number;
+  gatewayDecisions?: Record<string, boolean>;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +126,11 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     cancelled: false,
     currentStepIndex: 0,
     continuedAsNewCount,
+    gatewayDecisions: {},
   };
+
+  const completedStepResults: Record<string, Record<string, unknown>> = {};
+  const skippedSteps = new Set<string>();
 
   // -- signal handlers ------------------------------------------------
   setHandler(pauseSignal, () => {
@@ -190,6 +196,29 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       layerIndex += 1
     ) {
       const layer = executionLayers[layerIndex]!;
+      const executableLayer = layer.filter((step) => {
+        if (skippedSteps.has(step.stepId)) return false;
+        const deps = normalizeDependsOn(step.dependsOn);
+        return !deps.some((dep) => skippedSteps.has(dep));
+      });
+
+      for (const step of layer) {
+        if (!executableLayer.some((candidate) => candidate.stepId === step.stepId)) {
+          skippedSteps.add(step.stepId);
+          await activities.emitEvent({
+            ctx,
+            planRef,
+            eventType: 'StepSkipped',
+            stepId: step.stepId,
+          });
+        }
+      }
+
+      if (executableLayer.length === 0) {
+        processedLayersInCurrentExecution += 1;
+        continue;
+      }
+
       state.currentStepIndex = completedSteps;
 
       // Check cancellation before each layer
@@ -214,13 +243,32 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       }
 
       // Emit StepStarted in stable order, then execute the whole layer.
-      for (const step of layer) {
+      for (const step of executableLayer) {
         await activities.emitEvent({ ctx, planRef, eventType: 'StepStarted', stepId: step.stepId });
       }
 
       const layerResults = await Promise.all(
-        layer.map(async (step) => {
+        executableLayer.map(async (step) => {
           try {
+            if (step.type === 'gateway' && isGatewayConfig(step.gateway)) {
+              const gatewayCtx = buildGatewayContext(step, completedStepResults);
+              const parsed = parseDslV1(step.gateway.expression);
+              const passed = evaluateDslV1(parsed, gatewayCtx);
+              state.gatewayDecisions![step.stepId] = passed;
+
+              if (!passed) {
+                const downstream = collectDownstreamStepIds(plan.steps, step.stepId);
+                for (const downstreamStepId of downstream) {
+                  skippedSteps.add(downstreamStepId);
+                }
+              }
+
+              return {
+                stepId: step.stepId,
+                result: { stepId: step.stepId, status: 'COMPLETED' as const },
+              };
+            }
+
             const result = await activities.executeStep({ step, ctx });
             return { stepId: step.stepId, result };
           } catch (error) {
@@ -240,6 +288,10 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       for (const { stepId, result } of layerResults) {
         if (result.status === 'COMPLETED') {
           await activities.emitEvent({ ctx, planRef, eventType: 'StepCompleted', stepId });
+          completedStepResults[stepId] = {
+            status: 'COMPLETED',
+            stepId,
+          };
           completedSteps += 1;
           state.currentStepIndex = completedSteps;
           continue;
@@ -344,4 +396,50 @@ function isNonNegativeIntegerString(val: unknown): boolean {
   }
   const n = Number(val);
   return Number.isInteger(n) && n >= 0;
+}
+
+function normalizeDependsOn(dependsOn: unknown): string[] {
+  if (!Array.isArray(dependsOn)) return [];
+  return dependsOn.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
+}
+
+function isGatewayConfig(v: unknown): v is { dslVersion: '1.0'; expression: string } {
+  if (typeof v !== 'object' || v === null) return false;
+  const c = v as Record<string, unknown>;
+  return (
+    c.dslVersion === '1.0' && typeof c.expression === 'string' && c.expression.trim().length > 0
+  );
+}
+
+function buildGatewayContext(
+  step: WorkflowStep,
+  completedStepResults: Record<string, Record<string, unknown>>
+): Record<string, unknown> {
+  const deps = normalizeDependsOn(step.dependsOn);
+  const fromDependency = deps[0] ? completedStepResults[deps[0]] : undefined;
+  if (fromDependency) return fromDependency;
+  return {};
+}
+
+function collectDownstreamStepIds(steps: WorkflowStep[], fromStepId: string): Set<string> {
+  const childrenByParent = new Map<string, string[]>();
+  for (const step of steps) {
+    for (const dep of normalizeDependsOn(step.dependsOn)) {
+      const arr = childrenByParent.get(dep) ?? [];
+      arr.push(step.stepId);
+      childrenByParent.set(dep, arr);
+    }
+  }
+
+  const visited = new Set<string>();
+  const stack = [...(childrenByParent.get(fromStepId) ?? [])];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || visited.has(current)) continue;
+    visited.add(current);
+    for (const child of childrenByParent.get(current) ?? []) {
+      if (!visited.has(child)) stack.push(child);
+    }
+  }
+  return visited;
 }

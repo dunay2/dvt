@@ -183,7 +183,14 @@ export type Activities = ReturnType<typeof createActivities>;
 // Internal helpers (mirrors MockAdapter)
 // ---------------------------------------------------------------------------
 
-const ALLOWED_STEP_FIELDS = new Set(['stepId', 'kind', 'dependsOn', 'simulateError']);
+const ALLOWED_STEP_FIELDS = new Set([
+  'stepId',
+  'kind',
+  'type',
+  'gateway',
+  'dependsOn',
+  'simulateError',
+]);
 
 function resolveTemporalAttemptFromContext(): number {
   try {

@@ -91,6 +91,7 @@ export interface ExecutionPlan {
     planId: string;
     planVersion: string;
     schemaVersion: string;
+    inputHashSha256?: string;
     requiresCapabilities?: string[];
     fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
     targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock';
@@ -99,6 +100,11 @@ export interface ExecutionPlan {
     {
       stepId: string;
       kind?: string;
+      type?: 'task' | 'gateway';
+      gateway?: {
+        dslVersion: '1.0';
+        expression: string;
+      };
       /**
        * Optional dependency edges for DAG execution.
        * If omitted, workflow falls back to strict input order.

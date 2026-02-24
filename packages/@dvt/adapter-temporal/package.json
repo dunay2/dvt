@@ -11,6 +11,7 @@
     "@temporalio/worker": "1.14.1",
     "@temporalio/workflow": "1.14.1",
     "@dvt/contracts": "workspace:*",
+    "@dvt/dsl": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/plan-interpreter": "workspace:*"
   },

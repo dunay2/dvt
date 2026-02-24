@@ -30,6 +30,10 @@
     "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
+      "@dvt/canonical": ["packages/@dvt/canonical/src/index.ts"],
+      "@dvt/canonical/*": ["packages/@dvt/canonical/src/*"],
+      "@dvt/dsl": ["packages/@dvt/dsl/src/index.ts"],
+      "@dvt/dsl/*": ["packages/@dvt/dsl/src/*"],
       "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
       "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
       "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],

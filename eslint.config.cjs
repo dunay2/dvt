@@ -139,6 +139,23 @@ module.exports = [
     },
   },
   {
+    files: ['packages/@dvt/adapter-temporal/**/*.ts', 'packages/@dvt/adapter-postgres/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@dvt/planner', '@dvt/planner/*'],
+              message:
+                'Engine adapters MUST NOT import @dvt/planner. Planner sovereignty is mandatory (ADR-001).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['apps/api/src/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: { tsconfigRootDir: __dirname },

@@ -8,11 +8,10 @@
  * @version 1.1.0
  * @date 2026-02-21
  */
+import { jcsCanonicalize, sha256Hex } from '@dvt/canonical';
 import type { RunStatusSnapshot } from '@dvt/contracts';
 
 import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
-import { jcsCanonicalize } from '../utils/jcs.js';
-import { sha256Hex } from '../utils/sha256.js';
 
 /**
  * Pure function: applies a single event to a mutable WorkflowSnapshot.

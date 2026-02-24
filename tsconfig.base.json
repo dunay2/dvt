@@ -13,8 +13,12 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
+      "@dvt/canonical": ["packages/@dvt/canonical/src/index.ts"],
+      "@dvt/canonical/*": ["packages/@dvt/canonical/src/*"],
       "@dvt/contracts": ["packages/@dvt/contracts/index.ts"],
       "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
+      "@dvt/dsl": ["packages/@dvt/dsl/src/index.ts"],
+      "@dvt/dsl/*": ["packages/@dvt/dsl/src/*"],
       "@dvt/engine": ["packages/@dvt/engine/src/index.ts"],
       "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
       "@dvt/plan-interpreter": ["packages/@dvt/plan-interpreter/src/index.ts"],
