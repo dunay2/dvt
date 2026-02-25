@@ -1,6 +1,6 @@
 # Wiki interna con MkDocs Material (mínimo cambio)
 
-Este repositorio ya tiene base de wiki con [`mkdocs.yml`](../mkdocs.yml) y despliegue en [`.github/workflows/mkdocs-deploy.yml`](../.github/workflows/mkdocs-deploy.yml).
+Este repositorio tiene base de wiki con [`mkdocs.yml`](../mkdocs.yml) y despliegue en [`.github/workflows/mkdocs-deploy.yml`](../.github/workflows/mkdocs-deploy.yml).
 
 ## 1) Instalación local (Windows)
 
