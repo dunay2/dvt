@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dvt:planner:PlanCore:v2.3.1",
+  "type": "object",
+  "required": ["metadata", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["planVersion", "inputHashSha256"],
+      "additionalProperties": false,
+      "properties": {
+        "planVersion": { "const": "2.3" },
+        "inputHashSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ExecutionStepV2" }
+    }
+  },
+  "$defs": {
+    "ExecutionStepV2": {
+      "type": "object",
+      "required": ["stepId", "kind", "dependsOn"],
+      "additionalProperties": false,
+      "properties": {
+        "stepId": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "dependsOn": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "stepTypeConfig": { "type": "object", "additionalProperties": true }
+      }
+    }
+  }
+}
