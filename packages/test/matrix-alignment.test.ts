@@ -22,7 +22,7 @@ import { it, expect } from 'vitest';
 
 // ADAPTER_SUPPORTED_SCHEMA is added to versioning.ts as part of ADR-0017 implementation.
 // Shape: { major: number; minor: number } — e.g. { major: 1, minor: 1 }
-import { ADAPTER_SUPPORTED_SCHEMA as TEMPORAL_SUPPORTED } from '../adapter-temporal/src/versioning.ts';
+import { ADAPTER_SUPPORTED_SCHEMA as TEMPORAL_SUPPORTED } from '../@dvt/adapter-temporal/src/versioning.ts';
 
 type CompatMatrix = {
   schema: 'ExecutionPlan';

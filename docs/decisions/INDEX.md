@@ -17,6 +17,7 @@ This document is the main entry point for all ADRs in the repository.
 | ADR-0008 | Source Import Wizard (Warehouse → dbt Sources)          | Accepted | 2026-02-18 | [`ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md`](./ADR-0008-source-import-wizard-warehouse-to-dbt-sources.md)                                         |
 | ADR-0017 | State Write Boundary for Engine Adapters                | Proposed | 2026-02-25 | [`ADR-0017-state-write-boundary-for-engine-adapters.md`](./ADR-0017-state-write-boundary-for-engine-adapters.md)                                                   |
 | ADR-0018 | Divination Layer D&D naming and contract governance     | Proposed | 2026-02-25 | [`ADR-0018-divination-layer-dd-naming-and-contract.md`](./ADR-0018-divination-layer-dd-naming-and-contract.md)                                                     |
+| ADR-0019 | Dungeon Master orchestration component                  | Proposed | 2026-02-25 | [`ADR-0019-dungeon-master-orchestration-component.md`](./ADR-0019-dungeon-master-orchestration-component.md)                                                       |
 
 ---
 
