@@ -1,3 +1,6 @@
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.WorkflowSignals = exports.RUN_PLAN_WORKFLOW = void 0;
 /**
  * @file packages/@dvt/contracts/src/workflows.ts
  * @baseline ADR-0005: Contract Formalization Tooling
@@ -8,8 +11,8 @@
  * @date 2026-02-21
  */
 /** Canonical workflow names and signals used across engine & adapters */
-export const RUN_PLAN_WORKFLOW = 'runPlanWorkflow';
-export const WorkflowSignals = {
+exports.RUN_PLAN_WORKFLOW = 'runPlanWorkflow';
+exports.WorkflowSignals = {
   PAUSE: 'pause',
   RESUME: 'resume',
   CANCEL: 'cancel',

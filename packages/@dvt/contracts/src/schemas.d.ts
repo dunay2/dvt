@@ -17,8 +17,8 @@
 import { z } from 'zod';
 import type { RunStatusSnapshot } from './types/contracts';
 export declare const ProviderSchema: z.ZodEnum<{
-  conductor: 'conductor';
   temporal: 'temporal';
+  conductor: 'conductor';
   mock: 'mock';
 }>;
 export declare const RunStatusSchema: z.ZodEnum<{
@@ -42,8 +42,8 @@ export declare const StepStatusSchema: z.ZodEnum<{
   PENDING: 'PENDING';
   RUNNING: 'RUNNING';
   FAILED: 'FAILED';
-  SUCCESS: 'SUCCESS';
   SKIPPED: 'SKIPPED';
+  SUCCESS: 'SUCCESS';
 }>;
 export declare const SignalTypeSchema: z.ZodEnum<{
   PAUSE: 'PAUSE';
@@ -54,8 +54,8 @@ export declare const SignalTypeSchema: z.ZodEnum<{
 }>;
 export declare const StepOutputStatusSchema: z.ZodEnum<{
   FAILED: 'FAILED';
-  SUCCESS: 'SUCCESS';
   SKIPPED: 'SKIPPED';
+  SUCCESS: 'SUCCESS';
 }>;
 export declare const PlanRefSchema: z.ZodObject<
   {
@@ -66,6 +66,7 @@ export declare const PlanRefSchema: z.ZodObject<
     planVersion: z.ZodString;
     sizeBytes: z.ZodOptional<z.ZodNumber>;
     expiresAt: z.ZodOptional<z.ZodString>;
+    requiresCapabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
   },
   z.core.$strip
 >;
@@ -76,8 +77,8 @@ export declare const RunContextSchema: z.ZodObject<
     environmentId: z.ZodString;
     runId: z.ZodString;
     targetAdapter: z.ZodEnum<{
-      conductor: 'conductor';
       temporal: 'temporal';
+      conductor: 'conductor';
       mock: 'mock';
     }>;
   },
@@ -155,8 +156,8 @@ export declare const StepOutputSchema: z.ZodObject<
   {
     status: z.ZodEnum<{
       FAILED: 'FAILED';
-      SUCCESS: 'SUCCESS';
       SKIPPED: 'SKIPPED';
+      SUCCESS: 'SUCCESS';
     }>;
     artifactRefs: z.ZodArray<
       z.ZodObject<
@@ -211,8 +212,8 @@ export declare const StepSnapshotSchema: z.ZodObject<
       PENDING: 'PENDING';
       RUNNING: 'RUNNING';
       FAILED: 'FAILED';
-      SUCCESS: 'SUCCESS';
       SKIPPED: 'SKIPPED';
+      SUCCESS: 'SUCCESS';
     }>;
     logicalAttemptId: z.ZodString;
     engineAttemptId: z.ZodOptional<z.ZodString>;
@@ -245,8 +246,8 @@ export declare const RunSnapshotSchema: z.ZodObject<
             PENDING: 'PENDING';
             RUNNING: 'RUNNING';
             FAILED: 'FAILED';
-            SUCCESS: 'SUCCESS';
             SKIPPED: 'SKIPPED';
+            SUCCESS: 'SUCCESS';
           }>;
           logicalAttemptId: z.ZodString;
           engineAttemptId: z.ZodOptional<z.ZodString>;

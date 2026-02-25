@@ -1,3 +1,4 @@
+'use strict';
 /**
  * @file packages/@dvt/contracts/src/types/artifacts.ts
  * @baseline ADR-0005: Contract Formalization Tooling
@@ -12,5 +13,5 @@
  *
  * TypeScript types for artifact references and step outputs
  */
-export {};
+Object.defineProperty(exports, '__esModule', { value: true });
 //# sourceMappingURL=artifacts.js.map

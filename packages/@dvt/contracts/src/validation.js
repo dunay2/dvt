@@ -1,3 +1,19 @@
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.ContractValidationError = void 0;
+exports.toValidationErrorResponse = toValidationErrorResponse;
+exports.parsePlanRef = parsePlanRef;
+exports.parseRunContext = parseRunContext;
+exports.parseSignalRequest = parseSignalRequest;
+exports.parseEngineRunRef = parseEngineRunRef;
+exports.parseRunStatusSnapshot = parseRunStatusSnapshot;
+exports.parseArtifactRef = parseArtifactRef;
+exports.parseStepOutput = parseStepOutput;
+exports.parseCanonicalEngineEvent = parseCanonicalEngineEvent;
+exports.parseStepSnapshot = parseStepSnapshot;
+exports.parseRunSnapshot = parseRunSnapshot;
+exports.parseExecuteStepRequest = parseExecuteStepRequest;
+exports.parseExecuteStepResult = parseExecuteStepResult;
 /**
  * @file packages/@dvt/contracts/src/validation.ts
  * @baseline ADR-0005: Contract Formalization Tooling
@@ -8,25 +24,9 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { ZodError } from 'zod';
-import {
-  ArtifactRefSchema,
-  CanonicalEngineEventSchema,
-  EngineRunRefSchema,
-  ExecuteStepRequestSchema,
-  ExecuteStepResultSchema,
-  PlanRefSchema,
-  RunContextSchema,
-  RunSnapshotSchema,
-  RunStatusSnapshotSchema,
-  SignalRequestSchema,
-  StepOutputSchema,
-  StepSnapshotSchema,
-} from './schemas';
-export class ContractValidationError extends Error {
-  statusCode;
-  error;
-  details;
+const zod_1 = require('zod');
+const schemas_1 = require('./schemas');
+class ContractValidationError extends Error {
   constructor(details) {
     super('Validation failed');
     this.name = 'ContractValidationError';
@@ -43,11 +43,12 @@ export class ContractValidationError extends Error {
     };
   }
 }
-export function toValidationErrorResponse(error) {
+exports.ContractValidationError = ContractValidationError;
+function toValidationErrorResponse(error) {
   if (error instanceof ContractValidationError) {
     return error.toResponse();
   }
-  if (error instanceof ZodError) {
+  if (error instanceof zod_1.ZodError) {
     return {
       statusCode: 400,
       error: 'Bad Request',
@@ -74,40 +75,40 @@ function mapZodIssues(error) {
     message: issue.message,
   }));
 }
-export function parsePlanRef(input) {
-  return parseWithSchema(PlanRefSchema, input);
+function parsePlanRef(input) {
+  return parseWithSchema(schemas_1.PlanRefSchema, input);
 }
-export function parseRunContext(input) {
-  return parseWithSchema(RunContextSchema, input);
+function parseRunContext(input) {
+  return parseWithSchema(schemas_1.RunContextSchema, input);
 }
-export function parseSignalRequest(input) {
-  return parseWithSchema(SignalRequestSchema, input);
+function parseSignalRequest(input) {
+  return parseWithSchema(schemas_1.SignalRequestSchema, input);
 }
-export function parseEngineRunRef(input) {
-  return parseWithSchema(EngineRunRefSchema, input);
+function parseEngineRunRef(input) {
+  return parseWithSchema(schemas_1.EngineRunRefSchema, input);
 }
-export function parseRunStatusSnapshot(input) {
-  return parseWithSchema(RunStatusSnapshotSchema, input);
+function parseRunStatusSnapshot(input) {
+  return parseWithSchema(schemas_1.RunStatusSnapshotSchema, input);
 }
-export function parseArtifactRef(input) {
-  return parseWithSchema(ArtifactRefSchema, input);
+function parseArtifactRef(input) {
+  return parseWithSchema(schemas_1.ArtifactRefSchema, input);
 }
-export function parseStepOutput(input) {
-  return parseWithSchema(StepOutputSchema, input);
+function parseStepOutput(input) {
+  return parseWithSchema(schemas_1.StepOutputSchema, input);
 }
-export function parseCanonicalEngineEvent(input) {
-  return parseWithSchema(CanonicalEngineEventSchema, input);
+function parseCanonicalEngineEvent(input) {
+  return parseWithSchema(schemas_1.CanonicalEngineEventSchema, input);
 }
-export function parseStepSnapshot(input) {
-  return parseWithSchema(StepSnapshotSchema, input);
+function parseStepSnapshot(input) {
+  return parseWithSchema(schemas_1.StepSnapshotSchema, input);
 }
-export function parseRunSnapshot(input) {
-  return parseWithSchema(RunSnapshotSchema, input);
+function parseRunSnapshot(input) {
+  return parseWithSchema(schemas_1.RunSnapshotSchema, input);
 }
-export function parseExecuteStepRequest(input) {
-  return parseWithSchema(ExecuteStepRequestSchema, input);
+function parseExecuteStepRequest(input) {
+  return parseWithSchema(schemas_1.ExecuteStepRequestSchema, input);
 }
-export function parseExecuteStepResult(input) {
-  return parseWithSchema(ExecuteStepResultSchema, input);
+function parseExecuteStepResult(input) {
+  return parseWithSchema(schemas_1.ExecuteStepResultSchema, input);
 }
 //# sourceMappingURL=validation.js.map

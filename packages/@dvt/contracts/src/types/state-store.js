@@ -1,3 +1,4 @@
+'use strict';
 /**
  * @file packages/@dvt/contracts/src/types/state-store.ts
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
@@ -11,5 +12,5 @@
 /**
  * State Store Contract Types (v1.0)
  */
-export {};
+Object.defineProperty(exports, '__esModule', { value: true });
 //# sourceMappingURL=state-store.js.map

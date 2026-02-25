@@ -1,3 +1,6 @@
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.AuthorizationError = void 0;
 /**
  * @file packages/@dvt/contracts/src/errors.ts
  * @baseline ADR-0005: Contract Formalization Tooling
@@ -7,12 +10,13 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-export class AuthorizationError extends Error {
-  code = 'AUTHZ_DENIED';
+class AuthorizationError extends Error {
   constructor(message = 'Authorization denied') {
     super(message);
+    this.code = 'AUTHZ_DENIED';
     this.name = 'AuthorizationError';
     Object.setPrototypeOf(this, AuthorizationError.prototype);
   }
 }
+exports.AuthorizationError = AuthorizationError;
 //# sourceMappingURL=errors.js.map
