@@ -4,6 +4,12 @@ Este documento describe la estructura de ficheros del repositorio DVT y qué con
 
 ---
 
+## Actualización v2.2
+
+La estructura y contratos del planner han sido extraídos y reemplazados según la versión v2.2. Ver detalles en README y código fuente de `@dvt/planner`.
+
+---
+
 ## Resumen raíz
 
 - `CHANGELOG.md` — Historial de cambios del repositorio.
