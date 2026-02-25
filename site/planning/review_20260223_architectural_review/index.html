@@ -1,0 +1,2346 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>DVT+ Architectural Review — Principal/Staff Level - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dvt-architectural-review-principalstaff-level" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DVT+ Architectural Review — Principal/Staff Level
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-principle-under-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Principle Under Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-conceptual-soundness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Conceptual Soundness
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Conceptual Soundness">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-solid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is solid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-fragile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is fragile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is missing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architectural-risk-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architectural Risk Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-engine-abstraction-critique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Engine Abstraction Critique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Engine Abstraction Critique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#is-iworkflowengine-minimal-and-correct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is IWorkflowEngine minimal and correct?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-temporal-first-strategy-wise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is Temporal-first strategy wise?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-conductor-parity-realistic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is Conductor parity realistic?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-the-event-model-robust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is the event model robust?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-executionplan-sufficiently-expressive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is ExecutionPlan sufficiently expressive?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-execution-planning-layer-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Execution Planning Layer Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Execution Planning Layer Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dag-analyzer-based-on-dbt-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DAG analyzer based on dbt artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partial-execution-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partial execution guarantees
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retrybackoff-policy-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retry/backoff policy ownership
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cost-estimator-realism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost estimator realism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plan-versioning-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plan versioning strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assessment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-state-metadata-layer-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. State &amp; Metadata Layer Review
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. State &amp; Metadata Layer Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#is-postgres-sufficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is Postgres sufficient?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-snowflake-for-analytics-appropriate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is Snowflake for analytics appropriate?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-lineage-snapshotting-scalable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is lineage snapshotting scalable?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-artifact-immutability-realistic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is artifact immutability realistic?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-amplification-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Write amplification risk
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#event-sourcing-vs-mutable-state-tradeoffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event sourcing vs mutable state tradeoffs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ui-read-performance-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UI read performance constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-plugin-system-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Plugin System Evaluation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Plugin System Evaluation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current state
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#isolation-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Isolation strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-plugins-compromise-deterministic-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can plugins compromise deterministic execution?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-capability-based-security-sufficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is capability-based security sufficient?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assessment_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assessment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-what-is-overbuilt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. What Is Overbuilt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-what-is-underbuilt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. What Is Underbuilt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-scalability-outlook-3-year-horizon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Scalability Outlook (3-Year Horizon)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Scalability Outlook (3-Year Horizon)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bottlenecks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bottlenecks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-points-of-failure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single points of failure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-growth-pressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data growth pressure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planner-computation-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planner computation load
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-architectural-scorecard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Architectural Scorecard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-strategic-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Strategic Recommendations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Strategic Recommendations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#3-structural-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 Structural Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-clarifications-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 Clarifications Needed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-things-to-freeze-immediately" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 Things to Freeze Immediately
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-things-to-delay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 Things to Delay
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dvt-architectural-review-principalstaff-level">DVT+ Architectural Review — Principal/Staff Level<a class="headerlink" href="#dvt-architectural-review-principalstaff-level" title="Permanent link">&para;</a></h1>
+<p><strong>Date</strong>: 2026-02-23
+<strong>Reviewer Role</strong>: Principal Software Architect (Data Platforms, dbt+Snowflake, Deterministic Execution, Workflow Orchestration, Clean Architecture, Plugin SaaS, Multi-tenant)
+<strong>Sources</strong>: IWorkflowEngine.v2.0.md, ExecutionSemantics.v2.0.md, RunEvents.v2.0.md, IRunStateStore.v2.0.md, GlossaryContract.v2.0.md, SignalsAndAuth.v1.md, PluginSandbox.v1.md, TemporalAdapter.spec.md, ConductorAdapter.spec.md, ADR-0003, ADR-0004, engine-phases.md, dvt_v2_architecture.mmd, WorkflowEngine.ts, RunPlanWorkflow.ts, SnapshotProjector.ts, idempotency.ts, IProviderAdapter.ts, IRunStateStore.ts, executionPlan.ts, PostgresStateStoreAdapter.ts, @dvt/contracts, ROADMAP.md, review 20260222.md</p>
+<hr />
+<h2 id="core-principle-under-validation">Core Principle Under Validation<a class="headerlink" href="#core-principle-under-validation" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>"The UI does not execute. The engine does not decide. The planner does not persist state."</p>
+</blockquote>
+<hr />
+<h2 id="1-conceptual-soundness">1. Conceptual Soundness<a class="headerlink" href="#1-conceptual-soundness" title="Permanent link">&para;</a></h2>
+<h3 id="what-is-solid">What is solid<a class="headerlink" href="#what-is-solid" title="Permanent link">&para;</a></h3>
+<p><strong>The three-tier separation is architecturally correct and enforced at the code level.</strong> The <a href="packages/@dvt/engine/src/core/WorkflowEngine.ts:115"><code>WorkflowEngine</code></a> class does not contain planning logic. It receives a <a href="packages/@dvt/contracts/src/types/contracts.ts:56"><code>PlanRef</code></a> (not an <code>ExecutionPlan</code>), delegates to an adapter, and emits lifecycle events to the state store. The engine does not fetch plan bytes (ADR-0012). The engine does not decide execution order — that is the adapter's interpreter workflow responsibility. The state store is the append-only source of truth with monotonic <code>runSeq</code> ordering.</p>
+<p><strong>The event sourcing model is well-specified.</strong> The <a href="docs/architecture/engine/contracts/engine/ExecutionSemantics.v2.0.md:1"><code>ExecutionSemantics.v2.0.md</code></a> contract defines ordering authority (<code>runSeq</code>), deduplication authority (<code>(runId, idempotencyKey)</code>), and time-window authority (<code>persistedAt</code>). The timestamp split between <code>emittedAt</code> (producer) and <code>persistedAt</code> (append authority) is correct for distributed systems with clock skew.</p>
+<p><strong>The idempotency key derivation is deterministic and well-tested.</strong> The formula <code>SHA256(runId|stepIdNormalized|logicalAttemptId|eventType|planId|planVersion)</code> in <a href="packages/@dvt/engine/src/core/idempotency.ts:30"><code>IdempotencyKeyBuilder</code></a> matches the normative contract exactly. Golden test vectors exist. The exclusion of <code>tenantId</code> and <code>engineAttemptId</code> from the key is correct — these are envelope fields, not identity fields.</p>
+<p><strong>ADR discipline is genuine.</strong> 26+ ADRs with acceptance criteria, traceability annotations in code (<code>@baseline</code>, <code>@decision</code>, <code>@consequence</code>), and a previous review that found 7 active bugs by comparing ADR text to code. This is architecture as a verification tool.</p>
+<h3 id="what-is-fragile">What is fragile<a class="headerlink" href="#what-is-fragile" title="Permanent link">&para;</a></h3>
+<p><strong>The separation principle erodes at the adapter boundary.</strong> The <a href="packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:113"><code>RunPlanWorkflow.ts</code></a> contains the DAG walker (<a href="packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:347"><code>planExecutionLayers()</code></a>), step scheduling logic, retry policy (hardcoded 3 retries, 2x backoff in activity proxy config at line 98-107), and continue-as-new thresholds. This is planning logic living inside the adapter. The principle says "the engine does not decide" — but the adapter is deciding execution order, parallelism strategy, and retry policy. The boundary between "adapter translates" and "adapter decides" is not enforced by any contract.</p>
+<p>When Conductor is added, the same DAG walking logic must be reimplemented in the Conductor DSL generator. There is no shared <code>IPlanInterpreter</code> contract that both adapters must implement. The <a href="packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:347"><code>planExecutionLayers()</code></a> function is Temporal-specific code that will be duplicated.</p>
+<p><strong>The <code>ExecutionPlan</code> interface is underspecified.</strong> The <a href="packages/@dvt/engine/src/contracts/executionPlan.ts:9"><code>ExecutionPlan</code></a> has <code>steps</code> with optional <code>dependsOn</code> and an open <code>Record&lt;string, unknown&gt;</code> extension. There is no normative schema for step types, no required fields beyond <code>stepId</code>, and no contract for what a step's execution semantics are. The plan is a bag of JSON with a stepId. This means every adapter must independently interpret what a step means, and there is no validation that two adapters interpret the same plan identically.</p>
+<p><strong>State-driven UI at scale has an unresolved read model problem.</strong> The <a href="packages/@dvt/engine/src/core/WorkflowEngine.ts:283"><code>getRunStatus()</code></a> method reads from snapshot or falls back to full event replay. But the <a href="packages/@dvt/engine/src/contracts/runEvents.ts:92"><code>WorkflowSnapshot</code></a> does not include step-level detail beyond status/timestamps/attempts. For a UI showing 1000-node dbt runs with logs, artifacts, error details, and cost attribution, the snapshot is insufficient. The UI will need to query the event log directly or maintain separate read models — neither of which is specified.</p>
+<h3 id="what-is-missing">What is missing<a class="headerlink" href="#what-is-missing" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong><code>IExecutionPlanner</code> interface.</strong> Referenced in the V2 architecture diagram (<a href="docs/architecture/engine/dvt_v2_architecture.mmd:98"><code>IExecutionPlanner</code></a>) but does not exist in code. No contract defines how plans are produced, validated, or versioned. Users produce <code>ExecutionPlan</code> objects with no formal contract.</p>
+</li>
+<li>
+<p><strong><code>IPlanInterpreter</code> or equivalent.</strong> No contract ensures that Temporal and Conductor interpret the same plan identically. The DAG walker is adapter-specific code.</p>
+</li>
+<li>
+<p><strong>Plan-to-adapter semantic equivalence tests.</strong> No mechanism to verify that <code>planExecutionLayers()</code> in Temporal produces the same execution order as the Conductor DSL generator for the same plan.</p>
+</li>
+<li>
+<p><strong>Read model specification for UI.</strong> The contracts define write-side (events) and projection (snapshot) but not the read models the UI needs.</p>
+</li>
+</ol>
+<hr />
+<h2 id="2-architectural-risk-map">2. Architectural Risk Map<a class="headerlink" href="#2-architectural-risk-map" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Severity</th>
+<th>Likelihood</th>
+<th>Why</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Adapter semantic drift</strong></td>
+<td>Critical</td>
+<td>Certain (when Conductor ships)</td>
+<td>DAG walker lives in Temporal adapter. Conductor will reimplement independently. No shared contract or equivalence test.</td>
+<td>Extract <code>IPlanInterpreter</code> contract. Shared golden-path execution order tests.</td>
+</tr>
+<tr>
+<td><strong>No IExecutionPlanner</strong></td>
+<td>High</td>
+<td>Certain</td>
+<td>Plans are produced ad-hoc. No validation contract. No versioning strategy for plan schema evolution.</td>
+<td>Define <code>IExecutionPlanner</code> interface before Phase 2.</td>
+</tr>
+<tr>
+<td><strong>Tenant isolation is WHERE-clause only</strong></td>
+<td>High</td>
+<td>High</td>
+<td>No RLS in Postgres. One missing WHERE clause = cross-tenant data breach. <a href="packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:1"><code>PostgresStateStoreAdapter</code></a> relies on application-level filtering.</td>
+<td>Implement Postgres RLS. Add tenant isolation integration tests.</td>
+</tr>
+<tr>
+<td><strong>Snapshot insufficiency for UI</strong></td>
+<td>High</td>
+<td>Certain (at scale)</td>
+<td><a href="packages/@dvt/engine/src/contracts/runEvents.ts:92"><code>WorkflowSnapshot</code></a> lacks step logs, artifacts, error payloads, cost data. UI will bypass the projection layer.</td>
+<td>Define explicit read model contracts for UI views.</td>
+</tr>
+<tr>
+<td><strong><code>applyEventToSnapshot</code> duplication</strong></td>
+<td>High</td>
+<td>Certain</td>
+<td>The Postgres adapter has its own <a href="packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:90"><code>applyEventToSnapshot()</code></a> that must stay in sync with <a href="packages/@dvt/engine/src/core/SnapshotProjector.ts:24"><code>applyRunEvent()</code></a>. Comment says "must be kept in sync" — this is a manual invariant.</td>
+<td>Extract shared projection logic into <code>@dvt/projector</code> package.</td>
+</tr>
+<tr>
+<td><strong>Event volume unbounded</strong></td>
+<td>Medium</td>
+<td>Certain (at scale)</td>
+<td>No retention policy. No archival. Append-only log grows without bound. 1000-step runs produce 2000+ events per run.</td>
+<td>Define retention tiers, archival policy, and replay boundaries.</td>
+</tr>
+<tr>
+<td><strong><code>runSeq</code> contention under parallelism</strong></td>
+<td>Medium</td>
+<td>High</td>
+<td>Parallel step events from a single run contend on <code>MAX(runSeq)+1</code>. Under high parallelism, this becomes a serialization bottleneck.</td>
+<td>Use database sequences or pre-allocated ranges per run.</td>
+</tr>
+<tr>
+<td><strong>Plugin security boundary undefined</strong></td>
+<td>Medium</td>
+<td>Low (Phase 3)</td>
+<td><a href="docs/architecture/engine/contracts/extensions/PluginSandbox.v1.md:1"><code>PluginSandbox.v1.md</code></a> is DRAFT. vm2 is banned. No implementation exists.</td>
+<td>Freeze plugin contract before Phase 3. Do not start implementation until engine is stable.</td>
+</tr>
+<tr>
+<td><strong>Cost attribution complexity</strong></td>
+<td>Medium</td>
+<td>Medium</td>
+<td>V2 diagram includes Snowflake cost ingestion, cost dashboards, cost estimator. No implementation. No data model.</td>
+<td>Defer until Phase 3. Define cost event schema first.</td>
+</tr>
+<tr>
+<td><strong>Multi-engine abstraction leaks</strong></td>
+<td>Medium</td>
+<td>Certain (Phase 2)</td>
+<td>Temporal has deterministic replay. Conductor does not. The abstraction assumes both can provide equivalent guarantees. They cannot.</td>
+<td>Document parity gaps explicitly. Accept degraded guarantees for Conductor.</td>
+</tr>
+<tr>
+<td><strong>Outbox delivery ordering</strong></td>
+<td>Low</td>
+<td>Medium</td>
+<td>Outbox is at-least-once but not ordered. Events may be delivered out of <code>runSeq</code> order to consumers.</td>
+<td>Document ordering guarantees. Consumers must tolerate out-of-order delivery.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-engine-abstraction-critique">3. Engine Abstraction Critique<a class="headerlink" href="#3-engine-abstraction-critique" title="Permanent link">&para;</a></h2>
+<h3 id="is-iworkflowengine-minimal-and-correct">Is <code>IWorkflowEngine</code> minimal and correct?<a class="headerlink" href="#is-iworkflowengine-minimal-and-correct" title="Permanent link">&para;</a></h3>
+<p>The interface in <a href="docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md:31"><code>IWorkflowEngine.v2.0.md</code></a> is:</p>
+<pre><code class="language-ts">interface IWorkflowEngine {
+  startRun(planRef: PlanRef, context: RunContext): Promise&lt;EngineRunRef&gt;;
+  cancelRun(engineRunRef: EngineRunRef): Promise&lt;void&gt;;
+  getRunStatus(engineRunRef: EngineRunRef): Promise&lt;RunStatusSnapshot&gt;;
+  signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise&lt;void&gt;;
+}
+</code></pre>
+<p>This is minimal. Four methods. The actual implementation in <a href="packages/@dvt/engine/src/core/WorkflowEngine.ts:115"><code>WorkflowEngine.ts</code></a> adds <code>enrichRunStatus()</code>, <code>healthCheck()</code>, and <code>detectStuckRuns()</code> — all reasonable extensions that do not pollute the core contract.</p>
+<p><strong>Problem</strong>: <code>startRun</code> accepts <code>PlanRef</code> but the engine does not validate plan content. It validates <code>schemaVersion</code>, <code>uri</code> policy, and capabilities — but not the plan's structural correctness (valid DAG, no cycles, no orphan steps). That validation happens inside the adapter's workflow, which means a structurally invalid plan will fail at runtime inside Temporal, not at submission time. This is a poor user experience and wastes adapter resources.</p>
+<p><strong>Recommendation</strong>: Add <code>validatePlan(planRef: PlanRef): Promise&lt;ValidationReport&gt;</code> to the engine interface. Pre-flight validation before adapter dispatch.</p>
+<h3 id="is-temporal-first-strategy-wise">Is Temporal-first strategy wise?<a class="headerlink" href="#is-temporal-first-strategy-wise" title="Permanent link">&para;</a></h3>
+<p>Yes. Temporal provides deterministic replay, durable execution, and native signal handling. These are the hardest properties to build from scratch. Starting with the strongest runtime and degrading for weaker ones is correct.</p>
+<p>The <a href="packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:113"><code>RunPlanWorkflow.ts</code></a> is well-structured: deterministic (no <code>Date.now()</code>, no <code>Math.random()</code>, no Node.js APIs), delegates all side effects to activities, handles pause/resume/cancel via signals, and implements continue-as-new for history management.</p>
+<h3 id="is-conductor-parity-realistic">Is Conductor parity realistic?<a class="headerlink" href="#is-conductor-parity-realistic" title="Permanent link">&para;</a></h3>
+<p>No. The <a href="docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md:1"><code>ConductorAdapter.spec.md</code></a> documents fundamental parity gaps:</p>
+<ul>
+<li>No native deterministic replay</li>
+<li>No reliable pause/cancel (webhook-based, eventual)</li>
+<li>No parallel subworkflows (emulated)</li>
+<li>30s default task timeout (strict)</li>
+<li>32KB task output limit</li>
+</ul>
+<p>The spec honestly labels these as gaps. The problem is that the <code>IWorkflowEngine</code> contract promises <code>signal()</code> with PAUSE/RESUME semantics that Conductor cannot reliably deliver. The contract does not have a mechanism for adapters to declare "I support PAUSE but it's eventual, not immediate." The capability system checks for feature presence but not quality-of-service.</p>
+<p><strong>What will break when adding Conductor</strong>: Signal delivery guarantees. The engine emits <code>RunPaused</code> immediately after <code>signal()</code> returns. If Conductor's pause is eventual, the state store will show PAUSED while the workflow is still executing steps. This is a consistency violation.</p>
+<h3 id="is-the-event-model-robust">Is the event model robust?<a class="headerlink" href="#is-the-event-model-robust" title="Permanent link">&para;</a></h3>
+<p>The three-layer transition enforcement in <a href="docs/architecture/engine/contracts/engine/RunEvents.v2.0.md:246"><code>RunEvents.v2.0.md</code></a> (Producer Guard → Append Authority Optional Validation → Projector Mandatory Validation) is well-designed. The projector is the mandatory enforcement layer, which is correct — it's the only layer that sees the full event history.</p>
+<p><strong>Gap</strong>: The <a href="packages/@dvt/engine/src/core/SnapshotProjector.ts:136"><code>SnapshotProjector</code></a> does not implement Layer 3 transition validation. It applies events unconditionally. An invalid transition (e.g., <code>StepCompleted</code> on a step that was never <code>StepStarted</code>) will silently corrupt the snapshot. The <code>default</code> case logs a warning for unknown event types but does not validate transitions.</p>
+<h3 id="is-executionplan-sufficiently-expressive">Is <code>ExecutionPlan</code> sufficiently expressive?<a class="headerlink" href="#is-executionplan-sufficiently-expressive" title="Permanent link">&para;</a></h3>
+<p>No. The <a href="packages/@dvt/engine/src/contracts/executionPlan.ts:9"><code>ExecutionPlan</code></a> interface is a metadata header plus an array of steps with <code>stepId</code>, optional <code>kind</code>, optional <code>dependsOn</code>, and an open <code>Record&lt;string, unknown&gt;</code>. There is no:</p>
+<ul>
+<li>Step type taxonomy (what kinds of steps exist?)</li>
+<li>Step parameter schema (what does a dbt-run step need vs. a SQL step?)</li>
+<li>Retry policy per step (the plan declares nothing; the adapter hardcodes 3 retries)</li>
+<li>Timeout per step</li>
+<li>Resource requirements per step</li>
+<li>Output schema per step</li>
+</ul>
+<p>The plan is structurally a JSON blob with step IDs. This is insufficient for a multi-adapter system where two adapters must interpret the same plan identically.</p>
+<hr />
+<h2 id="4-execution-planning-layer-analysis">4. Execution Planning Layer Analysis<a class="headerlink" href="#4-execution-planning-layer-analysis" title="Permanent link">&para;</a></h2>
+<h3 id="dag-analyzer-based-on-dbt-artifacts">DAG analyzer based on dbt artifacts<a class="headerlink" href="#dag-analyzer-based-on-dbt-artifacts" title="Permanent link">&para;</a></h3>
+<p>The <a href="packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:347"><code>planExecutionLayers()</code></a> function implements a topological sort that produces execution layers (groups of steps that can run in parallel). It validates no duplicate step IDs, detects cycles, and validates dependency references.</p>
+<p><strong>Problem</strong>: This function lives inside the Temporal workflow, not in a shared planning layer. It runs inside the Temporal V8 sandbox on every workflow execution. For a 1000-node dbt project, this is a non-trivial computation happening inside a deterministic replay context. If the function's behavior changes between deployments, Temporal replay will fail with non-determinism errors.</p>
+<p><strong>Recommendation</strong>: Move DAG analysis to a pre-flight planning step. The plan should arrive at the adapter with layers pre-computed. The adapter should validate, not compute.</p>
+<h3 id="partial-execution-guarantees">Partial execution guarantees<a class="headerlink" href="#partial-execution-guarantees" title="Permanent link">&para;</a></h3>
+<p>Not specified. The <code>ExecutionPlan</code> has no mechanism for declaring "execute only these nodes" or "skip these nodes." The <code>StepSkipped</code> event type exists but there is no planner-level skip/selection mechanism.</p>
+<h3 id="retrybackoff-policy-ownership">Retry/backoff policy ownership<a class="headerlink" href="#retrybackoff-policy-ownership" title="Permanent link">&para;</a></h3>
+<p>Retry policy is hardcoded in the Temporal activity proxy configuration:</p>
+<pre><code class="language-ts">retry: {
+  initialInterval: '1s',
+  maximumInterval: '60s',
+  backoffCoefficient: 2,
+  maximumAttempts: 3,
+  nonRetryableErrorTypes: ['PermanentStepError'],
+}
+</code></pre>
+<p>This is adapter-specific, not plan-driven. The <code>ExecutionPlan</code> has no retry policy field. The <code>RetryBackoffPolicy</code> mentioned in the V2 architecture diagram does not exist in code. When Conductor is added, it will have its own retry configuration that may differ.</p>
+<p><strong>This violates the separation principle.</strong> The planner should define retry policy. The adapter should translate it to runtime-specific configuration.</p>
+<h3 id="cost-estimator-realism">Cost estimator realism<a class="headerlink" href="#cost-estimator-realism" title="Permanent link">&para;</a></h3>
+<p>The V2 architecture diagram includes a <a href="docs/architecture/engine/dvt_v2_architecture.mmd:159"><code>CostEstimator</code></a> component. No code exists. No data model exists. No Snowflake cost query integration exists. This is aspirational.</p>
+<p>For a realistic cost estimator, you need: Snowflake <code>QUERY_HISTORY</code> access, warehouse credit rates, per-query cost attribution, and historical cost data for estimation. This is a significant data engineering effort that depends on having production runs to calibrate against.</p>
+<h3 id="plan-versioning-strategy">Plan versioning strategy<a class="headerlink" href="#plan-versioning-strategy" title="Permanent link">&para;</a></h3>
+<p>The <code>ExecutionPlan</code> has <code>contractVersion</code> (plan schema version) and <code>planVersion</code> (specific plan instance version). The engine rejects unknown contract versions. This is correct but incomplete — there is no migration path from contract version 1.0.0 to 2.0.0. The <code>TemporalAdapter.spec.md</code> mentions cross-schema continuation via <code>continueAsNew</code> but no implementation exists.</p>
+<h3 id="assessment">Assessment<a class="headerlink" href="#assessment" title="Permanent link">&para;</a></h3>
+<p>The planning layer is <strong>under-specified and under-built</strong>. It is not over-engineered — the opposite. The V2 diagram shows 5 planning components (DAG Analyzer, Cost Estimator, Partial Execution Resolver, Retry Policy, Environment Resolver) but zero exist as code. The planning logic that does exist is embedded in the Temporal adapter where it should not be.</p>
+<p><strong>Hidden coupling to Snowflake</strong>: The cost estimator and analytics store assume Snowflake. If a tenant uses BigQuery or Databricks, the cost model breaks. This coupling should be behind an <code>ICostProvider</code> interface.</p>
+<hr />
+<h2 id="5-state-metadata-layer-review">5. State &amp; Metadata Layer Review<a class="headerlink" href="#5-state-metadata-layer-review" title="Permanent link">&para;</a></h2>
+<h3 id="is-postgres-sufficient">Is Postgres sufficient?<a class="headerlink" href="#is-postgres-sufficient" title="Permanent link">&para;</a></h3>
+<p>For Phase 1, yes. Postgres handles append-only event logs, JSONB snapshots, transactional bootstrap, and outbox pattern well. The <a href="packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:1"><code>PostgresStateStoreAdapter</code></a> implements the correct patterns.</p>
+<p><strong>Scaling concern</strong>: At 1000+ tenants with thousands of concurrent runs, the <code>run_events</code> table will grow rapidly. With 2000 events per run and 10,000 runs/day, that's 20M rows/day. Postgres can handle this with partitioning, but the current schema has no partitioning strategy documented. The <code>run_metadata_tenant_created_idx</code> index helps for listing, but event queries by <code>runId</code> need a composite index on <code>(run_id, run_seq)</code> with partition pruning.</p>
+<h3 id="is-snowflake-for-analytics-appropriate">Is Snowflake for analytics appropriate?<a class="headerlink" href="#is-snowflake-for-analytics-appropriate" title="Permanent link">&para;</a></h3>
+<p>The V2 diagram shows Snowflake as an optional analytics store. This is appropriate for long-term metrics, cost attribution, and cross-tenant analytics. But no data pipeline exists to move events from Postgres to Snowflake. No schema exists. No ETL/ELT process is defined.</p>
+<h3 id="is-lineage-snapshotting-scalable">Is lineage snapshotting scalable?<a class="headerlink" href="#is-lineage-snapshotting-scalable" title="Permanent link">&para;</a></h3>
+<p>No lineage snapshotting exists. The V2 diagram shows a <code>LineageView</code> in the UI but no lineage data model, no lineage capture mechanism, and no lineage storage. dbt's <code>manifest.json</code> contains lineage information, but there is no component that parses it and stores it.</p>
+<h3 id="is-artifact-immutability-realistic">Is artifact immutability realistic?<a class="headerlink" href="#is-artifact-immutability-realistic" title="Permanent link">&para;</a></h3>
+<p>The V2 diagram shows an <code>ArtifactRepository</code> for immutable bundles. No implementation exists. The <code>ArtifactRef</code> type in contracts has <code>uri</code>, <code>kind</code>, <code>sha256</code> — the right fields for immutable references. But no storage backend, no upload mechanism, and no garbage collection policy exist.</p>
+<h3 id="write-amplification-risk">Write amplification risk<a class="headerlink" href="#write-amplification-risk" title="Permanent link">&para;</a></h3>
+<p>Each event write triggers: (1) event append, (2) snapshot upsert, (3) outbox enqueue — all in one transaction. This is 3x write amplification per event. For a 1000-step run with 2000 events, that's 6000 writes. Under parallel step execution, multiple events may be appended in a single <code>appendAndEnqueueTx</code> call, which helps. But the snapshot upsert is a full JSONB replacement, not a partial update. For a run with 1000 steps, the snapshot JSONB grows to ~100KB, and every event rewrites it entirely.</p>
+<p><strong>Recommendation</strong>: Consider incremental snapshot updates (JSONB path operations) or deferred snapshot materialization (batch every N events).</p>
+<h3 id="event-sourcing-vs-mutable-state-tradeoffs">Event sourcing vs mutable state tradeoffs<a class="headerlink" href="#event-sourcing-vs-mutable-state-tradeoffs" title="Permanent link">&para;</a></h3>
+<p>The system correctly chose event sourcing for the write side and materialized snapshots for the read side. This is the right pattern. The tradeoff is operational complexity: debugging requires understanding both the event log and the projection. The <code>SnapshotProjector.rebuild()</code> method provides a way to reconstruct state from events, which is essential for debugging.</p>
+<p><strong>Missing</strong>: No event compaction or archival strategy. The event log is append-only forever. At scale, this becomes a storage cost problem and a replay performance problem.</p>
+<h3 id="ui-read-performance-constraints">UI read performance constraints<a class="headerlink" href="#ui-read-performance-constraints" title="Permanent link">&para;</a></h3>
+<p>The <a href="packages/@dvt/engine/src/core/WorkflowEngine.ts:283"><code>getRunStatus()</code></a> method reads from snapshot (O(1)) or falls back to full replay. This is correct for status queries. But the UI needs more than status — it needs step details, logs, artifacts, error messages. These are in event payloads, not in the snapshot. The UI will need to query events directly, which means <code>listEvents()</code> with pagination. The keyset pagination (afterSeq + limit) is implemented, which is good.</p>
+<p><strong>Gap</strong>: No API endpoint specification for UI data needs. The engine exposes <code>getRunStatus()</code> and <code>listEvents()</code> but no higher-level read models (e.g., "give me the run timeline with step details and errors").</p>
+<hr />
+<h2 id="6-plugin-system-evaluation">6. Plugin System Evaluation<a class="headerlink" href="#6-plugin-system-evaluation" title="Permanent link">&para;</a></h2>
+<h3 id="current-state">Current state<a class="headerlink" href="#current-state" title="Permanent link">&para;</a></h3>
+<p>The plugin system does not exist as code. What exists:</p>
+<ul>
+<li><a href="docs/architecture/engine/contracts/extensions/PluginSandbox.v1.md:1"><code>PluginSandbox.v1.md</code></a> — DRAFT contract defining trust tiers, isolation requirements, and execution limits</li>
+<li>A box in the V2 architecture diagram</li>
+<li>References to <code>IPluginRuntime</code> as a planned interface</li>
+</ul>
+<h3 id="isolation-strategy">Isolation strategy<a class="headerlink" href="#isolation-strategy" title="Permanent link">&para;</a></h3>
+<p>The contract correctly bans vm2 and Node.js <code>vm</code> module. It defines three trust tiers:</p>
+<ul>
+<li><strong>trusted</strong>: process/container boundary</li>
+<li><strong>partner</strong>: container sandbox with seccomp/AppArmor, network allowlist</li>
+<li><strong>untrusted</strong>: gVisor/microVM, no network</li>
+</ul>
+<p>This is the right tiering. The isolation requirements are realistic and well-specified.</p>
+<h3 id="can-plugins-compromise-deterministic-execution">Can plugins compromise deterministic execution?<a class="headerlink" href="#can-plugins-compromise-deterministic-execution" title="Permanent link">&para;</a></h3>
+<p>Yes, if plugins can emit events or modify run state. The contract does not specify whether plugins can:</p>
+<ol>
+<li>Emit lifecycle events (StepStarted, StepCompleted, etc.)</li>
+<li>Access the state store</li>
+<li>Modify the execution plan mid-run</li>
+<li>Interact with the adapter</li>
+</ol>
+<p>If plugins can do any of these, they can break deterministic execution. The contract needs explicit MUST NOT rules for state mutation.</p>
+<h3 id="is-capability-based-security-sufficient">Is capability-based security sufficient?<a class="headerlink" href="#is-capability-based-security-sufficient" title="Permanent link">&para;</a></h3>
+<p>The capability system in <a href="docs/architecture/engine/contracts/capabilities/capabilities.schema.json"><code>capabilities.schema.json</code></a> defines 12 capabilities across 6 categories. This is a good start for adapter capability validation. For plugins, a separate capability model is needed — what APIs can a plugin call, what data can it access, what side effects can it produce.</p>
+<h3 id="assessment_1">Assessment<a class="headerlink" href="#assessment_1" title="Permanent link">&para;</a></h3>
+<p>The plugin system is correctly deferred. The contract is reasonable but incomplete. The critical missing piece is the interaction model between plugins and the execution engine. This must be designed alongside <code>IProviderAdapter</code> stability, not before.</p>
+<hr />
+<h2 id="7-what-is-overbuilt">7. What Is Overbuilt<a class="headerlink" href="#7-what-is-overbuilt" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>V2 architecture diagram scope.</strong> The <a href="docs/architecture/engine/dvt_v2_architecture.mmd:1"><code>dvt_v2_architecture.mmd</code></a> includes 9 workflow engine options (Temporal, Conductor, BullMQ, Argo, Airflow, Prefect, Dagster, Flyte, Kestra), 4 event bus options, 3 git integration options, 5 UI foundations, 5 config libraries, and 7 observability tools. This is a technology catalog, not an architecture diagram. It creates a false impression of optionality that does not exist in the codebase. The actual system uses Temporal, Postgres, and React. Everything else is aspirational.</p>
+</li>
+<li>
+<p><strong>Security documentation depth for unbuilt components.</strong> <a href="docs/architecture/engine/security/SECURITY_INVARIANTS.v1.md:1"><code>SECURITY_INVARIANTS.v1.md</code></a> is 1150+ lines defining invariants for plugin tiers, deployment modes, supply chain security, and key rotation — for a system that cannot yet persist a run to a database. The threat model is 51KB. These documents are well-written but premature. Security invariants for components that don't exist create documentation debt.</p>
+</li>
+<li>
+<p><strong>Signal catalog breadth.</strong> <a href="docs/architecture/engine/contracts/engine/SignalsAndAuth.v1.md:1"><code>SignalsAndAuth.v1.md</code></a> defines 11 signal types including <code>INJECT_OVERRIDE</code>, <code>UPDATE_TARGET</code>, <code>EMERGENCY_STOP</code>, and <code>ESCALATE_ALERT</code>. The engine implements 3 (PAUSE, RESUME, CANCEL). The remaining 8 are specified but unimplemented. Specifying signals before the engine can execute a basic run is premature optimization of the control plane.</p>
+</li>
+<li>
+<p><strong>Contract versioning infrastructure.</strong> The system has v1.0, v1.1, v1.1.1, v2.0, v2.0.1 of multiple contracts, migration guides between versions, and a formal versioning policy — for contracts that have never been consumed by a production system. Version evolution is important, but versioning contracts before they've been validated by real usage produces churn, not stability.</p>
+</li>
+</ol>
+<hr />
+<h2 id="8-what-is-underbuilt">8. What Is Underbuilt<a class="headerlink" href="#8-what-is-underbuilt" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong><code>IExecutionPlanner</code> interface.</strong> The most critical missing contract. Without it, plans are unvalidated JSON blobs. Every adapter interprets them independently. There is no way to verify that two adapters produce equivalent execution for the same plan.</p>
+</li>
+<li>
+<p><strong>Shared plan interpretation logic.</strong> The DAG walker, layer computation, and dependency validation in <a href="packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:347"><code>planExecutionLayers()</code></a> must be extracted into a shared package (<code>@dvt/plan-interpreter</code>) that both Temporal and Conductor adapters consume.</p>
+</li>
+<li>
+<p><strong>Transition validation in projector.</strong> The <a href="packages/@dvt/engine/src/core/SnapshotProjector.ts:136"><code>SnapshotProjector</code></a> does not validate state transitions. It applies events unconditionally. Layer 3 of the three-layer enforcement model (mandatory projector validation) is not implemented.</p>
+</li>
+<li>
+<p><strong>Rollback guarantees.</strong> What happens when <code>bootstrapRunTx</code> succeeds but the adapter fails mid-execution? The compensation in <a href="packages/@dvt/engine/src/core/WorkflowEngine.ts:170"><code>startRun()</code></a> calls <code>adapter.cancelRun()</code> on bootstrap failure, but there is no compensation for adapter failures after bootstrap. A run can be in PENDING in the state store while the Temporal workflow has crashed.</p>
+</li>
+<li>
+<p><strong>Distributed consistency model.</strong> The system has two sources of state: the Temporal workflow state and the Postgres event log. These can diverge. If Temporal completes a step but the <code>emitEvent</code> activity fails, the workflow has progressed but the state store has not. No reconciliation mechanism exists.</p>
+</li>
+<li>
+<p><strong>Concurrency model.</strong> What happens when two <code>signal()</code> calls arrive simultaneously for the same run? The engine resolves metadata, checks authorization, and calls <code>adapter.signal()</code> — but there is no locking or serialization. Two PAUSE signals could both succeed, producing duplicate <code>RunPaused</code> events. The idempotency key prevents duplicate persistence, but the adapter receives both signals.</p>
+</li>
+<li>
+<p><strong>Backpressure strategy.</strong> The outbox rate limiter exists (<a href="packages/@dvt/engine/src/outbox/IOutboxRateLimiter.ts"><code>IOutboxRateLimiter</code></a>) but only for <code>startRun</code>. There is no backpressure for event emission, signal processing, or status queries. Under load, the system will accept work faster than it can process it.</p>
+</li>
+<li>
+<p><strong>Run retention policy.</strong> No mechanism to archive, compact, or delete old runs. The event log and metadata grow without bound.</p>
+</li>
+<li>
+<p><strong>SLA definitions.</strong> The <a href="docs/architecture/engine/ops/SLOs.md"><code>SLOs.md</code></a> defines targets but no contractual SLAs. For a multi-tenant platform, tenants need guaranteed response times, not aspirational targets.</p>
+</li>
+<li>
+<p><strong>Migration strategy.</strong> No documented process for migrating from contract v1 to v2 in a running system. The <a href="docs/architecture/engine/contracts/MIGRATION_v1.1.1_to_v2.0.0.md"><code>MIGRATION_v1.1.1_to_v2.0.0.md</code></a> exists as a document but no code implements it.</p>
+</li>
+</ol>
+<hr />
+<h2 id="9-scalability-outlook-3-year-horizon">9. Scalability Outlook (3-Year Horizon)<a class="headerlink" href="#9-scalability-outlook-3-year-horizon" title="Permanent link">&para;</a></h2>
+<p>Assumptions: 1000+ tenants, thousands of concurrent runs, large dbt projects (1000+ nodes), cross-environment diffs, heavy cost dashboards.</p>
+<h3 id="bottlenecks">Bottlenecks<a class="headerlink" href="#bottlenecks" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong><code>run_events</code> table growth.</strong> At 20M rows/day (10K runs × 2K events), the table reaches 7.3B rows/year. Without partitioning and archival, queries degrade. Postgres can handle this with time-based partitioning on <code>(tenant_id, persisted_at)</code>, but this is not implemented.</p>
+</li>
+<li>
+<p><strong>Snapshot JSONB size.</strong> A 1000-step run produces a ~100KB snapshot. Full JSONB replacement on every event write means 100KB × 2000 events = 200MB of write I/O per run just for snapshots. This is the dominant write cost.</p>
+</li>
+<li>
+<p><strong>Planner computation for large DAGs.</strong> Topological sort of 1000 nodes is O(V+E), which is fast. But if the planner needs to compute cost estimates, partial execution sets, and environment resolution for each node, the computation grows. No caching strategy exists.</p>
+</li>
+<li>
+<p><strong>Event bus fan-out.</strong> The outbox delivers events to an event bus. If 100 consumers subscribe (UI instances, analytics pipelines, alerting systems), each event is delivered 100 times. At 20M events/day, that's 2B deliveries/day. The outbox pattern does not scale to this — you need a proper message broker (Kafka/NATS).</p>
+</li>
+</ol>
+<h3 id="single-points-of-failure">Single points of failure<a class="headerlink" href="#single-points-of-failure" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Postgres.</strong> All state is in one database. No read replicas documented. No failover strategy. If Postgres is unavailable, the entire system stops.</p>
+</li>
+<li>
+<p><strong>Temporal cluster.</strong> If Temporal is down, no runs execute. The engine can still read state (from Postgres), but no new runs can start and no in-flight runs progress.</p>
+</li>
+<li>
+<p><strong>Outbox worker.</strong> If the outbox worker crashes, events accumulate in the outbox table. Consumers stop receiving updates. The dead-letter mechanism exists but no alerting on outbox lag is implemented.</p>
+</li>
+</ol>
+<h3 id="data-growth-pressure">Data growth pressure<a class="headerlink" href="#data-growth-pressure" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Growth Rate</th>
+<th>1-Year Size</th>
+<th>3-Year Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>run_events</td>
+<td>20M rows/day</td>
+<td>7.3B rows</td>
+<td>22B rows</td>
+</tr>
+<tr>
+<td>run_metadata</td>
+<td>10K rows/day</td>
+<td>3.6M rows</td>
+<td>11M rows</td>
+</tr>
+<tr>
+<td>snapshots</td>
+<td>10K upserts/day</td>
+<td>3.6M rows</td>
+<td>11M rows</td>
+</tr>
+<tr>
+<td>outbox</td>
+<td>Transient</td>
+<td>~100K pending</td>
+<td>~100K pending</td>
+</tr>
+<tr>
+<td>artifacts</td>
+<td>Depends on usage</td>
+<td>Unknown</td>
+<td>Unknown</td>
+</tr>
+</tbody>
+</table>
+<p>Without archival, the 3-year event log is ~22B rows at ~500 bytes/row = ~11TB. This is manageable with Postgres partitioning and cold storage archival, but requires engineering investment.</p>
+<h3 id="planner-computation-load">Planner computation load<a class="headerlink" href="#planner-computation-load" title="Permanent link">&para;</a></h3>
+<p>For 1000+ tenants each running 10+ plans/day with 1000+ nodes, the planner must compute ~10K execution plans/day. If each plan computation takes 100ms (DAG sort + cost estimate + partial execution), that's ~17 minutes of CPU/day — negligible. The bottleneck is not computation but I/O: fetching dbt manifests, querying Snowflake cost data, and resolving environment variables.</p>
+<hr />
+<h2 id="10-architectural-scorecard">10. Architectural Scorecard<a class="headerlink" href="#10-architectural-scorecard" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Score</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Conceptual clarity</strong></td>
+<td>7/10</td>
+<td>The three-tier separation is well-articulated and mostly enforced. Concept drift between "workflow engine" and "platform product" creates confusion. The V2 diagram is a technology catalog, not a focused architecture.</td>
+</tr>
+<tr>
+<td><strong>Separation of concerns</strong></td>
+<td>6/10</td>
+<td>Engine/state separation is clean. Planner/adapter separation is not — DAG walking, retry policy, and execution ordering live in the adapter. The <code>applyEventToSnapshot</code> duplication between engine and Postgres adapter is a concrete violation.</td>
+</tr>
+<tr>
+<td><strong>Replaceability of engine</strong></td>
+<td>7/10</td>
+<td>The <code>IProviderAdapter</code> interface is minimal and correct. Temporal can be replaced with Conductor at the adapter level. But the DAG walker in <code>RunPlanWorkflow.ts</code> is Temporal-specific and must be reimplemented. True replaceability requires extracting shared interpretation logic.</td>
+</tr>
+<tr>
+<td><strong>Determinism</strong></td>
+<td>8/10</td>
+<td>The idempotency key derivation is deterministic and well-tested. The Temporal workflow is replay-safe. The event sourcing model preserves ordering. Deduction: projector does not validate transitions (Layer 3 not implemented), and snapshot projection is duplicated across packages.</td>
+</tr>
+<tr>
+<td><strong>Extensibility</strong></td>
+<td>5/10</td>
+<td>The capability system exists but is minimal. The plugin contract is DRAFT. The <code>ExecutionPlan</code> is too loosely typed to support meaningful extension. No hook points for custom step types, custom validators, or custom cost policies.</td>
+</tr>
+<tr>
+<td><strong>Operational realism</strong></td>
+<td>3/10</td>
+<td>No production deployment exists. No Postgres in production. No Temporal in production. No monitoring dashboards deployed. No incident response tested. Observability docs exist but are aspirational. Stuck-run detection is implemented but untested in production.</td>
+</tr>
+<tr>
+<td><strong>Long-term maintainability</strong></td>
+<td>6/10</td>
+<td>ADR discipline is strong. Code traceability annotations are good. Contract versioning policy exists. But: documentation volume is disproportionate to code volume (~5000 lines of contracts for ~2000 lines of engine code). The documentation will drift as the code evolves.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Overall: 6.0/10</strong> — Conceptually sound, implementation-incomplete, documentation-heavy.</p>
+<hr />
+<h2 id="11-strategic-recommendations">11. Strategic Recommendations<a class="headerlink" href="#11-strategic-recommendations" title="Permanent link">&para;</a></h2>
+<h3 id="3-structural-changes">3 Structural Changes<a class="headerlink" href="#3-structural-changes" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Extract <code>@dvt/plan-interpreter</code> package.</strong> Move <a href="packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:347"><code>planExecutionLayers()</code></a>, DAG validation, and layer computation out of the Temporal adapter into a shared package. Both Temporal and Conductor adapters must consume this package. Add golden-path tests that verify identical execution order across adapters. This is the single most important structural change for multi-adapter correctness.</p>
+</li>
+<li>
+<p><strong>Extract <code>@dvt/projector</code> package.</strong> Move <a href="packages/@dvt/engine/src/core/SnapshotProjector.ts:24"><code>applyRunEvent()</code></a> into a shared package consumed by both the engine and the Postgres adapter. Eliminate the duplicated <a href="packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:90"><code>applyEventToSnapshot()</code></a>. Add Layer 3 transition validation to the projector.</p>
+</li>
+<li>
+<p><strong>Define <code>IExecutionPlanner</code> interface.</strong> Create the contract that specifies how plans are produced, what they must contain, and how they are validated. Include: step type taxonomy, retry policy per step, timeout per step, and pre-computed execution layers. This interface is the missing link between the planning layer and the engine.</p>
+</li>
+</ol>
+<h3 id="3-clarifications-needed">3 Clarifications Needed<a class="headerlink" href="#3-clarifications-needed" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>What is the consistency model between Temporal state and Postgres state?</strong> When they diverge (and they will), which is authoritative? The contracts say Postgres is the source of truth, but if Temporal has progressed and Postgres has not, the run is in an inconsistent state. Define the reconciliation strategy.</p>
+</li>
+<li>
+<p><strong>What are the Conductor parity acceptance criteria?</strong> The capability matrix shows gaps, but there is no documented decision on which gaps are acceptable. Can Conductor runs have weaker pause/resume guarantees? If so, how does the UI communicate this to users?</p>
+</li>
+<li>
+<p><strong>What is the plan schema evolution strategy?</strong> When <code>ExecutionPlan</code> v1.0.0 needs to become v2.0.0 (e.g., adding per-step retry policy), how are in-flight runs on v1 handled? The Temporal spec mentions cross-schema continuation but no implementation exists.</p>
+</li>
+</ol>
+<h3 id="3-things-to-freeze-immediately">3 Things to Freeze Immediately<a class="headerlink" href="#3-things-to-freeze-immediately" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong><code>RunEventWrite</code> / <code>RunEventRecord</code> envelope schema.</strong> This is the most critical contract in the system. Every consumer depends on it. The v2.0.1 specification is well-defined. Freeze it. No more changes without a major version bump and 6-month deprecation window.</p>
+</li>
+<li>
+<p><strong>Idempotency key derivation formula.</strong> The SHA-256 formula with <code>|</code> delimiter and fixed field order is correct and tested. Freeze it. Any change breaks all existing event deduplication.</p>
+</li>
+<li>
+<p><strong><code>IProviderAdapter</code> interface.</strong> The 5-method interface (<code>startRun</code>, <code>cancelRun</code>, <code>getRunStatus</code>, <code>signal</code>, <code>capabilities</code>) is minimal and correct. Freeze it. Adding methods to this interface forces changes in every adapter.</p>
+</li>
+</ol>
+<h3 id="3-things-to-delay">3 Things to Delay<a class="headerlink" href="#3-things-to-delay" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Plugin system implementation.</strong> Delay until Phase 3 minimum. The engine must be stable and in production before the extension surface is built. Building plugins before <code>IExecutionPlanner</code> is stable will produce an API that needs breaking changes.</p>
+</li>
+<li>
+<p><strong>Cost attribution and Snowflake analytics.</strong> Delay until production runs generate real cost data. Estimating costs without historical data is guesswork. Build the cost event schema first, collect data for 3 months, then build the estimator.</p>
+</li>
+<li>
+<p><strong>Multi-event-bus support (Kafka/NATS/Redis).</strong> The outbox pattern with Postgres polling is sufficient for Phase 1 and Phase 2. Adding Kafka/NATS adds operational complexity without proportional benefit until event volume exceeds what Postgres polling can handle (~100K events/minute).</p>
+</li>
+</ol>
+<p>esumen ejecutivo
+Score global: 6.0/10 — Conceptualmente sólido, implementación incompleta, documentación desproporcionada.</p>
+<p>Hallazgos críticos
+La separación Planner/Engine/State se erosiona en el adapter boundary. El DAG walker (planExecutionLayers()), la política de retry (hardcoded 3 retries), y la lógica de ejecución paralela viven dentro del Temporal adapter — no en un planner compartido. Cuando Conductor se añada, esta lógica se reimplementará independientemente sin contrato de equivalencia.</p>
+<p>IExecutionPlanner no existe. Es la interfaz más referenciada en el diagrama V2 (IExecutionPlanner) pero no tiene código ni contrato. Los planes son JSON blobs sin validación estructural.</p>
+<p>applyEventToSnapshot está duplicado. El engine tiene applyRunEvent() y el Postgres adapter tiene su propia copia en applyEventToSnapshot() con un comentario "must be kept in sync" — invariante manual que fallará.</p>
+<p>Layer 3 de validación de transiciones no implementado. El SnapshotProjector aplica eventos incondicionalmente. Transiciones inválidas corrompen el snapshot silenciosamente.</p>
+<p>Tenant isolation es solo WHERE-clause. Sin RLS en Postgres. Un bug en una query = breach cross-tenant.</p>
+<p>3 cambios estructurales recomendados
+Extraer @dvt/plan-interpreter — DAG walker compartido entre adapters
+Extraer @dvt/projector — proyección compartida con validación Layer 3
+Definir IExecutionPlanner — contrato formal para producción de planes
+3 cosas a congelar inmediatamente
+Schema RunEventWrite/RunEventRecord (v2.0.1)
+Fórmula de idempotency key SHA-256
+Interfaz IProviderAdapter (5 métodos)
+3 cosas a diferir
+Plugin system (hasta Phase 3 mínimo)
+Cost attribution / Snowflake analytics (hasta tener datos reales)
+Multi-event-bus (Kafka/NATS) — outbox con Postgres es suficiente hasta Phase</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

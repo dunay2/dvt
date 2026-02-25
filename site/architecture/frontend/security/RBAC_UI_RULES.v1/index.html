@@ -1,0 +1,1999 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>RBAC_UI_RULES.v1.md - Frontend Authorization Rules - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rbac_ui_rulesv1md-frontend-authorization-rules" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              RBAC_UI_RULES.v1.md - Frontend Authorization Rules
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-permission-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Permission Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-ui-rules-by-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. UI Rules by Resource
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. UI Rules by Resource">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Plans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-audit-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Audit Logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-cost-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Cost Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-admin-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Admin Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-navigation-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Navigation Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-route-guards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Route Guards
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-preventing-wasted-api-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Preventing Wasted API Calls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-button-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Button States
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Error Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-backend-returns-403" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Backend Returns 403
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-permission-expiry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Permission Expiry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-testing-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Testing Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-hook-api-usepermissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Hook API: usePermissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="rbac_ui_rulesv1md-frontend-authorization-rules">RBAC_UI_RULES.v1.md - Frontend Authorization Rules<a class="headerlink" href="#rbac_ui_rulesv1md-frontend-authorization-rules" title="Permanent link">&para;</a></h1>
+<p><strong>Version</strong>: 1.0<br />
+<strong>Date</strong>: 2026-02-11<br />
+<strong>Status</strong>: Normative (MUST follow these rules)<br />
+<strong>Location</strong>: docs/architecture/frontend/security/RBAC_UI_RULES.v1.md</p>
+<hr />
+<h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<p>The frontend MUST enforce UI-level authorization rules based on the user's <strong>effective permissions</strong> retrieved from the backend.</p>
+<p><strong>Philosophy</strong>:</p>
+<ul>
+<li><strong>Defense in depth</strong>: Backend always enforces authoritative decisions (see <a href="../../../engine/contracts/security/IAuthorization.v1/">IAuthorization.v1.md</a>)</li>
+<li><strong>Frontend responsibility</strong>: Show/hide UI elements, disable buttons, prevent wasted API calls</li>
+<li><strong>NO client-side filtering</strong>: Never filter lists (runs, plans) in the browser—always use backend <code>?filter=</code> queries</li>
+</ul>
+<hr />
+<h2 id="1-permission-model">1. Permission Model<a class="headerlink" href="#1-permission-model" title="Permanent link">&para;</a></h2>
+<p>The frontend receives a <strong>permission set</strong> from <code>GET /v1/auth/me</code>:</p>
+<pre><code class="language-json">{
+  &quot;userId&quot;: &quot;user-123&quot;,
+  &quot;roles&quot;: [&quot;engineer&quot;, &quot;viewer&quot;],
+  &quot;permissions&quot;: [
+    &quot;plan:view:*&quot;,
+    &quot;plan:edit:team-123&quot;,
+    &quot;run:start:*&quot;,
+    &quot;run:cancel:*&quot;,
+    &quot;audit:view:self&quot;,
+    &quot;cost:view:team-123&quot;
+  ]
+}
+</code></pre>
+<p><strong>Permission syntax</strong>: <code>resource:action:scope</code></p>
+<ul>
+<li><strong>resource</strong>: <code>plan</code>, <code>run</code>, <code>audit</code>, <code>cost</code>, <code>admin</code></li>
+<li><strong>action</strong>: <code>view</code>, <code>edit</code>, <code>delete</code>, <code>start</code>, <code>cancel</code>, <code>signal</code>, <code>export</code></li>
+<li><strong>scope</strong>: <code>*</code> (all), <code>self</code> (own items), <code>team-123</code> (team-scoped)</li>
+</ul>
+<hr />
+<h2 id="2-ui-rules-by-resource">2. UI Rules by Resource<a class="headerlink" href="#2-ui-rules-by-resource" title="Permanent link">&para;</a></h2>
+<h3 id="21-plans">2.1 Plans<a class="headerlink" href="#21-plans" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>UI Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plan:view:*</code></td>
+<td>Show "Plans" nav link</td>
+</tr>
+<tr>
+<td>NO <code>plan:view:*</code></td>
+<td>Hide "Plans" nav link</td>
+</tr>
+<tr>
+<td><code>plan:edit:*</code> or <code>plan:edit:${teamId}</code></td>
+<td>Enable "Edit Plan" button</td>
+</tr>
+<tr>
+<td>NO edit permission</td>
+<td>Disable "Edit Plan" button, show tooltip: "You don't have permission to edit this plan"</td>
+</tr>
+<tr>
+<td><code>plan:delete:*</code></td>
+<td>Show "Delete Plan" button (with confirmation modal)</td>
+</tr>
+<tr>
+<td>NO delete permission</td>
+<td>Hide "Delete Plan" button entirely</td>
+</tr>
+<tr>
+<td><code>plan:create:*</code></td>
+<td>Show "New Plan" button</td>
+</tr>
+<tr>
+<td>NO create permission</td>
+<td>Hide "New Plan" button</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example React component</strong>:</p>
+<pre><code class="language-tsx">import { usePermissions } from '@/hooks/usePermissions';
+
+function PlanDetailPage({ plan }) {
+  const { can } = usePermissions();
+
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;{plan.name}&lt;/h1&gt;
+
+      {can('plan:edit', plan.teamId) &amp;&amp; &lt;button onClick={handleEdit}&gt;Edit Plan&lt;/button&gt;}
+
+      {can('plan:delete', plan.teamId) &amp;&amp; &lt;button onClick={handleDelete}&gt;Delete Plan&lt;/button&gt;}
+
+      {!can('plan:edit', plan.teamId) &amp;&amp; (
+        &lt;Tooltip content=&quot;You don't have permission to edit this plan&quot;&gt;
+          &lt;button disabled&gt;Edit Plan&lt;/button&gt;
+        &lt;/Tooltip&gt;
+      )}
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<hr />
+<h3 id="22-runs">2.2 Runs<a class="headerlink" href="#22-runs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>UI Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>run:start:*</code></td>
+<td>Enable "Run" button on plan detail page</td>
+</tr>
+<tr>
+<td>NO <code>run:start</code></td>
+<td>Disable "Run" button, show tooltip: "You don't have permission to start runs"</td>
+</tr>
+<tr>
+<td><code>run:cancel:*</code> or <code>run:cancel:${teamId}</code></td>
+<td>Show "Cancel" button (only for RUNNING/PAUSED runs)</td>
+</tr>
+<tr>
+<td>NO cancel permission</td>
+<td>Hide "Cancel" button</td>
+</tr>
+<tr>
+<td><code>run:signal:*</code></td>
+<td>Show "Pause", "Resume", "Retry" buttons</td>
+</tr>
+<tr>
+<td>NO signal permission</td>
+<td>Disable signal buttons</td>
+</tr>
+<tr>
+<td><code>run:view:*</code></td>
+<td>Show "Runs" nav link, list all runs (via API)</td>
+</tr>
+<tr>
+<td><code>run:view:self</code></td>
+<td>Show only user's own runs (backend filters via <code>?actor=self</code>)</td>
+</tr>
+<tr>
+<td>NO <code>run:view</code></td>
+<td>Hide "Runs" nav link</td>
+</tr>
+</tbody>
+</table>
+<p><strong>CRITICAL</strong>: Never filter runs in the browser. Always use backend query:</p>
+<pre><code class="language-tsx">// ❌ WRONG: Client-side filtering (leaks data)
+const visibleRuns = allRuns.filter((run) =&gt; can('run:view', run.teamId));
+
+// ✅ CORRECT: Backend filtering
+const { data: runs } = useQuery(['runs', scope], () =&gt;
+  api.getRuns({ filter: scope === 'self' ? 'actor=self' : undefined })
+);
+</code></pre>
+<hr />
+<h3 id="23-audit-logs">2.3 Audit Logs<a class="headerlink" href="#23-audit-logs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>UI Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>audit:view:*</code></td>
+<td>Show "Audit" nav link, all records visible</td>
+</tr>
+<tr>
+<td><code>audit:view:self</code></td>
+<td>Show only user's own actions (backend filters)</td>
+</tr>
+<tr>
+<td>NO <code>audit:view</code></td>
+<td>Hide "Audit" nav link, return 403 if user navigates directly</td>
+</tr>
+<tr>
+<td><code>audit:export:*</code></td>
+<td>Show "Export to CSV" button</td>
+</tr>
+<tr>
+<td>NO export permission</td>
+<td>Hide export button</td>
+</tr>
+<tr>
+<td><code>audit:view-pii:*</code></td>
+<td>Show IP addresses, emails in audit records</td>
+</tr>
+<tr>
+<td>NO view-pii permission</td>
+<td>Redact PII: <code>1.2.3.4</code> → <code>•••.•••.•••.•••</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Redaction example</strong>:</p>
+<pre><code class="language-tsx">function AuditEntry({ entry, canViewPII }) {
+  const ip = canViewPII ? entry.ip : entry.ip.replace(/\d+/g, '•••');
+
+  return (
+    &lt;div&gt;
+      &lt;span&gt;IP: {ip}&lt;/span&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<hr />
+<h3 id="24-cost-data">2.4 Cost Data<a class="headerlink" href="#24-cost-data" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>UI Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cost:view:*</code></td>
+<td>Show cost panel on run detail page</td>
+</tr>
+<tr>
+<td><code>cost:view:team-123</code></td>
+<td>Show costs only for team-123 runs</td>
+</tr>
+<tr>
+<td>NO <code>cost:view</code></td>
+<td>Hide cost panel entirely, show message: "Cost data restricted"</td>
+</tr>
+<tr>
+<td><code>cost:export:*</code></td>
+<td>Enable "Export Cost Breakdown" button</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="25-admin-features">2.5 Admin Features<a class="headerlink" href="#25-admin-features" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>UI Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>admin:users:*</code></td>
+<td>Show "Admin" nav link → "Users" page</td>
+</tr>
+<tr>
+<td><code>admin:roles:*</code></td>
+<td>Show "Roles &amp; Permissions" page</td>
+</tr>
+<tr>
+<td>NO admin permissions</td>
+<td>Hide "Admin" nav link</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-navigation-rules">3. Navigation Rules<a class="headerlink" href="#3-navigation-rules" title="Permanent link">&para;</a></h2>
+<p>The frontend MUST dynamically render the navigation menu based on permissions.</p>
+<p><strong>Example navigation config</strong>:</p>
+<pre><code class="language-tsx">const navItems = [
+  {
+    label: 'Plans',
+    path: '/plans',
+    permission: 'plan:view:*',
+  },
+  {
+    label: 'Runs',
+    path: '/runs',
+    permission: 'run:view:*',
+  },
+  {
+    label: 'Audit',
+    path: '/audit',
+    permission: 'audit:view:*',
+  },
+  {
+    label: 'Admin',
+    path: '/admin',
+    permission: 'admin:users:*',
+  },
+];
+
+function Navigation() {
+  const { can } = usePermissions();
+
+  return (
+    &lt;nav&gt;
+      {navItems
+        .filter((item) =&gt; can(item.permission))
+        .map((item) =&gt; (
+          &lt;NavLink key={item.path} to={item.path}&gt;
+            {item.label}
+          &lt;/NavLink&gt;
+        ))}
+    &lt;/nav&gt;
+  );
+}
+</code></pre>
+<hr />
+<h2 id="4-route-guards">4. Route Guards<a class="headerlink" href="#4-route-guards" title="Permanent link">&para;</a></h2>
+<p>The frontend MUST guard routes and return <strong>403 Forbidden</strong> pages for unauthorized access.</p>
+<p><strong>Example</strong>:</p>
+<pre><code class="language-tsx">import { Navigate } from 'react-router-dom';
+import { usePermissions } from '@/hooks/usePermissions';
+
+function ProtectedRoute({ permission, children }) {
+  const { can, isLoading } = usePermissions();
+
+  if (isLoading) return &lt;Loading /&gt;;
+  if (!can(permission)) return &lt;Forbidden /&gt;;
+
+  return children;
+}
+
+// In router config
+&lt;Route
+  path=&quot;/admin&quot;
+  element={
+    &lt;ProtectedRoute permission=&quot;admin:users:*&quot;&gt;
+      &lt;AdminPage /&gt;
+    &lt;/ProtectedRoute&gt;
+  }
+/&gt;;
+</code></pre>
+<hr />
+<h2 id="5-preventing-wasted-api-calls">5. Preventing Wasted API Calls<a class="headerlink" href="#5-preventing-wasted-api-calls" title="Permanent link">&para;</a></h2>
+<p>The frontend SHOULD NOT make API calls that will fail with 403.</p>
+<p><strong>Example</strong>:</p>
+<pre><code class="language-tsx">// ❌ WRONG: Calls API even without permission
+async function deleteRun(runId) {
+  await api.delete(`/v1/runs/${runId}`); // → 403 error
+}
+
+// ✅ CORRECT: Check permission first
+async function deleteRun(runId) {
+  if (!can('run:delete', runId)) {
+    toast.error('You do not have permission to delete this run');
+    return;
+  }
+
+  await api.delete(`/v1/runs/${runId}`);
+}
+</code></pre>
+<hr />
+<h2 id="6-button-states">6. Button States<a class="headerlink" href="#6-button-states" title="Permanent link">&para;</a></h2>
+<p>Buttons MUST follow this priority:</p>
+<ol>
+<li><strong>Hidden</strong>: If action is never available to this user (e.g., <code>plan:delete</code> for viewer role)</li>
+<li><strong>Disabled with tooltip</strong>: If action is temporarily unavailable (e.g., "Cancel" button on COMPLETED run)</li>
+<li><strong>Enabled</strong>: If action is available</li>
+</ol>
+<p><strong>Example</strong>:</p>
+<pre><code class="language-tsx">function RunControls({ run }) {
+  const { can } = usePermissions();
+
+  const canCancel = can('run:cancel', run.teamId);
+  const isRunning = run.status === 'RUNNING';
+
+  // Hidden if no permission at all
+  if (!canCancel) return null;
+
+  // Disabled if run is not running
+  return (
+    &lt;Tooltip content={!isRunning ? 'Run is not active' : ''} disabled={isRunning}&gt;
+      &lt;button disabled={!isRunning} onClick={handleCancel}&gt;
+        Cancel Run
+      &lt;/button&gt;
+    &lt;/Tooltip&gt;
+  );
+}
+</code></pre>
+<hr />
+<h2 id="7-error-handling">7. Error Handling<a class="headerlink" href="#7-error-handling" title="Permanent link">&para;</a></h2>
+<h3 id="71-backend-returns-403">7.1 Backend Returns 403<a class="headerlink" href="#71-backend-returns-403" title="Permanent link">&para;</a></h3>
+<p>If the backend returns <code>403 Forbidden</code> despite frontend checks:</p>
+<pre><code class="language-tsx">async function startRun(planId) {
+  try {
+    await api.post('/v1/runs', { planId });
+  } catch (error) {
+    if (error.status === 403) {
+      toast.error('Permission denied. Your permissions may have changed.');
+      // Optionally: Refresh permissions
+      queryClient.invalidateQueries(['auth', 'me']);
+    }
+  }
+}
+</code></pre>
+<h3 id="72-permission-expiry">7.2 Permission Expiry<a class="headerlink" href="#72-permission-expiry" title="Permanent link">&para;</a></h3>
+<p>Permissions MUST be refreshed:</p>
+<ul>
+<li><strong>On page load</strong>: Always fetch <code>GET /v1/auth/me</code></li>
+<li><strong>On 403 error</strong>: Refetch permissions (may have been revoked)</li>
+<li><strong>Every 5 minutes</strong>: Background refresh (optional, prevents stale permissions)</li>
+</ul>
+<hr />
+<h2 id="8-testing-rules">8. Testing Rules<a class="headerlink" href="#8-testing-rules" title="Permanent link">&para;</a></h2>
+<p>Every UI rule MUST have a unit test:</p>
+<pre><code class="language-tsx">import { render, screen } from '@testing-library/react';
+import { PermissionsProvider } from '@/contexts/PermissionsContext';
+
+describe('PlanDetailPage', () =&gt; {
+  it('hides delete button if user lacks plan:delete permission', () =&gt; {
+    const mockPermissions = {
+      permissions: ['plan:view:*'], // No delete permission
+    };
+
+    render(
+      &lt;PermissionsProvider value={mockPermissions}&gt;
+        &lt;PlanDetailPage plan={mockPlan} /&gt;
+      &lt;/PermissionsProvider&gt;
+    );
+
+    expect(screen.queryByText('Delete Plan')).not.toBeInTheDocument();
+  });
+
+  it('shows delete button if user has plan:delete permission', () =&gt; {
+    const mockPermissions = {
+      permissions: ['plan:view:*', 'plan:delete:*'],
+    };
+
+    render(
+      &lt;PermissionsProvider value={mockPermissions}&gt;
+        &lt;PlanDetailPage plan={mockPlan} /&gt;
+      &lt;/PermissionsProvider&gt;
+    );
+
+    expect(screen.getByText('Delete Plan')).toBeInTheDocument();
+  });
+});
+</code></pre>
+<hr />
+<h2 id="9-hook-api-usepermissions">9. Hook API: <code>usePermissions</code><a class="headerlink" href="#9-hook-api-usepermissions" title="Permanent link">&para;</a></h2>
+<p>The frontend MUST provide a React hook for permission checks:</p>
+<pre><code class="language-tsx">import { useContext } from 'react';
+import { PermissionsContext } from '@/contexts/PermissionsContext';
+
+export function usePermissions() {
+  const { permissions, isLoading } = useContext(PermissionsContext);
+
+  function can(action: string, scope?: string): boolean {
+    // Check exact match
+    if (permissions.includes(`${action}:${scope || '*'}`)) {
+      return true;
+    }
+
+    // Check wildcard
+    const [resource, verb] = action.split(':');
+    if (permissions.includes(`${resource}:${verb}:*`)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  return { can, isLoading };
+}
+</code></pre>
+<p><strong>Usage</strong>:</p>
+<pre><code class="language-tsx">const { can } = usePermissions();
+
+if (can('plan:edit', 'team-123')) {
+  // Show edit button
+}
+</code></pre>
+<hr />
+<h2 id="10-references">10. References<a class="headerlink" href="#10-references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../../engine/contracts/security/IAuthorization.v1/">IAuthorization.v1.md</a> - Backend authorization contract</li>
+<li><a href="../../../engine/contracts/security/AuditLog.v1/">AuditLog.v1.md</a> - Audit logging</li>
+<li><a href="../../contracts/UI_API_CONTRACT.v1/">UI_API_CONTRACT.v1.md</a> - API endpoints for permissions</li>
+</ul>
+<hr />
+<p><em>Last updated: 2026-02-11</em><br />
+<em>Version: 1.0</em><br />
+<em>Status: Normative - UI MUST follow these rules</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

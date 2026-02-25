@@ -1,0 +1,2875 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+        <link rel="prev" href="../../CONTRIBUTING/">
+      
+      
+        <link rel="next" href="../../vision/DVT_Docs_Pack_v0.6/docs/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Quality Guide - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#quality-assurance-summary" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Quality Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-tools-configured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Quality Tools Configured
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Quality Tools Configured">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-code-quality-linting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Code Quality &amp; Linting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Code Quality &amp; Linting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eslint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ESLint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prettier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prettier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markdownlint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Markdownlint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Testing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vitest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vitest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-quality-practices-tooling-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing quality practices &amp; tooling backlog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suggested-adoption-order-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested adoption order (testing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fit-assessment-proposed-practices-and-toolchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit assessment: proposed practices and toolchain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-type-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Type Safety
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Type Safety">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#typescript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TypeScript
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-git-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Git Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Git Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#husky-git-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Husky (Git Hooks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lint-staged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lint-Staged
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commitlint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commitlint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-versioning-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Versioning &amp; Releases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Versioning &amp; Releases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#release-please-official-release-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release Please (official release tool)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Dependency Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Dependency Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependabot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependabot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-security-auditability-governance-tooling-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Security, Auditability &amp; Governance Tooling Backlog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Security, Auditability &amp; Governance Tooling Backlog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#priority-a-immediate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority A (Immediate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priority-b-near-term-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority B (Near-term hardening)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priority-c-maintainability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority C (Maintainability)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetry-observability-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Telemetry &amp; Observability backlog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetry-minimum-standard-when-enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Telemetry minimum standard (when enabled)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suggested-rollout-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested rollout order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github-actions-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔄 GitHub Actions (CI/CD)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 GitHub Actions (CI/CD)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#branch-protection-recommended-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch Protection (Recommended Setup)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-owners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Owners
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Quality Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📊 Quality Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coverage-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr-size-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Size Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Quick Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Quick Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-for-new-contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Checklist for New Contributors
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-tools-configured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Quality Tools Configured
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Quality Tools Configured">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-code-quality-linting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Code Quality &amp; Linting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Code Quality &amp; Linting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eslint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ESLint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prettier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prettier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markdownlint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Markdownlint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Testing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vitest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vitest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-quality-practices-tooling-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing quality practices &amp; tooling backlog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suggested-adoption-order-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested adoption order (testing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fit-assessment-proposed-practices-and-toolchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit assessment: proposed practices and toolchain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-type-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Type Safety
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Type Safety">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#typescript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TypeScript
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-git-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Git Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Git Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#husky-git-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Husky (Git Hooks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lint-staged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lint-Staged
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commitlint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commitlint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-versioning-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Versioning &amp; Releases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Versioning &amp; Releases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#release-please-official-release-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release Please (official release tool)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Dependency Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Dependency Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependabot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependabot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-security-auditability-governance-tooling-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Security, Auditability &amp; Governance Tooling Backlog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Security, Auditability &amp; Governance Tooling Backlog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#priority-a-immediate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority A (Immediate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priority-b-near-term-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority B (Near-term hardening)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priority-c-maintainability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority C (Maintainability)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetry-observability-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Telemetry &amp; Observability backlog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetry-minimum-standard-when-enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Telemetry minimum standard (when enabled)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suggested-rollout-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested rollout order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github-actions-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔄 GitHub Actions (CI/CD)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 GitHub Actions (CI/CD)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#branch-protection-recommended-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch Protection (Recommended Setup)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-owners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Owners
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Quality Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📊 Quality Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coverage-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr-size-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Size Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Quick Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Quick Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-for-new-contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Checklist for New Contributors
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="quality-assurance-summary">Quality Assurance Summary<a class="headerlink" href="#quality-assurance-summary" title="Permanent link">&para;</a></h1>
+<p>This document provides a comprehensive overview of all quality assurance tools and processes configured for the DVT project.</p>
+<h2 id="overview">🎯 Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The DVT project implements a <strong>multi-layered quality assurance strategy</strong> ensuring code quality, consistency, and deterministic behavior across the workflow engine.</p>
+<hr />
+<h2 id="quality-tools-configured">🛠️ Quality Tools Configured<a class="headerlink" href="#quality-tools-configured" title="Permanent link">&para;</a></h2>
+<h3 id="1-code-quality-linting">1. Code Quality &amp; Linting<a class="headerlink" href="#1-code-quality-linting" title="Permanent link">&para;</a></h3>
+<h4 id="eslint">ESLint<a class="headerlink" href="#eslint" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Config</strong>: <a href="../../eslint.config.cjs"><code>eslint.config.cjs</code></a></li>
+<li><strong>Purpose</strong>: TypeScript code quality and determinism enforcement</li>
+<li><strong>Key Rules</strong>:</li>
+<li>No <code>Date.now()</code> in engine code (use <code>workflow.now()</code>)</li>
+<li>No <code>Math.random()</code> (use seeded RNG)</li>
+<li>No <code>setTimeout</code>/<code>setInterval</code> in workflows</li>
+<li>Strict type checking</li>
+<li>Import organization</li>
+<li><strong>Run</strong>: <code>pnpm lint</code></li>
+</ul>
+<h4 id="prettier">Prettier<a class="headerlink" href="#prettier" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Config</strong>: <a href="../../.prettierrc.json"><code>.prettierrc.json</code></a></li>
+<li><strong>Purpose</strong>: Consistent code formatting</li>
+<li><strong>Features</strong>:</li>
+<li>Single quotes, 100 char width</li>
+<li>Trailing commas (ES5)</li>
+<li>Auto-formatting on commit</li>
+<li><strong>Run</strong>: <code>pnpm format</code></li>
+</ul>
+<h4 id="markdownlint">Markdownlint<a class="headerlink" href="#markdownlint" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Config</strong>: <a href="../../.markdownlint.json"><code>.markdownlint.json</code></a></li>
+<li><strong>Purpose</strong>: Documentation quality</li>
+<li><strong>Run</strong>: <code>pnpm lint:md</code></li>
+</ul>
+<h3 id="2-testing">2. Testing<a class="headerlink" href="#2-testing" title="Permanent link">&para;</a></h3>
+<h4 id="vitest">Vitest<a class="headerlink" href="#vitest" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Config (monorepo real)</strong>:</li>
+<li><a href="../../packages/@dvt/engine/vitest.config.ts"><code>packages/@dvt/engine/vitest.config.ts</code></a></li>
+<li><a href="../../packages/@dvt/adapter-temporal/vitest.config.cjs"><code>packages/@dvt/adapter-temporal/vitest.config.cjs</code></a></li>
+<li><strong>Coverage Requirements</strong>: 80%+ (lines, statements, functions, branches)</li>
+<li><strong>Features</strong>:</li>
+<li>Native TypeScript and ESM support</li>
+<li>Fast execution with Vite-powered transforms</li>
+<li>Mock Temporal SDK for determinism tests</li>
+<li>Coverage reports (HTML, LCOV, JSON) via v8 provider</li>
+<li><strong>Run</strong>:</li>
+<li><code>pnpm test</code> - Run all tests</li>
+<li><code>pnpm test:coverage</code> - With coverage</li>
+<li><code>pnpm test:engine</code> - Run engine tests (includes determinism)</li>
+<li><code>pnpm --filter @dvt/engine test -- --watch</code> - Watch mode (engine)</li>
+</ul>
+<p><strong>Exception policy</strong>:</p>
+<ul>
+<li>If a package truly requires Jest, isolate it in its own workspace to avoid duplicated config and tooling drift.</li>
+</ul>
+<h4 id="testing-quality-practices-tooling-backlog">Testing quality practices &amp; tooling backlog<a class="headerlink" href="#testing-quality-practices-tooling-backlog" title="Permanent link">&para;</a></h4>
+<p>These practices were identified to improve test reliability, signal quality, and confidence in CI.</p>
+<ul>
+<li><strong>Coverage gates in CI (per package and global)</strong></li>
+<li><strong>Goal</strong>: Enforce minimum coverage thresholds in CI (not only local guidance).</li>
+<li><strong>Practice</strong>: Require line/branch/function thresholds and block merges on regressions.</li>
+<li><strong>Mutation testing (Stryker)</strong></li>
+<li><strong>Goal</strong>: Measure test effectiveness (not just code coverage).</li>
+<li><strong>Practice</strong>: Start with engine core and adapter boundary modules.</li>
+<li><strong>Flaky test detection and quarantine workflow</strong></li>
+<li><strong>Goal</strong>: Detect nondeterministic tests early.</li>
+<li><strong>Practice</strong>: Retry matrix + flaky tagging + mandatory follow-up issue.</li>
+<li><strong>Contract test expansion (consumer/provider boundaries)</strong></li>
+<li><strong>Goal</strong>: Guarantee compatibility between engine, adapters, and CLI-facing contracts.</li>
+<li><strong>Practice</strong>: Validate schema evolution and backward compatibility on pull requests.</li>
+<li><strong>Test data builders and deterministic fixtures</strong></li>
+<li><strong>Goal</strong>: Reduce brittle tests and improve readability.</li>
+<li><strong>Practice</strong>: Prefer reusable builders over ad-hoc inline fixtures.</li>
+<li><strong>Time-control policy for async/integration tests</strong></li>
+<li><strong>Goal</strong>: Prevent race conditions and lifecycle leaks in Temporal/time-skipping tests.</li>
+<li><strong>Practice</strong>: Standardize worker/client teardown and explicit clock control.</li>
+</ul>
+<h4 id="suggested-adoption-order-testing">Suggested adoption order (testing)<a class="headerlink" href="#suggested-adoption-order-testing" title="Permanent link">&para;</a></h4>
+<ol>
+<li>CI coverage gates + regression blocking</li>
+<li>Flaky test detection workflow</li>
+<li>Deterministic fixture/builders standard</li>
+<li>Contract test expansion in adapter boundaries</li>
+<li>Mutation testing on critical modules</li>
+</ol>
+<h4 id="fit-assessment-proposed-practices-and-toolchain">Fit assessment: proposed practices and toolchain<a class="headerlink" href="#fit-assessment-proposed-practices-and-toolchain" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Proposal</th>
+<th>Fit for DVT</th>
+<th>Recommendation</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trunk-Based Development + small PRs</td>
+<td>High</td>
+<td>Adopt now</td>
+<td>Aligns with current PR quality gate and reduces merge drift/conflicts.</td>
+</tr>
+<tr>
+<td>Conventional Commits + SemVer</td>
+<td>High</td>
+<td>Keep and enforce</td>
+<td>Already aligned with commitlint and release governance.</td>
+</tr>
+<tr>
+<td>ADRs for architecture decisions</td>
+<td>High</td>
+<td>Adopt now</td>
+<td>Add a lightweight ADR template and link it from architecture docs.</td>
+</tr>
+<tr>
+<td>DORA metrics + SLO/error budget mindset</td>
+<td>Medium-High</td>
+<td>Adopt in hardening phase</td>
+<td>Start with lead time and change failure rate using CI/deploy data.</td>
+</tr>
+<tr>
+<td>Husky + lint-staged + commitlint</td>
+<td>High</td>
+<td>Keep</td>
+<td>Already configured in repository workflow.</td>
+</tr>
+<tr>
+<td>Changesets for monorepo releases</td>
+<td>Medium</td>
+<td>Defer (decision needed)</td>
+<td>Current direction is release-please; avoid dual release systems.</td>
+</tr>
+<tr>
+<td>Renovate for dependency updates</td>
+<td>Medium-High</td>
+<td>Optional migration</td>
+<td>Dependabot is active; migrate only if advanced grouping/rules are needed.</td>
+</tr>
+<tr>
+<td>pnpm workspaces</td>
+<td>High</td>
+<td>Keep</td>
+<td>Already foundational in this monorepo.</td>
+</tr>
+<tr>
+<td>Nx/Turborepo (cache/distributed tasks)</td>
+<td>Medium</td>
+<td>Defer</td>
+<td>Introduce when CI duration/package graph complexity justifies it.</td>
+</tr>
+<tr>
+<td>Playwright for E2E/UI</td>
+<td>High</td>
+<td>Adopt now</td>
+<td>Strong fit for golden-path browser validation.</td>
+</tr>
+<tr>
+<td>MSW for network mocking</td>
+<td>High</td>
+<td>Adopt now</td>
+<td>Improves realism and isolation for frontend/integration tests.</td>
+</tr>
+<tr>
+<td>OpenTelemetry</td>
+<td>High</td>
+<td>Adopt by stages</td>
+<td>Already in observability backlog; define minimum instrumentation first.</td>
+</tr>
+<tr>
+<td>OWASP ASVS</td>
+<td>High</td>
+<td>Adopt now (checklist baseline)</td>
+<td>Use as verification baseline for app/service security controls.</td>
+</tr>
+<tr>
+<td>SLSA</td>
+<td>Medium-High</td>
+<td>Adopt incrementally</td>
+<td>Start with provenance and build integrity controls.</td>
+</tr>
+<tr>
+<td>Sigstore</td>
+<td>Medium-High</td>
+<td>Adopt with release hardening</td>
+<td>Pair with SLSA milestones for artifact signing and verification.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-type-safety">3. Type Safety<a class="headerlink" href="#3-type-safety" title="Permanent link">&para;</a></h3>
+<h4 id="typescript">TypeScript<a class="headerlink" href="#typescript" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Config</strong>: <a href="../../tsconfig.json"><code>tsconfig.json</code></a></li>
+<li><strong>Settings</strong>:</li>
+<li>Strict mode enabled</li>
+<li>ES2022 target</li>
+<li>Path aliases (@dvt/engine, @dvt/contracts, @dvt/adapters)</li>
+<li><strong>Run</strong>: <code>pnpm type-check</code></li>
+</ul>
+<h3 id="4-git-workflow">4. Git Workflow<a class="headerlink" href="#4-git-workflow" title="Permanent link">&para;</a></h3>
+<h4 id="husky-git-hooks">Husky (Git Hooks)<a class="headerlink" href="#husky-git-hooks" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Pre-commit</strong>: Runs lint-staged (ESLint + Prettier)</li>
+<li><strong>Commit-msg</strong>: Validates conventional commit format</li>
+<li><strong>Config</strong>: <a href="../../.husky/"><code>.husky/</code></a></li>
+</ul>
+<h4 id="lint-staged">Lint-Staged<a class="headerlink" href="#lint-staged" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Auto-fixes</strong> TypeScript and formats files before commit</li>
+<li><strong>Config</strong>: <a href="../../package.json"><code>package.json</code></a> <code>lint-staged</code> section</li>
+</ul>
+<h4 id="commitlint">Commitlint<a class="headerlink" href="#commitlint" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Config</strong>: <a href="../../commitlint.config.cjs"><code>commitlint.config.cjs</code></a></li>
+<li><strong>Enforces</strong>: Conventional Commits format</li>
+<li><strong>Valid types</strong>: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert</li>
+</ul>
+<h3 id="5-versioning-releases">5. Versioning &amp; Releases<a class="headerlink" href="#5-versioning-releases" title="Permanent link">&para;</a></h3>
+<h4 id="release-please-official-release-tool">Release Please (official release tool)<a class="headerlink" href="#release-please-official-release-tool" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Workflow</strong>: <a href="../../.github/workflows/release.yml"><code>release.yml</code></a></li>
+<li><strong>Policy</strong>: <a href="../../architecture/engine/VERSIONING/">VERSIONING.md</a> (contract versioning); <a href="https://semver.org/">Semantic Versioning 2.0.0</a> (package versioning)</li>
+<li><strong>Features</strong>:</li>
+<li>Automated release PRs based on Conventional Commits</li>
+<li>Changelog updates managed by release automation</li>
+<li>Tagged GitHub releases on merge</li>
+<li>NPM publishing on release creation</li>
+<li><strong>Run</strong>:</li>
+<li>Automatic on push to <code>main</code> (release-please workflow)</li>
+<li>Manual trigger available via GitHub Actions (<code>workflow_dispatch</code>)</li>
+<li><strong>Flow</strong>:</li>
+<li>Merge PRs to <code>main</code> using Conventional Commits (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, etc.)</li>
+<li>release-please opens/updates a Release PR with version bump and changelog</li>
+<li>Merge the Release PR to create a GitHub release and git tag</li>
+<li>CI publishes to NPM automatically</li>
+<li><strong>Note</strong>: No other release tooling is used. <code>standard-version</code> was removed; all releases go through release-please</li>
+</ul>
+<h3 id="6-dependency-management">6. Dependency Management<a class="headerlink" href="#6-dependency-management" title="Permanent link">&para;</a></h3>
+<h4 id="dependabot">Dependabot<a class="headerlink" href="#dependabot" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Config</strong>: <a href="../../.github/dependabot.yml"><code>.github/dependabot.yml</code></a></li>
+<li><strong>Features</strong>:</li>
+<li>Weekly automated dependency updates</li>
+<li>Grouped updates (TypeScript, testing, linting, Temporal)</li>
+<li>Ignores major version bumps for critical deps</li>
+<li><strong>Targets</strong>: npm packages &amp; GitHub Actions</li>
+</ul>
+<h3 id="7-security-auditability-governance-tooling-backlog">7. Security, Auditability &amp; Governance Tooling Backlog<a class="headerlink" href="#7-security-auditability-governance-tooling-backlog" title="Permanent link">&para;</a></h3>
+<p>This section tracks recommended tooling to strengthen secure delivery, auditable releases, and architecture governance.</p>
+<h4 id="priority-a-immediate">Priority A (Immediate)<a class="headerlink" href="#priority-a-immediate" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>release-please</strong> --- <strong>CONFIGURED</strong></li>
+<li><strong>Goal</strong>: Standardize changelog and release automation via Conventional Commits.</li>
+<li><strong>Status</strong>: Active. Configured in <a href="../../.github/workflows/release.yml"><code>.github/workflows/release.yml</code></a>. No legacy release tooling remains (standard-version was fully removed).</li>
+<li><strong>CodeQL</strong></li>
+<li><strong>Goal</strong>: Static application security testing (SAST) in CI.</li>
+<li><strong>gitleaks</strong></li>
+<li><strong>Goal</strong>: Detect credential/secret leaks in commits and pull requests.</li>
+<li><strong>Trivy</strong> or <strong>OSV-Scanner</strong></li>
+<li><strong>Goal</strong>: Dependency vulnerability scanning with CI gate support.</li>
+</ul>
+<h4 id="priority-b-near-term-hardening">Priority B (Near-term hardening)<a class="headerlink" href="#priority-b-near-term-hardening" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>dependency-cruiser</strong></li>
+<li><strong>Goal</strong>: Enforce module/layer boundaries and prevent forbidden imports.</li>
+<li><strong>Semgrep</strong></li>
+<li><strong>Goal</strong>: Add custom security and determinism rules for engine/runtime code.</li>
+<li><strong>Syft + Grype</strong></li>
+<li><strong>Goal</strong>: Generate SBOM and scan generated inventories for vulnerabilities.</li>
+</ul>
+<h4 id="priority-c-maintainability">Priority C (Maintainability)<a class="headerlink" href="#priority-c-maintainability" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>knip</strong></li>
+<li><strong>Goal</strong>: Detect unused files/exports/dependencies and reduce dead code.</li>
+<li><strong>markdown-link-check</strong></li>
+<li><strong>Goal</strong>: Catch broken links in docs.</li>
+<li><strong>cspell</strong></li>
+<li><strong>Goal</strong>: Improve documentation quality and reduce review noise.</li>
+</ul>
+<h4 id="telemetry-observability-backlog">Telemetry &amp; Observability backlog<a class="headerlink" href="#telemetry-observability-backlog" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>OpenTelemetry (OTel SDK + Collector)</strong></li>
+<li><strong>Goal</strong>: Unified traces, metrics, and logs across engine/adapters/CLI.</li>
+<li><strong>Prometheus + Grafana</strong></li>
+<li><strong>Goal</strong>: Time-series monitoring dashboards and SLO/SLA tracking.</li>
+<li><strong>Loki + Tempo</strong></li>
+<li><strong>Goal</strong>: Correlate logs and traces with run/tenant/correlation IDs.</li>
+<li><strong>Sentry</strong></li>
+<li><strong>Goal</strong>: Error tracking with release-aware alerting and stack trace grouping.</li>
+<li><strong>Alertmanager</strong></li>
+<li><strong>Goal</strong>: Route and deduplicate alerts by severity and ownership.</li>
+</ul>
+<h4 id="telemetry-minimum-standard-when-enabled">Telemetry minimum standard (when enabled)<a class="headerlink" href="#telemetry-minimum-standard-when-enabled" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Trace IDs and correlation IDs MUST be propagated across API → Engine → Adapter boundaries.</li>
+<li>Metrics MUST include, at minimum: error rate, latency p95/p99, throughput, queue lag, and retry counts.</li>
+<li>Logs MUST be structured and tenant-safe (no secrets/PII leakage).</li>
+<li>Dashboards and alerts MUST map to runbooks and severity policy.</li>
+</ul>
+<h4 id="suggested-rollout-order">Suggested rollout order<a class="headerlink" href="#suggested-rollout-order" title="Permanent link">&para;</a></h4>
+<ol>
+<li>~~<code>release-please</code>~~ (done — active in CI)</li>
+<li><code>CodeQL</code> + <code>gitleaks</code> + (<code>Trivy</code> or <code>OSV-Scanner</code>)</li>
+<li><code>dependency-cruiser</code> + <code>Semgrep</code></li>
+<li><code>OpenTelemetry</code> + <code>Prometheus/Grafana</code></li>
+<li><code>Loki/Tempo</code> + <code>Alertmanager</code> + <code>Sentry</code></li>
+<li><code>Syft + Grype</code></li>
+<li><code>knip</code> + <code>markdown-link-check</code> + <code>cspell</code></li>
+</ol>
+<h4 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Treat this section as a governance backlog for quality/security tooling.</li>
+<li>Promote each tool from backlog to "configured" only after CI integration and documented usage.</li>
+</ul>
+<hr />
+<h2 id="github-actions-cicd">🔄 GitHub Actions (CI/CD)<a class="headerlink" href="#github-actions-cicd" title="Permanent link">&para;</a></h2>
+<h3 id="workflows">Workflows<a class="headerlink" href="#workflows" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>Purpose</th>
+<th>Triggers</th>
+<th>Key Checks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../.github/workflows/test.yml"><code>test.yml</code></a></td>
+<td>Run test suite</td>
+<td>PR, push to main</td>
+<td>Vitest tests, coverage (Node 18 &amp; 20), determinism tests</td>
+</tr>
+<tr>
+<td><a href="../../.github/workflows/ci.yml"><code>ci.yml</code></a></td>
+<td>Code quality checks</td>
+<td>PR, push to main</td>
+<td>ESLint, Prettier, TypeScript, markdown lint</td>
+</tr>
+<tr>
+<td><a href="../../.github/workflows/contracts.yml"><code>contracts.yml</code></a></td>
+<td>Contracts &amp; determinism</td>
+<td>PR, push to main</td>
+<td>Schema validation, determinism scan, golden paths</td>
+</tr>
+<tr>
+<td><a href="../../.github/workflows/golden-paths.yml"><code>golden-paths.yml</code></a></td>
+<td>Golden path validation</td>
+<td>Path-triggered, push</td>
+<td>Contract fixture and plan validation</td>
+</tr>
+<tr>
+<td><a href="../../.github/workflows/pr-quality-gate.yml"><code>pr-quality-gate.yml</code></a></td>
+<td>PR quality gate</td>
+<td>PR opened/updated</td>
+<td>PR title, size, description</td>
+</tr>
+<tr>
+<td><a href="../../.github/workflows/release.yml"><code>release.yml</code></a></td>
+<td>Create releases</td>
+<td>Push to main, manual</td>
+<td>Version bump, changelog, GitHub release</td>
+</tr>
+</tbody>
+</table>
+<h3 id="branch-protection-recommended-setup">Branch Protection (Recommended Setup)<a class="headerlink" href="#branch-protection-recommended-setup" title="Permanent link">&para;</a></h3>
+<p>Configure in GitHub Settings → Branches → Add rule:</p>
+<ul>
+<li>✅ Require pull request before merging</li>
+<li>✅ Require status checks to pass:</li>
+<li><code>test</code> (Run Tests)</li>
+<li><code>eslint</code> (ESLint)</li>
+<li><code>prettier</code> (Prettier Format Check)</li>
+<li><code>typescript</code> (TypeScript Type Check)</li>
+<li><code>markdown-lint</code> (Lint Markdown Syntax)</li>
+<li><code>determinism-lint</code> (Determinism Linting Rules)</li>
+<li>✅ Require conversation resolution before merging</li>
+<li>✅ Do not allow bypassing the above settings</li>
+</ul>
+<h3 id="code-owners">Code Owners<a class="headerlink" href="#code-owners" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Config</strong>: <a href="../../.github/CODEOWNERS"><code>.github/CODEOWNERS</code></a></li>
+<li><strong>Auto-assigns</strong> reviewers based on file paths</li>
+<li><strong>High scrutiny</strong> for:</li>
+<li><code>/docs/architecture/engine/contracts/</code> (normative contracts)</li>
+<li><code>/packages/@dvt/engine/src/</code> (determinism-critical code)</li>
+<li><code>/packages/@dvt/contracts/</code> (shared contract package)</li>
+</ul>
+<hr />
+<h2 id="quality-metrics">📊 Quality Metrics<a class="headerlink" href="#quality-metrics" title="Permanent link">&para;</a></h2>
+<h3 id="coverage-requirements">Coverage Requirements<a class="headerlink" href="#coverage-requirements" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Threshold</th>
+<th>Current</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lines</td>
+<td>80%</td>
+<td>TBD (run <code>pnpm test:coverage</code>)</td>
+</tr>
+<tr>
+<td>Statements</td>
+<td>80%</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td>Functions</td>
+<td>80%</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td>Branches</td>
+<td>80%</td>
+<td>TBD</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pr-size-guidelines">PR Size Guidelines<a class="headerlink" href="#pr-size-guidelines" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>Small</strong> (&lt; 200 lines): Ideal</li>
+<li>⚠️ <strong>Medium</strong> (200-500 lines): Acceptable</li>
+<li>❌ <strong>Large</strong> (&gt; 500 lines): Blocked by PR quality gate</li>
+</ul>
+<hr />
+<h2 id="quick-commands">🚀 Quick Commands<a class="headerlink" href="#quick-commands" title="Permanent link">&para;</a></h2>
+<h3 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash"># Setup
+pnpm install
+pnpm prepare              # Setup Git hooks
+
+# Quality checks
+pnpm lint                 # ESLint
+pnpm format:check         # Prettier check
+pnpm type-check           # TypeScript
+pnpm test                     # Run tests
+
+# Auto-fix
+pnpm lint:fix             # Fix ESLint issues
+pnpm format               # Format code
+
+# All checks (pre-commit)
+./dev.sh check               # Run all quality checks
+./dev.sh fix                 # Auto-fix issues
+</code></pre>
+<h3 id="release">Release<a class="headerlink" href="#release" title="Permanent link">&para;</a></h3>
+<pre><code class="language-bash"># Releases are fully automated via release-please (GitHub Actions).
+# There are no local release commands to run.
+#
+# Workflow: .github/workflows/release.yml
+# Trigger: Automatic on push to main (or manual via workflow_dispatch)
+# Process: Conventional Commits → release-please PR → merge → GitHub release → NPM publish
+#
+# To check release status:
+gh run list --workflow=release.yml --limit=5
+</code></pre>
+<hr />
+<h2 id="documentation">📝 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../CONTRIBUTING.md"><code>Contributing Guide</code></a></li>
+<li><a href="../../.github/COMMIT_CONVENTION.md"><code>Commit Convention</code></a></li>
+<li><a href="../../CHANGELOG.md"><code>Changelog</code></a></li>
+</ul>
+<hr />
+<h2 id="checklist-for-new-contributors">✅ Checklist for New Contributors<a class="headerlink" href="#checklist-for-new-contributors" title="Permanent link">&para;</a></h2>
+<p>Before submitting your first PR:</p>
+<ul>
+<li>[ ] Read <a href="../../CONTRIBUTING.md"><code>CONTRIBUTING.md</code></a></li>
+<li>[ ] Setup development environment: <code>pnpm install &amp;&amp; pnpm prepare</code></li>
+<li>[ ] Run quality checks: <code>./dev.sh check</code></li>
+<li>[ ] Write tests for new features (maintain 80%+ coverage)</li>
+<li>[ ] Follow <a href="../../.github/COMMIT_CONVENTION.md"><code>COMMIT_CONVENTION.md</code></a></li>
+<li>[ ] Ensure all CI checks pass</li>
+<li>[ ] Keep PR focused (&lt; 500 lines preferred)</li>
+</ul>
+<hr />
+<p><strong>Last Updated</strong>: 2026-02-13
+<strong>Maintained By</strong>: @dunay2</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

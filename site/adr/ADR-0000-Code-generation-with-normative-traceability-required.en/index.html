@@ -1,0 +1,1890 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>ADR 0000 Code generation with normative traceability required.en - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adr-0000-code-generation-with-enforced-normative-traceability-automated" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ADR 0000 Code generation with normative traceability required.en
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Problem Statement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mandatory-in-code-traceability-header" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Mandatory In-Code Traceability Header
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-test-level-traceability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Test-Level Traceability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-manifest-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Manifest Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-reverse-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Reverse Enforcement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-architecture-graph-publication-neo4j" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Architecture Graph Publication (Neo4j)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-automation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Automation Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Acceptance Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p>ADR-0000
+Code Generation with Enforced Normative Traceability (Automated)</p>
+<p>Status: Accepted
+Date: 2026-02-14
+Updated: 2026-02-21
+Owners: Core Architecture / Engine / Adapters / AI Tooling</p>
+<ol>
+<li>Context</li>
+</ol>
+<p>Architectural drift is inevitable unless decisions are:</p>
+<p>Explicit</p>
+<p>Traceable</p>
+<p>Machine-verifiable</p>
+<p>Continuously validated</p>
+<p>Traditional ADRs document intent but do not enforce implementation conformance.</p>
+<p>This leads to:</p>
+<p>Orphaned code</p>
+<p>Silent violations</p>
+<p>Undetected architectural erosion</p>
+<p>Compliance ambiguity</p>
+<p>Refactoring fragility</p>
+<p>For a layered, contract-driven system like DVT+, architectural integrity must be programmatically enforced.</p>
+<p>References:</p>
+<p>C4 Model: https://c4model.com/</p>
+<p>Architectural erosion: https://www.oreilly.com/library/view/software-architecture-in/9781492086888/</p>
+<p>Technical Debt: https://martinfowler.com/bliki/TechnicalDebt.html</p>
+<ol>
+<li>Problem Statement</li>
+</ol>
+<p>We require a mechanism that:</p>
+<ol>
+<li>Binds implementation artifacts to accepted ADRs.</li>
+<li>Survives refactoring and file movement.</li>
+<li>Is machine-verifiable in CI.</li>
+<li>Supports impact analysis.</li>
+<li>Generates an architecture dependency graph.</li>
+<li>
+<p>Detects both:</p>
+</li>
+<li>
+<p>Code without ADR</p>
+</li>
+<li>ADR without implementation</li>
+</ol>
+<p>This system must not rely on manual discipline alone.</p>
+<ol>
+<li>Scope (Important Constraint)</li>
+</ol>
+<p>This requirement applies to:</p>
+<p>Core modules</p>
+<p>Planner</p>
+<p>Engine</p>
+<p>Contracts</p>
+<p>Adapters</p>
+<p>Security modules</p>
+<p>Public API</p>
+<p>Persistent models</p>
+<p>Generated schemas</p>
+<p>It does NOT apply to:</p>
+<p>Pure UI presentational components</p>
+<p>Styling</p>
+<p>Internal utilities without architectural meaning</p>
+<p>Tests unrelated to architectural decisions</p>
+<p>This prevents traceability noise.</p>
+<ol>
+<li>Decision
+   4.1 Mandatory In-Code Traceability Header</li>
+</ol>
+<p>Every governed artifact MUST begin with:</p>
+<p>/**</p>
+<ul>
+<li>@file packages/contracts/src/idempotency/key-builder.ts</li>
+<li>@baseline ADR-0010: Run Event Envelope Split</li>
+<li>@decision Section 3.3 — Idempotency derivation rules</li>
+<li>@decision Section 3.4 — Canonical serialization</li>
+<li>@consequence Engine retries do not alter idempotency key</li>
+<li>@version 1.0.0</li>
+<li>@date 2026-02-21
+  */</li>
+</ul>
+<p>Rules:</p>
+<p>Multiple @baseline allowed</p>
+<p>@decision must reference section numbers</p>
+<p>@consequence must describe system guarantee</p>
+<p>Version must align with contract version (if applicable)</p>
+<p>Headers must be machine-parseable.</p>
+<p>4.2 Test-Level Traceability</p>
+<p>Contract and integration tests MUST include:</p>
+<p>/**</p>
+<ul>
+<li>@baseline ADR-0010</li>
+<li>@verifies Section 3.3</li>
+<li>@verifies Section 3.4
+  */</li>
+</ul>
+<p>This ensures:</p>
+<p>Tests prove decisions</p>
+<p>Architectural change impact is detectable</p>
+<p>4.3 Manifest Generation (Machine-Readable)</p>
+<p>Each module MUST generate:</p>
+<p>{
+"component": "@dvt/contracts",
+"version": "1.0.0",
+"generated": "2026-02-21",
+"baseline_adrs": [
+{
+"number": "ADR-0010",
+"title": "Run Event Envelope Split",
+"decisions": ["Section 3.3", "Section 3.4"],
+"implemented_by": [
+"src/idempotency/key-builder.ts"
+]
+}
+]
+}</p>
+<p>This manifest is generated automatically (not handwritten).</p>
+<p>4.4 Reverse Enforcement (New)</p>
+<p>CI MUST fail if:</p>
+<p>An ADR in docs/adr/ with Status: Accepted
+has zero implementation references in manifests.</p>
+<p>This prevents “dead architecture”.</p>
+<p>4.5 Architecture Graph Generation (New)</p>
+<p>The system MUST produce:</p>
+<p>ADR → File mapping</p>
+<p>File → ADR mapping</p>
+<p>ADR → ADR dependency graph (if declared)</p>
+<p>Module-level traceability graph</p>
+<p>Output formats:</p>
+<p>JSON (for tooling)</p>
+<p>Graph DB ingestion</p>
+<p>Mermaid export (for docs)</p>
+<p>The system MUST publish the traceability graph to Neo4j.</p>
+<p>The graph MUST be idempotent (re-running ingestion produces the same graph state).</p>
+<p>Nodes MUST include stable keys:</p>
+<p>ADR.number</p>
+<p>File.path</p>
+<p>Module.name</p>
+<p>Relationships MUST be deterministic and upserted, not appended.</p>
+<h1 id="adr-0000-code-generation-with-enforced-normative-traceability-automated">ADR-0000: Code Generation with Enforced Normative Traceability (Automated)<a class="headerlink" href="#adr-0000-code-generation-with-enforced-normative-traceability-automated" title="Permanent link">&para;</a></h1>
+<p><strong>Status:</strong> Accepted\
+<strong>Date:</strong> 2026-02-14\
+<strong>Updated:</strong> 2026-02-21\
+<strong>Owners:</strong> Core Architecture / Engine / Adapters / AI Tooling</p>
+<hr />
+<h2 id="1-context">1. Context<a class="headerlink" href="#1-context" title="Permanent link">&para;</a></h2>
+<p>Architectural drift is inevitable unless decisions are:</p>
+<ul>
+<li>Explicit\</li>
+<li>Traceable\</li>
+<li>Machine-verifiable\</li>
+<li>Continuously validated</li>
+</ul>
+<p>Traditional ADRs document intent but do not enforce implementation
+conformance.</p>
+<p>This leads to:</p>
+<ul>
+<li>Orphaned code\</li>
+<li>Silent violations\</li>
+<li>Undetected architectural erosion\</li>
+<li>Compliance ambiguity\</li>
+<li>Refactoring fragility</li>
+</ul>
+<p>For a layered, contract-driven system like DVT+, architectural integrity
+must be programmatically enforced.</p>
+<h3 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h3>
+<ul>
+<li>C4 Model: https://c4model.com/\</li>
+<li>Architectural erosion:
+  https://www.oreilly.com/library/view/software-architecture-in/9781492086888/\</li>
+<li>Technical Debt: https://martinfowler.com/bliki/TechnicalDebt.html</li>
+</ul>
+<hr />
+<h2 id="2-problem-statement">2. Problem Statement<a class="headerlink" href="#2-problem-statement" title="Permanent link">&para;</a></h2>
+<p>We require a mechanism that:</p>
+<ol>
+<li>Binds implementation artifacts to accepted ADRs.\</li>
+<li>Survives refactoring and file movement.\</li>
+<li>Is machine-verifiable in CI.\</li>
+<li>Supports impact analysis.\</li>
+<li>Generates an architecture dependency graph.\</li>
+<li>Detects both:</li>
+<li>Code without ADR</li>
+<li>ADR without implementation</li>
+</ol>
+<p>This system must not rely on manual discipline alone.</p>
+<hr />
+<h2 id="3-scope">3. Scope<a class="headerlink" href="#3-scope" title="Permanent link">&para;</a></h2>
+<p>Applies to:</p>
+<ul>
+<li>Core modules</li>
+<li>Planner</li>
+<li>Engine</li>
+<li>Contracts</li>
+<li>Adapters</li>
+<li>Security modules</li>
+<li>Public API</li>
+<li>Persistent models</li>
+<li>Generated schemas</li>
+</ul>
+<p>Does NOT apply to:</p>
+<ul>
+<li>Pure UI presentational components</li>
+<li>Styling</li>
+<li>Internal utilities without architectural meaning</li>
+<li>Tests unrelated to architectural decisions</li>
+</ul>
+<p>This prevents traceability noise.</p>
+<hr />
+<h2 id="4-decision">4. Decision<a class="headerlink" href="#4-decision" title="Permanent link">&para;</a></h2>
+<h3 id="41-mandatory-in-code-traceability-header">4.1 Mandatory In-Code Traceability Header<a class="headerlink" href="#41-mandatory-in-code-traceability-header" title="Permanent link">&para;</a></h3>
+<p>Every governed artifact MUST begin with:</p>
+<pre><code class="language-typescript">/**
+ * @file packages/contracts/src/idempotency/key-builder.ts
+ * @baseline ADR-0010: Run Event Envelope Split
+ * @decision Section 3.3 — Idempotency derivation rules
+ * @decision Section 3.4 — Canonical serialization
+ * @consequence Engine retries do not alter idempotency key
+ * @version 1.0.0
+ * @date 2026-02-21
+ */
+</code></pre>
+<p>Rules:</p>
+<ul>
+<li>Multiple <code>@baseline</code> allowed</li>
+<li><code>@decision</code> must reference section numbers</li>
+<li><code>@consequence</code> must describe system guarantee</li>
+<li>Version must align with contract version</li>
+<li>Headers must be machine-parseable</li>
+</ul>
+<hr />
+<h3 id="42-test-level-traceability">4.2 Test-Level Traceability<a class="headerlink" href="#42-test-level-traceability" title="Permanent link">&para;</a></h3>
+<pre><code class="language-typescript">/**
+ * @baseline ADR-0010
+ * @verifies Section 3.3
+ * @verifies Section 3.4
+ */
+</code></pre>
+<p>Tests serve as verifiable evidence of architectural decisions.</p>
+<hr />
+<h3 id="43-manifest-generation">4.3 Manifest Generation<a class="headerlink" href="#43-manifest-generation" title="Permanent link">&para;</a></h3>
+<p>Each module MUST generate a machine-readable manifest:</p>
+<pre><code class="language-json">{
+  &quot;component&quot;: &quot;@dvt/contracts&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;generated&quot;: &quot;2026-02-21&quot;,
+  &quot;baseline_adrs&quot;: [
+    {
+      &quot;number&quot;: &quot;ADR-0010&quot;,
+      &quot;title&quot;: &quot;Run Event Envelope Split&quot;,
+      &quot;decisions&quot;: [&quot;Section 3.3&quot;, &quot;Section 3.4&quot;],
+      &quot;implemented_by&quot;: [&quot;src/idempotency/key-builder.ts&quot;]
+    }
+  ]
+}
+</code></pre>
+<hr />
+<h3 id="44-reverse-enforcement">4.4 Reverse Enforcement<a class="headerlink" href="#44-reverse-enforcement" title="Permanent link">&para;</a></h3>
+<p>CI MUST fail if any <code>Accepted</code> ADR has zero implementation references.</p>
+<hr />
+<h3 id="45-architecture-graph-publication-neo4j">4.5 Architecture Graph Publication (Neo4j)<a class="headerlink" href="#45-architecture-graph-publication-neo4j" title="Permanent link">&para;</a></h3>
+<p>The system MUST publish traceability data to Neo4j.</p>
+<p>Stable keys:</p>
+<ul>
+<li>ADR.number\</li>
+<li>File.path\</li>
+<li>Module.name</li>
+</ul>
+<p>Relationships must be idempotent (MERGE, not CREATE).</p>
+<p>Example:</p>
+<pre><code class="language-cypher">MERGE (a:ADR {number:&quot;ADR-0010&quot;})
+MERGE (f:File {path:&quot;packages/contracts/src/idempotency/key-builder.ts&quot;})
+MERGE (f)-[:BASELINED_ON]-&gt;(a)
+</code></pre>
+<hr />
+<h2 id="5-automation-requirements">5. Automation Requirements<a class="headerlink" href="#5-automation-requirements" title="Permanent link">&para;</a></h2>
+<p>Traceability without automation is ritual.</p>
+<p>Required components:</p>
+<ul>
+<li>Header validation script</li>
+<li>Manifest generator</li>
+<li>Reverse ADR coverage validation</li>
+<li>CI enforcement</li>
+<li>Neo4j graph ingestion</li>
+</ul>
+<hr />
+<h2 id="6-acceptance-criteria">6. Acceptance Criteria<a class="headerlink" href="#6-acceptance-criteria" title="Permanent link">&para;</a></h2>
+<p>ADR-0000 is complete when:</p>
+<ul>
+<li>Header validation exists</li>
+<li>Manifest generator exists</li>
+<li>Reverse ADR coverage validation exists</li>
+<li>CI blocks non-compliant PRs</li>
+<li>Neo4j graph contains <code>(:ADR)&lt;-[:BASELINED_ON]-(:File)</code></li>
+<li>Graph export works</li>
+</ul>
+<p>Only then is traceability real.</p>
+<p>Add a new “done when” item in Acceptance Criteria:</p>
+<p>Neo4j contains (:ADR)-[:IMPLEMENTED_BY]-(:File) and (:Module)-[:CONTAINS]-&gt;(:File) for all governed files.</p>
+<ol>
+<li>Automation (Mandatory)</li>
+</ol>
+<p>Traceability without automation is ritual.</p>
+<p>We introduce automated enforcement.</p>
+<ol>
+<li>Automation Strategy
+   6.1 Header Validation</li>
+</ol>
+<p>Use:</p>
+<p>ESLint custom rule (AST-based)</p>
+<p>OR simple Node script (faster to implement initially)</p>
+<p>Recommended:</p>
+<p>Custom ESLint rule:</p>
+<p>Detect presence of @baseline ADR-</p>
+<p>Parse metadata</p>
+<p>Validate format</p>
+<p>Validate section references (optional enhancement)</p>
+<p>Alternative initial script:</p>
+<p>node tools/traceability/validate-headers.js</p>
+<p>Checks:</p>
+<p>Files under governed directories contain header</p>
+<p>Header matches regex</p>
+<p>ADR file exists</p>
+<p>ADR has Status: Accepted</p>
+<p>6.2 ADR Existence + Status Validation</p>
+<p>Script:</p>
+<p>Parse docs/adr/*.md</p>
+<p>Extract:</p>
+<p>ADR number</p>
+<p>Status</p>
+<p>Build map of Accepted ADRs</p>
+<p>Fail if:</p>
+<p>Referenced ADR missing</p>
+<p>ADR not Accepted</p>
+<p>6.3 Manifest Generator</p>
+<p>New tool:</p>
+<p>node tools/traceability/generate-manifest.js</p>
+<p>It:</p>
+<p>Scans governed files</p>
+<p>Extracts header metadata</p>
+<p>Builds manifest JSON</p>
+<p>Writes to:</p>
+<p>dist/traceability-manifest.json</p>
+<p>or /architecture/manifest.json</p>
+<p>6.4 Reverse ADR Coverage Validator</p>
+<p>Script:</p>
+<p>node tools/traceability/validate-adr-coverage.js</p>
+<p>It:</p>
+<p>Loads Accepted ADR list</p>
+<p>Loads manifest(s)</p>
+<p>Verifies:</p>
+<p>Each ADR has ≥1 implementing file</p>
+<p>Fail if orphaned ADR.</p>
+<p>6.5 CI Integration (GitHub Actions Example)
+name: ADR Governance</p>
+<p>on: [pull_request]</p>
+<pre><code class="language-yaml">jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: node tools/traceability/validate-headers.js
+      - run: node tools/traceability/generate-manifest.js
+      - run: node tools/traceability/validate-adr-coverage.js
+</code></pre>
+<ol>
+<li>Architecture Graph Generator</li>
+</ol>
+<p>Now we formalize it.</p>
+<p>7.1 Inputs</p>
+<p>Parsed ADR documents</p>
+<p>Parsed headers</p>
+<p>Generated manifest</p>
+<p>7.2 Graph Model</p>
+<p>Nodes:</p>
+<p>ADR</p>
+<p>File</p>
+<p>Module</p>
+<p>Contract</p>
+<p>Capability (optional future)</p>
+<p>Plugin (optional)</p>
+<p>Edges:</p>
+<p>IMPLEMENTS (File → ADR)</p>
+<p>BASELINE_OF (ADR → File)</p>
+<p>VERIFIES (Test → ADR Section)</p>
+<p>DEPENDS_ON (ADR → ADR)</p>
+<p>BELONGS_TO (File → Module)</p>
+<p>7.3 Graph Output Formats
+A) JSON</p>
+<p>For tooling.</p>
+<p>B) Mermaid Export
+C) Graph DB Ingestion</p>
+<p>Since you already have a project tracking graph DB:</p>
+<p>We store:</p>
+<p>Node label: ADR</p>
+<p>Node label: File</p>
+<p>Edge: IMPLEMENTS</p>
+<p>Edge: VERIFIES</p>
+<p>This allows:</p>
+<p>Impact radius queries</p>
+<p>Refactoring safety checks</p>
+<p>Architecture evolution visualization</p>
+<p>Risk heat maps</p>
+<p>Example Cypher (Neo4j-style):</p>
+<p>MERGE (a:ADR {number:"ADR-0010"})
+MERGE (f:File {path:"packages/contracts/src/idempotency/key-builder.ts"})
+MERGE (f)-[:IMPLEMENTS]-&gt;(a) 8. Advanced Optional (Phase 2)
+8.1 Impact Query Example</p>
+<p>If ADR-0010 changes:</p>
+<p>Query:</p>
+<p>MATCH (a:ADR {number:"ADR-0010"})&lt;-[:IMPLEMENTS]-(f)
+RETURN f</p>
+<p>You instantly get blast radius.</p>
+<ol>
+<li>Consequences</li>
+</ol>
+<p>Positive:</p>
+<p>Zero silent drift</p>
+<p>Machine-auditable architecture</p>
+<p>Graph-driven impact analysis</p>
+<p>Enforced boundaries</p>
+<p>Architectural memory</p>
+<p>Negative:</p>
+<p>Requires tooling discipline</p>
+<p>Slight onboarding friction</p>
+<p>Requires AST parsing or regex reliability</p>
+<p>Mitigations:</p>
+<p>Auto header templates</p>
+<p>CLI helpers</p>
+<p>IDE snippets</p>
+<p>Autofix ESLint rule</p>
+<ol>
+<li>Acceptance Criteria</li>
+</ol>
+<p>ADR-0000 is complete when:</p>
+<p>Header validation script exists</p>
+<p>Manifest generator exists</p>
+<p>Reverse ADR coverage check exists</p>
+<p>CI enforces governance</p>
+<p>Graph export works</p>
+<p>Graph DB ingestion works</p>
+<p>Only then is traceability real.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

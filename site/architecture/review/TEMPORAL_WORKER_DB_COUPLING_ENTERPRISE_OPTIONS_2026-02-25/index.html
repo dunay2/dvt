@@ -1,0 +1,1799 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>DVT — Temporal worker DB coupling: diseño correcto desde día 0 (Hexagonal + CQRS + engine-agnostic) - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dvt-temporal-worker-db-coupling-diseno-correcto-desde-dia-0-hexagonal-cqrs-engine-agnostic" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DVT — Temporal worker DB coupling: diseño correcto desde día 0 (Hexagonal + CQRS + engine-agnostic)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-posicion-arquitectonica-alineada-con-dvt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Posición arquitectónica (alineada con DVT)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-caso-de-uso-real-de-dvt-que-debe-pasar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Caso de uso real de DVT (qué debe pasar)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-problema-tecnico-reformulado-correctamente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Problema técnico reformulado correctamente
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3) Problema técnico reformulado correctamente">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#que-se-evita-si-lo-hacemos-bien-desde-el-inicio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Qué se evita si lo hacemos bien desde el inicio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-discusion-tecnica-mesa-de-colegas-version-productiva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Discusión técnica (mesa de colegas, versión productiva)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4) Discusión técnica (mesa de colegas, versión productiva)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#colega-1-arquitectura-de-dominio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colega 1 — Arquitectura de dominio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colega-2-plataformasre" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colega 2 — Plataforma/SRE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colega-3-productoentrega" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colega 3 — Producto/entrega
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colega-4-integracion-multi-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colega 4 — Integración multi-engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-arquitectura-objetivo-recomendada-no-trivial-pero-realista" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Arquitectura objetivo recomendada (no trivial, pero realista)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#51-write-side-command-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Write-side (Command model)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#52-read-side-query-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Read-side (Query model)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#53-adapter-de-engine-temporal-etc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Adapter de engine (Temporal, etc.)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-contrato-canonico-propuesto-anti-acoplamiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Contrato canónico propuesto (anti-acoplamiento)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-opciones-de-implementacion-y-evaluacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Opciones de implementación y evaluación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opcion-a-worker-escribe-db-directa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opción A — Worker escribe DB directa
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opcion-b-worker-servicio-de-estado-sincrono" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opción B — Worker -&gt; Servicio de estado síncrono
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opcion-c-worker-evento-materializador-asincrono" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opción C — Worker -&gt; evento -&gt; materializador asíncrono
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opcion-d-hibrido-comando-sincrono-evento-auditoria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opción D — Híbrido (comando síncrono + evento auditoría)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-recomendacion-final-para-dvt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8) Recomendación final para DVT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-plan-de-ejecucion-90-dias-enterprise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9) Plan de ejecución (90 días, enterprise)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9) Plan de ejecución (90 días, enterprise)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fase-1-semanas-13-borde-hexagonal-obligatorio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 1 (Semanas 1–3) — Borde hexagonal obligatorio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-2-semanas-47-cqrs-minimo-operativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 2 (Semanas 4–7) — CQRS mínimo operativo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-3-semanas-812-endurecimiento-multi-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 3 (Semanas 8–12) — Endurecimiento multi-engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-criterios-de-arquitectura-correcta-definition-of-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10) Criterios de “arquitectura correcta” (Definition of Done)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-riesgos-y-mitigaciones-realistas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11) Riesgos y mitigaciones realistas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-cierre" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12) Cierre
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dvt-temporal-worker-db-coupling-diseno-correcto-desde-dia-0-hexagonal-cqrs-engine-agnostic">DVT — Temporal worker DB coupling: diseño correcto desde día 0 (Hexagonal + CQRS + engine-agnostic)<a class="headerlink" href="#dvt-temporal-worker-db-coupling-diseno-correcto-desde-dia-0-hexagonal-cqrs-engine-agnostic" title="Permanent link">&para;</a></h1>
+<p><strong>Fecha:</strong> 2026-02-25<br />
+<strong>Origen del hallazgo:</strong> <a href="docs/audit/DVT+%20%E2%80%94%20Principal%20Architect%20Review260225000000.md"><code>DVT+ — Principal Architect Review260225000000.md</code></a></p>
+<hr />
+<h2 id="1-posicion-arquitectonica-alineada-con-dvt">1) Posición arquitectónica (alineada con DVT)<a class="headerlink" href="#1-posicion-arquitectonica-alineada-con-dvt" title="Permanent link">&para;</a></h2>
+<p>Tu punto es correcto: en DVT no se trata de “arreglar algo roto”, sino de <strong>no introducir deuda estructural</strong> cuando todavía se está definiendo el núcleo.</p>
+<p>Si el objetivo explícito es:</p>
+<ul>
+<li>arquitectura hexagonal por dominio,</li>
+<li>CQRS real (write/read separados),</li>
+<li>engine agnóstico,</li>
+<li>intercambiabilidad (Temporal hoy, otros motores mañana),</li>
+</ul>
+<p>entonces la regla fundacional es:</p>
+<blockquote>
+<p>Ningún worker de engine escribe infraestructura de estado directamente.</p>
+</blockquote>
+<p>No porque “hoy falle”, sino porque <strong>rompe el contrato de diseño base</strong> que queremos congelar temprano.</p>
+<hr />
+<h2 id="2-caso-de-uso-real-de-dvt-que-debe-pasar">2) Caso de uso real de DVT (qué debe pasar)<a class="headerlink" href="#2-caso-de-uso-real-de-dvt-que-debe-pasar" title="Permanent link">&para;</a></h2>
+<p>En una ejecución de run:</p>
+<ol>
+<li>El adapter de engine recibe señales/avances del workflow.</li>
+<li>El dominio decide transición válida (invariantes).</li>
+<li>El write model persiste estado autoritativo.</li>
+<li>El read model proyecta vistas para API/UI.</li>
+</ol>
+<p>En este flujo, el engine adapter es un <strong>transportador de intención</strong> y correlación, no dueño de persistencia.</p>
+<hr />
+<h2 id="3-problema-tecnico-reformulado-correctamente">3) Problema técnico reformulado correctamente<a class="headerlink" href="#3-problema-tecnico-reformulado-correctamente" title="Permanent link">&para;</a></h2>
+<p>No es “Temporal acoplado a Postgres” como accidente operativo:<br />
+es <strong>violación de borde hexagonal</strong> si un adapter cruza al detalle infra (tablas/SQL/transacción).</p>
+<h3 id="que-se-evita-si-lo-hacemos-bien-desde-el-inicio">Qué se evita si lo hacemos bien desde el inicio<a class="headerlink" href="#que-se-evita-si-lo-hacemos-bien-desde-el-inicio" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Lock-in de engine o storage.</li>
+<li>Reescrituras cuando llegue segundo adapter.</li>
+<li>Lógica duplicada de idempotencia fuera del dominio.</li>
+<li>Tests frágiles dependientes de DB para validar control flow del engine.</li>
+</ul>
+<hr />
+<h2 id="4-discusion-tecnica-mesa-de-colegas-version-productiva">4) Discusión técnica (mesa de colegas, versión productiva)<a class="headerlink" href="#4-discusion-tecnica-mesa-de-colegas-version-productiva" title="Permanent link">&para;</a></h2>
+<h3 id="colega-1-arquitectura-de-dominio">Colega 1 — Arquitectura de dominio<a class="headerlink" href="#colega-1-arquitectura-de-dominio" title="Permanent link">&para;</a></h3>
+<p>“Si somos hexagonales, el worker no puede conocer <code>schema/table/sql</code>. Debe invocar puerto de dominio.”</p>
+<p><strong>Aporte clave:</strong> coherencia de límites.</p>
+<h3 id="colega-2-plataformasre">Colega 2 — Plataforma/SRE<a class="headerlink" href="#colega-2-plataformasre" title="Permanent link">&para;</a></h3>
+<p>“Estoy de acuerdo si además definimos SLO y runbooks del write-path desde el primer ADR.”</p>
+<p><strong>Aporte clave:</strong> sin operación, no hay arquitectura enterprise.</p>
+<h3 id="colega-3-productoentrega">Colega 3 — Producto/entrega<a class="headerlink" href="#colega-3-productoentrega" title="Permanent link">&para;</a></h3>
+<p>“No hagamos big-bang. Diseñemos el target ahora y entreguemos vertical slices compatibles con ese target.”</p>
+<p><strong>Aporte clave:</strong> pragmatismo sin comprometer diseño.</p>
+<h3 id="colega-4-integracion-multi-engine">Colega 4 — Integración multi-engine<a class="headerlink" href="#colega-4-integracion-multi-engine" title="Permanent link">&para;</a></h3>
+<p>“El primer adapter no debe fijar semántica privada. El contrato debe ser neutral al engine.”</p>
+<p><strong>Aporte clave:</strong> intercambiabilidad real, no nominal.</p>
+<p><strong>Consenso:</strong> el patrón correcto es definir puertos de dominio y contrato de transición <strong>antes</strong> de escalar adapters.</p>
+<hr />
+<h2 id="5-arquitectura-objetivo-recomendada-no-trivial-pero-realista">5) Arquitectura objetivo recomendada (no trivial, pero realista)<a class="headerlink" href="#5-arquitectura-objetivo-recomendada-no-trivial-pero-realista" title="Permanent link">&para;</a></h2>
+<h2 id="51-write-side-command-model">5.1 Write-side (Command model)<a class="headerlink" href="#51-write-side-command-model" title="Permanent link">&para;</a></h2>
+<p>Puertos de dominio mínimos:</p>
+<ul>
+<li><code>RunStateCommandPort</code> → acepta comandos canónicos de transición.</li>
+<li><code>RunStateRepositoryPort</code> → persistencia autoritativa del agregado/run.</li>
+<li><code>RunEventAppendPort</code> → append-only de eventos auditables.</li>
+<li><code>IdempotencyPort</code> → deduplicación por clave estable.</li>
+</ul>
+<p>Adapters de infraestructura:</p>
+<ul>
+<li>Postgres adapter (hoy).</li>
+<li>Otra persistencia mañana sin tocar adapters de engine.</li>
+</ul>
+<h2 id="52-read-side-query-model">5.2 Read-side (Query model)<a class="headerlink" href="#52-read-side-query-model" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Proyector desacoplado por eventos.</li>
+<li>Esquemas de consulta optimizados para API/UI.</li>
+<li>Rebuild/replay posible sin impactar write model.</li>
+</ul>
+<h2 id="53-adapter-de-engine-temporal-etc">5.3 Adapter de engine (Temporal, etc.)<a class="headerlink" href="#53-adapter-de-engine-temporal-etc" title="Permanent link">&para;</a></h2>
+<p>Responsabilidades:</p>
+<ul>
+<li>mapear señales/estado del motor a comandos canónicos,</li>
+<li>correlacionar <code>runId</code>, <code>attemptId</code>, <code>causationId</code>,</li>
+<li>delegar a <code>RunStateCommandPort</code>.</li>
+</ul>
+<p><strong>No responsabilidades:</strong> SQL, transacciones DB, reglas de negocio de transición.</p>
+<hr />
+<h2 id="6-contrato-canonico-propuesto-anti-acoplamiento">6) Contrato canónico propuesto (anti-acoplamiento)<a class="headerlink" href="#6-contrato-canonico-propuesto-anti-acoplamiento" title="Permanent link">&para;</a></h2>
+<p>Comando base <code>ApplyRunTransition</code>:</p>
+<ul>
+<li><code>runId</code></li>
+<li><code>logicalAttemptId</code></li>
+<li><code>transitionType</code> (<code>RUN_STARTED</code>, <code>STEP_STARTED</code>, <code>STEP_COMPLETED</code>, <code>RUN_FAILED</code>, etc.)</li>
+<li><code>occurredAt</code></li>
+<li><code>idempotencyKey</code></li>
+<li><code>correlationId</code></li>
+<li><code>engineEnvelope</code> (metadata opcional, no normativa)</li>
+</ul>
+<p>Reglas:</p>
+<ol>
+<li><code>transitionType</code> y validación pertenecen al dominio.</li>
+<li><code>engineEnvelope</code> nunca define invariantes.</li>
+<li><code>idempotencyKey</code> fórmula congelada por ADR.</li>
+</ol>
+<hr />
+<h2 id="7-opciones-de-implementacion-y-evaluacion">7) Opciones de implementación y evaluación<a class="headerlink" href="#7-opciones-de-implementacion-y-evaluacion" title="Permanent link">&para;</a></h2>
+<h2 id="opcion-a-worker-escribe-db-directa">Opción A — Worker escribe DB directa<a class="headerlink" href="#opcion-a-worker-escribe-db-directa" title="Permanent link">&para;</a></h2>
+<p><strong>Pros:</strong> simple hoy.<br />
+<strong>Contras:</strong> anti-hexagonal, anti-agnóstico, deuda alta.<br />
+<strong>Veredicto:</strong> descartar como estado objetivo.</p>
+<h2 id="opcion-b-worker-servicio-de-estado-sincrono">Opción B — Worker -&gt; Servicio de estado síncrono<a class="headerlink" href="#opcion-b-worker-servicio-de-estado-sincrono" title="Permanent link">&para;</a></h2>
+<p><strong>Pros:</strong> bordes limpios, control transaccional.<br />
+<strong>Contras:</strong> hop extra, operación de servicio.<br />
+<strong>Veredicto:</strong> buena base enterprise.</p>
+<h2 id="opcion-c-worker-evento-materializador-asincrono">Opción C — Worker -&gt; evento -&gt; materializador asíncrono<a class="headerlink" href="#opcion-c-worker-evento-materializador-asincrono" title="Permanent link">&para;</a></h2>
+<p><strong>Pros:</strong> máximo desacople, trazabilidad fuerte.<br />
+<strong>Contras:</strong> complejidad de orden/DLQ/replay.<br />
+<strong>Veredicto:</strong> ideal a medio plazo si hay escala alta.</p>
+<h2 id="opcion-d-hibrido-comando-sincrono-evento-auditoria">Opción D — Híbrido (comando síncrono + evento auditoría)<a class="headerlink" href="#opcion-d-hibrido-comando-sincrono-evento-auditoria" title="Permanent link">&para;</a></h2>
+<p><strong>Pros:</strong> equilibrio entre consistencia y observabilidad.<br />
+<strong>Contras:</strong> más moving parts.<br />
+<strong>Veredicto:</strong> mejor opción product-grade para DVT.</p>
+<hr />
+<h2 id="8-recomendacion-final-para-dvt">8) Recomendación final para DVT<a class="headerlink" href="#8-recomendacion-final-para-dvt" title="Permanent link">&para;</a></h2>
+<p>Para “hacerlo bien desde el principio”:</p>
+<ol>
+<li>Adoptar <strong>Opción D</strong> como target architecture.</li>
+<li>Implementar primero <strong>B</strong> (servicio de estado) con contrato canónico estable.</li>
+<li>Añadir pipeline de eventos/proyección como segunda ola.</li>
+</ol>
+<p>Esto permite empezar limpio, sin sobreingeniería prematura, y sin hipotecar la intercambiabilidad.</p>
+<hr />
+<h2 id="9-plan-de-ejecucion-90-dias-enterprise">9) Plan de ejecución (90 días, enterprise)<a class="headerlink" href="#9-plan-de-ejecucion-90-dias-enterprise" title="Permanent link">&para;</a></h2>
+<h3 id="fase-1-semanas-13-borde-hexagonal-obligatorio">Fase 1 (Semanas 1–3) — Borde hexagonal obligatorio<a class="headerlink" href="#fase-1-semanas-13-borde-hexagonal-obligatorio" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Definir ADR de puertos y contrato <code>ApplyRunTransition</code>.</li>
+<li>Prohibir en lint/review cualquier acceso DB desde adapters de engine.</li>
+<li>Implementar <code>RunStateCommandPort</code> + tests de contrato.</li>
+</ul>
+<h3 id="fase-2-semanas-47-cqrs-minimo-operativo">Fase 2 (Semanas 4–7) — CQRS mínimo operativo<a class="headerlink" href="#fase-2-semanas-47-cqrs-minimo-operativo" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Separar write/read stores lógicamente.</li>
+<li>Proyector inicial idempotente.</li>
+<li>Métricas y trazas por transición.</li>
+</ul>
+<h3 id="fase-3-semanas-812-endurecimiento-multi-engine">Fase 3 (Semanas 8–12) — Endurecimiento multi-engine<a class="headerlink" href="#fase-3-semanas-812-endurecimiento-multi-engine" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Test harness de compatibilidad de adapter.</li>
+<li>Suite de conformance para Temporal + adapter simulado alternativo.</li>
+<li>Runbooks de DLQ/replay/snapshot.</li>
+</ul>
+<hr />
+<h2 id="10-criterios-de-arquitectura-correcta-definition-of-done">10) Criterios de “arquitectura correcta” (Definition of Done)<a class="headerlink" href="#10-criterios-de-arquitectura-correcta-definition-of-done" title="Permanent link">&para;</a></h2>
+<p>Se considera alineado con DVT solo si:</p>
+<ol>
+<li>Ningún adapter de engine contiene SQL/ORM/table-name.</li>
+<li>El dominio valida transiciones vía contrato único.</li>
+<li>Idempotencia es centralizada y verificable.</li>
+<li>Read model se puede reconstruir desde eventos.</li>
+<li>Se puede introducir un segundo engine sin tocar dominio de estado.</li>
+</ol>
+<hr />
+<h2 id="11-riesgos-y-mitigaciones-realistas">11) Riesgos y mitigaciones realistas<a class="headerlink" href="#11-riesgos-y-mitigaciones-realistas" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><strong>Riesgo:</strong> latencia adicional por servicio de estado.<br />
+<strong>Mitigación:</strong> budget de latencia + batch controlado + circuit-breakers.</p>
+</li>
+<li>
+<p><strong>Riesgo:</strong> complejidad operativa CQRS.<br />
+<strong>Mitigación:</strong> empezar con topología simple, observabilidad desde día 1.</p>
+</li>
+<li>
+<p><strong>Riesgo:</strong> “atajo temporal” que se vuelva permanente.<br />
+<strong>Mitigación:</strong> policy en PR checks + ADR de excepción con fecha de caducidad.</p>
+</li>
+</ul>
+<hr />
+<h2 id="12-cierre">12) Cierre<a class="headerlink" href="#12-cierre" title="Permanent link">&para;</a></h2>
+<p>La lectura correcta no es “se rompió algo”; es “todavía estamos a tiempo de fijar la forma correcta”.</p>
+<p>En una arquitectura como DVT, el éxito no está en que Temporal funcione hoy, sino en que <strong>Temporal sea intercambiable mañana sin cirugía mayor</strong>.</p>
+<p>Ese resultado solo aparece cuando el write-path se diseña <strong>por puertos de dominio, CQRS auténtico y contratos canónicos</strong> desde el principio.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

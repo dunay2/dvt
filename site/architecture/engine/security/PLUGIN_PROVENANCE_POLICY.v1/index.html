@@ -1,0 +1,1936 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>PLUGIN_PROVENANCE_POLICY.v1.md - Plugin Supply Chain Security - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#plugin_provenance_policyv1md-plugin-supply-chain-security" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              PLUGIN_PROVENANCE_POLICY.v1.md - Plugin Supply Chain Security
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-normative-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Normative Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Normative Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-verification-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Verification Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-trust-roots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Trust Roots
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-plugin-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Plugin Manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-catalog-integrity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Catalog Integrity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-revocation-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Revocation Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-sbom-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 SBOM Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-vulnerability-scanning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 Vulnerability Scanning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#28-prohibited-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.8 Prohibited Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#29-trust-tier-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.9 Trust Tier Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#210-transparency-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.10 Transparency Log
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-non-normative-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Non-normative Guidance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change Log
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Change Log">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#version-14-2026-02-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version 1.4 - 2026-02-12
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-13-2026-02-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version 1.3 - 2026-02-12
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-12-2026-02-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version 1.2 - 2026-02-12
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-11-2026-02-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version 1.1 - 2026-02-12
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="plugin_provenance_policyv1md-plugin-supply-chain-security">PLUGIN_PROVENANCE_POLICY.v1.md - Plugin Supply Chain Security<a class="headerlink" href="#plugin_provenance_policyv1md-plugin-supply-chain-security" title="Permanent link">&para;</a></h1>
+<p><strong>Version</strong>: 1.4<br />
+<strong>Date</strong>: 2026-02-12<br />
+<strong>Status</strong>: Normative<br />
+<strong>Location</strong>: docs/architecture/engine/security/PLUGIN_PROVENANCE_POLICY.v1.md</p>
+<hr />
+<h2 id="1-scope">1. Scope<a class="headerlink" href="#1-scope" title="Permanent link">&para;</a></h2>
+<p>This document defines <strong>mandatory supply chain security requirements</strong> for DVT Engine plugins. All plugin bundles MUST comply with provenance verification requirements before installation or execution.</p>
+<p><strong>Normative keywords</strong>: Per <a href="https://www.rfc-editor.org/rfc/rfc2119">RFC 2119</a> and <a href="https://www.rfc-editor.org/rfc/rfc8174">RFC 8174</a>: MUST, MUST NOT, SHOULD, SHOULD NOT, MAY.</p>
+<p><strong>Deployment Scope Convention</strong>:</p>
+<ul>
+<li>Requirements marked <strong>"Marketplace"</strong> apply only to official marketplace deployments</li>
+<li><strong>Self-hosted</strong> deployments MAY omit optional requirements unless Trust Tier policy requires them</li>
+<li>Requirements without scope qualifier apply to <strong>all deployments</strong></li>
+</ul>
+<hr />
+<h2 id="2-normative-requirements">2. Normative Requirements<a class="headerlink" href="#2-normative-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="21-verification-contract">2.1 Verification Contract<a class="headerlink" href="#21-verification-contract" title="Permanent link">&para;</a></h3>
+<p><strong>Inputs</strong> (MUST accept):</p>
+<ul>
+<li>Plugin bundle (artifact bytes)</li>
+<li><code>plugin.manifest.json</code> (embedded in bundle)</li>
+<li>SBOM (bundled or external with signature)</li>
+<li>Trust roots configuration</li>
+<li>Revocation feed</li>
+</ul>
+<p><strong>Output</strong> (MUST produce):</p>
+<pre><code class="language-typescript">interface VerificationResult {
+  bundleDigest: string; // SHA-256 of artifact bytes
+  signerIdentity: {
+    issuer: string;
+    subject: string;
+    claims?: Record&lt;string, string&gt;; // OIDC claims (if present)
+  };
+  matchedTrustRootId: string; // Trust root ID that matched
+  signatureType: 'sigstore' | 'gpg' | 'pki';
+  signatureValid: boolean;
+  policyVersion: string; // Digest of trust roots at verification time
+  timestamp: string; // ISO8601 UTC
+  decision: 'ALLOW' | 'DENY';
+  reasonCode?: string; // UNSIGNED | UNTRUSTED_SIGNER | DIGEST_MISMATCH | INVALID_MANIFEST | UNSUPPORTED_API_VERSION | MISSING_SBOM | INVALID_SBOM | REVOKED | CRITICAL_CVE | PROHIBITED_DEPENDENCY
+}
+</code></pre>
+<p><strong>Verification Phases</strong> (MUST):</p>
+<ul>
+<li><strong>Install time</strong>: Full signature verification; persist result to catalog</li>
+<li><strong>Load time</strong>: Full signature verification (once per process lifecycle)</li>
+<li><strong>Invocation time</strong>: Digest verification MUST (all tiers); full signature re-verification tier/config-dependent (see Trust Tier Matrix, Section 2.9)</li>
+</ul>
+<p><strong>Signature Binding</strong> (MUST verify):</p>
+<ol>
+<li>Artifact digest (SHA-256 of exact bundle bytes)</li>
+<li>Trusted identity (issuer + subject from certificate)</li>
+<li>Timestamp: MUST be derived from verifiable evidence</li>
+<li>Sigstore: Rekor inclusion proof time (when available) OR bundle timestamp attestation</li>
+<li>GPG/PKI: Trusted CI attestation timestamp OR RFC3161 TSA (when configured)</li>
+</ol>
+<p><strong>Rejection Criteria</strong> (MUST reject):</p>
+<ul>
+<li>Unsigned bundles</li>
+<li>Unknown issuer/subject (not in trust root allowlist)</li>
+<li>Digest mismatch</li>
+<li>Revoked certificate or identity</li>
+<li>Invalid or missing <code>plugin.manifest.json</code></li>
+</ul>
+<hr />
+<h3 id="22-trust-roots">2.2 Trust Roots<a class="headerlink" href="#22-trust-roots" title="Permanent link">&para;</a></h3>
+<p>Engine MUST maintain explicit allowlist of trusted plugin issuers.</p>
+<p><strong>Configuration Schema</strong> (MUST support):</p>
+<pre><code class="language-yaml">pluginTrustRoots:
+  - issuer: string                    # OIDC issuer URI
+    subjectExact?: string             # Exact subject match (mutually exclusive with subjectPattern)
+    subjectPattern?: string           # Anchored regex (^...$) - requires RE2 for SaaS
+    claims:                           # Optional OIDC claim constraints
+      repository: string              # Exact repository
+      workflow: string                # Workflow file path
+      ref: string                     # Git ref pattern
+    trustLevel: &quot;official&quot; | &quot;partner&quot; | &quot;self-hosted&quot;
+</code></pre>
+<p><strong>Subject Matching</strong> (MUST):</p>
+<ul>
+<li>Provide <strong>either</strong> <code>subjectExact</code> (exact string match) <strong>or</strong> <code>subjectPattern</code> (regex)</li>
+<li>Multi-tenant SaaS: If <code>subjectPattern</code> used, MUST use RE2; if unavailable, reject pattern or use <code>subjectExact</code> only</li>
+</ul>
+<p><strong>Regex Safety</strong> (MUST for multi-tenant SaaS):</p>
+<ul>
+<li>Use RE2 or linear-time regex engine</li>
+<li>If unavailable: disable regex matching, use exact subject match or precompiled allowlist</li>
+<li>Maximum pattern length: 1024 characters</li>
+</ul>
+<hr />
+<h3 id="23-plugin-manifest">2.3 Plugin Manifest<a class="headerlink" href="#23-plugin-manifest" title="Permanent link">&para;</a></h3>
+<p>Every plugin bundle MUST include <code>plugin.manifest.json</code> at archive root.</p>
+<p><strong>Required Fields</strong> (MUST):</p>
+<ul>
+<li><code>pluginId</code>: Scoped package name</li>
+<li><code>version</code>: Semantic version</li>
+<li><code>apiVersion</code>: DVT plugin API version (e.g., <code>v1</code>)</li>
+<li><code>entrypoint</code>: Relative path to main executable</li>
+<li><code>permissions</code>: Declared capability requests (network/filesystem/environment/subprocess)</li>
+</ul>
+<p><strong>Optional Fields</strong> (SHOULD):</p>
+<ul>
+<li><code>sbom.path</code>: Relative path to SBOM within bundle</li>
+<li><code>sbom.digest</code>: SHA-256 of SBOM content</li>
+<li><code>attestations[]</code>: Linked provenance artifacts</li>
+</ul>
+<p><strong>Enforcement</strong> (MUST):</p>
+<ul>
+<li>Reject if <code>apiVersion</code> not supported by runtime</li>
+<li>Compute <strong>effective permissions</strong> = requested ∩ allowedByTierPolicy ∩ enforceableBySandbox</li>
+<li>Fail closed if requested permission category unenforceable by sandbox</li>
+<li>Store in catalog: <code>apiVersion</code>, requested permissions, effective permissions, <code>sbom.digest</code></li>
+</ul>
+<hr />
+<h3 id="24-catalog-integrity">2.4 Catalog Integrity<a class="headerlink" href="#24-catalog-integrity" title="Permanent link">&para;</a></h3>
+<p>Catalog entries MUST be <strong>tamper-evident</strong> (satisfies INV-PLUGIN-05 in <a href="../SECURITY_INVARIANTS.v1/">SECURITY_INVARIANTS.v1.md</a>).</p>
+<p><strong>Invariant</strong> (MUST):</p>
+<ul>
+<li>Catalog entries append-only OR every mutation emits immutable audit event</li>
+<li>Store: bundleDigest, signerIdentity, rekorEntryId, sbomDigest, policyVersion</li>
+</ul>
+<p><strong>Verification API</strong> (MUST provide):</p>
+<pre><code class="language-typescript">interface CatalogIntegrityProof {
+  catalogRootHash: string; // Merkle root or hash chain head
+  entryCount: number;
+  lastMutationTime: string; // ISO8601 UTC
+  auditLogDigest?: string; // SHA-256 of audit log
+}
+</code></pre>
+<hr />
+<h3 id="25-revocation-model">2.5 Revocation Model<a class="headerlink" href="#25-revocation-model" title="Permanent link">&para;</a></h3>
+<p>Engine MUST support revocation mechanisms.</p>
+<p><strong>Denylist Types</strong> (MUST):</p>
+<ol>
+<li><strong>Digest denylist</strong>: Blocklist of SHA-256 artifact digests</li>
+<li><strong>Identity denylist</strong>: Revoked (issuer, subject) pairs</li>
+<li><strong>Cutoff timestamps</strong>: Block signatures from (issuer, subject) after <code>cutoffTime</code></li>
+</ol>
+<p><strong>Revocation Feed Interface</strong> (MUST for marketplace):</p>
+<pre><code class="language-typescript">interface RevocationFeed {
+  feedVersion: string; // Monotonic version
+  feedSignature: string; // Signature over feed content
+  digestDenylist: string[]; // SHA-256 digests
+  identityDenylist: Array&lt;{
+    issuer: string;
+    subject: string;
+    revokedAt: string; // ISO8601 UTC
+  }&gt;;
+  identityCutoffs: Array&lt;{
+    issuer: string;
+    subject: string;
+    cutoffTime: string; // ISO8601 UTC
+  }&gt;;
+}
+</code></pre>
+<p><strong>Feed Requirements</strong> (MUST):</p>
+<ul>
+<li>Poll at configured interval (default: hourly for marketplace, daily for self-hosted)</li>
+<li>Reject unsigned/invalid feeds</li>
+<li>Apply updates immediately (trigger catalog re-validation)</li>
+<li>Cache last-known-good feed</li>
+</ul>
+<p><strong>Fallback Policy</strong> (MUST for multi-tenant SaaS Tier 1/2):</p>
+<ul>
+<li>MUST NOT fail open</li>
+<li>MUST fail closed after grace window (default: 6 hours) using cached feed</li>
+</ul>
+<p><strong>Self-hosted</strong> (MAY):</p>
+<ul>
+<li>Configure fail open or fail closed</li>
+</ul>
+<hr />
+<h3 id="26-sbom-requirements">2.6 SBOM Requirements<a class="headerlink" href="#26-sbom-requirements" title="Permanent link">&para;</a></h3>
+<p>All plugins MUST include SBOM (CycloneDX or SPDX format).</p>
+<p><strong>Distribution Modes</strong> (MUST support):</p>
+<ol>
+<li><strong>Bundled</strong>: SBOM in signed bundle, path declared in manifest</li>
+<li><strong>External</strong>: SBOM distributed separately with cryptographic signature</li>
+</ol>
+<p><strong>Required Fields</strong> (MUST):</p>
+<ul>
+<li>Component name, version, publisher</li>
+<li>Dependencies (direct + transitive) with package URLs (purl) and hashes (SHA-256 minimum)</li>
+</ul>
+<p><strong>Enforcement</strong> (MUST):</p>
+<ul>
+<li>Reject if SBOM missing/unverifiable for Tier 1/2</li>
+<li>Verify SBOM digest matches manifest declaration (bundled mode)</li>
+<li>Verify SBOM signature (external mode): <strong>External SBOM signature MUST bind SBOM digest to the same signer identity policy OR to an explicitly configured SBOM trust root</strong></li>
+</ul>
+<hr />
+<h3 id="27-vulnerability-scanning">2.7 Vulnerability Scanning<a class="headerlink" href="#27-vulnerability-scanning" title="Permanent link">&para;</a></h3>
+<p><strong>Marketplace</strong> (MUST):</p>
+<ul>
+<li>Scan plugin dependencies for known vulnerabilities</li>
+<li>Use CVSS v3.1 Base Score with documented thresholds</li>
+<li>Record vulnerability DB metadata (timestamp, digest, version)</li>
+</ul>
+<p><strong>Approval Thresholds</strong>:</p>
+<ul>
+<li>Critical (CVSS ≥ 9.0): MUST block plugin release</li>
+<li>High (CVSS ≥ 7.0): MUST require remediation plan or ADR exception (≤90 days)</li>
+</ul>
+<p><strong>Exception Process</strong> (MAY):</p>
+<ul>
+<li>Time-bounded approval (≤90 days)</li>
+<li>Requires security review + justification</li>
+<li>Audited in catalog metadata</li>
+</ul>
+<hr />
+<h3 id="28-prohibited-dependencies">2.8 Prohibited Dependencies<a class="headerlink" href="#28-prohibited-dependencies" title="Permanent link">&para;</a></h3>
+<p><strong>vm2</strong> (MUST reject all tiers):</p>
+<ul>
+<li>Package has history of critical sandbox escape vulnerabilities</li>
+</ul>
+<p><strong>Native Addons</strong> (MUST for Tier 1; SHOULD for Tier 2/3):</p>
+<ul>
+<li>Tier 1: MUST reject always</li>
+<li>Tier 2/3: MUST reject unless approved via ADR with:</li>
+<li>Source code audit</li>
+<li>Runtime permission constraints (filesystem/network/syscall allowlist)</li>
+<li>Time-bounded approval (≤180 days, renewable)</li>
+</ul>
+<hr />
+<h3 id="29-trust-tier-matrix">2.9 Trust Tier Matrix<a class="headerlink" href="#29-trust-tier-matrix" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Trust Tier</th>
+<th>Signature (install+load)</th>
+<th>Invocation Time</th>
+<th>Trust Root</th>
+<th>SBOM</th>
+<th>Vuln Scan</th>
+<th>vm2</th>
+<th>Native Addons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tier 1</strong></td>
+<td>✅ MUST</td>
+<td>Digest MUST + sig SHOULD (TTL≤24h)</td>
+<td>Official + OIDC claims</td>
+<td>✅ MUST</td>
+<td>✅ MUST</td>
+<td>❌ MUST reject</td>
+<td>❌ MUST reject</td>
+</tr>
+<tr>
+<td><strong>Tier 2</strong></td>
+<td>✅ MUST</td>
+<td>Digest MUST + sig cached (TTL≤24h)</td>
+<td>Official + Partner</td>
+<td>✅ MUST</td>
+<td>✅ MUST</td>
+<td>❌ MUST reject</td>
+<td>⚠️ ADR required</td>
+</tr>
+<tr>
+<td><strong>Tier 3</strong></td>
+<td>✅ MUST</td>
+<td>Digest MUST*</td>
+<td>Self-hosted</td>
+<td>SHOULD</td>
+<td>SHOULD</td>
+<td>❌ MUST reject</td>
+<td>⚠️ ADR required</td>
+</tr>
+</tbody>
+</table>
+<p>*<strong>Tier 3 Invocation Time</strong>: Digest verification MUST; full signature re-verification configurable (default: digest-only).</p>
+<p><strong>Tier 1 Invocation Time Detail</strong>:</p>
+<ul>
+<li>MUST verify bundle digest on every call (SHA-256 comparison)</li>
+<li>SHOULD re-verify full signature on TTL ≤24h or policy update</li>
+</ul>
+<hr />
+<h3 id="210-transparency-log">2.10 Transparency Log<a class="headerlink" href="#210-transparency-log" title="Permanent link">&para;</a></h3>
+<p><strong>Marketplace</strong> (SHOULD):</p>
+<ul>
+<li>Record signatures in public transparency log (e.g., Sigstore Rekor)</li>
+<li>Enables tamper detection and audit trail</li>
+</ul>
+<p><strong>Air-gapped Deployments</strong> (MUST):</p>
+<ul>
+<li>Ship Cosign bundle (signature + certificate + inclusion proof)</li>
+<li>Engine verifies offline using bundled Sigstore trust materials (Fulcio roots, Rekor public key)</li>
+</ul>
+<hr />
+<h2 id="3-non-normative-guidance">3. Non-normative Guidance<a class="headerlink" href="#3-non-normative-guidance" title="Permanent link">&para;</a></h2>
+<p><strong>All non-normative content</strong> (rationale, examples, implementation notes, workflows, checklists, compliance references) has been moved to a separate document for clarity and stability:</p>
+<p><strong>→ <a href="../PLUGIN_PROVENANCE_POLICY.APPENDICES/">PLUGIN_PROVENANCE_POLICY.APPENDICES.md</a></strong></p>
+<p>This separation enables:</p>
+<ul>
+<li><strong>Stable normative core</strong>: Requirements change rarely; implementations can rely on stable contract</li>
+<li><strong>Evolving guidance</strong>: Implementation patterns and tooling can update without affecting normative compliance</li>
+<li><strong>Clear scope</strong>: CI/compliance tools validate against compact normative document only</li>
+</ul>
+<hr />
+<h2 id="change-log">Change Log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h2>
+<h3 id="version-14-2026-02-12">Version 1.4 - 2026-02-12<a class="headerlink" href="#version-14-2026-02-12" title="Permanent link">&para;</a></h3>
+<p><strong>Physical separation of normative core from non-normative guidance:</strong></p>
+<ol>
+<li><strong>Created separate appendices document</strong>: <a href="../PLUGIN_PROVENANCE_POLICY.APPENDICES/">PLUGIN_PROVENANCE_POLICY.APPENDICES.md</a></li>
+<li>All Section 3 content (Appendices A-F) moved to dedicated file</li>
+<li>Includes: Rationale, Examples, Implementation Notes, Workflows, Checklists, Compliance References</li>
+<li>
+<p>Status: Non-normative (Informative)</p>
+</li>
+<li>
+<p><strong>Benefits of separation</strong>:</p>
+</li>
+<li><strong>Stability</strong>: Normative core rarely changes; appendices can evolve with tooling/patterns</li>
+<li><strong>Clarity</strong>: Implementers read focused ~270-line normative contract without distraction</li>
+<li><strong>CI/Testability</strong>: Compliance tools validate against stable, compact normative document</li>
+<li><strong>Independent versioning</strong>: Appendices can update examples/tooling without bumping normative version</li>
+</ol>
+<p><strong>Normative content unchanged</strong>: All MUST/SHOULD/MAY requirements remain identical to v1.3. This is purely a documentation structure improvement.</p>
+<hr />
+<h3 id="version-13-2026-02-12">Version 1.3 - 2026-02-12<a class="headerlink" href="#version-13-2026-02-12" title="Permanent link">&para;</a></h3>
+<p><strong>Precision improvements for machine-checkable contracts (6 focused adjustments):</strong></p>
+<p><strong>Precision improvements for machine-checkable contracts (6 focused adjustments):</strong></p>
+<ol>
+<li><strong>Canonical reasonCode set</strong> (Section 2.1 + Appendix E):</li>
+<li>Expanded from 6 to 10 codes: <code>UNSIGNED</code>, <code>UNTRUSTED_SIGNER</code>, <code>DIGEST_MISMATCH</code>, <code>INVALID_MANIFEST</code>, <code>UNSUPPORTED_API_VERSION</code>, <code>MISSING_SBOM</code>, <code>INVALID_SBOM</code>, <code>REVOKED</code>, <code>CRITICAL_CVE</code>, <code>PROHIBITED_DEPENDENCY</code></li>
+<li>Consistent usage across VerificationResult interface and enforcement checklist</li>
+<li>
+<p>Enables automated compliance validation</p>
+</li>
+<li>
+<p><strong>Timestamp binding specificity</strong> (Section 2.1):</p>
+</li>
+<li>Clarified timestamp derivation per signature scheme:<ul>
+<li>Sigstore: Rekor inclusion proof time (when available) OR bundle timestamp attestation</li>
+<li>GPG/PKI: Trusted CI attestation timestamp OR RFC3161 TSA (when configured)</li>
+</ul>
+</li>
+<li>Prevents ambiguity in multi-scheme deployments</li>
+<li>
+<p>References: <a href="https://docs.sigstore.dev/rekor/overview/">Rekor</a>, <a href="https://docs.sigstore.dev/cosign/overview/">Cosign</a>, RFC3161</p>
+</li>
+<li>
+<p><strong>Trust root exact match support</strong> (Section 2.2):</p>
+</li>
+<li>Added <code>subjectExact</code> field (mutually exclusive with <code>subjectPattern</code>)</li>
+<li>Enables deployments without RE2 to use exact string matching instead of regex</li>
+<li>Multi-tenant SaaS MUST use RE2 if <code>subjectPattern</code> enabled; otherwise fall back to <code>subjectExact</code></li>
+<li>Resolves contradiction between "MUST support subjectPattern" and "disable regex if no RE2"</li>
+<li>
+<p>References: <a href="https://github.com/google/re2">RE2</a>, <a href="https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS">OWASP ReDoS</a></p>
+</li>
+<li>
+<p><strong>SBOM external signature binding</strong> (Section 2.6):</p>
+</li>
+<li>Added normative rule: "External SBOM signature MUST bind SBOM digest to the same signer identity policy OR to an explicitly configured SBOM trust root"</li>
+<li>Prevents SBOM signature bypass attacks (e.g., signed by untrusted party)</li>
+<li>
+<p>References: <a href="https://cyclonedx.org/specification/overview/">CycloneDX</a>, <a href="https://spdx.dev/specifications/">SPDX</a></p>
+</li>
+<li>
+<p><strong>Deployment scope convention</strong> (Section 1):</p>
+</li>
+<li>Added explicit convention: "Marketplace" requirements apply only to official marketplace; self-hosted MAY omit unless Tier policy requires</li>
+<li>Prevents misinterpretation that all MUST requirements apply to all deployment modes</li>
+<li>
+<p>Clarifies vulnerability scanning, revocation feed, transparency log as marketplace-specific</p>
+</li>
+<li>
+<p><strong>Invocation time digest clarification</strong> (Section 2.1):</p>
+</li>
+<li>Changed "Invocation time: See Trust Tier Matrix" to "Digest verification MUST (all tiers); full signature re-verification tier/config-dependent"</li>
+<li>Aligns Section 2.1 with Trust Tier Matrix (Section 2.9) for consistency</li>
+<li>Emphasizes that digest verification is non-negotiable across all tiers</li>
+</ol>
+<p><strong>Impact</strong>: These adjustments improve contract precision and testability without expanding normative surface. All changes maintain backward compatibility with v1.2 implementations.</p>
+<p><strong>References</strong>:</p>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc2119">RFC 2119</a> - Normative keywords</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8174">RFC 8174</a> - Ambiguity of RFC 2119 keywords</li>
+</ul>
+<hr />
+<h3 id="version-12-2026-02-12">Version 1.2 - 2026-02-12<a class="headerlink" href="#version-12-2026-02-12" title="Permanent link">&para;</a></h3>
+<p><strong>Restructured for normative clarity per RFC 2119/8174 guidance:</strong></p>
+<ol>
+<li><strong>Separated normative core from non-normative appendices</strong>:</li>
+<li>Normative Requirements (Section 2): Only MUST/SHOULD/MAY rules, inputs/outputs, invariants, tier matrix (3 pages)</li>
+<li>
+<p>Non-normative Appendices (Section 3): Rationale, examples, implementation notes, workflows, checklists, compliance references</p>
+</li>
+<li>
+<p><strong>Compacted normative surface</strong>:</p>
+</li>
+<li>Removed embedded explanations, examples, and tooling specifics from requirements</li>
+<li>Focused on testable contracts (VerificationResult, CatalogIntegrityProof interfaces)</li>
+<li>
+<p>Clear rejection criteria with stable reasonCodes</p>
+</li>
+<li>
+<p><strong>Improved stability</strong>:</p>
+</li>
+<li>Normative rules independent of specific tool versions (Trivy, npm audit)</li>
+<li>Implementation patterns moved to appendices (can evolve without breaking contract)</li>
+<li>
+<p>Tier matrix remains stable anchor for enforcement</p>
+</li>
+<li>
+<p><strong>Enhanced testability</strong>:</p>
+</li>
+<li>All MUST/SHOULD statements map to testable outcomes</li>
+<li>Structured interfaces for verification results and catalog integrity</li>
+<li>Checklist format in Appendix E for CI validation</li>
+</ol>
+<p><strong>Rationale</strong>: Large normative documents with embedded explanations, tool versioning, and operational details become brittle and hard to test. Separating "what MUST be done" (normative) from "why and how" (non-normative) creates stable, implementable contracts per RFC 2119 best practices.</p>
+<h3 id="version-11-2026-02-12">Version 1.1 - 2026-02-12<a class="headerlink" href="#version-11-2026-02-12" title="Permanent link">&para;</a></h3>
+<p>[Previous changelog content from v1.1]</p>
+<hr />
+<p><em>Last updated: 2026-02-12</em><br />
+<em>Version: 1.4</em><br />
+<em>Status: Normative (core requirements only; non-normative guidance in <a href="../PLUGIN_PROVENANCE_POLICY.APPENDICES/">APPENDICES.md</a>)</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

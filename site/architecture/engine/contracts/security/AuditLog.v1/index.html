@@ -1,0 +1,2106 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>AuditLog.v1.md - Audit Log Contract - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#auditlogv1md-audit-log-contract" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AuditLog.v1.md - Audit Log Contract
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-event-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Event Types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-log-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Log Schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-log-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Log Guarantees
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audit Log Guarantees">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#g1-append-only-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G1: Append-Only Storage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g2-cryptographic-integrity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G2: Cryptographic Integrity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g3-complete-audit-trail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G3: Complete Audit Trail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g4-tamper-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G4: Tamper Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retention-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention Policy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Retention Policy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hot-storage-0-90-days" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hot Storage (0-90 days)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warm-storage-90-days-2-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warm Storage (90 days - 2 years)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cold-storage-2-7-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cold Storage (2-7 years)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deletion-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deletion Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compliance-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compliance Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compliance Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#soc2-type-ii" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SOC2 Type II
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hipaa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HIPAA
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gdpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GDPR
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#query-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Query Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Query Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-user-activity-for-fraud-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1: User Activity (for fraud detection)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-resource-access-for-breach-investigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2: Resource Access (for breach investigation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-authorization-denials-for-security-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3: Authorization Denials (for security monitoring)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-phisensitive-data-access-for-compliance-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4: PHI/Sensitive Data Access (for compliance audit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-audit-event-integrity-check-for-tamper-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5: Audit Event Integrity Check (for tamper detection)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-requirements-phase-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Requirements (Phase 3)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-authorization-granted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1: Authorization Granted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-authorization-denied-insufficient-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2: Authorization Denied (Insufficient Permissions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-state-mutation-run-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3: State Mutation (Run Started)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="auditlogv1md-audit-log-contract">AuditLog.v1.md - Audit Log Contract<a class="headerlink" href="#auditlogv1md-audit-log-contract" title="Permanent link">&para;</a></h1>
+<p><a href="../../">← Back to Contracts Registry</a></p>
+<p><strong>Version</strong>: v1
+<strong>Status</strong>: DRAFT<br />
+<strong>Phase</strong>: Phase 1 (documentation), Phase 3 (implementation)<br />
+<strong>Versioning</strong>: See <a href="../../../VERSIONING/">VERSIONING.md</a> for contract evolution policy</p>
+<hr />
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>Define what events must be audited, the audit log schema, retention policy, and compliance requirements.</p>
+<p><strong>Invariant</strong>: Every authorization decision, state mutation, and API call is logged (append-only, tamper-proof).</p>
+<hr />
+<h2 id="audit-event-types">Audit Event Types<a class="headerlink" href="#audit-event-types" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Event Type</th>
+<th>When</th>
+<th>Who</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AUTH_DECISION</code></td>
+<td>Authorization check (grant or deny)</td>
+<td>IAuthorization</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>STATE_MUTATION</code></td>
+<td>Plan/run state changes</td>
+<td>Engine (via RunEventCatalog)</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>SIGNAL_SENT</code></td>
+<td>PAUSE, RESUME, CANCEL, custom signals</td>
+<td>Engine</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>API_CALL</code></td>
+<td>API request/response</td>
+<td>API gateway</td>
+<td>✅ Phase 2</td>
+</tr>
+<tr>
+<td><code>PLUGIN_INVOKED</code></td>
+<td>Plugin code execution starts/ends</td>
+<td>Plugin runtime</td>
+<td>⏳ Phase 3</td>
+</tr>
+<tr>
+<td><code>ARTIFACT_ACCESSED</code></td>
+<td>Read/write artifact data</td>
+<td>Engine</td>
+<td>⏳ Phase 2</td>
+</tr>
+<tr>
+<td><code>CONFIG_CHANGED</code></td>
+<td>Tenant config, RBAC role assignment</td>
+<td>Admin API</td>
+<td>⏳ Phase 4</td>
+</tr>
+<tr>
+<td><code>BACKPRESSURE_SIGNAL</code></td>
+<td>BACKPRESSURE_ON/OFF emitted</td>
+<td>Engine (Outbox)</td>
+<td>⏳ Phase 1.5</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="audit-log-schema">Audit Log Schema<a class="headerlink" href="#audit-log-schema" title="Permanent link">&para;</a></h2>
+<pre><code class="language-json">{
+  &quot;auditId&quot;: &quot;550e8400-e29b-41d4-a716-446655440000&quot;,
+  &quot;timestamp&quot;: &quot;2026-02-11T10:30:45.123Z&quot;,
+  &quot;tenantId&quot;: &quot;tenant-abc&quot;,
+
+  &quot;actor&quot;: {
+    &quot;id&quot;: &quot;user-123&quot;,
+    &quot;type&quot;: &quot;user&quot; | &quot;service-account&quot; | &quot;system&quot;,
+    &quot;email&quot;: &quot;user@example.com&quot;
+  },
+
+  &quot;action&quot;: &quot;RUN_START&quot; | &quot;STATE_MUTATION&quot; | &quot;SIGNAL_SENT&quot; | ...,
+
+  &quot;resource&quot;: {
+    &quot;type&quot;: &quot;plan&quot; | &quot;run&quot; | &quot;artifact&quot; | &quot;plugin&quot; | &quot;config&quot;,
+    &quot;id&quot;: &quot;plan-abc&quot; | &quot;run-xyz&quot;,
+    &quot;name&quot;: &quot;My Workflow Plan&quot;  // Human-readable name
+  },
+
+  &quot;decision&quot;: &quot;GRANTED&quot; | &quot;DENIED&quot; | &quot;COMPLETED&quot; | &quot;FAILED&quot;,
+
+  &quot;reason&quot;: {
+    &quot;code&quot;: &quot;RBAC_POLICY_DENIED&quot;,  // Machine-readable
+    &quot;message&quot;: &quot;User lacks operator role&quot;  // Human-readable
+  },
+
+  &quot;context&quot;: {
+    &quot;ip&quot;: &quot;203.0.113.45&quot;,
+    &quot;userAgent&quot;: &quot;Mozilla/5.0...&quot;,
+    &quot;requestId&quot;: &quot;req-7890&quot;,
+    &quot;sessionId&quot;: &quot;sess-1234&quot;,  // For tracking user sessions
+    &quot;sourceModule&quot;: &quot;api-gateway&quot; | &quot;engine&quot; | &quot;plugin-runtime&quot;
+  },
+
+  &quot;details&quot;: {
+    // Event-specific fields
+    &quot;previous_state&quot;: { ... },     // For STATE_MUTATION
+    &quot;new_state&quot;: { ... },          // For STATE_MUTATION
+    &quot;signal_type&quot;: &quot;PAUSE&quot;,        // For SIGNAL_SENT
+    &quot;plugin_name&quot;: &quot;send-email&quot;,   // For PLUGIN_INVOKED
+    &quot;artifact_size_bytes&quot;: 2048    // For ARTIFACT_ACCESSED
+  },
+
+  &quot;metadata&quot;: {
+    &quot;record_version&quot;: &quot;1.0&quot;,
+    &quot;signature&quot;: &quot;hmac-sha256:abc123...&quot;,  // For tamper detection
+    &quot;encrypted&quot;: true  // If PII is redacted/encrypted
+  }
+}
+</code></pre>
+<hr />
+<h2 id="audit-log-guarantees">Audit Log Guarantees<a class="headerlink" href="#audit-log-guarantees" title="Permanent link">&para;</a></h2>
+<h3 id="g1-append-only-storage">G1: Append-Only Storage<a class="headerlink" href="#g1-append-only-storage" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Never</strong> delete or modify existing audit events</li>
+<li>New events always appended to the end</li>
+<li>Storage: immutable log stream (kafka topic, S3 append-only bucket, database log table)</li>
+</ul>
+<pre><code class="language-sql">-- ✅ GOOD - Append-only table
+CREATE TABLE audit_log (
+  audit_id UUID PRIMARY KEY,
+  timestamp TIMESTAMPTZ NOT NULL,
+  tenant_id UUID NOT NULL,
+  event_data JSONB NOT NULL,
+
+  -- Prevent UPDATEs and DELETEs
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER prevent_audit_modifications
+BEFORE UPDATE OR DELETE ON audit_log
+FOR EACH ROW EXECUTE FUNCTION raise_immutability_error();
+</code></pre>
+<h3 id="g2-cryptographic-integrity">G2: Cryptographic Integrity<a class="headerlink" href="#g2-cryptographic-integrity" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Each audit event signed with HMAC(secret, event_data)</li>
+<li>Verify signature when reading audit log</li>
+<li>Detects tampering (missing events, modified data)</li>
+</ul>
+<pre><code class="language-typescript">function signEvent(event: AuditEvent, secret: string): string {
+  const data = JSON.stringify(event);
+  return crypto.createHmac('sha256', secret).update(data).digest('hex');
+}
+
+function verifyEvent(event: AuditEvent, signature: string, secret: string): boolean {
+  const computed = signEvent(event, secret);
+  return crypto.timingSafeEqual(computed, signature);
+}
+</code></pre>
+<h3 id="g3-complete-audit-trail">G3: Complete Audit Trail<a class="headerlink" href="#g3-complete-audit-trail" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Every authorization decision logged (grant AND deny)</li>
+<li>No gaps in sequence (events have sequential id or monotonic timestamp)</li>
+<li>All mutations tracked with before/after state</li>
+</ul>
+<h3 id="g4-tamper-evidence">G4: Tamper Evidence<a class="headerlink" href="#g4-tamper-evidence" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Detect if event was added, deleted, or modified</li>
+<li>Alert on signature mismatch</li>
+<li>Immutable storage prevents deletion</li>
+</ul>
+<hr />
+<h2 id="retention-policy">Retention Policy<a class="headerlink" href="#retention-policy" title="Permanent link">&para;</a></h2>
+<h3 id="hot-storage-0-90-days">Hot Storage (0-90 days)<a class="headerlink" href="#hot-storage-0-90-days" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Purpose</strong>: Fast queries, real-time alerts</li>
+<li><strong>Storage</strong>: Primary database (PostgreSQL, MongoDB)</li>
+<li><strong>Query patterns</strong>: "Show my actions in last 7 days"</li>
+<li><strong>Accessible</strong>: Full team (with RBAC)</li>
+</ul>
+<h3 id="warm-storage-90-days-2-years">Warm Storage (90 days - 2 years)<a class="headerlink" href="#warm-storage-90-days-2-years" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Purpose</strong>: Compliance investigation, audit, trend analysis</li>
+<li><strong>Storage</strong>: Archive database or data warehouse (slower, cheaper)</li>
+<li><strong>Query patterns</strong>: "Show all access to plan X in last year"</li>
+<li><strong>Accessible</strong>: Compliance/audit team only</li>
+</ul>
+<h3 id="cold-storage-2-7-years">Cold Storage (2-7 years)<a class="headerlink" href="#cold-storage-2-7-years" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Purpose</strong>: Long-term compliance (SOC2, HIPAA, GDPR)</li>
+<li><strong>Storage</strong>: Immutable archive (S3, Azure Blob, GCS) with Object Lock</li>
+<li><strong>Query patterns</strong>: Rare (subpoena, audit)</li>
+<li><strong>Accessible</strong>: Restricted to compliance team + senior leadership</li>
+</ul>
+<h3 id="deletion-policy">Deletion Policy<a class="headerlink" href="#deletion-policy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>GDPR Right to be Forgotten</strong>: Delete user's data + related audit events (subject to retention)</li>
+<li><strong>SOC2</strong>: Retain for 7 years after deletion</li>
+<li><strong>HIPAA</strong>: Retain for 6 years; can also retain indefinitely for audit</li>
+<li><strong>Implementation</strong>: Use soft-delete flag (mark deleted, keep for 7 years, then hard-delete)</li>
+</ul>
+<pre><code class="language-sql">-- Soft-delete user data
+UPDATE audit_log
+SET is_deleted = true, deletion_reason = 'GDPR_RTF'
+WHERE actor_id = 'user-123'
+  AND is_deleted = false
+  AND timestamp &lt; NOW() - INTERVAL '7 years';
+
+-- Hard-delete after 7-year grace period (separate batch job)
+DELETE FROM audit_log
+WHERE is_deleted = true
+  AND deletion_time &lt; NOW() - INTERVAL '7 years';
+</code></pre>
+<hr />
+<h2 id="compliance-requirements">Compliance Requirements<a class="headerlink" href="#compliance-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="soc2-type-ii">SOC2 Type II<a class="headerlink" href="#soc2-type-ii" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>CC6.1</strong>: Logical access control - log all access to sensitive data</li>
+<li><strong>CC6.2</strong>: Prior to issuing system security credentials, perform...</li>
+<li><strong>CC7.2</strong>: Monitor system components for anomalies - detect unauthorized access attempts (DENIED decisions)</li>
+</ul>
+<p><strong>Implementation</strong>:</p>
+<ul>
+<li>Log all AUTH_DECISION events (grant + deny)</li>
+<li>Log all STATE_MUTATION events (plan changes, run starts)</li>
+<li>Retention: 1 year hot, 6 years cold</li>
+<li>Monthly audit reports: "Summary of access denials"</li>
+</ul>
+<h3 id="hipaa">HIPAA<a class="headerlink" href="#hipaa" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>164.308(a)(5)(ii)(A)</strong>: Implement methods and procedures to ensure that audit controls work...</li>
+<li><strong>164.312(b)</strong>: Implement policies and procedures to record and examine PHI access</li>
+</ul>
+<p><strong>Implementation</strong>:</p>
+<ul>
+<li>Log all read/write of PHI-containing artifacts</li>
+<li>PHI audit events encrypted at rest, redacted in logs</li>
+<li>Retention: 6 years</li>
+<li>Query capability: "Show all access to patient record XYZ"</li>
+</ul>
+<h3 id="gdpr">GDPR<a class="headerlink" href="#gdpr" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Article 5(1)(f)</strong>: Data subjects have rights regarding their personal data</li>
+<li><strong>Article 17</strong>: Right to erasure ("right to be forgotten")</li>
+<li><strong>Article 7(3)</strong>: Withdrawal of consent</li>
+</ul>
+<p><strong>Implementation</strong>:</p>
+<ul>
+<li>Audit events marked with data type (PII, PHI, financial, etc.)</li>
+<li>Right to be Forgotten: soft-delete user events, hard-delete after 7 years</li>
+<li>Right to Access: user can query their own audit events</li>
+<li>Purpose limitation: only audit for stated purposes (not secondary use)</li>
+</ul>
+<hr />
+<h2 id="query-patterns">Query Patterns<a class="headerlink" href="#query-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="q1-user-activity-for-fraud-detection">Q1: User Activity (for fraud detection)<a class="headerlink" href="#q1-user-activity-for-fraud-detection" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">SELECT * FROM audit_log
+WHERE actor_id = 'user-123'
+  AND timestamp &gt; NOW() - INTERVAL '30 days'
+ORDER BY timestamp DESC;
+-- Returns: All actions by user in last 30 days
+</code></pre>
+<h3 id="q2-resource-access-for-breach-investigation">Q2: Resource Access (for breach investigation)<a class="headerlink" href="#q2-resource-access-for-breach-investigation" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">SELECT * FROM audit_log
+WHERE resource_type = 'plan'
+  AND resource_id = 'plan-abc'
+  AND tenant_id = 'tenant-1'
+ORDER BY timestamp DESC;
+-- Returns: Who accessed plan-abc and when
+</code></pre>
+<h3 id="q3-authorization-denials-for-security-monitoring">Q3: Authorization Denials (for security monitoring)<a class="headerlink" href="#q3-authorization-denials-for-security-monitoring" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">SELECT * FROM audit_log
+WHERE decision = 'DENIED'
+  AND tenant_id = 'tenant-1'
+  AND timestamp &gt; NOW() - INTERVAL '7 days'
+ORDER BY timestamp DESC;
+-- Returns: All failed authorization attempts (brute force detection)
+</code></pre>
+<h3 id="q4-phisensitive-data-access-for-compliance-audit">Q4: PHI/Sensitive Data Access (for compliance audit)<a class="headerlink" href="#q4-phisensitive-data-access-for-compliance-audit" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">SELECT * FROM audit_log
+WHERE details-&gt;&gt;'is_phi' = 'true'
+  AND timestamp &gt; NOW() - INTERVAL '1 year'
+ORDER BY timestamp DESC;
+-- Returns: All access to protected health information
+</code></pre>
+<h3 id="q5-audit-event-integrity-check-for-tamper-detection">Q5: Audit Event Integrity Check (for tamper detection)<a class="headerlink" href="#q5-audit-event-integrity-check-for-tamper-detection" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">SELECT COUNT(*) as breaches
+FROM audit_log
+WHERE signature != HMAC_SHA256(event_data, secret)
+  AND timestamp &gt; NOW() - INTERVAL '30 days';
+-- Returns: Number of tampered events (should be 0)
+</code></pre>
+<hr />
+<h2 id="implementation-requirements-phase-3">Implementation Requirements (Phase 3)<a class="headerlink" href="#implementation-requirements-phase-3" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Must implement append-only storage</strong></li>
+<li>No UPDATEs or DELETEs on existing events</li>
+<li>
+<p>Prevention: database triggers or immutable storage</p>
+</li>
+<li>
+<p><strong>Must implement HMAC signing</strong></p>
+</li>
+<li>Sign each event before persist</li>
+<li>
+<p>Verify signature when reading</p>
+</li>
+<li>
+<p><strong>Must implement retention policy</strong></p>
+</li>
+<li>Move events from hot → warm → cold automatically</li>
+<li>
+<p>Implement soft-delete for GDPR compliance</p>
+</li>
+<li>
+<p><strong>Must be queryable</strong></p>
+</li>
+<li>Index on: actor_id, resource_id, timestamp, decision</li>
+<li>
+<p>Support Q1-Q5 query patterns above</p>
+</li>
+<li>
+<p><strong>Must be integrated with authorization</strong></p>
+</li>
+<li>IAuthorization.auditAuthDecision() populates this log</li>
+<li>Every auth check → audit event</li>
+</ol>
+<hr />
+<h2 id="event-examples">Event Examples<a class="headerlink" href="#event-examples" title="Permanent link">&para;</a></h2>
+<h3 id="example-1-authorization-granted">Example 1: Authorization Granted<a class="headerlink" href="#example-1-authorization-granted" title="Permanent link">&para;</a></h3>
+<pre><code class="language-json">{
+  &quot;auditId&quot;: &quot;550e8400-e29b-41d4-a716-446655440001&quot;,
+  &quot;timestamp&quot;: &quot;2026-02-11T10:30:45.123Z&quot;,
+  &quot;tenantId&quot;: &quot;tenant-abc&quot;,
+  &quot;actor&quot;: {
+    &quot;id&quot;: &quot;user-123&quot;,
+    &quot;type&quot;: &quot;user&quot;,
+    &quot;email&quot;: &quot;alice@company.com&quot;
+  },
+  &quot;action&quot;: &quot;RUN_START&quot;,
+  &quot;resource&quot;: {
+    &quot;type&quot;: &quot;plan&quot;,
+    &quot;id&quot;: &quot;plan-abc&quot;,
+    &quot;name&quot;: &quot;Daily data sync&quot;
+  },
+  &quot;decision&quot;: &quot;GRANTED&quot;,
+  &quot;context&quot;: {
+    &quot;ip&quot;: &quot;203.0.113.45&quot;,
+    &quot;requestId&quot;: &quot;req-7890&quot;,
+    &quot;sourceModule&quot;: &quot;api-gateway&quot;
+  }
+}
+</code></pre>
+<h3 id="example-2-authorization-denied-insufficient-permissions">Example 2: Authorization Denied (Insufficient Permissions)<a class="headerlink" href="#example-2-authorization-denied-insufficient-permissions" title="Permanent link">&para;</a></h3>
+<pre><code class="language-json">{
+  &quot;auditId&quot;: &quot;550e8400-e29b-41d4-a716-446655440002&quot;,
+  &quot;timestamp&quot;: &quot;2026-02-11T10:31:12.456Z&quot;,
+  &quot;tenantId&quot;: &quot;tenant-abc&quot;,
+  &quot;actor&quot;: {
+    &quot;id&quot;: &quot;user-456&quot;,
+    &quot;type&quot;: &quot;user&quot;,
+    &quot;email&quot;: &quot;bob@company.com&quot;
+  },
+  &quot;action&quot;: &quot;PLAN_DELETE&quot;,
+  &quot;resource&quot;: {
+    &quot;type&quot;: &quot;plan&quot;,
+    &quot;id&quot;: &quot;plan-abc&quot;,
+    &quot;name&quot;: &quot;Daily data sync&quot;
+  },
+  &quot;decision&quot;: &quot;DENIED&quot;,
+  &quot;reason&quot;: {
+    &quot;code&quot;: &quot;RBAC_POLICY_DENIED&quot;,
+    &quot;message&quot;: &quot;User role 'viewer' lacks permission for PLAN_DELETE&quot;
+  },
+  &quot;context&quot;: {
+    &quot;ip&quot;: &quot;203.0.113.46&quot;,
+    &quot;requestId&quot;: &quot;req-7891&quot;,
+    &quot;sourceModule&quot;: &quot;api-gateway&quot;
+  }
+}
+</code></pre>
+<h3 id="example-3-state-mutation-run-started">Example 3: State Mutation (Run Started)<a class="headerlink" href="#example-3-state-mutation-run-started" title="Permanent link">&para;</a></h3>
+<pre><code class="language-json">{
+  &quot;auditId&quot;: &quot;550e8400-e29b-41d4-a716-446655440003&quot;,
+  &quot;timestamp&quot;: &quot;2026-02-11T10:32:00.789Z&quot;,
+  &quot;tenantId&quot;: &quot;tenant-abc&quot;,
+  &quot;actor&quot;: {
+    &quot;id&quot;: &quot;engine-system&quot;,
+    &quot;type&quot;: &quot;system&quot;
+  },
+  &quot;action&quot;: &quot;STATE_MUTATION&quot;,
+  &quot;resource&quot;: {
+    &quot;type&quot;: &quot;run&quot;,
+    &quot;id&quot;: &quot;run-xyz&quot;,
+    &quot;name&quot;: &quot;Daily data sync - 2026-02-11&quot;
+  },
+  &quot;decision&quot;: &quot;COMPLETED&quot;,
+  &quot;context&quot;: {
+    &quot;sourceModule&quot;: &quot;engine&quot;
+  },
+  &quot;details&quot;: {
+    &quot;mutation_type&quot;: &quot;RUN_STARTED&quot;,
+    &quot;previous_state&quot;: { &quot;status&quot;: &quot;PENDING&quot;, &quot;startedAt&quot;: null },
+    &quot;new_state&quot;: { &quot;status&quot;: &quot;RUNNING&quot;, &quot;startedAt&quot;: &quot;2026-02-11T10:32:00Z&quot; }
+  }
+}
+</code></pre>
+<hr />
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../../security/THREAT_MODEL/">THREAT_MODEL.md</a> - Threat scenarios (T4: audit tampering)</li>
+<li><a href="../IAuthorization.v1/">IAuthorization.v1.md</a> - Auth decision source</li>
+<li><a href="../../engine/ExecutionSemantics.v1/">ExecutionSemantics.v1.md</a> - State mutation source</li>
+<li>SOC2 Trust Services Criteria: <a href="https://www.aicpa.org/interestareas/informationsystemssecurity/pages/trust-services-criteria.aspx">https://www.aicpa.org/interestareas/informationsystemssecurity/pages/trust-services-criteria.aspx</a></li>
+<li>HIPAA Security Rule: <a href="https://www.hhs.gov/hipaa/for-professionals/security/index.html">https://www.hhs.gov/hipaa/for-professionals/security/index.html</a></li>
+<li>GDPR Article 5: <a href="https://gdpr-info.eu/art-5-gdpr/">https://gdpr-info.eu/art-5-gdpr/</a></li>
+</ul>
+<hr />
+<h2 id="change-log">Change Log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>2026-02-11</td>
+<td>Initial normative contract for audit logging</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: 2026-02-11</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": [], "search": "../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

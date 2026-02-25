@@ -1,0 +1,2513 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>A11Y_GUIDELINES.md - Accessibility Guidelines - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#a11y_guidelinesmd-accessibility-guidelines" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              A11Y_GUIDELINES.md - Accessibility Guidelines
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-wcag-21-aa-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. WCAG 2.1 AA Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. WCAG 2.1 AA Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-perceivable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Perceivable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-operable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Operable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-understandable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Understandable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-robust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Robust
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-keyboard-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Keyboard Navigation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Keyboard Navigation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-tab-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Tab Order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-focus-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Focus Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Keyboard Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-screen-reader-support-aria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Screen Reader Support (ARIA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Screen Reader Support (ARIA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-semantic-html" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Semantic HTML
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-aria-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 ARIA Roles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-aria-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 ARIA Labels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-live-regions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Live Regions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-color-contrast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Color Contrast
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Color Contrast">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-text-contrast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Text Contrast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-ui-element-contrast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 UI Element Contrast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-dont-rely-on-color-alone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Don't Rely on Color Alone
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-form-accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Form Accessibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Form Accessibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Labels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-error-messages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Error Messages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-required-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Required Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-table-accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Table Accessibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Table Accessibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-use-semantic-html" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Use Semantic HTML
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-caption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Caption
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-focus-indicators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Focus Indicators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Focus Indicators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-visible-focus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Visible Focus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-skip-link" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Skip Link
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-testing-for-accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Testing for Accessibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Testing for Accessibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-automated-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Automated Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-manual-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Manual Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-e2e-tests-playwright-axe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 E2E Tests (Playwright + Axe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-common-mistakes-to-avoid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Common Mistakes to Avoid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="a11y_guidelinesmd-accessibility-guidelines">A11Y_GUIDELINES.md - Accessibility Guidelines<a class="headerlink" href="#a11y_guidelinesmd-accessibility-guidelines" title="Permanent link">&para;</a></h1>
+<p><strong>Version</strong>: 1.0<br />
+<strong>Date</strong>: 2026-02-11<br />
+<strong>Status</strong>: Informative (WCAG 2.1 AA Compliance)<br />
+<strong>Location</strong>: docs/architecture/frontend/quality/A11Y_GUIDELINES.md</p>
+<hr />
+<h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<p>The frontend MUST comply with <strong>WCAG 2.1 Level AA</strong> standards to ensure usability for:</p>
+<ul>
+<li>Users with visual impairments (screen readers, low vision)</li>
+<li>Users with motor impairments (keyboard-only navigation)</li>
+<li>Users with cognitive disabilities (clear language, consistent UI)</li>
+</ul>
+<p><strong>Philosophy</strong>: Accessibility is not optional—it's a requirement for all features.</p>
+<hr />
+<h2 id="1-wcag-21-aa-requirements">1. WCAG 2.1 AA Requirements<a class="headerlink" href="#1-wcag-21-aa-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="11-perceivable">1.1 Perceivable<a class="headerlink" href="#11-perceivable" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Guideline</th>
+<th>Requirement</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1.1.1 Non-text Content</strong></td>
+<td>All images have alt text</td>
+<td><code>&lt;img alt="Run timeline graph"&gt;</code></td>
+</tr>
+<tr>
+<td><strong>1.2.1 Audio/Video</strong></td>
+<td>Provide captions (if applicable)</td>
+<td>N/A (no video content)</td>
+</tr>
+<tr>
+<td><strong>1.3.1 Info &amp; Relationships</strong></td>
+<td>Use semantic HTML</td>
+<td><code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;table&gt;</code></td>
+</tr>
+<tr>
+<td><strong>1.4.3 Contrast</strong></td>
+<td>Text contrast ≥4.5:1 (7:1 for large text)</td>
+<td>Test with <a href="https://webaim.org/resources/contrastchecker/">WebAIM Contrast Checker</a></td>
+</tr>
+<tr>
+<td><strong>1.4.4 Resize Text</strong></td>
+<td>UI usable at 200% zoom</td>
+<td>Test in browser zoom</td>
+</tr>
+<tr>
+<td><strong>1.4.11 Non-text Contrast</strong></td>
+<td>UI elements ≥3:1 contrast</td>
+<td>Buttons, borders, icons</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="12-operable">1.2 Operable<a class="headerlink" href="#12-operable" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Guideline</th>
+<th>Requirement</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2.1.1 Keyboard</strong></td>
+<td>All functionality keyboard-accessible</td>
+<td>No mouse-only actions</td>
+</tr>
+<tr>
+<td><strong>2.1.2 No Keyboard Trap</strong></td>
+<td>Users can exit all UI elements</td>
+<td>Test modal/dropdown focus traps</td>
+</tr>
+<tr>
+<td><strong>2.4.1 Bypass Blocks</strong></td>
+<td>Skip navigation link</td>
+<td><code>&lt;a href="#main"&gt;Skip to content&lt;/a&gt;</code></td>
+</tr>
+<tr>
+<td><strong>2.4.3 Focus Order</strong></td>
+<td>Logical tab order</td>
+<td>Test with <code>Tab</code> key</td>
+</tr>
+<tr>
+<td><strong>2.4.7 Focus Visible</strong></td>
+<td>Visible focus indicator</td>
+<td><code>:focus-visible { outline: 2px solid blue; }</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="13-understandable">1.3 Understandable<a class="headerlink" href="#13-understandable" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Guideline</th>
+<th>Requirement</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>3.1.1 Language</strong></td>
+<td>Declare page language</td>
+<td><code>&lt;html lang="en"&gt;</code></td>
+</tr>
+<tr>
+<td><strong>3.2.1 On Focus</strong></td>
+<td>No unexpected context changes</td>
+<td>Don't auto-submit forms on focus</td>
+</tr>
+<tr>
+<td><strong>3.3.1 Error Identification</strong></td>
+<td>Clearly describe errors</td>
+<td>"Email is required" (not "Field is invalid")</td>
+</tr>
+<tr>
+<td><strong>3.3.2 Labels</strong></td>
+<td>Form inputs have labels</td>
+<td><code>&lt;label for="email"&gt;Email&lt;/label&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="14-robust">1.4 Robust<a class="headerlink" href="#14-robust" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Guideline</th>
+<th>Requirement</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>4.1.2 Name, Role, Value</strong></td>
+<td>Use ARIA attributes correctly</td>
+<td><code>role="button"</code>, <code>aria-label="Close"</code></td>
+</tr>
+<tr>
+<td><strong>4.1.3 Status Messages</strong></td>
+<td>Use <code>role="status"</code> for live updates</td>
+<td>toast notifications, loading states</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-keyboard-navigation">2. Keyboard Navigation<a class="headerlink" href="#2-keyboard-navigation" title="Permanent link">&para;</a></h2>
+<h3 id="21-tab-order">2.1 Tab Order<a class="headerlink" href="#21-tab-order" title="Permanent link">&para;</a></h3>
+<p>All interactive elements MUST be reachable via <code>Tab</code> key:</p>
+<ul>
+<li><strong>Navigation menu</strong>: Tab through links (<code>Home</code>, <code>Plans</code>, <code>Runs</code>, <code>Audit</code>)</li>
+<li><strong>Buttons</strong>: <code>Tab</code> → <code>Enter</code> to activate</li>
+<li><strong>Forms</strong>: <code>Tab</code> through inputs, <code>Enter</code> to submit</li>
+<li><strong>Modals</strong>: Focus traps to modal (no tabbing to background)</li>
+</ul>
+<p><strong>Example modal focus trap</strong>:</p>
+<pre><code class="language-tsx">import { useEffect, useRef } from 'react';
+import FocusTrap from 'focus-trap-react';
+
+function Modal({ isOpen, onClose, children }) {
+  const closeButtonRef = useRef&lt;HTMLButtonElement&gt;(null);
+
+  useEffect(() =&gt; {
+    if (isOpen) {
+      closeButtonRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  return (
+    &lt;FocusTrap active={isOpen}&gt;
+      &lt;div role=&quot;dialog&quot; aria-modal=&quot;true&quot;&gt;
+        &lt;button ref={closeButtonRef} onClick={onClose}&gt;
+          Close
+        &lt;/button&gt;
+        {children}
+      &lt;/div&gt;
+    &lt;/FocusTrap&gt;
+  );
+}
+</code></pre>
+<hr />
+<h3 id="22-focus-management">2.2 Focus Management<a class="headerlink" href="#22-focus-management" title="Permanent link">&para;</a></h3>
+<p>When opening a modal/drawer, move focus to the first interactive element:</p>
+<pre><code class="language-tsx">// ❌ WRONG: Focus stays on trigger button
+&lt;button onClick={() =&gt; setModalOpen(true)}&gt;Open&lt;/button&gt;;
+
+// ✅ CORRECT: Focus moves to modal
+useEffect(() =&gt; {
+  if (modalOpen) {
+    modalRef.current?.querySelector('button')?.focus();
+  }
+}, [modalOpen]);
+</code></pre>
+<p>When closing a modal, return focus to the trigger element:</p>
+<pre><code class="language-tsx">function Modal({ triggerRef, onClose }) {
+  const handleClose = () =&gt; {
+    onClose();
+    triggerRef.current?.focus(); // Return focus
+  };
+
+  return &lt;button onClick={handleClose}&gt;Close&lt;/button&gt;;
+}
+</code></pre>
+<hr />
+<h3 id="23-keyboard-shortcuts">2.3 Keyboard Shortcuts<a class="headerlink" href="#23-keyboard-shortcuts" title="Permanent link">&para;</a></h3>
+<p>The graph editor MUST support keyboard shortcuts:</p>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Tab</code></td>
+<td>Navigate between nodes</td>
+</tr>
+<tr>
+<td><code>Enter</code></td>
+<td>Open node config panel</td>
+</tr>
+<tr>
+<td><code>Delete</code></td>
+<td>Delete selected node</td>
+</tr>
+<tr>
+<td><code>Ctrl+Z</code></td>
+<td>Undo</td>
+</tr>
+<tr>
+<td><code>Ctrl+Shift+Z</code></td>
+<td>Redo</td>
+</tr>
+<tr>
+<td><code>Ctrl+C</code></td>
+<td>Copy selected node</td>
+</tr>
+<tr>
+<td><code>Ctrl+V</code></td>
+<td>Paste node</td>
+</tr>
+<tr>
+<td><code>Arrow keys</code></td>
+<td>Move selected node</td>
+</tr>
+<tr>
+<td><code>Esc</code></td>
+<td>Close config panel / deselect</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Implementation</strong>:</p>
+<pre><code class="language-tsx">function GraphEditor() {
+  const [selectedNode, setSelectedNode] = useState(null);
+
+  useEffect(() =&gt; {
+    const handleKeyDown = (e: KeyboardEvent) =&gt; {
+      if (e.key === 'Delete' &amp;&amp; selectedNode) {
+        deleteNode(selectedNode.id);
+      } else if (e.key === 'Escape') {
+        setSelectedNode(null);
+      } else if (e.ctrlKey &amp;&amp; e.key === 'z') {
+        undo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () =&gt; window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode]);
+
+  return &lt;ReactFlow nodes={nodes} edges={edges} /&gt;;
+}
+</code></pre>
+<hr />
+<h2 id="3-screen-reader-support-aria">3. Screen Reader Support (ARIA)<a class="headerlink" href="#3-screen-reader-support-aria" title="Permanent link">&para;</a></h2>
+<h3 id="31-semantic-html">3.1 Semantic HTML<a class="headerlink" href="#31-semantic-html" title="Permanent link">&para;</a></h3>
+<p>Use native HTML elements when possible:</p>
+<table>
+<thead>
+<tr>
+<th>Semantic Element</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;nav&gt;</code></td>
+<td>Navigation menu</td>
+</tr>
+<tr>
+<td><code>&lt;main&gt;</code></td>
+<td>Main content area</td>
+</tr>
+<tr>
+<td><code>&lt;aside&gt;</code></td>
+<td>Sidebar / complementary content</td>
+</tr>
+<tr>
+<td><code>&lt;header&gt;</code></td>
+<td>Page header</td>
+</tr>
+<tr>
+<td><code>&lt;footer&gt;</code></td>
+<td>Page footer</td>
+</tr>
+<tr>
+<td><code>&lt;button&gt;</code></td>
+<td>Clickable button</td>
+</tr>
+<tr>
+<td><code>&lt;a&gt;</code></td>
+<td>Link to another page</td>
+</tr>
+<tr>
+<td><code>&lt;table&gt;</code></td>
+<td>Tabular data</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Don't use <code>&lt;div role="button"&gt;</code></strong> when <code>&lt;button&gt;</code> is sufficient.</p>
+<hr />
+<h3 id="32-aria-roles">3.2 ARIA Roles<a class="headerlink" href="#32-aria-roles" title="Permanent link">&para;</a></h3>
+<p>Use ARIA roles for custom components:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>role="dialog"</code></td>
+<td>Modal windows</td>
+</tr>
+<tr>
+<td><code>role="status"</code></td>
+<td>Live region (toast notifications)</td>
+</tr>
+<tr>
+<td><code>role="alert"</code></td>
+<td>Critical alerts (errors)</td>
+</tr>
+<tr>
+<td><code>role="progressbar"</code></td>
+<td>Progress indicators</td>
+</tr>
+<tr>
+<td><code>role="tablist"</code></td>
+<td>Tab navigation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example modal</strong>:</p>
+<pre><code class="language-tsx">&lt;div
+  role=&quot;dialog&quot;
+  aria-modal=&quot;true&quot;
+  aria-labelledby=&quot;modal-title&quot;
+  aria-describedby=&quot;modal-description&quot;
+&gt;
+  &lt;h2 id=&quot;modal-title&quot;&gt;Confirm Action&lt;/h2&gt;
+  &lt;p id=&quot;modal-description&quot;&gt;Are you sure you want to delete this run?&lt;/p&gt;
+  &lt;button onClick={handleConfirm}&gt;Confirm&lt;/button&gt;
+  &lt;button onClick={handleCancel}&gt;Cancel&lt;/button&gt;
+&lt;/div&gt;
+</code></pre>
+<hr />
+<h3 id="33-aria-labels">3.3 ARIA Labels<a class="headerlink" href="#33-aria-labels" title="Permanent link">&para;</a></h3>
+<p>Provide descriptive labels for interactive elements:</p>
+<pre><code class="language-tsx">// ❌ WRONG: No label (screen reader reads &quot;Button&quot;)
+&lt;button onClick={handleClose}&gt;
+  &lt;XIcon /&gt;
+&lt;/button&gt;
+
+// ✅ CORRECT: Descriptive label
+&lt;button onClick={handleClose} aria-label=&quot;Close modal&quot;&gt;
+  &lt;XIcon /&gt;
+&lt;/button&gt;
+</code></pre>
+<p><strong>Icon-only buttons</strong>: Always include <code>aria-label</code></p>
+<p><strong>Visually hidden labels</strong>: Use <code>.sr-only</code> class</p>
+<pre><code class="language-css">.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+</code></pre>
+<pre><code class="language-tsx">&lt;button&gt;
+  &lt;span className=&quot;sr-only&quot;&gt;Edit plan&lt;/span&gt;
+  &lt;EditIcon /&gt;
+&lt;/button&gt;
+</code></pre>
+<hr />
+<h3 id="34-live-regions">3.4 Live Regions<a class="headerlink" href="#34-live-regions" title="Permanent link">&para;</a></h3>
+<p>Use <code>aria-live</code> for dynamic content updates:</p>
+<table>
+<thead>
+<tr>
+<th><code>aria-live</code> Value</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>off</code></td>
+<td>No announcements (default)</td>
+</tr>
+<tr>
+<td><code>polite</code></td>
+<td>Announce after current speech (toast notifications)</td>
+</tr>
+<tr>
+<td><code>assertive</code></td>
+<td>Interrupt current speech (critical errors)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example toast notification</strong>:</p>
+<pre><code class="language-tsx">function Toast({ message }) {
+  return (
+    &lt;div role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;
+      {message}
+    &lt;/div&gt;
+  );
+}
+
+// Usage
+&lt;Toast message=&quot;Run started successfully&quot; /&gt;;
+</code></pre>
+<p><strong>Example error alert</strong>:</p>
+<pre><code class="language-tsx">function ErrorAlert({ message }) {
+  return (
+    &lt;div role=&quot;alert&quot; aria-live=&quot;assertive&quot;&gt;
+      ❌ {message}
+    &lt;/div&gt;
+  );
+}
+
+// Usage
+&lt;ErrorAlert message=&quot;Failed to start run&quot; /&gt;;
+</code></pre>
+<hr />
+<h2 id="4-color-contrast">4. Color Contrast<a class="headerlink" href="#4-color-contrast" title="Permanent link">&para;</a></h2>
+<h3 id="41-text-contrast">4.1 Text Contrast<a class="headerlink" href="#41-text-contrast" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Text Size</th>
+<th>Min Contrast Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Normal text (&lt;18px)</td>
+<td>4.5:1</td>
+</tr>
+<tr>
+<td>Large text (≥18px or bold ≥14px)</td>
+<td>3:1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Testing</strong>: Use <a href="https://webaim.org/resources/contrastchecker/">WebAIM Contrast Checker</a></p>
+<p><strong>Example</strong>:</p>
+<pre><code class="language-css">/* ❌ WRONG: Insufficient contrast (2.5:1) */
+.text {
+  color: #999; /* Light gray */
+  background-color: #fff; /* White */
+}
+
+/* ✅ CORRECT: Sufficient contrast (4.6:1) */
+.text {
+  color: #595959; /* Darker gray */
+  background-color: #fff;
+}
+</code></pre>
+<hr />
+<h3 id="42-ui-element-contrast">4.2 UI Element Contrast<a class="headerlink" href="#42-ui-element-contrast" title="Permanent link">&para;</a></h3>
+<p>Buttons, borders, icons MUST have ≥3:1 contrast against background.</p>
+<p><strong>Example</strong>:</p>
+<pre><code class="language-css">/* ❌ WRONG: Button border too light */
+.button {
+  background: #fff;
+  border: 1px solid #e0e0e0; /* 1.5:1 contrast */
+}
+
+/* ✅ CORRECT: Visible border */
+.button {
+  background: #fff;
+  border: 1px solid #888; /* 3.5:1 contrast */
+}
+</code></pre>
+<hr />
+<h3 id="43-dont-rely-on-color-alone">4.3 Don't Rely on Color Alone<a class="headerlink" href="#43-dont-rely-on-color-alone" title="Permanent link">&para;</a></h3>
+<p>Use additional visual cues (icons, text) alongside color:</p>
+<p><strong>Example run status</strong>:</p>
+<pre><code class="language-tsx">// ❌ WRONG: Color-only indicator
+&lt;div style={{ color: status === 'COMPLETED' ? 'green' : 'red' }}&gt;
+  {status}
+&lt;/div&gt;
+
+// ✅ CORRECT: Color + icon
+&lt;div style={{ color: status === 'COMPLETED' ? 'green' : 'red' }}&gt;
+  {status === 'COMPLETED' ? '✅' : '❌'} {status}
+&lt;/div&gt;
+</code></pre>
+<hr />
+<h2 id="5-form-accessibility">5. Form Accessibility<a class="headerlink" href="#5-form-accessibility" title="Permanent link">&para;</a></h2>
+<h3 id="51-labels">5.1 Labels<a class="headerlink" href="#51-labels" title="Permanent link">&para;</a></h3>
+<p>Every input MUST have an associated label:</p>
+<pre><code class="language-tsx">// ❌ WRONG: No label
+&lt;input type=&quot;text&quot; placeholder=&quot;Email&quot; /&gt;
+
+// ✅ CORRECT: Explicit label
+&lt;label htmlFor=&quot;email&quot;&gt;Email&lt;/label&gt;
+&lt;input type=&quot;text&quot; id=&quot;email&quot; /&gt;
+</code></pre>
+<p><strong>Alternative</strong>: Use <code>aria-label</code> if visual label is not desired</p>
+<pre><code class="language-tsx">&lt;input type=&quot;text&quot; aria-label=&quot;Search runs&quot; /&gt;
+</code></pre>
+<hr />
+<h3 id="52-error-messages">5.2 Error Messages<a class="headerlink" href="#52-error-messages" title="Permanent link">&para;</a></h3>
+<p>Error messages MUST be descriptive and linked to the input:</p>
+<pre><code class="language-tsx">function EmailInput({ error }) {
+  return (
+    &lt;div&gt;
+      &lt;label htmlFor=&quot;email&quot;&gt;Email&lt;/label&gt;
+      &lt;input
+        type=&quot;email&quot;
+        id=&quot;email&quot;
+        aria-invalid={!!error}
+        aria-describedby={error ? 'email-error' : undefined}
+      /&gt;
+      {error &amp;&amp; (
+        &lt;div id=&quot;email-error&quot; role=&quot;alert&quot;&gt;
+          {error}
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+}
+
+// Usage
+&lt;EmailInput error=&quot;Email is required&quot; /&gt;;
+</code></pre>
+<hr />
+<h3 id="53-required-fields">5.3 Required Fields<a class="headerlink" href="#53-required-fields" title="Permanent link">&para;</a></h3>
+<p>Mark required fields with <code>aria-required</code> and visual indicator:</p>
+<pre><code class="language-tsx">&lt;label htmlFor=&quot;planName&quot;&gt;
+  Plan Name &lt;span aria-label=&quot;required&quot;&gt;*&lt;/span&gt;
+&lt;/label&gt;
+&lt;input type=&quot;text&quot; id=&quot;planName&quot; required aria-required=&quot;true&quot; /&gt;
+</code></pre>
+<hr />
+<h2 id="6-table-accessibility">6. Table Accessibility<a class="headerlink" href="#6-table-accessibility" title="Permanent link">&para;</a></h2>
+<h3 id="61-use-semantic-html">6.1 Use Semantic HTML<a class="headerlink" href="#61-use-semantic-html" title="Permanent link">&para;</a></h3>
+<pre><code class="language-tsx">&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope=&quot;col&quot;&gt;Run ID&lt;/th&gt;
+      &lt;th scope=&quot;col&quot;&gt;Status&lt;/th&gt;
+      &lt;th scope=&quot;col&quot;&gt;Started At&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;run-123&lt;/td&gt;
+      &lt;td&gt;COMPLETED&lt;/td&gt;
+      &lt;td&gt;2026-02-11 10:00&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+</code></pre>
+<h3 id="62-caption">6.2 Caption<a class="headerlink" href="#62-caption" title="Permanent link">&para;</a></h3>
+<p>Provide a caption for complex tables:</p>
+<pre><code class="language-tsx">&lt;table&gt;
+  &lt;caption&gt;Recent Runs for &quot;Daily ETL&quot; Plan&lt;/caption&gt;
+  &lt;thead&gt;...&lt;/thead&gt;
+  &lt;tbody&gt;...&lt;/tbody&gt;
+&lt;/table&gt;
+</code></pre>
+<hr />
+<h2 id="7-focus-indicators">7. Focus Indicators<a class="headerlink" href="#7-focus-indicators" title="Permanent link">&para;</a></h2>
+<h3 id="71-visible-focus">7.1 Visible Focus<a class="headerlink" href="#71-visible-focus" title="Permanent link">&para;</a></h3>
+<p>All interactive elements MUST have a visible focus indicator:</p>
+<pre><code class="language-css">/* Default browser focus */
+button:focus-visible {
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
+}
+
+/* Custom focus style */
+.button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.5);
+}
+</code></pre>
+<p><strong>Test</strong>: Tab through the page and verify all interactive elements show focus.</p>
+<hr />
+<h3 id="72-skip-link">7.2 Skip Link<a class="headerlink" href="#72-skip-link" title="Permanent link">&para;</a></h3>
+<p>Provide a "Skip to content" link for keyboard users:</p>
+<pre><code class="language-tsx">&lt;a href=&quot;#main&quot; className=&quot;skip-link&quot;&gt;
+  Skip to main content
+&lt;/a&gt;
+
+&lt;nav&gt;...&lt;/nav&gt;
+
+&lt;main id=&quot;main&quot;&gt;
+  {/* Main content */}
+&lt;/main&gt;
+</code></pre>
+<pre><code class="language-css">.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+</code></pre>
+<hr />
+<h2 id="8-testing-for-accessibility">8. Testing for Accessibility<a class="headerlink" href="#8-testing-for-accessibility" title="Permanent link">&para;</a></h2>
+<h3 id="81-automated-tests">8.1 Automated Tests<a class="headerlink" href="#81-automated-tests" title="Permanent link">&para;</a></h3>
+<p>Use <strong>jest-axe</strong> for unit tests:</p>
+<pre><code class="language-tsx">import { render } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
+import { RunList } from './RunList';
+
+expect.extend(toHaveNoViolations);
+
+test('RunList has no accessibility violations', async () =&gt; {
+  const { container } = render(&lt;RunList runs={mockRuns} /&gt;);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+</code></pre>
+<hr />
+<h3 id="82-manual-testing">8.2 Manual Testing<a class="headerlink" href="#82-manual-testing" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Tool</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Screen reader</strong></td>
+<td>NVDA (Windows), VoiceOver (Mac)</td>
+<td>Navigate page with screen reader</td>
+</tr>
+<tr>
+<td><strong>Keyboard navigation</strong></td>
+<td>Browser</td>
+<td>Navigate with <code>Tab</code>, <code>Enter</code>, <code>Esc</code></td>
+</tr>
+<tr>
+<td><strong>Color contrast</strong></td>
+<td>Chrome DevTools → Accessibility</td>
+<td>Check contrast ratios</td>
+</tr>
+<tr>
+<td><strong>Focus indicators</strong></td>
+<td>Browser</td>
+<td>Tab through page, verify visible focus</td>
+</tr>
+<tr>
+<td><strong>Zoom to 200%</strong></td>
+<td>Browser zoom</td>
+<td>Verify layout remains usable</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="83-e2e-tests-playwright-axe">8.3 E2E Tests (Playwright + Axe)<a class="headerlink" href="#83-e2e-tests-playwright-axe" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+test('Audit viewer has no accessibility violations', async ({ page }) =&gt; {
+  await page.goto('/audit');
+
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('Can navigate audit viewer with keyboard', async ({ page }) =&gt; {
+  await page.goto('/audit');
+
+  // Tab to first filter
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+
+  // Type in actor filter
+  await page.keyboard.type('alice@example.com');
+
+  // Tab to search button
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+
+  // Verify results loaded
+  await expect(page.locator('.audit-entry')).toBeVisible();
+});
+</code></pre>
+<hr />
+<h2 id="9-common-mistakes-to-avoid">9. Common Mistakes to Avoid<a class="headerlink" href="#9-common-mistakes-to-avoid" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Correct Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Using <code>&lt;div&gt;</code> instead of <code>&lt;button&gt;</code></td>
+<td>Use semantic HTML: <code>&lt;button&gt;</code></td>
+</tr>
+<tr>
+<td>Icon-only button without label</td>
+<td>Add <code>aria-label="Close"</code></td>
+</tr>
+<tr>
+<td>Form input without label</td>
+<td>Use <code>&lt;label&gt;</code> or <code>aria-label</code></td>
+</tr>
+<tr>
+<td>Low contrast text (e.g., gray on white)</td>
+<td>Ensure ≥4.5:1 contrast</td>
+</tr>
+<tr>
+<td>No focus indicator</td>
+<td>Add <code>:focus-visible</code> styles</td>
+</tr>
+<tr>
+<td>Modal without focus trap</td>
+<td>Use <code>focus-trap-react</code></td>
+</tr>
+<tr>
+<td>Live updates without <code>aria-live</code></td>
+<td>Add <code>role="status"</code> or <code>role="alert"</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-resources">10. Resources<a class="headerlink" href="#10-resources" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://www.w3.org/WAI/WCAG21/quickref/">WCAG 2.1 Guidelines</a></li>
+<li><a href="https://webaim.org/resources/contrastchecker/">WebAIM Contrast Checker</a></li>
+<li><a href="https://www.a11yproject.com/checklist/">A11y Project Checklist</a></li>
+<li><a href="https://react.dev/learn/accessibility">React Accessibility Docs</a></li>
+<li><a href="https://www.w3.org/WAI/ARIA/apg/">ARIA Authoring Practices</a></li>
+</ul>
+<hr />
+<p><em>Last updated: 2026-02-11</em><br />
+<em>Version: 1.0</em><br />
+<em>Status: Informative - WCAG 2.1 AA compliance guidelines</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

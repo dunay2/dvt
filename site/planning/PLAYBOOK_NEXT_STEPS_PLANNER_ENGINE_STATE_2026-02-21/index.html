@@ -1,0 +1,2160 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Playbook Next Steps — Planner / Engine / State Alignment - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#playbook-next-steps-planner-engine-state-alignment" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Playbook Next Steps — Planner / Engine / State Alignment
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-think-first-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Think-First Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) Think-First Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problem-summary-facts-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem summary (facts only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constraints-and-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constraints and invariants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options-considered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options considered
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selected-option-and-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected option and rationale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternatives-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives rejected
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-validation-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected validation evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pre-implementation-brief" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Pre-implementation brief
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) Pre-implementation brief">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#suitability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suitability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blockers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blockers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opportunities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opportunities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHAT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FOR (goal)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HOW
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scope-touched" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope touched
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risks-and-mitigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks and mitigation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unknowns-decisions-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unknowns / decisions needed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-execution-plan-incremental-prs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Execution plan (incremental PRs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pr-1-documentation-and-policy-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR-1 — Documentation and policy alignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PR-1 — Documentation and policy alignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHAT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pr-2-contract-hardening-for-planner-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR-2 — Contract hardening for Planner → Engine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PR-2 — Contract hardening for Planner → Engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHAT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-files_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pr-3-capability-gating-and-compatibility-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR-3 — Capability gating and compatibility matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PR-3 — Capability gating and compatibility matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHAT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-files_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preferred-implementation-variant-auto-generated-capability-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preferred implementation variant: auto-generated capability matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preferred implementation variant: auto-generated capability matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guardrails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guardrails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci-gates-mandatory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI gates (mandatory)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pr-4-runtime-decoupling-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR-4 — Runtime decoupling cleanup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PR-4 — Runtime decoupling cleanup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHAT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-files_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pr-5-ci-governance-and-migration-safeguards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR-5 — CI governance and migration safeguards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PR-5 — CI governance and migration safeguards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHAT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WHY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-files_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-quality-gates-checklist-must-pass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Quality gates checklist (must pass)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-final-expected-outcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Final expected outcome
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="playbook-next-steps-planner-engine-state-alignment">Playbook Next Steps — Planner / Engine / State Alignment<a class="headerlink" href="#playbook-next-steps-planner-engine-state-alignment" title="Permanent link">&para;</a></h1>
+<ul>
+<li>Version: <code>v0.1-draft</code></li>
+<li>Status: <code>proposed</code></li>
+<li>Date (UTC): <code>2026-02-21</code></li>
+<li>Scope: <code>Planner → Engine → State contract hardening and decoupling</code></li>
+<li>Basis: <code>AI Issue Resolution Playbook v1.6.2</code></li>
+</ul>
+<h2 id="1-think-first-analysis">1) Think-First Analysis<a class="headerlink" href="#1-think-first-analysis" title="Permanent link">&para;</a></h2>
+<h3 id="problem-summary-facts-only">Problem summary (facts only)<a class="headerlink" href="#problem-summary-facts-only" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Planner/Engine/State separation is conceptually clear but partially fragile at runtime boundaries.</li>
+<li>Contract shape and capabilities are not fully governed by automated compatibility gates.</li>
+<li>Recent fixes restored test integrity and idempotency consistency, but structural governance remains pending.</li>
+</ul>
+<h3 id="constraints-and-invariants">Constraints and invariants<a class="headerlink" href="#constraints-and-invariants" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Keep deterministic semantics in engine/adapters.</li>
+<li>Preserve compatibility unless explicitly version-bumped.</li>
+<li>Keep ownership semantics aligned with ADR decisions (Engine emits <code>RunQueued</code>; adapters own <code>RunStarted</code>).</li>
+<li>Avoid broad refactors in a single iteration.</li>
+</ul>
+<h3 id="options-considered">Options considered<a class="headerlink" href="#options-considered" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Option A — Full redesign now</strong></li>
+<li>Rewrite Planner/Engine boundaries and contracts in one large PR.</li>
+<li><strong>Option B — Incremental contract-first hardening (selected)</strong></li>
+<li>Stabilize contract metadata + capability gating + compatibility tests in small PRs.</li>
+<li><strong>Option C — Docs-only clarification</strong></li>
+<li>Update docs and postpone code/test governance.</li>
+</ul>
+<h3 id="selected-option-and-rationale">Selected option and rationale<a class="headerlink" href="#selected-option-and-rationale" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Selected: Option B</strong>.</li>
+<li>Reason: smallest-risk path to reduce coupling while preserving delivery velocity and rollback safety.</li>
+</ul>
+<h3 id="alternatives-rejected">Alternatives rejected<a class="headerlink" href="#alternatives-rejected" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>A rejected</strong>: too risky, high regression surface, poor rollback granularity.</li>
+<li><strong>C rejected</strong>: does not reduce runtime/compatibility risk.</li>
+</ul>
+<h3 id="expected-validation-evidence">Expected validation evidence<a class="headerlink" href="#expected-validation-evidence" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Target package tests green for engine and temporal adapter.</li>
+<li>Contract compatibility checks introduced and enforced in CI.</li>
+<li>Explicit WHAT/WHY traceability in issue/PR comments.</li>
+</ul>
+<hr />
+<h2 id="2-pre-implementation-brief">2) Pre-implementation brief<a class="headerlink" href="#2-pre-implementation-brief" title="Permanent link">&para;</a></h2>
+<h3 id="suitability">Suitability<a class="headerlink" href="#suitability" title="Permanent link">&para;</a></h3>
+<ul>
+<li>This plan is suitable because it addresses the highest-risk coupling points first (contract/version/capabilities), then runtime decoupling.</li>
+</ul>
+<h3 id="blockers">Blockers<a class="headerlink" href="#blockers" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Missing automated compatibility gate for Planner→Engine contract evolution.</li>
+<li>Potential ambiguity on business-rule ownership for runtime decisions (retry/backpressure/cost heuristics).</li>
+</ul>
+<h3 id="opportunities">Opportunities<a class="headerlink" href="#opportunities" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Add explicit provenance fields in plan metadata.</li>
+<li>Improve discoverability with a single compatibility matrix report artifact.</li>
+</ul>
+<h3 id="what">WHAT<a class="headerlink" href="#what" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Introduce incremental corrections for contract governance and runtime responsibility boundaries.</li>
+</ul>
+<h3 id="for-goal">FOR (goal)<a class="headerlink" href="#for-goal" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ensure Planner/Engine/State separation is robust at runtime and enforceable by CI.</li>
+</ul>
+<h3 id="how">HOW<a class="headerlink" href="#how" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Execute 5 PRs in sequence with isolated risk and explicit validation gates.</li>
+</ul>
+<h3 id="why">WHY<a class="headerlink" href="#why" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Contract-first governance reduces hidden coupling and prevents silent breakage across adapters.</li>
+</ul>
+<h3 id="scope-touched">Scope touched<a class="headerlink" href="#scope-touched" title="Permanent link">&para;</a></h3>
+<ul>
+<li>In scope: <code>packages/@dvt/engine</code>, <code>packages/@dvt/contracts</code>, <code>packages/@dvt/adapter-temporal</code>, CI workflows, architecture docs.</li>
+<li>Out of scope: frontend feature work, unrelated refactors, non-contract runtime optimization not tied to separation risks.</li>
+</ul>
+<h3 id="risk-classification">Risk classification<a class="headerlink" href="#risk-classification" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>High</strong> (cross-package contract and runtime semantics).</li>
+</ul>
+<h3 id="risks-and-mitigation">Risks and mitigation<a class="headerlink" href="#risks-and-mitigation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Risk: accidental breaking change in plan schema.</li>
+<li>Mitigation: versioned contract checks + compatibility tests.</li>
+<li>Risk: ownership drift between engine and adapters.</li>
+<li>Mitigation: ADR-aligned assertions and tests around lifecycle events.</li>
+</ul>
+<h3 id="validation-plan">Validation plan<a class="headerlink" href="#validation-plan" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Package tests: engine + temporal adapter.</li>
+<li>Contract compatibility matrix tests.</li>
+<li>CI gates for contract drift and path-based impact.</li>
+</ul>
+<h3 id="unknowns-decisions-needed">Unknowns / decisions needed<a class="headerlink" href="#unknowns-decisions-needed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Final policy for capability lifecycle (<code>experimental/stable/deprecated</code>) enforcement at runtime.</li>
+<li>Required backward-compatibility window for Planner-generated plans.</li>
+</ul>
+<hr />
+<h2 id="3-execution-plan-incremental-prs">3) Execution plan (incremental PRs)<a class="headerlink" href="#3-execution-plan-incremental-prs" title="Permanent link">&para;</a></h2>
+<h2 id="pr-1-documentation-and-policy-alignment">PR-1 — Documentation and policy alignment<a class="headerlink" href="#pr-1-documentation-and-policy-alignment" title="Permanent link">&para;</a></h2>
+<h3 id="what_1">WHAT<a class="headerlink" href="#what_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Align gap docs with ADR ownership semantics and current implementation reality.</li>
+</ul>
+<h3 id="why_1">WHY<a class="headerlink" href="#why_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Remove contradictory guidance before further implementation.</li>
+</ul>
+<h3 id="expected-files">Expected files<a class="headerlink" href="#expected-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>packages/@dvt/engine/docs/GAPS_AND_FIXES.md</code></li>
+<li><code>docs/decisions/ADR-0011-run-started-ownership.md</code> (reference-only updates if needed)</li>
+</ul>
+<h3 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Markdown lint + reviewer verification of semantic consistency.</li>
+</ul>
+<h2 id="pr-2-contract-hardening-for-planner-engine">PR-2 — Contract hardening for Planner → Engine<a class="headerlink" href="#pr-2-contract-hardening-for-planner-engine" title="Permanent link">&para;</a></h2>
+<h3 id="what_2">WHAT<a class="headerlink" href="#what_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Extend and formalize <code>ExecutionPlan</code> metadata (<code>contractVersion</code>, <code>plannerVersion</code>, <code>plannerGitSha</code>, <code>generatedAt</code>, <code>requiresCapabilities</code>).</li>
+</ul>
+<h3 id="why_2">WHY<a class="headerlink" href="#why_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Prevent hidden coupling by making provenance and compatibility explicit.</li>
+</ul>
+<h3 id="expected-files_1">Expected files<a class="headerlink" href="#expected-files_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>packages/@dvt/engine/src/contracts/executionPlan.ts</code></li>
+<li><code>packages/@dvt/contracts/src/*</code> (if shared promotion is required)</li>
+<li>Contract tests under <code>packages/@dvt/engine/test/contracts/*</code></li>
+</ul>
+<h3 id="validation_1">Validation<a class="headerlink" href="#validation_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Contract tests + targeted build/test in affected packages.</li>
+</ul>
+<h2 id="pr-3-capability-gating-and-compatibility-matrix">PR-3 — Capability gating and compatibility matrix<a class="headerlink" href="#pr-3-capability-gating-and-compatibility-matrix" title="Permanent link">&para;</a></h2>
+<h3 id="what_3">WHAT<a class="headerlink" href="#what_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Enforce runtime capability checks against adapter matrix and emit explicit validation report.</li>
+</ul>
+<h3 id="why_3">WHY<a class="headerlink" href="#why_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ensure plans cannot request unsupported features silently.</li>
+</ul>
+<h3 id="expected-files_2">Expected files<a class="headerlink" href="#expected-files_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>docs/architecture/engine/contracts/capabilities/adapters.capabilities.json</code></li>
+<li><code>packages/@dvt/engine/src/core/WorkflowEngine.ts</code></li>
+<li>CI workflow files for compatibility gate</li>
+</ul>
+<h3 id="validation_2">Validation<a class="headerlink" href="#validation_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Positive/negative tests for required capabilities.</li>
+</ul>
+<h3 id="preferred-implementation-variant-auto-generated-capability-matrix">Preferred implementation variant: auto-generated capability matrix<a class="headerlink" href="#preferred-implementation-variant-auto-generated-capability-matrix" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Generate <a href="docs/architecture/engine/contracts/capabilities/adapters.capabilities.json:1"><code>adapters.capabilities.json</code></a> from adapter capability tests instead of manual edits.</li>
+<li>Keep <a href="docs/architecture/engine/contracts/capabilities/capabilities.schema.json:1"><code>capabilities.schema.json</code></a> as the normative enum source, and fail generation if unknown capabilities appear.</li>
+<li>Add generator script under <a href="scripts/AI_INDEX_README.md:1"><code>scripts/</code></a> and wire CI to fail when generated output is stale.</li>
+<li>Runtime validation in <a href="packages/@dvt/engine/src/core/WorkflowEngine.ts:128"><code>WorkflowEngine</code></a> should consume the generated matrix and enforce <code>requiresCapabilities</code> deterministically.</li>
+</ul>
+<h4 id="guardrails">Guardrails<a class="headerlink" href="#guardrails" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Generated file header must include timestamp + generator version + source test paths.</li>
+<li>Capabilities marked <code>experimental</code> must include explicit metadata (<code>experimental: true</code>) and be blocked by default unless plan opt-in is explicit.</li>
+<li>Capability removals require migration note + contract version bump gate.</li>
+</ul>
+<h4 id="ci-gates-mandatory">CI gates (mandatory)<a class="headerlink" href="#ci-gates-mandatory" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>generate:capability-matrix</code> produces no diff on clean branch.</li>
+<li>Contract compatibility check fails if generated matrix and adapter tests diverge.</li>
+<li>PR comment bot reports matrix delta when capabilities changed.</li>
+</ul>
+<h2 id="pr-4-runtime-decoupling-cleanup">PR-4 — Runtime decoupling cleanup<a class="headerlink" href="#pr-4-runtime-decoupling-cleanup" title="Permanent link">&para;</a></h2>
+<h3 id="what_4">WHAT<a class="headerlink" href="#what_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Move operational decisions out of plan payload where they are runtime concerns; keep plan declarative.</li>
+</ul>
+<h3 id="why_4">WHY<a class="headerlink" href="#why_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Reduce Planner↔Engine operational coupling.</li>
+</ul>
+<h3 id="expected-files_3">Expected files<a class="headerlink" href="#expected-files_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts</code></li>
+<li><code>packages/@dvt/engine/src/core/WorkflowEngine.ts</code></li>
+<li>Adapter workflow tests</li>
+</ul>
+<h3 id="validation_3">Validation<a class="headerlink" href="#validation_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Determinism and integration tests remain green.</li>
+</ul>
+<h2 id="pr-5-ci-governance-and-migration-safeguards">PR-5 — CI governance and migration safeguards<a class="headerlink" href="#pr-5-ci-governance-and-migration-safeguards" title="Permanent link">&para;</a></h2>
+<h3 id="what_5">WHAT<a class="headerlink" href="#what_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Add automated breaking-change policy checks and migration-note requirement.</li>
+</ul>
+<h3 id="why_5">WHY<a class="headerlink" href="#why_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Make contract stability enforceable, not aspirational.</li>
+</ul>
+<h3 id="expected-files_4">Expected files<a class="headerlink" href="#expected-files_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>.github/workflows/*</code></li>
+<li><code>docs/architecture/engine/VERSIONING.md</code></li>
+<li><code>docs/CONTRACTS_AUTOMATION_INDEX.md</code></li>
+</ul>
+<h3 id="validation_4">Validation<a class="headerlink" href="#validation_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CI fails on incompatible contract changes without version/migration updates.</li>
+</ul>
+<hr />
+<h2 id="4-quality-gates-checklist-must-pass">4) Quality gates checklist (must pass)<a class="headerlink" href="#4-quality-gates-checklist-must-pass" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] Acceptance criteria checked per PR.</li>
+<li>[ ] WHAT/WHY documented in PR/issue comments.</li>
+<li>[ ] Determinism-sensitive tests pass.</li>
+<li>[ ] Contract compatibility checks pass.</li>
+<li>[ ] No untracked business-rule ambiguity remains.</li>
+<li>[ ] Technical debt register reviewed (<code>no new debt</code> or explicit entries).</li>
+</ul>
+<hr />
+<h2 id="5-final-expected-outcome">5) Final expected outcome<a class="headerlink" href="#5-final-expected-outcome" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Planner/Engine/State separation remains conceptually clear <strong>and</strong> operationally enforceable.</li>
+<li>Contract drift becomes detectable in CI before merge.</li>
+<li>Adapter/runtime-specific behavior no longer leaks silently into planner contract assumptions.</li>
+</ul>
+<p>graph TD
+A[Adapter Tests] --&gt;|describeCapability| B[Generator Script]
+B --&gt;|auto-genera| C[capabilities.json]
+C --&gt;|valida| D[Schema]
+C --&gt;|consume| E[WorkflowEngine]
+E --&gt;|enforce| F[Runtime Validation]
+G[CI] --&gt;|check stale| B
+H[PR] --&gt;|diff comment| I[Reviewer]</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1930 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+        <link rel="prev" href="../../CONTRACTS_AUTOMATION_INDEX/">
+      
+      
+        <link rel="next" href="../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Technical Debt Register - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#technical-debt-register-iterative" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Technical Debt Register
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-rule-per-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mandatory rule per iteration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iteration-update-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iteration update workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Iteration update workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-iteration-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Iteration start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-during-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) During implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-iteration-close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Iteration close
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#register-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Register conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-entry-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New entry template
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#active-technical-debt-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Active technical debt register
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iteration-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iteration history
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-rule-per-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mandatory rule per iteration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iteration-update-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iteration update workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Iteration update workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-iteration-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Iteration start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-during-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) During implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-iteration-close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Iteration close
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#register-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Register conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-entry-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New entry template
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#active-technical-debt-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Active technical debt register
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iteration-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iteration history
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="technical-debt-register-iterative">Technical Debt Register (Iterative)<a class="headerlink" href="#technical-debt-register-iterative" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Document control</p>
+<ul>
+<li>Version: <code>v1.3.0</code></li>
+<li>Status: <code>active</code></li>
+<li>Last updated (UTC): <code>2026-02-20</code></li>
+<li>Owner: <code>Engineering / AI Delivery Governance</code></li>
+<li>Mandatory cadence: <strong>every iteration</strong></li>
+</ul>
+</blockquote>
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>Maintain a living, auditable, and prioritized technical debt register to reduce operational risk, improve maintainability, and prevent important debt from being excluded from the delivery cycle.</p>
+<h2 id="mandatory-rule-per-iteration">Mandatory rule per iteration<a class="headerlink" href="#mandatory-rule-per-iteration" title="Permanent link">&para;</a></h2>
+<p>In <strong>every iteration</strong> (issue/PR change or implementation cycle), the team MUST:</p>
+<ol>
+<li>Review the current register state.</li>
+<li>Update entries impacted by the iteration changes.</li>
+<li>Record newly identified debt (if any).</li>
+<li>Explicitly record <code>no new debt</code> when no new entries are identified.</li>
+</ol>
+<h2 id="iteration-update-workflow">Iteration update workflow<a class="headerlink" href="#iteration-update-workflow" title="Permanent link">&para;</a></h2>
+<h3 id="1-iteration-start">1) Iteration start<a class="headerlink" href="#1-iteration-start" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Review the active debt table.</li>
+<li>Confirm which entries remain open and their priority.</li>
+<li>Check whether any debt is blocking the current scope.</li>
+</ul>
+<h3 id="2-during-implementation">2) During implementation<a class="headerlink" href="#2-during-implementation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>If new debt appears, create an entry immediately with <code>id</code>, <code>risk</code>, <code>plan</code>, and <code>owner</code>.</li>
+<li>If an existing debt item changes in scope/risk, update it immediately.</li>
+</ul>
+<h3 id="3-iteration-close">3) Iteration close<a class="headerlink" href="#3-iteration-close" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Update <code>status</code>, <code>last review (UTC)</code>, and <code>evidence</code> (issue/PR/file).</li>
+<li>Move resolved entries to <code>closed</code> (do not delete history).</li>
+<li>Add one row to the iteration history.</li>
+</ul>
+<h2 id="register-conventions">Register conventions<a class="headerlink" href="#register-conventions" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>id</code>: <code>TD-0001</code>, <code>TD-0002</code>, ...</li>
+<li><code>type</code>: <code>code | test | docs | infra | process</code></li>
+<li><code>risk</code>: <code>Low | Medium | High</code></li>
+<li><code>effort</code>: <code>Low | Medium | High</code></li>
+<li><code>status</code>: <code>open | planned | in-progress | blocked | closed</code></li>
+</ul>
+<h2 id="new-entry-template">New entry template<a class="headerlink" href="#new-entry-template" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>title</th>
+<th>type</th>
+<th>area</th>
+<th>detected_at_utc</th>
+<th>risk</th>
+<th>effort</th>
+<th>status</th>
+<th>owner</th>
+<th>mitigation plan</th>
+<th>objective</th>
+<th>evidence</th>
+<th>last review (UTC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TD-XXXX</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>open</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="active-technical-debt-register">Active technical debt register<a class="headerlink" href="#active-technical-debt-register" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>title</th>
+<th>type</th>
+<th>area</th>
+<th>detected_at_utc</th>
+<th>risk</th>
+<th>effort</th>
+<th>status</th>
+<th>owner</th>
+<th>mitigation plan</th>
+<th>objective</th>
+<th>evidence</th>
+<th>last review (UTC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TD-0001</td>
+<td>Formalize mandatory iterative debt-register updates in core process docs</td>
+<td>process</td>
+<td>docs/guides</td>
+<td>2026-02-17</td>
+<td>Medium</td>
+<td>Low</td>
+<td>closed</td>
+<td>Engineering / AI Governance</td>
+<td>Integrate the register into process documents and the documentation index.</td>
+<td>Standardize governance</td>
+<td><code>docs/guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md</code>, <code>docs/INDEX.md</code></td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0002</td>
+<td>Engine public API still exports Temporal/Conductor stub adapters</td>
+<td>code</td>
+<td>packages/@dvt/engine/src</td>
+<td>2026-02-17</td>
+<td>High</td>
+<td>Medium</td>
+<td>open</td>
+<td>Engine maintainers</td>
+<td>Remove stub exports from the public entrypoint (or move to explicit test-only exports); keep only production-capable adapters in default API.</td>
+<td>Prevent accidental runtime use of non-functional adapters</td>
+<td><code>packages/@dvt/engine/src/index.ts</code>, <code>packages/@dvt/engine/src/adapters/temporal/TemporalAdapterStub.ts</code>, <code>packages/@dvt/engine/src/adapters/conductor/ConductorAdapterStub.ts</code>, <code>docs/planning/ISSUE_5_TEMPORAL_ADAPTER_STATUS_AND_IMPLEMENTATION_PROPOSAL.md</code></td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0003</td>
+<td>Retry signal flow (<code>RETRY_STEP</code> / <code>RETRY_RUN</code>) remains NotImplemented across engine and Temporal adapter</td>
+<td>code</td>
+<td>packages/engine + packages/@dvt/adapter-temporal</td>
+<td>2026-02-17</td>
+<td>Medium</td>
+<td>High</td>
+<td>planned</td>
+<td>Engine + Temporal adapter maintainers</td>
+<td>Implement deterministic retry semantics end-to-end (engine mapping, adapter handling, tests, and contract alignment).</td>
+<td>Close Phase-2 functional gap in control signals</td>
+<td><code>packages/@dvt/engine/src/core/WorkflowEngine.ts</code>, <code>packages/@dvt/adapter-temporal/src/TemporalAdapter.ts</code>, <code>docs/architecture/engine/adapters/temporal/EnginePolicies.md</code></td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0004</td>
+<td>Legacy adapter package still active in workspace and contains unresolved TODO-based test setup</td>
+<td>test</td>
+<td>packages/adapters-legacy</td>
+<td>2026-02-17</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>open</td>
+<td>Platform maintainers</td>
+<td>Decide legacy end-state (archive/remove/migrate), then move any remaining useful tests to active packages and close TODOs.</td>
+<td>Reduce confusion and split-brain test maintenance</td>
+<td><code>packages/adapters-legacy/README.md</code>, <code>packages/adapters-legacy/test/setup.ts</code></td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0005</td>
+<td>Empty root <code>test/</code> placeholder still exists despite cleanup recommendation</td>
+<td>repo</td>
+<td>root</td>
+<td>2026-02-17</td>
+<td>Low</td>
+<td>Low</td>
+<td>open</td>
+<td>Repo maintainers</td>
+<td>Remove empty root placeholder and verify CI/scripts/docs no longer reference it.</td>
+<td>Complete monorepo structure cleanup</td>
+<td><code>docs/REPO_STRUCTURE_SUMMARY.md</code>, root <code>test/</code> directory (empty)</td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0006</td>
+<td>DAG dependency field (<code>dependsOn</code>) initially implemented only in adapter-local plan typing</td>
+<td>code</td>
+<td>packages/@dvt/adapter-temporal + shared contracts</td>
+<td>2026-02-17</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>closed</td>
+<td>Contracts + Temporal maintainers</td>
+<td>Promote <code>dependsOn</code> to canonical shared plan contract and propagate validation/docs across engine and adapters.</td>
+<td>Avoid contract drift between workflow interpreter and shared plan schema</td>
+<td><code>packages/@dvt/adapter-temporal/src/engine-types.ts</code>, <code>packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts</code>, <code>packages/@dvt/engine/src/contracts/executionPlan.ts</code>, <code>packages/@dvt/engine/src/adapters/mock/MockAdapter.ts</code></td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0007</td>
+<td>Lint debt backlog remains open in legacy and adapter side-paths</td>
+<td>process</td>
+<td>packages/adapters-legacy + adapter-postgres</td>
+<td>2026-02-17</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>open</td>
+<td>Platform maintainers</td>
+<td>Resolve by explicit route batches and closure criteria (<code>eslint --max-warnings 0</code> per target scope), or archive legacy scope with owner sign-off.</td>
+<td>Replace vague lint-debt tracking with auditable execution batches</td>
+<td><code>docs/status/IMPLEMENTATION_SUMMARY.md</code>, <code>packages/adapters-legacy/**</code>, <code>packages/@dvt/adapter-postgres/**</code>, <code>packages/@dvt/engine/legacy-top-level-engine/**</code></td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0008</td>
+<td>Documentation/path normalization tracked as generic note without concrete file list</td>
+<td>docs</td>
+<td>docs/*</td>
+<td>2026-02-17</td>
+<td>Low</td>
+<td>Medium</td>
+<td>open</td>
+<td>Documentation maintainers</td>
+<td>Maintain explicit normalization queue by file path and update status each iteration until closed.</td>
+<td>Ensure documentation debt is actionable and verifiable</td>
+<td><code>docs/status/IMPLEMENTATION_SUMMARY.md</code>, <code>docs/REPO_STRUCTURE_SUMMARY.md</code>, <code>docs/planning/ISSUE_5_TEMPORAL_ADAPTER_STATUS_AND_IMPLEMENTATION_PROPOSAL.md</code>, <code>docs/knowledge/ROADMAP_AND_ISSUES_MAP.md</code>, <code>docs/INDEX.md</code></td>
+<td>2026-02-17</td>
+</tr>
+<tr>
+<td>TD-0009</td>
+<td>Temporal workflow determinism linting guardrails are not yet enforced in CI for adapter workflows</td>
+<td>process</td>
+<td>packages/@dvt/adapter-temporal + CI</td>
+<td>2026-02-18</td>
+<td>Medium</td>
+<td>Low</td>
+<td>planned</td>
+<td>Temporal adapter maintainers</td>
+<td>Add deterministic-workflow lint rules/checks in CI and pre-push path for Temporal workflow files; fail build on violations.</td>
+<td>Prevent non-deterministic APIs from entering workflow sandbox code</td>
+<td><code>packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts</code>, <code>docs/decisions/ADR-0007-temporal-retry-policy-mvp.md</code>, <code>docs/status/IMPLEMENTATION_SUMMARY.md</code></td>
+<td>2026-02-18</td>
+</tr>
+<tr>
+<td>TD-0010</td>
+<td>Activity heartbeat/timeout strategy for long-running steps is not formalized in adapter runtime</td>
+<td>code</td>
+<td>packages/@dvt/adapter-temporal</td>
+<td>2026-02-18</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>planned</td>
+<td>Temporal adapter maintainers</td>
+<td>Define and implement default <code>startToClose</code>/<code>scheduleToClose</code> + heartbeat policy for long-running step execution paths.</td>
+<td>Avoid silent hangs and improve failure detectability for long activities</td>
+<td><code>packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts</code>, <code>packages/@dvt/adapter-temporal/src/activities/stepActivities.ts</code>, <code>docs/decisions/ADR-0007-temporal-retry-policy-mvp.md</code></td>
+<td>2026-02-18</td>
+</tr>
+<tr>
+<td>TD-0011</td>
+<td>Engine internals still contain non-typed <code>throw new Error(...)</code> branches</td>
+<td>code</td>
+<td>packages/@dvt/engine/src/core</td>
+<td>2026-02-20</td>
+<td>Medium</td>
+<td>Low</td>
+<td>open</td>
+<td>Engine maintainers</td>
+<td>Replace internal generic throws with domain typed errors where stable error code semantics are required; keep behavior unchanged.</td>
+<td>Complete typed-error consistency across engine paths</td>
+<td><code>packages/@dvt/engine/src/core/WorkflowEngine.ts</code>, <code>docs/planning/IMPLEMENTATION-PLAN-ARCH-REVIEW.md</code>, <code>ROADMAP.md</code></td>
+<td>2026-02-20</td>
+</tr>
+<tr>
+<td>TD-0012</td>
+<td><code>src</code>/<code>dist</code> artifact divergence risk after hardening changes</td>
+<td>process</td>
+<td>packages/adapter-postgres + packages/engine</td>
+<td>2026-02-20</td>
+<td>High</td>
+<td>Low</td>
+<td>open</td>
+<td>Package maintainers</td>
+<td>Keep <code>dist</code> out of microcommits while ignored by repository policy; close debt only via explicit release/rebuild workflow that regenerates artifacts from <code>src</code> and validates parity before publish.</td>
+<td>Prevent shipping stale runtime behavior from generated artifacts</td>
+<td><code>packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts</code>, <code>packages/@dvt/adapter-postgres/dist/PostgresStateStoreAdapter.js</code>, <code>.gitignore</code>, <code>docs/planning/IMPLEMENTATION-PLAN-ARCH-REVIEW.md</code></td>
+<td>2026-02-20</td>
+</tr>
+<tr>
+<td>TD-0013</td>
+<td>Test fixtures still use permissive <code>as any</code> in engine tests</td>
+<td>test</td>
+<td>packages/@dvt/engine/test</td>
+<td>2026-02-20</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>open</td>
+<td>Engine test maintainers</td>
+<td>Tighten fixture typing incrementally (factory helpers + explicit interface types) in small PR slices to improve drift detection.</td>
+<td>Reduce false negatives and strengthen compile-time contract checks</td>
+<td><code>packages/@dvt/engine/test/core/WorkflowEngine.test.ts</code>, <code>packages/@dvt/engine/test/security/authorizer.deny.test.ts</code>, <code>docs/planning/IMPLEMENTATION-PLAN-ARCH-REVIEW.md</code></td>
+<td>2026-02-20</td>
+</tr>
+</tbody>
+</table>
+<h2 id="iteration-history">Iteration history<a class="headerlink" href="#iteration-history" title="Permanent link">&para;</a></h2>
+<ul>
+<li>2026-02-17 · bootstrap</li>
+<li>Summary: Created the technical debt register and defined mandatory iterative update flow.</li>
+<li>Evidence: <code>docs/guides/TECHNICAL_DEBT_REGISTER.md</code>, <code>docs/INDEX.md</code></li>
+<li>2026-02-17 · iteration-1</li>
+<li>Summary: Integrated register governance into the playbook; updated TD-0001 and recorded no additional debt.</li>
+<li>Evidence: <code>docs/guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md</code></li>
+<li>2026-02-17 · iteration-2</li>
+<li>Summary: Repository audit completed; added TD-0002..TD-0005 for stub exports, retry gap, legacy adapter area, and root placeholder cleanup.</li>
+<li>Evidence: <code>packages/@dvt/engine/src/index.ts</code>, <code>packages/@dvt/engine/src/core/WorkflowEngine.ts</code>, <code>packages/@dvt/adapter-temporal/src/TemporalAdapter.ts</code>, <code>packages/adapters-legacy/README.md</code>, <code>docs/REPO_STRUCTURE_SUMMARY.md</code></li>
+<li>2026-02-17 · iteration-3</li>
+<li>Summary: Added deterministic DAG-layer scheduler slice for <code>#15</code>; recorded new debt TD-0006 for shared-contract alignment of <code>dependsOn</code>.</li>
+<li>Evidence: <code>packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts</code>, <code>packages/@dvt/adapter-temporal/src/engine-types.ts</code>, <code>packages/@dvt/engine/src/contracts/executionPlan.ts</code></li>
+<li>2026-02-17 · iteration-4</li>
+<li>Summary: Promoted <code>dependsOn</code> to shared engine execution plan contract and aligned mock adapter/test coverage; closed TD-0006.</li>
+<li>Evidence: <code>packages/@dvt/engine/src/contracts/executionPlan.ts</code>, <code>packages/@dvt/engine/src/adapters/mock/MockAdapter.ts</code>, <code>packages/@dvt/engine/test/contracts/engine.test.ts</code></li>
+<li>2026-02-17 · iteration-5</li>
+<li>Summary: Converted vague debt statements into explicit tracked entries TD-0007 (lint backlog routes) and TD-0008 (docs/path queue by file).</li>
+<li>Evidence: <code>docs/status/IMPLEMENTATION_SUMMARY.md</code>, <code>docs/guides/TECHNICAL_DEBT_REGISTER.md</code></li>
+<li>2026-02-17 · iteration-6</li>
+<li>Summary: Completed issue <code>#15</code> Option A slices (retry/error + E2E golden path); no additional technical debt introduced in this iteration.</li>
+<li>Evidence: <code>packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts</code>, <code>packages/@dvt/adapter-temporal/src/activities/stepActivities.ts</code>, <code>packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts</code></li>
+<li>2026-02-18 · iteration-7</li>
+<li>Summary: Captured post-closure hardening backlog for Temporal runtime: determinism linting CI guardrails and long-activity heartbeat policy.</li>
+<li>Evidence: <code>docs/decisions/ADR-0007-temporal-retry-policy-mvp.md</code>, <code>docs/guides/TECHNICAL_DEBT_REGISTER.md</code>, <code>docs/status/IMPLEMENTATION_SUMMARY.md</code></li>
+<li>2026-02-19 · iteration-8</li>
+<li>Summary: Implemented contracts-only slice for issue <code>#220</code> (<code>CanvasState</code> schema v1), no new technical debt.</li>
+<li>Evidence: <code>docs/architecture/engine/contracts/schemas/canvas-state.schema.json</code>, <code>docs/architecture/engine/contracts/README.md</code>, <code>.gh-comments/issue-220-prebrief.md</code></li>
+<li>2026-02-19 · iteration-9</li>
+<li>Summary: Implemented contracts-only slice for issue <code>#221</code> (<code>ProvenanceEvent</code> schema v1), no new technical debt.</li>
+<li>Evidence: <code>docs/architecture/engine/contracts/schemas/provenance-event.schema.json</code>, <code>docs/architecture/engine/contracts/README.md</code>, <code>.gh-comments/issue-221-prebrief.md</code></li>
+<li>2026-02-20 · iteration-10</li>
+<li>Summary: Added post-checkpoint debt entries for typed error consistency, <code>src</code>/<code>dist</code> artifact synchronization, and engine test fixture typing hardening.</li>
+<li>Evidence: <code>docs/planning/IMPLEMENTATION-PLAN-ARCH-REVIEW.md</code>, <code>ROADMAP.md</code>, <code>docs/guides/TECHNICAL_DEBT_REGISTER.md</code></li>
+<li>2026-02-20 · iteration-11</li>
+<li>Summary: Confirmed microcommit strategy will omit <code>dist/</code> artifacts from commits; TD-0012 remains open and explicitly tracked until release rebuild/publish parity workflow is executed.</li>
+<li>Evidence: <code>docs/guides/TECHNICAL_DEBT_REGISTER.md</code>, <code>.gitignore</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

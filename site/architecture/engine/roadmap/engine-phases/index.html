@@ -1,0 +1,2506 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Engine Roadmap: Phases & Milestones - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#engine-roadmap-phases-milestones" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Engine Roadmap: Phases &amp; Milestones
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-mvp-temporal-only-target-march-31-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: MVP (Temporal Only) — Target: March 31, 2026
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: MVP (Temporal Only) — Target: March 31, 2026">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-normative-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Normative Contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-core-engine-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Core Engine Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-temporal-interpreter-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Temporal Interpreter Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-observability-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Observability &amp; Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-determinism-tooling-ci-gating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Determinism Tooling &amp; CI Gating
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-mvp-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 MVP Release
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-15-hardening-operational-readiness-target-may-31-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1.5: Hardening &amp; Operational Readiness — Target: May 31, 2026
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1.5: Hardening &amp; Operational Readiness — Target: May 31, 2026">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#17-load-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Load Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-operational-correctness-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 Operational Correctness Suite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#19-security-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.9 Security Baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-conductor-adapter-multi-language-sdks-target-september-30-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Conductor Adapter &amp; Multi-Language SDKs — Target: September 30, 2026
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Conductor Adapter &amp; Multi-Language SDKs — Target: September 30, 2026">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-conductor-adapter-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Conductor Adapter Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-multi-language-sdks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Multi-Language SDKs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-plan-schema-v12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Plan Schema v1.2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-roadmap-outcomes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Roadmap Outcomes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-advanced-observability-plugin-marketplace-target-march-31-2027" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Advanced Observability &amp; Plugin Marketplace — Target: March 31, 2027
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Advanced Observability &amp; Plugin Marketplace — Target: March 31, 2027">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-cost-attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Cost Attribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-ml-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 ML Observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-plugin-marketplace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Plugin Marketplace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-target-date" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Target Date
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-enterprise-features-beyond-2027" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Enterprise Features &amp; Beyond — 2027+
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Enterprise Features &amp; Beyond — 2027+">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-rbac-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 RBAC &amp; Audit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-disaster-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Disaster Recovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-global-replication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Global Replication
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-registry-mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Registry &amp; Mitigations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#success-metrics-overall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Metrics (Overall)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-blockers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependencies &amp; Blockers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dependencies &amp; Blockers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-mvp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 (MVP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#staffing-budget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staffing &amp; Budget
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-gates-redyellowgreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Gates (Red/Yellow/Green)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision Gates (Red/Yellow/Green)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-phase-15-gate-march-31-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 → Phase 1.5 Gate (March 31, 2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-15-phase-2-gate-may-31-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1.5 → Phase 2 Gate (May 31, 2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-phase-3-gate-sept-30-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2 → Phase 3 Gate (Sept 30, 2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-milestones-quarterly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Milestones (Quarterly)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anchor-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anchor Decisions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Anchor Decisions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anchor-decision-a-conductor-determinism-parity-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anchor Decision A: Conductor Determinism Parity (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anchor-decision-b-statestore-indexing-retention-operational-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anchor Decision B: StateStore Indexing &amp; Retention (OPERATIONAL CONTRACT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="engine-roadmap-phases-milestones">Engine Roadmap: Phases &amp; Milestones<a class="headerlink" href="#engine-roadmap-phases-milestones" title="Permanent link">&para;</a></h1>
+<p><strong>Audience</strong>: Executive stakeholders, product, engineering leadership<br />
+<strong>Purpose</strong>: Phase breakdown, milestones, success criteria<br />
+<strong>Status</strong>: Phase 1 (MVP) in progress<br />
+<strong>Last Updated</strong>: 2026-02-11</p>
+<hr />
+<h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<p><strong>Vision</strong>: Multi-adapter data orchestration engine (Temporal → Conductor → custom platforms).</p>
+<p><strong>Timeline</strong>:</p>
+<ul>
+<li><strong>Phase 1 (MVP)</strong>: Temporal-only, core engine semantics, determinism gating (Q1 2026 - Target: March 31).</li>
+<li><strong>Phase 1.5 (Hardening)</strong>: Load testing, operational correctness, security baseline (April-May 2026).</li>
+<li><strong>Phase 2</strong>: Conductor adapter, parity matrix, multi-language SDKs (Q2-Q3 2026).</li>
+<li><strong>Phase 3</strong>: Cost attribution, observability automation, custom plugins (Q3-Q4 2026).</li>
+<li><strong>Phase 4</strong>: Enterprise features (RBAC, audit compliance, disaster recovery) (2027).</li>
+</ul>
+<hr />
+<h2 id="phase-1-mvp-temporal-only-target-march-31-2026">Phase 1: MVP (Temporal Only) — Target: March 31, 2026<a class="headerlink" href="#phase-1-mvp-temporal-only-target-march-31-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Scope</strong>: Temporal-powered engine with determinism guarantees.</p>
+<h3 id="11-normative-contracts">1.1 Normative Contracts<a class="headerlink" href="#11-normative-contracts" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>✅ IWorkflowEngine.v1.1.md (interface + signal catalog)</li>
+<li>✅ ExecutionSemantics.v1.md (StateStore model, dual attempts, snapshots)</li>
+<li>✅ TemporalAdapter.spec.md (interpreter, namespace, workers, determinism)</li>
+<li>✅ RunStateUpdate.v1.md (event schema, envelope, versioning, consumer compatibility)</li>
+<li>✅ Idempotency.v1.md (key spec: eventType+runId+stepId+attemptId, upsert semantics)</li>
+<li>✅ PlanRef versioning &amp; schema evolution</li>
+<li>✅ Capability matrix (executable JSON schemas)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] All contracts reviewed + signed off by engineering leads</li>
+<li>[ ] Contract tests: golden JSON fixtures + schema validation + backward compatibility tests in CI</li>
+<li>[ ] Temporal 1.0+ compatibility verified</li>
+</ul>
+<h3 id="12-core-engine-implementation">1.2 Core Engine Implementation<a class="headerlink" href="#12-core-engine-implementation" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] IWorkflowEngine interface (startRun, cancelRun, getRunStatus [debug-only], signal)</li>
+<li>[ ] RunStateStore impl (PostgreSQL, append-only events, idempotent writes)</li>
+<li>[ ] SnapshotProjector (event replay, state derivation, immutable artifacts)</li>
+<li>[ ] Signal handler (PAUSE, RESUME, RETRY_STEP, CANCEL, custom signals)</li>
+<li>[ ] PlanFetcher + validator (schema versioning, capability checks)</li>
+<li>[ ] Authorization enforcement (API-boundary RBAC; engine consumes pre-authorized commands; emits auditable SignalDecisionRecord to StateStore)</li>
+<li>[ ] StateStore retention baseline (event archival after 90 days to cold storage; latest-status denormalized index for queries)</li>
+<li>[ ] Plugin permission schema (capabilities + scopes; design in Phase 1, implement Phase 3)</li>
+<li>[ ] Plugin sandbox strategy decision (isolated-vm / gVisor / separate process boundary)</li>
+<li>[ ] Audit events schema for plugin invocations</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] E2E test: run deterministic plan from start to completion</li>
+<li>[ ] E2E test: pause + resume workflow mid-execution</li>
+<li>[ ] E2E test: retry failed step, same artifacts produced</li>
+<li>[ ] E2E test: cancel run gracefully, in-flight tasks timeout</li>
+<li>[ ] All StateStore writes idempotent under at-least-once delivery (upsert semantics verified)</li>
+<li>[ ] StateStore write latency p99 &lt; 10ms (constraints: single-region, SSD storage, connection pool ≥50, batched writes where possible)</li>
+<li>[ ] Projection lag p99 &lt; 1s (time-based SLO); backpressure triggers at 100 events behind</li>
+<li>[ ] getRunStatus used for debugging only; StateStore remains primary truth</li>
+</ul>
+<h3 id="13-temporal-interpreter-workflow">1.3 Temporal Interpreter Workflow<a class="headerlink" href="#13-temporal-interpreter-workflow" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] DAG walker (step scheduling, dependency order)</li>
+<li>[ ] Activity dispatch (correct task queue routing, retries)</li>
+<li>[ ] Determinism enforcement (Temporal getVersion gates)</li>
+<li>[ ] continueAsNew logic (50 steps OR 1MB history threshold)</li>
+<li>[ ] Pause signal handler (cancel in-flight activities, StateStore sync)</li>
+<li>[ ] StateStore retention + archival baseline policy (archive after 90 days to cold storage; index strategy for latest-status queries)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Large plan (200+ steps): completes without continueAsNew OR continues correctly</li>
+<li>[ ] Pause signal latency p99 &lt; 1s (engine responsiveness)</li>
+<li>[ ] Activity retries increment engineAttemptId correctly</li>
+<li>[ ] Determinism verified (replay produces identical snapshots)</li>
+<li>[ ] Archive/query strategy documented and tested</li>
+</ul>
+<h3 id="14-observability-monitoring">1.4 Observability &amp; Monitoring<a class="headerlink" href="#14-observability-monitoring" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>✅ Metrics definition (runs, steps, StateStore, signals, adapters)</li>
+<li>✅ Prometheus scrape config</li>
+<li>✅ Grafana dashboards (executive, SRE, developer)</li>
+<li>✅ Alert rules (P1: adapter down, projection gap; P2: error rate, lag)</li>
+<li>✅ Jaeger trace instrumentation</li>
+<li>✅ ELK log aggregation</li>
+<li>✅ Incident response runbooks</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Dashboard shows: runs/min, completion latency, error rate, projection lag</li>
+<li>[ ] Alert "ProjectionGapDetected" fires correctly</li>
+<li>[ ] MTTR drill: 3 game-days completed; p50 time-to-identify culprit component &lt; 5 min</li>
+</ul>
+<h3 id="15-determinism-tooling-ci-gating">1.5 Determinism Tooling &amp; CI Gating<a class="headerlink" href="#15-determinism-tooling-ci-gating" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>✅ ESLint determinism rules</li>
+<li>✅ Replay test framework</li>
+<li>✅ Pre-commit hooks</li>
+<li>✅ GitHub Actions CI gate</li>
+<li>✅ Developer debugging tools (replay, trace divergence)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] All new plans pass determinism gate</li>
+<li>[ ] PR comment auto-generated with replay test results</li>
+<li>[ ] Zero non-deterministic plans reach production</li>
+</ul>
+<h3 id="16-mvp-release">1.6 MVP Release<a class="headerlink" href="#16-mvp-release" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Public contracts (versioned, tagged)</li>
+<li>[ ] SDK (TypeScript reference impl + interface)</li>
+<li>[ ] Getting started guide</li>
+<li>[ ] 3-step tutorial (hello-world → dbt → complex branching)</li>
+<li>[ ] Production runbooks</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] External beta users can deploy engine in &lt; 1 hour</li>
+<li>[ ] First 10 plans completed successfully (&gt; 99% completion rate)</li>
+<li>[ ] Zero unplanned incidents (P0)</li>
+</ul>
+<p><strong>Target Date</strong>: March 31, 2026</p>
+<hr />
+<h2 id="phase-15-hardening-operational-readiness-target-may-31-2026">Phase 1.5: Hardening &amp; Operational Readiness — Target: May 31, 2026<a class="headerlink" href="#phase-15-hardening-operational-readiness-target-may-31-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Scope</strong>: Load testing, operational correctness validation, security baseline.</p>
+<p><strong>Rationale</strong>: March 31 MVP gate + immediate Phase 2 (Conductor) creates slip risk. Dedicate 8 weeks to hardening before multi-adapter complexity.</p>
+<h3 id="17-load-testing">1.7 Load Testing<a class="headerlink" href="#17-load-testing" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Steady-state benchmarks: 1000 runs/min, 10K steps/min</li>
+<li>[ ] Stress tests: signal storms (100 PAUSE signals/sec), worker failure scenarios</li>
+<li>[ ] Chaos engineering: DB failover, network partition, adapter restart</li>
+<li>[ ] Resource saturation: connection pool exhaustion, disk I/O limits</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Sustained 1000 runs/min for 4 hours without degradation</li>
+<li>[ ] Zero data corruption during DB failover</li>
+<li>[ ] Recovery from worker loss &lt; 30s (new worker picks up tasks)</li>
+</ul>
+<h3 id="18-operational-correctness-suite">1.8 Operational Correctness Suite<a class="headerlink" href="#18-operational-correctness-suite" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Idempotency torture test: duplicate events, out-of-order delivery, retry storms</li>
+<li>[ ] Projector rebuild from zero: time-to-rebuild &lt; 10 min for 100K events</li>
+<li>[ ] State consistency verification: snapshot checksum matches event log replay</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] 1M duplicate events processed without state corruption</li>
+<li>[ ] Projector rebuild completes in &lt; 10 min (100K events)</li>
+<li>[ ] Zero divergence between projector and manual replay</li>
+</ul>
+<h3 id="19-security-baseline">1.9 Security Baseline<a class="headerlink" href="#19-security-baseline" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Authn/z enforcement at API boundary (even if RBAC is stubbed)</li>
+<li>[ ] Audit trail retention: 90 days hot, 7 years cold (policy + automation)</li>
+<li>[ ] PII scrubbing policy: credentials, tokens never appear in logs</li>
+<li>[ ] Threat model document (finalizing #13 from backlog)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Penetration test: no API bypass, no SQL injection</li>
+<li>[ ] Audit log tamper-proof (append-only, cryptographic signatures)</li>
+<li>[ ] PII regex scan: zero credentials in logs (automated check)</li>
+</ul>
+<p><strong>Target Date</strong>: May 31, 2026</p>
+<hr />
+<h2 id="phase-2-conductor-adapter-multi-language-sdks-target-september-30-2026">Phase 2: Conductor Adapter &amp; Multi-Language SDKs — Target: September 30, 2026<a class="headerlink" href="#phase-2-conductor-adapter-multi-language-sdks-target-september-30-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Scope</strong>: Conductor support (Phase 2 DRAFT), Python/Go SDKs, plan schema v1.2.</p>
+<h3 id="21-conductor-adapter-implementation">2.1 Conductor Adapter Implementation<a class="headerlink" href="#21-conductor-adapter-implementation" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>✅ ConductorAdapter.spec.md (limitations, emulation strategy)</li>
+<li>[ ] <strong>Determinism parity definition</strong> (anchored decision - see Anchor Decision A below):</li>
+<li><em>Guarantee</em>: For a given ExecutionPlan vN, the allowed state transitions and final snapshot are deterministic (same inputs/artifacts → same outcome), regardless of adapter</li>
+<li><em>Non-goal</em>: Identical replay semantics across engines (Temporal replay ≠ Conductor runtime)</li>
+<li><em>Mechanism</em>: StateStore + immutable artifacts are canonical replay surface; adapter behavior validated against it</li>
+<li>[ ] Determinism parity test suite: cross-adapter validation (10+ plans, verified identical state transitions)</li>
+<li>[ ] Workflow DSL generator (plan → Conductor JSON)</li>
+<li>[ ] Event listener (async status callbacks)</li>
+<li>[ ] Pause/cancel emulation (WAIT_FOR_EXTERNAL_EVENT)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] 10 end-to-end Conductor workflows (simple → complex)</li>
+<li>[ ] Pause latency p99 &lt; 5s (eventual, not native Temporal-speed)</li>
+<li>[ ] Capability matrix validated (6 supported, 4 emulated, 2 degraded)</li>
+<li>[ ] Determinism parity definition approved by engineering leads</li>
+<li>[ ] POC integration tests passing</li>
+</ul>
+<h3 id="22-multi-language-sdks">2.2 Multi-Language SDKs<a class="headerlink" href="#22-multi-language-sdks" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Python SDK (task workers, plan builder, client)</li>
+<li>[ ] Go SDK (task workers, observability)</li>
+<li>[ ] Java SDK (Spring Boot integration)</li>
+<li>[ ] SDK documentation + examples</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Python task worker can execute 5 step types</li>
+<li>[ ] All SDKs pass compatibility matrix tests</li>
+</ul>
+<h3 id="23-plan-schema-v12">2.3 Plan Schema v1.2<a class="headerlink" href="#23-plan-schema-v12" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Schema evolution (v1.0 → v1.1 → v1.2 migration path)</li>
+<li>[ ] Backward compatibility verified</li>
+<li>[ ] New features: custom signals, plugin policies, cost hints</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Existing v1.0 plans run on v1.2 without changes</li>
+<li>[ ] v1.2 → v1.0 downgrade path documented</li>
+</ul>
+<h3 id="24-roadmap-outcomes">2.4 Roadmap Outcomes<a class="headerlink" href="#24-roadmap-outcomes" title="Permanent link">&para;</a></h3>
+<p><strong>Phase 1 + Phase 2 = Multi-Adapter Parity</strong>:</p>
+<ul>
+<li>2 production adapters (Temporal + Conductor)</li>
+<li>3+ language SDKs</li>
+<li>Standardized capability fallback (reject, emulate, degrade)</li>
+<li>Cost model (compute per task, data per artifact)</li>
+</ul>
+<p><strong>Target Date</strong>: September 30, 2026</p>
+<hr />
+<h2 id="phase-3-advanced-observability-plugin-marketplace-target-march-31-2027">Phase 3: Advanced Observability &amp; Plugin Marketplace — Target: March 31, 2027<a class="headerlink" href="#phase-3-advanced-observability-plugin-marketplace-target-march-31-2027" title="Permanent link">&para;</a></h2>
+<p><strong>Scope</strong>: Cost attribution, ML anomaly detection, custom plugins, SSO.</p>
+<h3 id="31-cost-attribution">3.1 Cost Attribution<a class="headerlink" href="#31-cost-attribution" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Per-tenant billing model (compute units/min, GB artifacts)</li>
+<li>[ ] Chargeback dashboard (cost vs. run count)</li>
+<li>[ ] Budget alerts (per-tenant spend cap)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Can answer "How much did tenant-X spend last month?"</li>
+<li>[ ] Tenant sees cost per plan, per run</li>
+</ul>
+<h3 id="32-ml-observability">3.2 ML Observability<a class="headerlink" href="#32-ml-observability" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Anomaly detection (unusual latencies, error patterns, data volumes)</li>
+<li>[ ] Auto-remediation (scale workers, reject runs, alert)</li>
+<li>[ ] Predictive alerts (forecast resource exhaustion)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] Detects 80% of anomalies 10 minutes before SLA breach</li>
+<li>[ ] False positive rate &lt; 5%</li>
+</ul>
+<h3 id="33-plugin-marketplace">3.3 Plugin Marketplace<a class="headerlink" href="#33-plugin-marketplace" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Plugin registry (vetted, published, versioned)</li>
+<li>[ ] Plugin sandbox (resource limits, timeout enforcement)</li>
+<li>[ ] Plugin marketplace UI (discover, rate, review plugins)</li>
+</ul>
+<p><strong>Success Criteria</strong>:</p>
+<ul>
+<li>[ ] 20+ community plugins published</li>
+<li>[ ] 10k plugin invocations/week</li>
+<li>[ ] Zero sandbox escapes (security audit)</li>
+</ul>
+<h3 id="34-target-date">3.4 Target Date<a class="headerlink" href="#34-target-date" title="Permanent link">&para;</a></h3>
+<p>March 31, 2027</p>
+<hr />
+<h2 id="phase-4-enterprise-features-beyond-2027">Phase 4: Enterprise Features &amp; Beyond — 2027+<a class="headerlink" href="#phase-4-enterprise-features-beyond-2027" title="Permanent link">&para;</a></h2>
+<p><strong>Scope</strong>: RBAC, compliance (SOC2, HIPAA), disaster recovery, global replication.</p>
+<h3 id="41-rbac-audit">4.1 RBAC &amp; Audit<a class="headerlink" href="#41-rbac-audit" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Fine-grained RBAC (plan author, operator, auditor roles)</li>
+<li>[ ] 7-year audit trail (SignalDecisionRecord + all state mutations)</li>
+<li>[ ] Compliance exports (SOC2, HIPAA, GDPR)</li>
+</ul>
+<h3 id="42-disaster-recovery">4.2 Disaster Recovery<a class="headerlink" href="#42-disaster-recovery" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Cross-region failover (Temporal cluster + StateStore)</li>
+<li>[ ] Backup/restore procedures</li>
+<li>[ ] PITR (Point-in-Time Recovery)</li>
+</ul>
+<h3 id="43-global-replication">4.3 Global Replication<a class="headerlink" href="#43-global-replication" title="Permanent link">&para;</a></h3>
+<p><strong>Deliverables</strong>:</p>
+<ul>
+<li>[ ] Multi-region deployments</li>
+<li>[ ] Geo-distributed StateStore (with consistency model)</li>
+<li>[ ] Regional adapter selection (run plans in home region)</li>
+</ul>
+<hr />
+<h2 id="risk-registry-mitigations">Risk Registry &amp; Mitigations<a class="headerlink" href="#risk-registry-mitigations" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Temporal scalability</strong></td>
+<td>Medium</td>
+<td>High</td>
+<td>Load test @ 1000 runs/min early; pre-allocate hardware</td>
+</tr>
+<tr>
+<td><strong>Determinism bugs</strong></td>
+<td>Low</td>
+<td>High</td>
+<td>Extensive replay tests (Phase 1); find gaps in CI</td>
+</tr>
+<tr>
+<td><strong>Storage bottleneck</strong></td>
+<td>Low</td>
+<td>High</td>
+<td>Archive events yearly; tune index design</td>
+</tr>
+<tr>
+<td><strong>Conductor phase slip</strong></td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Start POC in Phase 1 funding; hire contractor if needed</td>
+</tr>
+<tr>
+<td><strong>Security: plugin sandbox</strong></td>
+<td>Medium</td>
+<td>High</td>
+<td>Red-team plugin isolation (pre-Phase 3); pen-test report</td>
+</tr>
+<tr>
+<td><strong>Regulatory: GDPR compliance</strong></td>
+<td>Low</td>
+<td>High</td>
+<td>Legal review of audit trail design; pre-emptive deletion policy</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="success-metrics-overall">Success Metrics (Overall)<a class="headerlink" href="#success-metrics-overall" title="Permanent link">&para;</a></h2>
+<p>By end of 2026 (Phases 1 + 2):</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Control-plane latency</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>RunRequest → plan persisted</td>
+<td>p99 &lt; 300ms</td>
+<td>API validation + planner + StateStore</td>
+</tr>
+<tr>
+<td>State update → UI refresh</td>
+<td>p99 &lt; 1s</td>
+<td>Projection latency</td>
+</tr>
+<tr>
+<td><strong>Engine responsiveness</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>PAUSE signal → no new activities scheduled</td>
+<td>p99 &lt; 1s</td>
+<td>Temporal-native, immediate</td>
+</tr>
+<tr>
+<td>State mutation → projector updates StateStore</td>
+<td>p99 &lt; 10ms</td>
+<td>Write latency</td>
+</tr>
+<tr>
+<td><strong>Data-plane (step execution)</strong></td>
+<td>Varies by step type</td>
+<td>Measured per warehouse size</td>
+</tr>
+<tr>
+<td>dbt step (small model: &lt;1K rows)</td>
+<td>p99 &lt; 30s</td>
+<td>Data warehouse, not engine</td>
+</tr>
+<tr>
+<td>dbt step (medium model: 1-100K rows)</td>
+<td>p99 &lt; 2m</td>
+<td>Warehouse-dependent</td>
+</tr>
+<tr>
+<td>Spark job execution</td>
+<td>p99 &lt; 5m</td>
+<td>Cluster size, not engine</td>
+</tr>
+<tr>
+<td><strong>System-level SLOs</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Availability (control plane)</td>
+<td>99.5%</td>
+<td>Excludes data warehouse</td>
+</tr>
+<tr>
+<td>Error rate (engine)</td>
+<td>&lt; 0.1%</td>
+<td>Excludes user-code errors in tasks</td>
+</tr>
+<tr>
+<td>Cost per run</td>
+<td>&lt; $0.01</td>
+<td>Compute + storage, TBD</td>
+</tr>
+<tr>
+<td>Runs completed / day</td>
+<td>50,000+</td>
+<td>Phase 1 baseline</td>
+</tr>
+<tr>
+<td>Tenant count</td>
+<td>50+</td>
+<td>Beta phase</td>
+</tr>
+</tbody>
+</table>
+<p>By end of 2027 (Phases 1 + 2 + 3):</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runs completed / day</td>
+<td>500,000+</td>
+</tr>
+<tr>
+<td>Tenant count</td>
+<td>500+</td>
+</tr>
+<tr>
+<td>Plugins in registry</td>
+<td>100+</td>
+</tr>
+<tr>
+<td>Multi-region deployments</td>
+<td>3+</td>
+</tr>
+<tr>
+<td>Control-plane SLA compliance</td>
+<td>99.5% availability</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="dependencies-blockers">Dependencies &amp; Blockers<a class="headerlink" href="#dependencies-blockers" title="Permanent link">&para;</a></h2>
+<h3 id="phase-1-mvp">Phase 1 (MVP)<a class="headerlink" href="#phase-1-mvp" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ Temporal cluster (staging + prod): <strong>GO</strong> (infrastructure ready)</li>
+<li>✅ PostgreSQL (StateStore): <strong>GO</strong> (provisioned)</li>
+<li>✅ Observability stack (Prometheus, Grafana, Jaeger): <strong>GO</strong> (deployed)</li>
+<li>🔶 Legal approval for audit trail: <strong>IN PROGRESS</strong> (expected Feb 20)</li>
+</ul>
+<h3 id="phase-2">Phase 2<a class="headerlink" href="#phase-2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>🔶 Conductor cluster setup: <strong>BLOCKED on vendor onboarding</strong> (expected March 15)</li>
+<li>🟢 Python/Go SDK design: <strong>READY</strong> (design doc approved)</li>
+</ul>
+<h3 id="phase-3">Phase 3<a class="headerlink" href="#phase-3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>🟢 ML/observability vendor (DataDog or Splunk): <strong>READY to integrate</strong></li>
+<li>🔶 Plugin security audit: <strong>SCHEDULED Q2 2026</strong></li>
+</ul>
+<hr />
+<h2 id="staffing-budget">Staffing &amp; Budget<a class="headerlink" href="#staffing-budget" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Engineers</th>
+<th>SREs</th>
+<th>PM</th>
+<th>Timeline</th>
+<th>Budget</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1</td>
+<td>5</td>
+<td>2</td>
+<td>1</td>
+<td>8 weeks</td>
+<td>$1.5M</td>
+</tr>
+<tr>
+<td>Phase 2</td>
+<td>4</td>
+<td>1</td>
+<td>1</td>
+<td>16 weeks</td>
+<td>$2.0M</td>
+</tr>
+<tr>
+<td>Phase 3</td>
+<td>3</td>
+<td>2</td>
+<td>1</td>
+<td>20 weeks</td>
+<td>$2.5M</td>
+</tr>
+<tr>
+<td>Phase 4</td>
+<td>2-3</td>
+<td>2</td>
+<td>1</td>
+<td>Ongoing</td>
+<td>$1.5M/quarter</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="decision-gates-redyellowgreen">Decision Gates (Red/Yellow/Green)<a class="headerlink" href="#decision-gates-redyellowgreen" title="Permanent link">&para;</a></h2>
+<h3 id="phase-1-phase-15-gate-march-31-2026">Phase 1 → Phase 1.5 Gate (March 31, 2026)<a class="headerlink" href="#phase-1-phase-15-gate-march-31-2026" title="Permanent link">&para;</a></h3>
+<p><strong>Green Criteria</strong> (ALL required):</p>
+<ul>
+<li>[ ] Zero P1 incidents in production (2-week window)</li>
+<li>[ ] 95%+ test pass rate</li>
+<li>[ ] SLA targets verified via synthetic benchmarks:</li>
+<li>Control-plane latency (RunRequest → plan persisted) p99 &lt; 300ms ✅</li>
+<li>State update → UI update p99 &lt; 1s ✅</li>
+<li>PAUSE signal latency p99 &lt; 1s ✅</li>
+<li>[ ] External beta users report positive feedback (survey NPS &gt; 50)</li>
+</ul>
+<p><strong>Yellow Criteria</strong> (assess):</p>
+<ul>
+<li>[ ] 1 P1 incident in 2-week window → post-mortem required</li>
+<li>[ ] 85-94% test pass rate → root cause analysis</li>
+<li>[ ] Any control-plane SLA target exceeded → optimization plan required</li>
+</ul>
+<p><strong>Red Criteria</strong> (BLOCK):</p>
+<ul>
+<li>[ ] &gt; 1 P1 incident / week</li>
+<li>[ ] &lt; 85% test pass rate</li>
+<li>[ ] Control-plane latency targets missed by &gt;50% → root cause investigation required</li>
+<li>[ ] Any security vulnerability (audit trail, idempotency, plugin sandbox)</li>
+</ul>
+<p><strong>Decision Maker</strong>: VP Engineering + Product Lead</p>
+<h3 id="phase-15-phase-2-gate-may-31-2026">Phase 1.5 → Phase 2 Gate (May 31, 2026)<a class="headerlink" href="#phase-15-phase-2-gate-may-31-2026" title="Permanent link">&para;</a></h3>
+<p><strong>Green Criteria</strong> (ALL required):</p>
+<ul>
+<li>[ ] Load test targets met: 1000 runs/min sustained for 4 hours</li>
+<li>[ ] Idempotency torture test passed: 1M duplicate events, zero corruption</li>
+<li>[ ] Projector rebuild &lt; 10 min for 100K events</li>
+<li>[ ] Security baseline: penetration test passed, PII scan clean</li>
+<li>[ ] Operational readiness: 3 game-days completed, MTTR p50 &lt; 5 min</li>
+</ul>
+<p><strong>Yellow Criteria</strong> (assess):</p>
+<ul>
+<li>[ ] 1 P1 incident in 2-week window → post-mortem required</li>
+<li>[ ] 85-94% test pass rate → root cause analysis</li>
+<li>[ ] Any control-plane SLA target exceeded → optimization plan required</li>
+</ul>
+<p><strong>Red Criteria</strong> (BLOCK):</p>
+<ul>
+<li>[ ] &gt; 1 P1 incident / week</li>
+<li>[ ] &lt; 85% test pass rate</li>
+<li>[ ] Control-plane latency targets missed by &gt;50% → root cause investigation required</li>
+<li>[ ] Any security vulnerability (audit trail, idempotency, plugin sandbox)</li>
+</ul>
+<p><strong>Decision Maker</strong>: VP Engineering + Product Lead</p>
+<h3 id="phase-2-phase-3-gate-sept-30-2026">Phase 2 → Phase 3 Gate (Sept 30, 2026)<a class="headerlink" href="#phase-2-phase-3-gate-sept-30-2026" title="Permanent link">&para;</a></h3>
+<p>Same criteria as Phase 1 → Phase 2 gate, PLUS:</p>
+<ul>
+<li>[ ] Conductor adapter passes POC validation (parity definition honored)</li>
+<li>[ ] Multi-language SDK (≥2 languages) mature and tested</li>
+<li>[ ] Cost model approved by finance</li>
+<li>[ ] Determinism parity implemented and verified across adapters</li>
+</ul>
+<hr />
+<h2 id="key-milestones-quarterly">Key Milestones (Quarterly)<a class="headerlink" href="#key-milestones-quarterly" title="Permanent link">&para;</a></h2>
+<pre><code>Q1 2026 (Phase 1)
+  Week 1-2:  Contracts finalized; engine core impl starts
+  Week 3-4:  Interpreter workflow; observability baseline
+  Week 5-6:  Determinism tooling + CI gating
+  Week 7-8:  MVP release; 5 beta customers
+
+Q2 2026 (Phase 1.5 + Phase 2 start)
+  Week 1-4:  Load testing; operational correctness suite
+  Week 5-8:  Security baseline; hardening complete
+  Week 9-12: Conductor POC + DSL generator; determinism parity test suite
+
+Q3 2026 (Phase 2 finish, Phase 3 start)
+  Week 1-4:  Phase 2 release candidate
+  Week 5-8:  Cost attribution MVP
+  Week 9-12: ML observability POC
+
+Q4 2026 / Early 2027 (Phase 3)
+  Plugin marketplace launch
+  RBAC implementation
+  Disaster recovery planning
+</code></pre>
+<hr />
+<h2 id="anchor-decisions">Anchor Decisions<a class="headerlink" href="#anchor-decisions" title="Permanent link">&para;</a></h2>
+<h3 id="anchor-decision-a-conductor-determinism-parity-normative">Anchor Decision A: Conductor Determinism Parity (NORMATIVE)<a class="headerlink" href="#anchor-decision-a-conductor-determinism-parity-normative" title="Permanent link">&para;</a></h3>
+<p><strong>Decision Date</strong>: 2026-02-11</p>
+<p><strong>Guarantee</strong>: For a given <code>ExecutionPlan vN</code>, the allowed state transitions and final snapshot are deterministic (given the same inputs/artifacts), regardless of adapter.</p>
+<p><strong>Non-goal</strong>: Identical replay semantics across engines (Temporal replay ≠ Conductor runtime).</p>
+<p><strong>Mechanism</strong>: StateStore + immutable artifacts are the canonical replay surface; adapter behavior must be validated against it.</p>
+<p><strong>Validation</strong>:</p>
+<ul>
+<li>Cross-adapter test suite: same plan executed on Temporal and Conductor must produce identical state transitions (event log comparison).</li>
+<li>Test coverage: 10+ golden paths (minimal, parallel, cancel-resume, retry, branching).</li>
+<li>Acceptance: Zero divergence in final snapshot checksums.</li>
+</ul>
+<p><strong>References</strong>:</p>
+<ul>
+<li>DVT Product Definition: "engine executes, store is truth"</li>
+<li>Engine boundary: <a href="https://github.com/dunay2/dvt/blob/main/docs/architecture/engine/design_principles.md">https://github.com/dunay2/dvt/blob/main/docs/architecture/engine/design_principles.md</a></li>
+</ul>
+<h3 id="anchor-decision-b-statestore-indexing-retention-operational-contract">Anchor Decision B: StateStore Indexing &amp; Retention (OPERATIONAL CONTRACT)<a class="headerlink" href="#anchor-decision-b-statestore-indexing-retention-operational-contract" title="Permanent link">&para;</a></h3>
+<p><strong>Decision Date</strong>: 2026-02-11</p>
+<p><strong>Hot vs Cold Storage</strong>:</p>
+<ul>
+<li><strong>Hot (PostgreSQL)</strong>: Latest status index (runId → latestStatus, updatedAt); 90 days retention; optimized for queries: "show run status", "list active runs".</li>
+<li><strong>Cold (S3/GCS)</strong>: Append-only event log; 7 years retention; optimized for compliance + disaster recovery.</li>
+</ul>
+<p><strong>Projector Rebuild Path</strong>:</p>
+<ul>
+<li>Rebuild mechanism: replay all events from cold storage + recompute snapshots.</li>
+<li>Time budget: 10 min for 100K events (Phase 1.5 load test target).</li>
+<li>Triggers: data corruption, schema migration, disaster recovery.</li>
+</ul>
+<p><strong>Retention Enforcement</strong>:</p>
+<ul>
+<li>Automated archival: events older than 90 days moved to cold storage (daily cron job).</li>
+<li>Hot storage indexes: runId (primary key), tenantId+createdAt (tenant queries), status+updatedAt (active runs dashboard).</li>
+<li>Cold storage format: partitioned Parquet files (year/month/day), compressed.</li>
+</ul>
+<p><strong>Query Patterns (Hot)</strong>:</p>
+<ul>
+<li>"Get run status": SELECT latestStatus FROM runs WHERE runId = ?</li>
+<li>"List active runs for tenant": SELECT * FROM runs WHERE tenantId = ? AND status IN ('RUNNING', 'PAUSED') ORDER BY updatedAt DESC</li>
+<li>"Count runs by status": SELECT status, COUNT(*) FROM runs WHERE tenantId = ? GROUP BY status</li>
+</ul>
+<p><strong>Query Patterns (Cold)</strong>:</p>
+<ul>
+<li>"Audit log for run": SELECT * FROM events WHERE runId = ? ORDER BY timestamp (S3 Select or Athena)</li>
+<li>"Compliance export": SELECT * FROM events WHERE tenantId = ? AND timestamp BETWEEN ? AND ?</li>
+</ul>
+<p><strong>Constraints</strong>:</p>
+<ul>
+<li>Single-region deployment (Phase 1); cross-region replication deferred to Phase 4.</li>
+<li>SSD storage class (PostgreSQL); connection pool ≥50 (avoid saturation at 1000 runs/min).</li>
+<li>Batched writes where possible (projector buffers 10 events before commit).</li>
+</ul>
+<p><strong>References</strong>:</p>
+<ul>
+<li>Temporal history limits: <a href="https://docs.temporal.io/encyclopedia/temporal-platform-limits">https://docs.temporal.io/encyclopedia/temporal-platform-limits</a></li>
+<li>OpenTelemetry for traces: <a href="https://opentelemetry.io/">https://opentelemetry.io/</a></li>
+</ul>
+<hr />
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../contracts/engine/IWorkflowEngine.v1.1.md">IWorkflowEngine Contract</a></li>
+<li><a href="../../contracts/engine/ExecutionSemantics.v1/">ExecutionSemantics Contract</a></li>
+<li><a href="../../adapters/temporal/TemporalAdapter.spec/">TemporalAdapter Spec</a></li>
+<li><a href="../../ops/observability/">Observability Guide</a></li>
+<li><a href="../../ops/runbooks/incident_response/">Incident Response Runbook</a></li>
+<li><a href="https://docs.temporal.io/encyclopedia/temporal-platform-limits">Temporal Platform Limits</a></li>
+<li><a href="https://conductor.netflix.com/">Conductor (Netflix/Orkes)</a></li>
+<li><a href="https://opentelemetry.io/">OpenTelemetry</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1826 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Postgres State Store Adapter - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#postgres-state-store-adapter" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Postgres State Store Adapter
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-physical-schema-ddl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Physical Schema (DDL)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) Physical Schema (DDL)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-run_events-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 RUN_EVENTS Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-append-authority-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Append Authority Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) Append Authority Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-strategy-a-application-managed-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Strategy A: Application-Managed Sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-strategy-b-database-sequence-advanced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Strategy B: Database Sequence (Advanced)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-idempotent-append-on-conflict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Idempotent Append (ON CONFLICT)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-fetch-events-watermark-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Fetch Events (Watermark Pattern)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-snapshot-projection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Snapshot Projection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5) Snapshot Projection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-materialized-view-auto-refresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Materialized View (Auto-Refresh)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-incremental-update-trigger-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Incremental Update (Trigger-Based)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-performance-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Performance Tuning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6) Performance Tuning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-partitioning-large-workloads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Partitioning (Large Workloads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-jsonb-indexing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 JSONB Indexing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-limitations-trade-offs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Limitations &amp; Trade-offs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="postgres-state-store-adapter">Postgres State Store Adapter<a class="headerlink" href="#postgres-state-store-adapter" title="Permanent link">&para;</a></h1>
+<p><strong>Status</strong>: Implementation Guide<br />
+<strong>Version</strong>: 1.0<br />
+<strong>Backend</strong>: PostgreSQL 14+<br />
+<strong>Contract</strong>: <a href="../../../../contracts/state-store/">State Store Contract</a></p>
+<hr />
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>This document specifies how to implement the <a href="../../../../contracts/state-store/">State Store Contract</a> using <strong>PostgreSQL</strong> as the persistence backend.</p>
+<p><strong>Key design decisions</strong>:</p>
+<ul>
+<li>✅ Use <code>SERIAL</code> or <code>SEQUENCE</code> for runSeq assignment (native atomic increment)</li>
+<li>✅ Enforce <code>UNIQUE</code> constraints at database level (vs Snowflake logical-only)</li>
+<li>✅ Use <code>JSONB</code> for flexible event schema evolution</li>
+<li>✅ Leverage <code>ON CONFLICT</code> for idempotent upserts</li>
+<li>✅ Use <code>GENERATED ALWAYS AS IDENTITY</code> for modern Postgres (v10+)</li>
+</ul>
+<hr />
+<h2 id="1-physical-schema-ddl">1) Physical Schema (DDL)<a class="headerlink" href="#1-physical-schema-ddl" title="Permanent link">&para;</a></h2>
+<h3 id="11-run_events-table">1.1 RUN_EVENTS Table<a class="headerlink" href="#11-run_events-table" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Core event log (append-only, source of truth)
+CREATE TABLE IF NOT EXISTS run_events (
+  -- Identity
+  run_id             TEXT          NOT NULL,
+  run_seq            BIGINT        NOT NULL,  -- Assigned by sequence or app logic
+  event_id           UUID          NOT NULL DEFAULT gen_random_uuid(),
+
+  -- Step context
+  step_id            TEXT,
+  engine_attempt_id  TEXT,
+  logical_attempt_id TEXT,
+
+  -- Event payload
+  event_type         TEXT          NOT NULL,
+  event_data         JSONB,
+
+  -- Idempotency &amp; causality
+  idempotency_key    TEXT          NOT NULL,
+  caused_by_signal_id UUID,
+  parent_event_id    UUID,
+
+  -- Timestamps
+  emitted_at         TIMESTAMPTZ   NOT NULL,
+  persisted_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+
+  -- Metadata
+  adapter_version    TEXT,
+  engine_run_ref     JSONB,
+
+  -- Constraints
+  PRIMARY KEY (run_id, run_seq),
+  UNIQUE (run_id, idempotency_key)
+);
+
+-- Indexes for common queries
+CREATE INDEX idx_run_events_runid_runseq ON run_events(run_id, run_seq);
+CREATE INDEX idx_run_events_idempotency ON run_events(run_id, idempotency_key);
+CREATE INDEX idx_run_events_eventtype ON run_events(event_type) WHERE event_type IN ('RunCompleted', 'RunFailed');
+
+-- Comments
+COMMENT ON TABLE run_events IS 'Append-only event log (source of truth for all execution state)';
+COMMENT ON COLUMN run_events.run_seq IS 'Monotonic sequence per run_id (gaps allowed, assigned by append authority)';
+COMMENT ON COLUMN run_events.idempotency_key IS 'SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)';
+</code></pre>
+<hr />
+<h2 id="2-append-authority-implementation">2) Append Authority Implementation<a class="headerlink" href="#2-append-authority-implementation" title="Permanent link">&para;</a></h2>
+<h3 id="21-strategy-a-application-managed-sequence">2.1 Strategy A: Application-Managed Sequence<a class="headerlink" href="#21-strategy-a-application-managed-sequence" title="Permanent link">&para;</a></h3>
+<p><strong>Use case</strong>: Full control, easier to add business logic</p>
+<pre><code class="language-typescript">async function appendEvent(event: CanonicalEngineEvent): Promise&lt;AppendResult&gt; {
+  return await db.transaction(async (tx) =&gt; {
+    // Check idempotency
+    const existing = await tx.oneOrNone&lt;{ run_seq: number }&gt;(
+      `SELECT run_seq FROM run_events
+       WHERE run_id = $1 AND idempotency_key = $2`,
+      [event.runId, event.idempotencyKey]
+    );
+
+    if (existing) {
+      return { runSeq: existing.run_seq, idempotent: true, persisted: false };
+    }
+
+    // Get next runSeq
+    const { max_seq } = await tx.one&lt;{ max_seq: number }&gt;(
+      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq
+       FROM run_events
+       WHERE run_id = $1
+       FOR UPDATE`,  -- Lock to prevent race conditions
+      [event.runId]
+    );
+
+    const newSeq = max_seq + 1;
+
+    // Insert
+    await tx.none(
+      `INSERT INTO run_events (
+        run_id, run_seq, event_id, step_id, engine_attempt_id, logical_attempt_id,
+        event_type, event_data, idempotency_key, caused_by_signal_id, parent_event_id,
+        emitted_at, adapter_version, engine_run_ref
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+      [event.runId, newSeq, event.eventId, ...]
+    );
+
+    return { runSeq: newSeq, idempotent: false, persisted: true };
+  });
+}
+</code></pre>
+<h3 id="22-strategy-b-database-sequence-advanced">2.2 Strategy B: Database Sequence (Advanced)<a class="headerlink" href="#22-strategy-b-database-sequence-advanced" title="Permanent link">&para;</a></h3>
+<p><strong>Challenge</strong>: Postgres sequences are global, not per-group (no "sequence per runId").</p>
+<p><strong>Workaround</strong>: Use a <strong>sequence registry table</strong>:</p>
+<pre><code class="language-sql">-- Registry: one sequence per runId
+CREATE TABLE run_sequence_registry (
+  run_id TEXT PRIMARY KEY,
+  seq_name TEXT UNIQUE NOT NULL
+);
+
+-- Function: get or create sequence for runId
+CREATE OR REPLACE FUNCTION get_run_sequence(p_run_id TEXT)
+RETURNS TEXT AS $$
+DECLARE
+  v_seq_name TEXT;
+BEGIN
+  -- Check if sequence exists
+  SELECT seq_name INTO v_seq_name
+  FROM run_sequence_registry
+  WHERE run_id = p_run_id;
+
+  IF v_seq_name IS NULL THEN
+    -- Create new sequence
+    v_seq_name := 'run_seq_' || REPLACE(p_run_id, '-', '_');
+    EXECUTE format('CREATE SEQUENCE IF NOT EXISTS %I', v_seq_name);
+
+    INSERT INTO run_sequence_registry (run_id, seq_name)
+    VALUES (p_run_id, v_seq_name);
+  END IF;
+
+  RETURN v_seq_name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Usage: get next runSeq
+SELECT nextval(get_run_sequence('run-12345'));  -- Returns: 1, 2, 3, ...
+</code></pre>
+<p><strong>Trade-off</strong>:</p>
+<ul>
+<li>✅ True atomic increment (no locks needed)</li>
+<li>❌ Sequence proliferation (1 sequence per run, could be millions)</li>
+<li>⚠️ Cleanup required (drop sequences for archived runs)</li>
+</ul>
+<hr />
+<h2 id="3-idempotent-append-on-conflict">3) Idempotent Append (ON CONFLICT)<a class="headerlink" href="#3-idempotent-append-on-conflict" title="Permanent link">&para;</a></h2>
+<pre><code class="language-sql">-- Insert with idempotency (ON CONFLICT DO NOTHING)
+WITH new_event AS (
+  SELECT
+    $1::TEXT AS run_id,
+    COALESCE((SELECT MAX(run_seq) FROM run_events WHERE run_id = $1), 0) + 1 AS run_seq,
+    $2::UUID AS event_id,
+    $3::TEXT AS idempotency_key,
+    -- ... other fields
+)
+INSERT INTO run_events (run_id, run_seq, event_id, idempotency_key, ...)
+SELECT * FROM new_event
+ON CONFLICT (run_id, idempotency_key) DO NOTHING;
+
+-- Return result (existing or new runSeq)
+SELECT run_seq, (persisted_at &lt; NOW() - INTERVAL '1 second') AS idempotent
+FROM run_events
+WHERE run_id = $1 AND idempotency_key = $2;
+</code></pre>
+<p><strong>Important</strong>: Wrap in transaction with <code>FOR UPDATE</code> lock to prevent race conditions on <code>MAX(run_seq)</code>.</p>
+<hr />
+<h2 id="4-fetch-events-watermark-pattern">4) Fetch Events (Watermark Pattern)<a class="headerlink" href="#4-fetch-events-watermark-pattern" title="Permanent link">&para;</a></h2>
+<pre><code class="language-sql">-- Fetch events for projection (paginated, watermark-based)
+SELECT
+  run_id,
+  run_seq,
+  event_id,
+  step_id,
+  engine_attempt_id,
+  logical_attempt_id,
+  event_type,
+  event_data,
+  idempotency_key,
+  emitted_at,
+  persisted_at,
+  adapter_version,
+  engine_run_ref,
+  caused_by_signal_id,
+  parent_event_id
+FROM run_events
+WHERE run_id = $1
+  AND run_seq &gt; $2  -- Watermark filter
+ORDER BY run_seq ASC
+LIMIT $3;
+</code></pre>
+<p><strong>Index usage</strong>: <code>idx_run_events_runid_runseq</code> (Index-only scan for most queries).</p>
+<hr />
+<h2 id="5-snapshot-projection">5) Snapshot Projection<a class="headerlink" href="#5-snapshot-projection" title="Permanent link">&para;</a></h2>
+<h3 id="51-materialized-view-auto-refresh">5.1 Materialized View (Auto-Refresh)<a class="headerlink" href="#51-materialized-view-auto-refresh" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">CREATE MATERIALIZED VIEW run_snapshots AS
+SELECT
+  run_id,
+  MAX(run_seq) AS last_event_seq,
+  jsonb_build_object(
+    'runId', run_id,
+    'status', (
+      SELECT event_data-&gt;&gt;'status'
+      FROM run_events e2
+      WHERE e2.run_id = e1.run_id
+        AND event_type IN ('RunStarted', 'RunCompleted', 'RunFailed')
+      ORDER BY run_seq DESC
+      LIMIT 1
+    ),
+    'steps', (
+      SELECT jsonb_object_agg(step_id, event_data)
+      FROM run_events e3
+      WHERE e3.run_id = e1.run_id AND event_type LIKE 'Step%'
+    )
+  ) AS snapshot_data
+FROM run_events e1
+GROUP BY run_id;
+
+-- Refresh (manual or via cron)
+REFRESH MATERIALIZED VIEW CONCURRENTLY run_snapshots;
+</code></pre>
+<h3 id="52-incremental-update-trigger-based">5.2 Incremental Update (Trigger-Based)<a class="headerlink" href="#52-incremental-update-trigger-based" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Projector table
+CREATE TABLE run_snapshots (
+  run_id TEXT PRIMARY KEY,
+  status TEXT NOT NULL,
+  last_event_seq BIGINT NOT NULL,
+  snapshot_data JSONB NOT NULL,
+  projected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  version BIGINT DEFAULT 0
+);
+
+-- Trigger: update snapshot on new event
+CREATE OR REPLACE FUNCTION update_snapshot_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO run_snapshots (run_id, last_event_seq, snapshot_data, status)
+  VALUES (NEW.run_id, NEW.run_seq, project_snapshot(NEW.run_id), 'RUNNING')
+  ON CONFLICT (run_id) DO UPDATE SET
+    last_event_seq = GREATEST(run_snapshots.last_event_seq, NEW.run_seq),
+    snapshot_data = project_snapshot(NEW.run_id),
+    projected_at = NOW(),
+    version = run_snapshots.version + 1;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_snapshot
+AFTER INSERT ON run_events
+FOR EACH ROW
+EXECUTE FUNCTION update_snapshot_trigger();
+</code></pre>
+<hr />
+<h2 id="6-performance-tuning">6) Performance Tuning<a class="headerlink" href="#6-performance-tuning" title="Permanent link">&para;</a></h2>
+<h3 id="61-partitioning-large-workloads">6.1 Partitioning (Large Workloads)<a class="headerlink" href="#61-partitioning-large-workloads" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Partition by run_id hash (distribute load)
+CREATE TABLE run_events (
+  -- ... columns
+) PARTITION BY HASH (run_id);
+
+CREATE TABLE run_events_p0 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 0);
+CREATE TABLE run_events_p1 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 1);
+CREATE TABLE run_events_p2 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 2);
+CREATE TABLE run_events_p3 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 3);
+</code></pre>
+<h3 id="62-jsonb-indexing">6.2 JSONB Indexing<a class="headerlink" href="#62-jsonb-indexing" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Index on event_type (frequent filter)
+CREATE INDEX idx_run_events_event_type ON run_events USING BTREE(event_type);
+
+-- GIN index on event_data (full-text search)
+CREATE INDEX idx_run_events_event_data_gin ON run_events USING GIN(event_data);
+</code></pre>
+<hr />
+<h2 id="7-limitations-trade-offs">7) Limitations &amp; Trade-offs<a class="headerlink" href="#7-limitations-trade-offs" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Limitation</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sequence per run</strong></td>
+<td>Not natively supported</td>
+<td>Use application-side <code>MAX + 1</code> OR sequence registry</td>
+</tr>
+<tr>
+<td><strong>Contention on MAX(run_seq)</strong></td>
+<td>High-frequency writers may conflict</td>
+<td>Use <code>FOR UPDATE</code> lock + retry logic</td>
+</tr>
+<tr>
+<td><strong>JSONB vs VARIANT</strong></td>
+<td>Less flexible than Snowflake VARIANT</td>
+<td>Use jsonb_set() for schema evolution</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="change-log">Change Log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>2026-02-11</td>
+<td>Initial Postgres adapter (parallel to Snowflake adapter)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../../..", "features": [], "search": "../../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

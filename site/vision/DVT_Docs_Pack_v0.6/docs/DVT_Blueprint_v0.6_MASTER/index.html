@@ -1,0 +1,2230 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../standards/development/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Blueprint MASTER - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dvt-blueprint-v06-master-canonical-navigable" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Blueprint MASTER
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-use-this-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to use this document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-source-of-truth-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single Source of Truth policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monorepo-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monorepo structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#standard-module-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard module template
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-orchestration-decision-pnpm-baseline-now-turbo-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build orchestration decision: pnpm baseline now, Turbo later
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tooling-and-recommended-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tooling and recommended tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-model-envelope-seq-idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event model: envelope, seq, idempotency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event model: envelope, seq, idempotency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-envelope-schema-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Envelope schema example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gap-detection-policy-for-projectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap detection policy for projectors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schema-evolution-dual-read-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema evolution: dual-read default
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Schema evolution: dual-read default">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-dual-read-coordination-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Dual-read coordination protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#devkits-technical-only-rule-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Devkits: technical-only rule + enforcement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-smoke-real-deps-per-module-independence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI smoke: real deps + per-module independence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adr-governance-linkage-with-ci-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADR governance + linkage (with CI example)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ADR governance + linkage (with CI example)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adr-migration-plan-avoid-double-canon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADR migration plan (avoid double canon)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learning-path-onboarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learning path / onboarding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#annex-19-development-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annex 19: Development Standard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#annex-20-lore-dd-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annex 20: Lore (D&amp;D mapping)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-use-this-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to use this document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-source-of-truth-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single Source of Truth policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monorepo-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monorepo structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#standard-module-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard module template
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-orchestration-decision-pnpm-baseline-now-turbo-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build orchestration decision: pnpm baseline now, Turbo later
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tooling-and-recommended-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tooling and recommended tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-model-envelope-seq-idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event model: envelope, seq, idempotency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event model: envelope, seq, idempotency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-envelope-schema-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Envelope schema example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gap-detection-policy-for-projectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap detection policy for projectors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schema-evolution-dual-read-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema evolution: dual-read default
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Schema evolution: dual-read default">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-dual-read-coordination-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Dual-read coordination protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#devkits-technical-only-rule-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Devkits: technical-only rule + enforcement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-smoke-real-deps-per-module-independence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI smoke: real deps + per-module independence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adr-governance-linkage-with-ci-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADR governance + linkage (with CI example)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ADR governance + linkage (with CI example)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adr-migration-plan-avoid-double-canon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADR migration plan (avoid double canon)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learning-path-onboarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learning path / onboarding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#annex-19-development-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annex 19: Development Standard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#annex-20-lore-dd-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annex 20: Lore (D&amp;D mapping)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dvt-blueprint-v06-master-canonical-navigable">DVT+ Blueprint — v0.6 MASTER (Canonical, Navigable)<a class="headerlink" href="#dvt-blueprint-v06-master-canonical-navigable" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Date</strong>: 2026-02-25 (Atlantic/Canary)
+<strong>Canonical entrypoint</strong>: this file is the single source of truth for architecture + repo layout + tooling + enforcement.
+<strong>Annexes</strong>: <code>docs/standards/development.md</code> and <code>docs/lore.md</code> are normative onboarding/process companions and are part of this blueprint.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="#dvt-blueprint--v06-master-canonical-navigable">DVT+ Blueprint — v0.6 MASTER (Canonical, Navigable)</a></li>
+<li><a href="#table-of-contents">Table of Contents</a></li>
+<li><a href="#how-to-use-this-document">How to use this document</a></li>
+<li><a href="#single-source-of-truth-policy">Single Source of Truth policy</a></li>
+<li><a href="#monorepo-structure">Monorepo structure</a></li>
+<li><a href="#standard-module-template">Standard module template</a></li>
+<li><a href="#build-orchestration-decision-pnpm-baseline-now-turbo-later">Build orchestration decision: pnpm baseline now, Turbo later</a></li>
+<li><a href="#tooling-and-recommended-tools">Tooling and recommended tools</a></li>
+<li><a href="#architecture-overview">Architecture overview</a></li>
+<li><a href="#event-model-envelope-seq-idempotency">Event model: envelope, seq, idempotency</a><ul>
+<li><a href="#81-envelope-schema-example">8.1 Envelope schema example</a></li>
+</ul>
+</li>
+<li><a href="#gap-detection-policy-for-projectors">Gap detection policy for projectors</a></li>
+<li><a href="#schema-evolution-dual-read-default">Schema evolution: dual-read default</a><ul>
+<li><a href="#101-dual-read-coordination-protocol">10.1 Dual-read coordination protocol</a></li>
+</ul>
+</li>
+<li><a href="#devkits-technical-only-rule--enforcement">Devkits: technical-only rule + enforcement</a></li>
+<li><a href="#cli-smoke-real-deps--per-module-independence">CLI smoke: real deps + per-module independence</a></li>
+<li><a href="#adr-governance--linkage-with-ci-example">ADR governance + linkage (with CI example)</a><ul>
+<li><a href="#adr-migration-plan-avoid-double-canon">ADR migration plan (avoid double canon)</a></li>
+</ul>
+</li>
+<li><a href="#learning-path--onboarding">Learning path / onboarding</a></li>
+<li><a href="#annex-19-development-standard">Annex 19: Development Standard</a></li>
+<li><a href="#annex-20-lore-dd-mapping">Annex 20: Lore (D\&amp;D mapping)</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+<hr />
+<h2 id="how-to-use-this-document">How to use this document<a class="headerlink" href="#how-to-use-this-document" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Start here for architecture + rules.</li>
+<li>Use <code>docs/index.md</code> as the navigation hub.</li>
+<li>Annex 19 (development standard) is normative process/tooling.</li>
+<li>Annex 20 (lore) is onboarding aid and repo mapping mnemonic.</li>
+</ul>
+<h2 id="single-source-of-truth-policy">Single Source of Truth policy<a class="headerlink" href="#single-source-of-truth-policy" title="Permanent link">&para;</a></h2>
+<ul>
+<li>This MASTER is canonical.</li>
+<li>Any semantic change MUST update this file in the same PR.</li>
+<li>Annexes are part of the canon; changes to annexes MUST be reflected here (reference + summary).</li>
+</ul>
+<h2 id="monorepo-structure">Monorepo structure<a class="headerlink" href="#monorepo-structure" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Decision (v0.6)</strong>: lore canonical entry is a single file <code>docs/lore.md</code>.
+Optional future split to <code>docs/lore/</code> is allowed only with explicit migration PR that updates this MASTER and <code>docs/index.md</code> in the same change.</p>
+</blockquote>
+<pre><code class="language-text">repo/
+  README.md
+  turbo.json
+  package.json
+  pnpm-workspace.yaml
+  tsconfig.base.json
+
+  docs/
+    index.md
+    DVT_Blueprint_v0.6_MASTER.md
+    standards/
+      development.md
+    lore.md                     # entry point (Annex 20)
+    # optional future split:
+    # lore/
+    #   campaign/
+    #   modules/
+
+  docs/adr/
+    ADR-0000-template.md
+    ADR-0001-*.md
+
+  tooling/
+    eslint/
+    scripts/
+
+  infra/
+    kafka/
+      local-compose.yaml
+    rds/
+      local-compose.yaml
+
+  packages/
+    @dvt/
+      planner/
+      engine/
+      run-state-store/
+      projector/
+      traceability-service/
+      devkit-*/                 # technical-only utilities
+      adapters-*/
+
+  apps/
+    api/
+    ui/
+</code></pre>
+<h2 id="standard-module-template">Standard module template<a class="headerlink" href="#standard-module-template" title="Permanent link">&para;</a></h2>
+<pre><code class="language-text">packages/@dvt/&lt;module&gt;/
+  README.md
+  package.json
+  tsconfig.json
+
+  docs/
+    overview.md
+    architecture.md
+    adr/
+    contracts/
+    runbooks/
+
+  schemas/
+    envelope/
+      RunEventEnvelope.v1.schema.json
+    commands/
+      &lt;CommandName&gt;.v1.schema.json
+    events/
+      &lt;EventName&gt;.v1.schema.json
+
+  src/
+    index.ts
+    generated/
+    domain/
+    application/
+    ports/
+    adapters/
+    composition/
+
+  test/
+    unit/
+    contract/
+    integration/
+
+  cli/
+    src/
+      smoke.ts
+      validate-schemas.ts
+      codegen.ts
+</code></pre>
+<h2 id="build-orchestration-decision-pnpm-baseline-now-turbo-later">Build orchestration decision: pnpm baseline now, Turbo later<a class="headerlink" href="#build-orchestration-decision-pnpm-baseline-now-turbo-later" title="Permanent link">&para;</a></h2>
+<p><strong>Current baseline (repo reality)</strong>:
+- <code>pnpm-workspace.yaml</code> + root scripts in <code>package.json</code> are authoritative.
+- Commands baseline: <code>pnpm -r build</code>, <code>pnpm -r test</code>, <code>pnpm -r lint</code>, <code>pnpm -r typecheck</code>.</p>
+<p><strong>TurboRepo policy</strong>:
+- Turbo is <strong>recommended</strong>, but <strong>not mandatory now</strong>.
+- Adopt Turbo when one of these thresholds is met:
+  1. CI duration repeatedly exceeds agreed SLO.
+  2. Package graph growth makes affected-only execution materially beneficial.
+  3. Team confirms operational ownership for <code>turbo.json</code> maintenance.</p>
+<p>Optional future <code>turbo.json</code> (illustrative):</p>
+<pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://turbo.build/schema.json&quot;,
+  &quot;pipeline&quot;: {
+    &quot;codegen&quot;: { &quot;outputs&quot;: [&quot;src/generated/**&quot;] },
+    &quot;build&quot;: { &quot;dependsOn&quot;: [&quot;codegen&quot;, &quot;^build&quot;], &quot;outputs&quot;: [&quot;dist/**&quot;, &quot;.tsbuildinfo&quot;] },
+    &quot;typecheck&quot;: { &quot;dependsOn&quot;: [&quot;codegen&quot;, &quot;^typecheck&quot;], &quot;outputs&quot;: [] },
+    &quot;test&quot;: { &quot;dependsOn&quot;: [&quot;build&quot;], &quot;outputs&quot;: [&quot;coverage/**&quot;] },
+    &quot;lint&quot;: { &quot;outputs&quot;: [] },
+    &quot;cli:smoke&quot;: { &quot;dependsOn&quot;: [&quot;build&quot;], &quot;outputs&quot;: [] }
+  }
+}
+</code></pre>
+<h2 id="tooling-and-recommended-tools">Tooling and recommended tools<a class="headerlink" href="#tooling-and-recommended-tools" title="Permanent link">&para;</a></h2>
+<p>Required:
+- pnpm workspaces
+- TypeScript strict + ESM
+- JSON Schema draft 2020-12 + AJV
+- ESLint + Prettier</p>
+<p>Recommended:
+- TurboRepo (phase 2, when thresholds are met)
+- API Extractor (devkit public surface enforcement — see section 11)
+- Testcontainers (smoke)
+- OpenTelemetry
+- ESLint boundaries/no-restricted-imports</p>
+<p>Links:
+- https://turbo.build/repo/docs
+- https://pnpm.io/workspaces
+- https://json-schema.org/
+- https://ajv.js.org/
+- https://api-extractor.com/
+- https://node.testcontainers.org/
+- https://opentelemetry.io/</p>
+<h2 id="architecture-overview">Architecture overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<pre><code class="language-mermaid">flowchart LR
+  A[Planner (pure)] --&gt;|ExecutionPlan + planId| B[Engine (semantics)]
+  B --&gt;|append events tx + outbox| C[(RunStateStore / Postgres)]
+  C --&gt; D[Outbox Publisher]
+  D --&gt; E[(Event Bus)]
+  E --&gt; F[Projectors]
+  F --&gt; G[(Read Models)]
+  G --&gt; H[UI / Control Plane]
+</code></pre>
+<h2 id="event-model-envelope-seq-idempotency">Event model: envelope, seq, idempotency<a class="headerlink" href="#event-model-envelope-seq-idempotency" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Envelope carries <code>schemaVersion</code>, <code>eventType</code>, <code>runId</code>, <code>seq</code>, <code>occurredAt</code>, <code>idempotencyKey</code>, <code>orderingKey</code>.</li>
+<li><strong><code>seq</code> ownership</strong>: generated by RunStateStore at append time; persisted; copied into outbox; published unchanged.</li>
+<li>Consumers use <code>(runId, seq)</code> for ordering + dedup; tolerate duplicates and reordering.</li>
+</ul>
+<h3 id="81-envelope-schema-example">8.1 Envelope schema example<a class="headerlink" href="#81-envelope-schema-example" title="Permanent link">&para;</a></h3>
+<p>Canonical JSON Schema (draft 2020-12) for <code>RunEventEnvelope.v1</code>:</p>
+<pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://json-schema.org/draft/2020-12/schema&quot;,
+  &quot;$id&quot;: &quot;https://dvt.internal/schemas/envelope/RunEventEnvelope.v1.schema.json&quot;,
+  &quot;title&quot;: &quot;RunEventEnvelope&quot;,
+  &quot;description&quot;: &quot;Outer envelope for all DVT+ run events published to the event bus.&quot;,
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;required&quot;: [
+    &quot;schemaVersion&quot;, &quot;eventType&quot;, &quot;runId&quot;,
+    &quot;seq&quot;, &quot;occurredAt&quot;, &quot;idempotencyKey&quot;, &quot;orderingKey&quot;, &quot;payload&quot;
+  ],
+  &quot;additionalProperties&quot;: false,
+  &quot;properties&quot;: {
+    &quot;schemaVersion&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;Schema version of the payload (e.g. '1.0.0').&quot;,
+      &quot;pattern&quot;: &quot;^\\d+\\.\\d+\\.\\d+$&quot;
+    },
+    &quot;eventType&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;Fully-qualified event type (e.g. 'dvt.run.RunStarted').&quot;,
+      &quot;pattern&quot;: &quot;^dvt\\.[a-z]+\\.[A-Z][a-zA-Z]+$&quot;
+    },
+    &quot;runId&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;format&quot;: &quot;uuid&quot;,
+      &quot;description&quot;: &quot;Stable identifier for this dbt run.&quot;
+    },
+    &quot;seq&quot;: {
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;minimum&quot;: 1,
+      &quot;description&quot;: &quot;Monotonically increasing sequence number scoped to runId. Generated by RunStateStore.&quot;
+    },
+    &quot;occurredAt&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;format&quot;: &quot;date-time&quot;,
+      &quot;description&quot;: &quot;ISO-8601 UTC timestamp when the event occurred.&quot;
+    },
+    &quot;idempotencyKey&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;Opaque key for consumer-side deduplication. Format: '&lt;runId&gt;:&lt;seq&gt;'.&quot;
+    },
+    &quot;orderingKey&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;Kafka/NATS partition key. Typically equals runId to preserve per-run ordering.&quot;
+    },
+    &quot;payload&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;description&quot;: &quot;Event-specific payload. Must conform to the schema referenced by eventType + schemaVersion.&quot;
+    }
+  }
+}
+</code></pre>
+<p>Example <code>RunStarted</code> payload (the <code>payload</code> field above):</p>
+<pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://json-schema.org/draft/2020-12/schema&quot;,
+  &quot;$id&quot;: &quot;https://dvt.internal/schemas/events/RunStarted.v1.schema.json&quot;,
+  &quot;title&quot;: &quot;RunStarted&quot;,
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;required&quot;: [&quot;planId&quot;, &quot;projectId&quot;, &quot;triggeredBy&quot;, &quot;models&quot;],
+  &quot;additionalProperties&quot;: false,
+  &quot;properties&quot;: {
+    &quot;planId&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;uuid&quot; },
+    &quot;projectId&quot;: { &quot;type&quot;: &quot;string&quot; },
+    &quot;triggeredBy&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;enum&quot;: [&quot;manual&quot;, &quot;schedule&quot;, &quot;ci&quot;, &quot;api&quot;]
+    },
+    &quot;models&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;minItems&quot;: 1,
+      &quot;description&quot;: &quot;List of dbt model unique_ids included in this run.&quot;
+    }
+  }
+}
+</code></pre>
+<h2 id="gap-detection-policy-for-projectors">Gap detection policy for projectors<a class="headerlink" href="#gap-detection-policy-for-projectors" title="Permanent link">&para;</a></h2>
+<p>When a projector observes a gap in <code>seq</code> for a given <code>runId</code>:</p>
+<p><strong>Gap classification thresholds</strong> (recommended initial values — tune per environment):
+- <code>Tshort</code>: <strong>10 seconds</strong> (configurable via <code>DVT_PROJECTOR_GAP_TSHORT_MS</code>, default <code>10000</code>)
+- <code>Tmax</code>: <strong>10 minutes</strong> (configurable via <code>DVT_PROJECTOR_GAP_TMAX_MS</code>, default <code>600000</code>)
+- Short vs large gap threshold: <strong>delta ≤ 10</strong> is a short gap; <strong>delta &gt; 10</strong> triggers immediate backfill (configurable via <code>DVT_PROJECTOR_GAP_LARGE_THRESHOLD</code>, default <code>10</code>)</p>
+<p><strong>Short gaps</strong> (delta ≤ threshold, e.g., last=5, new=7):
+- log <code>WARN</code> with <code>runId</code>, <code>expectedSeq</code>, <code>observedSeq</code>
+- buffer or wait up to <code>Tshort</code> for missing seq
+- continue processing other runs/partitions</p>
+<p><strong>Large gaps</strong> (delta &gt; threshold, e.g., last=5, new=100):
+- log <code>ERROR</code>
+- trigger <strong>controlled backfill</strong> from RunStateStore for <code>[expectedSeq..observedSeq-1]</code>
+- mark run projection status as <code>DEGRADED</code> until reconciled</p>
+<p><strong>Timeout policy</strong>:
+- if missing seq does not arrive within <code>Tmax</code>, mark run as <code>INCONSISTENT</code>
+- emit operational alert and keep retrying backfill with exponential backoff (initial interval 5s, max 5min, factor 2)</p>
+<p>Rationale: avoid global stalls while maintaining auditability and correctness.</p>
+<h2 id="schema-evolution-dual-read-default">Schema evolution: dual-read default<a class="headerlink" href="#schema-evolution-dual-read-default" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Default strategy: dual-read projector + write-new-only producers + controlled backfill.</li>
+<li>Snapshot rebuild is fallback only (requires explicit ADR).</li>
+</ul>
+<h3 id="101-dual-read-coordination-protocol">10.1 Dual-read coordination protocol<a class="headerlink" href="#101-dual-read-coordination-protocol" title="Permanent link">&para;</a></h3>
+<p>The lifecycle of a schema migration has four phases:</p>
+<p><strong>Phase 1 — Prepare</strong>: Add new schema version. Deploy dual-read projectors that handle both <code>v_old</code> and <code>v_new</code>. Producers still write <code>v_old</code>. No cutover yet.</p>
+<p><strong>Phase 2 — Migrate producers</strong>: Deploy producers writing <code>v_new</code>. Both versions are live on the bus. Dual-read projectors consume both transparently.</p>
+<p><strong>Phase 3 — Backfill</strong> (if needed): For projectors that need to reprocess historical events in <code>v_old</code> format, execute controlled backfill from RunStateStore. Mark affected runs as <code>BACKFILLING</code> during this window.</p>
+<p><strong>Phase 4 — Retire old path</strong>: Once all consumers confirm <code>v_old</code> traffic has drained (observable via metrics on <code>schemaVersion</code> field in envelope), remove the dual-read branch. Gate this behind an ADR approval — the retiring PR MUST include an ADR change or reference.</p>
+<p><strong>Cutover criteria</strong> (minimum):
+- Zero <code>v_old</code> events observed on the bus for <code>&gt;= 2 * Tmax</code> (i.e., all in-flight events have been processed).
+- All projector instances report <code>CONSISTENT</code> for all runs.
+- Backfill jobs for the migration window are complete.</p>
+<p><strong>Who decides to retire</strong>: the team owning the producer module, with sign-off in the ADR.</p>
+<h2 id="devkits-technical-only-rule-enforcement">Devkits: technical-only rule + enforcement<a class="headerlink" href="#devkits-technical-only-rule-enforcement" title="Permanent link">&para;</a></h2>
+<p>Devkits MUST NOT export domain concepts (statuses, policies, aggregates, run lifecycle types).</p>
+<p><strong>Enforcement mechanism</strong> (concrete):
+1. Each <code>packages/@dvt/devkit-*</code> package is configured with <a href="https://api-extractor.com/">API Extractor</a>.
+2. A CI step runs <code>api-extractor run --local</code> and diffs the generated <code>.d.ts</code> rollup against an allowlist of permitted export shapes.
+3. A custom ESLint rule (or <code>eslint-plugin-boundaries</code>) is configured to block <code>import</code> of devkit internals from domain modules and vice versa.
+4. The <code>tooling/scripts/check-devkit-surface.ts</code> script encodes the allowlist and fails with exit code 1 if domain symbols appear in the public surface.</p>
+<p>Any PR that modifies a devkit's <code>src/index.ts</code> MUST pass the API surface check in CI before merge.</p>
+<h2 id="cli-smoke-real-deps-per-module-independence">CLI smoke: real deps + per-module independence<a class="headerlink" href="#cli-smoke-real-deps-per-module-independence" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>cli:smoke</code> MUST start real deps (Postgres + Kafka/NATS) and run an end-to-end slice.</li>
+<li>Each runtime module SHOULD have its own smoke to prove independence.</li>
+<li>Local infra is provided by <code>infra/kafka/local-compose.yaml</code> and <code>infra/rds/local-compose.yaml</code> (see those files for service definitions).</li>
+</ul>
+<h2 id="adr-governance-linkage-with-ci-example">ADR governance + linkage (with CI example)<a class="headerlink" href="#adr-governance-linkage-with-ci-example" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Semantic changes MUST link to an Accepted ADR.</li>
+<li>CI gate enforces ADR linkage for sensitive paths (schemas/contracts/run-state).</li>
+<li>The gate checks for <strong>ADR files changed in the PR diff</strong>. Referencing an ADR only in the PR body description is NOT sufficient to pass the gate — an ADR file under <code>docs/adr/</code> must be added or modified.</li>
+<li>Example workflow: <code>infra/ci/adr-linkage.yml</code> in this pack.</li>
+</ul>
+<h3 id="adr-migration-plan-avoid-double-canon">ADR migration plan (avoid double canon)<a class="headerlink" href="#adr-migration-plan-avoid-double-canon" title="Permanent link">&para;</a></h3>
+<p>To consolidate scattered decision records under <code>docs/adr/</code>:</p>
+<ol>
+<li>Freeze new ADR creation outside <code>docs/adr/</code>.</li>
+<li>Move legacy ADRs in controlled batches, preserving identifiers.</li>
+<li>Add redirect pointers in old locations (<code>README</code> or short tombstone files).</li>
+<li>Update all links in docs/CI/scripts to <code>docs/adr/</code>.</li>
+<li>Remove legacy ADR locations only after two release cycles with no broken references.</li>
+</ol>
+<h2 id="learning-path-onboarding">Learning path / onboarding<a class="headerlink" href="#learning-path-onboarding" title="Permanent link">&para;</a></h2>
+<p>The following links point to canonical module docs within the repo:</p>
+<ul>
+<li><strong>Week 1</strong>: Planner + Engine — <code>packages/@dvt/planner/docs/overview.md</code>, <code>packages/@dvt/engine/docs/overview.md</code></li>
+<li>Focus: determinism guarantees in Planner; state machine semantics in Engine</li>
+<li><strong>Week 2</strong>: RunStateStore + outbox — <code>packages/@dvt/run-state-store/docs/overview.md</code></li>
+<li>Focus: <code>seq</code> generation, transactional outbox, idempotency key construction</li>
+<li><strong>Week 3</strong>: Projectors + read models — <code>packages/@dvt/projector/docs/overview.md</code></li>
+<li>Focus: CQRS projection, gap detection policy (section 9), dedup via <code>(runId, seq)</code></li>
+<li><strong>Week 4</strong>: Schema evolution + operations — <code>docs/standards/development.md</code>, ADR archive</li>
+<li>Focus: dual-read protocol (section 10.1), backfill runbooks, smoke test execution</li>
+</ul>
+<h2 id="annex-19-development-standard">Annex 19: Development Standard<a class="headerlink" href="#annex-19-development-standard" title="Permanent link">&para;</a></h2>
+<p>This annex is maintained in: <a href="../standards/development/"><code>docs/standards/development.md</code></a>.
+<strong>Rule</strong>: it is part of this blueprint; any change to it MUST be reflected in this MASTER (section 15) in the same PR.</p>
+<h2 id="annex-20-lore-dd-mapping">Annex 20: Lore (D&amp;D mapping)<a class="headerlink" href="#annex-20-lore-dd-mapping" title="Permanent link">&para;</a></h2>
+<p>Lore entry point: <a href="../lore/"><code>docs/lore.md</code></a>.
+It is an onboarding tool and mnemonic mapping to modules; treat it as a supported artifact.
+If split to folder format (<code>docs/lore/campaign/</code>, <code>docs/lore/modules/</code>) is needed later, it MUST be done with migration PR updating links and templates in lockstep.</p>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li>ADR guide: https://adr.github.io/</li>
+<li>Transactional outbox: https://microservices.io/patterns/data/transactional-outbox.html</li>
+<li>Event sourcing: https://martinfowler.com/eaaDev/EventSourcing.html</li>
+<li>CQRS: https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs</li>
+<li>JSON Schema 2020-12: https://json-schema.org/draft/2020-12/json-schema-core</li>
+<li>API Extractor: https://api-extractor.com/</li>
+<li>Testcontainers: https://node.testcontainers.org/</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,60 +1,44 @@
-# Documentation Index
+# DVT Docs Home
 
-This is the canonical entrypoint for project documentation.
+Bienvenido a la wiki técnica de DVT.
 
-## Core
+Esta página es la **home** de documentación para navegar por arquitectura, visión, estándares, operación y estado del proyecto.
 
-- [Architecture index](./architecture/engine/INDEX.md)
-- [Frontend architecture index](./architecture/frontend/INDEX.md)
-- [Roadmap](../ROADMAP.md)
-- [Repository structure summary](./REPO_STRUCTURE_SUMMARY.md)
-- [Architecture analysis](./architecture/ARCHITECTURE_ANALYSIS.md)
-- [Knowledge base index](./knowledge/INDEX.md)
+## Inicio rápido
 
-## Contracts & automation
+- [Índice documental general](./INDEX.md)
+- [Arquitectura Engine](./architecture/engine/INDEX.md)
+- [Guía de contribución](./CONTRIBUTING.md)
+- [Guía de calidad](./guides/QUALITY.md)
 
-- [Contracts automation index](./CONTRACTS_AUTOMATION_INDEX.md)
-- [Execution semantics (legacy pointer)](./ExecutionSemantics.v1.md)
+## Visión y reestructuración
 
-## Governance & contribution
+- [Vision Pack v0.6 (índice)](./vision/DVT_Docs_Pack_v0.6/docs/index.md)
+- [Blueprint MASTER v0.6](./vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md)
+- [Estándar de desarrollo (v0.6)](./vision/DVT_Docs_Pack_v0.6/docs/standards/development.md)
+- [Módulos canónicos mínimos](./vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos.md)
 
-- [Contributing guide (root)](../CONTRIBUTING.md)
-- [Documentation contribution guide](./CONTRIBUTING.md)
-- [Quality guide](./guides/QUALITY.md)
-- [AI issue resolution playbook](./guides/AI_ISSUE_RESOLUTION_PLAYBOOK.md)
-- [Technical debt register (iterative)](./guides/TECHNICAL_DEBT_REGISTER.md)
+## Gobernanza
 
-## Project status
+- [ADR index](./adr/README.md)
+- [Automation de contratos](./CONTRACTS_AUTOMATION_INDEX.md)
+- [Resumen de estructura del repo](./REPO_STRUCTURE_SUMMARY.md)
+
+## Estado y operación
 
 - [Implementation summary](./status/IMPLEMENTATION_SUMMARY.md)
-- [Outbox worker implementation notes](./status/IMPLEMENTATION_NOTES_OUTBOX_WORKER.md)
+- [Notas de outbox worker](./status/IMPLEMENTATION_NOTES_OUTBOX_WORKER.md)
+- [Runbooks](./runbooks/README.md)
 - [Changelog](./release/CHANGELOG.md)
 
-## Planning
+## Planificación
 
-- [Next issue templates](./planning/NEXT_ISSUES_TEMPLATES.md)
-- [Product strategy and GTM hub](./planning/PRODUCT_STRATEGY_GTM_AND_FINANCIALS.md)
-- [Product strategy (DVT)](./planning/PRODUCT_STRATEGY_DVT.md)
-- [GTM plan (DVT)](./planning/GTM_PLAN_DVT.md)
-- [Product operations appendix (DVT)](./planning/PRODUCT_OPERATIONS_APPENDIX_DVT.md)
-- [DBT Cloud Extendido V2 spec (source)](./planning/DBT_CLOUD_EXTENDIDO_V2_SPEC_SOURCE.md)
-- [DBT Cloud Extendido V2 alignment with DVT](./planning/DBT_CLOUD_EXTENDIDO_V2_ALIGNMENT.md)
-- [Backlog V2 epics and user stories](./planning/BACKLOG_V2_EPICS_AND_STORIES.md)
-- [Backlog V2 GitHub execution guide](./planning/BACKLOG_V2_GITHUB_EXECUTION.md)
-- [Frontend DVT+ technical spec](./planning/FRONTEND_DVT_PLUS_TECHNICAL_SPEC.md)
-- [Frontend DVT+ epics and user stories](./planning/BACKLOG_FRONTEND_DVT_PLUS_EPICS_AND_STORIES.md)
-- [Frontend DVT+ GitHub execution guide](./planning/BACKLOG_FRONTEND_DVT_PLUS_GITHUB_EXECUTION.md)
+- [Next issues templates](./planning/NEXT_ISSUES_TEMPLATES.md)
+- [Product strategy DVT](./planning/PRODUCT_STRATEGY_DVT.md)
+- [GTM plan DVT](./planning/GTM_PLAN_DVT.md)
 
-## Operations & Runbooks
+---
 
-- [SLOs (Service Level Objectives)](./architecture/engine/ops/SLOs.md)
-- [Severity matrix](./architecture/engine/ops/runbooks/severity_matrix.md)
-- [Incident response](./architecture/engine/ops/runbooks/incident_response.md)
-- [Outbox replay](./runbooks/outbox_replay.md)
-- [Plugin quarantine](./runbooks/plugin_quarantine.md)
-- [Rollback and restore](./runbooks/rollback_and_restore.md)
+Nota de uso local con MkDocs:
 
-## Archived operational docs
-
-- [CI isolation strategy](./archive/ci/CI_ISOLATION_STRATEGY.md)
-- [Workflow isolation testing](./archive/ci/WORKFLOW_ISOLATION_TESTING.md)
+- Abre la wiki en `/index/` (no en `/index.md`).

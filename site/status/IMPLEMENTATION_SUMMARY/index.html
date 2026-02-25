@@ -1,0 +1,1982 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+        <link rel="prev" href="../../runbooks/rollback_and_restore/">
+      
+      
+        <link rel="next" href="../IMPLEMENTATION_NOTES_OUTBOX_WORKER/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Implementation Summary - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#contract-testing-pipeline-implementation-status" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Implementation Summary
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implemented-foundation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Foundation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implemented Foundation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#root-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#packagetest-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package/Test Paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Alignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issue-6-status-update-2026-02-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue #6 Status Update (2026-02-19)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-issues-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Issues Summary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Issues Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#functional-work-still-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functional Work Still Open
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issue-audit-snapshot-2026-02-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue Audit Snapshot (2026-02-14)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Issue Audit Snapshot (2026-02-14)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#closures-applied-during-this-audit-pass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Closures applied during this audit pass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implemented-foundation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Foundation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implemented Foundation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#root-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#packagetest-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package/Test Paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Alignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issue-6-status-update-2026-02-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue #6 Status Update (2026-02-19)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-issues-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Issues Summary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Issues Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#functional-work-still-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functional Work Still Open
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issue-audit-snapshot-2026-02-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue Audit Snapshot (2026-02-14)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Issue Audit Snapshot (2026-02-14)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#closures-applied-during-this-audit-pass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Closures applied during this audit pass
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="contract-testing-pipeline-implementation-status">Contract Testing Pipeline - Implementation Status<a class="headerlink" href="#contract-testing-pipeline-implementation-status" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>This document tracks implementation progress for contract validation and golden-path determinism checks.</p>
+<p>The baseline infrastructure is in place and aligned with the monorepo layout.</p>
+<h2 id="implemented-foundation">Implemented Foundation<a class="headerlink" href="#implemented-foundation" title="Permanent link">&para;</a></h2>
+<h3 id="root-scripts">Root Scripts<a class="headerlink" href="#root-scripts" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>validate:contracts</code></li>
+<li><code>golden:validate</code></li>
+<li><code>node scripts/compare-hashes.cjs</code></li>
+</ul>
+<h3 id="packagetest-paths">Package/Test Paths<a class="headerlink" href="#packagetest-paths" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Plans and fixtures: <code>packages/@dvt/engine/test/contracts/</code></li>
+<li>Results: <code>packages/@dvt/engine/test/contracts/results/</code></li>
+<li>Baseline hashes: <code>.golden/hashes.json</code></li>
+</ul>
+<h3 id="ci-alignment">CI Alignment<a class="headerlink" href="#ci-alignment" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>.github/workflows/contracts.yml</code></li>
+<li><code>.github/workflows/golden-paths.yml</code></li>
+<li><code>.github/workflows/test.yml</code></li>
+</ul>
+<h2 id="current-state">Current State<a class="headerlink" href="#current-state" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Core contract/golden-path tooling is functional.</li>
+<li>Scripts and workflows reference package-scoped paths.</li>
+<li>Determinism hash comparison is wired into CI checks.</li>
+</ul>
+<h2 id="issue-6-status-update-2026-02-19">Issue #6 Status Update (2026-02-19)<a class="headerlink" href="#issue-6-status-update-2026-02-19" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>@dvt/adapter-postgres</code> moved from in-memory foundation to real PostgreSQL persistence.</li>
+<li>SQL migration baseline added for <code>run_metadata</code>, <code>run_events</code>, and <code>outbox</code> in <a href="../../packages/@dvt/adapter-postgres/migrations/001_init.sql"><code>packages/@dvt/adapter-postgres/migrations/001_init.sql</code></a>.</li>
+<li>Migration execution implemented in <a href="../../scripts/db-migrate.cjs"><code>scripts/db-migrate.cjs</code></a> (ordered SQL, schema placeholder replacement, migration tracking table).</li>
+<li>Adapter runtime now uses <code>pg</code> queries and transactional append+enqueue behavior in <a href="../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts"><code>PostgresStateStoreAdapter</code></a>.</li>
+<li>Integration tests now support real DB validation via <code>DVT_PG_INTEGRATION=1</code> in <a href="../../packages/@dvt/adapter-postgres/test/smoke.test.ts"><code>packages/@dvt/adapter-postgres/test/smoke.test.ts</code></a>.</li>
+<li>Validation evidence:</li>
+<li><code>pnpm --filter @dvt/adapter-postgres typecheck</code> ✅</li>
+<li><code>pnpm db:migrate</code> (with <code>DATABASE_URL</code>) ✅</li>
+<li><code>pnpm --filter @dvt/adapter-postgres test</code> with <code>DVT_PG_INTEGRATION=1</code> ✅ (3/3)</li>
+</ul>
+<h2 id="open-issues-summary">Open Issues Summary<a class="headerlink" href="#open-issues-summary" title="Permanent link">&para;</a></h2>
+<h3 id="functional-work-still-open">Functional Work Still Open<a class="headerlink" href="#functional-work-still-open" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Adapter completion and parity validation (Temporal/Conductor tracks).</li>
+<li>Full runtime boundary validation coverage across all entry points.</li>
+<li>Golden-path matrix expansion and fixture hardening.</li>
+</ul>
+<h2 id="issue-audit-snapshot-2026-02-14">Issue Audit Snapshot (2026-02-14)<a class="headerlink" href="#issue-audit-snapshot-2026-02-14" title="Permanent link">&para;</a></h2>
+<p>Repository audit was reconciled against active package paths (<code>packages/*</code>) and issue comments were updated with concrete evidence.</p>
+<h3 id="closures-applied-during-this-audit-pass">Closures applied during this audit pass<a class="headerlink" href="#closures-applied-during-this-audit-pass" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<h1 id="92-closed-documentation-corrected-in-docsguidesqualitymd-to-reflect-real-vitest-configs-in-package-scope-and-current-watch-command-usage">92 <strong>Closed</strong>: documentation corrected in <a href="../../guides/QUALITY/"><code>docs/guides/QUALITY.md</code></a> to reflect real Vitest configs in package scope and current watch command usage.<a class="headerlink" href="#92-closed-documentation-corrected-in-docsguidesqualitymd-to-reflect-real-vitest-configs-in-package-scope-and-current-watch-command-usage" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="91-closed-eslintconfigcjs-normalized-to-a-single-active-flat-config-export">91 <strong>Closed</strong>: <a href="../../eslint.config.cjs"><code>eslint.config.cjs</code></a> normalized to a single active flat-config export.<a class="headerlink" href="#91-closed-eslintconfigcjs-normalized-to-a-single-active-flat-config-export" title="Permanent link">&para;</a></h1>
+</li>
+</ul>
+<h3 id="tracker-comments-updated-state-refinement-without-closure">Tracker comments updated (state refinement without closure)<a class="headerlink" href="#tracker-comments-updated-state-refinement-without-closure" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<h1 id="68-evidence-posted-for-active-temporal-adapter-implementation-in-packagesdvtadapter-temporalsrctemporaladapterts-workflowsactivities-and-tests-left-as-near-closure-pending-checklist-alignment">68: evidence posted for active Temporal adapter implementation in <a href="../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts"><code>packages/@dvt/adapter-temporal/src/TemporalAdapter.ts</code></a>, workflows/activities, and tests; left as near-closure pending checklist alignment.<a class="headerlink" href="#68-evidence-posted-for-active-temporal-adapter-implementation-in-packagesdvtadapter-temporalsrctemporaladapterts-workflowsactivities-and-tests-left-as-near-closure-pending-checklist-alignment" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="14-evidence-posted-for-engine-core-and-projector-implementation-in-packagesdvtenginesrccoreworkflowenginets-and-packagesdvtenginesrccoresnapshotprojectorts-left-open-pending-checklistapi-wording-refresh">14: evidence posted for engine core and projector implementation in <a href="../../packages/@dvt/engine/src/core/WorkflowEngine.ts"><code>packages/@dvt/engine/src/core/WorkflowEngine.ts</code></a> and <a href="../../packages/@dvt/engine/src/core/SnapshotProjector.ts"><code>packages/@dvt/engine/src/core/SnapshotProjector.ts</code></a>; left open pending checklist/API wording refresh.<a class="headerlink" href="#14-evidence-posted-for-engine-core-and-projector-implementation-in-packagesdvtenginesrccoreworkflowenginets-and-packagesdvtenginesrccoresnapshotprojectorts-left-open-pending-checklistapi-wording-refresh" title="Permanent link">&para;</a></h1>
+</li>
+</ul>
+<h3 id="updated-in-github-2026-02-19-1843-utc">Updated in GitHub (2026-02-19 18:43 UTC)<a class="headerlink" href="#updated-in-github-2026-02-19-1843-utc" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<h1 id="67-closed-runtime-boundary-validation-delivered-on-active-api-boundaries">67: <strong>Closed</strong> (runtime boundary validation delivered on active API boundaries).<a class="headerlink" href="#67-closed-runtime-boundary-validation-delivered-on-active-api-boundaries" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="68-closed-closure-track-finalized-with-ci-alignment-and-canonical-tracker-publication">68: <strong>Closed</strong> (closure track finalized with CI alignment and canonical tracker publication).<a class="headerlink" href="#68-closed-closure-track-finalized-with-ci-alignment-and-canonical-tracker-publication" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="69-not-started-conductor-adapter-package-not-present-engine-conductor-adapter-stub-only">69: <strong>Not started</strong> (Conductor adapter package not present; engine Conductor adapter stub only).<a class="headerlink" href="#69-not-started-conductor-adapter-package-not-present-engine-conductor-adapter-stub-only" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="70-implemented-and-merged-fixtures-baseline-hashes-validation-flow-integrated-via-pr-201-github-issue-remains-open-pending-manual-closureupdate">70: <strong>Implemented and merged</strong> (fixtures + baseline hashes + validation flow integrated via PR #201; GitHub issue remains open pending manual closure/update).<a class="headerlink" href="#70-implemented-and-merged-fixtures-baseline-hashes-validation-flow-integrated-via-pr-201-github-issue-remains-open-pending-manual-closureupdate" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="71-blocked-not-started-depends-on-non-stub-conductor-foundation">71: <strong>Blocked / not started</strong> (depends on non-stub Conductor foundation).<a class="headerlink" href="#71-blocked-not-started-depends-on-non-stub-conductor-foundation" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="72-not-started-on-active-path-version-binding-enforcement-currently-visible-in-legacy-area-not-active-runtime-path">72: <strong>Not started on active path</strong> (version-binding enforcement currently visible in legacy area, not active runtime path).<a class="headerlink" href="#72-not-started-on-active-path-version-binding-enforcement-currently-visible-in-legacy-area-not-active-runtime-path" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="73-partial-determinism-tests-for-engine-mock-exist-cross-adapter-determinism-still-blocked-mainly-by-conductor-gaps">73: <strong>Partial</strong> (determinism tests for engine + mock exist; cross-adapter determinism still blocked mainly by Conductor gaps).<a class="headerlink" href="#73-partial-determinism-tests-for-engine-mock-exist-cross-adapter-determinism-still-blocked-mainly-by-conductor-gaps" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="14-mostly-implemented-in-active-engine-path-issue-checklist-should-be-refreshed-to-current-api-names-and-remaining-deltas">14: <strong>Mostly implemented</strong> in active engine path; issue checklist should be refreshed to current API names and remaining deltas.<a class="headerlink" href="#14-mostly-implemented-in-active-engine-path-issue-checklist-should-be-refreshed-to-current-api-names-and-remaining-deltas" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="15-in-progress-temporal-interpreter-now-includes-deterministic-dag-layer-planning-with-declaration-order-fallback-remaining-scope-includes-full-parity-items-like-continue-as-new-thresholds-and-broader-acceptance-scenarios">15: <strong>In progress</strong> (Temporal interpreter now includes deterministic DAG-layer planning with declaration-order fallback; remaining scope includes full parity items like continue-as-new thresholds and broader acceptance scenarios).<a class="headerlink" href="#15-in-progress-temporal-interpreter-now-includes-deterministic-dag-layer-planning-with-declaration-order-fallback-remaining-scope-includes-full-parity-items-like-continue-as-new-thresholds-and-broader-acceptance-scenarios" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="5-superseded-scope-by-68-for-active-monorepo-implementation-tracking">5: <strong>Superseded scope</strong> by #68 for active monorepo implementation tracking.<a class="headerlink" href="#5-superseded-scope-by-68-for-active-monorepo-implementation-tracking" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="6-foundation-implemented-and-merged-in-active-adapter-package-mvp-base-via-pr-202-with-postgresstatestoreadapter-contract-compatible-types-and-smoke-coverage-follow-up-required-for-full-postgresql-persistenceruntime-hardening">6: <strong>Foundation implemented and merged</strong> in active adapter package (MVP base via PR #202 with <code>PostgresStateStoreAdapter</code>, contract-compatible types, and smoke coverage); follow-up required for full PostgreSQL persistence/runtime hardening.<a class="headerlink" href="#6-foundation-implemented-and-merged-in-active-adapter-package-mvp-base-via-pr-202-with-postgresstatestoreadapter-contract-compatible-types-and-smoke-coverage-follow-up-required-for-full-postgresql-persistenceruntime-hardening" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="76-and-79-active-repository-governance-tracking-for-monorepopath-normalization-and-stale-local-reference-cleanup">76 and #79: active repository-governance tracking for monorepo/path normalization and stale local reference cleanup.<a class="headerlink" href="#76-and-79-active-repository-governance-tracking-for-monorepopath-normalization-and-stale-local-reference-cleanup" title="Permanent link">&para;</a></h1>
+</li>
+</ul>
+<h3 id="suggested-canonical-execution-order-updated-2026-02-19-1843-utc">Suggested canonical execution order (updated 2026-02-19 18:43 UTC)<a class="headerlink" href="#suggested-canonical-execution-order-updated-2026-02-19-1843-utc" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Complete #6 foundation (Postgres active implementation + closure evidence).</li>
+<li>Complete #70 fixtures and executable golden-path runs.</li>
+<li>Progress #69 and #71 (Conductor + draining policies).</li>
+<li>Finalize #72 and expand #73 cross-adapter determinism.</li>
+</ol>
+<h3 id="quality-debt-still-open">Quality Debt Still Open<a class="headerlink" href="#quality-debt-still-open" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Workspace lint debt (concrete backlog):</li>
+<li><code>packages/adapters-legacy/src/**</code> — normalize import order and unresolved references; target gate: <code>eslint --max-warnings 0</code> on package scope.</li>
+<li><code>packages/@dvt/adapter-postgres/test/**</code> — align parser project boundaries and test-lint rules; target gate: package test-lint clean run.</li>
+<li><code>packages/@dvt/engine/legacy-top-level-engine/**</code> — legacy lint drift cleanup or archive decision with explicit owner.</li>
+<li>Docs/path normalization backlog (explicit files):</li>
+<li><code>docs/REPO_STRUCTURE_SUMMARY.md</code> — reconcile active vs legacy package maps after latest adapter/engine changes.</li>
+<li><code>docs/planning/ISSUE_5_TEMPORAL_ADAPTER_STATUS_AND_IMPLEMENTATION_PROPOSAL.md</code> — refresh status links to current PR/issue trail.</li>
+<li><code>docs/knowledge/ROADMAP_AND_ISSUES_MAP.md</code> — align issue state transitions (<code>#68</code> closed, <code>#15</code> multi-slice in progress).</li>
+<li><code>docs/INDEX.md</code> — ensure discoverability links include current status/debt records.</li>
+</ul>
+<h2 id="next-work-focus">Next Work Focus<a class="headerlink" href="#next-work-focus" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Stabilize lint/type boundaries package-by-package.</li>
+<li>Complete runtime boundary validation for adapter-facing entry points.</li>
+<li>Expand deterministic golden-path coverage and keep baseline hashes synchronized.</li>
+<li>Continue documentation normalization until all repository docs are fully consistent and English-only.</li>
+</ol>
+<h2 id="recent-low-priority-completed-task-2026-02-14">Recent Low-Priority Completed Task (2026-02-14)<a class="headerlink" href="#recent-low-priority-completed-task-2026-02-14" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Issue <a href="https://github.com/dunay2/dvt/issues/82">#82</a> closed.</li>
+<li>Change applied in <a href="packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:172"><code>validateStepShape()</code></a>: hoisted allowed step fields to module-level constant to avoid per-call <code>Set</code> allocation.</li>
+<li>Validation evidence: <code>pnpm --filter @dvt/adapter-temporal test</code> passed (19 tests).</li>
+</ul>
+<h2 id="recent-high-priority-completed-task-2026-02-17">Recent High-Priority Completed Task (2026-02-17)<a class="headerlink" href="#recent-high-priority-completed-task-2026-02-17" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Scope: align logical attempts vs infrastructure attempts in Temporal activity event emission.</li>
+<li>Problem addressed: <code>logicalAttemptId</code> defaulted to infrastructure attempt under retries, risking duplicate logical events and non-canonical idempotency behavior.</li>
+<li>Runtime changes:</li>
+<li><a href="../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:92"><code>emitEvent()</code></a> now defaults <code>logicalAttemptId</code> to <code>1</code> (unless explicitly provided).</li>
+<li><a href="../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:140"><code>resolveTemporalAttemptFromContext()</code></a> centralizes safe extraction of Temporal activity attempt for <code>engineAttemptId</code> only.</li>
+<li><a href="../../packages/@dvt/adapter-temporal/src/engine-types.ts:112"><code>EventIdempotencyInput</code></a> no longer includes <code>engineAttemptId</code>, reinforcing idempotency derivation from logical attempt dimensions.</li>
+<li>Regression tests added/updated:</li>
+<li><a href="../../packages/@dvt/adapter-temporal/test/activities.test.ts:221"><code>activities.test.ts</code></a> now validates:<ul>
+<li>logical attempt defaults to <code>1</code> even when engine attempt &gt; 1,</li>
+<li>dedupe remains stable across infrastructure retries with unchanged logical attempt,</li>
+<li>explicit logical attempt remains independent from engine attempt.</li>
+</ul>
+</li>
+<li><a href="../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:41"><code>integration.time-skipping.test.ts</code></a> test idempotency fixture aligned with logical-attempt-based derivation.</li>
+<li>Validation evidence:</li>
+<li><code>pnpm --filter @dvt/adapter-temporal test</code> ✅</li>
+<li>Result: 4 test files passed, 24 tests passed.</li>
+</ul>
+<h3 id="residual-risks-follow-up">Residual Risks / Follow-up<a class="headerlink" href="#residual-risks-follow-up" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Engine package (<code>packages/engine</code>) still emits fixed attempt values in several paths (<a href="../../packages/@dvt/engine/src/core/WorkflowEngine.ts:307"><code>WorkflowEngine.emitRunEvent*</code></a>); this task only closes the active Temporal activity emission gap.</li>
+<li>Conductor path remains pending and should adopt the same logical-vs-engine-attempt invariants before parity testing.</li>
+</ul>
+<h2 id="recent-high-priority-progress-slice-2026-02-17">Recent High-Priority Progress Slice (2026-02-17)<a class="headerlink" href="#recent-high-priority-progress-slice-2026-02-17" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Scope: <code>#15</code> incremental interpreter upgrade with deterministic DAG-layer scheduling primitives.</li>
+<li>Problem addressed: workflow execution was strictly sequential with no explicit DAG dependency planning path.</li>
+<li>Runtime changes:</li>
+<li>Added optional DAG dependency support (<code>dependsOn</code>) in adapter-local execution plan typing via <a href="../../packages/@dvt/adapter-temporal/src/engine-types.ts:64"><code>ExecutionPlan</code></a>.</li>
+<li>Extended step validation in <a href="../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:182"><code>validateStepShape()</code></a> to allow and validate <code>dependsOn</code> arrays.</li>
+<li>Added deterministic DAG-layer planner in <a href="../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:213"><code>planExecutionLayers()</code></a>, including validation for duplicate step IDs, unknown dependencies, self-dependencies, invalid dependency values, and cycles.</li>
+<li>Updated <a href="../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:92"><code>runPlanWorkflow()</code></a> to execute by deterministic layers (parallelizable frontier via <code>Promise.all</code>) while preserving declaration-order fallback for legacy plans.</li>
+<li>Tests added/updated:</li>
+<li>New scheduler-focused unit suite in <a href="../../packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts:1"><code>workflow-dag-scheduler.test.ts</code></a> covering linear fallback, layered DAG ordering, and invalid-graph error paths.</li>
+<li>Extended activity validation coverage in <a href="../../packages/@dvt/adapter-temporal/test/activities.test.ts:278"><code>activities.test.ts</code></a> for <code>dependsOn</code> acceptance and invalid-shape rejection.</li>
+<li>Validation evidence:</li>
+<li><code>pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-dag-scheduler.test.ts</code> ✅</li>
+<li><code>pnpm --filter @dvt/adapter-temporal test</code> ✅</li>
+<li>Result: 5 test files passed, 35 tests passed.</li>
+</ul>
+<h3 id="residual-risks-follow-up-issue-15">Residual Risks / Follow-up (Issue #15)<a class="headerlink" href="#residual-risks-follow-up-issue-15" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Canonical contract alignment for execution plan dependencies is now promoted in engine contracts for active runtime paths; remaining follow-up is cross-package validation/schema parity in all consumers.</li>
+<li><code>continueAsNew</code> policy/threshold and long-run compaction behavior remain unimplemented in the workflow.</li>
+<li>Full end-to-end DAG parity acceptance (including richer dispatch semantics) remains open and should continue in follow-up slices.</li>
+</ul>
+<h2 id="recent-high-priority-progress-slice-2-2026-02-17">Recent High-Priority Progress Slice 2 (2026-02-17)<a class="headerlink" href="#recent-high-priority-progress-slice-2-2026-02-17" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Scope: continue <code>#15</code> by promoting DAG dependency shape (<code>dependsOn</code>) from adapter-local typing to shared engine contract surfaces.</li>
+<li>Runtime changes:</li>
+<li>Added optional <code>dependsOn?: string[]</code> to shared engine execution plan contract in <a href="../../packages/@dvt/engine/src/contracts/executionPlan.ts:1"><code>ExecutionPlan</code></a>.</li>
+<li>Updated mock adapter step validation in <a href="../../packages/@dvt/engine/src/adapters/mock/MockAdapter.ts:157"><code>validateMockStep()</code></a> to accept/validate <code>dependsOn</code>.</li>
+<li>Tests:</li>
+<li>Added engine contract regression coverage in <a href="../../packages/@dvt/engine/test/contracts/engine.test.ts:37"><code>engine.test.ts</code></a> with a DAG-shaped plan using <code>dependsOn</code>.</li>
+<li>Validation evidence:</li>
+<li><code>pnpm --filter @dvt/contracts build</code> ✅</li>
+<li><code>pnpm --filter @dvt/engine test -- --run test/contracts/engine.test.ts</code> ✅</li>
+<li>Result: engine suite passed (7 files, 42 tests).</li>
+</ul>
+<h2 id="recent-high-priority-progress-slice-3-2026-02-17">Recent High-Priority Progress Slice 3 (2026-02-17)<a class="headerlink" href="#recent-high-priority-progress-slice-3-2026-02-17" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Scope: add deterministic continue-as-new policy to Temporal interpreter workflow (<code>#15</code>).</li>
+<li>Runtime changes:</li>
+<li>Added adapter config parameter <code>continueAsNewAfterLayerCount</code> in <a href="../../packages/@dvt/adapter-temporal/src/config.ts:1"><code>TemporalAdapterConfig</code></a>, sourced from <code>TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS</code> with safe default <code>0</code> (disabled).</li>
+<li>Workflow input/state upgraded in <a href="../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:29"><code>RunPlanWorkflow</code></a> with resume cursor and <code>continuedAsNewCount</code> tracking.</li>
+<li>Added deterministic rollover policy helper <a href="../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:278"><code>shouldTriggerContinueAsNew()</code></a> and integrated <code>continueAsNew(...)</code> trigger after configured layer threshold.</li>
+<li>Adapter start payload now passes threshold to workflow in <a href="../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts:52"><code>TemporalAdapter.startRun()</code></a>.</li>
+<li>Tests added/updated:</li>
+<li>New policy tests in <a href="../../packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts:1"><code>workflow-continue-as-new.test.ts</code></a>.</li>
+<li>Config coverage extended in <a href="../../packages/@dvt/adapter-temporal/test/smoke.test.ts:68"><code>smoke.test.ts</code></a>.</li>
+<li>Validation evidence:</li>
+<li><code>pnpm --filter @dvt/adapter-temporal test</code> ✅</li>
+<li>Result: adapter-temporal suite passed (6 files, 39 tests).</li>
+</ul>
+<h2 id="recent-high-priority-progress-slice-46-2026-02-17">Recent High-Priority Progress Slice 4+6 (2026-02-17)<a class="headerlink" href="#recent-high-priority-progress-slice-46-2026-02-17" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Scope: complete Option A parity closure for <code>#15</code> with retry/error handling + E2E golden-path coverage.</li>
+<li>Runtime changes:</li>
+<li>Added controlled failure simulation in <a href="../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:85"><code>executeStep()</code></a> via <code>simulateError: 'transient' | 'permanent'</code> for deterministic retry/error-path testing.</li>
+<li>Expanded step validation allowlist in <a href="../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts:200"><code>validateStepShape()</code></a> to accept <code>simulateError</code> in test plans.</li>
+<li>Updated workflow activity retry policy in <a href="../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:88"><code>runPlanWorkflow()</code></a> to:<ul>
+<li><code>maximumInterval: '60s'</code></li>
+<li><code>maximumAttempts: 3</code></li>
+<li><code>nonRetryableErrorTypes: ['PermanentStepError']</code></li>
+</ul>
+</li>
+<li>Added explicit activity error mapping in <a href="../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:205"><code>runPlanWorkflow()</code></a> to convert terminal activity failures into deterministic <code>StepFailed</code> + <code>RunFailed</code> event emission.</li>
+<li>Tests added/updated:</li>
+<li>Added failure-simulation unit coverage in <a href="../../packages/@dvt/adapter-temporal/test/activities.test.ts:351"><code>activities.test.ts</code></a> for transient and permanent error branches.</li>
+<li>Added linear 3-step golden-path E2E in <a href="../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:417"><code>integration.time-skipping.test.ts</code></a> asserting deterministic event order and <code>runSeq</code> continuity.</li>
+<li>Added permanent-failure E2E in <a href="../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:476"><code>integration.time-skipping.test.ts</code></a> asserting deterministic <code>StepFailed</code> + <code>RunFailed</code> terminal path.</li>
+<li>Validation evidence:</li>
+<li><code>pnpm --filter @dvt/adapter-temporal test -- --run test/integration.time-skipping.test.ts</code> ✅</li>
+<li><code>pnpm --filter @dvt/adapter-temporal test</code> ✅</li>
+<li>Result: adapter-temporal suite passed (6 files, 43 tests).</li>
+</ul>
+<h2 id="operational-notes">Operational Notes<a class="headerlink" href="#operational-notes" title="Permanent link">&para;</a></h2>
+<p>When behavior changes affect deterministic execution:</p>
+<ol>
+<li>Regenerate golden-path results.</li>
+<li>Compare against <code>.golden/hashes.json</code>.</li>
+<li>Update baseline hashes intentionally.</li>
+<li>Document changes in <code>CHANGELOG.md</code>.</li>
+</ol>
+<h2 id="post-closure-direction-2026-02-18">Post-Closure Direction (2026-02-18)<a class="headerlink" href="#post-closure-direction-2026-02-18" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>#15</code> is considered closed for MVP runtime parity after Slice 4+6 completion and validation.</li>
+<li>Next product-delivery focus is <code>#10</code> (Golden Paths) to capitalize on the now-stable interpreter runtime.</li>
+<li>Immediate sequencing recommendation:</li>
+<li>dbt project parser</li>
+<li>lineage/DAG builder from dbt metadata</li>
+<li>SQL preview + end-to-end execution demo flow</li>
+<li>Retry policy rationale and constraints for the current MVP baseline are formalized in <a href="../../decisions/ADR-0007-temporal-retry-policy-mvp/"><code>ADR-0007</code></a>.</li>
+<li>Observability, determinism linting, and heartbeat strategy remain explicit debt and are intentionally deferred to hardening iterations.</li>
+</ul>
+<hr />
+<p><strong>Status</strong>: Active and usable (with audited gaps tracked)
+<strong>Last updated</strong>: 2026-02-21 22:55 UTC</p>
+<h2 id="branch-synchronization-update-2026-02-21">Branch synchronization update (2026-02-21)<a class="headerlink" href="#branch-synchronization-update-2026-02-21" title="Permanent link">&para;</a></h2>
+<p>This section records the latest branch-level hardening updates merged in <code>feat/ddd-cqrs-structure</code> before PR review.</p>
+<h3 id="engine-and-contract-test-hardening">Engine and contract-test hardening<a class="headerlink" href="#engine-and-contract-test-hardening" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Mock adapter start path adjusted to avoid <code>RUN_NOT_FOUND</code> bootstrap failures in contract test scenarios where provider metadata is not pre-seeded.</li>
+<li>Contract coverage in <a href="../../packages/@dvt/engine/test/contracts/engine.test.ts"><code>packages/@dvt/engine/test/contracts/engine.test.ts</code></a> was refreshed to:</li>
+<li>keep deterministic replay/hash checks,</li>
+<li>align expected status semantics with projected model behavior in the mocked path,</li>
+<li>include explicit traceability header with issue impact context.</li>
+</ul>
+<h3 id="ci-reliability-hardening">CI reliability hardening<a class="headerlink" href="#ci-reliability-hardening" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Workspace CI build order was hardened in <a href="../../.github/workflows/ci.yml"><code>workspace-ci</code></a> to build target workspaces with their workspace dependencies first.</li>
+<li>Change applied in <a href="../../.github/workflows/ci.yml"><code>Build affected workspace (including workspace dependencies)</code></a>:</li>
+<li>from <code>pnpm --filter "${{ matrix.pkg }}" --if-present run build</code></li>
+<li>to <code>pnpm --filter "...${{ matrix.pkg }}" --if-present run build</code></li>
+<li>This prevents package-entry resolution failures in CI (notably <code>@dvt/contracts</code> dist artifacts missing when downstream workspaces run tests).</li>
+</ul>
+<h3 id="test-hygiene">Test hygiene<a class="headerlink" href="#test-hygiene" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Removed orphan snapshot with no owning spec: <a href="../../packages/@dvt/engine/test/core/__snapshots__/WorkflowEngine.integration.test.ts.snap"><code>packages/@dvt/engine/test/core/__snapshots__/WorkflowEngine.integration.test.ts.snap</code></a>.</li>
+</ul>
+<h3 id="validation-evidence-latest-pass">Validation evidence (latest pass)<a class="headerlink" href="#validation-evidence-latest-pass" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>pnpm -C packages/@dvt/engine test -- --run test/contracts/engine.test.ts</code> ✅</li>
+<li><code>pnpm --filter "...@dvt/engine" --if-present run build</code> + <code>pnpm --filter "@dvt/engine" --if-present run test</code> ✅</li>
+</ul>
+<h2 id="postgresql-hardening-slice-2026-02-19-1832-utc">PostgreSQL Hardening Slice (2026-02-19 18:32 UTC)<a class="headerlink" href="#postgresql-hardening-slice-2026-02-19-1832-utc" title="Permanent link">&para;</a></h2>
+<p>Scope executed as a prioritized hardening pass for <code>@dvt/adapter-postgres</code> and engine integration points.</p>
+<h3 id="p0-completed">P0 completed<a class="headerlink" href="#p0-completed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Removed unused transactional parameter from adapter+engine transactional path:</li>
+<li><a href="../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts"><code>appendAndEnqueueTx()</code></a></li>
+<li><a href="../../packages/@dvt/engine/src/core/WorkflowEngine.ts"><code>WorkflowEngine.persistEvent()</code></a></li>
+<li><a href="../../packages/@dvt/engine/src/state/InMemoryTxStore.ts"><code>InMemoryTxStore.appendAndEnqueueTx()</code></a></li>
+<li>Added safe pending-outbox claiming in <a href="../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts"><code>listPending()</code></a> using <code>FOR UPDATE SKIP LOCKED</code> with stale-claim recovery (<code>claimed_at</code> timeout policy).</li>
+</ul>
+<h3 id="p1-completed">P1 completed<a class="headerlink" href="#p1-completed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added explicit integration schema teardown in <a href="../../packages/@dvt/adapter-postgres/test/smoke.test.ts"><code>packages/@dvt/adapter-postgres/test/smoke.test.ts</code></a> via <code>afterAll</code> and <code>DROP SCHEMA ... CASCADE</code>.</li>
+<li>CI now executes Postgres integration smoke tests in <a href="../../.github/workflows/contracts.yml"><code>contract-hashes</code> job</a> with PostgreSQL service and integration env flags.</li>
+</ul>
+<h3 id="p2-completed">P2 completed<a class="headerlink" href="#p2-completed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Removed redundant index-creation path for <code>run_events(run_id, run_seq)</code> in adapter schema initialization (PK already covers access path).</li>
+<li>Type-drift decision documented in <a href="../../packages/@dvt/adapter-postgres/src/types.ts"><code>packages/@dvt/adapter-postgres/src/types.ts</code></a>: keep adapter-local transactional types for now; do not alias current <code>@dvt/contracts</code> state-store contracts yet because those represent canonical snapshot/projection contracts, not transactional outbox persistence semantics.</li>
+</ul>
+<h3 id="validation-evidence">Validation evidence<a class="headerlink" href="#validation-evidence" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>pnpm --filter @dvt/engine build</code> ✅</li>
+<li><code>pnpm --filter @dvt/adapter-postgres build</code> ✅</li>
+<li><code>pnpm --filter @dvt/adapter-postgres exec vitest run test/smoke.test.ts --config vitest.config.cjs</code> with <code>DVT_PG_INTEGRATION=1</code> + <code>DATABASE_URL</code> ✅ (3/3)</li>
+</ul>
+<h3 id="current-status">Current status<a class="headerlink" href="#current-status" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Hardening slice scope completed for requested P0/P1/P2 items.</li>
+<li>Remaining higher-level track is full non-stub golden-path execution parity publication for issue-level closure criteria.</li>
+</ul>
+<h3 id="type-drift-strategy-review-2026-02-19-1837-utc">Type-drift strategy review (2026-02-19 18:37 UTC)<a class="headerlink" href="#type-drift-strategy-review-2026-02-19-1837-utc" title="Permanent link">&para;</a></h3>
+<p>Context: <a href="../../packages/@dvt/adapter-postgres/src/types.ts"><code>packages/@dvt/adapter-postgres/src/types.ts</code></a> currently defines local transactional adapter types while the package also depends on <a href="../../packages/@dvt/contracts/index.ts"><code>@dvt/contracts</code></a>.</p>
+<p>Evaluated strategies:</p>
+<ol>
+<li><strong>Direct import/alias from <code>@dvt/contracts</code> now</strong></li>
+<li>Pros: single source of truth for shared names.</li>
+<li>Cons: current exported contracts in <a href="../../packages/@dvt/contracts/src/types/state-store.ts"><code>packages/@dvt/contracts/src/types/state-store.ts</code></a> model canonical event projection (<code>appendEvent</code>, <code>fetchEvents</code>, snapshots), not transactional outbox persistence (<code>appendEventsTx</code>, <code>appendAndEnqueueTx</code>, claim/delivery lifecycle).</li>
+<li>
+<p>Risk: forced casts and semantic mismatch.</p>
+</li>
+<li>
+<p><strong>Keep fully local adapter types (current state)</strong></p>
+</li>
+<li>Pros: clean separation and no false coupling.</li>
+<li>
+<p>Cons: long-term drift risk on overlapping fields (<code>eventType</code>, <code>RunMetadata</code>, envelope shape).</p>
+</li>
+<li>
+<p><strong>Introduce a dedicated shared transactional contract module (recommended)</strong></p>
+</li>
+<li>Add a new contract surface in <code>@dvt/contracts</code> specifically for transactional state-store + outbox behavior.</li>
+<li>Adapter and engine import from that module while canonical snapshot/projection contracts stay separate.</li>
+<li>Preserves decoupling-by-boundary while eliminating duplicated type definitions.</li>
+</ol>
+<p>Decision at this timestamp:</p>
+<ul>
+<li>Keep local types for now.</li>
+<li>Plan a follow-up to extract <strong>transactional</strong> shared contracts into <code>@dvt/contracts</code> and migrate <a href="../../packages/@dvt/adapter-postgres/src/types.ts"><code>packages/@dvt/adapter-postgres/src/types.ts</code></a> and engine call sites together in one compatibility slice.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

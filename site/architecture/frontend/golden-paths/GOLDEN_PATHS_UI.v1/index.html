@@ -1,0 +1,1837 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>GOLDEN_PATHS_UI.v1.md - UI Golden Paths - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#golden_paths_uiv1md-ui-golden-paths" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              GOLDEN_PATHS_UI.v1.md - UI Golden Paths
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gp-01-import-dbt-project-validate-execute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GP-01: Import dbt Project → Validate → Execute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gp-02-create-plan-from-scratch-add-nodes-execute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GP-02: Create Plan from Scratch → Add Nodes → Execute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gp-03-audit-trail-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GP-03: Audit Trail Review
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gp-04-pause-run-resume-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GP-04: Pause Run → Resume → Complete
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gp-05-view-cost-breakdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GP-05: View Cost Breakdown
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitoring-synthetic-canaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitoring: Synthetic Canaries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="golden_paths_uiv1md-ui-golden-paths">GOLDEN_PATHS_UI.v1.md - UI Golden Paths<a class="headerlink" href="#golden_paths_uiv1md-ui-golden-paths" title="Permanent link">&para;</a></h1>
+<p><strong>Version</strong>: 1.0<br />
+<strong>Date</strong>: 2026-02-11<br />
+<strong>Status</strong>: Testable (E2E Tests)<br />
+<strong>Location</strong>: docs/architecture/frontend/golden-paths/GOLDEN_PATHS_UI.v1.md</p>
+<hr />
+<h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<p><strong>Golden paths</strong> are critical user journeys that MUST work end-to-end. Each golden path has:</p>
+<ul>
+<li><strong>Acceptance criteria</strong> (what "works" means)</li>
+<li><strong>E2E test</strong> (Playwright/Cypress)</li>
+<li><strong>Monitoring</strong> (synthetic canary)</li>
+</ul>
+<p><strong>Philosophy</strong>: If a golden path breaks, the product is broken.</p>
+<hr />
+<h2 id="gp-01-import-dbt-project-validate-execute">GP-01: Import dbt Project → Validate → Execute<a class="headerlink" href="#gp-01-import-dbt-project-validate-execute" title="Permanent link">&para;</a></h2>
+<p><strong>User persona</strong>: Data engineer importing existing dbt project</p>
+<p><strong>Steps</strong>:</p>
+<ol>
+<li><strong>Create new project</strong></li>
+<li>Click "New Project" button</li>
+<li>Enter project name: "Analytics ETL"</li>
+<li>Select "Import from dbt"</li>
+<li>Provide Git URL: <code>https://github.com/org/dbt-project</code></li>
+<li>
+<p>Click "Import"</p>
+</li>
+<li>
+<p><strong>View DAG</strong></p>
+</li>
+<li>System parses <code>dbt_project.yml</code> + SQL models</li>
+<li>Displays graph in React Flow editor (nodes = models, edges = refs)</li>
+<li>
+<p>Nodes colored by status (idle = gray)</p>
+</li>
+<li>
+<p><strong>Validate plan</strong></p>
+</li>
+<li>Click "Validate" button</li>
+<li>System checks:<ul>
+<li>No cycles</li>
+<li>All refs resolve</li>
+<li>Valid SQL syntax (if supported)</li>
+</ul>
+</li>
+<li>
+<p>Validation panel shows ✅ or ❌ with errors</p>
+</li>
+<li>
+<p><strong>Execute plan</strong></p>
+</li>
+<li>Click "Run" button</li>
+<li>Modal shows: Environment dropdown (dev/prod), input params</li>
+<li>Click "Start Run"</li>
+<li>
+<p>Run detail page opens</p>
+</li>
+<li>
+<p><strong>Monitor execution</strong></p>
+</li>
+<li>Timeline view shows steps (models) running in order</li>
+<li>Status updates every 2 seconds (polling or SSE)</li>
+<li>Nodes highlight green (success) / red (fail) as they complete</li>
+<li>
+<p>Progress bar: "5 / 10 models completed (50%)"</p>
+</li>
+<li>
+<p><strong>View logs</strong></p>
+</li>
+<li>Click failing node</li>
+<li>
+<p>Panel shows:</p>
+<ul>
+<li>Step status: FAILED</li>
+<li>Error message: "Syntax error in SQL: line 42"</li>
+<li>Logs snippet (last 100 lines)</li>
+<li>Button: "Full Logs" → opens log viewer</li>
+</ul>
+</li>
+<li>
+<p><strong>Retry failed step</strong></p>
+</li>
+<li>Click "Retry" button on failed node</li>
+<li>System sends RETRY signal</li>
+<li>Step reruns from beginning</li>
+<li>Timeline updates</li>
+</ol>
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+<li>✅ DAG renders with &gt;100 nodes in &lt;2 seconds</li>
+<li>✅ Validation completes in &lt;5 seconds</li>
+<li>✅ Run starts within 1 second of "Start Run" click</li>
+<li>✅ Status updates visible within 3 seconds of backend state change</li>
+<li>✅ Logs panel loads in &lt;1 second</li>
+<li>✅ Retry button disabled if run is COMPLETED or CANCELLED</li>
+</ul>
+<p><strong>E2E Test</strong> (Playwright):</p>
+<pre><code class="language-typescript">test('GP-01: Import dbt project → validate → execute', async ({ page }) =&gt; {
+  // 1. Import
+  await page.goto('/projects');
+  await page.click('button:has-text(&quot;New Project&quot;)');
+  await page.fill('input[name=&quot;name&quot;]', 'Analytics ETL');
+  await page.selectOption('select[name=&quot;source&quot;]', 'dbt');
+  await page.fill('input[name=&quot;gitUrl&quot;]', 'https://github.com/org/dbt-project');
+  await page.click('button:has-text(&quot;Import&quot;)');
+
+  // 2. View DAG
+  await page.waitForSelector('.react-flow__node', { timeout: 5000 });
+  const nodeCount = await page.locator('.react-flow__node').count();
+  expect(nodeCount).toBeGreaterThan(0);
+
+  // 3. Validate
+  await page.click('button:has-text(&quot;Validate&quot;)');
+  await page.waitForSelector('.validation-result:has-text(&quot;✅&quot;)', { timeout: 5000 });
+
+  // 4. Execute
+  await page.click('button:has-text(&quot;Run&quot;)');
+  await page.selectOption('select[name=&quot;environment&quot;]', 'dev');
+  await page.click('button:has-text(&quot;Start Run&quot;)');
+
+  // 5. Monitor
+  await page.waitForURL(/\/runs\/.+/, { timeout: 2000 });
+  await page.waitForSelector('.progress-bar', { timeout: 3000 });
+
+  // 6-7. Skipped in test (requires actual failure)
+});
+</code></pre>
+<hr />
+<h2 id="gp-02-create-plan-from-scratch-add-nodes-execute">GP-02: Create Plan from Scratch → Add Nodes → Execute<a class="headerlink" href="#gp-02-create-plan-from-scratch-add-nodes-execute" title="Permanent link">&para;</a></h2>
+<p><strong>User persona</strong>: Workflow author creating custom plan</p>
+<p><strong>Steps</strong>:</p>
+<ol>
+<li><strong>Create blank plan</strong></li>
+<li>Click "New Plan" → "Blank Plan"</li>
+<li>
+<p>Enter name: "Daily Reports"</p>
+</li>
+<li>
+<p><strong>Add nodes</strong></p>
+</li>
+<li>Drag "Python Task" from palette → canvas</li>
+<li>Double-click node → config panel opens</li>
+<li>Fill:<ul>
+<li>Name: "Fetch Data"</li>
+<li>Script: <code>print("Hello")</code></li>
+</ul>
+</li>
+<li>Click "Save"</li>
+<li>
+<p>Add 2 more nodes: "Transform", "Load"</p>
+</li>
+<li>
+<p><strong>Connect nodes</strong></p>
+</li>
+<li>Drag edge from "Fetch Data" output → "Transform" input</li>
+<li>Drag edge from "Transform" → "Load"</li>
+<li>
+<p>Graph validates: no cycles ✅</p>
+</li>
+<li>
+<p><strong>Save &amp; Publish</strong></p>
+</li>
+<li>Click "Save Draft"</li>
+<li>Notification: "Plan saved (version 1)"</li>
+<li>Click "Publish"</li>
+<li>Confirmation modal: "Publish plan? Runs will use this version."</li>
+<li>Click "Confirm"</li>
+<li>
+<p>Status badge changes: DRAFT → PUBLISHED</p>
+</li>
+<li>
+<p><strong>Execute</strong></p>
+</li>
+<li>Click "Run" → "Start Run"</li>
+<li>Timeline shows 3 steps running sequentially</li>
+<li>All complete successfully</li>
+</ol>
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+<li>✅ Node drag-and-drop performance: &lt;100ms lag</li>
+<li>✅ Config panel opens in &lt;500ms</li>
+<li>✅ Autosave triggers 2 seconds after last edit</li>
+<li>✅ Publish completes in &lt;1 second</li>
+<li>✅ Cannot edit published plan (button disabled)</li>
+</ul>
+<p><strong>E2E Test</strong>:</p>
+<pre><code class="language-typescript">test('GP-02: Create plan → add nodes → execute', async ({ page }) =&gt; {
+  await page.goto('/plans');
+  await page.click('button:has-text(&quot;New Plan&quot;)');
+  await page.click('button:has-text(&quot;Blank Plan&quot;)');
+
+  // Add node
+  await page.dragAndDrop('.palette-item[data-type=&quot;python-task&quot;]', '.react-flow__pane', {
+    targetPosition: { x: 200, y: 200 },
+  });
+
+  // Configure node
+  await page.dblclick('.react-flow__node');
+  await page.fill('input[name=&quot;nodeName&quot;]', 'Fetch Data');
+  await page.fill('textarea[name=&quot;script&quot;]', 'print(&quot;Hello&quot;)');
+  await page.click('button:has-text(&quot;Save&quot;)');
+
+  // Publish
+  await page.click('button:has-text(&quot;Publish&quot;)');
+  await page.click('button:has-text(&quot;Confirm&quot;)');
+
+  await page.waitForSelector('.status-badge:has-text(&quot;PUBLISHED&quot;)');
+});
+</code></pre>
+<hr />
+<h2 id="gp-03-audit-trail-review">GP-03: Audit Trail Review<a class="headerlink" href="#gp-03-audit-trail-review" title="Permanent link">&para;</a></h2>
+<p><strong>User persona</strong>: Auditor investigating security incident</p>
+<p><strong>Steps</strong>:</p>
+<ol>
+<li><strong>Open audit viewer</strong></li>
+<li>Navigate to <code>/audit</code></li>
+<li>
+<p>Page requires <code>auditor</code> role (403 if unauthorized)</p>
+</li>
+<li>
+<p><strong>Search by actor</strong></p>
+</li>
+<li>Enter user email: <code>alice@example.com</code></li>
+<li>Click "Search"</li>
+<li>
+<p>Results show all actions by Alice in last 30 days</p>
+</li>
+<li>
+<p><strong>Filter by action</strong></p>
+</li>
+<li>Select "RUN_CANCEL" from action dropdown</li>
+<li>
+<p>Results narrow to only CANCEL actions</p>
+</li>
+<li>
+<p><strong>View decision record</strong></p>
+</li>
+<li>Click audit entry</li>
+<li>
+<p>Panel shows:</p>
+<ul>
+<li>Timestamp: 2026-02-11 10:30 AM</li>
+<li>Actor: Alice (user-123)</li>
+<li>Action: RUN_CANCEL</li>
+<li>Resource: run-xyz (plan: dbt_daily_build)</li>
+<li>Decision: GRANTED</li>
+<li>Justification: "Deploy in progress"</li>
+<li>IP: 1.2.3.4 (redacted if PII protection)</li>
+</ul>
+</li>
+<li>
+<p><strong>Export to CSV</strong></p>
+</li>
+<li>Click "Export" button</li>
+<li>Modal: "Export 250 results to CSV?"</li>
+<li>Click "Download"</li>
+<li>CSV includes audit ID, timestamp, actor, action, resource</li>
+</ol>
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+<li>✅ Search returns results in &lt;2 seconds (indexed queries)</li>
+<li>✅ PII (IP, email) redacted unless user has <code>view-pii</code> permission</li>
+<li>✅ Export limited to 10,000 rows (prevent DoS)</li>
+<li>✅ Decision records include mandatory justification field</li>
+</ul>
+<p><strong>E2E Test</strong>:</p>
+<pre><code class="language-typescript">test('GP-03: Audit trail review', async ({ page }) =&gt; {
+  await page.goto('/audit');
+
+  // Search
+  await page.fill('input[name=&quot;actor&quot;]', 'alice@example.com');
+  await page.click('button:has-text(&quot;Search&quot;)');
+
+  await page.waitForSelector('.audit-entry', { timeout: 2000 });
+
+  // Filter
+  await page.selectOption('select[name=&quot;action&quot;]', 'RUN_CANCEL');
+  const filteredCount = await page.locator('.audit-entry').count();
+  expect(filteredCount).toBeGreaterThan(0);
+
+  // View details
+  await page.click('.audit-entry:first-child');
+  await page.waitForSelector('.audit-detail-panel');
+  expect(await page.textContent('.audit-detail-panel')).toContain('Justification');
+});
+</code></pre>
+<hr />
+<h2 id="gp-04-pause-run-resume-complete">GP-04: Pause Run → Resume → Complete<a class="headerlink" href="#gp-04-pause-run-resume-complete" title="Permanent link">&para;</a></h2>
+<p><strong>User persona</strong>: Operator controlling running workflow</p>
+<p><strong>Steps</strong>:</p>
+<ol>
+<li><strong>Start run</strong></li>
+<li>Open plan → click "Run"</li>
+<li>
+<p>Run starts, status: RUNNING</p>
+</li>
+<li>
+<p><strong>Pause run</strong></p>
+</li>
+<li>Click "Pause" button in toolbar</li>
+<li>Modal: "Pause run? Provide reason:"</li>
+<li>Enter: "Deploy in progress"</li>
+<li>Click "Confirm"</li>
+<li>Status changes: RUNNING → PAUSED</li>
+<li>
+<p>Timeline shows pause marker with timestamp</p>
+</li>
+<li>
+<p><strong>Resume run</strong></p>
+</li>
+<li>Click "Resume" button</li>
+<li>Status changes: PAUSED → RUNNING</li>
+<li>
+<p>Execution continues from where it paused</p>
+</li>
+<li>
+<p><strong>Complete</strong></p>
+</li>
+<li>All steps finish</li>
+<li>Status: COMPLETED</li>
+<li>Timeline shows full history: start → pause → resume → complete</li>
+</ol>
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+<li>✅ Pause completes within 5 seconds (graceful stop)</li>
+<li>✅ Resume button disabled if run is COMPLETED</li>
+<li>✅ Pause reason captured in Decision Record (audit log)</li>
+<li>✅ Timeline visually distinguishes pause markers</li>
+</ul>
+<p><strong>E2E Test</strong>:</p>
+<pre><code class="language-typescript">test('GP-04: Pause → resume → complete', async ({ page }) =&gt; {
+  // Assume run already started
+  await page.goto('/runs/run-xyz');
+
+  // Pause
+  await page.click('button:has-text(&quot;Pause&quot;)');
+  await page.fill('textarea[name=&quot;reason&quot;]', 'Deploy in progress');
+  await page.click('button:has-text(&quot;Confirm&quot;)');
+
+  await page.waitForSelector('.status-badge:has-text(&quot;PAUSED&quot;)', { timeout: 5000 });
+
+  // Resume
+  await page.click('button:has-text(&quot;Resume&quot;)');
+  await page.waitForSelector('.status-badge:has-text(&quot;RUNNING&quot;)', { timeout: 2000 });
+
+  // Verify timeline
+  const markers = await page.locator('.timeline-marker[data-type=&quot;pause&quot;]').count();
+  expect(markers).toBeGreaterThan(0);
+});
+</code></pre>
+<hr />
+<h2 id="gp-05-view-cost-breakdown">GP-05: View Cost Breakdown<a class="headerlink" href="#gp-05-view-cost-breakdown" title="Permanent link">&para;</a></h2>
+<p><strong>User persona</strong>: Finance team reviewing cloud costs</p>
+<p><strong>Steps</strong>:</p>
+<ol>
+<li><strong>Open run detail</strong></li>
+<li>Navigate to completed run</li>
+<li>
+<p>Cost panel visible: "$1.23 USD"</p>
+</li>
+<li>
+<p><strong>View breakdown</strong></p>
+</li>
+<li>Click "View Breakdown"</li>
+<li>Modal shows:<ul>
+<li>Compute: $0.80</li>
+<li>Storage: $0.30</li>
+<li>Network: $0.13</li>
+</ul>
+</li>
+<li>
+<p>Table lists per-node costs</p>
+</li>
+<li>
+<p><strong>Filter by node</strong></p>
+</li>
+<li>Click "Show nodes &gt;$0.50"</li>
+<li>
+<p>Table filters to expensive nodes only</p>
+</li>
+<li>
+<p><strong>Export for billing</strong></p>
+</li>
+<li>Click "Export to CSV"</li>
+<li>CSV includes: nodeId, cost, duration, resources</li>
+</ol>
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul>
+<li>✅ Cost estimates available within 10 seconds of run completion</li>
+<li>✅ Breakdown sums to total (no rounding errors)</li>
+<li>✅ Export includes all cost line items</li>
+</ul>
+<p><strong>E2E Test</strong>:</p>
+<pre><code class="language-typescript">test('GP-05: View cost breakdown', async ({ page }) =&gt; {
+  await page.goto('/runs/run-xyz');
+
+  // Verify cost visible
+  await page.waitForSelector('.cost-panel');
+  const totalCost = await page.textContent('.cost-panel .total');
+  expect(totalCost).toMatch(/\$[\d.]+/);
+
+  // View breakdown
+  await page.click('button:has-text(&quot;View Breakdown&quot;)');
+  await page.waitForSelector('.cost-breakdown-modal');
+
+  // Check categories
+  expect(await page.isVisible('text=Compute')).toBeTruthy();
+  expect(await page.isVisible('text=Storage')).toBeTruthy();
+});
+</code></pre>
+<hr />
+<h2 id="monitoring-synthetic-canaries">Monitoring: Synthetic Canaries<a class="headerlink" href="#monitoring-synthetic-canaries" title="Permanent link">&para;</a></h2>
+<p>Each golden path should have a <strong>synthetic canary</strong> running every 15 minutes:</p>
+<pre><code class="language-typescript">// Example: Playwright synthetic test
+import { test } from '@playwright/test';
+
+test('Canary: GP-01 smoke test', async ({ page }) =&gt; {
+  await page.goto(process.env.APP_URL);
+
+  // Minimal smoke test (not full golden path)
+  await page.click('button:has-text(&quot;New Project&quot;)');
+  await page.waitForSelector('input[name=&quot;name&quot;]', { timeout: 2000 });
+
+  // Report to monitoring
+  console.log('✅ GP-01 smoke test passed');
+});
+</code></pre>
+<p><strong>Monitoring alerts</strong>:</p>
+<ul>
+<li>Golden path failure → PagerDuty critical alert</li>
+<li>2 consecutive failures → Page oncall engineer</li>
+<li>SLO: 99.9% golden path success rate</li>
+</ul>
+<hr />
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../contracts/UI_API_CONTRACT.v1/">UI_API_CONTRACT.v1.md</a> - API endpoints</li>
+<li><a href="../../quality/TEST_STRATEGY_FRONT/">TEST_STRATEGY_FRONT.md</a> - Testing approach</li>
+<li><a href="https://playwright.dev">Playwright Docs</a> - E2E testing</li>
+</ul>
+<hr />
+<p><em>Last updated: 2026-02-11</em><br />
+<em>Version: 1.0</em><br />
+<em>Status: Testable - Each golden path MUST have passing E2E test</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

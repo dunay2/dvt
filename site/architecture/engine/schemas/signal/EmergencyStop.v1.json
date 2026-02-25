@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/signal/EmergencyStop.v1.json",
+  "title": "EmergencyStop Signal Payload",
+  "type": "object",
+  "properties": {
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "forceKill": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false,
+  "required": ["reason"]
+}

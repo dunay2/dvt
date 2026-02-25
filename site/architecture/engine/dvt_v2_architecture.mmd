@@ -1,0 +1,391 @@
+flowchart LR
+
+%% ─────────────────────────────────────────────────────────────
+%% STYLES (Legend-driven)
+classDef core fill:#1f4e79,color:#fff,stroke:#0b2c44,stroke-width:1px;
+classDef reused fill:#f3f4f6,color:#111827,stroke:#9ca3af,stroke-dasharray: 5 5;
+classDef pluggable fill:#ffffff,color:#111827,stroke:#6b7280,stroke-width:1px;
+classDef store fill:#fff7ed,color:#111827,stroke:#fb923c,stroke-width:1px;
+classDef contract fill:#eef2ff,color:#111827,stroke:#6366f1,stroke-width:1px;
+classDef capability fill:#ecfeff,color:#111827,stroke:#06b6d4,stroke-width:1px;
+
+%% ─────────────────────────────────────────────────────────────
+%% EXTERNAL / REUSED OSS
+subgraph EXT["External / Reused OSS (Candidates)"]
+  direction TB
+
+  subgraph EXT_ENG["Workflow Engines (selectable)"]
+    direction TB
+    Temporal["Temporal"]:::reused
+    Conductor["Netflix Conductor / Orkes Conductor"]:::reused
+    BullMQ["BullMQ"]:::reused
+    ArgoWF["(optional) Argo Workflows"]:::reused
+    Airflow["(optional) Apache Airflow"]:::reused
+    Prefect["(optional) Prefect"]:::reused
+    Dagster["(optional) Dagster"]:::reused
+    Flyte["(optional) Flyte"]:::reused
+    Kestra["(optional) Kestra"]:::reused
+  end
+
+  subgraph EXT_BUS["Event Bus / Messaging"]
+    direction TB
+    NATS["NATS"]:::reused
+    Kafka["Kafka"]:::reused
+    RedisPS["Redis Pub/Sub"]:::reused
+    Rabbit["(optional) RabbitMQ"]:::reused
+  end
+
+  subgraph EXT_GIT["Git Integration"]
+    direction TB
+    GHGL["GitHub / GitLab APIs"]:::reused
+    IsoGit["(optional) isomorphic-git"]:::reused
+    LibGit2["(optional) libgit2"]:::reused
+  end
+
+  subgraph EXT_UI["UI Foundations"]
+    direction TB
+    ReactFlow["React Flow"]:::reused
+    Monaco["Monaco Editor"]:::reused
+    XState["(optional) xstate"]:::reused
+    Zod["(optional) zod"]:::reused
+    RHF["(optional) react-hook-form"]:::reused
+  end
+
+  subgraph EXT_CFG["Config Concepts"]
+    direction TB
+    Convict["convict"]:::reused
+    Confidence["confidence"]:::reused
+    NodeConfig["node-config"]:::reused
+    EnvVar["(optional) env-var"]:::reused
+    Dotenvx["(optional) dotenvx"]:::reused
+  end
+
+  subgraph EXT_OBS["Observability Stack"]
+    direction TB
+    OTel["OpenTelemetry"]:::reused
+    Prom["Prometheus"]:::reused
+    Graf["Grafana"]:::reused
+    Loki["Loki (logs)"]:::reused
+    ELK["(optional) ELK"]:::reused
+    Jaeger["Jaeger (traces)"]:::reused
+    Tempo["Tempo (traces)"]:::reused
+    Sentry["(optional) Sentry (FE)"]:::reused
+  end
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% CORE PLATFORM
+subgraph CORE["Core Platform"]
+  direction TB
+
+  subgraph BOOT["Bootstrap Core"]
+    direction TB
+    CoreCfg["Core::ConfigLoader\n(env/yaml/defaults)"]:::core
+    CoreDisc["Core::ModuleAutodiscovery"]:::core
+    CoreDI["Core::DIContainer"]:::core
+    CoreFlags["Core::FeatureFlags (optional)"]:::core
+  end
+
+  subgraph BOUND["Interface Boundary (Core Contracts)"]
+    direction TB
+    IWorkflowEngine["IWorkflowEngine"]:::contract
+    IEventBus["IEventBus"]:::contract
+    IPluginRuntime["IPluginRuntime"]:::contract
+    IGitSyncEngine["IGitSyncEngine"]:::contract
+    IUIHost["IUIHost"]:::contract
+    IServiceRegistry["IServiceRegistry"]:::contract
+
+    IExecutionPlanner["IExecutionPlanner"]:::contract
+    IRunStateStore["IRunStateStore"]:::contract
+    IObservability["IObservability"]:::contract
+    IArtifactStore["IArtifactStore"]:::contract
+    IAuthorization["IAuthorization"]:::contract
+    ISecretsProvider["ISecretsProvider"]:::contract
+  end
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% ADAPTERS (implement contracts)
+subgraph ADPT["Adapters (implement Core Contracts)"]
+  direction TB
+
+  subgraph ADPT_ENG["Workflow Engine Adapters"]
+    direction TB
+    TemporalAdapter["TemporalAdapter"]:::pluggable
+    ConductorAdapter["ConductorAdapter"]:::pluggable
+    BullMQAdapter["BullMQAdapter"]:::pluggable
+  end
+
+  subgraph ADPT_BUS["Event Bus Adapters"]
+    direction TB
+    NATSAdapter["NATSAdapter"]:::pluggable
+    KafkaAdapter["KafkaAdapter"]:::pluggable
+    RedisAdapter["RedisPubSubAdapter"]:::pluggable
+  end
+
+  subgraph ADPT_GIT["Git Sync Adapters"]
+    direction TB
+    GHGLAdapter["GitHubGitLabAdapter"]:::pluggable
+    IsoGitAdapter["(optional) IsomorphicGitAdapter"]:::pluggable
+    LibGit2Adapter["(optional) LibGit2Adapter"]:::pluggable
+  end
+
+  subgraph ADPT_CFG["Config Adapters"]
+    direction TB
+    ConfigAdapter["ConfigProviderAdapter\n(convict/confidence/node-config)"]:::pluggable
+  end
+
+  subgraph ADPT_OBS["Observability Adapters"]
+    direction TB
+    OTelAdapter["OpenTelemetryAdapter"]:::pluggable
+    MetricsAdapter["PrometheusMetricsAdapter"]:::pluggable
+    LogsAdapter["LogsAdapter\n(Loki/ELK)"]:::pluggable
+    TracesAdapter["TracesAdapter\n(Tempo/Jaeger)"]:::pluggable
+    SnowCostAdapter["SnowflakeCostIngestionAdapter"]:::pluggable
+  end
+
+  subgraph ADPT_SEC["Security & Secrets Adapters"]
+    direction TB
+    OIDCAdapter["OIDC/OAuth Adapter"]:::pluggable
+    VaultAdapter["(recommended) Vault/SecretsManager Adapter"]:::pluggable
+  end
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% EXECUTION PLANNING LAYER
+subgraph PLAN["Execution Planning Layer"]
+  direction TB
+  DAGAnalyzer["DAG Analyzer\n(manifest-based)"]:::pluggable
+  CostEstimator["Cost/Impact Estimator\n(Snowflake + heuristics)"]:::pluggable
+  PartialExec["Partial Execution Resolver\n(selection/skip)"]:::pluggable
+  RetryPolicy["Retry/Backoff Policy\n(engine-agnostic)"]:::pluggable
+  EnvResolver["Environment Resolver\n(dev/stage/prod targets, vars)"]:::pluggable
+  ExecPlan["ExecutionPlan (versioned)"]:::pluggable
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% METADATA / STATE LAYER
+subgraph STATE["Metadata / State Store Layer"]
+  direction TB
+  ApiStateSvc["Run State Service\n(API + subscriptions)"]:::pluggable
+
+  subgraph STORES["Data Stores"]
+    direction TB
+    Postgres["Postgres (preferred)\nTransactional State"]:::store
+    SQLite["(optional) SQLite (local dev)"]:::store
+    SnowflakeAnalytics["(optional) Snowflake (analytics)\nLong-term metrics"]:::store
+    ArtifactRepo["Artifact Repository\n(immutable bundles)"]:::store
+  end
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% OBSERVABILITY & COST LAYER
+subgraph OBS["Observability & Cost Layer"]
+  direction TB
+  OTelInstr["Instrumentation Points\n(core+adapters)"]:::pluggable
+  ObsRouter["Observability Router\n(metrics/logs/traces)"]:::pluggable
+  Alerts["SLA Alerts / Notifications"]:::pluggable
+  CostDash["Cost Dashboards"]:::pluggable
+  RunDiag["Run Diagnostics\n(root-cause)"]:::pluggable
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% DBT INTEGRATION
+subgraph DBT["dbt Integration (Adapters)"]
+  direction TB
+  DbtCompile["dbt Compiler\n(compiled SQL + manifest)"]:::pluggable
+  DbtRunner["dbt Runner\n(dbt Core OR dbt Cloud API adapter)"]:::pluggable
+  ArtParser["Artifacts Parser\n(manifest/run_results/catalog)"]:::pluggable
+  DbtDocs["(optional) Docs Generator"]:::pluggable
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% PLUGIN SYSTEM (SANDBOXED)
+subgraph PLUG["Plugin System (Sandboxed)"]
+  direction TB
+  PluginManifest["Plugin Manifest\n(capabilities, perms, UI modules)"]:::pluggable
+  PluginSandbox["Sandbox Runtime\n(worker/isolated-vm)"]:::pluggable
+  PluginAPI["Plugin API Surface\n(contracts only)"]:::pluggable
+  PluginTypes["Plugin Types:\n- Nodes\n- Validators\n- Cost policies\n- Panels"]:::pluggable
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% API LAYER
+subgraph API["API Layer"]
+  direction TB
+  Auth["AuthN/AuthZ\n(OIDC/OAuth)"]:::pluggable
+  RBAC["RBAC Enforcement\n(tenant/project scope)"]:::pluggable
+  RestGQL["REST or GraphQL"]:::pluggable
+  Live["WebSocket/SSE\nlive run updates"]:::pluggable
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% UI RUNTIME MODEL
+subgraph UI["UI Runtime Model"]
+  direction TB
+  Canvas["Graph Canvas\n(React Flow)"]:::pluggable
+  Inspector["Node Inspector / Forms\n(JSON schema driven)"]:::pluggable
+  RunView["Run View\n(timeline/status/logs/retries)"]:::pluggable
+  DiffView["Diff View\n(git + artifacts diff)"]:::pluggable
+  LineageView["Lineage View\n(catalog/manifest)"]:::pluggable
+  TenantSwitch["Permissions & Tenant Switch"]:::pluggable
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% CAPABILITIES PANEL (Product view)
+subgraph CAP["Capabilities (Product)"]
+  direction TB
+  CapProj["Project & Environment Management"]:::capability
+  CapGit["Git Sync & PR lifecycle"]:::capability
+  CapGraph["Graph Modeling (Canvas + Inspector)"]:::capability
+  CapPlan["Execution Planning (cost/impact/skip)"]:::capability
+  CapRuns["Orchestration & Runs"]:::capability
+  CapObs["Observability & Cost"]:::capability
+  CapSec["Security (RBAC, secrets)"]:::capability
+  CapPlug["Plugins & Extensions"]:::capability
+  CapDbt["dbt Compatibility (compile/run/test/docs)"]:::capability
+end
+
+%% ─────────────────────────────────────────────────────────────
+%% CONTRACT WIRING (core -> adapters)
+IWorkflowEngine --> TemporalAdapter
+IWorkflowEngine --> ConductorAdapter
+IWorkflowEngine --> BullMQAdapter
+
+IEventBus --> NATSAdapter
+IEventBus --> KafkaAdapter
+IEventBus --> RedisAdapter
+
+IGitSyncEngine --> GHGLAdapter
+IGitSyncEngine --> IsoGitAdapter
+IGitSyncEngine --> LibGit2Adapter
+
+IObservability --> OTelAdapter
+IObservability --> MetricsAdapter
+IObservability --> LogsAdapter
+IObservability --> TracesAdapter
+IObservability --> SnowCostAdapter
+
+IAuthorization --> OIDCAdapter
+ISecretsProvider --> VaultAdapter
+
+%% external bindings (adapters -> external)
+TemporalAdapter --> Temporal
+ConductorAdapter --> Conductor
+BullMQAdapter --> BullMQ
+
+NATSAdapter --> NATS
+KafkaAdapter --> Kafka
+RedisAdapter --> RedisPS
+
+GHGLAdapter --> GHGL
+IsoGitAdapter --> IsoGit
+LibGit2Adapter --> LibGit2
+
+OTelAdapter --> OTel
+MetricsAdapter --> Prom
+Graf --> Graf
+LogsAdapter --> Loki
+LogsAdapter --> ELK
+TracesAdapter --> Jaeger
+TracesAdapter --> Tempo
+Sentry --- UI
+
+%% ─────────────────────────────────────────────────────────────
+%% CORE -> LAYERS (ports usage)
+IExecutionPlanner --> DAGAnalyzer
+IExecutionPlanner --> CostEstimator
+IExecutionPlanner --> PartialExec
+IExecutionPlanner --> RetryPolicy
+IExecutionPlanner --> EnvResolver
+DAGAnalyzer --> ExecPlan
+CostEstimator --> ExecPlan
+PartialExec --> ExecPlan
+RetryPolicy --> ExecPlan
+EnvResolver --> ExecPlan
+
+IRunStateStore --> ApiStateSvc
+ApiStateSvc --> Postgres
+ApiStateSvc --> SQLite
+ApiStateSvc --> SnowflakeAnalytics
+IArtifactStore --> ArtifactRepo
+
+%% ─────────────────────────────────────────────────────────────
+%% DBT integration wiring
+DbtCompile --> ArtParser
+DbtRunner --> ArtParser
+ArtParser --> ApiStateSvc
+DbtCompile --> ArtifactRepo
+DbtRunner --> ArtifactRepo
+DbtDocs --> ArtifactRepo
+
+%% ─────────────────────────────────────────────────────────────
+%% UI wiring (UI reads from State + subscribes)
+Canvas --> RestGQL
+Inspector --> RestGQL
+RunView --> RestGQL
+DiffView --> RestGQL
+LineageView --> RestGQL
+TenantSwitch --> RestGQL
+Live --> Canvas
+Live --> RunView
+
+RestGQL --> ApiStateSvc
+Live --> ApiStateSvc
+
+%% ─────────────────────────────────────────────────────────────
+%% Plugins wiring
+IPluginRuntime --> PluginSandbox
+PluginManifest --> PluginSandbox
+PluginSandbox --> PluginAPI
+PluginAPI --> IExecutionPlanner
+PluginAPI --> IUIHost
+PluginAPI --> IObservability
+PluginTypes --> PluginManifest
+
+%% ─────────────────────────────────────────────────────────────
+%% API security wiring
+Auth --> RBAC
+RBAC --> RestGQL
+RBAC --> Live
+OIDCAdapter --> Auth
+
+%% ─────────────────────────────────────────────────────────────
+%% Observability flows
+OTelInstr --> ObsRouter
+ObsRouter --> Prom
+ObsRouter --> Loki
+ObsRouter --> ELK
+ObsRouter --> Jaeger
+ObsRouter --> Tempo
+SnowCostAdapter --> CostDash
+ObsRouter --> RunDiag
+ObsRouter --> Alerts
+
+%% ─────────────────────────────────────────────────────────────
+%% KEY FLOWS (numbered)
+GHGLAdapter -- "1) repo@sha" --> DbtCompile
+DbtCompile -- "1) manifest.json + compiled_sql" --> ArtifactRepo
+DbtRunner -- "1) run_results.json" --> ArtifactRepo
+ArtParser -- "1) graph + metadata" --> ApiStateSvc
+ApiStateSvc -- "1) GraphViewModel" --> Canvas
+
+Canvas -- "2) RunRequest (selection)" --> RestGQL
+RestGQL -- "2) RunRequest" --> ApiStateSvc
+ApiStateSvc -- "2) PlanInputs (manifest + selection + env)" --> DAGAnalyzer
+ExecPlan -- "2) ExecutionPlan vN" --> IWorkflowEngine
+IWorkflowEngine -- "2) task/workflow start" --> ApiStateSvc
+ApiStateSvc -- "2) RunStateUpdate" --> Live
+Live -- "2) RunStateUpdate" --> RunView
+
+DbtRunner -- "3) metrics/logs/traces" --> OTelInstr
+OTelInstr -- "3) telemetry spans/metrics/logs" --> ObsRouter
+SnowCostAdapter -- "3) query_history/warehouse_usage" --> ObsRouter
+ObsRouter -- "3) dashboards/alerts" --> CostDash
+ObsRouter -- "3) diagnostics" --> RunDiag
+CostDash -- "3) CostViewModel" --> RunView
+
+PluginManifest -- "4) RegisterNodeType + UI module" --> IUIHost
+IUIHost -- "4) UIExtension" --> Canvas
+PluginAPI -- "4) PlannerExtension" --> DAGAnalyzer
+PluginSandbox -- "4) Execution hooks" --> IWorkflowEngine

@@ -1,0 +1,1627 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>DVT+ — Principal Architect Review - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dvt-principal-architect-review" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DVT+ — Principal Architect Review
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#source-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dvt-principal-architect-review">DVT+ — Principal Architect Review<a class="headerlink" href="#dvt-principal-architect-review" title="Permanent link">&para;</a></h1>
+<p><strong>Date:</strong> 2026-02-25 00:00<br />
+<strong>Role:</strong> Principal / Staff Architect Review<br />
+<strong>Scope Basis:</strong> ADR-0000 → ADR-0017, Planner v2.3.2, IWorkflowEngine v1.1.1, WorkflowEngine.ts, architecture diagram, planner ADRs 0001–0006.</p>
+<hr />
+<h2 id="source-artifacts">Source Artifacts<a class="headerlink" href="#source-artifacts" title="Permanent link">&para;</a></h2>
+<p>This review is based on the following project artifacts:</p>
+<ul>
+<li>Architecture diagram &amp; system framing fileciteturn0file0</li>
+<li>Workflow Engine Artifact (Temporal-first strategy) fileciteturn0file1</li>
+<li>V2 Architecture Explanation fileciteturn0file2</li>
+<li>Product Definition V0 fileciteturn0file3</li>
+</ul>
+<p>The three named standalone documents were not present independently; conclusions are derived from implemented code and ADRs.</p>
+<hr />
+<h1 id="1-conceptual-soundness">1. Conceptual Soundness<a class="headerlink" href="#1-conceptual-soundness" title="Permanent link">&para;</a></h1>
+<h2 id="core-trifecta">Core Trifecta<a class="headerlink" href="#core-trifecta" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>“The UI does not execute.<br />
+ The engine does not decide.<br />
+ The planner does not persist.”</p>
+</blockquote>
+<p>At the interface boundary level, this separation is valid.</p>
+<ul>
+<li><code>IWorkflowEngine</code> consumes <code>PlanRef</code>, not raw plan bytes.</li>
+<li>Planner emits deterministic <code>ExecutionPlanV2</code>.</li>
+<li><code>RunStateStore</code> is the sole source of truth.</li>
+<li>UI is projection-driven.</li>
+</ul>
+<p>This separation is architecturally correct.</p>
+<h3 id="fragility-points">Fragility Points<a class="headerlink" href="#fragility-points" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Dual Versioning Namespace</strong></li>
+<li>Planner: <code>planVersion</code> = schema format.</li>
+<li>Engine <code>PlanRef.planVersion</code> = revision instance.</li>
+<li><code>schemaVersion</code> (engine compatibility gate).</li>
+</ol>
+<p>Same term, different semantics. High confusion risk.</p>
+<ol>
+<li>
+<p><strong>@dvt/plan-verifier Missing</strong>
+   ADR-0012 and ADR-0017 mandate a shared verification package. It does not exist.
+   → Integrity enforcement is aspirational, not enforceable.</p>
+</li>
+<li>
+<p><strong>Temporal Worker Direct DB Writes</strong>
+   Temporal activities write directly to <code>IRunStateStore</code>.
+   This couples adapter workers to Postgres infrastructure.</p>
+</li>
+<li>
+<p><strong>detectStuckRuns on IWorkflowEngine</strong>
+   Operational sweep function placed on primary lifecycle interface.
+   Violates boundary purity.</p>
+</li>
+<li>
+<p><strong>Projection Scalability</strong>
+   In-process projector.
+   No async deployment model.
+   No snapshot frequency enforcement.</p>
+</li>
+</ol>
+<hr />
+<h1 id="2-architectural-risk-map">2. Architectural Risk Map<a class="headerlink" href="#2-architectural-risk-map" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Severity</th>
+<th>Likelihood</th>
+<th>Rationale</th>
+<th>Required Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plan-verifier absent</td>
+<td>Critical</td>
+<td>High</td>
+<td>ADR-mandated but missing</td>
+<td>Build before production</td>
+</tr>
+<tr>
+<td>Temporal worker DB coupling</td>
+<td>High</td>
+<td>Certain</td>
+<td>Hard infra dependency</td>
+<td>Accept formally or introduce state-write service</td>
+</tr>
+<tr>
+<td>Version naming collision</td>
+<td>High</td>
+<td>High</td>
+<td>Semantic overload</td>
+<td>Rename planner field</td>
+</tr>
+<tr>
+<td>DLQ strict blocking</td>
+<td>High</td>
+<td>Medium</td>
+<td>Poison event blocks run stream</td>
+<td>Add DLQ tooling</td>
+</tr>
+<tr>
+<td>Snapshot incomplete</td>
+<td>High</td>
+<td>High</td>
+<td>Replay cost grows</td>
+<td>Implement snapshotting</td>
+</tr>
+<tr>
+<td>Conductor undefined</td>
+<td>Medium</td>
+<td>Certain</td>
+<td>No adapter design</td>
+<td>Freeze parity claim</td>
+</tr>
+<tr>
+<td>Tenant quota missing</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>No limits per tenant</td>
+<td>Add quota enforcement</td>
+</tr>
+<tr>
+<td>Retention undefined</td>
+<td>Medium</td>
+<td>High</td>
+<td>Event log growth</td>
+<td>Define archival policy</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="3-engine-abstraction-review">3. Engine Abstraction Review<a class="headerlink" href="#3-engine-abstraction-review" title="Permanent link">&para;</a></h1>
+<p><code>IWorkflowEngine</code> should remain:</p>
+<ul>
+<li>startRun</li>
+<li>cancelRun</li>
+<li>getRunStatus</li>
+<li>enrichRunStatus</li>
+<li>signal</li>
+</ul>
+<p>Remove <code>detectStuckRuns</code> from primary contract.</p>
+<p>Temporal-first is operationally reasonable.</p>
+<p>Conductor parity is theoretical; design not yet specified.</p>
+<p>Event model is sound:</p>
+<ul>
+<li>logicalAttemptId / engineAttemptId separation</li>
+<li>idempotency hash formula correct</li>
+<li>cancel intent vs terminal separation correct</li>
+</ul>
+<p>Determinism risk remains if workflow code introduces non-deterministic behavior.</p>
+<hr />
+<h1 id="4-execution-planning-layer">4. Execution Planning Layer<a class="headerlink" href="#4-execution-planning-layer" title="Permanent link">&para;</a></h1>
+<p>Strengths:</p>
+<ul>
+<li>Kahn topological sort (O(N log N))</li>
+<li>Content-addressed <code>planId = sha256(JCS(planCore))</code></li>
+<li>Deterministic canonicalization</li>
+<li>Clear StepFactory extension</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li>No enforcement that adapters honor retry policy.</li>
+<li>Cost attribution unimplemented.</li>
+<li>Input schema does not constrain resourceType enum.</li>
+<li>Planner and contracts define separate input type systems.</li>
+</ul>
+<p>Planner core is production-grade. Surrounding contracts are not yet aligned.</p>
+<hr />
+<h1 id="5-state-metadata-layer">5. State &amp; Metadata Layer<a class="headerlink" href="#5-state-metadata-layer" title="Permanent link">&para;</a></h1>
+<p>Postgres is correct for transactional store.</p>
+<p>Major missing elements:</p>
+<ul>
+<li>Retention policy</li>
+<li>Archival partitioning strategy</li>
+<li>Snapshot cadence specification</li>
+<li>Read replica/failover spec</li>
+<li>DLQ operator tooling</li>
+</ul>
+<p>Projection remains in-process. Not horizontally scalable.</p>
+<p>At projected scale (1000 tenants × 100 runs/day):
+Append-only growth becomes operational pressure within 12 months.</p>
+<hr />
+<h1 id="6-plugin-system-evaluation">6. Plugin System Evaluation<a class="headerlink" href="#6-plugin-system-evaluation" title="Permanent link">&para;</a></h1>
+<p>StepFactory extension clean.</p>
+<p>However:</p>
+<ul>
+<li>No version contract for StepFactory.</li>
+<li>No isolation ADR for plugin runtime.</li>
+<li>vm2 deprecated; worker-thread alternative not documented.</li>
+<li>Capabilities self-declared; no attestation.</li>
+</ul>
+<p>Plugin model conceptually valid but governance underbuilt.</p>
+<hr />
+<h1 id="7-overbuilt-areas">7. Overbuilt Areas<a class="headerlink" href="#7-overbuilt-areas" title="Permanent link">&para;</a></h1>
+<ol>
+<li>Neo4j CI dependency for AI knowledge graph.</li>
+<li>Six-phase idempotency migration ceremony.</li>
+<li>Multi-engine ambition without second engine spec.</li>
+</ol>
+<hr />
+<h1 id="8-underbuilt-areas">8. Underbuilt Areas<a class="headerlink" href="#8-underbuilt-areas" title="Permanent link">&para;</a></h1>
+<ol>
+<li>plan-verifier (critical).</li>
+<li>Schema upgrade migration tooling.</li>
+<li>Rollback semantics for in-flight runs.</li>
+<li>Cost attribution layer.</li>
+<li>DLQ operational tooling.</li>
+<li>Tenant quota enforcement.</li>
+<li>adapter-postgres implementation.</li>
+<li>Async projector deployment model.</li>
+</ol>
+<hr />
+<h1 id="9-scalability-outlook-3-year">9. Scalability Outlook (3-Year)<a class="headerlink" href="#9-scalability-outlook-3-year" title="Permanent link">&para;</a></h1>
+<p>Planner: horizontally scalable.</p>
+<p>Primary bottlenecks:</p>
+<ul>
+<li>Projection read amplification.</li>
+<li>Outbox throughput and DLQ blocking.</li>
+<li>Event table growth without partitioning.</li>
+<li>Single Postgres write node.</li>
+</ul>
+<p>Cost dashboards near-real-time capability not designed.</p>
+<hr />
+<h1 id="10-architectural-scorecard">10. Architectural Scorecard<a class="headerlink" href="#10-architectural-scorecard" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Score</th>
+<th>Commentary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Conceptual clarity</td>
+<td>7/10</td>
+<td>Strong core; naming debt + verifier gap</td>
+</tr>
+<tr>
+<td>Separation of concerns</td>
+<td>6/10</td>
+<td>Boundaries clean conceptually; leak at adapter layer</td>
+</tr>
+<tr>
+<td>Engine replaceability</td>
+<td>5/10</td>
+<td>Interface stable; Conductor design absent</td>
+</tr>
+<tr>
+<td>Determinism</td>
+<td>9/10</td>
+<td>Planner rigor excellent</td>
+</tr>
+<tr>
+<td>Extensibility</td>
+<td>6/10</td>
+<td>Plugin surface exists; governance missing</td>
+</tr>
+<tr>
+<td>Operational realism</td>
+<td>4/10</td>
+<td>Production prerequisites incomplete</td>
+</tr>
+<tr>
+<td>Maintainability</td>
+<td>6/10</td>
+<td>ADR discipline strong; execution gaps remain</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="11-strategic-priorities">11. Strategic Priorities<a class="headerlink" href="#11-strategic-priorities" title="Permanent link">&para;</a></h1>
+<h2 id="immediate">Immediate<a class="headerlink" href="#immediate" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Build <code>@dvt/plan-verifier</code>.</li>
+<li>Extract detectStuckRuns from IWorkflowEngine.</li>
+<li>Rename planner <code>planVersion</code> → <code>planSchemaVersion</code>.</li>
+</ol>
+<h2 id="clarify">Clarify<a class="headerlink" href="#clarify" title="Permanent link">&para;</a></h2>
+<ol>
+<li>ConductorAdapter write-path design.</li>
+<li>Projector deployment topology.</li>
+<li>Run retention &amp; archival policy.</li>
+</ol>
+<h2 id="freeze">Freeze<a class="headerlink" href="#freeze" title="Permanent link">&para;</a></h2>
+<ol>
+<li>IWorkflowEngine lifecycle surface (5 methods only).</li>
+<li>Idempotency key formula.</li>
+<li>planCore hash boundary.</li>
+</ol>
+<h2 id="delay">Delay<a class="headerlink" href="#delay" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Multi-event-bus expansion.</li>
+<li>Cost attribution until execution stable.</li>
+<li>Plugin runtime isolation redesign until first real plugin.</li>
+</ol>
+<hr />
+<h1 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h1>
+<p>The conceptual architecture is coherent and disciplined.</p>
+<p>The planner is production-grade.</p>
+<p>The system is <strong>not production-ready</strong> due to:</p>
+<ul>
+<li>Missing plan-verifier</li>
+<li>Stub persistence adapter</li>
+<li>In-process projection model</li>
+<li>No retention or migration tooling</li>
+</ul>
+<p>The risk is architectural ambition exceeding implementation maturity.</p>
+<p>Priority should shift from expanding scope to closing enforceability gaps and operational hardening.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

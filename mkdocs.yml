@@ -1,6 +1,5 @@
 site_name: DVT Documentation
 site_description: Documentation site for DVT (engine, contracts, runbooks)
-site_url: https://dunay2.github.io/dvt
 repo_url: https://github.com/dunay2/dvt
 theme:
   name: material
@@ -17,15 +16,33 @@ plugins:
   - search
 nav:
   - Home: index.md
-  - Contracts:
-      - Overview: contracts/README.md
-  - ADR:
-      - Overview: adr/README.md
-  - Architecture:
-      - Overview: architecture/README.md
-  - Runbooks:
-      - Overview: runbooks/README.md
-  - API:
-      - Overview: api/README.md
+  - Core:
+      - Docs Index: INDEX.md
+      - Architecture Index: architecture/engine/INDEX.md
+      - Contributing: CONTRIBUTING.md
+      - Quality Guide: guides/QUALITY.md
+  - Vision (v0.6):
+      - Vision Pack Index: vision/DVT_Docs_Pack_v0.6/docs/index.md
+      - Blueprint MASTER: vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md
+      - Development Standard: vision/DVT_Docs_Pack_v0.6/docs/standards/development.md
+      - Canonical Minimal Modules: vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos.md
+      - Lore: vision/DVT_Docs_Pack_v0.6/docs/lore.md
+  - Governance:
+      - Repo Structure Summary: REPO_STRUCTURE_SUMMARY.md
+      - Contracts Automation Index: CONTRACTS_AUTOMATION_INDEX.md
+      - Technical Debt Register: guides/TECHNICAL_DEBT_REGISTER.md
+      - Engine Migration Plan (Gap -> Target): planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN.md
+  - Planning:
+      - Next Issues Templates: planning/NEXT_ISSUES_TEMPLATES.md
+      - Product Strategy DVT: planning/PRODUCT_STRATEGY_DVT.md
+      - GTM Plan DVT: planning/GTM_PLAN_DVT.md
+  - Operations:
+      - Runbooks README: runbooks/README.md
+      - Outbox Replay: runbooks/outbox_replay.md
+      - Rollback & Restore: runbooks/rollback_and_restore.md
+  - Status:
+      - Implementation Summary: status/IMPLEMENTATION_SUMMARY.md
+      - Outbox Worker Notes: status/IMPLEMENTATION_NOTES_OUTBOX_WORKER.md
+      - Changelog: release/CHANGELOG.md
 extra:
   language: en

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/signal/SkipStep.v1.json",
+  "title": "SkipStep Signal Payload",
+  "type": "object",
+  "properties": {
+    "stepId": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 500
+    }
+  },
+  "additionalProperties": false,
+  "required": ["stepId"]
+}

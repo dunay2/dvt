@@ -1,0 +1,63 @@
+name: ADR Linkage Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  adr-linkage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect sensitive changes
+        id: diff
+        run: |
+          git fetch origin main --depth=1
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          echo "changed<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Check ADR linkage for sensitive paths
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          CHANGED="${{ steps.diff.outputs.changed }}"
+          echo "$CHANGED" | sed 's/^/ - /'
+
+          SENSITIVE=$(echo "$CHANGED" | grep -E '^packages/@dvt/.+/(schemas|contracts|run-state|run-state-store)/' || true)
+          if [ -z "$SENSITIVE" ]; then
+            echo "No sensitive changes detected."
+            exit 0
+          fi
+
+          echo "Sensitive changes detected:"
+          echo "$SENSITIVE" | sed 's/^/ - /'
+
+          # Check 1: ADR file changed/added in this PR
+          ADR_FILES=$(echo "$CHANGED" | grep -E '^ADR/ADR-[0-9]{4}.*\.md$' || true)
+          if [ -n "$ADR_FILES" ]; then
+            echo "✅ ADR file(s) present in PR diff:"
+            echo "$ADR_FILES" | sed 's/^/ - /'
+            exit 0
+          fi
+
+          # Check 2: ADR reference marker in PR body (format: ADR-NNNN)
+          # NOTE: This check requires the PR body to include a reference like "ADR-0001" or "ADR-0023".
+          # A reference alone is weaker than adding/modifying the ADR file.
+          # It is accepted for changes that reference an already-Accepted ADR without amending it.
+          if echo "$PR_BODY" | grep -qE 'ADR-[0-9]{4}'; then
+            MATCHED=$(echo "$PR_BODY" | grep -oE 'ADR-[0-9]{4}' | head -5 | tr '\n' ' ')
+            echo "✅ ADR reference found in PR body: $MATCHED"
+            echo "⚠️  Warning: referencing an existing ADR is accepted but adding/modifying the ADR file is preferred."
+            exit 0
+          fi
+
+          echo "❌ No ADR file in diff and no ADR-NNNN reference found in PR body."
+          echo "Expected one of:"
+          echo "  - Add or modify a file under /ADR/ADR-NNNN-*.md"
+          echo "  - Include 'ADR-NNNN' in the PR description referencing an Accepted ADR"
+          exit 1

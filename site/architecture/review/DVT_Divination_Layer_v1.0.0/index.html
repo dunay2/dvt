@@ -1,0 +1,3074 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for DVT (engine, contracts, runbooks)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>🔮 DVT+ Divination Layer v1.0.0 - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dvt-divination-layer-v100" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              🔮 DVT+ Divination Layer v1.0.0
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../engine/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/QUALITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision (v0.6)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vision (v0.6)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pack Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint MASTER
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/standards/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Minimal Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vision/DVT_Docs_Pack_v0.6/docs/lore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../REPO_STRUCTURE_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repo Structure Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CONTRACTS_AUTOMATION_INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Automation Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/TECHNICAL_DEBT_REGISTER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Debt Register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/ENGINE_GAP_TO_TARGET_MIGRATION_PLAN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Migration Plan (Gap -> Target)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/NEXT_ISSUES_TEMPLATES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Next Issues Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/PRODUCT_STRATEGY_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Strategy DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../planning/GTM_PLAN_DVT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GTM Plan DVT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks README
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/outbox_replay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Replay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/rollback_and_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback & Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Status
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../status/IMPLEMENTATION_SUMMARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Summary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../status/IMPLEMENTATION_NOTES_OUTBOX_WORKER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outbox Worker Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../release/CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-oracle-engine-spec-nomenclatura-dd-5e-codigo-fuente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Oracle Engine — Spec · Nomenclatura D&amp;D 5e · Código Fuente
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Índice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-sistema-de-nomenclatura-dd-5e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Sistema de Nomenclatura D&amp;D 5e
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Sistema de Nomenclatura D&amp;D 5e">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-mapa-de-conceptos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Mapa de Conceptos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-nomenclatura-en-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Nomenclatura en UI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-especificacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Especificación
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Especificación">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-principios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Principios
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-invariantes-formales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Invariantes formales
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-prerequisitos-no-negociables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Prerequisitos (no negociables)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-estructura-del-paquete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Estructura del paquete
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-codigo-fuente-completo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Código fuente completo
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Código fuente completo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#packagejson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        package.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tsconfigjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tsconfig.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srctypests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/types.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srcerrorsts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/errors.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srcconstantsts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/constants.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srcoments-portent-dice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/omen.ts — Portent Dice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srcconcentrationts-concentration-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/concentration.ts — Concentration Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srcscryts-cast-scrying" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/scry.ts — Cast Scrying
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srcadapterdivinationadapterts-el-diviner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/adapter/DivinationAdapter.ts — El Diviner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srcindexts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        src/index.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#testomentestts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        test/omen.test.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testconcentrationtestts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        test/concentration.test.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testscrytestts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        test/scry.test.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-integracion-con-dvt-v23x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Integración con DVT+ v2.3.x
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Integración con DVT+ v2.3.x">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flujo-completo-cast-scrying-desde-el-orchestrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flujo completo: Cast Scrying desde el Orchestrator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#foresight-report-en-pr-intelligence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Foresight Report en PR Intelligence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concentration-check-al-reutilizar-una-vision-cacheada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concentration Check al reutilizar una Vision cacheada
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Roadmap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-puntos-de-mejora-el-conjurador-siempre-busca-perfeccion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 🔍 Puntos de mejora (el conjurador siempre busca perfección)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 🔍 Puntos de mejora (el conjurador siempre busca perfección)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-falta-el-historyprovider-concreto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Falta el HistoryProvider concreto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-manejo-de-ttl-de-visiones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Manejo de TTL de Visiones
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-cacheo-de-omens-por-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Cacheo de Omens por performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#94-validacion-de-prerequisitos-en-produccion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.4 Validación de prerequisitos en producción
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-comparativa-con-la-arquitectura-existente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 📊 Comparativa con la arquitectura existente
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dvt-divination-layer-v100">🔮 DVT+ Divination Layer v1.0.0<a class="headerlink" href="#dvt-divination-layer-v100" title="Permanent link">&para;</a></h1>
+<h3 id="the-oracle-engine-spec-nomenclatura-dd-5e-codigo-fuente">The Oracle Engine — Spec · Nomenclatura D&amp;D 5e · Código Fuente<a class="headerlink" href="#the-oracle-engine-spec-nomenclatura-dd-5e-codigo-fuente" title="Permanent link">&para;</a></h3>
+<p><strong>Fecha:</strong> 2026-02-24<br />
+<strong>Versión:</strong> <code>1.0.0</code><br />
+<strong>Estado:</strong> Draft → Production<br />
+<strong>Paquete:</strong> <code>@dvt/divination</code></p>
+<blockquote>
+<p><em>"A Diviner does not change the world. They see what the world will become."</em><br />
+— D&amp;D 5e, Player's Handbook, School of Divination</p>
+</blockquote>
+<hr />
+<h2 id="indice">Índice<a class="headerlink" href="#indice" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="#1-sistema-de-nomenclatura-dd-5e">Sistema de Nomenclatura D&amp;D 5e</a></li>
+<li><a href="#2-especificación">Especificación</a></li>
+<li><a href="#3-estructura-del-paquete">Estructura del paquete</a></li>
+<li><a href="#4-código-fuente-completo">Código fuente completo</a></li>
+<li><a href="#5-tests">Tests</a></li>
+<li><a href="#6-integración-con-dvt-v23x">Integración con DVT+ v2.3.x</a></li>
+<li><a href="#7-roadmap">Roadmap</a></li>
+<li><a href="#8-checklist">Checklist</a></li>
+</ol>
+<hr />
+<h2 id="1-sistema-de-nomenclatura-dd-5e">1. Sistema de Nomenclatura D&amp;D 5e<a class="headerlink" href="#1-sistema-de-nomenclatura-dd-5e" title="Permanent link">&para;</a></h2>
+<p>Toda la Divination Layer usa terminología D&amp;D 5e como lenguaje canónico — en código interno, documentación <strong>y UI</strong>. Esta tabla es la fuente de verdad del mapeo.</p>
+<h3 id="11-mapa-de-conceptos">1.1 Mapa de Conceptos<a class="headerlink" href="#11-mapa-de-conceptos" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Concepto DVT+</th>
+<th>Nombre D&amp;D</th>
+<th>Escuela / Mecánica</th>
+<th>Justificación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simulation Engine</td>
+<td><strong>Divination Engine</strong></td>
+<td>School of Divination</td>
+<td>Divination: ver consecuencias antes de actuar</td>
+</tr>
+<tr>
+<td>What-If Run</td>
+<td><strong>Scrying</strong> (<code>scry()</code>)</td>
+<td>Divination spell (5e p.274)</td>
+<td>Scrying: observar sin intervenir en el mundo</td>
+</tr>
+<tr>
+<td>Simulation Run State</td>
+<td><strong>Vision</strong></td>
+<td>Divination / Trance</td>
+<td>Una Visión es real pero no es el plano material</td>
+</tr>
+<tr>
+<td>Estimation Model</td>
+<td><strong>Omen</strong></td>
+<td>Portent (Diviner feature)</td>
+<td>Portent: predecir resultados futuros con dados</td>
+</tr>
+<tr>
+<td>Uncertainty Range</td>
+<td><strong>Portent Dice</strong></td>
+<td>Diviner: Portent (2d20)</td>
+<td>Los dados representan el rango de incertidumbre</td>
+</tr>
+<tr>
+<td>No-history fallback</td>
+<td><strong>Augury</strong></td>
+<td>Divination spell (nivel 2)</td>
+<td>Augury: respuesta vaga cuando hay poco historial</td>
+</tr>
+<tr>
+<td>Sin historial en absoluto</td>
+<td><strong>Silence</strong></td>
+<td>Silence spell (nivel 2)</td>
+<td>El oráculo no habla si no hay nada que ver</td>
+</tr>
+<tr>
+<td>PR Pre-Execution Intelligence</td>
+<td><strong>Foresight</strong></td>
+<td>Divination spell (nivel 9)</td>
+<td>Foresight: visión completa antes del evento</td>
+</tr>
+<tr>
+<td>Simulación invalidada</td>
+<td><strong>Vision Dispelled</strong></td>
+<td>Dispel Magic (Abjuration)</td>
+<td>El plan cambió: la Visión se disipa</td>
+</tr>
+<tr>
+<td>Confidence score</td>
+<td><strong>Arcane Accuracy</strong></td>
+<td>Spell Attack modifier</td>
+<td>Probabilidad de acierto del oráculo</td>
+</tr>
+<tr>
+<td>SimulationAdapter</td>
+<td><strong>Diviner</strong></td>
+<td>Wizard subclass</td>
+<td>El Diviner ejecuta Scrying sin tocar el mundo</td>
+</tr>
+<tr>
+<td>Plan hash check</td>
+<td><strong>Concentration Check</strong></td>
+<td>Concentration mechanic</td>
+<td>Si el plan cambia, se rompe la concentración</td>
+</tr>
+<tr>
+<td>Simulación vigente</td>
+<td><strong>Concentration: active</strong></td>
+<td>Sustained spell</td>
+<td>La Visión persiste mientras el plan no cambia</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-nomenclatura-en-ui">1.2 Nomenclatura en UI<a class="headerlink" href="#12-nomenclatura-en-ui" title="Permanent link">&para;</a></h3>
+<p>Los textos visibles al usuario usan la terminología D&amp;D. Los tooltips avanzados pueden mostrar el término técnico entre paréntesis.</p>
+<table>
+<thead>
+<tr>
+<th>Elemento UI</th>
+<th>Texto D&amp;D</th>
+<th>Tooltip / subtexto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Botón de ejecución simulada</td>
+<td><code>✦ Cast Scrying</code></td>
+<td>Ejecuta una simulación determinista del plan</td>
+</tr>
+<tr>
+<td>Badge de run simulado</td>
+<td><code>👁 Vision</code></td>
+<td>Este run es una simulación — no ejecutó SQL</td>
+</tr>
+<tr>
+<td>Modo de ejecución</td>
+<td><code>Divination Mode</code></td>
+<td>Oracle Engine activo · sin efecto en Snowflake</td>
+</tr>
+<tr>
+<td>Estimación de coste</td>
+<td><code>Omen: ~$12.40 (±$5.60)</code></td>
+<td>Basado en historial · rango de incertidumbre incluido</td>
+</tr>
+<tr>
+<td>Estimación de duración</td>
+<td><code>Omen: ~4m 20s (±1m 10s)</code></td>
+<td>Percentil 50 histórico por nodeId</td>
+</tr>
+<tr>
+<td>Confianza alta</td>
+<td><code>Arcane Accuracy: 94%</code></td>
+<td>Alta confianza en la estimación</td>
+</tr>
+<tr>
+<td>Confianza baja (pocos datos)</td>
+<td><code>⚠ Augury (datos escasos)</code></td>
+<td>Menos de 5 runs históricos para este nodo</td>
+</tr>
+<tr>
+<td>Sin datos en absoluto</td>
+<td><code>— Silence</code></td>
+<td>Sin historial — no se muestra estimación</td>
+</tr>
+<tr>
+<td>Simulación invalidada</td>
+<td><code>🔴 Vision Dispelled</code></td>
+<td>El plan cambió — relanzar Cast Scrying</td>
+</tr>
+<tr>
+<td>Resultado PR Intelligence</td>
+<td><code>✨ Foresight Report</code></td>
+<td>Análisis pre-merge: coste, riesgo, SLA</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-especificacion">2. Especificación<a class="headerlink" href="#2-especificacion" title="Permanent link">&para;</a></h2>
+<h3 id="21-principios">2.1 Principios<a class="headerlink" href="#21-principios" title="Permanent link">&para;</a></h3>
+<p><strong>El Diviner no cambia el mundo.</strong> <code>scry()</code> nunca escribe en Snowflake, no lanza actividades, no muta el plan. Es una función pura de lectura.</p>
+<p><strong>Implementa <code>IWorkflowEngine</code>.</strong> El contrato del engine no cambia. <code>DivinationAdapter</code> (el Diviner) es un adapter más, intercambiable con <code>TemporalAdapter</code> o <code>ConductorAdapter</code>. El orchestrator no sabe la diferencia hasta que lee <code>ref.mode</code>.</p>
+<p><strong>Determinismo garantizado.</strong> Mismo <code>planId</code> + mismo historial → mismo <code>visionId</code> y mismos Omens. Los Portent Dice son reproducibles.</p>
+<p><strong>Incertidumbre explícita siempre.</strong> Nunca una estimación puntual sin rango. La UI siempre muestra <code>p50 (±spread)</code>. Sin historial suficiente → Augury (rango amplio marcado). Sin historial en absoluto → Silence (no se muestra).</p>
+<p><strong>Concentration Check por hash.</strong> Si <code>plan.inputHashSha256</code> cambia respecto a la Vision cacheada, la Vision se disipa automáticamente (<code>VISION_DISPELLED</code>). El <code>inputHashSha256</code> del planner v2.3.x ya provee esta garantía.</p>
+<h3 id="22-invariantes-formales">2.2 Invariantes formales<a class="headerlink" href="#22-invariantes-formales" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Invariante</th>
+<th>Definición</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Portent Determinism</strong></td>
+<td><code>scry(planId, historial) → Vision idéntica si los datos no cambian</code></td>
+</tr>
+<tr>
+<td><strong>Concentration Check</strong></td>
+<td><code>plan.inputHashSha256 ≠ vision.inputHashSha256 → status = 'dispelled'</code></td>
+</tr>
+<tr>
+<td><strong>Augury Fallback</strong></td>
+<td><code>historicalRuns(nodeId) &lt; MIN_PORTENT_RUNS → source = 'augury', rango ×3</code></td>
+</tr>
+<tr>
+<td><strong>Silence Floor</strong></td>
+<td><code>historicalRuns(nodeId) = 0 → source = 'silence', no mostrar Omen en UI</code></td>
+</tr>
+<tr>
+<td><strong>Arcane Accuracy</strong></td>
+<td><code>overallConfidence = min(nodeVisions.map(n =&gt; n.durationOmen.confidence))</code></td>
+</tr>
+<tr>
+<td><strong>No Side Effects</strong></td>
+<td><code>scry()</code> nunca escribe en Snowflake ni emite eventos de ejecución</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-prerequisitos-no-negociables">2.3 Prerequisitos (no negociables)<a class="headerlink" href="#23-prerequisitos-no-negociables" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>⚠️ <strong>El Diviner no se lanza a producción hasta que se cumplen los tres.</strong> Un Oráculo sin datos es peor que ningún Oráculo: da respuestas con falsa confianza.</p>
+</blockquote>
+<ul>
+<li><strong>Historial mínimo por nodo:</strong> <code>MIN_PORTENT_RUNS = 5</code> runs completados por <code>nodeId</code>. Por debajo → Augury o Silence.</li>
+<li><strong>Ingestión de coste Snowflake:</strong> Pipeline de query history normalizado (warehouse size, concurrencia, créditos/hora). Sin esto los <code>costOmen</code> son Silence.</li>
+<li><strong>Plan versionado activo:</strong> <code>inputHashSha256</code> disponible en todos los planes persistidos. Ya existe en <code>@dvt/planner</code> v2.3.x.</li>
+</ul>
+<hr />
+<h2 id="3-estructura-del-paquete">3. Estructura del paquete<a class="headerlink" href="#3-estructura-del-paquete" title="Permanent link">&para;</a></h2>
+<pre><code>packages/@dvt/divination/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── index.ts                      # exports públicos
+│   ├── types.ts                      # Omen, Vision, NodeVision, OmenSource
+│   ├── errors.ts                     # DivinationError + DivinationErrorCode
+│   ├── constants.ts                  # MIN_PORTENT_RUNS, TTL, multiplicadores
+│   ├── omen.ts                       # computeOmen() — Portent Dice
+│   ├── scry.ts                       # scry() — función principal (Cast Scrying)
+│   ├── concentration.ts              # checkConcentrationOrThrow()
+│   └── adapter/
+│       └── DivinationAdapter.ts      # implements IWorkflowEngine
+└── test/
+    ├── omen.test.ts
+    ├── scry.test.ts
+    └── concentration.test.ts
+</code></pre>
+<hr />
+<h2 id="4-codigo-fuente-completo">4. Código fuente completo<a class="headerlink" href="#4-codigo-fuente-completo" title="Permanent link">&para;</a></h2>
+<h3 id="packagejson"><code>package.json</code><a class="headerlink" href="#packagejson" title="Permanent link">&para;</a></h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;@dvt/divination&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;private&quot;: true,
+  &quot;type&quot;: &quot;module&quot;,
+  &quot;main&quot;: &quot;./dist/index.js&quot;,
+  &quot;types&quot;: &quot;./dist/index.d.ts&quot;,
+  &quot;exports&quot;: {
+    &quot;.&quot;: {
+      &quot;types&quot;: &quot;./dist/index.d.ts&quot;,
+      &quot;import&quot;: &quot;./dist/index.js&quot;
+    }
+  },
+  &quot;files&quot;: [&quot;dist&quot;],
+  &quot;scripts&quot;: {
+    &quot;build&quot;: &quot;tsc -p tsconfig.json&quot;,
+    &quot;test&quot;: &quot;vitest run&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;typescript&quot;: &quot;^5.5.0&quot;,
+    &quot;vitest&quot;: &quot;^1.6.0&quot;
+  },
+  &quot;engines&quot;: {
+    &quot;node&quot;: &quot;&gt;=22&quot;
+  }
+}
+</code></pre>
+<h3 id="tsconfigjson"><code>tsconfig.json</code><a class="headerlink" href="#tsconfigjson" title="Permanent link">&para;</a></h3>
+<pre><code class="language-json">{
+  &quot;compilerOptions&quot;: {
+    &quot;target&quot;: &quot;ES2022&quot;,
+    &quot;lib&quot;: [&quot;ES2022&quot;, &quot;DOM&quot;],
+    &quot;module&quot;: &quot;ES2022&quot;,
+    &quot;moduleResolution&quot;: &quot;Bundler&quot;,
+    &quot;outDir&quot;: &quot;dist&quot;,
+    &quot;rootDir&quot;: &quot;src&quot;,
+    &quot;declaration&quot;: true,
+    &quot;declarationMap&quot;: true,
+    &quot;sourceMap&quot;: true,
+    &quot;strict&quot;: true,
+    &quot;noUncheckedIndexedAccess&quot;: true,
+    &quot;exactOptionalPropertyTypes&quot;: true,
+    &quot;noImplicitOverride&quot;: true,
+    &quot;noImplicitReturns&quot;: true,
+    &quot;skipLibCheck&quot;: true
+  },
+  &quot;include&quot;: [&quot;src&quot;],
+  &quot;exclude&quot;: [&quot;test&quot;, &quot;node_modules&quot;]
+}
+</code></pre>
+<hr />
+<h3 id="srctypests"><code>src/types.ts</code><a class="headerlink" href="#srctypests" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">/**
+ * Tipos centrales de la Divination Layer.
+ *
+ * Nomenclatura D&amp;D 5e:
+ *   Omen       → estimación con rango (Portent Dice)
+ *   OmenSource → de dónde viene la estimación
+ *   Vision     → el run simulado completo
+ *   NodeVision → estimación por nodo del plan
+ */
+
+/**
+ * Un Omen es una estimación probabilística con rango explícito.
+ * Representa los Portent Dice del Diviner: dos posibles futuros (bajo/alto)
+ * y el más probable (p50).
+ */
+export interface Omen {
+  /** Estimación central — percentil 50 histórico. */
+  p50: number;
+  /** Portent Die bajo — percentil 10 (límite optimista). */
+  p10: number;
+  /** Portent Die alto — percentil 90 (límite pesimista). */
+  p90: number;
+  /**
+   * Arcane Accuracy — confianza en el Omen, de 0 a 1.
+   * 0 = el oráculo no sabe nada. 1 = certeza absoluta (nunca en la práctica).
+   */
+  confidence: number;
+  /** Fuente del Omen — determina cómo mostrarlo en UI. */
+  source: OmenSource;
+}
+
+/**
+ * Fuente del Omen.
+ *   portent → historial suficiente (&gt;= MIN_PORTENT_RUNS). Estimación confiable.
+ *   augury  → historial escaso. Estimación con rango ampliado. UI: &quot;⚠ Augury&quot;.
+ *   silence → sin historial. No mostrar estimación en UI. UI: &quot;— Silence&quot;.
+ */
+export type OmenSource = 'portent' | 'augury' | 'silence';
+
+/** Resultado de la Scrying para un nodo individual del plan. */
+export interface NodeVision {
+  nodeId: string;
+  stepId: string;
+  /** Omen de duración en milisegundos. */
+  durationOmen: Omen;
+  /** Omen de coste en USD. */
+  costOmen: Omen;
+  /** Probabilidad histórica de fallo — 0 a 1. */
+  failureProbability: number;
+}
+
+/**
+ * Vision: el run simulado completo.
+ *
+ * Una Vision es persistida como un run real pero marcada con
+ * status distinto de 'live'. El Concentration Check la invalida
+ * automáticamente si el plan cambia.
+ */
+export interface Vision {
+  /** visionId === planId. Misma raíz, identidad compartida. */
+  visionId: string;
+  planId: string;
+  /** Hash del input semántico del plan. Si cambia → Vision Dispelled. */
+  inputHashSha256: string;
+  /** Estado de la Vision — Concentration mechanic. */
+  status: VisionStatus;
+  /** ISO timestamp de cuando se lanzó Cast Scrying. */
+  castAt: string;
+  nodeVisions: readonly NodeVision[];
+  totalDurationOmen: Omen;
+  totalCostOmen: Omen;
+  /**
+   * Arcane Accuracy global del plan.
+   * = min(nodeVisions.map(n =&gt; n.durationOmen.confidence))
+   * El eslabón más débil determina la confianza total.
+   */
+  overallConfidence: number;
+}
+
+/**
+ * Estados de una Vision (Concentration mechanic).
+ *
+ *   scrying   → calculando (Cast Scrying en progreso)
+ *   active    → Concentration: active — Vision vigente y válida
+ *   dispelled → plan cambió — Vision Dispelled (Dispel Magic implícito)
+ *   expired   → TTL superado — la Vision se disuelve con el tiempo
+ */
+export type VisionStatus = 'scrying' | 'active' | 'dispelled' | 'expired';
+</code></pre>
+<hr />
+<h3 id="srcerrorsts"><code>src/errors.ts</code><a class="headerlink" href="#srcerrorsts" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">/**
+ * Taxonomía de errores de la Divination Layer.
+ * Todos los errores lanzados por @dvt/divination son DivinationError.
+ */
+
+export type DivinationErrorCode =
+  | 'VISION_DISPELLED' // plan cambió — Concentration rota
+  | 'SCRYING_FAILED' // error interno al calcular la Vision
+  | 'INVALID_PLAN' // planCore mal formado o modo incorrecto
+  | 'HISTORY_UNAVAILABLE'; // el HistoryProvider no responde
+
+export class DivinationError extends Error {
+  readonly code: DivinationErrorCode;
+  readonly cause: unknown;
+
+  constructor(code: DivinationErrorCode, message: string, cause?: unknown) {
+    super(message);
+    this.name = 'DivinationError';
+    this.code = code;
+    this.cause = cause;
+  }
+}
+
+/** Normaliza cualquier error lanzado a DivinationError. */
+export function asDivinationError(err: unknown): DivinationError {
+  if (err instanceof DivinationError) return err;
+  if (err instanceof Error) {
+    return new DivinationError('SCRYING_FAILED', err.message, err);
+  }
+  return new DivinationError('SCRYING_FAILED', String(err), err);
+}
+</code></pre>
+<hr />
+<h3 id="srcconstantsts"><code>src/constants.ts</code><a class="headerlink" href="#srcconstantsts" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">/**
+ * Constantes de la Divination Layer.
+ * Ajustables vía configuración del DivinationAdapter.
+ */
+
+/**
+ * Mínimo de runs históricos para activar Portent (estimación confiable).
+ * Por debajo → Augury. En cero → Silence.
+ */
+export const MIN_PORTENT_RUNS = 5;
+
+/**
+ * Multiplicador de rango para Augury (datos escasos).
+ * El spread p10–p90 se amplía × este factor para reflejar incertidumbre.
+ */
+export const AUGURY_RANGE_MULTIPLIER = 3;
+
+/**
+ * TTL de una Vision activa en milisegundos (24 horas).
+ * Pasado este tiempo → status = 'expired'.
+ */
+export const VISION_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Confidence mínima para mostrar Omen en UI.
+ * Por debajo de este umbral → mostrar &quot;— Silence&quot; aunque haya datos.
+ */
+export const MIN_DISPLAY_CONFIDENCE = 0.1;
+</code></pre>
+<hr />
+<h3 id="srcoments-portent-dice"><code>src/omen.ts</code> — Portent Dice<a class="headerlink" href="#srcoments-portent-dice" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">/**
+ * computeOmen: el corazón estadístico de la Divination Layer.
+ *
+ * Calcula el Omen (Portent Dice) de un campo numérico a partir de
+ * una serie de samples históricos.
+ *
+ * Reglas D&amp;D:
+ *   - Portent  → suficientes datos (&gt;= MIN_PORTENT_RUNS): p10/p50/p90 reales.
+ *   - Augury   → pocos datos: p50 real, rango multiplicado × AUGURY_RANGE_MULTIPLIER.
+ *   - Silence  → sin datos: confidence = 0, no mostrar en UI.
+ */
+import { Omen, OmenSource } from './types.js';
+import { MIN_PORTENT_RUNS, AUGURY_RANGE_MULTIPLIER } from './constants.js';
+
+export interface HistoricalSample {
+  /** Duración real de ejecución del nodo en milisegundos. */
+  durationMs: number;
+  /** Coste real en USD (Snowflake credits × rate). */
+  costUsd: number;
+  /** Si el run completó sin error. */
+  succeeded: boolean;
+}
+
+/**
+ * Calcula un Omen para el campo `field` a partir de samples históricos.
+ *
+ * Garantías:
+ * - Mismo samples → mismo Omen (determinista).
+ * - Nunca emite NaN o Infinity — siempre valores finitos &gt;= 0.
+ * - confidence ∈ [0, 1].
+ */
+export function computeOmen(
+  samples: readonly HistoricalSample[],
+  field: 'durationMs' | 'costUsd'
+): Omen {
+  // Silence: sin historial — el oráculo no habla
+  if (samples.length === 0) {
+    return { p50: 0, p10: 0, p90: 0, confidence: 0, source: 'silence' };
+  }
+
+  const values = [...samples.map((s) =&gt; s[field])].sort((a, b) =&gt; a - b);
+
+  const p10raw = percentile(values, 0.1);
+  const p50 = percentile(values, 0.5);
+  const p90raw = percentile(values, 0.9);
+
+  const source: OmenSource = samples.length &gt;= MIN_PORTENT_RUNS ? 'portent' : 'augury';
+
+  // Augury: ampliar el rango para reflejar incertidumbre por datos escasos
+  const spread = source === 'augury' ? AUGURY_RANGE_MULTIPLIER : 1;
+  const p10 = Math.max(0, p50 - (p50 - p10raw) * spread);
+  const p90 = p50 + (p90raw - p50) * spread;
+
+  // Arcane Accuracy: coeficiente de variación normalizado
+  // CV alto → rango amplio → baja confianza
+  const cv = p50 &gt; 0 ? (p90raw - p10raw) / p50 : 1;
+  const rawConf = Math.max(0, 1 - cv);
+  // Augury penaliza la confianza al 50%
+  const confidence = source === 'augury' ? rawConf * 0.5 : rawConf;
+
+  return {
+    p50,
+    p10,
+    p90,
+    confidence: Math.min(1, Math.max(0, confidence)),
+    source,
+  };
+}
+
+/**
+ * Percentil lineal interpolado sobre array ordenado.
+ * q ∈ [0, 1].
+ */
+function percentile(sorted: readonly number[], q: number): number {
+  if (sorted.length === 1) return sorted[0]!;
+  const idx = q * (sorted.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  const frac = idx - lo;
+  return sorted[lo]! * (1 - frac) + sorted[hi]! * frac;
+}
+
+/**
+ * Agrega múltiples Omens en uno sumando p10/p50/p90.
+ * La confianza total es la mínima de todas (el eslabón más débil).
+ * Si todos son Silence → resultado Silence.
+ */
+export function aggregateOmens(omens: readonly Omen[]): Omen {
+  if (omens.length === 0) {
+    return { p50: 0, p10: 0, p90: 0, confidence: 0, source: 'silence' };
+  }
+  const allSilent = omens.every((o) =&gt; o.source === 'silence');
+  const anyAugury = omens.some((o) =&gt; o.source === 'augury');
+
+  return {
+    p50: omens.reduce((s, o) =&gt; s + o.p50, 0),
+    p10: omens.reduce((s, o) =&gt; s + o.p10, 0),
+    p90: omens.reduce((s, o) =&gt; s + o.p90, 0),
+    confidence: Math.min(...omens.map((o) =&gt; o.confidence)),
+    source: allSilent ? 'silence' : anyAugury ? 'augury' : 'portent',
+  };
+}
+</code></pre>
+<hr />
+<h3 id="srcconcentrationts-concentration-check"><code>src/concentration.ts</code> — Concentration Check<a class="headerlink" href="#srcconcentrationts-concentration-check" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">/**
+ * Concentration Check — mecánica de invalidación de la Vision.
+ *
+ * En D&amp;D 5e, los hechizos de Concentration se rompen si el lanzador
+ * sufre daño o condiciones adversas. En DVT+, la &quot;concentración&quot; se
+ * rompe si el plan cambia (inputHashSha256 diferente).
+ *
+ * Si el plan cambia → VISION_DISPELLED (Dispel Magic implícito).
+ */
+import { Vision } from './types.js';
+import { DivinationError } from './errors.js';
+
+/**
+ * Verifica que la Vision sigue siendo válida para el plan actual.
+ *
+ * @throws DivinationError(&quot;VISION_DISPELLED&quot;) si:
+ *   - inputHashSha256 del plan no coincide con el de la Vision
+ *   - La Vision ya está en estado dispelled o expired
+ */
+export function checkConcentrationOrThrow(vision: Vision, currentInputHash: string): void {
+  // Concentration rota: el plan cambió
+  if (vision.inputHashSha256 !== currentInputHash) {
+    throw new DivinationError(
+      'VISION_DISPELLED',
+      `Vision ${vision.visionId} dispelled: plan input changed. ` +
+        `vision.inputHash=${vision.inputHashSha256} ` +
+        `current.inputHash=${currentInputHash}`
+    );
+  }
+
+  // Vision ya inválida por estado anterior
+  if (vision.status === 'dispelled' || vision.status === 'expired') {
+    throw new DivinationError(
+      'VISION_DISPELLED',
+      `Vision ${vision.visionId} is already ${vision.status}.`
+    );
+  }
+}
+</code></pre>
+<hr />
+<h3 id="srcscryts-cast-scrying"><code>src/scry.ts</code> — Cast Scrying<a class="headerlink" href="#srcscryts-cast-scrying" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">/**
+ * scry() — Cast Scrying.
+ *
+ * Función principal de la Divination Layer. Genera una Vision determinista
+ * a partir de un planCore y un HistoryProvider.
+ *
+ * Garantías:
+ *   - No I/O excepto lecturas vía HistoryProvider (nunca Snowflake directo).
+ *   - Mismo planCore + mismo historial → misma Vision (determinista).
+ *   - Nunca escribe en RunStateStore — el caller persiste si quiere.
+ *   - Nunca lanza actividades ni emite eventos de ejecución real.
+ */
+import { Vision, NodeVision } from './types.js';
+import { computeOmen, aggregateOmens, HistoricalSample } from './omen.js';
+import { asDivinationError } from './errors.js';
+
+/** Forma mínima del planCore que necesita la Divination Layer. */
+export interface PlanCoreForScrying {
+  planId: string;
+  inputHashSha256: string;
+  planVersion: string;
+  steps: readonly {
+    stepId: string;
+    /** nodeId === stepId en @dvt/planner v2.3.x. Se mantienen separados por claridad. */
+    nodeId: string;
+    kind: string;
+    dependsOn: readonly string[];
+  }[];
+}
+
+/**
+ * Proveedor de historial de ejecuciones.
+ * El adapter concreto lo implementa (DB, cache, mock en tests).
+ */
+export interface HistoryProvider {
+  getNodeHistory(nodeId: string): Promise&lt;readonly HistoricalSample[]&gt;;
+}
+
+/**
+ * Cast Scrying: genera una Vision para el plan dado.
+ *
+ * @param plan    - planCore del @dvt/planner (v2.3.x compatible)
+ * @param history - proveedor de historial de runs
+ * @returns Vision con Omens por nodo y totales
+ * @throws DivinationError(&quot;SCRYING_FAILED&quot;) si el historial falla
+ */
+export async function scry(plan: PlanCoreForScrying, history: HistoryProvider): Promise&lt;Vision&gt; {
+  try {
+    const nodeVisions: NodeVision[] = [];
+
+    for (const step of plan.steps) {
+      const samples = await history.getNodeHistory(step.nodeId);
+
+      const durationOmen = computeOmen(samples, 'durationMs');
+      const costOmen = computeOmen(samples, 'costUsd');
+
+      // Probabilidad de fallo histórica
+      // Sin historial → 0.5 (máxima incertidumbre, no 0 para evitar falsa confianza)
+      const failureCount = samples.filter((s) =&gt; !s.succeeded).length;
+      const failureProbability = samples.length &gt; 0 ? failureCount / samples.length : 0.5;
+
+      nodeVisions.push({
+        nodeId: step.nodeId,
+        stepId: step.stepId,
+        durationOmen,
+        costOmen,
+        failureProbability,
+      });
+    }
+
+    const totalDurationOmen = aggregateOmens(nodeVisions.map((n) =&gt; n.durationOmen));
+    const totalCostOmen = aggregateOmens(nodeVisions.map((n) =&gt; n.costOmen));
+
+    // Arcane Accuracy global: el eslabón más débil
+    const overallConfidence =
+      nodeVisions.length &gt; 0 ? Math.min(...nodeVisions.map((n) =&gt; n.durationOmen.confidence)) : 0;
+
+    return {
+      visionId: plan.planId, // visionId === planId
+      planId: plan.planId,
+      inputHashSha256: plan.inputHashSha256,
+      status: 'active', // Concentration: active
+      castAt: new Date().toISOString(),
+      nodeVisions,
+      totalDurationOmen,
+      totalCostOmen,
+      overallConfidence,
+    };
+  } catch (err: unknown) {
+    throw asDivinationError(err);
+  }
+}
+</code></pre>
+<hr />
+<h3 id="srcadapterdivinationadapterts-el-diviner"><code>src/adapter/DivinationAdapter.ts</code> — El Diviner<a class="headerlink" href="#srcadapterdivinationadapterts-el-diviner" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">/**
+ * DivinationAdapter — El Diviner.
+ *
+ * Implementa IWorkflowEngine. En lugar de lanzar actividades en Temporal
+ * o Conductor, recorre el plan, consulta el historial, y produce una Vision.
+ *
+ * El orchestrator lo inyecta exactamente igual que TemporalAdapter:
+ *   const engine = isDivinationMode ? new DivinationAdapter(opts) : new TemporalAdapter(opts);
+ *   const ref = await engine.startRun(plan, context);
+ *
+ * Nomenclatura D&amp;D:
+ *   startRun(mode=divination) → Cast Scrying
+ *   cancelRun()               → Dismiss Vision
+ */
+import { scry, PlanCoreForScrying, HistoryProvider } from '../scry.js';
+import { checkConcentrationOrThrow } from '../concentration.js';
+import { Vision } from '../types.js';
+import { DivinationError, asDivinationError } from '../errors.js';
+
+// ─── Contrato del engine (definido en @dvt/engine-contracts) ─────────────────
+// Se replica aquí para que @dvt/divination no tenga dependencia circular.
+
+export interface IWorkflowEngine {
+  startRun(plan: PlanCoreForScrying, context: RunContext): Promise&lt;EngineRunRef&gt;;
+  cancelRun(ref: EngineRunRef): Promise&lt;void&gt;;
+}
+
+export interface RunContext {
+  runId: string;
+  requestId: string;
+  /**
+   * Mode discriminator.
+   * 'divination' → DivinationAdapter (UI: &quot;Divination Mode · Cast Scrying&quot;)
+   * 'live'       → engine real (Temporal, Conductor, etc.)
+   */
+  mode: 'live' | 'divination';
+}
+
+export interface EngineRunRef {
+  engineRunId: string;
+  mode: 'live' | 'divination';
+  /** Solo presente en mode=divination. */
+  vision?: Vision;
+}
+
+// ─── DivinationAdapter ────────────────────────────────────────────────────────
+
+export interface DivinationAdapterOptions {
+  history: HistoryProvider;
+  /**
+   * Hook opcional para persistir la Vision en el RunStateStore.
+   * El adapter no tiene estado propio — el caller persiste si quiere.
+   */
+  persistVision?: (vision: Vision) =&gt; Promise&lt;void&gt;;
+}
+
+export class DivinationAdapter implements IWorkflowEngine {
+  private readonly history: HistoryProvider;
+  private readonly persistVision?: (vision: Vision) =&gt; Promise&lt;void&gt;;
+
+  constructor(opts: DivinationAdapterOptions) {
+    this.history = opts.history;
+    this.persistVision = opts.persistVision;
+  }
+
+  /**
+   * Cast Scrying.
+   * Lanza la Scrying sobre el plan y opcionalmente persiste la Vision.
+   *
+   * @throws DivinationError(&quot;INVALID_PLAN&quot;) si mode !== 'divination'
+   * @throws DivinationError(&quot;SCRYING_FAILED&quot;) si falla el cálculo
+   */
+  async startRun(plan: PlanCoreForScrying, context: RunContext): Promise&lt;EngineRunRef&gt; {
+    if (context.mode !== 'divination') {
+      throw new DivinationError(
+        'INVALID_PLAN',
+        'DivinationAdapter only handles mode=divination. ' + `Received mode='${context.mode}'.`
+      );
+    }
+
+    try {
+      // Cast Scrying — puro, sin side effects
+      const vision = await scry(plan, this.history);
+
+      // Persistir Vision en RunStateStore (opcional, responsibility del caller)
+      if (this.persistVision !== undefined) {
+        await this.persistVision(vision);
+      }
+
+      return {
+        engineRunId: vision.visionId,
+        mode: 'divination',
+        vision,
+      };
+    } catch (err: unknown) {
+      throw asDivinationError(err);
+    }
+  }
+
+  /**
+   * Dismiss Vision.
+   * El orchestrator actualiza el estado en RunStateStore.
+   * El adapter no tiene estado propio.
+   */
+  async cancelRun(_ref: EngineRunRef): Promise&lt;void&gt; {
+    // Stateless — el orchestrator marca la Vision como 'dispelled'.
+  }
+}
+</code></pre>
+<hr />
+<h3 id="srcindexts"><code>src/index.ts</code><a class="headerlink" href="#srcindexts" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">// @dvt/divination — public API
+
+export * from './types.js';
+export * from './errors.js';
+export * from './constants.js';
+export * from './omen.js';
+export * from './scry.js';
+export * from './concentration.js';
+export { DivinationAdapter } from './adapter/DivinationAdapter.js';
+export type {
+  IWorkflowEngine,
+  RunContext,
+  EngineRunRef,
+  DivinationAdapterOptions,
+} from './adapter/DivinationAdapter.js';
+</code></pre>
+<hr />
+<h2 id="5-tests">5. Tests<a class="headerlink" href="#5-tests" title="Permanent link">&para;</a></h2>
+<h3 id="testomentestts"><code>test/omen.test.ts</code><a class="headerlink" href="#testomentestts" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">import { describe, it, expect } from 'vitest';
+import { computeOmen, aggregateOmens } from '../src/omen.js';
+import { MIN_PORTENT_RUNS } from '../src/constants.js';
+import type { HistoricalSample } from '../src/omen.js';
+
+const makeSamples = (
+  n: number,
+  duration: number,
+  cost: number,
+  succeeded = true
+): HistoricalSample[] =&gt;
+  Array.from({ length: n }, () =&gt; ({ durationMs: duration, costUsd: cost, succeeded }));
+
+describe('Portent Dice — computeOmen', () =&gt; {
+  it('Silence: sin historial → confidence=0, source=silence', () =&gt; {
+    const o = computeOmen([], 'durationMs');
+    expect(o.source).toBe('silence');
+    expect(o.confidence).toBe(0);
+    expect(o.p50).toBe(0);
+  });
+
+  it('Augury: datos escasos → source=augury, confianza penalizada', () =&gt; {
+    const samples = makeSamples(MIN_PORTENT_RUNS - 1, 1000, 1);
+    const o = computeOmen(samples, 'durationMs');
+    expect(o.source).toBe('augury');
+    expect(o.confidence).toBeLessThan(0.5);
+  });
+
+  it('Portent: datos suficientes → source=portent', () =&gt; {
+    const samples = makeSamples(MIN_PORTENT_RUNS + 5, 1000, 1);
+    const o = computeOmen(samples, 'durationMs');
+    expect(o.source).toBe('portent');
+    expect(o.p50).toBeGreaterThan(0);
+  });
+
+  it('Portent determinista: mismo input → mismo output', () =&gt; {
+    const samples = makeSamples(10, 2000, 5);
+    const a = computeOmen(samples, 'durationMs');
+    const b = computeOmen(samples, 'durationMs');
+    expect(a).toEqual(b);
+  });
+
+  it('p10 &lt;= p50 &lt;= p90 siempre', () =&gt; {
+    const samples = makeSamples(10, 3000, 10);
+    const o = computeOmen(samples, 'durationMs');
+    expect(o.p10).toBeLessThanOrEqual(o.p50);
+    expect(o.p50).toBeLessThanOrEqual(o.p90);
+  });
+
+  it('confidence ∈ [0, 1]', () =&gt; {
+    const samples = makeSamples(10, 1000, 1);
+    const o = computeOmen(samples, 'durationMs');
+    expect(o.confidence).toBeGreaterThanOrEqual(0);
+    expect(o.confidence).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('aggregateOmens', () =&gt; {
+  it('agrega p50 correctamente', () =&gt; {
+    const o1 = { p50: 100, p10: 80, p90: 120, confidence: 0.9, source: 'portent' as const };
+    const o2 = { p50: 200, p10: 160, p90: 240, confidence: 0.8, source: 'portent' as const };
+    const agg = aggregateOmens([o1, o2]);
+    expect(agg.p50).toBe(300);
+    expect(agg.confidence).toBe(0.8); // mínima
+    expect(agg.source).toBe('portent');
+  });
+
+  it('si todos son silence → resultado silence', () =&gt; {
+    const s = { p50: 0, p10: 0, p90: 0, confidence: 0, source: 'silence' as const };
+    const agg = aggregateOmens([s, s]);
+    expect(agg.source).toBe('silence');
+  });
+
+  it('si hay algún augury → resultado augury', () =&gt; {
+    const portent = { p50: 100, p10: 90, p90: 110, confidence: 0.9, source: 'portent' as const };
+    const augury = { p50: 50, p10: 20, p90: 100, confidence: 0.3, source: 'augury' as const };
+    const agg = aggregateOmens([portent, augury]);
+    expect(agg.source).toBe('augury');
+  });
+});
+</code></pre>
+<hr />
+<h3 id="testconcentrationtestts"><code>test/concentration.test.ts</code><a class="headerlink" href="#testconcentrationtestts" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">import { describe, it, expect } from 'vitest';
+import { checkConcentrationOrThrow } from '../src/concentration.js';
+import { DivinationError } from '../src/errors.js';
+import type { Vision } from '../src/types.js';
+
+const makeVision = (hash: string, status: Vision['status'] = 'active'): Vision =&gt; ({
+  visionId: 'vision-1',
+  planId: 'plan-1',
+  inputHashSha256: hash,
+  status,
+  castAt: new Date().toISOString(),
+  nodeVisions: [],
+  totalDurationOmen: { p50: 0, p10: 0, p90: 0, confidence: 0, source: 'silence' },
+  totalCostOmen: { p50: 0, p10: 0, p90: 0, confidence: 0, source: 'silence' },
+  overallConfidence: 0,
+});
+
+describe('Concentration Check', () =&gt; {
+  it('no lanza si el hash coincide y la Vision está activa', () =&gt; {
+    expect(() =&gt; checkConcentrationOrThrow(makeVision('abc123'), 'abc123')).not.toThrow();
+  });
+
+  it('Vision Dispelled si el hash cambia (plan cambió)', () =&gt; {
+    let err: unknown;
+    try {
+      checkConcentrationOrThrow(makeVision('abc123'), 'xyz999');
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(DivinationError);
+    expect((err as DivinationError).code).toBe('VISION_DISPELLED');
+  });
+
+  it('Vision Dispelled si status ya es dispelled', () =&gt; {
+    let err: unknown;
+    try {
+      checkConcentrationOrThrow(makeVision('abc123', 'dispelled'), 'abc123');
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(DivinationError);
+    expect((err as DivinationError).code).toBe('VISION_DISPELLED');
+  });
+
+  it('Vision Dispelled si status es expired', () =&gt; {
+    let err: unknown;
+    try {
+      checkConcentrationOrThrow(makeVision('abc123', 'expired'), 'abc123');
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(DivinationError);
+    expect((err as DivinationError).code).toBe('VISION_DISPELLED');
+  });
+});
+</code></pre>
+<hr />
+<h3 id="testscrytestts"><code>test/scry.test.ts</code><a class="headerlink" href="#testscrytestts" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">import { describe, it, expect } from 'vitest';
+import { scry } from '../src/scry.js';
+import type { PlanCoreForScrying, HistoryProvider } from '../src/scry.js';
+import type { HistoricalSample } from '../src/omen.js';
+
+const makePlan = (nodeIds: string[]): PlanCoreForScrying =&gt; ({
+  planId: 'plan-test-1',
+  inputHashSha256: 'a'.repeat(64),
+  planVersion: '2.3',
+  steps: nodeIds.map((id) =&gt; ({
+    stepId: id,
+    nodeId: id,
+    kind: 'DBT_MODEL',
+    dependsOn: [],
+  })),
+});
+
+const makeHistory = (data: Record&lt;string, HistoricalSample[]&gt;): HistoryProvider =&gt; ({
+  getNodeHistory: async (nodeId) =&gt; data[nodeId] ?? [],
+});
+
+describe('scry — Cast Scrying', () =&gt; {
+  it('genera una Vision con status=active', async () =&gt; {
+    const plan = makePlan(['model.a', 'model.b']);
+    const history = makeHistory({
+      'model.a': Array.from({ length: 10 }, () =&gt; ({
+        durationMs: 1000,
+        costUsd: 1,
+        succeeded: true,
+      })),
+      'model.b': Array.from({ length: 10 }, () =&gt; ({
+        durationMs: 2000,
+        costUsd: 2,
+        succeeded: true,
+      })),
+    });
+    const vision = await scry(plan, history);
+    expect(vision.status).toBe('active');
+    expect(vision.visionId).toBe(plan.planId);
+    expect(vision.nodeVisions).toHaveLength(2);
+  });
+
+  it('Vision determinista: mismo input → misma Vision', async () =&gt; {
+    const plan = makePlan(['model.x']);
+    const samples = Array.from({ length: 8 }, () =&gt; ({
+      durationMs: 3000,
+      costUsd: 5,
+      succeeded: true,
+    }));
+    const history = makeHistory({ 'model.x': samples });
+    const a = await scry(plan, history);
+    const b = await scry(plan, history);
+    expect(a.totalDurationOmen).toEqual(b.totalDurationOmen);
+    expect(a.totalCostOmen).toEqual(b.totalCostOmen);
+    expect(a.overallConfidence).toBe(b.overallConfidence);
+  });
+
+  it('plan sin historial → todos Silence, overallConfidence=0', async () =&gt; {
+    const plan = makePlan(['model.new']);
+    const history = makeHistory({});
+    const vision = await scry(plan, history);
+    expect(vision.totalDurationOmen.source).toBe('silence');
+    expect(vision.overallConfidence).toBe(0);
+  });
+
+  it('nodo fallido → failureProbability &gt; 0', async () =&gt; {
+    const plan = makePlan(['model.flaky']);
+    const history = makeHistory({
+      'model.flaky': [
+        { durationMs: 1000, costUsd: 1, succeeded: false },
+        { durationMs: 1000, costUsd: 1, succeeded: false },
+        { durationMs: 1000, costUsd: 1, succeeded: true },
+      ],
+    });
+    const vision = await scry(plan, history);
+    const nv = vision.nodeVisions[0]!;
+    expect(nv.failureProbability).toBeCloseTo(2 / 3);
+  });
+});
+</code></pre>
+<hr />
+<h2 id="6-integracion-con-dvt-v23x">6. Integración con DVT+ v2.3.x<a class="headerlink" href="#6-integracion-con-dvt-v23x" title="Permanent link">&para;</a></h2>
+<h3 id="flujo-completo-cast-scrying-desde-el-orchestrator">Flujo completo: Cast Scrying desde el Orchestrator<a class="headerlink" href="#flujo-completo-cast-scrying-desde-el-orchestrator" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">import { Planner } from '@dvt/planner';
+import { DivinationAdapter } from '@dvt/divination';
+import { myHistoryProvider } from './history.js';
+import { runStateStore } from './stateStore.js';
+
+const planner = new Planner();
+const diviner = new DivinationAdapter({
+  history: myHistoryProvider,
+  persistVision: (vision) =&gt; runStateStore.saveVision(vision),
+});
+
+// 1. Planner genera el plan determinista (sin cambios)
+const { plan } = await planner.buildPlan(input);
+
+// 2. Cast Scrying — sin tocar Snowflake
+const ref = await diviner.startRun(plan, {
+  runId: generateRunId(),
+  requestId: req.id,
+  mode: 'divination', // UI: &quot;Divination Mode&quot;
+});
+
+// 3. Vision disponible inmediatamente
+const { vision } = ref;
+console.log(vision.totalCostOmen);
+// → { p50: 12.4, p10: 8.1, p90: 19.3, confidence: 0.81, source: &quot;portent&quot; }
+// UI: &quot;Omen: ~$12.40 (±$5.60) · Arcane Accuracy 81%&quot;
+</code></pre>
+<h3 id="foresight-report-en-pr-intelligence">Foresight Report en PR Intelligence<a class="headerlink" href="#foresight-report-en-pr-intelligence" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">// Git Sync Hook — pre-merge, sin cambios en el planner
+async function onPullRequestOpened(pr: PullRequest): Promise&lt;void&gt; {
+  const { plan } = await planner.buildPlan(await buildInputFromManifest(pr.manifest));
+  const vision = await scry(plan, historyProvider);
+
+  const riskNodes = vision.nodeVisions
+    .filter((n) =&gt; n.failureProbability &gt; 0.2)
+    .map((n) =&gt; n.nodeId);
+
+  await pr.addComment(
+    [
+      '## ✨ Foresight Report',
+      `**Omen de coste:** ${formatOmen(vision.totalCostOmen)}`,
+      `**Omen de duración:** ${formatOmen(vision.totalDurationOmen)}`,
+      `**Arcane Accuracy:** ${(vision.overallConfidence * 100).toFixed(0)}%`,
+      riskNodes.length &gt; 0
+        ? `**⚠ Nodos de riesgo:** ${riskNodes.join(', ')}`
+        : '**✅ Sin nodos de riesgo detectados**',
+    ].join('\n')
+  );
+}
+
+function formatOmen(o: Omen): string {
+  if (o.source === 'silence') return '— Silence (sin historial)';
+  const mid = o.p50.toFixed(2);
+  const spread = ((o.p90 - o.p10) / 2).toFixed(2);
+  const label = o.source === 'augury' ? ' ⚠ Augury' : '';
+  return `~${mid} (±${spread})${label}`;
+}
+</code></pre>
+<h3 id="concentration-check-al-reutilizar-una-vision-cacheada">Concentration Check al reutilizar una Vision cacheada<a class="headerlink" href="#concentration-check-al-reutilizar-una-vision-cacheada" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">import { checkConcentrationOrThrow } from '@dvt/divination';
+
+async function getOrCastVision(plan: PlanCoreForScrying): Promise&lt;Vision&gt; {
+  const cached = await runStateStore.getVision(plan.planId);
+
+  if (cached !== undefined) {
+    try {
+      // Concentration Check: Vision Dispelled si el plan cambió
+      checkConcentrationOrThrow(cached, plan.inputHashSha256);
+      return cached; // Concentration: active — reutilizar
+    } catch {
+      // Vision Dispelled — recalcular
+    }
+  }
+
+  // Cast Scrying de nuevo
+  return scry(plan, historyProvider);
+}
+</code></pre>
+<hr />
+<h2 id="7-roadmap">7. Roadmap<a class="headerlink" href="#7-roadmap" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Sprint</th>
+<th>Feature D&amp;D</th>
+<th>Descripción técnica</th>
+<th>Prerequisito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Cast Scrying MVP</strong></td>
+<td><code>DivinationAdapter</code> + <code>computeOmen</code> + <code>persistVision</code></td>
+<td><code>MIN_PORTENT_RUNS</code> en prod</td>
+</tr>
+<tr>
+<td>1</td>
+<td><strong>Concentration Check</strong></td>
+<td>Invalidación automática por <code>inputHashSha256</code></td>
+<td>Plan v2.3.x activo</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Foresight Report (PR)</strong></td>
+<td>Hook pre-merge con Omen de coste + <code>riskNodes</code></td>
+<td>Sprint 1 completo</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>UI: Divination Mode</strong></td>
+<td>Badge <code>👁 Vision</code> + tooltip Omen en formato D&amp;D</td>
+<td>Sprint 1 completo</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Augury mejorado</strong></td>
+<td>Estimación por <code>kind</code> cuando no hay historial propio del nodo</td>
+<td>Historial agregado por <code>kind</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Monte Carlo (Portent++)</strong></td>
+<td>Simulación por muestreo de distribuciones reales</td>
+<td>100+ runs por nodo</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Capacity Planning</strong></td>
+<td>"Si lanzas a las 09:00 colisiona con N runs críticos"</td>
+<td>Multi-tenant <code>RunStateStore</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚔️ <strong>Regla de oro:</strong> el Diviner nunca entra en combate sin datos. Si los prerequisitos no están, el feature no se despliega aunque esté implementado.</p>
+</blockquote>
+<hr />
+<h2 id="8-checklist">8. Checklist<a class="headerlink" href="#8-checklist" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] Nomenclatura D&amp;D 5e coherente en código y UI</li>
+<li>[x] <code>IWorkflowEngine</code> implementado — sin cambios en planner ni engine live</li>
+<li>[x] Portent Dice: <code>p10</code>/<code>p50</code>/<code>p90</code> + Arcane Accuracy</li>
+<li>[x] Augury fallback para datos escasos</li>
+<li>[x] Silence para nodos sin historial</li>
+<li>[x] Concentration Check por <code>inputHashSha256</code></li>
+<li>[x] No I/O excepto lecturas de historial</li>
+<li>[x] Sin efectos en Snowflake</li>
+<li>[x] Foresight Report en PR Intelligence</li>
+<li>[x] Tests unitarios por capa (<code>omen</code>, <code>concentration</code>, <code>scry</code>)</li>
+<li>[ ] <code>MIN_PORTENT_RUNS</code> verificado en prod antes de despliegue</li>
+<li>[ ] Vector fijo de Vision bootstrapeado para test de regresión</li>
+</ul>
+<hr />
+<h2 id="9-puntos-de-mejora-el-conjurador-siempre-busca-perfeccion">9. 🔍 Puntos de mejora (el conjurador siempre busca perfección)<a class="headerlink" href="#9-puntos-de-mejora-el-conjurador-siempre-busca-perfeccion" title="Permanent link">&para;</a></h2>
+<h3 id="91-falta-el-historyprovider-concreto">9.1 Falta el <code>HistoryProvider</code> concreto<a class="headerlink" href="#91-falta-el-historyprovider-concreto" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">// Sugerencia: implementación de referencia para Postgres
+export class PostgresHistoryProvider implements HistoryProvider {
+  constructor(private pool: pg.Pool) {}
+
+  async getNodeHistory(nodeId: string): Promise&lt;HistoricalSample[]&gt; {
+    const result = await this.pool.query(
+      `SELECT
+        EXTRACT(EPOCH FROM (ended_at - started_at)) * 1000 as duration_ms,
+        cost_usd,
+        succeeded
+       FROM run_history
+       WHERE node_id = $1
+         AND status = 'completed'
+       ORDER BY ended_at DESC
+       LIMIT 100`,
+      [nodeId]
+    );
+
+    return result.rows.map((row) =&gt; ({
+      durationMs: row.duration_ms,
+      costUsd: row.cost_usd,
+      succeeded: row.succeeded,
+    }));
+  }
+}
+</code></pre>
+<h3 id="92-manejo-de-ttl-de-visiones">9.2 Manejo de TTL de Visiones<a class="headerlink" href="#92-manejo-de-ttl-de-visiones" title="Permanent link">&para;</a></h3>
+<p>El documento define <code>VISION_TTL_MS</code> pero no lo implementa en validación de concentración.</p>
+<pre><code class="language-ts">// Añadir a concentration.ts
+export function isVisionExpired(vision: Vision): boolean {
+  const age = Date.now() - new Date(vision.castAt).getTime();
+  return age &gt; VISION_TTL_MS;
+}
+
+// En checkConcentrationOrThrow:
+if (isVisionExpired(vision)) {
+  throw new DivinationError('VISION_DISPELLED', 'Vision expired');
+}
+</code></pre>
+<h3 id="93-cacheo-de-omens-por-performance">9.3 Cacheo de Omens por performance<a class="headerlink" href="#93-cacheo-de-omens-por-performance" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">// OmenCache para evitar recalcular sobre mismo histórico
+export class OmenCache {
+  private cache = new Map&lt;string, Omen&gt;();
+
+  get(key: string, samples: HistoricalSample[], field: Field): Omen {
+    const hash = sha256(JSON.stringify(samples) + field);
+    if (this.cache.has(hash)) return this.cache.get(hash)!;
+    const omen = computeOmen(samples, field);
+    this.cache.set(hash, omen);
+    return omen;
+  }
+}
+</code></pre>
+<h3 id="94-validacion-de-prerequisitos-en-produccion">9.4 Validación de prerequisitos en producción<a class="headerlink" href="#94-validacion-de-prerequisitos-en-produccion" title="Permanent link">&para;</a></h3>
+<p>El documento define prerequisitos de datos pero conviene añadir guardas automáticas en runtime.</p>
+<pre><code class="language-ts">// En DivinationAdapter constructor
+if (process.env.NODE_ENV === 'production') {
+  const stats = await this.history.getGlobalStats();
+  if (stats.totalNodesWithHistory &lt; 10) {
+    throw new Error(
+      'Divination Layer requires at least 10 nodes with history. ' +
+        'Current: ' +
+        stats.totalNodesWithHistory
+    );
+  }
+}
+</code></pre>
+<hr />
+<h2 id="10-comparativa-con-la-arquitectura-existente">10. 📊 Comparativa con la arquitectura existente<a class="headerlink" href="#10-comparativa-con-la-arquitectura-existente" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>En DVT+ v2.3.x</th>
+<th>En Divination Layer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IWorkflowEngine</td>
+<td>✅ Contrato</td>
+<td>✅ Implementado</td>
+</tr>
+<tr>
+<td>ExecutionPlan</td>
+<td>✅ Generado</td>
+<td>✅ Consumido</td>
+</tr>
+<tr>
+<td>inputHashSha256</td>
+<td>✅ En metadata</td>
+<td>✅ Concentration Check</td>
+</tr>
+<tr>
+<td>State Store</td>
+<td>✅ Persistencia</td>
+<td>✅ Vision persistida</td>
+</tr>
+<tr>
+<td>Eventos</td>
+<td>✅ onStepCompleted</td>
+<td>✅ simulated: true</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>✅ Runs reales</td>
+<td>✅ Badge 👁 Vision</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Zero cambios arquitectónicos. 100% compatible.</strong></p>
+<hr />
+<p><em>🎲 The dice have been cast. The Vision is active. Concentration maintained.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
