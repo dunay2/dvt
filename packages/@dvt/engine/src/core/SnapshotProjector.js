@@ -1,0 +1,148 @@
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.SnapshotProjector = void 0;
+exports.applyRunEvent = applyRunEvent;
+exports.snapshotToStatus = snapshotToStatus;
+/**
+ * @file packages/@dvt/engine/src/core/SnapshotProjector.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @baseline ADR-0007: Run Cancellation Semantics (RunCancelRequested + cancelling substatus)
+ * @decision Decision — The snapshot projection is derived exclusively from events for deterministic state reads
+ * @consequence getRunStatus and incremental stores reuse the same replay semantics without duplicating rules
+ * @version 1.1.0
+ * @date 2026-02-21
+ */
+const canonical_1 = require('@dvt/canonical');
+/**
+ * Pure function: applies a single event to a mutable WorkflowSnapshot.
+ *
+ * Exported so state store implementations can incrementally maintain a
+ * materialized snapshot without depending on SnapshotProjector as a class.
+ * Must remain a pure value transform — no I/O, no side effects.
+ */
+function applyRunEvent(snap, e) {
+  switch (e.eventType) {
+    case 'RunQueued':
+      // stays PENDING
+      break;
+    case 'RunStarted':
+      snap.status = 'RUNNING';
+      snap.startedAt = snap.startedAt ?? e.emittedAt;
+      break;
+    case 'RunPaused':
+      snap.status = 'PAUSED';
+      snap.paused = true;
+      break;
+    case 'RunResumed':
+      snap.status = 'RUNNING';
+      snap.paused = false;
+      break;
+    case 'RunCancelRequested':
+      // ADR-0007: Engine emits RunCancelRequested (intent only). Run stays RUNNING.
+      // Adapter emits RunCancelled from workflow context when cancellation completes.
+      snap.cancelling = true;
+      break;
+    case 'RunCancelled':
+      snap.status = 'CANCELLED';
+      snap.cancelling = false;
+      snap.completedAt = e.emittedAt;
+      break;
+    case 'RunCompleted':
+      snap.status = 'COMPLETED';
+      snap.completedAt = e.emittedAt;
+      break;
+    case 'RunFailed':
+      snap.status = 'FAILED';
+      snap.completedAt = e.emittedAt;
+      break;
+    case 'StepStarted': {
+      const stepId = e.stepId;
+      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      s.status = 'RUNNING';
+      s.startedAt = s.startedAt ?? e.emittedAt;
+      s.attempts += 1;
+      snap.steps[stepId] = s;
+      break;
+    }
+    case 'StepCompleted': {
+      const stepId = e.stepId;
+      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      s.status = 'COMPLETED';
+      s.completedAt = e.emittedAt;
+      snap.steps[stepId] = s;
+      break;
+    }
+    case 'StepFailed': {
+      const stepId = e.stepId;
+      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      s.status = 'FAILED';
+      s.completedAt = e.emittedAt;
+      snap.steps[stepId] = s;
+      break;
+    }
+    case 'StepSkipped': {
+      const stepId = e.stepId;
+      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+      s.status = 'SKIPPED';
+      s.completedAt = e.emittedAt;
+      snap.steps[stepId] = s;
+      break;
+    }
+    default: {
+      // Forward-compatibility: tolerate unknown event types without mutating state.
+      console.warn('SnapshotProjector: unknown eventType skipped', {
+        eventType: e.eventType,
+        runId: snap.runId,
+        runSeq: e.runSeq,
+      });
+      break;
+    }
+  }
+  return snap;
+}
+/**
+ * Pure function: converts a materialized WorkflowSnapshot into a RunStatusSnapshot
+ * (adds the deterministic JCS+SHA-256 hash).
+ *
+ * Exported so WorkflowEngine.getRunStatus can produce its response from a
+ * stored snapshot without a full event replay.
+ */
+function snapshotToStatus(snap) {
+  const logical = {
+    runId: snap.runId,
+    status: snap.status,
+    paused: snap.paused,
+    cancelling: snap.cancelling,
+    startedAt: snap.startedAt,
+    completedAt: snap.completedAt,
+    steps: snap.steps,
+  };
+  const canonical = (0, canonical_1.jcsCanonicalize)(logical);
+  const hash = (0, canonical_1.sha256Hex)(canonical);
+  return {
+    runId: snap.runId,
+    status: snap.status,
+    ...(snap.cancelling ? { substatus: 'CANCELLING' } : {}),
+    ...(snap.startedAt ? { startedAt: snap.startedAt } : {}),
+    ...(snap.completedAt ? { completedAt: snap.completedAt } : {}),
+    hash,
+  };
+}
+class SnapshotProjector {
+  rebuild(runId, events) {
+    const snap = {
+      runId,
+      status: 'PENDING',
+      paused: false,
+      cancelling: false,
+      steps: {},
+    };
+    for (const e of events) {
+      applyRunEvent(snap, e);
+    }
+    return snapshotToStatus(snap);
+  }
+}
+exports.SnapshotProjector = SnapshotProjector;
+//# sourceMappingURL=SnapshotProjector.js.map
