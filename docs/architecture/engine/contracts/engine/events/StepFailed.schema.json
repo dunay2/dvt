@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/StepFailed.schema.json",
+  "title": "StepFailed Event",
+  "description": "Emitted by Activity when step execution fails",
+  "type": "object",
+  "required": [
+    "eventType",
+    "eventId",
+    "runId",
+    "runSeq",
+    "idempotencyKey",
+    "emittedAt",
+    "emittedBy",
+    "stepId",
+    "logicalAttemptId",
+    "failedAt",
+    "error"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "const": "StepFailed",
+      "description": "Event type discriminator"
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier (UUID v4)"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^run_[a-zA-Z0-9_-]+$",
+      "description": "Workflow run identifier"
+    },
+    "runSeq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic sequence number (per runId, assigned by Append Authority)"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 hash: SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)"
+    },
+    "emittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event was persisted to StateStore (processing time)"
+    },
+    "emittedBy": {
+      "type": "string",
+      "enum": ["engine", "planner", "activity-worker", "system"],
+      "description": "Component that emitted the event"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event actually occurred at source (optional, event time)"
+    },
+    "stepId": {
+      "type": "string",
+      "description": "Step identifier from plan"
+    },
+    "logicalAttemptId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Business-level attempt counter (increments on RETRY_STEP signal)"
+    },
+    "engineAttemptId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Infrastructure-level attempt counter (platform retries)"
+    },
+    "failedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when step execution failed"
+    },
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "retryable"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g., TIMEOUT, NETWORK_ERROR, VALIDATION_FAILED)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error message"
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Whether the error is transient and retryable"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["infrastructure", "business", "validation", "timeout"],
+          "description": "Error category for classification"
+        },
+        "stackTrace": {
+          "type": "string",
+          "description": "Stack trace (truncated if necessary)"
+        }
+      }
+    },
+    "artifactRefs": {
+      "type": "array",
+      "description": "Partial artifacts or logs produced before failure",
+      "items": {
+        "type": "object",
+        "required": ["uri", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "uri",
+            "description": "Storage URI (s3://, gs://, azure://, etc.)"
+          },
+          "kind": {
+            "type": "string",
+            "description": "Artifact type (log-bundle, partial-output, etc.)"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "Integrity hash"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Artifact size in bytes"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Expiration timestamp"
+          }
+        }
+      }
+    },
+    "planVersion": {
+      "type": "string",
+      "description": "Plan version for idempotency key calculation"
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Step execution duration before failure (milliseconds)"
+    }
+  },
+  "examples": [
+    {
+      "eventType": "StepFailed",
+      "eventId": "d4e5f678-90ab-cdef-0123-456789abcdef",
+      "runId": "run_2026-02-11_abc123",
+      "runSeq": 12,
+      "idempotencyKey": "c3d4e5f678901234567890123456789012345678901234567890123456789012",
+      "occurredAt": "2026-02-11T10:35:20.000Z",
+      "emittedBy": "activity-worker",
+      "stepId": "transform_data",
+      "logicalAttemptId": 1,
+      "engineAttemptId": 2,
+      "failedAt": "2026-02-11T10:35:20.000Z",
+      "error": {
+        "code": "TIMEOUT",
+        "message": "Step execution exceeded timeout of 180s",
+        "retryable": true,
+        "category": "timeout"
+      },
+      "artifactRefs": [
+        {
+          "uri": "s3://dvt-artifacts/runs/run_2026-02-11_abc123/transform_data_logs.txt",
+          "kind": "log-bundle",
+          "sha256": "def456789012345678901234567890123456789012345678901234567890abcd",
+          "sizeBytes": 4096,
+          "expiresAt": "2026-03-11T10:35:20.000Z"
+        }
+      ],
+      "planVersion": "1.2",
+      "durationMs": 180000
+    }
+  ]
+}

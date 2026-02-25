@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dvt.local/contracts/engine/events/RunEventWrite.v2.0.schema.json",
+  "title": "RunEventWrite v2.0.0",
+  "type": "object",
+  "required": [
+    "eventId",
+    "eventType",
+    "emittedAt",
+    "tenantId",
+    "projectId",
+    "environmentId",
+    "runId",
+    "planId",
+    "planVersion",
+    "engineAttemptId",
+    "logicalAttemptId",
+    "idempotencyKey"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "eventType": {
+      "type": "string"
+    },
+    "emittedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "projectId": { "type": "string", "minLength": 1 },
+    "environmentId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "planId": { "type": "string", "minLength": 1 },
+    "planVersion": { "type": "string", "minLength": 1 },
+    "engineAttemptId": { "type": "integer", "minimum": 1 },
+    "logicalAttemptId": { "type": "integer", "minimum": 1 },
+    "idempotencyKey": { "type": "string", "minLength": 1 },
+    "stepId": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "StepStarted",
+              "StepCompleted",
+              "StepFailed",
+              "StepSkipped"
+            ]
+          }
+        },
+        "required": ["eventType"]
+      },
+      "then": {
+        "required": ["stepId"]
+      },
+      "else": {
+        "not": {
+          "required": ["stepId"]
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}

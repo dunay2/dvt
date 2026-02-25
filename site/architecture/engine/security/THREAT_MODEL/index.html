@@ -1,0 +1,2581 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>THREAT_MODEL.md - DVT Engine Security Analysis - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#threat_modelmd-dvt-engine-security-analysis" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              THREAT_MODEL.md - DVT Engine Security Analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../adr/_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../adr/_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../planning/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threat-actors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat Actors
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Threat Actors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-external-attacker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. External Attacker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-malicious-tenant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Malicious Tenant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-compromised-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Compromised Plugin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-insider-threat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Insider Threat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-noisy-neighbor-accidental-dos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Noisy Neighbor / Accidental DoS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assets-to-protect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assets to Protect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-invariants-testable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔐 Security Invariants (Testable)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔐 Security Invariants (Testable)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invariant-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invariant Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-boundaries-trust-lines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Boundaries &amp; Trust Lines
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security Boundaries &amp; Trust Lines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#visual-trust-model-illustrative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Trust Model (Illustrative)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threat-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat Scenarios
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Threat Scenarios">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#high-risk-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High-Risk Scenarios
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medium-risk-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Medium-Risk Scenarios
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1-api-boundary-authentication-authorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. API Boundary (Authentication + Authorization)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-engine-boundary-tenant-scope-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Engine Boundary (Tenant Scope Enforcement)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-statestore-boundary-row-level-security-scope-parameter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. StateStore Boundary (Row-Level Security + Scope Parameter)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-audit-boundary-immutable-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Audit Boundary (Immutable Record)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-plugin-boundary-trust-tiers-permission-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Plugin Boundary (Trust Tiers + Permission Model)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Plugin Boundary (Trust Tiers + Permission Model)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supply-chain-controls-pre-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supply Chain Controls (Pre-Install)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime-isolation-controls-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Isolation Controls (Execution)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugin-permission-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plugin Permission Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Plugin Permission Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-defense-in-depth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Defense in Depth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hipaa-us-healthcare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HIPAA (US Healthcare)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-auditability-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Auditability First
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-least-privilege" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Least Privilege
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-tenant-isolation-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Tenant Isolation Invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compliance-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compliance Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compliance Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#soc2-type-ii" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SOC2 Type II
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hipaa-healthcare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HIPAA (Healthcare)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gdpr-eu-data-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GDPR (EU Data Protection)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention-policy-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention Policy Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-validation-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Validation Checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Validation Checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-reference-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Reference Checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#normative-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normative Contracts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Normative Contracts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-invariants-and-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Invariants and Policies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interface-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mitigation-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mitigation Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="References">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interface-contracts_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regulatory-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regulatory References
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supply-chain-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supply Chain Security
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="threat_modelmd-dvt-engine-security-analysis">THREAT_MODEL.md - DVT Engine Security Analysis<a class="headerlink" href="#threat_modelmd-dvt-engine-security-analysis" title="Permanent link">&para;</a></h1>
+<p><strong>Version</strong>: 1.5<br />
+<strong>Date</strong>: 2026-02-12<br />
+<strong>Status</strong>: Informative (Living Document)<br />
+<strong>Location</strong>: docs/architecture/engine/security/THREAT_MODEL.md</p>
+<hr />
+<h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<p>The DVT Engine is a multi-tenant workflow orchestration platform. This threat model documents:</p>
+<ul>
+<li>Threat actors and their capabilities</li>
+<li>Assets to protect (plans, run state, audit logs)</li>
+<li>Threat scenarios with likelihood/impact assessment (<strong>descriptive</strong>: what can go wrong and why)</li>
+<li>Security boundaries and mitigations (with visual trust lines)</li>
+<li>Compliance requirements (SOC2, HIPAA, GDPR)</li>
+<li>Plugin security model</li>
+<li>Execution Semantics v1.9 alignment</li>
+</ul>
+<p><strong>Key Distinction</strong>: This document is <strong>descriptive</strong> (threat scenarios, risk analysis). <strong>Normative requirements</strong> are in <strong><a href="../SECURITY_INVARIANTS.v1/">SECURITY_INVARIANTS.v1.md</a></strong> and <strong><a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a></strong> (must satisfy all invariants; violations = security incidents). Mitigations mentioned here are informative; see normative contracts for implemention requirements.</p>
+<p><strong>Design principle</strong>: Security enforced at architectural boundaries (API, Engine, StateStore, Plugin), not as afterthought.</p>
+<hr />
+<h2 id="threat-actors">Threat Actors<a class="headerlink" href="#threat-actors" title="Permanent link">&para;</a></h2>
+<h3 id="1-external-attacker">1. External Attacker<a class="headerlink" href="#1-external-attacker" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Goal</strong>: Access other tenant's data or infrastructure</li>
+<li><strong>Capabilities</strong>: Network-based attacks, credential theft, zero-day exploits</li>
+<li><strong>Attack surface</strong>: API endpoint, exposed credentials in logs, third-party dependencies</li>
+<li><strong>Likelihood</strong>: High | <strong>Impact</strong>: Critical</li>
+</ul>
+<h3 id="2-malicious-tenant">2. Malicious Tenant<a class="headerlink" href="#2-malicious-tenant" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Goal</strong>: Escape sandbox, DoS engine, exfiltrate data from other tenants</li>
+<li><strong>Capabilities</strong>: Can write arbitrary workflow plans, install plugins, consume resources</li>
+<li><strong>Attack surface</strong>: Plugin code execution, expensive plans (e.g., infinite loops), resource quotas</li>
+<li><strong>Likelihood</strong>: Medium | <strong>Impact</strong>: High</li>
+</ul>
+<h3 id="3-compromised-plugin">3. Compromised Plugin<a class="headerlink" href="#3-compromised-plugin" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Goal</strong>: Steal secrets, escape sandbox, DoS engine, exfiltrate data</li>
+<li><strong>Capabilities</strong>: Execute code within plugin runtime, access plan secrets, call external APIs</li>
+<li><strong>Attack surface</strong>: Plugin marketplace (supply chain), unsigned or unverified plugin bundles, plugin code execution</li>
+<li><strong>Likelihood</strong>: Medium (unsigned plugins) / Low (signed but compromised) | <strong>Impact</strong>: Critical</li>
+<li><strong>Key Mitigation</strong>: Cryptographic signature verification (INV-PLUGIN-01), reject unsigned/unknown provenance, SBOM + vulnerability scanning (T13)</li>
+</ul>
+<h3 id="4-insider-threat">4. Insider Threat<a class="headerlink" href="#4-insider-threat" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Goal</strong>: Excessive access to sensitive data, audit log tampering</li>
+<li><strong>Capabilities</strong>: Database access, log access, override controls</li>
+<li><strong>Attack surface</strong>: Database credentials, operator access, audit log storage</li>
+<li><strong>Likelihood</strong>: Low | <strong>Impact</strong>: Critical</li>
+</ul>
+<h3 id="5-noisy-neighbor-accidental-dos">5. Noisy Neighbor / Accidental DoS<a class="headerlink" href="#5-noisy-neighbor-accidental-dos" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Goal</strong>: Not malicious, but consumes excessive resources (honest mistake)</li>
+<li><strong>Capabilities</strong>: Submits expensive plans, creates infinite loops</li>
+<li><strong>Attack surface</strong>: Resource quotas, plan complexity limits</li>
+<li><strong>Likelihood</strong>: High | <strong>Impact</strong>: Medium</li>
+</ul>
+<hr />
+<h2 id="assets-to-protect">Assets to Protect<a class="headerlink" href="#assets-to-protect" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Sensitivity</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Workflow Plans</strong></td>
+<td>High</td>
+<td>May reference secrets (secret IDs), contain business logic, and encode PII-relevant transformations</td>
+</tr>
+<tr>
+<td><strong>Run State</strong></td>
+<td>High</td>
+<td>May contain intermediate results with PII, secret references, artifacts</td>
+</tr>
+<tr>
+<td><strong>Audit Logs</strong></td>
+<td>Medium</td>
+<td>Compliance requirement (SOC2, HIPAA, GDPR), tamper-proof</td>
+</tr>
+<tr>
+<td><strong>Infrastructure</strong></td>
+<td>Medium</td>
+<td>Compute, storage, network (DoS impact, cost)</td>
+</tr>
+<tr>
+<td><strong>Plugin Marketplace</strong></td>
+<td>Medium</td>
+<td>Supply chain security, malicious code injection</td>
+</tr>
+<tr>
+<td><strong>Tenant Metadata</strong></td>
+<td>Low</td>
+<td>Names, contact info, subscription tier</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p>Deployment Modes</p>
+<p>The security posture varies significantly depending on deployment architecture. This threat model applies to all modes but with mode-specific constraints:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Tenant Isolation</th>
+<th>Trust Tier 3</th>
+<th>Audit Log Access</th>
+<th>Quota Enforcement</th>
+<th>Sandbox Tier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Multi-Tenant SaaS</strong></td>
+<td>Cryptographic + DB RLS</td>
+<td>❌ Explicitly forbidden (INV-PLUGIN-04)</td>
+<td>Auditor role only; tenant cannot read own logs in prod</td>
+<td>Mandatory (T6 DoS risk)</td>
+<td>Tier 1 (gVisor) default</td>
+</tr>
+<tr>
+<td><strong>Dedicated Tenant Isolation</strong></td>
+<td>Physical/virtual isolation + RLS</td>
+<td>⚠️ Allowed with strong audit + monitoring</td>
+<td>Auditor access only; may delegate to tenant operator</td>
+<td>Mandatory per SLA</td>
+<td>Tier 1/2 recommended</td>
+</tr>
+<tr>
+<td><strong>Single-Tenant / Self-Hosted</strong></td>
+<td>Application-layer scope enforcement</td>
+<td>✅ Allowed; operator has root access</td>
+<td>Full access (logs == internal system logs)</td>
+<td>Not required (single tenant)</td>
+<td>Any (Tier 3 acceptable if self-operated)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Implication for this threat model</strong>:</p>
+<ul>
+<li><strong>T6</strong> (Noisy Neighbor DoS): Relevant only in multi-tenant SaaS; less critical in dedicated isolation</li>
+<li><strong>T7</strong> (Insider threat): Critical in SaaS + dedicated; managed differently in single-tenant</li>
+<li><strong>T14</strong> (Operator justification): Mandatory in all modes; enforcement differs (regulatory in SaaS, internal in self-hosted)</li>
+<li><strong>Audit retention</strong>: Multi-tenant SaaS = 6-7 years (regulatory); single-tenant = policy-driven</li>
+<li><strong>Tier 3 prohibition</strong>: See INV-PLUGIN-04; multi-tenant SaaS Monly, TLS 1.2 rejected (INV-CRYPTO-02) | <a href="../SECURITY_INVARIANTS.v1/#encryption-invariants">SECURITY_INVARIANTS.v1.md</a> |</li>
+</ul>
+<p><strong>Note on TLS 1.3+ Requirement</strong>: This is a deliberate product stance: <strong>TLS 1.2 connections MUST be rejected</strong>. Rationale: TLS 1.2 has deprecated cipher suites, requires stronger operational discipline, and is end-of-life for most cloud providers. Organizations requiring legacy TLS 1.2 support must be declined or deployed on isolated infrastructure. See <a href="https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html">OWASP Transport Layer Protection Cheat Sheet</a> for technical rationale.</p>
+<hr />
+<h2 id="security-invariants-testable">🔐 Security Invariants (Testable)<a class="headerlink" href="#security-invariants-testable" title="Permanent link">&para;</a></h2>
+<p>Every DVT Engine deployment MUST satisfy these invariants. Violations are considered security incidents.</p>
+<p><strong>For complete invariant specifications, see the normative contract</strong>: <strong><a href="../SECURITY_INVARIANTS.v1/">SECURITY_INVARIANTS.v1.md</a></strong></p>
+<h3 id="invariant-summary">Invariant Summary<a class="headerlink" href="#invariant-summary" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Key Invariants</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scope Enforcement</strong></td>
+<td>Immutable tenant context (INV-SCOPE-01); StateStore scope required (INV-SCOPE-02); No cross-tenant inference (INV-SCOPE-03)</td>
+<td><a href="../SECURITY_INVARIANTS.v1/#scope-enforcement-invariants">SECURITY_INVARIANTS.v1.md</a></td>
+</tr>
+<tr>
+<td><strong>Secrets Management</strong></td>
+<td>No plaintext secrets (INV-SECRETS-01); ISecretsProvider only</td>
+<td><a href="../SECURITY_INVARIANTS.v1/#secrets-management-invariants">SECURITY_INVARIANTS.v1.md</a></td>
+</tr>
+<tr>
+<td><strong>Audit Logging</strong></td>
+<td>Append-only audit log (INV-AUDIT-01); All state mutations audited (INV-AUDIT-02); Trusted timestamps (INV-AUDIT-03)</td>
+<td><a href="../SECURITY_INVARIANTS.v1/#audit-invariants">SECURITY_INVARIANTS.v1.md</a></td>
+</tr>
+<tr>
+<td><strong>Plugin Security</strong></td>
+<td>Cryptographic signature verification (INV-PLUGIN-01); Network egress allowlist (INV-PLUGIN-02); Permission manifest enforcement (INV-PLUGIN-03)</td>
+<td><a href="../SECURITY_INVARIANTS.v1/#plugin-security-invariants">SECURITY_INVARIANTS.v1.md</a>, <a href="../PLUGIN_PROVENANCE_POLICY.v1/">PLUGIN_PROVENANCE_POLICY.v1.md</a></td>
+</tr>
+<tr>
+<td><strong>Engine Boundaries</strong></td>
+<td>Determinism enforcement (INV-ENGINE-01); No default tenant (INV-ENGINE-02)</td>
+<td><a href="../SECURITY_INVARIANTS.v1/#engine-boundary-invariants">SECURITY_INVARIANTS.v1.md</a></td>
+</tr>
+<tr>
+<td><strong>Encryption</strong></td>
+<td>Encryption at rest (INV-CRYPTO-01); TLS 1.3+ enforcement (INV-CRYPTO-02)</td>
+<td><a href="../SECURITY_INVARIANTS.v1/#encryption-invariants">SECURITY_INVARIANTS.v1.md</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Related Normative Contracts</strong>:</p>
+<ul>
+<li><strong><a href="../PLUGIN_PROVENANCE_POLICY.v1/">PLUGIN_PROVENANCE_POLICY.v1.md</a></strong>: Plugin supply chain security requirements</li>
+<li><strong><a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a></strong>: Mandatory isolation test suite</li>
+</ul>
+<hr />
+<h2 id="security-boundaries-trust-lines">Security Boundaries &amp; Trust Lines<a class="headerlink" href="#security-boundaries-trust-lines" title="Permanent link">&para;</a></h2>
+<h3 id="visual-trust-model-illustrative">Visual Trust Model (Illustrative)<a class="headerlink" href="#visual-trust-model-illustrative" title="Permanent link">&para;</a></h3>
+<p>Diagram is illustrative; normative requirements are defined in <strong>Security Invariants</strong> and <strong>normative contracts</strong>.<br />
+This diagram visualizes trust boundaries but does not replace the text specification.</p>
+<pre><code class="language-mermaid">graph LR
+    subgraph Internet
+        User((User/Client))
+    end
+
+    subgraph API_Gateway [API Boundary - Trust Line 1]
+        direction TB
+        AuthN[Authentication JWT/mTLS]
+        AuthZ{IAuthorization RBAC}
+        Validate[Input Validation]
+        RateLimit[Rate Limiting]
+    end
+
+    subgraph Core_Engine [Engine Boundary - Trust Line 2]
+        direction TB
+        Workflow[Workflow Orchestrator]
+        ScopeCheck[Tenant Scope Enforcement]
+        Determinism[Determinism Enforcer]
+        State[(StateStore RLS + TenantScope)]
+    end
+TenantScope + CorrelationIds + (optional) SignedAuthzDecisionEnvelope
+    subgraph Audit_System [Audit Boundary - Trust Line 3]
+        direction TB
+        AuditLog[(Immutable Audit Store)]
+        DecisionRec[Decision Records v1.9]
+        Sign[HMAC Signer - KMS/HSM]
+    end
+
+    subgraph Sandbox [Plugin Boundary - Sandbox]
+        direction TB
+        Tier1[[Trust Tier 1: gVisor/isolated-vm]]
+        Tier2[[Trust Tier 2: Container]]
+        Tier3[[Trust Tier 3: Host Process]]
+        Code[Plugin Code]
+    end
+
+    User --&gt;|JWT/TLS| API_Gateway
+
+    API_Gateway --&gt;|Authorized Plan + Tenant Context| Core_Engine
+
+    Core_Engine --&gt;|Limited Context + TenantScope| Sandbox
+    Core_Engine --&gt;|State Reads/Writes| State
+
+    State -.-&gt;|Audit Events| Audit_System
+    Core_Engine -.-&gt;|Operator Actions + Justification| Audit_System
+    API_Gateway -.-&gt;|AuthZ Decisions| Audit_System
+
+    Sandbox --&gt;|Egress Allowlist| Internet
+
+    style AuthZ fill:#ff9900,stroke:#333
+    style ScopeCheck fill:#ff9900,stroke:#333
+    style AuditLog fill:#6c757d,stroke:#333
+    style Tier1 fill:#28a745,stroke:#333
+    style Tier2 fill:#ffc107,stroke:#333
+    style Tier3 fill:#dc3545,stroke:#333
+</code></pre>
+<hr />
+<p>| <strong>T20</strong> | Signer key compromise → attacker forges audit entries or auth decisions | Low | <strong>Critical</strong> | <strong>Key separation + HSM/KMS</strong>: HMAC signer key isolated from write-only log service; asymmetric signing (RSA/ECDSA) optional for non-repudiation; key export requires dual control + admin approval; rotation + alerting on key access; KMS audit log tracks all key operations; see <a href="https://csrc.nist.gov/projects/ssdf">NIST SSDF</a> |</p>
+<h2 id="threat-scenarios">Threat Scenarios<a class="headerlink" href="#threat-scenarios" title="Permanent link">&para;</a></h2>
+<p><strong>Descriptive vs. Prescriptive Distinction</strong>:</p>
+<ul>
+<li><strong>Threat scenarios</strong> (this section): Descriptive analysis of what can go wrong, likelihood, impact assessment, and mitigation approaches</li>
+<li><strong>Security Invariants</strong> (<a href="../SECURITY_INVARIANTS.v1/">SECURITY_INVARIANTS.v1.md</a>): Normative, testable requirements that implementations MUST satisfy</li>
+<li><strong>Test Suite</strong> (<a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a>): Validation procedures for invariants</li>
+</ul>
+<p>This document identifies risks; normative contracts define what MUST hold. Treat mitigations mentioned here as guidance, not implementation specifications.</p>
+<p><strong>Threat Modeling Methodology</strong>: See <a href="https://owasp.org/www-community/Threat_Modeling">OWASP Threat Modeling Guide</a> for principles of risk analysis, attack surface identification, and mitigation prioritization.</p>
+<p><strong>Note</strong>: Threat IDs are stable; gaps in numbering exist due to retired or consolidated threats from earlier versions.</p>
+<h3 id="high-risk-scenarios">High-Risk Scenarios<a class="headerlink" href="#high-risk-scenarios" title="Permanent link">&para;</a></h3>
+<p><strong>Masking mode + cache control</strong>: Per <a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a> ISOL-TIMING/ISOL-ORACLE, masked endpoints return <strong>403 Forbidden</strong> (not 404) for cross-tenant access attempts; constant-time checks; generic error messages; <strong>Cache-Control: no-store</strong> header on all masked endpoints (per <a href="https://www.rfc-editor.org/rfc/rfc9111.html">RFC 9111</a> § 5.2.2.1) to prevent cache oracles; conditional request validation (ETags must not leak existence); AuthZ decision cached per-request only (not shared across requests)
+| # | Threat | Likelihood | Impact | Mitigation |
+| ------- | ------------------------------------------------------------------------ | ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <strong>T1</strong> | Tenant A reads Tenant B's plan via API | Medium | <strong>Critical</strong> | <strong>Row-level security (RLS)</strong> on plans table; <code>tenantId</code> in all queries (INV-SCOPE-01, INV-SCOPE-02, INV-SCOPE-03); RBAC authorization at API boundary per <code>IAuthorization.v1.md</code>; SQL-level tenant binding with session scope; no cross-tenant inference via timing/errors |
+| <strong>T2</strong> | Plugin escapes sandbox, accesses host filesystem | Low | <strong>Critical</strong> | <strong>Trust Tier enforcement</strong> (Tier 1 gVisor: zero FS access; Tier 2/3: scoped temp only); resource limits (CPU, memory, network per tier); timeout enforcement; seccomp/AppArmor; no symlinks to sensitive paths; plugin manifest permission checks |
+| <strong>T3</strong> | SQL Injection in API (SELECT * FROM plans WHERE id = {id}) | Low | <strong>Critical</strong> | Parameterized queries; ORM usage; input validation at API boundary; WAF; belt + suspenders: RLS prevents cross-tenant data exposure even if SQLi succeeds |
+| <strong>T17</strong> | Confused deputy: plugin uses engine identity to access resources (artifacts, state) it shouldn't; or operator uses admin identity to access cross-tenant audit logs | Medium | <strong>High</strong> | <strong>Distinct plugin principal</strong>: Plugin identity isolated from engine/operator identity; every internal resource access (artifact, state, log read) authorized against plugin principal + tier + manifest; plugin claims in JWT bound to <code>pluginId</code> + <code>executionId</code> (non-transferable); see <a href="https://owasp.org/www-project-api-security/">OWASP API Security #5 (BOLA)</a> |
+| <strong>T18</strong> | SSRF via plugin egress allowlist: even with DNS allowlist, plugin reaches internal metadata endpoints (169.254.x.x, link-local) or does DNS rebinding | Medium | <strong>Medium</strong> | <strong>Egress proxy mandatory for Tier 2/3</strong>: Block RFC1918 (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), 127.0.0.0/8, 169.254.0.0/16, 224.0.0.0/4 to egress allowlist; DNS rebinding protection (DNSSEC, response validation, TTL limits); per-tier granularity (Tier 1 = zero egress blocks this) |
+| <strong>T19</strong> | Log/metric exfiltration channel: even if plugin egress blocked, logs/metrics leak data (tenants read own logs, structured data carries PII, log retention too long) | Medium | <strong>Medium</strong> | <strong>Log scrubbing + payload controls</strong>: Redact PII/secret patterns in logs; classify logs (public/internal/pii); size limits per log entry (1KB default, configurable); tenant access to logs limited (read own, or auditor only); retention policy enforces deletion (see Retention Policy Summary); see <a href="https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html">OWASP Logging Cheat Sheet</a> |
+| <strong>T4</strong> | Audit log tampering (delete evidence of breach) | Low | <strong>Critical</strong> | <strong>Append-only storage</strong> (INV-AUDIT-01); cryptographic signatures (HMAC-SHA256) per entry; separate credentials for write-only signer vs. read-only auditor; immutable storage backend (S3 Object Lock, immutable table); KMS-backed HMAC key rotation |
+| <strong>T5</strong> | Secret leak in logs (plan contains API key, logged as-is) | Medium | <strong>High</strong> | <strong>ISecretsProvider</strong>: Engine never logs secret values, only secret IDs; log scrubbing (regex scan for secret patterns); secrets MUST NOT be persisted in any workflow-engine execution history; adapters MUST ensure exclusion; encryption at rest for logs; redaction filters in observability pipeline (see <a href="https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html">OWASP Logging Cheat Sheet</a>) |
+| <strong>T6</strong> | Tenant B DoS engine with expensive plan (infinite loop, recursive calls) | Medium | <strong>Medium</strong> | Cost attribution (charge tenant for CPU/memory); per-tenant quotas (max 1000 concurrent runs); plan complexity limits; timeout enforcement per plugin tier; circuit breakers; rate limiting at API boundary (per deployment policy) |
+| <strong>T7</strong> | Insider access to prod database (engineer deletes customer audit logs) | Low | <strong>Critical</strong> | Encryption at rest (INV-CRYPTO-01); separate audit DB with restricted access; multi-factor authentication for admin; audit log of database access; <strong>Decision Records</strong> (INV-AUDIT-02): All operator actions logged with actorId + justification; no anonymous admin operations |
+| <strong>T8</strong> | Compromised dependency (e.g., Temporal SDK) contains backdoor | Low | <strong>High</strong> | Dependency scanning (Dependabot, Snyk); <strong>SBOM generation</strong> (CycloneDX); supply chain controls: all plugin bundles signed (Sigstore/Cosign); verification at install + load; SLSA Build Track L2 goal for official marketplace; provenance verification |
+| <strong>T13</strong> | Malicious plugin unsigned or unknown provenance installed | Medium | <strong>Critical</strong> | <strong>Supply chain enforcement</strong>: All plugin bundles MUST be cryptographically signed (INV-PLUGIN-01); verification binds signature → digest + trusted issuer; plugin catalog tamper-evident (INV-PLUGIN-05); reject unsigned/unknown provenance per <a href="../PLUGIN_PROVENANCE_POLICY.v1/">PLUGIN_PROVENANCE_POLICY.v1.md</a>; official marketplace enforces SBOM + vulnerability scan in CI; deny Tier 3 in multi-tenant SaaS by default (INV-PLUGIN-04) |
+| <strong>T14</strong> | Operator cancels workflow without justification (unauditable action) | Medium | <strong>High</strong> | <strong>Decision Records mandatory</strong> (INV-AUDIT-02): All PAUSE, CANCEL, RESTART operations emit Decision Record with <code>actorId</code> + <code>justificationText</code>; audit system flags missing justifications; alerting on anonymous operator actions; retention per compliance policy |</p>
+<h3 id="medium-risk-scenarios">Medium-Risk Scenarios<a class="headerlink" href="#medium-risk-scenarios" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Threat</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>T9</strong></td>
+<td>Plugin calls external API to exfiltrate data</td>
+<td>Medium</td>
+<td><strong>Medium</strong></td>
+<td><strong>Tier-based network egress</strong> (Tier 1: zero egress; Tier 2: allowlist only; Tier 3: monitored/audited); plugin manifest declares NET_EGRESS permission; runtime enforcement; logging all external calls; rate limiting per plugin</td>
+</tr>
+<tr>
+<td><strong>T10</strong></td>
+<td>Timing attack / cache oracle on authorization (response time / ETag / cache headers reveal resource existence across tenant boundary)</td>
+<td>Low</td>
+<td><strong>Medium</strong></td>
+<td>Statistical timing analysis mitigation (see <a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a> ISOL-TIMING/ISOL-ORACLE); MASKING_MODE policy (403 vs 404); constant-time checks; generic errors; no cache headers leaking tenant data (per <a href="https://www.rfc-editor.org/rfc/rfc9111.html">RFC 9111</a>); AuthZ decision cached per request</td>
+</tr>
+<tr>
+<td><strong>T11</strong></td>
+<td>CSRF attack (malicious website triggers action on behalf of user)</td>
+<td>Low</td>
+<td><strong>Medium</strong></td>
+<td>CSRF tokens in forms; SameSite cookies (Strict/Lax); origin validation; double-submit cookie pattern; state parameter for OAuth flows</td>
+</tr>
+<tr>
+<td><strong>T12</strong></td>
+<td>Replay attack (replay old authorization token or API call)</td>
+<td>Low</td>
+<td><strong>High</strong></td>
+<td>JWT expiration (short-lived tokens ≤15min); refresh token rotation; request signing with nonce (optional per API); TLS only (no plaintext); token revocation support via deny-list or version increment</td>
+</tr>
+<tr>
+<td><strong>T15</strong></td>
+<td>Secret rotation breaks running workflows (stale credentials)</td>
+<td>Low</td>
+<td><strong>Medium</strong></td>
+<td><strong>ISecretsProvider</strong> design: Activities resolve secret references at runtime (not at plan creation); version-aware secret retrieval (use latest unless pinned); graceful secret expiry handling; audit secret access per workflow run</td>
+</tr>
+<tr>
+<td><strong>T16</strong></td>
+<td>Plugin abuses artifact APIs to stage data exfiltration or cross-boundary leakage (write sensitive data to shared artifact namespace, read later from different context)</td>
+<td>Medium</td>
+<td><strong>High</strong></td>
+<td>Scoped artifact namespaces per tenant; content classification + data loss prevention (DLP) scanning; per-tenant artifact quotas; audit all READ_ARTIFACT/WRITE_ARTIFACT operations; deny cross-tenant artifact access (enforce tenant scope in artifact store adapter); rate limiting on artifact uploads</td>
+</tr>
+</tbody>
+</table>
+<p><strong>References</strong>:</p>
+<ul>
+<li><a href="https://owasp.org/www-project-api-security/">OWASP API Security Top 10</a> - Data exposure risks</li>
+<li><a href="https://owasp.org/www-community/Threat_Modeling">OWASP Threat Modeling</a> - Threat modeling methodology</li>
+</ul>
+<hr />
+<h3 id="1-api-boundary-authentication-authorization">1. API Boundary (Authentication + Authorization)<a class="headerlink" href="#1-api-boundary-authentication-authorization" title="Permanent link">&para;</a></h3>
+<p><strong>Location</strong>: API gateway / REST endpoint<br />
+<strong>Trust Line</strong>: Internet → Trusted Internal Network</p>
+<p><strong>Responsibilities</strong>:</p>
+<ul>
+<li>Authentication: Verify identity (JWT, OAuth2, mTLS)</li>
+<li>Authorization: Evaluate RBAC policy per <code>IAuthorization.v1.md</code> contract</li>
+<li>Principle**: Defense-in-depth—Engine MUST NOT rely solely on API authorization decisions for tenant isolation. Even if API AuthZ is bypassed, Engine MUST enforce scope invariants independently.</li>
+</ul>
+<p><strong>Responsibilities</strong>:</p>
+<ul>
+<li><strong>Scope enforcement (primary)</strong>: MUST validate <code>tenantId</code> matches authenticated context; validate scope immutability; reject cross-tenant payloads via fail-fast checks (INV-SCOPE-01/02). This is <strong>not delegated to API</strong>; Engine owns this guarantee.</li>
+<li><strong>RBAC re-check (optional)</strong>: If Engine needs user-level authorization beyond scope, validate against signed authorization decision envelope from API (signed JWT claims + decision record). Without signed envelope, deny by default.</li>
+<li><strong>Determinism</strong>: No side-effect I/O except via explicit Plugin/Adapter boundaries (INV-ENGINE-01)</li>
+<li><strong>Event emission</strong>: Emit events to outbox (not direct side effects)</li>
+<li><strong>Scope validation</strong>: Panic/fail-fast on malformed scope, missing <code>tenantId</code>, or default tenant assumptions</li>
+</ul>
+<p><strong>v1.9 Alignment</strong>:</p>
+<ul>
+<li><strong>Secrets</strong>: Engine never sees secret values; Activities resolve references at runtime via <code>ISecretsProvider</code></li>
+<li><strong>History</strong>: Secrets MUST NOT be persisted in any workflow-engine execution history; adapters MUST ensure exclusion (see <a href="https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html">OWASP Logging Cheat Sheet</a>)</li>
+<li><strong>Decision Records</strong>: All operator actions (PAUSE, CANCEL) emit mandatory Decision Records with <code>actorId</code> + justification string</li>
+</ul>
+<p><strong>Note on API trust model</strong>: Signed authorization decision envelopes (e.g., JWT with <code>scope</code>, <code>tenantId</code>, <code>claims</code>) may be used to reduce re-checks, but ONLY if:</p>
+<ol>
+<li>Signature verified against API key (public key in HSM/KMS)</li>
+<li>Claims include immutable scope binding (<code>tenantId</code>, <code>projectId</code>)</li>
+<li>Expiry + nonce prevent replay (see T12 mitigation)
+   See <a href="https://datatracker.ietf.org/doc/html/rfc7519">RFC 7519</a> for JWT best practices.</li>
+</ol>
+<h3 id="2-engine-boundary-tenant-scope-enforcement">2. Engine Boundary (Tenant Scope Enforcement)<a class="headerlink" href="#2-engine-boundary-tenant-scope-enforcement" title="Permanent link">&para;</a></h3>
+<p><strong>Location</strong>: <code>IWorkflowEngine</code> interface<br />
+<strong>Trust Line</strong>: Authorized Request → Tenant-Isolated Execution</p>
+<p><strong>Responsibilities</strong>:</p>
+<ul>
+<li>Assume commands are pre-authorized (RBAC complete at API)</li>
+<li>Enforce tenant-scope invariants: Never process cross-tenant payloads; validate <code>tenantId</code> matches authenticated context</li>
+<li>Enforce determinism: No side-effect I/O except via explicit Plugin/Adapter boundaries</li>
+<li>Emit events to outbox (not direct side effects)</li>
+<li>Reject malformed scope: No default tenant; explicit scope required; panic/fail-fast on validation failure</li>
+</ul>
+<p><strong>v1.9 Alignment</strong>:</p>
+<ul>
+<li>Secrets: Engine never sees secret values; Activities resolve references at runtime via <code>ISecretsProvider</code></li>
+<li>History: Secrets MUST NOT be persisted in any workflow-engine execution history; adapters MUST ensure exclusion (see <a href="https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html">OWASP Logging Cheat Sheet</a>)</li>
+<li>Decision Records: All operator actions (PAUSE, CANCEL) emit mandatory Decision Records with <code>actorId</code> + justification string</li>
+</ul>
+<hr />
+<h3 id="3-statestore-boundary-row-level-security-scope-parameter">3. StateStore Boundary (Row-Level Security + Scope Parameter)<a class="headerlink" href="#3-statestore-boundary-row-level-security-scope-parameter" title="Permanent link">&para;</a></h3>
+<p><strong>Location</strong>: <code>IStateStoreAdapter</code> interface<br />
+<strong>Trust Line</strong>: Engine → Persistent Storage
+or asymmetric) per entry or batch</p>
+<ul>
+<li>Write-only service identity: Log writer cannot read logs</li>
+<li>Read path separate: Auditor role with distinct credentials; multi-tenant SaaS: tenant cannot read own audit logs outside of formal audit requests</li>
+<li>Key management: HMAC/signing keys in KMS/HSM; signer service has sign-only permissions; regular rotation with auditability; dual-control for key export</li>
+<li>Trusted time: All audit timestamps MUST be derived from trusted NTP source + monotonic clock, recorded in UTC</li>
+</ul>
+<p><strong>Trust Assumption (HMAC-based)</strong>: HMAC-SHA256 provides tamper-evidence <strong>only if the signer key remains confidential</strong>. Compromise of the key (T20) allows forged entries. Mitigations for T20:</p>
+<ul>
+<li><strong>Key isolation</strong>: Signer key never exported; only the log writer service holds it</li>
+<li><strong>Dual control</strong>: Key export requires approval from two independent operators (SOC2 access control)</li>
+<li><strong>HSM/KMS enforcement</strong>: Key never touches application memory; signing operations in hardware module</li>
+<li><strong>Rotation + alerting</strong>: Periodic key rotation (e.g., quarterly); alerting on any key access/export/rotation events</li>
+<li><strong>Asymmetric option</strong>: For non-repudiation (audit cannot be forged even if HMAC key later compromised), use RSA-3072/ECDSA-384 instead of HMAC. Trade-off: higher CPU cost, but stronger guarantees.</li>
+<li><strong>Key audit trail</strong>: KMS logs MUST record all key operations (access, rotation, export denial); retain per compliance window</li>
+</ul>
+<p><strong>Storage Options</strong>:</p>
+<ul>
+<li>Immutable database table (no DELETE/UPDATE grants; RLS ensures cross-tenant isolation)</li>
+<li>S3/Object storage with Object Lock (WORM enforcement)</li>
+<li>Dedicated audit log service (e.g., SysLog with TLS + append-only + signature)</li>
+</ul>
+<p><strong>References</strong>:</p>
+<ul>
+<li><a href="https://csrc.nist.gov/projects/ssdf">NIST SSDF</a> - Secure software development framework (key management practices)</li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html">OWASP Cryptographic Storage Cheat Sheet</a> - Key management best practices
+  <strong>Implementation Example (Non-Normative)</strong>:<br />
+  PostgreSQL RLS policy using <code>USING (tenant_id = current_setting('app.current_tenant')::TEXT)</code> with the application setting <code>app.current_tenant</code> per connection/transaction.<br />
+  Equivalent mechanisms exist for other datastores (native RLS, tenant-scoped partitions, policy-enforced access controls).</li>
+</ul>
+<hr />
+<h3 id="4-audit-boundary-immutable-record">4. Audit Boundary (Immutable Record)<a class="headerlink" href="#4-audit-boundary-immutable-record" title="Permanent link">&para;</a></h3>
+<p><strong>Location</strong>: <code>AuditLog.v1.md</code> contract implementation<br />
+<strong>Trust Line</strong>: System Components → Tamper-Evident Storage</p>
+<p><strong>Responsibilities</strong>:</p>
+<ul>
+<li>Append-only: No deletion, no mutation; write-once semantics</li>
+<li>Tamper-evident: Cryptographic signatures (HMAC-SHA256) per entry or batch</li>
+<li>Write-only service identity: Log writer cannot read logs</li>
+<li>Read path separate: Auditor role with distinct credentials</li>
+<li>Key management: HMAC keys stored in KMS/HSM; signer service has sign-only permissions; regular rotation, auditable</li>
+<li>Trusted time: All audit timestamps MUST be derived from a trusted time source (e.g., NTP-synchronized wall clock + monotonic clock) and recorded in UTC</li>
+</ul>
+<p><strong>Cryptographic integrity note</strong>: HMAC-SHA256 provides tamper-evidence assuming key confidentiality; optional asymmetric signing (e.g., RSA, ECDSA) may be used for stronger non-repudiation guarantees (audit log cannot be forged even if HMAC key is later compromised).</p>
+<p><strong>Storage Options</strong>:</p>
+<ul>
+<li>Immutable database table (no DELETE/UPDATE grants)</li>
+<li>S3/Object storage with Object Lock (WORM)</li>
+<li>Dedicated audit log service</li>
+</ul>
+<p><strong>References</strong>:</p>
+<ul>
+<li><a href="https://csrc.nist.gov/projects/ssdf">NIST SSDF</a> - Secure software development framework</li>
+</ul>
+<p><strong>v1.9 Alignment</strong>:</p>
+<ul>
+<li>Decision Records: All operator-initiated state changes include mandatory justification fields</li>
+<li>Retention tagging: PII/PHI flagged for pseudonymization at retention boundaries</li>
+</ul>
+<hr />
+<h3 id="5-plugin-boundary-trust-tiers-permission-model">5. Plugin Boundary (Trust Tiers + Permission Model)<a class="headerlink" href="#5-plugin-boundary-trust-tiers-permission-model" title="Permanent link">&para;</a></h3>
+<p><strong>Location</strong>: Plugin execution environment<br />
+<strong>Trust Line</strong>: Sandboxed Code → Isolated Runtime</p>
+<p><strong>Trust Tiers (v1.9)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Isolation Level</th>
+<th>Network Egress</th>
+<th>Filesystem</th>
+<th>Deployment Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tier 1</td>
+<td>gVisor / isolated-vm</td>
+<td>❌ Zero by default</td>
+<td>❌ None</td>
+<td>Default for untrusted plugins; multi-tenant SaaS</td>
+</tr>
+<tr>
+<td>Tier 2</td>
+<td>Container (Docker)</td>
+<td>✅ Allowlist only</td>
+<td>✅ Temp dir</td>
+<td>Trusted partner plugins</td>
+</tr>
+<tr>
+<td>Tier 3</td>
+<td>Host process</td>
+<td>✅ Unrestricted</td>
+<td>✅ Restricted</td>
+<td>MUST be disabled by default in multi-tenant SaaS deployments; permitted only in single-tenant/self-hosted or strongly isolated dedicated tenants. <strong>Tier 3 implies host trust</strong>: restrictions are policy/ops-enforced (audit, monitoring), not sandbox-enforced. Escape = full host compromise.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supply-chain-controls-pre-install">Supply Chain Controls (Pre-Install)<a class="headerlink" href="#supply-chain-controls-pre-install" title="Permanent link">&para;</a></h4>
+<p><strong>Provenance verification</strong> (before plugin execution):</p>
+<ul>
+<li>All plugin bundles MUST be cryptographically signed (Sigstore/Cosign, GPG, or equivalent)</li>
+<li>Verification MUST bind signature → artifact digest and trustSee note below |
+  | FILESYSTEM_TEMP | ❌ Denied | ✅ 100MB | ✅ 1GB | Ephemeral scratch space |
+  | EXEC | ❌ Denied | ❌ Denied | ⚠️ Audit | Subprocess execution (audited) |</li>
+</ul>
+<p><strong>Note on SECRETS_ACCESS</strong>: Plugins never receive <strong>raw secret values</strong> directly. Instead, plugins declare required secrets via manifest; the engine resolves secret IDs to values at <strong>runtime</strong> using <code>ISecretsProvider</code>. Secrets are injected into the plugin execution environment in a <strong>non-persisted way</strong> with <strong>strict redaction</strong> in logs and audit trails. The <code>ISecretsProvider</code> interface ensures secrets are never shared with plugins as persistent objects, preventing accidental exposure in execution history or inter-process communication.</p>
+<ul>
+<li>Dependency provenance verification: SLSA v1.2 Build Track L2 minimum for official marketplace artifacts (policy goal)</li>
+</ul>
+<p><strong>vm2 Prohibition</strong>: The <code>vm2</code> npm package is <strong>PROHIBITED</strong> in all plugin dependencies due to known sandbox escape vulnerabilities (CVE-2023-30547, CVE-2023-32313, CVE-2023-37466). See <a href="../PLUGIN_PROVENANCE_POLICY.v1/#vm2-prohibition">PLUGIN_PROVENANCE_POLICY.v1.md</a> for migration guidance to <code>isolated-vm</code>, <code>worker_threads</code>, or gVisor sandboxing.</p>
+<p><strong>References</strong>:</p>
+<ul>
+<li><a href="https://docs.sigstore.dev/">Sigstore Documentation</a> - Keyless signing + transparency log</li>
+<li><a href="https://slsa.dev/">SLSA Framework</a> - Supply chain levels for software artifacts</li>
+</ul>
+<h4 id="runtime-isolation-controls-execution">Runtime Isolation Controls (Execution)<a class="headerlink" href="#runtime-isolation-controls-execution" title="Permanent link">&para;</a></h4>
+<p><strong>Sandbox enforcement</strong> (during plugin invocation):</p>
+<ul>
+<li><strong>Resource limits</strong>: CPU, memory, disk, file descriptors, process count</li>
+<li><strong>Timeout enforcement</strong>: Kill process after N seconds (configurable per tier)</li>
+<li><strong>Filesystem</strong>: Tier 1 = none; Tier 2-3 = scoped temp directory (per-invocation, auto-cleaned)</li>
+<li><strong>Network</strong>: Tier 1 = zero egress; Tier 2 = explicit allowlist; Tier 3 = monitored unrestricted (SaaS: disabled)</li>
+<li><strong>Secrets</strong>: No direct access; only via <code>ISecretsProvider</code> with scoped secret IDs</li>
+<li><strong>Permission manifest</strong>: Plugin declares required capabilities; runtime enforces per tier</li>
+</ul>
+<p><strong>References</strong>:</p>
+<ul>
+<li><a href="https://gvisor.dev/">gVisor</a> - Application kernel for containers (strong isolation)</li>
+<li><a href="contracts/extensions/PluginSandbox.v1.0.md">PluginSandbox.v1.0.md</a> - Trust Tier specification</li>
+</ul>
+<hr />
+<h2 id="plugin-permission-model">Plugin Permission Model<a class="headerlink" href="#plugin-permission-model" title="Permanent link">&para;</a></h2>
+<p>Plugins declare required permissions in manifest; runtime enforces deny-by-default + tier constraints.</p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th style="text-align: right;">Tier 1</th>
+<th style="text-align: right;">Tier 2</th>
+<th style="text-align: right;">Tier 3</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NET_EGRESS</td>
+<td style="text-align: right;">❌ Denied</td>
+<td style="text-align: right;">✅ Allowlist</td>
+<td style="text-align: right;">✅ Unrestricted</td>
+<td>Outbound HTTP(S) to allowed domains</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reference</strong>: <a href="https://www.aicpa.org/topic/audit-assurance/trust-services">AICPA Trust Services Criteria</a> - Security (CC), Availability (A), Confidentiality (C)</p>
+<ul>
+<li><strong>Audit Log (CC6.1/CC7.2)</strong>: All access to sensitive data logged (INV-AUDIT-01), tamper-proof (HMAC signatures per T4 mitigation), searchable; cryptographic evidence of integrity</li>
+<li><strong>Access Control (CC6.2)</strong>: Documented RBAC per <code>IAuthorization.v1.md</code>; tested authorization; decision logs (INV-AUDIT-02); MFA for admin; role-based privilege separation</li>
+<li><strong>Change Management (CC7.3/CC7.5)</strong>: Audit trail of configuration changes; Decision Records + justification for operator actions; no anonymous/emergency access without investigation</li>
+<li><strong>Incident Response (A1.3)</strong>: Plan for breach detection via audit logs; alerting on suspicious patterns (failed authorization, multiple access denials); immutable log retention for forensic analysis
+  | FILESYSTEM_TEMP | ❌ Denied | ✅ 100MB | ✅ 1GB | Ephemeral scratch space |
+  <strong>Reference</strong>: <a href="https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164">45 CFR Part 164</a> - Security and Privacy Ru; immutable append-only structure with cryptographic integrity (HMAC/asymmetric signatures)</li>
+<li><strong>Encryption</strong>: At-rest (INV-CRYPTO-01: AES-256, KMS-backed keys with key rotation) and in-transit (TLS 1.3+ per INV-CRYPTO-02); encryption key management with authentication and monitoring</li>
+<li><strong>Audit Log Retention</strong>: <strong>6 years minimum</strong> (45 CFR § 164.530(j)(2)) for audit logs containing PHI access records; immutable storage; no deletion except via cryptographic erasure</li>
+<li><strong>Data Deletion</strong>: Right to be forgotten implemented via <strong>pseudonymization</strong> (replace PHI with hash) or <strong>cryptographic erasure</strong> (delete keys); PHI tags enable selective erasure; no unencrypted PHI in backups</li>
+<li><strong>Access Controls</strong>: Role-based access control; MFA for administrative access; audit all authorization decisions; no shared credentials; emergency procedures with audit trail</li>
+</ul>
+<h3 id="1-defense-in-depth">1. Defense in Depth<a class="headerlink" href="#1-defense-in-depth" title="Permanent link">&para;</a></h3>
+<p>Multiple layers of security:</p>
+<p><strong>Reference</strong>: <a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj">GDPR Regulation (EU) 2016/679</a>; <a href="https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/">ICO GDPR Guide</a></p>
+<ul>
+<li><strong>Right to Access</strong> (Art. 15): User can query audit logs for their data access history (personal data access report); provide within 30 days</li>
+<li><strong>Right to be Forgotten</strong> (Art. 17): Erasure applies to PII fields within audit records; audit envelopes remain immutable for compliance; implement via <strong>cryptographic erasure</strong> (delete PII encryption keys, rendering ciphertext irrecoverable per <a href="https://csrc.nist.gov/publications/detail/sp/800-88/rev-1/final">NIST SP 800-88r1</a>) or <strong>pseudonymization</strong> (replace PII with irreversible hash); retention obligations (financial records, legal holds) may override erasure requests within defined retention window</li>
+<li><strong>Data Minimization</strong> (Art. 5(1)(c)): Don't log unnecessary PII; secret IDs instead of values; redact sensitive fields in audit logs; scope audit access per role (tenant cannot read audit logs in multi-tenant SaaS)</li>
+<li><strong>Purpose Limitation</strong> (Art. 5(1)(b)): Only audit for purposes disclosed in privacy policy (security, compliance, law enforcement); do not repurpose audit data for secondary uses without consent</li>
+<li><strong>Storage Limitation</strong> (Art. 5(1)(e)): Define maximum retention periods per data category (see Retention Policy); enforce deletion at boundary via cryptographic erasure or anonymization</li>
+<li><strong>Accountability</strong> (Art. 5(2)): Maintain Data Processing Agreement (DPA), conduct Data Protection Impact Assessments (DPIA), document processing activities (Article 30 records)</li>
+</ul>
+<h3 id="hipaa-us-healthcare">HIPAA (US Healthcare)<a class="headerlink" href="#hipaa-us-healthcare" title="Permanent link">&para;</a></h3>
+<p>Security decisions made <strong>in Phase 1 documentation</strong>, not bolted on in Phase 3.</p>
+<h3 id="3-auditability-first">3. Auditability First<a class="headerlink" href="#3-auditability-first" title="Permanent link">&para;</a></h3>
+<p><strong>Every</strong> authorization decision, state mutation, and API call is audited.</p>
+<h3 id="4-least-privilege">4. Least Privilege<a class="headerlink" href="#4-least-privilege" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Plugins run with minimal permissions</li>
+<li>Service accounts have role-specific access</li>
+<li>Operators cannot override authorization</li>
+</ul>
+<h3 id="5-tenant-isolation-invariant">5. Tenant Isolation Invariant<a class="headerlink" href="#5-tenant-isolation-invariant" title="Permanent link">&para;</a></h3>
+<p><strong>Invariant</strong>: Tenant A cannot read, write, or infer Tenant B's data.</p>
+<h2 id="compliance-requirements">Compliance Requirements<a class="headerlink" href="#compliance-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="soc2-type-ii">SOC2 Type II<a class="headerlink" href="#soc2-type-ii" title="Permanent link">&para;</a></h3>
+<p><strong>Reference</strong>: <a href="https://www.aicpa.org/topic/audit-assurance/trust-services">AICPA Trust Services Criteria</a> - Security (CC), Availability (A), Confidentiality (C)</p>
+<ul>
+<li><strong>Audit Log (CC6.1/CC7.2)</strong>: All access to sensitive data logged (INV-AUDIT-01), tamper-proof (HMAC signatures), searchable; cryptographic evidence of integrity</li>
+<li><strong>Access Control (CC6.2)</strong>: Documented RBAC per <code>IAuthorization.v1.md</code>; tested authorization; decision logs (INV-AUDIT-02); MFA for admin; privilege separation</li>
+<li><strong>Change Management (CC7.3/CC7.5)</strong>: Audit trail of configuration changes; Decision Records + justification for operator actions</li>
+<li><strong>Incident Response</strong>: Plan for breach detection via audit logs; alerting on suspicious patterns; immutable log retention</li>
+</ul>
+<h3 id="hipaa-healthcare">HIPAA (Healthcare)<a class="headerlink" href="#hipaa-healthcare" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>PHI Access Logging</strong>: All access to Protected Health Information audited per <code>AuditLog.v1.md</code>; actor identification; timestamp</li>
+<li><strong>Encryption</strong>: At-rest (INV-CRYPTO-01: AES-256, KMS-backed keys) and in-transit (TLS 1.3+ per INV-CRYPTO-02)</li>
+<li><strong>Audit Log Retention</strong>: <strong>6 years minimum</strong> (45 CFR § 164.530(j)(2)); immutable storage; no deletion except cryptographic erasure at retention boundary</li>
+<li><strong>Data Deletion</strong>: Right to be forgotten implemented via <strong>pseudonymization</strong> (replace PII with cryptographic hash) or <strong>cryptographic erasure</strong> (delete encryption keys, rendering data irrecoverable); PHI tags in audit records enable selective erasure; retain metadata for compliance audits</li>
+<li><strong>Access Controls</strong>: Role-based access control; MFA for admin; audit all authorization decisions</li>
+</ul>
+<h3 id="gdpr-eu-data-protection">GDPR (EU Data Protection)<a class="headerlink" href="#gdpr-eu-data-protection" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Right to Access</strong> (Art. 15): User can query audit logs for their data access history (personal data access report)</li>
+<li><strong>Right to be Forgotten</strong> (Art. 17): Erasure applies to PII fields within audit records; audit envelopes remain immutable; implement via <strong>cryptographic erasure</strong> (delete PII encryption keys, rendering ciphertext irrecoverable per <a href="https://csrc.nist.gov/publications/detail/sp/800-88/rev-1/final">NIST SP 800-88r1</a>) or <strong>pseudonymization</strong> (replace PII with irreversible hash); retention obligations (financial records, legal holds) may override erasure requests</li>
+<li><strong>Data Minimization</strong> (Art. 5(1)(c)): Don't log unnecessary PII; secret IDs instead of values; redact sensitive fields in audit logs</li>
+<li><strong>Purpose Limitation</strong> (Art. 5(1)(b)): Only audit for purposes disclosed in privacy policy (security, compliance, debugging); no secondary use without consent</li>
+<li><strong>Retention Limits</strong>: Define maximum retention periods per data category; enforce automated deletion at retention boundary unless legal hold applies</li>
+</ul>
+<h3 id="retention-policy-summary">Retention Policy Summary<a class="headerlink" href="#retention-policy-summary" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Data Type</th>
+<th>Retention Period</th>
+<th>Erasure Method</th>
+<th>Regulatory Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Audit logs (non-PHI)</td>
+<td>7 years</td>
+<td>Cryptographic erasure (KMS key deletion)</td>
+<td>SOC2, GDPR Art. 5(1)(e)</td>
+</tr>
+<tr>
+<td>Audit logs (PHI)</td>
+<td>6 years</td>
+<td>Cryptographic erasure + pseudonymization</td>
+<td>HIPAA 45 CFR § 164.530(j)(2)</td>
+</tr>
+<tr>
+<td>Workflow execution history</td>
+<td>90 days (default)</td>
+<td>Soft delete (tombstone) → hard delete</td>
+<td>Business policy, GDPR minimization</td>
+</tr>
+<tr>
+<td>Decision Records</td>
+<td>3 years (operator actions)</td>
+<td>Immutable retention (no deletion)</td>
+<td>SOC2, internal audit</td>
+</tr>
+<tr>
+<td>User PII (non-regulated)</td>
+<td>Account deletion + 30 days</td>
+<td>Hard delete (GDPR erasure request)</td>
+<td>GDPR Art. 17</td>
+</tr>
+<tr>
+<td>Financial records</td>
+<td>7 years (varies by jurisdiction)</td>
+<td>No deletion (legal hold)</td>
+<td>Tax law, SOX</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cryptographic Erasure Definition</strong>: Delete the encryption key used to encrypt data at rest, rendering ciphertext irrecoverable without the key. Equivalent to secure data deletion for compliance purposes (NIST SP 800-88r1). KMS audit logs MUST retain key deletion events for provenance.</p>
+<hr />
+<h2 id="implementation-validation-checklist">Implementation Validation Checklist<a class="headerlink" href="#implementation-validation-checklist" title="Permanent link">&para;</a></h2>
+<p><strong>For complete validation checklists, see</strong>:</p>
+<ul>
+<li><strong><a href="../SECURITY_INVARIANTS.v1/#implementation-validation-checklist">SECURITY_INVARIANTS.v1.md</a></strong> - Security invariant implementation checklist</li>
+<li><strong><a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a></strong> - Mandatory tenant isolation test suite</li>
+<li><strong><a href="../PLUGIN_PROVENANCE_POLICY.v1/#enforcement-checklist">PLUGIN_PROVENANCE_POLICY.v1.md</a></strong> - Plugin provenance enforcement checklist</li>
+</ul>
+<h3 id="quick-reference-checklist">Quick Reference Checklist<a class="headerlink" href="#quick-reference-checklist" title="Permanent link">&para;</a></h3>
+<p><strong>Scope Enforcement</strong>:</p>
+<ul>
+<li>[ ] All commands include immutable tenant scope (INV-SCOPE-01)</li>
+<li>[ ] StateStore methods require TenantScope parameter (INV-SCOPE-02)</li>
+<li>[ ] Cross-tenant inference tests pass (INV-SCOPE-03, see <a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a>)</li>
+</ul>
+<p><strong>Audit Logging</strong>:</p>
+<ul>
+<li>[ ] Audit log append-only (INV-AUDIT-01)</li>
+<li>[ ] All state mutations audited (INV-AUDIT-02)</li>
+<li>[ ] Trusted timestamps from NTP source (INV-AUDIT-03)</li>
+</ul>
+<p><strong>Plugin Security</strong>:</p>
+<ul>
+<li>[ ] Plugin signature verification on install + load (INV-PLUGIN-01)</li>
+<li>[ ] Network egress blocked for Tier 1 plugins (INV-PLUGIN-02)</li>
+<li>[ ] Permission manifest enforced (INV-PLUGIN-03)</li>
+<li>[ ] Tier 3 disabled in multi-tenant SaaS (INV-PLUGIN-04)</li>
+<li>[ ] Plugin catalog tamper-evident + audited (INV-PLUGIN-05)</li>
+<li>[ ] vm2 package prohibited (see <a href="../PLUGIN_PROVENANCE_POLICY.v1/#vm2-prohibition">PLUGIN_PROVENANCE_POLICY.v1.md</a>)</li>
+</ul>
+<p><strong>Encryption</strong>:</p>
+<ul>
+<li>[ ] Database dump shows ciphertext (INV-CRYPTO-01)</li>
+<li>[ ] TLS 1.2 connection rejected (INV-CRYPTO-02)</li>
+</ul>
+<hr />
+<h2 id="normative-contracts">Normative Contracts<a class="headerlink" href="#normative-contracts" title="Permanent link">&para;</a></h2>
+<p>The following contracts define security-critical interfaces and policies. Implementations MUST conform to these contracts; divergence requires explicit architectural decision record (ADR) with security review.</p>
+<h3 id="security-invariants-and-policies">Security Invariants and Policies<a class="headerlink" href="#security-invariants-and-policies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><a href="../SECURITY_INVARIANTS.v1/">SECURITY_INVARIANTS.v1.md</a></strong>: Testable security invariants (MUST satisfy all)</li>
+<li><strong><a href="../PLUGIN_PROVENANCE_POLICY.v1/">PLUGIN_PROVENANCE_POLICY.v1.md</a></strong>: Plugin supply chain security requirements</li>
+<li><strong><a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a></strong>: Mandatory tenant isolation test suite</li>
+</ul>
+<h3 id="interface-contracts">Interface Contracts<a class="headerlink" href="#interface-contracts" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><a href="contracts/security/IAuthorization.v1.md">IAuthorization.v1.md</a></strong>: Authorization interface (RBAC evaluation)</li>
+<li><strong><a href="contracts/security/AuditLog.v1.md">AuditLog.v1.md</a></strong>: Audit log schema + immutability guarantees</li>
+<li><strong><a href="contracts/security/ISecretsProvider.v1.md">ISecretsProvider.v1.md</a></strong>: Secrets resolution interface (reference → value at runtime)</li>
+<li><strong><a href="contracts/operations/DecisionRecord.v1.md">DecisionRecord.v1.md</a></strong>: Operator action justification schema</li>
+</ul>
+<hr />
+<h2 id="mitigation-summary">Mitigation Summary<a class="headerlink" href="#mitigation-summary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Implemented</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API Authentication</strong></td>
+<td>JWT, OAuth2</td>
+<td>Phase 0 (assumed)</td>
+</tr>
+<tr>
+<td><strong>RBAC Authorization</strong></td>
+<td>IAuthorization.v1.md contract</td>
+<td>Phase 1 (docs), Phase 4 (impl)</td>
+</tr>
+<tr>
+<td><strong>Row-Level Security (RLS)</strong></td>
+<td>DB-enforced tenant isolation</td>
+<td>Phase 2 (#6 StateStoreAdapter)</td>
+</tr>
+<tr>
+<td><strong>Log Scrubbing</strong></td>
+<td>Regex scan for secrets</td>
+<td>Phase 1.5 (docs), Phase 2 (impl)</td>
+</tr>
+<tr>
+<td><strong>Audit Log (append-only)</strong></td>
+<td>AuditLog.v1.md contract + immutable stream</td>
+<td>Phase 1 (docs), Phase 3 (impl)</td>
+</tr>
+<tr>
+<td><strong>Encryption at Rest</strong></td>
+<td>StateStore adapter responsibility</td>
+<td>Phase 2 (#6)</td>
+</tr>
+<tr>
+<td><strong>Plugin Sandbox</strong></td>
+<td>Resource limits + seccomp</td>
+<td>Phase 3 (epic)</td>
+</tr>
+<tr>
+<td><strong>Cost Attribution</strong></td>
+<td>Per-tenant quotas, metering</td>
+<td>Phase 3 (epic)</td>
+</tr>
+<tr>
+<td><strong>Dependency Scanning</strong></td>
+<td>Dependabot, Snyk in CI</td>
+<td>Phase 1.5 (docs), Phase 2 (impl)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<h3 id="security-documentation">Security Documentation<a class="headerlink" href="#security-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="../SECURITY_INVARIANTS.v1/">SECURITY_INVARIANTS.v1.md</a> - Normative security invariants</li>
+<li><a href="../PLUGIN_PROVENANCE_POLICY.v1/">PLUGIN_PROVENANCE_POLICY.v1.md</a> - Plugin supply chain security policy</li>
+<li><a href="../TENANT_ISOLATION_TESTS.v1/">TENANT_ISOLATION_TESTS.v1.md</a> - Tenant isolation test suite</li>
+</ul>
+<h3 id="interface-contracts_1">Interface Contracts<a class="headerlink" href="#interface-contracts_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="contracts/security/IAuthorization.v1.md">IAuthorization.v1.md</a> - Authorization interface (RBAC evaluation)</li>
+<li><a href="contracts/security/AuditLog.v1.md">AuditLog.v1.md</a> - Audit log schema + cryptographic signature requirements</li>
+<li><a href="contracts/security/ISecretsProvider.v1.md">ISecretsProvider.v1.md</a> - Secrets resolution interface (no secrets in logs/history)</li>
+<li><a href="contracts/operations/DecisionRecord.v1.md">DecisionRecord.v1.md</a> - Operator action justification schema</li>
+<li><a href="contracts/engine/IWorkflowEngine.v1.1.md">IWorkflowEngine.v1.1.md</a> - Core engine interface with tenant scope requirements</li>
+</ul>
+<h3 id="architecture-documentation">Architecture Documentation<a class="headerlink" href="#architecture-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="../../../README.md#product-definition">Product Definition</a> - Multi-tenant, auditability requirements</li>
+<li><a href="../design_principles.md">design_principles.md</a> - Architecture principles (security by design)</li>
+<li><a href="contracts/extensions/PluginSandbox.v1.0.md">PluginSandbox.v1.0.md</a> - Plugin isolation + Trust Tier specification</li>
+</ul>
+<h3 id="regulatory-references">Regulatory References<a class="headerlink" href="#regulatory-references" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>HIPAA</strong>: <a href="https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164">45 CFR Part 164</a> - Security and Privacy Rules (PHI protection, audit log retention 6 years)</li>
+<li><strong>GDPR</strong>: <a href="https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/">ICO Guide to GDPR</a> - Right to access (Art. 15), right to erasure (Art. 17), data minimization (Art. 5)</li>
+<li><strong>NIST SP 800-88r1</strong>: <a href="https://csrc.nist.gov/publications/detail/sp/800-88/rev-1/final">Guidelines for Media Sanitization</a> - Cryptographic erasure equivalent to secure deletion</li>
+<li><strong>SOC2</strong>: <a href="https://www.aicpa.org/topic/audit-assurance/trust-services">AICPA Trust Services Criteria</a> - Security, availability, confidentiality controls</li>
+</ul>
+<h3 id="supply-chain-security">Supply Chain Security<a class="headerlink" href="#supply-chain-security" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>SLSA Framework</strong>: <a href="https://slsa.dev/">SLSA Build Track v1.2</a> - Supply chain security levels (L2 target for official marketplace)</li>
+<li><strong>Sigstore</strong>: <a href="https://docs.sigstore.dev/">Sigstore Documentation</a> - Keyless signing + transparency log for software artifacts</li>
+<li><strong>CycloneDX</strong>: <a href="https://cyclonedx.org/">SBOM Standard</a> - Software Bill of Materials format (plugin dependency tracking)</li>
+<li><strong>OWASP Dependency-Check</strong>: <a href="https://owasp.org/www-project-dependency-check/">Dependency Scanning</a> - Vulnerability detection in dependencies</li>
+</ul>
+<hr />
+<p><em>Last updated: 2026-02-12</em><br />
+<em>Version: 1.5</em><br />
+<em>Status: Living document - see <a href="https://github.com/dunay2/dvt/issues/63">GitHub Issue #63</a> for v1.5 changes</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

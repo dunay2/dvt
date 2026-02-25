@@ -1,0 +1,1814 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>ADR-0004: Event Sourcing Strategy (Extended) - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adr-0004-event-sourcing-strategy-extended" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ADR-0004: Event Sourcing Strategy (Extended)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-canonical-write-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Canonical Write Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-cqrs-separation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 CQRS Separation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-storage-choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Storage Choice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-architecture-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Architecture Alignment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Invariants
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Invariants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inv-state-1-monotonic-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        INV-STATE-1: Monotonic Sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inv-state-2-deterministic-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        INV-STATE-2: Deterministic Replay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inv-state-3-idempotency-guarantee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        INV-STATE-3: Idempotency Guarantee
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inv-state-4-tenant-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        INV-STATE-4: Tenant Isolation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-implementation-in-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Implementation in Code
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Implementation in Code">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-append-only-log-with-monotonic-runseq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Append-Only Log with Monotonic runSeq
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-idempotency-by-runid-idempotencykey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Idempotency by (runId, idempotencyKey)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-cqrs-projector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 CQRS Projector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-snapshots-for-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Snapshots for Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-test-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Test Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-compliance-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Compliance Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-risks-mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Risks &amp; Mitigations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="adr-0004-event-sourcing-strategy-extended">ADR-0004: Event Sourcing Strategy (Extended)<a class="headerlink" href="#adr-0004-event-sourcing-strategy-extended" title="Permanent link">&para;</a></h1>
+<ul>
+<li>Status: Accepted</li>
+<li>Date: 2026-02-16</li>
+<li>Owners: Architecture / Data Domain</li>
+<li>Version: v2.0 (Extended Implementation &amp; Verification)</li>
+<li><strong>Related files</strong>:</li>
+<li><a href="../ADR-0003-execution-model/"><code>ADR-0003-execution-model.md</code></a></li>
+<li><a href="../../architecture/engine/contracts/engine/ExecutionSemantics.v2.0/"><code>ExecutionSemantics.v2.0.md</code></a></li>
+<li><a href="../../architecture/engine/contracts/engine/RunEvents.v2.0/"><code>RunEvents.v2.0.md</code></a></li>
+<li><a href="../../architecture/engine/contracts/state-store/IRunStateStore.v2.0/"><code>IRunStateStore.v2.0.md</code></a></li>
+</ul>
+<hr />
+<pre><code class="language-mermaid">graph TD
+
+    subgraph Architectural_Foundations
+        A[&quot;ADR-0003: Execution Model Sovereignty&lt;br/&gt;Defines WHAT can happen&quot;]
+        B[&quot;ADR-0004: Event Sourcing Strategy&lt;br/&gt;Defines HOW it is recorded&quot;]
+    end
+
+    subgraph Technical_Implementations
+        C[&quot;ADR-0010: Run Event Envelope Split&lt;br/&gt;Event structure &amp; idempotency&quot;]
+        D[&quot;ADR-0011: RunStarted Ownership&lt;br/&gt;Lifecycle event ownership&quot;]
+        E[&quot;ADR-0012: Plan Integrity Ownership&lt;br/&gt;Plan validation boundary&quot;]
+        F[&quot;ADR-0013: bootstrapRunTx&lt;br/&gt;Atomic append + outbox&quot;]
+    end
+
+    subgraph Code_Verification
+        G[&quot;TestStateStore&lt;br/&gt;Implements IRunStateStore&quot;]
+        H[&quot;TestOutbox&lt;br/&gt;Implements IOutboxStorage&quot;]
+        I[&quot;TestProjector&lt;br/&gt;CQRS projection&quot;]
+        J[&quot;integration.time-skipping.test.ts&lt;br/&gt;Validates all invariants&quot;]
+    end
+
+    A --&gt; B
+    B --&gt; C
+    B --&gt; F
+    A --&gt; D
+    A --&gt; E
+
+    C --&gt; G
+    F --&gt; H
+    D --&gt; I
+    E --&gt; J
+    G --&gt; J
+    H --&gt; J
+    I --&gt; J
+
+    style A fill:#a9f,stroke:#333,stroke-width:3px
+    style B fill:#aaa,stroke:#333,stroke-width:3px
+    style C fill:#aaa,stroke:#333
+    style D fill:#aaf,stroke:#333
+    style E fill:#aaf,stroke:#333
+    style F fill:#aa,stroke:#333
+    style J fill:#ffb,stroke:#333,stroke-width:2px
+</code></pre>
+<hr />
+<h2 id="1-context">1. Context<a class="headerlink" href="#1-context" title="Permanent link">&para;</a></h2>
+<p>Distributed execution systems must handle:</p>
+<ul>
+<li>retries and duplicate delivery</li>
+<li>partial failures</li>
+<li>clock drift</li>
+<li>concurrent updates</li>
+<li>strict auditability requirements</li>
+<li>multi-tenant isolation</li>
+<li>deterministic replay</li>
+</ul>
+<p>The platform requires a persistence model that is:</p>
+<ul>
+<li>deterministic</li>
+<li>replayable</li>
+<li>append-only</li>
+<li>idempotent</li>
+<li>engine-agnostic</li>
+<li>audit-safe</li>
+</ul>
+<p>Event sourcing satisfies these constraints.</p>
+<hr />
+<h2 id="2-decision">2. Decision<a class="headerlink" href="#2-decision" title="Permanent link">&para;</a></h2>
+<p>Adopt an append-only, event-sourced persistence model as the canonical write strategy.</p>
+<h3 id="21-canonical-write-model">2.1 Canonical Write Model<a class="headerlink" href="#21-canonical-write-model" title="Permanent link">&para;</a></h3>
+<p>The write side MUST use an append-only event log with:</p>
+<ul>
+<li>monotonic <code>runSeq</code> per <code>runId</code></li>
+<li>globally unique event identity</li>
+<li>idempotency uniqueness constraint on <code>(runId, idempotencyKey)</code></li>
+<li>immutable records</li>
+<li>persisted timestamp (<code>persistedAt</code>)</li>
+</ul>
+<h3 id="22-cqrs-separation">2.2 CQRS Separation<a class="headerlink" href="#22-cqrs-separation" title="Permanent link">&para;</a></h3>
+<p>Write model and read projections MUST remain separated.</p>
+<p>Projectors MUST:</p>
+<ul>
+<li>enforce transition invariants</li>
+<li>rebuild state exclusively from events</li>
+<li>support snapshot acceleration</li>
+</ul>
+<h3 id="23-storage-choice">2.3 Storage Choice<a class="headerlink" href="#23-storage-choice" title="Permanent link">&para;</a></h3>
+<p>PostgreSQL is selected as the primary production store due to:</p>
+<ul>
+<li>ACID guarantees</li>
+<li>transactional integrity</li>
+<li>strong indexing capabilities</li>
+<li>operational maturity</li>
+</ul>
+<p>SQLite MAY be used for local development.
+Snowflake MAY be used for analytical projections (not transactional state).</p>
+<hr />
+<h2 id="3-architecture-alignment">3. Architecture Alignment<a class="headerlink" href="#3-architecture-alignment" title="Permanent link">&para;</a></h2>
+<p>ADR-0004 complements ADR-0003:</p>
+<table>
+<thead>
+<tr>
+<th>ADR</th>
+<th>Responsibility</th>
+<th>Analogy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR-0003</td>
+<td>Defines what may happen</td>
+<td>Constitution</td>
+</tr>
+<tr>
+<td>ADR-0004</td>
+<td>Defines how it is recorded</td>
+<td>Ledger / Official Record</td>
+</tr>
+</tbody>
+</table>
+<p>Without ADR-0004:</p>
+<ul>
+<li>deterministic replay is impossible</li>
+<li>auditability collapses</li>
+<li>CQRS becomes invalid</li>
+<li>engine replacement becomes unsafe</li>
+</ul>
+<hr />
+<h2 id="4-invariants">4. Invariants<a class="headerlink" href="#4-invariants" title="Permanent link">&para;</a></h2>
+<h3 id="inv-state-1-monotonic-sequence">INV-STATE-1: Monotonic Sequence<a class="headerlink" href="#inv-state-1-monotonic-sequence" title="Permanent link">&para;</a></h3>
+<p>For a given runId:
+runSeq MUST be strictly increasing by 1.</p>
+<h3 id="inv-state-2-deterministic-replay">INV-STATE-2: Deterministic Replay<a class="headerlink" href="#inv-state-2-deterministic-replay" title="Permanent link">&para;</a></h3>
+<p>Replaying events in runSeq order MUST reconstruct the same state.</p>
+<h3 id="inv-state-3-idempotency-guarantee">INV-STATE-3: Idempotency Guarantee<a class="headerlink" href="#inv-state-3-idempotency-guarantee" title="Permanent link">&para;</a></h3>
+<p>Duplicate <code>(runId, idempotencyKey)</code> MUST NOT create new records.</p>
+<h3 id="inv-state-4-tenant-isolation">INV-STATE-4: Tenant Isolation<a class="headerlink" href="#inv-state-4-tenant-isolation" title="Permanent link">&para;</a></h3>
+<p>All queries MUST be tenant-scoped.</p>
+<hr />
+<h2 id="5-implementation-in-code">5. Implementation in Code<a class="headerlink" href="#5-implementation-in-code" title="Permanent link">&para;</a></h2>
+<h3 id="51-append-only-log-with-monotonic-runseq">5.1 Append-Only Log with Monotonic runSeq<a class="headerlink" href="#51-append-only-log-with-monotonic-runseq" title="Permanent link">&para;</a></h3>
+<pre><code class="language-typescript">interface IRunStateStore {
+  appendEvent(event: RunEventWrite): Promise&lt;AppendResult&gt;;
+  fetchEvents(
+    runId: string,
+    options?: {
+      afterSeq?: number;
+      limit?: number;
+    }
+  ): Promise&lt;RunEventRecord[]&gt;;
+}
+
+class TestStateStore implements IRunStateStore {
+  private readonly eventsByRun = new Map&lt;string, RunEventRecord[]&gt;();
+
+  async appendEvent(event: RunEventWrite): Promise&lt;AppendResult&gt; {
+    const events = this.eventsByRun.get(event.runId) ?? [];
+
+    const nextRunSeq = events.length + 1;
+
+    const record: RunEventRecord = {
+      ...event,
+      runSeq: nextRunSeq,
+      persistedAt: new Date().toISOString(),
+    };
+
+    events.push(record);
+    this.eventsByRun.set(event.runId, events);
+
+    return {
+      runSeq: nextRunSeq,
+      idempotent: false,
+      persisted: true,
+    };
+  }
+}
+</code></pre>
+<hr />
+<h3 id="52-idempotency-by-runid-idempotencykey">5.2 Idempotency by (runId, idempotencyKey)<a class="headerlink" href="#52-idempotency-by-runid-idempotencykey" title="Permanent link">&para;</a></h3>
+<pre><code class="language-typescript">class TestStateStore implements IRunStateStore {
+  private readonly idempByRun = new Map&lt;string, Map&lt;string, RunEventRecord&gt;&gt;();
+
+  async appendEvent(event: RunEventWrite): Promise&lt;AppendResult&gt; {
+    const idx = this.idempByRun.get(event.runId) ?? new Map();
+
+    const existing = idx.get(event.idempotencyKey);
+    if (existing) {
+      return {
+        runSeq: existing.runSeq,
+        idempotent: true,
+        persisted: false,
+      };
+    }
+
+    // assign runSeq and persist...
+  }
+}
+</code></pre>
+<hr />
+<h3 id="53-cqrs-projector">5.3 CQRS Projector<a class="headerlink" href="#53-cqrs-projector" title="Permanent link">&para;</a></h3>
+<pre><code class="language-typescript">class TestProjector {
+  rebuild(runId: string, events: RunEventRecord[]): RunStatus {
+    let status: RunStatus = 'PENDING';
+
+    for (const e of events) {
+      if (e.eventType === 'RunStarted') status = 'RUNNING';
+      if (e.eventType === 'RunCompleted') status = 'COMPLETED';
+    }
+
+    return { runId, status };
+  }
+}
+</code></pre>
+<hr />
+<h3 id="54-snapshots-for-performance">5.4 Snapshots for Performance<a class="headerlink" href="#54-snapshots-for-performance" title="Permanent link">&para;</a></h3>
+<pre><code class="language-typescript">class TestStateStore implements IRunStateStore {
+  private readonly snapshotsByRun = new Map&lt;string, RunSnapshot&gt;();
+
+  async getSnapshot(runId: string): Promise&lt;RunSnapshot | null&gt; {
+    return this.snapshotsByRun.get(runId) ?? null;
+  }
+
+  async projectSnapshot(runId: string): Promise&lt;RunSnapshot&gt; {
+    const events = await this.fetchEvents(runId);
+    const snapshot: RunSnapshot = {
+      runId,
+      status: this.calculateStatus(events),
+      lastEventSeq: events.length,
+      projectedAt: new Date().toISOString(),
+    };
+
+    this.snapshotsByRun.set(runId, snapshot);
+    return snapshot;
+  }
+}
+</code></pre>
+<hr />
+<h2 id="6-test-verification">6. Test Verification<a class="headerlink" href="#6-test-verification" title="Permanent link">&para;</a></h2>
+<p>The integration test validates:</p>
+<ul>
+<li>append-only log</li>
+<li>monotonic runSeq</li>
+<li>deterministic replay</li>
+<li>correct event ordering</li>
+<li>CQRS separation</li>
+</ul>
+<p>Example assertion:</p>
+<pre><code class="language-typescript">expect(events.every((e, idx) =&gt; e.runSeq === idx + 1)).toBe(true);
+expect(projected.status).toBe('COMPLETED');
+</code></pre>
+<hr />
+<h2 id="7-compliance-matrix">7. Compliance Matrix<a class="headerlink" href="#7-compliance-matrix" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Implementation</th>
+<th>Verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Append-only</td>
+<td>eventsByRun</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>runSeq monotonic</td>
+<td>appendEvent</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Idempotency</td>
+<td>idempByRun</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>CQRS separation</td>
+<td>Projector</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Snapshots</td>
+<td>snapshotsByRun</td>
+<td>Partially</td>
+</tr>
+<tr>
+<td>PostgreSQL production store</td>
+<td>Production adapter</td>
+<td>N/A in tests</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-risks-mitigations">8. Risks &amp; Mitigations<a class="headerlink" href="#8-risks-mitigations" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Event duplication</td>
+<td>Idempotency keys</td>
+</tr>
+<tr>
+<td>Planner/engine coupling</td>
+<td>Strict responsibility separation</td>
+</tr>
+<tr>
+<td>Snapshot drift</td>
+<td>Rebuild from canonical log</td>
+</tr>
+<tr>
+<td>Tenant bleed</td>
+<td>Scoped queries + RBAC enforcement</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-conclusion">9. Conclusion<a class="headerlink" href="#9-conclusion" title="Permanent link">&para;</a></h2>
+<p>ADR-0004 establishes the canonical persistence foundation.</p>
+<p>It ensures:</p>
+<ul>
+<li>deterministic replay</li>
+<li>strict auditability</li>
+<li>engine replaceability</li>
+<li>safe retries</li>
+<li>immutable historical record</li>
+</ul>
+<p>This ADR is foundational. Any deviation breaks system guarantees.</p>
+<pre><code class="language-mermaid"> sequenceDiagram
+    participant C as Caller
+    participant E as Engine
+    participant A as Adapter
+    participant S as StateStore (Event Log)
+    participant P as Projector
+
+    C-&gt;&gt;E: startRun(planRef)
+    E-&gt;&gt;S: appendEvent(RunQueued)
+    E-&gt;&gt;A: executePlan(planRef)
+
+    A-&gt;&gt;A: fetch + validate plan
+    A-&gt;&gt;S: appendEvent(RunStarted)
+    A-&gt;&gt;A: execute steps
+
+    loop Each step
+        A-&gt;&gt;S: appendEvent(StepStarted)
+        A-&gt;&gt;S: appendEvent(StepCompleted)
+    end
+
+    S--&gt;&gt;P: fetchEvents(runId)
+    P--&gt;&gt;S: upsertProjection(runId, state)
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

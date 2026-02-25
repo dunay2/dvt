@@ -16,19 +16,19 @@
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
-        <title>Wiki interna con MkDocs Material (mínimo cambio) - DVT Documentation</title>
+        <title>ADR-0008: Signal Idempotency Key Derivation - DVT Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -47,7 +47,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#wiki-interna-con-mkdocs-material-minimo-cambio" class="md-skip">
+        <a href="#adr-0008-signal-idempotency-key-derivation" class="md-skip">
           Skip to content
         </a>
       
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Wiki interna con MkDocs Material (mínimo cambio)
+              ADR-0008: Signal Idempotency Key Derivation
             
           </span>
         </div>
@@ -210,7 +210,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -240,7 +240,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -321,7 +321,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -356,7 +356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/_drafts/" class="md-nav__link">
+      <a href="../_drafts/" class="md-nav__link">
         
   
   
@@ -391,7 +391,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/_archive/" class="md-nav__link">
+      <a href="../_archive/" class="md-nav__link">
         
   
   
@@ -480,7 +480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../architecture/" class="md-nav__link">
+      <a href="../../architecture/" class="md-nav__link">
         
   
   
@@ -515,7 +515,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../architecture/engine/" class="md-nav__link">
+      <a href="../../architecture/engine/" class="md-nav__link">
         
   
   
@@ -528,13 +528,6 @@
     
   </span>
   
-  
-    
-  
-  
-    <span class="md-status md-status--Active"></span>
-  
-
   
 
       </a>
@@ -550,7 +543,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../architecture/frontend/" class="md-nav__link">
+      <a href="../../architecture/frontend/" class="md-nav__link">
         
   
   
@@ -585,7 +578,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../architecture/infra/" class="md-nav__link">
+      <a href="../../architecture/infra/" class="md-nav__link">
         
   
   
@@ -674,7 +667,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contracts/" class="md-nav__link">
+      <a href="../../contracts/" class="md-nav__link">
         
   
   
@@ -709,7 +702,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contracts/engine/" class="md-nav__link">
+      <a href="../../contracts/engine/" class="md-nav__link">
         
   
   
@@ -744,7 +737,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contracts/planner/" class="md-nav__link">
+      <a href="../../contracts/planner/" class="md-nav__link">
         
   
   
@@ -779,7 +772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contracts/shared/" class="md-nav__link">
+      <a href="../../contracts/shared/" class="md-nav__link">
         
   
   
@@ -821,7 +814,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../guides/" class="md-nav__link">
+      <a href="../../guides/" class="md-nav__link">
         
   
   
@@ -855,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../runbooks/" class="md-nav__link">
+      <a href="../../runbooks/" class="md-nav__link">
         
   
   
@@ -936,7 +929,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning/" class="md-nav__link">
+      <a href="../../planning/" class="md-nav__link">
         
   
   
@@ -971,7 +964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning/proposals/" class="md-nav__link">
+      <a href="../../planning/proposals/" class="md-nav__link">
         
   
   
@@ -1006,7 +999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning/reviews/" class="md-nav__link">
+      <a href="../../planning/reviews/" class="md-nav__link">
         
   
   
@@ -1041,7 +1034,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning/status/" class="md-nav__link">
+      <a href="../../planning/status/" class="md-nav__link">
         
   
   
@@ -1083,7 +1076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../archive/" class="md-nav__link">
+      <a href="../../archive/" class="md-nav__link">
         
   
   
@@ -1137,10 +1130,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-instalacion-local-windows" class="md-nav__link">
+  <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1) Instalación local (Windows)
+        Context
       
     </span>
   </a>
@@ -1148,10 +1141,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-comandos" class="md-nav__link">
+  <a href="#decision" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2) Comandos
+        Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#golden-vectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golden Vectors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invariants
       
     </span>
   </a>
@@ -1159,10 +1191,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-estructura-de-navegacion-aplicada" class="md-nav__link">
+  <a href="#documents-to-update-normative-impact" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Estructura de navegación aplicada
+        Documents to Update (Normative Impact)
       
     </span>
   </a>
@@ -1170,10 +1202,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-publicacion" class="md-nav__link">
+  <a href="#required-tests-mandatory-ci" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4) Publicación
+        Required Tests (mandatory CI)
       
     </span>
   </a>
@@ -1200,37 +1232,83 @@
   
 
 
-<h1 id="wiki-interna-con-mkdocs-material-minimo-cambio">Wiki interna con MkDocs Material (mínimo cambio)<a class="headerlink" href="#wiki-interna-con-mkdocs-material-minimo-cambio" title="Permanent link">&para;</a></h1>
-<p>Este repositorio tiene base de wiki con <a href="../mkdocs.yml"><code>mkdocs.yml</code></a> y despliegue en <a href="../.github/workflows/mkdocs-deploy.yml"><code>.github/workflows/mkdocs-deploy.yml</code></a>.</p>
-<h2 id="1-instalacion-local-windows">1) Instalación local (Windows)<a class="headerlink" href="#1-instalacion-local-windows" title="Permanent link">&para;</a></h2>
-<pre><code class="language-bash">python -m pip install --upgrade pip
-pip install mkdocs mkdocs-material
-</code></pre>
-<h2 id="2-comandos">2) Comandos<a class="headerlink" href="#2-comandos" title="Permanent link">&para;</a></h2>
-<p>Desde la raíz del repo:</p>
-<pre><code class="language-bash">pnpm docs:serve
-pnpm docs:build
-</code></pre>
-<h2 id="3-estructura-de-navegacion-aplicada">3) Estructura de navegación aplicada<a class="headerlink" href="#3-estructura-de-navegacion-aplicada" title="Permanent link">&para;</a></h2>
-<p>Se actualizó <a href="../mkdocs.yml"><code>mkdocs.yml</code></a> para incluir:</p>
+<h1 id="adr-0008-signal-idempotency-key-derivation">ADR-0008: Signal Idempotency Key Derivation<a class="headerlink" href="#adr-0008-signal-idempotency-key-derivation" title="Permanent link">&para;</a></h1>
 <ul>
-<li>Core</li>
-<li>Vision (v0.6)</li>
-<li>Governance</li>
-<li>Planning</li>
-<li>Operations</li>
-<li>Status</li>
+<li><strong>Status</strong>: Accepted</li>
+<li><strong>Date</strong>: 2026-02-21</li>
+<li><strong>Owners</strong>: Engine Domain</li>
+<li><strong>Related</strong>:</li>
+<li>ADR-0007: Run Cancellation Semantics (cross-references this ADR for signal-based cancel)</li>
+<li>ADR-0004: Event Sourcing Strategy</li>
+<li>RunEvents.v2.0.1.md (envelope split — tenantId excluded from derivation)</li>
 </ul>
-<p>Incluyendo el pack de visión:</p>
+<hr />
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>Signals are used to send out-of-band instructions to running workflows
+(PAUSE, RESUME, CANCEL, RETRY_STEP, RETRY_RUN).</p>
+<p>Without a deterministic idempotency key:</p>
 <ul>
-<li><a href="./vision/DVT_Docs_Pack_v0.6/docs/index.md"><code>docs/vision/DVT_Docs_Pack_v0.6/docs/index.md</code></a></li>
-<li><a href="./vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md"><code>docs/vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md</code></a></li>
-<li><a href="./vision/DVT_Docs_Pack_v0.6/docs/standards/development.md"><code>docs/vision/DVT_Docs_Pack_v0.6/docs/standards/development.md</code></a></li>
-<li><a href="./vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos.md"><code>docs/vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos.md</code></a></li>
-<li><a href="./vision/DVT_Docs_Pack_v0.6/docs/lore.md"><code>docs/vision/DVT_Docs_Pack_v0.6/docs/lore.md</code></a></li>
+<li>Duplicate signal deliveries may trigger duplicate state transitions.</li>
+<li>Adapters may apply the same signal multiple times across retries.</li>
+<li>No cross-adapter consistency guarantee for signal processing.</li>
 </ul>
-<h2 id="4-publicacion">4) Publicación<a class="headerlink" href="#4-publicacion" title="Permanent link">&para;</a></h2>
-<p>La publicación está automatizada en <a href="../.github/workflows/mkdocs-deploy.yml"><code>.github/workflows/mkdocs-deploy.yml</code></a>.</p>
+<p>The key MUST be deterministic from the signal's logical identity, not
+from infrastructure-level identifiers (message IDs, delivery timestamps).</p>
+<hr />
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p>Signal idempotency key MUST be derived as:</p>
+<p>SHA256(
+runId + '|' +
+'SIGNAL' + '|' +
+signalType + '|' +
+signalId + '|' +
+logicalAttemptId + '|' +
+planId + '|' +
+planVersion +
+(stepId ? '|' + stepId : '')
+)</p>
+<h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>tenantId</code> is part of the event envelope and MUST NOT be included in idempotency derivation.</li>
+<li><code>schemaVersion</code> MUST NOT influence the hash.</li>
+<li>All fields MUST be UTF-8 encoded exactly as provided (no trimming, normalization, or case changes).</li>
+</ul>
+<h3 id="golden-vectors">Golden Vectors<a class="headerlink" href="#golden-vectors" title="Permanent link">&para;</a></h3>
+<p>Implementations MUST match these SHA256 outputs exactly:</p>
+<ul>
+<li><code>run-1|SIGNAL|CANCEL|sig-1|1|plan-abc|3</code><br />
+  → <code>f416e54fb621cf612b2e00ddc80b77427c7a4e9161477e0e3c0b87be8cf6968d</code></li>
+<li><code>run-42|SIGNAL|RETRY_STEP|sig-999|2|plan-sales|7|model.orders</code><br />
+  → <code>2378af3967a757ac180e92def46f181a813315290373d03a6d906ad26f2bfeb5</code></li>
+<li><code>run-prod|SIGNAL|PAUSE|sig-pause|1|plan-prod|12</code><br />
+  → <code>94fcc1967da2e5db233eb936e54bbf67645cc36947cdcfaf88ec487d5793d187</code></li>
+</ul>
+<hr />
+<h2 id="invariants">Invariants<a class="headerlink" href="#invariants" title="Permanent link">&para;</a></h2>
+<ul>
+<li>INV-SIGNAL-001: Same inputs → same hash</li>
+<li>INV-SIGNAL-002: Different signalId → different hash</li>
+<li>INV-SIGNAL-003: schemaVersion MUST NOT influence hash</li>
+<li>INV-SIGNAL-004: tenantId MUST NOT influence hash</li>
+</ul>
+<h2 id="documents-to-update-normative-impact">Documents to Update (Normative Impact)<a class="headerlink" href="#documents-to-update-normative-impact" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong><code>packages/@dvt/engine/src/core/idempotency.ts</code></strong></li>
+<li>Replace <code>signalKey</code> implementation: current plain-string join including <code>tenantId</code>
+     is non-compliant. MUST use SHA256 with the formula above, excluding <code>tenantId</code>.</li>
+</ol>
+<h2 id="required-tests-mandatory-ci">Required Tests (mandatory CI)<a class="headerlink" href="#required-tests-mandatory-ci" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>test/idempotency/signal-idempotency-golden.test.ts</code></li>
+<li>MUST verify all three golden vectors exactly.</li>
+<li>A failing golden test indicates the formula was changed without an ADR update.</li>
+<li><code>test/idempotency/signal-tenant-id-excluded.test.ts</code></li>
+<li>Two signals differing only in tenantId MUST produce the same hash.</li>
+<li><code>test/idempotency/signal-schema-version-excluded.test.ts</code></li>
+<li>Two signals differing only in schemaVersion MUST produce the same hash.</li>
+</ul>
+<hr />
+<p>End of ADR-0008</p>
 
 
 
@@ -1280,10 +1358,10 @@ pnpm docs:build
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
