@@ -18,6 +18,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
+import type { RunStateCommandPort } from '@dvt/state-store';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -630,7 +631,13 @@ function createActivityDeps(
   outbox: TestOutbox, // Now properly separated
   planBytes: Uint8Array
 ): ActivityDeps {
+  const runStateCommandPort: RunStateCommandPort = {
+    bootstrapRun: (input) => store.bootstrapRunTx(input),
+    appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
+  };
+
   return {
+    runStateCommandPort,
     stateStore: store, // Implements IRunStateStore
     outbox: outbox, // Implements IOutboxStorage
     clock: new TestClock(),

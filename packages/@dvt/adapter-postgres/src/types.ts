@@ -165,3 +165,11 @@ export interface IOutboxStorage {
   /** Returns dead-lettered records for monitoring and manual replay. */
   listDeadLetter(limit: number): Promise<DeadLetterRecord[]>;
 }
+
+/**
+ * Write-side command boundary exposed by the Postgres adapter.
+ */
+export interface RunStateCommandPort {
+  bootstrapRun(input: RunBootstrapInput): Promise<AppendResult>;
+  appendTransitions(runId: RunId, events: EventInput[]): Promise<AppendResult>;
+}

@@ -8,6 +8,7 @@
   "dependencies": {
     "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*",
+    "@dvt/state-store": "workspace:*",
     "pg": "^8.16.3"
   },
   "scripts": {

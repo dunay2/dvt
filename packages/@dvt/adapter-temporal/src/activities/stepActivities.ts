@@ -24,6 +24,7 @@ import type {
   IPlanFetcher,
   IPlanIntegrityValidator,
   IRunStateStore,
+  RunStateCommandPort,
   RunMetadata,
 } from '../engine-types.js';
 
@@ -32,8 +33,11 @@ import type {
 // ---------------------------------------------------------------------------
 
 export interface ActivityDeps {
-  stateStore: IRunStateStore;
-  outbox: IOutboxStorage;
+  runStateCommandPort?: RunStateCommandPort;
+  /** @deprecated transitional fallback while callers migrate to runStateCommandPort */
+  stateStore?: IRunStateStore;
+  /** @deprecated retained for backwards compatibility in tests */
+  outbox?: IOutboxStorage;
   clock: IClock;
   idempotency: IIdempotencyKeyBuilder;
   fetcher: IPlanFetcher;
@@ -77,6 +81,8 @@ export function createActivities(deps: ActivityDeps): {
   emitEvent(input: EmitEventInput): Promise<void>;
   saveRunMetadata(meta: RunMetadata): Promise<void>;
 } {
+  const runStateCommandPort = resolveRunStateCommandPort(deps);
+
   return {
     /**
      * Fetch plan from storage, validate SHA-256 integrity, parse JSON,
@@ -154,7 +160,7 @@ export function createActivities(deps: ActivityDeps): {
         }),
       };
 
-      await deps.stateStore.appendAndEnqueueTx(ctx.runId, [envelope]);
+      await runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
     },
 
     /**
@@ -168,7 +174,7 @@ export function createActivities(deps: ActivityDeps): {
      */
     async saveRunMetadata(meta: RunMetadata): Promise<void> {
       try {
-        await deps.stateStore.bootstrapRunTx({ metadata: meta, firstEvents: [] });
+        await runStateCommandPort.bootstrapRun({ metadata: meta, firstEvents: [] });
       } catch (err) {
         if (err instanceof Error && err.message === 'RUN_ALREADY_EXISTS') return;
         throw err;
@@ -178,6 +184,19 @@ export function createActivities(deps: ActivityDeps): {
 }
 
 export type Activities = ReturnType<typeof createActivities>;
+
+function resolveRunStateCommandPort(deps: ActivityDeps): RunStateCommandPort {
+  if (deps.runStateCommandPort) return deps.runStateCommandPort;
+  const { stateStore } = deps;
+  if (!stateStore) {
+    throw new Error('RUN_STATE_COMMAND_PORT_NOT_CONFIGURED');
+  }
+
+  return {
+    bootstrapRun: (input) => stateStore.bootstrapRunTx(input),
+    appendTransitions: (runId, events) => stateStore.appendAndEnqueueTx(runId, events),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Internal helpers (mirrors MockAdapter)

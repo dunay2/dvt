@@ -19,3 +19,4 @@ export type {
 export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
+export { PostgresRunStateCommandPortBridge } from './runStateCommandPortBridge.js';

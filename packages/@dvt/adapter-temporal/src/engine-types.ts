@@ -135,6 +135,11 @@ export interface IRunStateStore {
   listEvents(runId: string): Promise<EventEnvelope[]>;
 }
 
+export interface RunStateCommandPort {
+  bootstrapRun(input: RunBootstrapInput): Promise<AppendResult>;
+  appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult>;
+}
+
 // ---------------------------------------------------------------------------
 // Outbox (mirrors engine/outbox/types.ts)
 // ---------------------------------------------------------------------------

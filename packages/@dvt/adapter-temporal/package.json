@@ -13,7 +13,8 @@
     "@dvt/contracts": "workspace:*",
     "@dvt/dsl": "workspace:*",
     "@dvt/engine": "workspace:*",
-    "@dvt/plan-interpreter": "workspace:*"
+    "@dvt/plan-interpreter": "workspace:*",
+    "@dvt/state-store": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

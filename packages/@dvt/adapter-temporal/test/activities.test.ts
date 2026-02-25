@@ -1,4 +1,5 @@
 import type { PlanRef, RunContext } from '@dvt/contracts';
+import type { RunStateCommandPort } from '@dvt/state-store';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createActivities, type ActivityDeps } from '../src/activities/stepActivities.js';
@@ -169,7 +170,13 @@ class FailingFirstAppendStateStore extends TestTxStore {
 }
 
 function buildDeps(store: TestTxStore = new TestTxStore()): ActivityDeps {
+  const runStateCommandPort: RunStateCommandPort = {
+    bootstrapRun: (input) => store.bootstrapRunTx(input),
+    appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
+  };
+
   return {
+    runStateCommandPort,
     stateStore: store,
     outbox: store,
     clock: new TestClock(),
