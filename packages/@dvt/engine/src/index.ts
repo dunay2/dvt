@@ -11,6 +11,7 @@ export * from './contracts/types.js';
 export * from './contracts/runEvents.js';
 export * from './contracts/executionPlan.js';
 export * from './contracts/errors.js';
+export * from './contracts/engine/index.js';
 
 export * from './core/WorkflowEngine.js';
 export * from './core/SnapshotProjector.js';
@@ -33,8 +34,6 @@ export * from './security/AuthorizationError.js';
 export * from './security/planRefPolicy.js';
 export * from './security/planIntegrity.js';
 
-export * from './adapters/IPlanFetcher.js';
-export * from './adapters/IProviderAdapter.js';
 export * from './adapters/mock/MockAdapter.js';
 export * from './adapters/temporal/TemporalAdapterStub.js';
 export * from './adapters/conductor/ConductorAdapterStub.js';

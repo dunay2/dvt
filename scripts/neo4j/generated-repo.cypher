@@ -1695,7 +1695,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/decisions' })
 SET m += { nombre: 'decisions', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/decisions/product name.md' })
-SET a += { nombre: 'product name.md', tipo: 'md', bytes: 73, topico: 'doc' }
+SET a += { nombre: 'product name.md', tipo: 'md', bytes: 74, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/discussions' })
 SET m += { nombre: 'discussions', lenguaje: 'markdown' }
@@ -2175,7 +2175,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/adapter-postgres/src/types.ts' })
-SET a += { nombre: 'types.ts', tipo: 'ts', bytes: 5348, topico: 'code' }
+SET a += { nombre: 'types.ts', tipo: 'ts', bytes: 996, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2245,7 +2245,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/adapter-temporal/src/engine-types.ts' })
-SET a += { nombre: 'engine-types.ts', tipo: 'ts', bytes: 6030, topico: 'code' }
+SET a += { nombre: 'engine-types.ts', tipo: 'ts', bytes: 454, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2725,7 +2725,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 495, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 869, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2965,7 +2965,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/index.ts' })
-SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 1602, topico: 'code' }
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 1555, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -3305,7 +3305,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 757, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 759, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -3505,7 +3505,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/planner/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 626, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 915, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -3575,7 +3575,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/planner/src/index.ts' })
-SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 509, topico: 'code' }
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 818, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -3630,7 +3630,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/planner/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 543, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 576, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -3825,7 +3825,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/test' })
 SET m += { nombre: 'test', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/test/matrix-alignment.test.ts' })
-SET a += { nombre: 'matrix-alignment.test.ts', tipo: 'ts', bytes: 2911, topico: 'code' }
+SET a += { nombre: 'matrix-alignment.test.ts', tipo: 'ts', bytes: 2916, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'pnpm-lock.yaml' })
 SET m += { nombre: 'pnpm-lock.yaml', lenguaje: 'yaml' }
@@ -3890,7 +3890,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'scripts/neo4j/generated-repo.cypher' })
-SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 346826, topico: 'other' }
+SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 414823, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
@@ -3980,7 +3980,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'tsconfig.base.json' })
 SET m += { nombre: 'tsconfig.base.json', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'tsconfig.base.json' })
-SET a += { nombre: 'tsconfig.base.json', tipo: 'json', bytes: 1410, topico: 'config' }
+SET a += { nombre: 'tsconfig.base.json', tipo: 'json', bytes: 1863, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'tsconfig.eslint.base.json' })
 SET m += { nombre: 'tsconfig.eslint.base.json', lenguaje: 'json' }
@@ -5176,12 +5176,6 @@ MATCH (src:Archivo { path: 'packages/@dvt/engine/src/index.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/engine/src/security/planIntegrity.js' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/engine/src/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/engine/src/adapters/IPlanFetcher.js' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/engine/src/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/engine/src/adapters/IProviderAdapter.js' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/engine/src/index.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/engine/src/adapters/mock/MockAdapter.js' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/engine/src/index.ts' })
@@ -5429,6 +5423,9 @@ MATCH (dst:Archivo { path: 'packages/@dvt/engine/src/contracts/types.js' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/engine/test/utils/clock.test.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/engine/src/utils/clock.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/test/matrix-alignment.test.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/adapter-temporal/src/versioning.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'scripts/neo4j/neo4j-generate-cypher.cjs' })
 MATCH (dst:Archivo { path: 'scripts/neo4j/neo4j-ingest-repo.cjs' })

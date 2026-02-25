@@ -5,11 +5,20 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./contracts/planner/*": {
+      "types": "./dist/contracts/planner/*.d.ts",
+      "import": "./dist/contracts/planner/*.js",
+      "default": "./dist/contracts/planner/*.js"
+    }
+  },
   "files": [
-    "dist",
-    "docs",
-    "examples",
-    "test"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",

@@ -1,9 +1,3 @@
-/**
- * @file packages/@dvt/adapter-temporal/src/engine-types.ts
- *
- * Adapter-temporal no define contratos locales: consume el canon en @dvt/contracts.
- */
-
 export type {
   AppendResult,
   EventEnvelope,
@@ -19,4 +13,5 @@ export type {
   RunBootstrapInput,
   RunMetadata,
   RunStateCommandPort,
-} from '@dvt/contracts';
+  WorkflowSnapshot,
+} from '../../engine/IRunStateStore.v1';
