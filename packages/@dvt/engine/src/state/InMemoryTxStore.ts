@@ -11,8 +11,12 @@ import type {
 import { applyRunEvent } from '../core/SnapshotProjector.js';
 import type { DeadLetterRecord, IOutboxStorage, OutboxRecord } from '../outbox/types.js';
 import { MAX_OUTBOX_ATTEMPTS } from '../outbox/types.js';
-
-import type { IRunStateStore, ListRunsOptions, RunBootstrapInput } from './IRunStateStore.js';
+import type {
+  IRunStateStore,
+  ListEventsOptions,
+  ListRunsOptions,
+  RunBootstrapInput,
+} from '../ports/IRunStateStore.js';
 
 export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
@@ -32,6 +36,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
       status: 'PENDING',
       paused: false,
       cancelling: false,
+      gatewayDecisions: {},
       steps: {},
     };
   }
@@ -57,8 +62,10 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     }
   }
 
-  async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
-    return this.metadataByRunId.get(runId) ?? null;
+  async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
+    const meta = this.metadataByRunId.get(runId) ?? null;
+    if (!meta) return null;
+    return meta.tenantId === tenantId ? meta : null;
   }
 
   /**
@@ -121,14 +128,15 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   async appendAndEnqueueTx(runId: string, eventsToAppend: RunEventInput[]): Promise<AppendResult> {
     this.assertRunExists(runId);
 
+    const existingEvents = this.eventsByRunId.get(runId) ?? [];
+    const baseRunSeq = existingEvents.length;
+
     if (eventsToAppend.length === 0) {
-      return { appended: [], deduped: [] };
+      return { appended: [], deduped: [], lastSeq: baseRunSeq };
     }
 
-    const existingEvents = this.eventsByRunId.get(runId) ?? [];
     const idempotencyIndex =
       this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
-    const baseRunSeq = existingEvents.length;
 
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
@@ -183,7 +191,11 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
       });
     }
 
-    return { appended, deduped };
+    return {
+      appended,
+      deduped,
+      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+    };
   }
 
   /**
@@ -195,14 +207,23 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     return this.appendAndEnqueueTx(runId, envelopes);
   }
 
-  async listEvents(runId: string): Promise<RunEventPersisted[]> {
-    return (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
+  async listEvents(
+    tenantId: string,
+    runId: string,
+    options?: ListEventsOptions
+  ): Promise<RunEventPersisted[]> {
+    const meta = this.metadataByRunId.get(runId);
+    if (!meta || meta.tenantId !== tenantId) return [];
+    const all = (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
+    const afterSeq = options?.afterSeq;
+    const filtered = afterSeq !== undefined ? all.filter((e) => e.runSeq > afterSeq) : all;
+    return options?.limit !== undefined ? filtered.slice(0, options.limit) : filtered;
   }
 
-  async listRuns(options?: ListRunsOptions): Promise<RunMetadata[]> {
+  async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     const limit = options?.limit ?? 50;
     const all = Array.from(this.metadataByRunId.values());
-    const byTenant = options?.tenantId ? all.filter((m) => m.tenantId === options.tenantId) : all;
+    const byTenant = all.filter((m) => m.tenantId === options.tenantId);
     const byStatus =
       options?.status !== undefined
         ? byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status)
@@ -210,7 +231,9 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     return byStatus.slice(-limit).reverse();
   }
 
-  async getSnapshot(runId: string): Promise<WorkflowSnapshot | null> {
+  async getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null> {
+    const meta = this.metadataByRunId.get(runId);
+    if (!meta || meta.tenantId !== tenantId) return null;
     return this.snapshotByRunId.get(runId) ?? null;
   }
 

@@ -34,18 +34,24 @@ class CountingAdapter implements IProviderAdapter {
   async startRun(
     planRef: import('@dvt/contracts').PlanRef,
     ctx: RunContext
-  ): Promise<{ provider: 'mock'; workflowId: string; runId: string }> {
+  ): Promise<{ provider: 'mock'; tenantId: string; workflowId: string; runId: string }> {
     this.startCalls += 1;
     // Debe devolver un EngineRunRef válido para provider 'mock'
-    return { provider: 'mock', workflowId: 'wf', runId: ctx.runId };
+    return { provider: 'mock', tenantId: ctx.tenantId, workflowId: 'wf', runId: ctx.runId };
   }
 
-  async cancelRun(_runRef: { provider: 'mock'; workflowId: string; runId: string }): Promise<void> {
+  async cancelRun(_runRef: {
+    provider: 'mock';
+    tenantId: string;
+    workflowId: string;
+    runId: string;
+  }): Promise<void> {
     this.cancelCalls += 1;
   }
 
   async getRunStatus(_runRef: {
     provider: 'mock';
+    tenantId: string;
     workflowId: string;
     runId: string;
   }): Promise<{ runId: string; status: 'PENDING' }> {
@@ -53,7 +59,7 @@ class CountingAdapter implements IProviderAdapter {
   }
 
   async signal(
-    _runRef: { provider: 'mock'; workflowId: string; runId: string },
+    _runRef: { provider: 'mock'; tenantId: string; workflowId: string; runId: string },
     _request: import('@dvt/contracts').SignalRequest
   ): Promise<void> {
     this.signalCalls += 1;
@@ -129,6 +135,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
 
     const runRef: import('@dvt/contracts').EngineRunRef = {
       provider: 'mock',
+      tenantId: 't1',
       workflowId: 'wf',
       runId: 'run-1',
     };

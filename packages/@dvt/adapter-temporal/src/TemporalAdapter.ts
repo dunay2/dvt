@@ -8,13 +8,17 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunStatusSnapshot,
-  SignalRequest,
-  IProviderAdapter,
+import {
+  type EngineRunRef,
+  type IProviderAdapter,
+  type PlanRef,
+  type RunContext,
+  type RunStatusSnapshot,
+  type SignalRequest,
+  parseEngineRunRef,
+  parsePlanRef,
+  parseRunContext,
+  parseSignalRequest,
 } from '@dvt/contracts';
 import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 
@@ -39,7 +43,7 @@ interface WorkflowClientLike {
 }
 
 interface IRunStateStoreLike {
-  listEvents(runId: string): Promise<unknown[]>;
+  listEvents(tenantId: string, runId: string): Promise<unknown[]>;
 }
 
 interface SnapshotProjectorLike {
@@ -68,18 +72,20 @@ export class TemporalAdapter implements IProviderAdapter {
   constructor(private readonly deps: TemporalAdapterDeps) {}
 
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
+    const validatedPlanRef = parsePlanRef(planRef);
+    const validatedCtx = parseRunContext(ctx);
     const workflowClient = await this.getClient();
 
-    const workflowId = toTemporalWorkflowId(ctx.runId);
-    const taskQueue = toTemporalTaskQueue(ctx.tenantId, this.deps.config);
+    const workflowId = toTemporalWorkflowId(validatedCtx.runId);
+    const taskQueue = toTemporalTaskQueue(validatedCtx.tenantId, this.deps.config);
 
     const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
       workflowId,
       args: [
         {
-          planRef,
-          ctx,
+          planRef: validatedPlanRef,
+          ctx: validatedCtx,
           continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
         },
       ],
@@ -88,9 +94,10 @@ export class TemporalAdapter implements IProviderAdapter {
     const runId =
       typeof started.firstExecutionRunId === 'string' && started.firstExecutionRunId.length > 0
         ? started.firstExecutionRunId
-        : ctx.runId;
+        : validatedCtx.runId;
 
     return toTemporalRunRef({
+      tenantId: validatedCtx.tenantId,
       workflowId: started.workflowId,
       runId,
       config: this.deps.config,
@@ -99,21 +106,28 @@ export class TemporalAdapter implements IProviderAdapter {
   }
 
   async cancelRun(runRef: EngineRunRef): Promise<void> {
+    const validatedRunRef = parseEngineRunRef(runRef);
     const workflowClient = await this.getClient();
-    await workflowClient.getHandle(runRef.workflowId).cancel();
+    await workflowClient.getHandle(validatedRunRef.workflowId).cancel();
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
+    const validatedRunRef = parseEngineRunRef(runRef);
     // Operational authority is persisted projection, not Workflow query state.
-    const events = await this.deps.stateStore.listEvents(runRef.runId);
-    return this.deps.projector.rebuild(runRef.runId, events);
+    const events = await this.deps.stateStore.listEvents(
+      validatedRunRef.tenantId,
+      validatedRunRef.runId
+    );
+    return this.deps.projector.rebuild(validatedRunRef.runId, events);
   }
 
   async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
+    const validatedRunRef = parseEngineRunRef(runRef);
+    const validatedRequest = parseSignalRequest(request);
     const workflowClient = await this.getClient();
-    const workflow = workflowClient.getHandle(runRef.workflowId) as WorkflowHandleLike;
+    const workflow = workflowClient.getHandle(validatedRunRef.workflowId) as WorkflowHandleLike;
 
-    switch (request.type) {
+    switch (validatedRequest.type) {
       case 'PAUSE':
         await workflow.signal(WorkflowSignals.PAUSE);
         return;
@@ -129,7 +143,7 @@ export class TemporalAdapter implements IProviderAdapter {
       case 'RETRY_RUN':
         throw new Error('NotImplemented: RETRY_* signals are Phase 2');
       default: {
-        const _never: never = request.type;
+        const _never: never = validatedRequest.type;
         throw new Error(`Unknown signal type: ${String(_never)}`);
       }
     }

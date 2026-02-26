@@ -32,6 +32,7 @@ export function toTemporalTaskQueue(tenantId: string, cfg: TemporalAdapterConfig
 }
 
 export function toTemporalRunRef(args: {
+  tenantId: string;
   workflowId: string;
   runId: string;
   config: TemporalAdapterConfig;
@@ -39,6 +40,7 @@ export function toTemporalRunRef(args: {
 }): Extract<EngineRunRef, { provider: 'temporal' }> {
   return {
     provider: 'temporal',
+    tenantId: args.tenantId,
     namespace: args.config.namespace,
     workflowId: args.workflowId,
     runId: args.runId,

@@ -11,10 +11,16 @@ export type {
   AppendResult,
   EventEnvelope,
   EventType,
+  EventInput,
   IOutboxStorage,
   IRunStateStore,
+  ListEventsOptions,
+  ListRunsOptions,
   OutboxRecord,
+  RunBootstrapInput,
   RunMetadata,
+  RunStateCommandPort,
+  WorkflowSnapshot,
 } from './types.js';
 export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
 

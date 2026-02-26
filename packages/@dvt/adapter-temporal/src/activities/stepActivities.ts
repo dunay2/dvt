@@ -10,7 +10,8 @@
  */
 import { TextDecoder } from 'node:util';
 
-import type { PlanRef, RunContext } from '@dvt/contracts';
+import { parsePlanRef, parseRunContext } from '@dvt/contracts';
+import type { PlanRef, RunContext, RunId } from '@dvt/contracts';
 import { Context } from '@temporalio/activity';
 import { ApplicationFailure } from '@temporalio/activity';
 
@@ -67,6 +68,7 @@ export interface EmitEventInput {
   planRef: PlanRef;
   eventType: EventType;
   stepId?: string;
+  payload?: Record<string, unknown>;
   /** Optional planner-driven logical attempt id; defaults to 1. */
   logicalAttemptId?: number;
 }
@@ -89,9 +91,10 @@ export function createActivities(deps: ActivityDeps): {
      * and verify metadata matches PlanRef.
      */
     async fetchPlan(planRef: PlanRef): Promise<ExecutionPlan> {
-      const bytes = await deps.integrity.fetchAndValidate(planRef, deps.fetcher);
+      const validatedPlanRef = parsePlanRef(planRef);
+      const bytes = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
       const plan = parsePlan(bytes);
-      validatePlanAgainstRef(plan, planRef);
+      validatePlanAgainstRef(plan, validatedPlanRef);
       return plan;
     },
 
@@ -127,7 +130,9 @@ export function createActivities(deps: ActivityDeps): {
      * to the state store with idempotency + outbox forwarding.
      */
     async emitEvent(input: EmitEventInput): Promise<void> {
-      const { ctx, eventType, stepId } = input;
+      const ctx = parseRunContext(input.ctx);
+      const validatedPlanRef = parsePlanRef(input.planRef);
+      const { eventType, stepId, payload } = input;
 
       const engineAttemptId =
         typeof deps.getEngineAttemptId === 'function'
@@ -144,8 +149,8 @@ export function createActivities(deps: ActivityDeps): {
         projectId: ctx.projectId,
         environmentId: ctx.environmentId,
         runId: ctx.runId,
-        planId: input.planRef.planId,
-        planVersion: input.planRef.planVersion,
+        planId: validatedPlanRef.planId,
+        planVersion: validatedPlanRef.planVersion,
         ...(stepId ? { stepId } : {}),
         engineAttemptId,
         logicalAttemptId,
@@ -154,10 +159,11 @@ export function createActivities(deps: ActivityDeps): {
           tenantId: ctx.tenantId,
           runId: ctx.runId,
           logicalAttemptId,
-          planId: input.planRef.planId,
-          planVersion: input.planRef.planVersion,
+          planId: validatedPlanRef.planId,
+          planVersion: validatedPlanRef.planVersion,
           ...(stepId ? { stepId } : {}),
         }),
+        ...(payload !== undefined ? { payload } : {}),
       };
 
       await runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
@@ -194,7 +200,7 @@ function resolveRunStateCommandPort(deps: ActivityDeps): RunStateCommandPort {
 
   return {
     bootstrapRun: (input) => stateStore.bootstrapRunTx(input),
-    appendTransitions: (runId, events) => stateStore.appendAndEnqueueTx(runId, events),
+    appendTransitions: (runId, events) => stateStore.appendAndEnqueueTx(runId as RunId, events),
   };
 }
 
@@ -210,6 +216,8 @@ const ALLOWED_STEP_FIELDS = new Set([
   'dependsOn',
   'simulateError',
 ]);
+
+const SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0']);
 
 function resolveTemporalAttemptFromContext(): number {
   try {
@@ -227,6 +235,7 @@ function parsePlan(bytes: Uint8Array): ExecutionPlan {
   if (!isExecutionPlan(obj)) {
     throw new Error('INVALID_PLAN_SCHEMA');
   }
+  validatePlanContractVersion(obj.metadata.contractVersion);
   return obj;
 }
 
@@ -241,7 +250,20 @@ function isExecutionPlan(v: unknown): v is ExecutionPlan {
   return (
     typeof m['planId'] === 'string' &&
     typeof m['planVersion'] === 'string' &&
-    typeof m['schemaVersion'] === 'string'
+    typeof m['schemaVersion'] === 'string' &&
+    typeof m['contractVersion'] === 'string'
+  );
+}
+
+function validatePlanContractVersion(contractVersion: string): void {
+  if (SUPPORTED_PLAN_CONTRACT_VERSIONS.has(contractVersion)) {
+    return;
+  }
+
+  throw new Error(
+    `PLAN_CONTRACT_VERSION_UNKNOWN: ${contractVersion}. Supported: ${Array.from(
+      SUPPORTED_PLAN_CONTRACT_VERSIONS
+    ).join(', ')}`
   );
 }
 
@@ -254,6 +276,10 @@ function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
+  if (Object.prototype.hasOwnProperty.call(step, 'inputBindings')) {
+    throw new Error('INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1');
+  }
+
   for (const k of Object.keys(step)) {
     if (!ALLOWED_STEP_FIELDS.has(k)) {
       throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);

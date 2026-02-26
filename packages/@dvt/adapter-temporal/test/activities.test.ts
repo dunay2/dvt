@@ -15,7 +15,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 const PLAN_JSON = {
-  metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1' },
+  metadata: { planId: 'p1', planVersion: 'v1', schemaVersion: 's1', contractVersion: '1.0.0' },
   steps: [
     { stepId: 'step-a', kind: 'test' },
     { stepId: 'step-b', kind: 'test' },
@@ -105,8 +105,9 @@ class TestTxStore {
   async appendEventsTx(
     runId: string,
     envelopes: Omit<EventEnvelope, 'runSeq'>[]
-  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
     const current = this.eventsByRun.get(runId) ?? [];
+    const baseRunSeq = current.length;
     const appended: EventEnvelope[] = [];
     const deduped: EventEnvelope[] = [];
 
@@ -126,7 +127,11 @@ class TestTxStore {
     }
 
     this.eventsByRun.set(runId, current);
-    return { appended, deduped };
+    return {
+      appended,
+      deduped,
+      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+    };
   }
 
   async listEvents(runId: string): Promise<EventEnvelope[]> {
@@ -136,16 +141,16 @@ class TestTxStore {
   async appendAndEnqueueTx(
     runId: string,
     envelopes: Omit<EventEnvelope, 'runSeq'>[]
-  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
     return this.appendEventsTx(runId, envelopes);
   }
 
   async bootstrapRunTx(input: {
     metadata: RunMetadata;
     firstEvents: Omit<EventEnvelope, 'runSeq'>[];
-  }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+  }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
     await this.saveRunMetadata(input.metadata);
-    if (input.firstEvents.length === 0) return { appended: [], deduped: [] };
+    if (input.firstEvents.length === 0) return { appended: [], deduped: [], lastSeq: 0 };
     return this.appendEventsTx(input.metadata.runId, input.firstEvents);
   }
 
@@ -160,7 +165,7 @@ class FailingFirstAppendStateStore extends TestTxStore {
   override async appendEventsTx(
     runId: string,
     envelopes: Omit<EventEnvelope, 'runSeq'>[]
-  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
     if (this.first) {
       this.first = false;
       throw new Error('TRANSIENT_DB_ERROR');
@@ -231,6 +236,26 @@ describe('stepActivities', () => {
 
       await expect(acts.fetchPlan(badRef)).rejects.toThrow('PLAN_REF_MISMATCH: planId');
     });
+
+    it('rejects unsupported plan contractVersion', async () => {
+      const badPlan = {
+        ...PLAN_JSON,
+        metadata: {
+          ...PLAN_JSON.metadata,
+          contractVersion: '99.0.0',
+        },
+      };
+      const badBytes = Buffer.from(JSON.stringify(badPlan), 'utf-8');
+      const deps = buildDeps();
+      deps.fetcher = { fetch: vi.fn(async () => badBytes) };
+      deps.integrity = {
+        fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
+      } as unknown as ActivityDeps['integrity'];
+
+      const acts = createActivities(deps);
+
+      await expect(acts.fetchPlan(PLAN_REF)).rejects.toThrow('PLAN_CONTRACT_VERSION_UNKNOWN');
+    });
   });
 
   describe('emitEvent', () => {
@@ -280,6 +305,26 @@ describe('stepActivities', () => {
       expect(events).toHaveLength(2);
       expect(events[0]!.eventType).toBe('StepStarted');
       expect((events[0] as { stepId: string }).stepId).toBe('step-a');
+    });
+
+    it('persists payload when provided (gateway decision)', async () => {
+      const deps = buildDeps();
+      const acts = createActivities(deps);
+
+      await acts.emitEvent({
+        ctx: CTX,
+        planRef: PLAN_REF,
+        eventType: 'StepCompleted',
+        stepId: 'gw-1',
+        payload: { gatewayDecision: true },
+      });
+
+      const events = await deps.stateStore.listEvents('run-1');
+      expect(events).toHaveLength(1);
+      expect(events[0]!.eventType).toBe('StepCompleted');
+      expect(
+        (events[0]!.payload as { gatewayDecision?: boolean } | undefined)?.gatewayDecision
+      ).toBe(true);
     });
 
     it('retry-safe: transient failure then retry persists one logical event', async () => {
@@ -414,6 +459,18 @@ describe('stepActivities', () => {
       expectExecuteStepRejects(
         { stepId: 's1', kind: 'test', forbidden: 'field' },
         'INVALID_STEP_SCHEMA: field_not_allowed:forbidden'
+      )
+    );
+
+    it(
+      'rejects step when inputBindings appears (not supported in v1 runtime)',
+      expectExecuteStepRejects(
+        {
+          stepId: 's1',
+          kind: 'test',
+          inputBindings: [{ targetPath: '/x', sourceStepId: 's0', sourcePath: '/y' }],
+        },
+        'INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1'
       )
     );
 

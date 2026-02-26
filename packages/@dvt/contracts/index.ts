@@ -11,3 +11,4 @@ export * from './src/errors';
 export * from './src/schemas';
 export * from './src/planner-input';
 export * from './src/validation';
+export type { WorkflowSnapshot } from './src/engine/IRunStateStore.v1';

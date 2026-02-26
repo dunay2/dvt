@@ -10,30 +10,32 @@
  */
 import { ZodError, type ZodType } from 'zod';
 
-import type { ExecuteStepRequest, ExecuteStepResult } from './adapters/IWorkflowEngineAdapter.v1';
 import {
   ArtifactRefSchema,
+  type ArtifactRefSchemaT,
   CanonicalEngineEventSchema,
+  type CanonicalEngineEventSchemaT,
   EngineRunRefSchema,
+  type EngineRunRefSchemaT,
   ExecuteStepRequestSchema,
+  type ExecuteStepRequestSchemaT,
   ExecuteStepResultSchema,
+  type ExecuteStepResultSchemaT,
   PlanRefSchema,
+  type PlanRefSchemaT,
   RunContextSchema,
+  type RunContextSchemaT,
   RunSnapshotSchema,
+  type RunSnapshotSchemaT,
   RunStatusSnapshotSchema,
+  type RunStatusSnapshotSchemaT,
   SignalRequestSchema,
+  type SignalRequestSchemaT,
   StepOutputSchema,
+  type StepOutputSchemaT,
   StepSnapshotSchema,
+  type StepSnapshotSchemaT,
 } from './schemas';
-import type { ArtifactRef, StepOutput } from './types/artifacts';
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunStatusSnapshot,
-  SignalRequest,
-} from './types/contracts';
-import type { CanonicalEngineEvent, RunSnapshot, StepSnapshot } from './types/state-store';
 
 export interface ValidationIssue {
   path: string;
@@ -107,50 +109,50 @@ function mapZodIssues(error: ZodError): ValidationIssue[] {
   }));
 }
 
-export function parsePlanRef(input: unknown): PlanRef {
+export function parsePlanRef(input: unknown): PlanRefSchemaT {
   return parseWithSchema(PlanRefSchema, input);
 }
 
-export function parseRunContext(input: unknown): RunContext {
+export function parseRunContext(input: unknown): RunContextSchemaT {
   return parseWithSchema(RunContextSchema, input);
 }
 
-export function parseSignalRequest(input: unknown): SignalRequest {
+export function parseSignalRequest(input: unknown): SignalRequestSchemaT {
   return parseWithSchema(SignalRequestSchema, input);
 }
 
-export function parseEngineRunRef(input: unknown): EngineRunRef {
+export function parseEngineRunRef(input: unknown): EngineRunRefSchemaT {
   return parseWithSchema(EngineRunRefSchema, input);
 }
 
-export function parseRunStatusSnapshot(input: unknown): RunStatusSnapshot {
+export function parseRunStatusSnapshot(input: unknown): RunStatusSnapshotSchemaT {
   return parseWithSchema(RunStatusSnapshotSchema, input);
 }
 
-export function parseArtifactRef(input: unknown): ArtifactRef {
+export function parseArtifactRef(input: unknown): ArtifactRefSchemaT {
   return parseWithSchema(ArtifactRefSchema, input);
 }
 
-export function parseStepOutput(input: unknown): StepOutput {
+export function parseStepOutput(input: unknown): StepOutputSchemaT {
   return parseWithSchema(StepOutputSchema, input);
 }
 
-export function parseCanonicalEngineEvent(input: unknown): CanonicalEngineEvent {
+export function parseCanonicalEngineEvent(input: unknown): CanonicalEngineEventSchemaT {
   return parseWithSchema(CanonicalEngineEventSchema, input);
 }
 
-export function parseStepSnapshot(input: unknown): StepSnapshot {
+export function parseStepSnapshot(input: unknown): StepSnapshotSchemaT {
   return parseWithSchema(StepSnapshotSchema, input);
 }
 
-export function parseRunSnapshot(input: unknown): RunSnapshot {
+export function parseRunSnapshot(input: unknown): RunSnapshotSchemaT {
   return parseWithSchema(RunSnapshotSchema, input);
 }
 
-export function parseExecuteStepRequest(input: unknown): ExecuteStepRequest {
+export function parseExecuteStepRequest(input: unknown): ExecuteStepRequestSchemaT {
   return parseWithSchema(ExecuteStepRequestSchema, input);
 }
 
-export function parseExecuteStepResult(input: unknown): ExecuteStepResult {
+export function parseExecuteStepResult(input: unknown): ExecuteStepResultSchemaT {
   return parseWithSchema(ExecuteStepResultSchema, input);
 }

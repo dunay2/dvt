@@ -311,7 +311,7 @@ class TestStateStore {
   async bootstrapRunTx(input: {
     metadata: RunMetadata;
     firstEvents: EventInput[];
-  }): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[] }> {
+  }): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[]; lastSeq: number }> {
     this.metadataByRun.set(input.metadata.runId, input.metadata);
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
@@ -323,13 +323,17 @@ class TestStateStore {
       if (res.idempotent) deduped.push(persisted);
       else appended.push(persisted);
     }
-    return { appended, deduped };
+    return {
+      appended,
+      deduped,
+      lastSeq: appended[appended.length - 1]?.runSeq ?? 0,
+    };
   }
 
   async appendAndEnqueueTx(
     runId: string,
     events: EventInput[]
-  ): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[] }> {
+  ): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[]; lastSeq: number }> {
     const appended: RunEventPersisted[] = [];
     const deduped: RunEventPersisted[] = [];
     for (const event of events) {
@@ -339,7 +343,12 @@ class TestStateStore {
       if (res.idempotent) deduped.push(persisted);
       else appended.push(persisted);
     }
-    return { appended, deduped };
+    const all = await this.listEvents(runId);
+    return {
+      appended,
+      deduped,
+      lastSeq: appended[appended.length - 1]?.runSeq ?? all[all.length - 1]?.runSeq ?? 0,
+    };
   }
 
   async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
@@ -706,6 +715,7 @@ function mkPlan(stepCount: number): unknown {
       planId: 'it-plan',
       planVersion: '1.0.0',
       schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
     },
     steps: Array.from({ length: stepCount }, (_, i) => ({ stepId: `s-${i + 1}`, kind: 'noop' })),
   } as const;
@@ -717,6 +727,7 @@ function mkLinearThreeStepPlan(): unknown {
       planId: 'it-plan-linear-3',
       planVersion: '1.0.0',
       schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
     },
     steps: [
       { stepId: 's-1', kind: 'noop' },
@@ -732,6 +743,7 @@ function mkPermanentFailurePlan(): unknown {
       planId: 'it-plan-permanent-failure',
       planVersion: '1.0.0',
       schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
     },
     steps: [{ stepId: 's-fail', kind: 'noop', simulateError: 'permanent' }],
   } as const;
@@ -1051,6 +1063,77 @@ describe('temporal integration (time-skipping)', () => {
         expect(projected.status).toBe('FAILED');
       } finally {
         await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
+  it(
+    'crash recovery: worker restart preserves idempotency (no duplicate idempotencyKey)',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+      const store = new TestStateStore();
+      const outbox = new TestOutbox();
+      const projector = new TestProjector();
+      const plan = mkPlan(40);
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+
+      const planRef = createPlanRef('it-plan', planBytes);
+      const ctx = createRunContext('run-it-crash-recovery');
+
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-crash-recovery',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
+
+      const mkWorker = () =>
+        new TemporalWorkerHost({
+          temporalConfig: {
+            ...temporalConfig,
+            taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+          },
+          workflowsPath: WORKFLOW_PATH,
+          activityDeps: createActivityDeps(store, outbox, planBytes),
+        });
+
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+        stateStore: store,
+        projector,
+      });
+
+      const worker1 = mkWorker();
+      await worker1.start(env.nativeConnection);
+
+      try {
+        const runRef = await adapter.startRun(planRef, ctx);
+
+        await waitForCondition(
+          () => store.listEvents(ctx.runId),
+          (events) => events.some((e) => e.eventType === 'StepStarted'),
+          { timeoutMs: 30_000 }
+        );
+
+        await worker1.shutdown();
+
+        const worker2 = mkWorker();
+        await worker2.start(env.nativeConnection);
+
+        try {
+          await adapter.cancelRun(runRef);
+          await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
+
+          const events = await store.listEvents(ctx.runId);
+          const uniqueKeys = new Set(events.map((e) => e.idempotencyKey));
+          expect(uniqueKeys.size).toBe(events.length);
+        } finally {
+          await worker2.shutdown();
+        }
+      } finally {
         await env.teardown();
       }
     },

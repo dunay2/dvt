@@ -35,7 +35,7 @@ interface AppState {
   // Active tabs
   activeTabs: Array<{
     id: string;
-    type: 'canvas' | 'run' | 'diff' | 'lineage';
+    type: TabType;
     label: string;
     data?: any;
   }>;
@@ -77,7 +77,7 @@ interface AppState {
   setHighlightedNodes: (nodes: string[]) => void;
   toggleImpactOverlay: () => void;
   toggleColumnLevelLineage: () => void;
-  addTab: (tab: { id: string; type: string; label: string; data?: any }) => void;
+  addTab: (tab: { id: string; type: TabType; label: string; data?: any }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   setConnectionStatus: (status: Partial<ConnectionStatus>) => void;
@@ -85,6 +85,8 @@ interface AppState {
   setCurrentRun: (run: Run | null) => void;
   setInspectorNode: (nodeId: string | null) => void;
 }
+
+type TabType = 'canvas' | 'run' | 'diff' | 'lineage';
 
 export const useAppStore = create<AppState>((set) => ({
   // Initial state

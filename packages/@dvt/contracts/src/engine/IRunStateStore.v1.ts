@@ -59,6 +59,7 @@ export interface RunMetadata {
 export interface AppendResult {
   appended: EventEnvelope[];
   deduped: EventEnvelope[];
+  lastSeq: number;
 }
 
 export interface RunBootstrapInput {
@@ -73,6 +74,11 @@ export interface WorkflowSnapshot {
   completedAt?: IsoUtcString;
   paused: boolean;
   cancelling: boolean;
+  /**
+   * Gateway decisions materialized from gateway StepCompleted events.
+   * Key: gateway stepId, Value: evaluated boolean decision.
+   */
+  gatewayDecisions?: Record<string, boolean>;
   steps: Record<
     string,
     {
@@ -87,8 +93,8 @@ export interface WorkflowSnapshot {
 export interface IRunStateStore {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
-  getRunMetadataByRunId(runId: string): Promise<RunMetadata | null>;
-  listEvents(runId: string): Promise<EventEnvelope[]>;
+  getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
+  listEvents(tenantId: string, runId: string): Promise<EventEnvelope[]>;
 }
 
 export interface RunStateCommandPort {

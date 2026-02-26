@@ -7,7 +7,9 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type { IsoUtcString, RunStatus } from './types.js';
+import type { WorkflowSnapshot as SharedWorkflowSnapshot } from '@dvt/contracts';
+
+import type { IsoUtcString } from './types.js';
 
 export type EventType =
   | 'RunQueued'
@@ -60,6 +62,8 @@ export type EventEnvelope = RunEventPersisted;
 export interface AppendResult {
   appended: RunEventPersisted[];
   deduped: RunEventPersisted[];
+  /** Maximum run sequence after the transactional append attempt. */
+  lastSeq: number;
 }
 
 export interface RunMetadata {
@@ -89,21 +93,8 @@ export interface RunMetadata {
   createdAt?: IsoUtcString;
 }
 
-export interface WorkflowSnapshot {
-  runId: string;
-  status: RunStatus;
-  startedAt?: IsoUtcString;
-  completedAt?: IsoUtcString;
-  paused: boolean;
-  /** True between RunCancelRequested and RunCancelled. ADR-0007. */
-  cancelling: boolean;
-  steps: Record<
-    string,
-    {
-      status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'SKIPPED';
-      startedAt?: IsoUtcString;
-      completedAt?: IsoUtcString;
-      attempts: number;
-    }
-  >;
-}
+/**
+ * Shared-kernel alias. Ownership moved to @dvt/contracts so external adapters
+ * can implement IRunStateStore without depending on engine internals.
+ */
+export type WorkflowSnapshot = SharedWorkflowSnapshot;

@@ -13,6 +13,7 @@ import type {
   AppendResult,
   EventInput,
   IRunStateStore,
+  RunId,
   RunBootstrapInput,
   RunStateCommandPort,
 } from './types.js';
@@ -28,7 +29,7 @@ export class PostgresRunStateCommandPortBridge implements RunStateCommandPort {
     return this.store.bootstrapRunTx(input);
   }
 
-  appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult> {
+  appendTransitions(runId: RunId, events: EventInput[]): Promise<AppendResult> {
     return this.store.appendAndEnqueueTx(runId, events);
   }
 }

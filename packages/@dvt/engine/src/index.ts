@@ -17,7 +17,7 @@ export * from './core/WorkflowEngine.js';
 export * from './core/SnapshotProjector.js';
 export * from './core/idempotency.js';
 
-export * from './state/IRunStateStore.js';
+export * from './ports/IRunStateStore.js';
 export * from './state/InMemoryTxStore.js';
 
 export * from './outbox/types.js';

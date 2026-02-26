@@ -17,6 +17,7 @@ import type {
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
+  TenantId,
 } from '@dvt/contracts';
 import {
   parseEngineRunRef,
@@ -41,9 +42,9 @@ import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEven
 import type { IMetricsCollector } from '../metrics/IMetricsCollector.js';
 import type { IOutboxRateLimiter } from '../outbox/IOutboxRateLimiter.js';
 import type { IOutboxStorage } from '../outbox/types.js';
+import type { IRunStateStore } from '../ports/IRunStateStore.js';
 import type { IAuthorizer } from '../security/authorizer.js';
 import { PlanRefPolicy } from '../security/planRefPolicy.js';
-import type { IRunStateStore } from '../state/IRunStateStore.js';
 import type { IClock } from '../utils/clock.js';
 
 import { IdempotencyKeyBuilder } from './idempotency.js';
@@ -123,7 +124,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
-    const validatedPlanRef = parsePlanRef(planRef);
+    const validatedPlanRef = normalizePlanRef(parsePlanRef(planRef));
     const validatedContext = parseRunContext(context);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
     const metricTags = {
@@ -197,7 +198,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     validateSchemaVersionOrThrow(planRef.schemaVersion);
     await this.deps.authorizer.assertTenantAccess(context.tenantId);
     validateRunIdOrThrow(context.runId);
-    await this.ensureRunDoesNotExist(context.runId);
+    await this.ensureRunDoesNotExist(context.tenantId, context.runId);
   }
 
   private validateCapabilitiesOrThrow(planRef: PlanRef, adapter: IProviderAdapter): void {
@@ -237,7 +238,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     });
 
     const failMeta = await this.deps.stateStore
-      .getRunMetadataByRunId(validatedContext.runId)
+      .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
     if (failMeta) {
       await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
@@ -251,7 +252,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
-    const validatedRunRef = parseEngineRunRef(engineRunRef);
+    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
@@ -281,7 +282,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
-    const validatedRunRef = parseEngineRunRef(engineRunRef);
+    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
@@ -290,10 +291,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     // Latency must be independent of adapter availability.
     // Snapshot-first (O(1)). Falls back to full replay only when no snapshot exists
     // — e.g. runs predating snapshot support.
-    const storedSnap = await this.deps.stateStore.getSnapshot(meta.runId);
+    const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
     const result = storedSnap
       ? snapshotToStatus(storedSnap)
-      : this.deps.projector.rebuild(meta.runId, await this.deps.stateStore.listEvents(meta.runId));
+      : this.deps.projector.rebuild(
+          meta.runId,
+          await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
+        );
 
     this.metrics.timing(
       'dvt.run.status_duration_ms',
@@ -311,16 +315,19 @@ export class WorkflowEngine implements IWorkflowEngine {
    * Circuit breaking is the caller's responsibility at the infrastructure layer.
    */
   async enrichRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
-    const validatedRunRef = parseEngineRunRef(engineRunRef);
+    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
     const adapter = this.getAdapterOrThrow(meta.provider);
 
-    const storedSnap = await this.deps.stateStore.getSnapshot(meta.runId);
+    const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
     const base = storedSnap
       ? snapshotToStatus(storedSnap)
-      : this.deps.projector.rebuild(meta.runId, await this.deps.stateStore.listEvents(meta.runId));
+      : this.deps.projector.rebuild(
+          meta.runId,
+          await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
+        );
 
     const providerView = await this.withTimeout(
       adapter.getRunStatus(validatedRunRef),
@@ -336,8 +343,8 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    const validatedRunRef = parseEngineRunRef(engineRunRef);
-    const validatedRequest = parseSignalRequest(request);
+    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
+    const validatedRequest = normalizeSignalRequest(parseSignalRequest(request));
 
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     await this.deps.authorizer.assertTenantAccess(meta.tenantId);
@@ -414,7 +421,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   private async resolveMetaOrThrow(runRef: EngineRunRef): Promise<RunMetadata> {
-    const m = await this.deps.stateStore.getRunMetadataByRunId(runRef.runId);
+    const m = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
     if (!m) {
       throw new RunMetadataNotFoundError(runRef.runId);
     }
@@ -498,8 +505,8 @@ export class WorkflowEngine implements IWorkflowEngine {
   async detectStuckRuns(options: {
     /** Runs in PENDING for longer than this many milliseconds are considered stuck. */
     thresholdMs: number;
-    /** Restrict scan to a single tenant. Omit to scan all tenants. */
-    tenantId?: string;
+    /** Restrict scan to a single tenant (required). */
+    tenantId: TenantId;
     /** Maximum candidates to inspect per call (default: 100). */
     limit?: number;
   }): Promise<string[]> {
@@ -507,7 +514,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const nowMs = Date.parse(this.deps.clock.nowIsoUtc());
 
     const candidates = await this.deps.stateStore.listRuns({
-      ...(tenantId !== undefined && { tenantId }),
+      tenantId,
       status: 'PENDING',
       limit: limit ?? 100,
     });
@@ -530,8 +537,8 @@ export class WorkflowEngine implements IWorkflowEngine {
     return stuckRunIds;
   }
 
-  private async ensureRunDoesNotExist(runId: string): Promise<void> {
-    const existing = await this.deps.stateStore.getRunMetadataByRunId(runId);
+  private async ensureRunDoesNotExist(tenantId: string, runId: string): Promise<void> {
+    const existing = await this.deps.stateStore.getRunMetadataByRunId(tenantId, runId);
     if (existing) throw new RunAlreadyExistsError(runId);
   }
 
@@ -622,5 +629,60 @@ function buildRunMetadata(
       : {}),
     ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
     createdAt,
+  };
+}
+
+function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
+  return {
+    uri: input.uri,
+    sha256: input.sha256,
+    schemaVersion: input.schemaVersion,
+    planId: input.planId,
+    planVersion: input.planVersion,
+    ...(input.sizeBytes !== undefined ? { sizeBytes: input.sizeBytes } : {}),
+    ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
+    ...(input.requiresCapabilities !== undefined
+      ? { requiresCapabilities: input.requiresCapabilities }
+      : {}),
+  };
+}
+
+function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
+  if (input.provider === 'temporal') {
+    return {
+      provider: 'temporal',
+      tenantId: input.tenantId,
+      namespace: input.namespace,
+      workflowId: input.workflowId,
+      runId: input.runId,
+      ...(input.taskQueue !== undefined ? { taskQueue: input.taskQueue } : {}),
+    };
+  }
+
+  if (input.provider === 'conductor') {
+    return {
+      provider: 'conductor',
+      tenantId: input.tenantId,
+      workflowId: input.workflowId,
+      runId: input.runId,
+      conductorUrl: input.conductorUrl,
+    };
+  }
+
+  return {
+    provider: 'mock',
+    tenantId: input.tenantId,
+    workflowId: input.workflowId,
+    runId: input.runId,
+  };
+}
+
+function normalizeSignalRequest(input: ReturnType<typeof parseSignalRequest>): SignalRequest {
+  return {
+    signalId: input.signalId,
+    type: input.type,
+    ...(input.stepId !== undefined ? { stepId: input.stepId } : {}),
+    ...(input.reason !== undefined ? { reason: input.reason } : {}),
+    ...(input.requestedAt !== undefined ? { requestedAt: input.requestedAt } : {}),
   };
 }

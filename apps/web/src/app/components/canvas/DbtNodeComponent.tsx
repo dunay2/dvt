@@ -1,5 +1,5 @@
 import styles from './DbtNodeComponent.module.css';
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Handle, Position, Node, NodeProps } from '@xyflow/react';
 import {
   Database,
   Table,
@@ -18,7 +18,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { cn } from '../ui/utils';
 
-interface DbtNodeData {
+export interface DbtNodeData extends Record<string, unknown> {
   name: string;
   type: DbtNodeType;
   status: NodeStatus;
@@ -29,6 +29,8 @@ interface DbtNodeData {
   showColumns?: boolean;
   columns?: Array<{ name: string; type: string }>;
 }
+
+type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
 
 const nodeTypeConfig: Record<DbtNodeType, { icon: any; bgColor: string; borderColor: string }> = {
   SOURCE: { icon: Database, bgColor: 'bg-purple-900/30', borderColor: 'border-purple-500' },
@@ -50,7 +52,7 @@ const statusColors: Record<NodeStatus, string> = {
   warn: 'bg-orange-500',
 };
 
-function DbtNodeComponent(props: NodeProps<DbtNodeData>) {
+function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { selected } = props;
   const config = nodeTypeConfig[data.type];

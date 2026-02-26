@@ -38,7 +38,7 @@ function buildRunStarted(runId: string): RunEventInput {
 describe('PostgresRunStateCommandPortBridge', () => {
   it('delegates bootstrapRun to bootstrapRunTx', async () => {
     const store = {
-      bootstrapRunTx: vi.fn(async () => ({ appended: [], deduped: [] })),
+      bootstrapRunTx: vi.fn(async () => ({ appended: [], deduped: [], lastSeq: 0 })),
       appendAndEnqueueTx: vi.fn(),
     } as any;
 
@@ -52,7 +52,7 @@ describe('PostgresRunStateCommandPortBridge', () => {
   it('delegates appendTransitions to appendAndEnqueueTx', async () => {
     const store = {
       bootstrapRunTx: vi.fn(),
-      appendAndEnqueueTx: vi.fn(async () => ({ appended: [], deduped: [] })),
+      appendAndEnqueueTx: vi.fn(async () => ({ appended: [], deduped: [], lastSeq: 0 })),
     } as any;
 
     const bridge = new PostgresRunStateCommandPortBridge(store);

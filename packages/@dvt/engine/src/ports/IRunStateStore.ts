@@ -1,6 +1,8 @@
 /**
  * @baseline ADR-0003
  */
+import type { TenantId } from '@dvt/contracts';
+
 import type {
   AppendResult,
   RunEventInput,
@@ -9,13 +11,15 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import type { RunStatus } from '../contracts/types.js';
+
 export interface RunBootstrapInput {
   metadata: RunMetadata;
   firstEvents: RunEventInput[];
 }
+
 export interface ListRunsOptions {
-  /** Filter to a single tenant. */
-  tenantId?: string;
+  /** Tenant scope is mandatory to prevent cross-tenant leaks. */
+  tenantId: TenantId;
   /** Maximum records to return (default: 50). */
   limit?: number;
   /**
@@ -24,6 +28,7 @@ export interface ListRunsOptions {
    */
   status?: RunStatus;
 }
+
 export interface ListEventsOptions {
   /**
    * Keyset cursor: return only events with run_seq strictly greater than this value.
@@ -37,21 +42,30 @@ export interface ListEventsOptions {
    */
   limit?: number;
 }
+
 export interface IRunStateStore {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: RunEventInput[]): Promise<AppendResult>;
-  getRunMetadataByRunId(runId: string): Promise<RunMetadata | null>;
+
+  getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
+
   /**
    * Returns persisted events ordered by run_seq ASC.
    * WARNING: Omitting options.limit is a full table scan. Only call from
    * recovery/rebuild paths (snapshot unavailable). Hot path: use getSnapshot().
    */
-  listEvents(runId: string, options?: ListEventsOptions): Promise<RunEventPersisted[]>;
+  listEvents(
+    tenantId: string,
+    runId: string,
+    options?: ListEventsOptions
+  ): Promise<RunEventPersisted[]>;
+
   /**
    * Returns run metadata records, most-recently created first.
    * Useful for dashboard / admin listing — does not include run status.
    */
-  listRuns(options?: ListRunsOptions): Promise<RunMetadata[]>;
+  listRuns(options: ListRunsOptions): Promise<RunMetadata[]>;
+
   /**
    * Returns the latest materialized WorkflowSnapshot for the run, or null if
    * no snapshot exists yet (run predates snapshot support, or store crashed
@@ -59,6 +73,5 @@ export interface IRunStateStore {
    *
    * Callers MUST fall back to full event replay when null is returned.
    */
-  getSnapshot(runId: string): Promise<WorkflowSnapshot | null>;
+  getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null>;
 }
-//# sourceMappingURL=IRunStateStore.d.ts.map

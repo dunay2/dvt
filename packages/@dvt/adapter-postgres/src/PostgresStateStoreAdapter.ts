@@ -184,6 +184,17 @@ function handleStepCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
   s.status = 'COMPLETED';
   s.completedAt = e.emittedAt;
   snap.steps[stepId] = s;
+
+  const payload = e.payload;
+  if (payload && typeof payload === 'object') {
+    const maybeDecision = (payload as Record<string, unknown>).gatewayDecision;
+    if (typeof maybeDecision === 'boolean') {
+      if (!snap.gatewayDecisions) {
+        snap.gatewayDecisions = {};
+      }
+      snap.gatewayDecisions[stepId] = maybeDecision;
+    }
+  }
 }
 
 function handleStepFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
@@ -320,10 +331,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       await this.insertRunMetadataWithClient(client, input.metadata);
       const append = await this.appendEventsTxWithClient(
         client,
-        input.metadata.runId,
+        input.metadata.runId as RunId,
         input.firstEvents
       );
-      await this.enqueueTxWithClient(client, input.metadata.runId, append.appended);
+      await this.enqueueTxWithClient(client, input.metadata.runId as RunId, append.appended);
       await client.query('COMMIT');
       return append;
     } catch (error: unknown) {
@@ -426,7 +437,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     );
   }
 
-  async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
+  async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
     const result = await this.pool.query<RunMetadataRow>(
       `
@@ -444,9 +455,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           provider_task_queue,
           provider_conductor_url
         FROM ${quoteIdentifier(this.schema)}.run_metadata
-        WHERE run_id = $1
+        WHERE tenant_id = $1 AND run_id = $2
       `,
-      [runId]
+      [tenantId, runId]
     );
 
     const row = result.rows[0];
@@ -470,12 +481,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     } as RunMetadata;
   }
 
-  async listRuns(options?: ListRunsOptions): Promise<RunMetadata[]> {
+  async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     this.ready();
-    const limit = Math.min(options?.limit ?? 50, 500);
-    const params: unknown[] = [limit];
-    const tenantFilter = options?.tenantId ? `WHERE tenant_id = $2` : '';
-    if (options?.tenantId) params.push(options.tenantId);
+    const limit = Math.min(options.limit ?? 50, 500);
+    const params: unknown[] = [limit, options.tenantId];
 
     const result = await this.pool.query<RunMetadataRow>(
       `
@@ -493,7 +502,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           provider_task_queue,
           provider_conductor_url
         FROM ${quoteIdentifier(this.schema)}.run_metadata
-        ${tenantFilter}
+        WHERE tenant_id = $2
         ORDER BY created_at DESC
         LIMIT $1
       `,
@@ -539,26 +548,31 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   }
 
-  async listEvents(runId: RunId): Promise<EventEnvelope[]> {
+  async listEvents(tenantId: string, runId: string): Promise<EventEnvelope[]> {
     this.ready();
     const result = await this.pool.query<EventPayloadRow>(
       `
         SELECT payload
         FROM ${quoteIdentifier(this.schema)}.run_events
-        WHERE run_id = $1
+        WHERE tenant_id = $1 AND run_id = $2
         ORDER BY run_seq ASC
       `,
-      [runId]
+      [tenantId, runId]
     );
 
     return result.rows.map((row: EventPayloadRow) => row.payload as EventEnvelope);
   }
 
-  async getSnapshot(runId: RunId): Promise<WorkflowSnapshot | null> {
+  async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     this.ready();
     const result = await this.pool.query<SnapshotRow>(
-      `SELECT snapshot FROM ${quoteIdentifier(this.schema)}.run_snapshots WHERE run_id = $1`,
-      [runId]
+      `
+        SELECT s.snapshot
+        FROM ${quoteIdentifier(this.schema)}.run_snapshots s
+        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
+        WHERE m.tenant_id = $1 AND s.run_id = $2
+      `,
+      [tenantId, runId]
     );
     return result.rows[0]?.snapshot ?? null;
   }
@@ -904,7 +918,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       [runId]
     );
 
-    let nextRunSeq = Number(seqResult.rows[0]?.max_seq ?? 0) + 1;
+    const baseRunSeq = Number(seqResult.rows[0]?.max_seq ?? 0);
+    let nextRunSeq = baseRunSeq + 1;
     const appended: EventEnvelope[] = [];
     const deduped: EventEnvelope[] = [];
 
@@ -990,6 +1005,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         status: 'PENDING',
         paused: false,
         cancelling: false,
+        gatewayDecisions: {},
         steps: {},
       };
       for (const e of appended) {
@@ -1008,7 +1024,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       );
     }
 
-    return { appended, deduped };
+    return {
+      appended,
+      deduped,
+      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+    };
   }
 
   private async insertRunMetadataWithClient(client: PoolClient, meta: RunMetadata): Promise<void> {

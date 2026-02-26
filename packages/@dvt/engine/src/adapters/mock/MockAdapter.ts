@@ -18,7 +18,7 @@ import type {
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
-import type { IRunStateStore } from '../../state/IRunStateStore.js';
+import type { IRunStateStore } from '../../ports/IRunStateStore.js';
 import type { IClock } from '../../utils/clock.js';
 import type { IProviderAdapter } from '../IProviderAdapter.js';
 
@@ -66,6 +66,7 @@ export class MockAdapter implements IProviderAdapter {
 
     const runRef: EngineRunRef = {
       provider: 'mock',
+      tenantId: ctx.tenantId,
       workflowId: `mock_${ctx.runId}`,
       runId: ctx.runId,
     };
@@ -82,7 +83,7 @@ export class MockAdapter implements IProviderAdapter {
   }
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
-    const events = await this.deps.stateStore.listEvents(runRef.runId);
+    const events = await this.deps.stateStore.listEvents(runRef.tenantId, runRef.runId);
     return this.deps.projector.rebuild(runRef.runId, events);
   }
 

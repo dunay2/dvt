@@ -3,4 +3,4 @@ export type {
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
-} from '../../state/IRunStateStore.js';
+} from '../../ports/IRunStateStore.js';

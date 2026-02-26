@@ -23,8 +23,10 @@ export class InMemoryRunStateStore implements IRunStateStore {
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
 
-  async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
-    return this.metadataByRunId.get(runId) ?? null;
+  async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
+    const meta = this.metadataByRunId.get(runId) ?? null;
+    if (!meta) return null;
+    return meta.tenantId === tenantId ? meta : null;
   }
 
   async saveProviderRef(
@@ -62,6 +64,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
       status: 'PENDING',
       paused: false,
       cancelling: false,
+      gatewayDecisions: {},
       steps: {},
     });
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
@@ -69,6 +72,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
 
   async appendAndEnqueueTx(runId: string, eventsToAppend: RunEventInput[]): Promise<AppendResult> {
     const events = this.eventsByRunId.get(runId) ?? [];
+    const baseRunSeq = events.length;
     const idx = this.idempIndexByRunId.get(runId) ?? new Map<string, RunEventPersisted>();
 
     const appended: RunEventPersisted[] = [];
@@ -100,6 +104,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
         status: 'PENDING',
         paused: false,
         cancelling: false,
+        gatewayDecisions: {},
         steps: {},
       };
       for (const e of appended) {
@@ -108,28 +113,40 @@ export class InMemoryRunStateStore implements IRunStateStore {
       this.snapshotByRunId.set(runId, snap);
     }
 
-    return { appended, deduped };
+    return {
+      appended,
+      deduped,
+      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+    };
   }
 
-  async listEvents(runId: string, options?: ListEventsOptions): Promise<RunEventPersisted[]> {
+  async listEvents(
+    tenantId: string,
+    runId: string,
+    options?: ListEventsOptions
+  ): Promise<RunEventPersisted[]> {
+    const meta = this.metadataByRunId.get(runId);
+    if (!meta || meta.tenantId !== tenantId) return [];
     const all = (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
     const afterSeq = options?.afterSeq;
     const filtered = afterSeq !== undefined ? all.filter((e) => e.runSeq > afterSeq) : all;
     return options?.limit !== undefined ? filtered.slice(0, options.limit) : filtered;
   }
 
-  async listRuns(options?: ListRunsOptions): Promise<RunMetadata[]> {
-    const limit = options?.limit ?? 50;
+  async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
+    const limit = options.limit ?? 50;
     const all = Array.from(this.metadataByRunId.values());
-    const byTenant = options?.tenantId ? all.filter((m) => m.tenantId === options.tenantId) : all;
+    const byTenant = all.filter((m) => m.tenantId === options.tenantId);
     const byStatus =
-      options?.status !== undefined
+      options.status !== undefined
         ? byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status)
         : byTenant;
     return byStatus.slice(-limit).reverse();
   }
 
-  async getSnapshot(runId: string): Promise<WorkflowSnapshot | null> {
+  async getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null> {
+    const meta = this.metadataByRunId.get(runId);
+    if (!meta || meta.tenantId !== tenantId) return null;
     return this.snapshotByRunId.get(runId) ?? null;
   }
 }

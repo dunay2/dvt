@@ -64,6 +64,8 @@ export interface RunPlanWorkflowInput {
   resumeFromLayerIndex?: number;
   /** Internal cumulative counter used for observability and test assertions. */
   continuedAsNewCount?: number;
+  /** Internal gateway decision map carried across continue-as-new rollovers. */
+  gatewayDecisions?: Record<string, boolean>;
 }
 
 export interface RunPlanWorkflowResult {
@@ -126,7 +128,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     cancelled: false,
     currentStepIndex: 0,
     continuedAsNewCount,
-    gatewayDecisions: {},
+    gatewayDecisions: { ...(input.gatewayDecisions ?? {}) },
   };
 
   const completedStepResults: Record<string, Record<string, unknown>> = {};
@@ -254,7 +256,10 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
               const gatewayCtx = buildGatewayContext(step, completedStepResults);
               const parsed = parseDslV1(step.gateway.expression);
               const passed = evaluateDslV1(parsed, gatewayCtx);
-              state.gatewayDecisions![step.stepId] = passed;
+              if (!state.gatewayDecisions) {
+                state.gatewayDecisions = {};
+              }
+              state.gatewayDecisions[step.stepId] = passed;
 
               if (!passed) {
                 const downstream = collectDownstreamStepIds(plan.steps, step.stepId);
@@ -265,6 +270,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
               return {
                 stepId: step.stepId,
+                gatewayDecision: passed,
                 result: { stepId: step.stepId, status: 'COMPLETED' as const },
               };
             }
@@ -285,9 +291,18 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
         })
       );
 
-      for (const { stepId, result } of layerResults) {
+      for (const { stepId, result, gatewayDecision } of layerResults) {
         if (result.status === 'COMPLETED') {
-          await activities.emitEvent({ ctx, planRef, eventType: 'StepCompleted', stepId });
+          const completedPayload =
+            typeof gatewayDecision === 'boolean' ? { gatewayDecision } : undefined;
+
+          await activities.emitEvent({
+            ctx,
+            planRef,
+            eventType: 'StepCompleted',
+            stepId,
+            ...(completedPayload ? { payload: completedPayload } : {}),
+          });
           completedStepResults[stepId] = {
             status: 'COMPLETED',
             stepId,
@@ -314,12 +329,15 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
           totalLayerCount: executionLayers.length,
         })
       ) {
-        return continueAsNew<typeof runPlanWorkflow>({
-          ...input,
-          continueAsNewAfterLayerCount,
-          resumeFromLayerIndex: nextLayerIndex,
-          continuedAsNewCount: continuedAsNewCount + 1,
-        });
+        return continueAsNew<typeof runPlanWorkflow>(
+          buildContinueAsNewInput({
+            input,
+            continueAsNewAfterLayerCount,
+            nextLayerIndex,
+            continuedAsNewCount,
+            gatewayDecisions: state.gatewayDecisions ?? {},
+          })
+        );
       }
     }
 
@@ -339,6 +357,22 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     }
     throw err;
   }
+}
+
+export function buildContinueAsNewInput(args: {
+  input: RunPlanWorkflowInput;
+  continueAsNewAfterLayerCount: number;
+  nextLayerIndex: number;
+  continuedAsNewCount: number;
+  gatewayDecisions: Record<string, boolean>;
+}): RunPlanWorkflowInput {
+  return {
+    ...args.input,
+    continueAsNewAfterLayerCount: args.continueAsNewAfterLayerCount,
+    resumeFromLayerIndex: args.nextLayerIndex,
+    continuedAsNewCount: args.continuedAsNewCount + 1,
+    gatewayDecisions: { ...args.gatewayDecisions },
+  };
 }
 
 export function shouldTriggerContinueAsNew(args: {

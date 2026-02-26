@@ -11,6 +11,7 @@ import {
   useEdgesState,
   NodeTypes,
   MarkerType,
+  type NodeProps,
 } from '@xyflow/react';
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import '@xyflow/react/dist/style.css';
@@ -32,6 +33,7 @@ import { useCanvasStore, useModalStore } from '../stores';
 import { DbtNode, NodeType } from '../types';
 
 import DbtNodeComponent from './canvas/DbtNodeComponent';
+import type { DbtNodeData } from './canvas/DbtNodeComponent';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 
@@ -162,7 +164,7 @@ export function GraphCanvas() {
 
   const nodeTypes: NodeTypes = useMemo(
     () => ({
-      dbtNode: DbtNodeComponent as React.ComponentType<import('@xyflow/react').NodeProps<any>>,
+      dbtNode: DbtNodeComponent as React.ComponentType<NodeProps<Node<DbtNodeData, 'dbtNode'>>>,
     }),
     []
   );

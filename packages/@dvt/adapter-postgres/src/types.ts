@@ -1,19 +1,43 @@
-import type { EventEnvelope } from '@dvt/contracts';
+import type { RunId } from '@dvt/contracts';
+import type {
+  IRunStateStore,
+  ListEventsOptions,
+  ListRunsOptions,
+  RunBootstrapInput,
+} from '@dvt/engine/contracts/engine/IRunStateStore.v1';
+import type {
+  AppendResult,
+  EventEnvelope,
+  EventType,
+  RunEventInput,
+  RunMetadata,
+  WorkflowSnapshot,
+} from '@dvt/engine/contracts/engine/RunEvents.v2';
+import type { IOutboxStorage } from '@dvt/engine/src/outbox/types';
 
 export type {
   AppendResult,
-  EventInput,
+  EventEnvelope,
   EventType,
   IOutboxStorage,
   IRunStateStore,
+  ListEventsOptions,
+  ListRunsOptions,
+  RunId,
   RunBootstrapInput,
   RunMetadata,
-  RunStateCommandPort,
   WorkflowSnapshot,
-} from '@dvt/contracts';
+};
+
+export type EventInput = RunEventInput;
+export type StepSnapshot = WorkflowSnapshot['steps'][string];
+
+export interface RunStateCommandPort {
+  bootstrapRun(input: RunBootstrapInput): Promise<AppendResult>;
+  appendTransitions(runId: RunId, events: EventInput[]): Promise<AppendResult>;
+}
 
 export type IsoUtcString = string;
-export type RunId = string;
 export type OutboxId = string;
 export type ErrorMessage = string;
 export type SchemaName = string;
@@ -34,11 +58,6 @@ export interface DeadLetterRecord {
   payload: EventEnvelope;
   lastError: string;
   deadLetteredAt: IsoUtcString;
-}
-
-export interface ListRunsOptions {
-  tenantId?: string;
-  limit?: number;
 }
 
 /**

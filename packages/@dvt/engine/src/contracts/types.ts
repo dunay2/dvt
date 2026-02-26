@@ -67,6 +67,7 @@ export interface RunContext {
 export type EngineRunRef =
   | {
       provider: 'temporal';
+      tenantId: string;
       namespace: string;
       workflowId: string;
       runId: string;
@@ -74,12 +75,14 @@ export type EngineRunRef =
     }
   | {
       provider: 'conductor';
+      tenantId: string;
       workflowId: string;
       runId: string;
       conductorUrl: string;
     }
   | {
       provider: 'mock';
+      tenantId: string;
       workflowId: string;
       runId: string;
     };

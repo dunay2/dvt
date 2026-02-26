@@ -16,8 +16,6 @@
  */
 import { z } from 'zod';
 
-import type { RunStatusSnapshot } from './types/contracts';
-
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
 export const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
@@ -86,12 +84,13 @@ export const RunStatusSnapshotSchema = z.object({
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
   hash: z.string().optional(),
-}) as z.ZodType<RunStatusSnapshot>;
+});
 
 // ─── EngineRunRef (discriminated union) ──────────────────────────────────────
 
 const TemporalRunRefSchema = z.object({
   provider: z.literal('temporal'),
+  tenantId: z.string().min(1),
   namespace: z.string().min(1),
   workflowId: z.string().min(1),
   runId: z.string().min(1),
@@ -100,6 +99,7 @@ const TemporalRunRefSchema = z.object({
 
 const ConductorRunRefSchema = z.object({
   provider: z.literal('conductor'),
+  tenantId: z.string().min(1),
   workflowId: z.string().min(1),
   runId: z.string().min(1),
   conductorUrl: z.string().min(1),
@@ -107,6 +107,7 @@ const ConductorRunRefSchema = z.object({
 
 const MockRunRefSchema = z.object({
   provider: z.literal('mock'),
+  tenantId: z.string().min(1),
   workflowId: z.string().min(1),
   runId: z.string().min(1),
 });
@@ -216,3 +217,21 @@ export const ExecuteStepResultSchema = z.object({
   duration: z.number().nonnegative(),
   executedAt: z.number(),
 });
+
+// ─── Inferred types from schemas (B1) ────────────────────────────────────────
+
+export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
+export type RunContextSchemaT = z.infer<typeof RunContextSchema>;
+export type SignalRequestSchemaT = z.infer<typeof SignalRequestSchema>;
+export type RunStatusSnapshotSchemaT = z.infer<typeof RunStatusSnapshotSchema>;
+export type EngineRunRefSchemaT = z.infer<typeof EngineRunRefSchema>;
+
+export type ArtifactRefSchemaT = z.infer<typeof ArtifactRefSchema>;
+export type StepOutputSchemaT = z.infer<typeof StepOutputSchema>;
+
+export type CanonicalEngineEventSchemaT = z.infer<typeof CanonicalEngineEventSchema>;
+export type StepSnapshotSchemaT = z.infer<typeof StepSnapshotSchema>;
+export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
+
+export type ExecuteStepRequestSchemaT = z.infer<typeof ExecuteStepRequestSchema>;
+export type ExecuteStepResultSchemaT = z.infer<typeof ExecuteStepResultSchema>;

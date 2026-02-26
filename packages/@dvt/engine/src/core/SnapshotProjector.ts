@@ -70,6 +70,14 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): Workflo
       s.status = 'COMPLETED';
       s.completedAt = e.emittedAt;
       snap.steps[stepId] = s;
+
+      const decision = extractGatewayDecision(e);
+      if (decision !== undefined) {
+        if (!snap.gatewayDecisions) {
+          snap.gatewayDecisions = {};
+        }
+        snap.gatewayDecisions[stepId] = decision;
+      }
       break;
     }
     case 'StepFailed': {
@@ -116,6 +124,7 @@ export function snapshotToStatus(snap: WorkflowSnapshot): RunStatusSnapshot {
     cancelling: snap.cancelling,
     startedAt: snap.startedAt,
     completedAt: snap.completedAt,
+    gatewayDecisions: snap.gatewayDecisions,
     steps: snap.steps,
   };
 
@@ -139,6 +148,7 @@ export class SnapshotProjector {
       status: 'PENDING',
       paused: false,
       cancelling: false,
+      gatewayDecisions: {},
       steps: {},
     };
 
@@ -148,4 +158,14 @@ export class SnapshotProjector {
 
     return snapshotToStatus(snap);
   }
+}
+
+function extractGatewayDecision(e: EventEnvelope): boolean | undefined {
+  const payload = e.payload;
+  if (!payload || typeof payload !== 'object') {
+    return undefined;
+  }
+
+  const maybeDecision = (payload as Record<string, unknown>)['gatewayDecision'];
+  return typeof maybeDecision === 'boolean' ? maybeDecision : undefined;
 }

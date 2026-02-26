@@ -6,6 +6,8 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import type { TenantId } from '@dvt/contracts';
+
 import type {
   EngineRunRef,
   PlanRef,
@@ -44,7 +46,7 @@ export interface IWorkflowEngine {
    */
   detectStuckRuns(options: {
     thresholdMs: number;
-    tenantId?: string;
+    tenantId: TenantId;
     limit?: number;
   }): Promise<string[]>;
 }

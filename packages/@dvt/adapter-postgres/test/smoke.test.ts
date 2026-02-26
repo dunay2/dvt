@@ -93,6 +93,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(result.appended).toHaveLength(1);
       expect(result.appended[0]?.eventType).toBe('RunQueued');
       expect(result.appended[0]?.runSeq).toBe(1);
+      expect(result.lastSeq).toBe(1);
 
       const meta = await adapter.getRunMetadataByRunId('run-bs-1');
       expect(meta).toMatchObject({
@@ -137,8 +138,10 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
 
       expect(first.appended).toHaveLength(1);
       expect(first.appended[0]?.runSeq).toBe(2);
+      expect(first.lastSeq).toBe(2);
       expect(second.appended).toHaveLength(0);
       expect(second.deduped).toHaveLength(1);
+      expect(second.lastSeq).toBe(2);
       await expect(adapter.listEvents('run-idemp')).resolves.toHaveLength(2);
     } finally {
       await adapter.close();

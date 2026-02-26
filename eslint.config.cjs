@@ -238,6 +238,26 @@ module.exports = [
     },
   },
 
+  // Tripwire A1: branded casts are transitional and MUST NOT live in engine core.
+  {
+    files: ['packages/@dvt/engine/src/core/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "TSAsExpression[typeAnnotation.typeName.name='RunId']",
+          message:
+            "`as RunId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.",
+        },
+        {
+          selector: "TSAsExpression[typeAnnotation.typeName.name='TenantId']",
+          message:
+            "`as TenantId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.",
+        },
+      ],
+    },
+  },
+
   // ──────────────────────────────────────────────────────────────────────────
   // Strictest determinism rules for Temporal workflow files
   // Workflows run inside the Temporal sandbox and MUST be fully deterministic.
