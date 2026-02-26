@@ -182,7 +182,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     const plan = await activities.fetchPlan(planRef);
 
     // 3. Walk steps in deterministic layers (sequential fallback when no DAG edges).
-    const executionLayers = planExecutionLayers(plan.steps);
+    const executionLayers = planExecutionLayers<WorkflowStep>(plan.steps);
     if (resumeFromLayerIndex > executionLayers.length) {
       throw new Error('INVALID_WORKFLOW_STATE: resumeFromLayerIndex_out_of_range');
     }

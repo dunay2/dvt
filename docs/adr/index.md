@@ -17,6 +17,7 @@ Single source of truth for accepted architecture decisions.
 
 ## Index
 
+- [ADR-0019 — Adapter Equivalence and Maintenance Boundary](ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md)
 - [ADR-0018 — Shared Kernel Ownership Governance (`@dvt/contracts`)](ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [Draft ADRs](_drafts/index.md)
 - [Archived ADRs](_archive/index.md)

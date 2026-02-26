@@ -98,6 +98,7 @@ exports.RunStatusSnapshotSchema = zod_1.z.object({
 // ─── EngineRunRef (discriminated union) ──────────────────────────────────────
 const TemporalRunRefSchema = zod_1.z.object({
   provider: zod_1.z.literal('temporal'),
+  tenantId: zod_1.z.string().min(1),
   namespace: zod_1.z.string().min(1),
   workflowId: zod_1.z.string().min(1),
   runId: zod_1.z.string().min(1),
@@ -105,12 +106,14 @@ const TemporalRunRefSchema = zod_1.z.object({
 });
 const ConductorRunRefSchema = zod_1.z.object({
   provider: zod_1.z.literal('conductor'),
+  tenantId: zod_1.z.string().min(1),
   workflowId: zod_1.z.string().min(1),
   runId: zod_1.z.string().min(1),
   conductorUrl: zod_1.z.string().min(1),
 });
 const MockRunRefSchema = zod_1.z.object({
   provider: zod_1.z.literal('mock'),
+  tenantId: zod_1.z.string().min(1),
   workflowId: zod_1.z.string().min(1),
   runId: zod_1.z.string().min(1),
 });

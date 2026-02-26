@@ -75,7 +75,11 @@ export interface SnapshotProjector {
     observedNonContiguous: boolean;
   }>;
 }
-export interface IRunStateStore {
+/**
+ * @deprecated Legacy experimental contract.
+ * Canonical runtime contract is `engine/IRunStateStore.v1`.
+ */
+export interface ILegacyRunStateStore {
   appendEvent(event: CanonicalEngineEvent): Promise<AppendResult>;
   fetchEvents(runId: string, options: FetchEventsOptions): Promise<CanonicalEngineEvent[]>;
   getSnapshot(runId: string): Promise<RunSnapshot | null>;

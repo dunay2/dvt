@@ -1,13 +1,17 @@
-import type { ExecuteStepRequest, ExecuteStepResult } from './adapters/IWorkflowEngineAdapter.v1';
-import type { ArtifactRef, StepOutput } from './types/artifacts';
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunStatusSnapshot,
-  SignalRequest,
-} from './types/contracts';
-import type { CanonicalEngineEvent, RunSnapshot, StepSnapshot } from './types/state-store';
+import {
+  type ArtifactRefSchemaT,
+  type CanonicalEngineEventSchemaT,
+  type EngineRunRefSchemaT,
+  type ExecuteStepRequestSchemaT,
+  type ExecuteStepResultSchemaT,
+  type PlanRefSchemaT,
+  type RunContextSchemaT,
+  type RunSnapshotSchemaT,
+  type RunStatusSnapshotSchemaT,
+  type SignalRequestSchemaT,
+  type StepOutputSchemaT,
+  type StepSnapshotSchemaT,
+} from './schemas';
 export interface ValidationIssue {
   path: string;
   code: string;
@@ -27,16 +31,16 @@ export declare class ContractValidationError extends Error {
   toResponse(): ValidationErrorResponse;
 }
 export declare function toValidationErrorResponse(error: unknown): ValidationErrorResponse;
-export declare function parsePlanRef(input: unknown): PlanRef;
-export declare function parseRunContext(input: unknown): RunContext;
-export declare function parseSignalRequest(input: unknown): SignalRequest;
-export declare function parseEngineRunRef(input: unknown): EngineRunRef;
-export declare function parseRunStatusSnapshot(input: unknown): RunStatusSnapshot;
-export declare function parseArtifactRef(input: unknown): ArtifactRef;
-export declare function parseStepOutput(input: unknown): StepOutput;
-export declare function parseCanonicalEngineEvent(input: unknown): CanonicalEngineEvent;
-export declare function parseStepSnapshot(input: unknown): StepSnapshot;
-export declare function parseRunSnapshot(input: unknown): RunSnapshot;
-export declare function parseExecuteStepRequest(input: unknown): ExecuteStepRequest;
-export declare function parseExecuteStepResult(input: unknown): ExecuteStepResult;
+export declare function parsePlanRef(input: unknown): PlanRefSchemaT;
+export declare function parseRunContext(input: unknown): RunContextSchemaT;
+export declare function parseSignalRequest(input: unknown): SignalRequestSchemaT;
+export declare function parseEngineRunRef(input: unknown): EngineRunRefSchemaT;
+export declare function parseRunStatusSnapshot(input: unknown): RunStatusSnapshotSchemaT;
+export declare function parseArtifactRef(input: unknown): ArtifactRefSchemaT;
+export declare function parseStepOutput(input: unknown): StepOutputSchemaT;
+export declare function parseCanonicalEngineEvent(input: unknown): CanonicalEngineEventSchemaT;
+export declare function parseStepSnapshot(input: unknown): StepSnapshotSchemaT;
+export declare function parseRunSnapshot(input: unknown): RunSnapshotSchemaT;
+export declare function parseExecuteStepRequest(input: unknown): ExecuteStepRequestSchemaT;
+export declare function parseExecuteStepResult(input: unknown): ExecuteStepResultSchemaT;
 //# sourceMappingURL=validation.d.ts.map

@@ -15,7 +15,6 @@
  * Use the parse* helpers from ./validation.ts at API boundaries.
  */
 import { z } from 'zod';
-import type { RunStatusSnapshot } from './types/contracts';
 export declare const ProviderSchema: z.ZodEnum<{
   temporal: 'temporal';
   conductor: 'conductor';
@@ -100,12 +99,46 @@ export declare const SignalRequestSchema: z.ZodObject<
   },
   z.core.$strip
 >;
-export declare const RunStatusSnapshotSchema: z.ZodType<RunStatusSnapshot>;
+export declare const RunStatusSnapshotSchema: z.ZodObject<
+  {
+    runId: z.ZodString;
+    status: z.ZodEnum<{
+      PENDING: 'PENDING';
+      APPROVED: 'APPROVED';
+      RUNNING: 'RUNNING';
+      PAUSED: 'PAUSED';
+      COMPLETED: 'COMPLETED';
+      FAILED: 'FAILED';
+      CANCELLED: 'CANCELLED';
+    }>;
+    substatus: z.ZodOptional<
+      z.ZodUnion<
+        readonly [
+          z.ZodEnum<{
+            DRAINING: 'DRAINING';
+            RETRYING: 'RETRYING';
+            CONTINUE_AS_NEW: 'CONTINUE_AS_NEW';
+            WAITING_APPROVAL: 'WAITING_APPROVAL';
+            RECOVERING: 'RECOVERING';
+            CANCELLING: 'CANCELLING';
+          }>,
+          z.ZodString,
+        ]
+      >
+    >;
+    message: z.ZodOptional<z.ZodString>;
+    startedAt: z.ZodOptional<z.ZodString>;
+    completedAt: z.ZodOptional<z.ZodString>;
+    hash: z.ZodOptional<z.ZodString>;
+  },
+  z.core.$strip
+>;
 export declare const EngineRunRefSchema: z.ZodDiscriminatedUnion<
   [
     z.ZodObject<
       {
         provider: z.ZodLiteral<'temporal'>;
+        tenantId: z.ZodString;
         namespace: z.ZodString;
         workflowId: z.ZodString;
         runId: z.ZodString;
@@ -116,6 +149,7 @@ export declare const EngineRunRefSchema: z.ZodDiscriminatedUnion<
     z.ZodObject<
       {
         provider: z.ZodLiteral<'conductor'>;
+        tenantId: z.ZodString;
         workflowId: z.ZodString;
         runId: z.ZodString;
         conductorUrl: z.ZodString;
@@ -125,6 +159,7 @@ export declare const EngineRunRefSchema: z.ZodDiscriminatedUnion<
     z.ZodObject<
       {
         provider: z.ZodLiteral<'mock'>;
+        tenantId: z.ZodString;
         workflowId: z.ZodString;
         runId: z.ZodString;
       },
@@ -309,4 +344,16 @@ export declare const ExecuteStepResultSchema: z.ZodObject<
   },
   z.core.$strip
 >;
+export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
+export type RunContextSchemaT = z.infer<typeof RunContextSchema>;
+export type SignalRequestSchemaT = z.infer<typeof SignalRequestSchema>;
+export type RunStatusSnapshotSchemaT = z.infer<typeof RunStatusSnapshotSchema>;
+export type EngineRunRefSchemaT = z.infer<typeof EngineRunRefSchema>;
+export type ArtifactRefSchemaT = z.infer<typeof ArtifactRefSchema>;
+export type StepOutputSchemaT = z.infer<typeof StepOutputSchema>;
+export type CanonicalEngineEventSchemaT = z.infer<typeof CanonicalEngineEventSchema>;
+export type StepSnapshotSchemaT = z.infer<typeof StepSnapshotSchema>;
+export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
+export type ExecuteStepRequestSchemaT = z.infer<typeof ExecuteStepRequestSchema>;
+export type ExecuteStepResultSchemaT = z.infer<typeof ExecuteStepResultSchema>;
 //# sourceMappingURL=schemas.d.ts.map
