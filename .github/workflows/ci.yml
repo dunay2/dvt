@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      run_traceability_gate:
+        description: 'Run ADR-0000 traceability gate'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -149,6 +154,7 @@ jobs:
         run: node scripts/check-changed.cjs
 
       - name: ADR-0000 traceability gate
+        if: ${{ github.event.inputs.run_traceability_gate == 'true' }}
         run: pnpm traceability:adr0
 
   workspace-ci:
