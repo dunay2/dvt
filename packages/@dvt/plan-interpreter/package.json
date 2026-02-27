@@ -1,0 +1,17 @@
+{
+  "name": "@dvt/plan-interpreter",
+  "version": "1.0.0",
+  "description": "Shared plan interpretation: DAG analysis, execution layer computation, and validation. Consumed by all adapter implementations.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --config vitest.config.cjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

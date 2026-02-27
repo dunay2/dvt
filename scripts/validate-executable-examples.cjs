@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-/* global console, process, __dirname */
 
 /**
  * Validate executable TypeScript examples embedded in contract markdown docs.

@@ -1,0 +1,2146 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Run Events Contract (Normative v2.0.1) - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#run-events-contract-normative-v201" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Run Events Contract (Normative v2.0.1)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-scope-and-event-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Scope and Event Catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) Scope and Event Catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-scope-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Scope (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-known-lifecycle-events-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Known Lifecycle Events (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-forward-compatibility-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Forward Compatibility (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-event-envelope-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Event Envelope Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) Event Envelope Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-required-fields-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Required Fields (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-stepid-applicability-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 stepId Applicability (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-timestamp-authority-split-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Timestamp Authority Split (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-attempts-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Attempts (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-eventid-stability-under-retries-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 eventId Stability Under Retries (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#251-producer-eventid-registry-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.1 Producer EventId Registry (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#252-temporalruntime-notes-informative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5.2 Temporal/Runtime Notes (INFORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-payload-presence-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 payload Presence (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-idempotency-and-duplicate-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Idempotency and Duplicate Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3) Idempotency and Duplicate Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-idempotency-derivation-normative-breaking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Idempotency Derivation (NORMATIVE, BREAKING)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-duplicate-handling-normative-breaking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Duplicate Handling (NORMATIVE, BREAKING)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-conformance-tests-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Conformance Tests (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-two-phase-event-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Two-Phase Event Shapes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-state-transition-mapping-and-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) State Transition Mapping and Enforcement
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5) State Transition Mapping and Enforcement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-run-level-transition-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Run-Level Transition Mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-step-level-transition-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Step-Level Transition Mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-transition-enforcement-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Transition Enforcement (NORMATIVE)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.3 Transition Enforcement (NORMATIVE)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layer-1-producer-guard-engine-domain-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 1 — Producer Guard (Engine domain) (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-2-append-authority-optional-validation-statestore-normative-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 2 — Append Authority Optional Validation (StateStore) (NORMATIVE OPTIONAL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-3-projector-reduction-validation-mandatory-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 3 — Projector Reduction Validation (MANDATORY) (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-invalid-transition-alert-payload-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Invalid Transition Alert Payload (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-change-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Change Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-decisions-risks-informative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A — Decisions &amp; Risks (INFORMATIVE)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix A — Decisions &amp; Risks (INFORMATIVE)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a1-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.1 Decisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a2-risks-and-mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A.2 Risks and Mitigations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-golden-test-vectors-informative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B — Golden Test Vectors (INFORMATIVE)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix B — Golden Test Vectors (INFORMATIVE)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vector-1-step-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vector 1 (step-level)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vector-2-run-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vector 2 (run-level)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vector-3-step-level-logicalattemptid2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vector 3 (step-level, logicalAttemptId=2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vector-4-run-level-planversion3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vector 4 (run-level, planVersion=3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vector-5-step-level-different-stepid-planversion1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vector 5 (step-level, different stepId, planVersion=1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#machine-readable-vectors-informative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Machine-readable vectors (INFORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="run-events-contract-normative-v201">Run Events Contract (Normative v2.0.1)<a class="headerlink" href="#run-events-contract-normative-v201" title="Permanent link">&para;</a></h1>
+<p><strong>Status</strong>: Normative (MUST / MUST NOT)<br />
+<strong>Version</strong>: 2.0.1<br />
+<strong>Stability</strong>: Contracts — breaking changes require major version bump<br />
+<strong>Consumers</strong>: StateStore (Append Authority), Projectors, UI, Audit Systems<br />
+<strong>Parent Contract</strong>: <a href="../IWorkflowEngine.v2.0/"><code>IWorkflowEngine.v2.0.md</code></a><br />
+<strong>References</strong>: <a href="../ExecutionSemantics.v2.0/"><code>ExecutionSemantics.v2.0.md</code></a>, <a href="../../state-store/IRunStateStore.v2.0/"><code>IRunStateStore.v2.0.md</code></a>, SignalsAndAuth v1.1 (pending publication), <a href="../AgnosticEventLayerStrategy.v2.0.1/"><code>AgnosticEventLayerStrategy.v2.0.1.md</code></a></p>
+<p><strong>Normative keywords</strong>: The key words “MUST”, “MUST NOT”, “SHOULD”, “SHOULD NOT”, “MAY” in this document are to be interpreted as described in BCP 14 (RFC 2119 and RFC 8174).</p>
+<hr />
+<h2 id="1-scope-and-event-catalog">1) Scope and Event Catalog<a class="headerlink" href="#1-scope-and-event-catalog" title="Permanent link">&para;</a></h2>
+<h3 id="11-scope-normative">1.1 Scope (NORMATIVE)<a class="headerlink" href="#11-scope-normative" title="Permanent link">&para;</a></h3>
+<p>This contract governs run and step lifecycle events emitted by the Engine domain:</p>
+<ul>
+<li>engine runtime,</li>
+<li>workers/activities owned by the engine adapter.</li>
+</ul>
+<p>Signal decision events (<code>SignalAccepted</code>, <code>SignalRejected</code>) are out of scope and remain defined in SignalsAndAuth v1.1 (pending publication).</p>
+<h3 id="12-known-lifecycle-events-normative">1.2 Known Lifecycle Events (NORMATIVE)<a class="headerlink" href="#12-known-lifecycle-events-normative" title="Permanent link">&para;</a></h3>
+<p>Known lifecycle events are:</p>
+<ul>
+<li><code>RunQueued</code></li>
+<li><code>RunStarted</code></li>
+<li><code>StepStarted</code></li>
+<li><code>StepCompleted</code></li>
+<li><code>StepFailed</code></li>
+<li><code>StepSkipped</code></li>
+<li><code>RunPaused</code></li>
+<li><code>RunResumed</code></li>
+<li><code>RunCompleted</code></li>
+<li><code>RunFailed</code></li>
+<li><code>RunCancelled</code></li>
+</ul>
+<p><code>RunQueued</code> MAY be emitted by admission-control components (inside or outside engine boundary). If emitted, it MUST comply with this envelope model.</p>
+<h3 id="13-forward-compatibility-normative">1.3 Forward Compatibility (NORMATIVE)<a class="headerlink" href="#13-forward-compatibility-normative" title="Permanent link">&para;</a></h3>
+<p>Consumers MUST tolerate unknown <code>eventType</code> values, treat them as opaque for display/logging, and still advance watermarks deterministically. In this contract, a 'watermark' is a consumer checkpoint for deterministic ingestion progress. When consuming persisted <code>RunEventRecord</code>, consumers MUST advance the watermark using <code>(runId, runSeq)</code> order. If consuming a non-persisted stream (<code>RunEventWrite</code>) without <code>runSeq</code>/<code>persistedAt</code>, the consumer MUST define a deterministic checkpoint strategy (for example, ingestion offset) and MUST NOT use that stream to mutate authoritative derived state unless documented. Unknown <code>eventType</code> values MUST NOT mutate derived run/step state unless the consumer explicitly implements documented semantics for that <code>eventType</code>.</p>
+<hr />
+<h2 id="2-event-envelope-requirements">2) Event Envelope Requirements<a class="headerlink" href="#2-event-envelope-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="21-required-fields-normative">2.1 Required Fields (NORMATIVE)<a class="headerlink" href="#21-required-fields-normative" title="Permanent link">&para;</a></h3>
+<p>All events MUST include:</p>
+<ul>
+<li><code>eventId</code> (UUID v4)</li>
+<li><code>eventType</code></li>
+<li><code>runId</code></li>
+<li><code>tenantId</code>, <code>projectId</code>, <code>environmentId</code></li>
+<li><code>planId</code>, <code>planVersion</code></li>
+<li><code>engineAttemptId</code> (number)</li>
+<li><code>logicalAttemptId</code> (number)</li>
+<li><code>idempotencyKey</code></li>
+<li><code>emittedAt</code> (producer clock timestamp, RFC 3339 UTC)</li>
+</ul>
+<h3 id="22-stepid-applicability-normative">2.2 stepId Applicability (NORMATIVE)<a class="headerlink" href="#22-stepid-applicability-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Step-level events (<code>StepStarted</code>, <code>StepCompleted</code>, <code>StepFailed</code>, <code>StepSkipped</code>): <code>stepId</code> MUST be present and non-empty.</li>
+<li>Run-level events: <code>stepId</code> MUST NOT be present.</li>
+</ul>
+<h3 id="23-timestamp-authority-split-normative">2.3 Timestamp Authority Split (NORMATIVE)<a class="headerlink" href="#23-timestamp-authority-split-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>emittedAt</code> = producer time (engine/worker clock)</li>
+<li><code>persistedAt</code> = Append Authority time (StateStore server clock)</li>
+</ul>
+<p>For time-window queries, audit windows, and authoritative temporal slicing, consumers MUST use <code>persistedAt</code> when processing persisted records.</p>
+<h3 id="24-attempts-normative">2.4 Attempts (NORMATIVE)<a class="headerlink" href="#24-attempts-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>logicalAttemptId</code> MUST start at <code>1</code>.</li>
+<li><code>engineAttemptId</code> MUST be present in every event.</li>
+<li>If provider runtime does not expose attempts, producer MUST set <code>engineAttemptId = 1</code>.</li>
+<li>Producers MUST NOT increment <code>engineAttemptId</code> artificially.</li>
+</ul>
+<h3 id="25-eventid-stability-under-retries-normative">2.5 eventId Stability Under Retries (NORMATIVE)<a class="headerlink" href="#25-eventid-stability-under-retries-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Producers MUST reuse the same <code>eventId</code> for the same <code>idempotencyKey</code> across retries.</li>
+<li>If producer reuse cannot be guaranteed:</li>
+<li>Append Authority MUST treat persisted record metadata as authoritative.</li>
+<li>Append Authority MUST return existing metadata (<code>eventId</code>, <code>runSeq</code>, <code>persistedAt</code>).</li>
+<li>Callers MUST accept returned metadata.</li>
+</ul>
+<h3 id="251-producer-eventid-registry-normative">2.5.1 Producer EventId Registry (NORMATIVE)<a class="headerlink" href="#251-producer-eventid-registry-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Producers MUST maintain a per-run mapping <code>EventIdRegistry</code> keyed by <code>(runId, idempotencyKey)</code> returning a stable <code>eventId</code> (UUID v4).</li>
+<li>On first emission for a given <code>(runId, idempotencyKey)</code>, the producer MUST:</li>
+<li>generate a new UUID v4 as <code>eventId</code>,</li>
+<li>write it into <code>EventIdRegistry</code> BEFORE attempting append, and</li>
+<li>reuse the same <code>eventId</code> for all retries of that event.</li>
+<li><code>EventIdRegistry</code> MUST survive producer retries/restarts that can re-emit the same logical event. Accepted durability mechanisms:</li>
+<li>Deterministic workflow state replay (e.g., workflow memory/state that replays identically), OR</li>
+<li>Durable per-run storage scoped to <code>(runId, idempotencyKey)</code> with idempotent writes.</li>
+<li>Producers MUST NOT derive <code>eventId</code> deterministically from inputs (UUID v5 or hashes are NOT allowed) because <code>eventId</code> MUST be UUID v4.</li>
+<li>If the producer cannot guarantee registry durability (e.g., crash before registry write), it MAY generate a new UUID v4 on retry, BUT then it MUST accept Append Authority’s returned metadata as authoritative and MUST update <code>EventIdRegistry</code> to the returned <code>eventId</code> for the remainder of the run.</li>
+</ul>
+<h3 id="252-temporalruntime-notes-informative">2.5.2 Temporal/Runtime Notes (INFORMATIVE)<a class="headerlink" href="#252-temporalruntime-notes-informative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>For Temporal TypeScript Workflows, UUID v4 generation MUST be determinism-safe. Use Temporal’s workflow-safe UUID helper rather than a standard non-deterministic UUID library in workflow code.</li>
+<li>Activities may generate UUIDs safely because their results are recorded in history, but the producer still MUST preserve <code>(runId, idempotencyKey) → eventId</code> stability across retries via the registry rules above.</li>
+</ul>
+<p>References:</p>
+<ul>
+<li><a href="https://typescript.temporal.io/api/modules/workflow#uuid4">https://typescript.temporal.io/api/modules/workflow#uuid4</a></li>
+<li><a href="https://community.temporal.io/t/uuid-from-workflow-sdk-vs-via-activity/8536">https://community.temporal.io/t/uuid-from-workflow-sdk-vs-via-activity/8536</a></li>
+</ul>
+<h3 id="26-payload-presence-normative">2.6 payload Presence (NORMATIVE)<a class="headerlink" href="#26-payload-presence-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>If an event carries event-specific data (errors, outputs, skip reasons, pause/resume/cancel reasons), producer MUST include <code>payload</code>.</li>
+<li>If no additional data exists, <code>payload</code> MAY be omitted.</li>
+</ul>
+<hr />
+<h2 id="3-idempotency-and-duplicate-handling">3) Idempotency and Duplicate Handling<a class="headerlink" href="#3-idempotency-and-duplicate-handling" title="Permanent link">&para;</a></h2>
+<h3 id="31-idempotency-derivation-normative-breaking">3.1 Idempotency Derivation (NORMATIVE, BREAKING)<a class="headerlink" href="#31-idempotency-derivation-normative-breaking" title="Permanent link">&para;</a></h3>
+<p><code>idempotencyKey</code> MUST be derived exactly as:</p>
+<pre><code class="language-text">SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planId | planVersion)
+</code></pre>
+<p>Derivation requirements:</p>
+<ol>
+<li>Field set MUST be exactly the six fields above.</li>
+<li>Field order MUST be exactly as shown.</li>
+<li>Hash algorithm MUST be SHA-256.</li>
+<li>Delimiter MUST be the literal character <code>|</code>.</li>
+<li>Preimage string encoding MUST be UTF-8.
+   All string fields (runId, stepId, eventType, planId, planVersion) are used verbatim, case-sensitive, without trimming or Unicode normalization.</li>
+<li>Numeric rendering for <code>logicalAttemptId</code> MUST be base-10 ASCII with no leading zeros (except literal <code>0</code>).</li>
+<li><code>stepIdNormalized</code> rules:</li>
+<li>step-level events: <code>stepIdNormalized = stepId</code></li>
+<li>run-level events: <code>stepIdNormalized = 'RUN'</code></li>
+<li><code>tenantId</code>, <code>projectId</code>, <code>environmentId</code>, and <code>engineAttemptId</code> MUST NOT participate in derivation.</li>
+<li><code>runId</code>, <code>eventType</code>, <code>planId</code>, and <code>planVersion</code> MUST NOT contain <code>|</code>. <code>stepId</code> MUST NOT contain <code>|</code> when present.</li>
+</ol>
+<p>Any implementation that changes ordering, delimiter, encoding, algorithm, normalization, or includes forbidden fields is NOT compliant with v2.0.1.</p>
+<h3 id="32-duplicate-handling-normative-breaking">3.2 Duplicate Handling (NORMATIVE, BREAKING)<a class="headerlink" href="#32-duplicate-handling-normative-breaking" title="Permanent link">&para;</a></h3>
+<p>If an event with the same <code>(runId, idempotencyKey)</code> already exists, Append Authority MUST:</p>
+<ol>
+<li>Succeed,</li>
+<li>Return existing metadata at minimum: <code>eventId</code>, <code>runSeq</code>, <code>persistedAt</code>,</li>
+<li>MUST NOT insert a duplicate record.</li>
+</ol>
+<p>Reject-on-duplicate behavior is NOT compliant in v2.0.1.</p>
+<hr />
+<h2 id="33-conformance-tests-normative">3.3 Conformance Tests (NORMATIVE)<a class="headerlink" href="#33-conformance-tests-normative" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Implementations MUST provide golden test vectors for <code>idempotencyKey</code> derivation covering:</li>
+<li>run-level events (stepIdNormalized = 'RUN')</li>
+<li>step-level events (stepIdNormalized = stepId)</li>
+<li>multiple logicalAttemptId values</li>
+<li>multiple planVersion values</li>
+<li>Tests MUST assert:</li>
+<li>exact UTF-8 preimage formatting,</li>
+<li>exact delimiter usage (<code>|</code>),</li>
+<li>SHA-256 output matches expected hex digest,</li>
+<li>forbidden fields do not affect output.</li>
+<li>The contract repository MUST include at least 5 vectors in a machine-readable form named <code>RunEvents.v2.0.1.idempotency_vectors.json</code> stored next to this contract.</li>
+</ul>
+<hr />
+<h2 id="4-two-phase-event-shapes">4) Two-Phase Event Shapes<a class="headerlink" href="#4-two-phase-event-shapes" title="Permanent link">&para;</a></h2>
+<pre><code class="language-ts">type KnownRunEventType =
+  | 'RunQueued'
+  | 'RunStarted'
+  | 'StepStarted'
+  | 'StepCompleted'
+  | 'StepFailed'
+  | 'StepSkipped'
+  | 'RunPaused'
+  | 'RunResumed'
+  | 'RunCompleted'
+  | 'RunFailed'
+  | 'RunCancelled';
+
+type RunEventType = KnownRunEventType | (string &amp; {});
+
+interface RunEventWrite {
+  eventId: string; // UUID v4
+  eventType: RunEventType;
+  emittedAt: string; // RFC 3339 UTC (producer clock)
+  runId: string;
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  planId: string;
+  planVersion: string;
+  engineAttemptId: number;
+  logicalAttemptId: number;
+  idempotencyKey: string;
+  stepId?: string; // constrained by section 2.2
+  payload?: Record&lt;string, unknown&gt;;
+}
+
+interface RunEventRecord extends RunEventWrite {
+  runSeq: number; // monotonic per runId; gaps allowed
+  persistedAt: string; // RFC 3339 UTC (Append Authority clock)
+}
+</code></pre>
+<p><code>persistedAt</code> MUST be present in <code>RunEventRecord</code>.</p>
+<hr />
+<h2 id="5-state-transition-mapping-and-enforcement">5) State Transition Mapping and Enforcement<a class="headerlink" href="#5-state-transition-mapping-and-enforcement" title="Permanent link">&para;</a></h2>
+<h3 id="51-run-level-transition-mapping">5.1 Run-Level Transition Mapping<a class="headerlink" href="#51-run-level-transition-mapping" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Status Transition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RunStarted</code></td>
+<td><code>RUNNING</code></td>
+</tr>
+<tr>
+<td><code>RunPaused</code></td>
+<td><code>PAUSED</code></td>
+</tr>
+<tr>
+<td><code>RunResumed</code></td>
+<td><code>RUNNING</code></td>
+</tr>
+<tr>
+<td><code>RunCompleted</code></td>
+<td><code>COMPLETED</code></td>
+</tr>
+<tr>
+<td><code>RunFailed</code></td>
+<td><code>FAILED</code></td>
+</tr>
+<tr>
+<td><code>RunCancelled</code></td>
+<td><code>CANCELLED</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-step-level-transition-mapping">5.2 Step-Level Transition Mapping<a class="headerlink" href="#52-step-level-transition-mapping" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Step Transition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>StepStarted</code></td>
+<td><code>PENDING</code> → <code>RUNNING</code></td>
+</tr>
+<tr>
+<td><code>StepCompleted</code></td>
+<td><code>RUNNING</code> → <code>SUCCESS</code></td>
+</tr>
+<tr>
+<td><code>StepFailed</code></td>
+<td><code>RUNNING</code> → <code>FAILED</code></td>
+</tr>
+<tr>
+<td><code>StepSkipped</code></td>
+<td><code>PENDING</code> → <code>SKIPPED</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-transition-enforcement-normative">5.3 Transition Enforcement (NORMATIVE)<a class="headerlink" href="#53-transition-enforcement-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Enforcement MUST be implemented as three layers with the responsibilities below. The system is compliant ONLY if Layer 3 is implemented.</li>
+</ul>
+<h4 id="layer-1-producer-guard-engine-domain-normative">Layer 1 — Producer Guard (Engine domain) (NORMATIVE)<a class="headerlink" href="#layer-1-producer-guard-engine-domain-normative" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Producers MUST validate the current derived state they believe to be true before emitting the next transition event.</li>
+<li>Producers MUST NOT emit an invalid transition event.</li>
+<li>If invalid transition is detected locally:</li>
+<li>Producers MUST stop further emission for the affected entity (run/step) and surface an internal error.</li>
+<li>Producers MAY emit <code>RunFailed</code> with payload describing <code>invalidTransitionDetected</code>, ONLY IF doing so does not itself violate run-level sequencing assumptions in their runtime; if uncertain, producers SHOULD emit no further lifecycle events and rely on Layer 3 to flag inconsistency.</li>
+<li>Producers MAY emit <code>StepFailed</code> ONLY if the producer’s current derived step state is <code>RUNNING</code>; otherwise producers MUST NOT emit <code>StepFailed</code>.</li>
+<li>Payload for this condition MUST include <code>invalidTransitionDetected=true</code>, <code>expectedState</code>, <code>actualState</code>, and <code>attemptedEventType</code>.</li>
+</ul>
+<h4 id="layer-2-append-authority-optional-validation-statestore-normative-optional">Layer 2 — Append Authority Optional Validation (StateStore) (NORMATIVE OPTIONAL)<a class="headerlink" href="#layer-2-append-authority-optional-validation-statestore-normative-optional" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Append Authority MAY validate transitions at append-time to reduce bad data entering the log.</li>
+<li>Append Authority MUST NOT be the only enforcement layer.</li>
+<li>If Append Authority performs validation, on invalid transition it MUST NOT write a record and MUST return a deterministic rejection using machine-readable code <code>INVALID_TRANSITION</code>.</li>
+<li>For invalid transitions rejected before append, §3.2 does not apply because no persisted event exists for that key.</li>
+<li>Retries of the same invalid append MUST return the same deterministic rejection (same error code and metadata), and MUST NOT create a record.</li>
+</ul>
+<h4 id="layer-3-projector-reduction-validation-mandatory-normative">Layer 3 — Projector Reduction Validation (MANDATORY) (NORMATIVE)<a class="headerlink" href="#layer-3-projector-reduction-validation-mandatory-normative" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Projectors MUST validate transitions while reducing the append-only event stream into derived state.</li>
+<li>On invalid transition, projectors MUST:</li>
+<li>raise an operational alert,</li>
+<li>MUST NOT corrupt derived state,</li>
+<li>apply a deterministic handling policy chosen below and documented:<ul>
+<li>Policy A (RECOMMENDED): ignore the invalid event for state mutation and mark the run as <code>INCONSISTENT</code> in derived metadata (without changing terminal status), OR</li>
+<li>Policy B: freeze further reductions for that <code>runId</code> at the last valid <code>runSeq</code> and mark run as <code>STALLED_INVALID_TRANSITION</code>.</li>
+</ul>
+</li>
+<li>The chosen policy MUST be consistent across deployments and MUST be test-covered.</li>
+</ul>
+<h3 id="54-invalid-transition-alert-payload-normative">5.4 Invalid Transition Alert Payload (NORMATIVE)<a class="headerlink" href="#54-invalid-transition-alert-payload-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Alerts emitted/logged by projectors for invalid transitions MUST include at minimum:</li>
+<li>runId, tenantId, projectId, environmentId</li>
+<li>offending eventId, eventType, runSeq, persistedAt</li>
+<li>prior derived state and attempted next state</li>
+<li>a machine-readable code: <code>INVALID_TRANSITION</code></li>
+<li>Alerts MUST be idempotent per <code>(runId, offending eventId)</code>.</li>
+</ul>
+<hr />
+<h2 id="6-change-log">6) Change Log<a class="headerlink" href="#6-change-log" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>2.0.1 (2026-02-16)</strong>: PATCH — clarified producer-side <code>eventId</code> tracking requirements and specified a three-layer transition enforcement architecture with deterministic invalid-transition handling; added conformance test requirements and golden vectors for idempotency derivation.</li>
+<li><strong>2.0.0 (2026-02-16)</strong>: <strong>MAJOR</strong> — <code>eventId</code> REQUIRED; idempotency formula now includes <code>planId</code> + <code>planVersion</code> with strict SHA-256, ordered derivation, <code>|</code> delimiter, and <code>RUN</code> normalization; duplicate handling changed to return-existing metadata and no insert; lifecycle catalog explicitly includes <code>RunQueued</code>; <code>eventType</code> made forward-compatible; <code>stepId</code> MUST/MUST NOT applicability made strict; <code>eventId</code> retry-stability rule added; payload presence rule added; transition enforcement responsibilities added; scope clarified to engine runtime plus adapter-owned workers/activities; attempt fallback (<code>engineAttemptId = 1</code>) formalized; timestamp authority split (<code>emittedAt</code> vs <code>persistedAt</code>) formalized.</li>
+</ul>
+<hr />
+<h2 id="appendix-a-decisions-risks-informative">Appendix A — Decisions &amp; Risks (INFORMATIVE)<a class="headerlink" href="#appendix-a-decisions-risks-informative" title="Permanent link">&para;</a></h2>
+<h3 id="a1-decisions">A.1 Decisions<a class="headerlink" href="#a1-decisions" title="Permanent link">&para;</a></h3>
+<p><strong>D0 — Separation of concerns alignment (INFORMATIVE)</strong><br />
+Decision: this scope is aligned with the product principles: UI does not execute, engine does not decide, planner does not persist state, and StateStore/Append Authority is the source of truth.<br />
+Reason: preserves clear ownership boundaries across planning, execution, and persistence.</p>
+<p><strong>D1 — Strict idempotency derivation</strong><br />
+Decision: strict SHA-256 derivation with fixed order, fixed delimiter, fixed normalization.<br />
+Reason: prevents cross-language drift and preserves deterministic retries/business dedup.</p>
+<p><strong>D2 — Include <code>planId</code> + <code>planVersion</code> in idempotency</strong><br />
+Decision: both identifiers are mandatory inputs to key derivation.<br />
+Reason: prevents collisions across plan lineage and version boundaries.</p>
+<p><strong>D3 — Duplicate policy is return-existing</strong><br />
+Decision: reject-on-duplicate prohibited; append must return existing metadata.<br />
+Reason: enables safe retries in distributed systems.</p>
+<p><strong>D4 — Timestamp authority split</strong><br />
+Decision: producer clock (<code>emittedAt</code>) separated from append authority clock (<code>persistedAt</code>).<br />
+Reason: producer skew is expected; authoritative audit/time slicing requires append-time clock.</p>
+<p><strong>D5 — Engine domain ownership includes adapter workers/activities</strong><br />
+Decision: event ownership includes runtime plus adapter-owned workers/activities.<br />
+Reason: matches real distributed topology and clarifies accountability boundaries.</p>
+<h3 id="a2-risks-and-mitigations">A.2 Risks and Mitigations<a class="headerlink" href="#a2-risks-and-mitigations" title="Permanent link">&para;</a></h3>
+<p><strong>R1 — Producer clock skew</strong><br />
+Mitigation: use <code>persistedAt</code> for windows and audit slicing.</p>
+<p><strong>R2 — Mixed v1/v2 streams during rollout</strong><br />
+Mitigation: define a bounded compatibility window; during that window, projectors apply deterministic normalization before reduction.</p>
+<p><strong>R3 — Canonicalization drift in key derivation</strong><br />
+Mitigation: exact algorithm/ordering/delimiter/encoding rules plus golden test vectors and shared helper implementation.</p>
+<p><strong>R4 — <code>runSeq</code> concurrency contention</strong><br />
+Mitigation: Append Authority remains the sole transactional ordering authority.</p>
+<p><strong>R5 — Event volume and cost growth</strong><br />
+Mitigation: retention tiers, archival policy, and replay boundaries.</p>
+<p><strong>R6 — Orchestrator behavior differences (Temporal vs Conductor)</strong><br />
+Mitigation: projector transition validation, deterministic invalid-transition policy, and operational alerting.</p>
+<p><strong>R7 — eventId instability under crash-before-registry-write</strong><br />
+Mitigation: Producer EventIdRegistry durability + accept returned metadata + update registry.</p>
+<p><strong>R8 — Divergent invalid-transition handling across environments</strong><br />
+Mitigation: mandate a single documented projector policy (A or B) + tests.</p>
+<hr />
+<h2 id="appendix-b-golden-test-vectors-informative">Appendix B — Golden Test Vectors (INFORMATIVE)<a class="headerlink" href="#appendix-b-golden-test-vectors-informative" title="Permanent link">&para;</a></h2>
+<p>The vectors below are copy/paste-safe conformance fixtures for <code>idempotencyKey</code> derivation under section 3.1.</p>
+<h3 id="vector-1-step-level">Vector 1 (step-level)<a class="headerlink" href="#vector-1-step-level" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>runId</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a</code></li>
+<li><code>stepId</code> = <code>model.orders</code></li>
+<li><code>stepIdNormalized</code> = <code>model.orders</code></li>
+<li><code>logicalAttemptId</code> = <code>1</code></li>
+<li><code>eventType</code> = <code>StepStarted</code></li>
+<li><code>planId</code> = <code>plan_abc</code></li>
+<li><code>planVersion</code> = <code>2</code></li>
+<li><code>preimage</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|model.orders|1|StepStarted|plan_abc|2</code></li>
+<li><code>expectedSha256Hex</code> = <code>7f4b974658a54fb2aee9ecb9cefebd2eec27f3fd01f0f8c0d031dfc4a5b96e3c</code></li>
+</ul>
+<h3 id="vector-2-run-level">Vector 2 (run-level)<a class="headerlink" href="#vector-2-run-level" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>runId</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a</code></li>
+<li><code>stepIdNormalized</code> = <code>RUN</code></li>
+<li><code>logicalAttemptId</code> = <code>1</code></li>
+<li><code>eventType</code> = <code>RunStarted</code></li>
+<li><code>planId</code> = <code>plan_abc</code></li>
+<li><code>planVersion</code> = <code>2</code></li>
+<li><code>preimage</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|RUN|1|RunStarted|plan_abc|2</code></li>
+<li><code>expectedSha256Hex</code> = <code>204197f81e5dc1a8491d8e411c440a730c51a741cd48a74863d3e5c4c452640d</code></li>
+</ul>
+<h3 id="vector-3-step-level-logicalattemptid2">Vector 3 (step-level, logicalAttemptId=2)<a class="headerlink" href="#vector-3-step-level-logicalattemptid2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>runId</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a</code></li>
+<li><code>stepId</code> = <code>model.orders</code></li>
+<li><code>stepIdNormalized</code> = <code>model.orders</code></li>
+<li><code>logicalAttemptId</code> = <code>2</code></li>
+<li><code>eventType</code> = <code>StepFailed</code></li>
+<li><code>planId</code> = <code>plan_abc</code></li>
+<li><code>planVersion</code> = <code>2</code></li>
+<li><code>preimage</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|model.orders|2|StepFailed|plan_abc|2</code></li>
+<li><code>expectedSha256Hex</code> = <code>599945c1a8023ece5d2ae5132a4397b8cfbe9fa1c4c08d6fc4193a9bd9a2ebcd</code></li>
+</ul>
+<h3 id="vector-4-run-level-planversion3">Vector 4 (run-level, planVersion=3)<a class="headerlink" href="#vector-4-run-level-planversion3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>runId</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a</code></li>
+<li><code>stepIdNormalized</code> = <code>RUN</code></li>
+<li><code>logicalAttemptId</code> = <code>1</code></li>
+<li><code>eventType</code> = <code>RunFailed</code></li>
+<li><code>planId</code> = <code>plan_abc</code></li>
+<li><code>planVersion</code> = <code>3</code></li>
+<li><code>preimage</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|RUN|1|RunFailed|plan_abc|3</code></li>
+<li><code>expectedSha256Hex</code> = <code>b5a178e6f30962ca3d17b573c0d4c5f96d7623be5fe62a972644785fc05a003b</code></li>
+</ul>
+<h3 id="vector-5-step-level-different-stepid-planversion1">Vector 5 (step-level, different stepId, planVersion=1)<a class="headerlink" href="#vector-5-step-level-different-stepid-planversion1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>runId</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a</code></li>
+<li><code>stepId</code> = <code>seed.customers</code></li>
+<li><code>stepIdNormalized</code> = <code>seed.customers</code></li>
+<li><code>logicalAttemptId</code> = <code>1</code></li>
+<li><code>eventType</code> = <code>StepSkipped</code></li>
+<li><code>planId</code> = <code>plan_abc</code></li>
+<li><code>planVersion</code> = <code>1</code></li>
+<li><code>preimage</code> = <code>0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|seed.customers|1|StepSkipped|plan_abc|1</code></li>
+<li><code>expectedSha256Hex</code> = <code>6bfdbe26d62eac0c00cf2683aae31115e76e4d33d515e39957627be091367b31</code></li>
+</ul>
+<h3 id="machine-readable-vectors-informative">Machine-readable vectors (INFORMATIVE)<a class="headerlink" href="#machine-readable-vectors-informative" title="Permanent link">&para;</a></h3>
+<pre><code class="language-json">[
+  {
+    &quot;name&quot;: &quot;vector-1-step-started&quot;,
+    &quot;runId&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a&quot;,
+    &quot;stepId&quot;: &quot;model.orders&quot;,
+    &quot;stepIdNormalized&quot;: &quot;model.orders&quot;,
+    &quot;logicalAttemptId&quot;: 1,
+    &quot;eventType&quot;: &quot;StepStarted&quot;,
+    &quot;planId&quot;: &quot;plan_abc&quot;,
+    &quot;planVersion&quot;: &quot;2&quot;,
+    &quot;preimage&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|model.orders|1|StepStarted|plan_abc|2&quot;,
+    &quot;expectedSha256Hex&quot;: &quot;7f4b974658a54fb2aee9ecb9cefebd2eec27f3fd01f0f8c0d031dfc4a5b96e3c&quot;
+  },
+  {
+    &quot;name&quot;: &quot;vector-2-run-started&quot;,
+    &quot;runId&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a&quot;,
+    &quot;stepIdNormalized&quot;: &quot;RUN&quot;,
+    &quot;logicalAttemptId&quot;: 1,
+    &quot;eventType&quot;: &quot;RunStarted&quot;,
+    &quot;planId&quot;: &quot;plan_abc&quot;,
+    &quot;planVersion&quot;: &quot;2&quot;,
+    &quot;preimage&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|RUN|1|RunStarted|plan_abc|2&quot;,
+    &quot;expectedSha256Hex&quot;: &quot;204197f81e5dc1a8491d8e411c440a730c51a741cd48a74863d3e5c4c452640d&quot;
+  },
+  {
+    &quot;name&quot;: &quot;vector-3-step-failed-attempt-2&quot;,
+    &quot;runId&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a&quot;,
+    &quot;stepId&quot;: &quot;model.orders&quot;,
+    &quot;stepIdNormalized&quot;: &quot;model.orders&quot;,
+    &quot;logicalAttemptId&quot;: 2,
+    &quot;eventType&quot;: &quot;StepFailed&quot;,
+    &quot;planId&quot;: &quot;plan_abc&quot;,
+    &quot;planVersion&quot;: &quot;2&quot;,
+    &quot;preimage&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|model.orders|2|StepFailed|plan_abc|2&quot;,
+    &quot;expectedSha256Hex&quot;: &quot;599945c1a8023ece5d2ae5132a4397b8cfbe9fa1c4c08d6fc4193a9bd9a2ebcd&quot;
+  },
+  {
+    &quot;name&quot;: &quot;vector-4-run-failed-plan-v3&quot;,
+    &quot;runId&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a&quot;,
+    &quot;stepIdNormalized&quot;: &quot;RUN&quot;,
+    &quot;logicalAttemptId&quot;: 1,
+    &quot;eventType&quot;: &quot;RunFailed&quot;,
+    &quot;planId&quot;: &quot;plan_abc&quot;,
+    &quot;planVersion&quot;: &quot;3&quot;,
+    &quot;preimage&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|RUN|1|RunFailed|plan_abc|3&quot;,
+    &quot;expectedSha256Hex&quot;: &quot;b5a178e6f30962ca3d17b573c0d4c5f96d7623be5fe62a972644785fc05a003b&quot;
+  },
+  {
+    &quot;name&quot;: &quot;vector-5-step-skipped-customers-v1&quot;,
+    &quot;runId&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a&quot;,
+    &quot;stepId&quot;: &quot;seed.customers&quot;,
+    &quot;stepIdNormalized&quot;: &quot;seed.customers&quot;,
+    &quot;logicalAttemptId&quot;: 1,
+    &quot;eventType&quot;: &quot;StepSkipped&quot;,
+    &quot;planId&quot;: &quot;plan_abc&quot;,
+    &quot;planVersion&quot;: &quot;1&quot;,
+    &quot;preimage&quot;: &quot;0d3c6a9e-4f0c-4a8e-9d5d-3d4c0f7dbb8a|seed.customers|1|StepSkipped|plan_abc|1&quot;,
+    &quot;expectedSha256Hex&quot;: &quot;6bfdbe26d62eac0c00cf2683aae31115e76e4d33d515e39957627be091367b31&quot;
+  }
+]
+</code></pre>
+<hr />
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li>BCP14 (RFC 2119 / RFC 8174): <a href="https://www.rfc-editor.org/bcp/bcp14.txt">https://www.rfc-editor.org/bcp/bcp14.txt</a></li>
+<li>RFC 3339 (timestamps): <a href="https://www.rfc-editor.org/rfc/rfc3339">https://www.rfc-editor.org/rfc/rfc3339</a></li>
+<li>RFC 4122 (UUID): <a href="https://www.rfc-editor.org/rfc/rfc4122">https://www.rfc-editor.org/rfc/rfc4122</a></li>
+<li>NIST FIPS 180-4 (SHA-256): <a href="https://csrc.nist.gov/pubs/fips/180-4/final">https://csrc.nist.gov/pubs/fips/180-4/final</a></li>
+<li>AWS Builders Library (idempotency): <a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-apis/">https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-apis/</a></li>
+<li>Temporal Cloud limits: <a href="https://docs.temporal.io/cloud/limits">https://docs.temporal.io/cloud/limits</a></li>
+<li>Temporal message passing: <a href="https://docs.temporal.io/workflows#message-passing">https://docs.temporal.io/workflows#message-passing</a></li>
+<li>Temporal TypeScript SDK: <a href="https://docs.temporal.io/develop/typescript">https://docs.temporal.io/develop/typescript</a></li>
+<li>Netflix Conductor wiki: <a href="https://github.com/netflix/conductor/wiki">https://github.com/netflix/conductor/wiki</a></li>
+<li>Agnostic Event Layer Strategy v2.0.1: <a href="../AgnosticEventLayerStrategy.v2.0.1/"><code>AgnosticEventLayerStrategy.v2.0.1.md</code></a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": [], "search": "../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

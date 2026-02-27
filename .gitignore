@@ -10,7 +10,7 @@ yarn.lock
 coverage/
 .nyc_output/
 *.lcov
-packages/engine/test/contracts/results/
+packages/@dvt/engine/test/contracts/results/
 
 # Build outputs
 dist/
@@ -61,3 +61,6 @@ private/neo4j/
 
 # Monorepo-local private data (full path under dvt/)
 dvt/private/
+docs/planning/GTM_PLAN_DVT.md
+docs/planning/GTM_PLAN_DVT.md
+docs/planning/GTM_PLAN_DVT.md

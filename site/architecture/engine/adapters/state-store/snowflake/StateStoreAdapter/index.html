@@ -1,0 +1,1908 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Snowflake State Store Adapter - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#snowflake-state-store-adapter" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Snowflake State Store Adapter
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../adr/_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../adr/_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../planning/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-physical-schema-ddl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Physical Schema (DDL)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) Physical Schema (DDL)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-run_events-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 RUN_EVENTS Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-run_snapshots-table-materialized-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 RUN_SNAPSHOTS Table (Materialized View)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-append-authority-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Append Authority Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) Append Authority Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-stored-procedure-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Stored Procedure (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-application-side-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Application-Side (Alternative)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-fetch-events-watermark-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Fetch Events (Watermark Pattern)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-snapshot-projection-materialized-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Snapshot Projection (Materialized View)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4) Snapshot Projection (Materialized View)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-incremental-update-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Incremental Update Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-on-demand-projection-cold-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 On-Demand Projection (Cold Start)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-idempotency-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Idempotency Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5) Idempotency Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-merge-pattern-upsert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 MERGE Pattern (Upsert)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-performance-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Performance Tuning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6) Performance Tuning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-clustering-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Clustering Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-search-optimization-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Search Optimization Service
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-retention-archival" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Retention &amp; Archival
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-limitations-trade-offs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Limitations &amp; Trade-offs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-migration-from-other-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8) Migration from Other Backends
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8) Migration from Other Backends">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-from-postgres" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 From Postgres
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="snowflake-state-store-adapter">Snowflake State Store Adapter<a class="headerlink" href="#snowflake-state-store-adapter" title="Permanent link">&para;</a></h1>
+<p><strong>Status</strong>: Implementation Guide<br />
+<strong>Version</strong>: 1.0<br />
+<strong>Backend</strong>: Snowflake<br />
+<strong>Contract</strong>: <a href="../../../../contracts/state-store/">State Store Contract</a></p>
+<hr />
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>This document specifies how to implement the <a href="../../../../contracts/state-store/">State Store Contract</a> using <strong>Snowflake</strong> as the persistence backend.</p>
+<p><strong>Key design decisions</strong>:</p>
+<ul>
+<li>✅ Leverage <code>VARIANT</code> for flexible event schema evolution</li>
+<li>✅ Use <code>MERGE</code> for idempotent appends (upsert pattern)</li>
+<li>✅ Cluster by <code>(RUN_ID, PERSISTED_AT)</code> for polling/projection queries</li>
+<li>⚠️ Snowflake does NOT enforce <code>PRIMARY KEY</code> or <code>UNIQUE</code> constraints (logical only)</li>
+<li>⚠️ <code>runSeq</code> assignment requires application-side or stored procedure logic</li>
+</ul>
+<hr />
+<h2 id="1-physical-schema-ddl">1) Physical Schema (DDL)<a class="headerlink" href="#1-physical-schema-ddl" title="Permanent link">&para;</a></h2>
+<h3 id="11-run_events-table">1.1 RUN_EVENTS Table<a class="headerlink" href="#11-run_events-table" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Core event log (append-only, source of truth)
+CREATE TABLE IF NOT EXISTS RUN_EVENTS (
+  -- Identity
+  RUN_ID             STRING        NOT NULL,
+  RUN_SEQ            NUMBER(38,0)  NOT NULL,  -- Assigned by Append Authority (monotonic per RUN_ID)
+  EVENT_ID           STRING        NOT NULL,  -- UUID as string
+
+  -- Step context
+  STEP_ID            STRING,                  -- NULL for run-level events
+  ENGINE_ATTEMPT_ID  STRING,                  -- Platform-level retry counter (Temporal attemptNumber)
+  LOGICAL_ATTEMPT_ID STRING,                  -- Business-level retry counter
+
+  -- Event payload
+  EVENT_TYPE         STRING        NOT NULL,  -- &quot;RunStarted&quot;, &quot;StepCompleted&quot;, etc.
+  EVENT_DATA         VARIANT,                 -- Event-specific payload (JSON)
+
+  -- Idempotency &amp; causality
+  IDEMPOTENCY_KEY    STRING        NOT NULL,  -- SHA256 hex (unique per runId)
+  CAUSED_BY_SIGNAL_ID STRING,                 -- UUID as string
+  PARENT_EVENT_ID    STRING,                  -- UUID as string
+
+  -- Timestamps
+  EMITTED_AT         TIMESTAMP_NTZ NOT NULL,  -- When activity emitted
+  PERSISTED_AT       TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+
+  -- Metadata
+  ADAPTER_VERSION    STRING,                  -- Engine adapter version (e.g., &quot;temporal-v1.2.3&quot;)
+  ENGINE_RUN_REF     VARIANT                  -- Platform-specific reference (Temporal WorkflowId, etc.)
+);
+
+-- Performance optimization: cluster by runId + time for polling/projection
+ALTER TABLE RUN_EVENTS CLUSTER BY (RUN_ID, PERSISTED_AT);
+
+-- Comments (documentation in schema)
+COMMENT ON TABLE RUN_EVENTS IS 'Append-only event log (source of truth for all execution state)';
+COMMENT ON COLUMN RUN_EVENTS.RUN_SEQ IS 'Monotonic sequence per RUN_ID (gaps allowed, assigned by Append Authority)';
+COMMENT ON COLUMN RUN_EVENTS.IDEMPOTENCY_KEY IS 'SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)';
+</code></pre>
+<p><strong>Logical constraints</strong> (NOT enforced by Snowflake, must be enforced by application logic):</p>
+<ul>
+<li><strong>Unique key</strong>: <code>(RUN_ID, RUN_SEQ)</code></li>
+<li><strong>Uniqueness</strong>: <code>(RUN_ID, IDEMPOTENCY_KEY)</code></li>
+</ul>
+<h3 id="12-run_snapshots-table-materialized-view">1.2 RUN_SNAPSHOTS Table (Materialized View)<a class="headerlink" href="#12-run_snapshots-table-materialized-view" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Derived state (immutable snapshots, not source of truth)
+CREATE TABLE IF NOT EXISTS RUN_SNAPSHOTS (
+  RUN_ID             STRING        NOT NULL,
+  STATUS             STRING        NOT NULL,  -- &quot;PENDING&quot;, &quot;RUNNING&quot;, &quot;COMPLETED&quot;, etc.
+  LAST_EVENT_SEQ     NUMBER(38,0)  NOT NULL,  -- High-water mark (projection watermark)
+
+  -- Snapshot payload
+  SNAPSHOT_DATA      VARIANT       NOT NULL,  -- RunSnapshot JSON
+
+  -- Timestamps
+  STARTED_AT         TIMESTAMP_NTZ,
+  COMPLETED_AT       TIMESTAMP_NTZ,
+  PROJECTED_AT       TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+
+  -- Version control
+  VERSION            NUMBER(38,0)  DEFAULT 0  -- Optimistic concurrency control
+);
+
+-- Primary access pattern: lookup by runId
+ALTER TABLE RUN_SNAPSHOTS CLUSTER BY (RUN_ID);
+
+COMMENT ON TABLE RUN_SNAPSHOTS IS 'Materialized snapshots (derived from RUN_EVENTS, updated by projector)';
+COMMENT ON COLUMN RUN_SNAPSHOTS.LAST_EVENT_SEQ IS 'Watermark: highest runSeq applied to this snapshot';
+</code></pre>
+<hr />
+<h2 id="2-append-authority-implementation">2) Append Authority Implementation<a class="headerlink" href="#2-append-authority-implementation" title="Permanent link">&para;</a></h2>
+<p><strong>Challenge</strong>: Snowflake does NOT support <code>AUTO_INCREMENT</code> with grouping (e.g., "per RUN_ID").</p>
+<p><strong>Solution</strong>: Assign <code>runSeq</code> using <code>MAX(runSeq) + 1</code> within a transaction-like scope.</p>
+<h3 id="21-stored-procedure-recommended">2.1 Stored Procedure (Recommended)<a class="headerlink" href="#21-stored-procedure-recommended" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">CREATE OR REPLACE PROCEDURE APPEND_EVENT(
+  p_runId STRING,
+  p_eventId STRING,
+  p_stepId STRING,
+  p_engineAttemptId STRING,
+  p_logicalAttemptId STRING,
+  p_eventType STRING,
+  p_eventData VARIANT,
+  p_idempotencyKey STRING,
+  p_causedBySignalId STRING,
+  p_parentEventId STRING,
+  p_emittedAt TIMESTAMP_NTZ,
+  p_adapterVersion STRING,
+  p_engineRunRef VARIANT
+)
+RETURNS TABLE (RUN_SEQ NUMBER, IDEMPOTENT BOOLEAN, PERSISTED BOOLEAN)
+LANGUAGE SQL
+AS
+$$
+DECLARE
+  v_existingSeq NUMBER;
+  v_newSeq NUMBER;
+BEGIN
+  -- Check if idempotencyKey already exists (idempotent append)
+  SELECT RUN_SEQ INTO :v_existingSeq
+  FROM RUN_EVENTS
+  WHERE RUN_ID = :p_runId AND IDEMPOTENCY_KEY = :p_idempotencyKey
+  LIMIT 1;
+
+  IF (:v_existingSeq IS NOT NULL) THEN
+    -- Duplicate: return existing runSeq
+    RETURN TABLE(SELECT :v_existingSeq AS RUN_SEQ, TRUE AS IDEMPOTENT, FALSE AS PERSISTED);
+  END IF;
+
+  -- Assign new runSeq (monotonic: MAX + 1)
+  SELECT COALESCE(MAX(RUN_SEQ), 0) + 1 INTO :v_newSeq
+  FROM RUN_EVENTS
+  WHERE RUN_ID = :p_runId;
+
+  -- Insert new event
+  INSERT INTO RUN_EVENTS (
+    RUN_ID, RUN_SEQ, EVENT_ID, STEP_ID, ENGINE_ATTEMPT_ID, LOGICAL_ATTEMPT_ID,
+    EVENT_TYPE, EVENT_DATA, IDEMPOTENCY_KEY, CAUSED_BY_SIGNAL_ID, PARENT_EVENT_ID,
+    EMITTED_AT, ADAPTER_VERSION, ENGINE_RUN_REF
+  ) VALUES (
+    :p_runId, :v_newSeq, :p_eventId, :p_stepId, :p_engineAttemptId, :p_logicalAttemptId,
+    :p_eventType, :p_eventData, :p_idempotencyKey, :p_causedBySignalId, :p_parentEventId,
+    :p_emittedAt, :p_adapterVersion, :p_engineRunRef
+  );
+
+  RETURN TABLE(SELECT :v_newSeq AS RUN_SEQ, FALSE AS IDEMPOTENT, TRUE AS PERSISTED);
+END;
+$$;
+</code></pre>
+<p><strong>Usage</strong>:</p>
+<pre><code class="language-sql">CALL APPEND_EVENT(
+  p_runId =&gt; 'run-12345',
+  p_eventId =&gt; 'evt-abc',
+  p_stepId =&gt; 'step-dbt-run',
+  p_engineAttemptId =&gt; '1',
+  p_logicalAttemptId =&gt; '1',
+  p_eventType =&gt; 'StepCompleted',
+  p_eventData =&gt; PARSE_JSON('{&quot;exitCode&quot;:0,&quot;durationMs&quot;:1234}'),
+  p_idempotencyKey =&gt; 'sha256...',
+  p_causedBySignalId =&gt; NULL,
+  p_parentEventId =&gt; 'evt-xyz',
+  p_emittedAt =&gt; CURRENT_TIMESTAMP(),
+  p_adapterVersion =&gt; 'temporal-v1.2.3',
+  p_engineRunRef =&gt; PARSE_JSON('{&quot;workflowId&quot;:&quot;wf-12345&quot;,&quot;runId&quot;:&quot;run-abc&quot;}')
+);
+-- Returns: { RUN_SEQ: 10, IDEMPOTENT: false, PERSISTED: true }
+</code></pre>
+<h3 id="22-application-side-alternative">2.2 Application-Side (Alternative)<a class="headerlink" href="#22-application-side-alternative" title="Permanent link">&para;</a></h3>
+<p>For lighter-weight implementations, assign <code>runSeq</code> in application code:</p>
+<pre><code class="language-typescript">async function appendEvent(event: CanonicalEngineEvent): Promise&lt;AppendResult&gt; {
+  // Check for existing event (idempotency)
+  const existing = await snowflake.query&lt;{ RUN_SEQ: number }&gt;(
+    `SELECT RUN_SEQ FROM RUN_EVENTS
+     WHERE RUN_ID = ? AND IDEMPOTENCY_KEY = ?
+     LIMIT 1`,
+    [event.runId, event.idempotencyKey]
+  );
+
+  if (existing.length &gt; 0) {
+    return { runSeq: existing[0].RUN_SEQ, idempotent: true, persisted: false };
+  }
+
+  // Acquire lock (critical section per runId to prevent race conditions)
+  await acquireLock(event.runId); // Redis lock, DB advisory lock, etc.
+
+  try {
+    // Get next runSeq
+    const maxSeqResult = await snowflake.query&lt;{ MAX_SEQ: number }&gt;(
+      `SELECT COALESCE(MAX(RUN_SEQ), 0) AS MAX_SEQ
+       FROM RUN_EVENTS
+       WHERE RUN_ID = ?`,
+      [event.runId]
+    );
+    const newSeq = maxSeqResult[0].MAX_SEQ + 1;
+
+    // Insert
+    await snowflake.execute(
+      `INSERT INTO RUN_EVENTS (...) VALUES (?, ?, ...)`,
+      [event.runId, newSeq, ...]
+    );
+
+    return { runSeq: newSeq, idempotent: false, persisted: true };
+  } finally {
+    await releaseLock(event.runId);
+  }
+}
+</code></pre>
+<p><strong>Trade-offs</strong>:</p>
+<ul>
+<li>✅ More flexible (easier to add business logic)</li>
+<li>⚠️ Requires distributed lock (Redis, ZooKeeper, etc.)</li>
+<li>⚠️ More network round-trips vs stored procedure</li>
+</ul>
+<hr />
+<h2 id="3-fetch-events-watermark-pattern">3) Fetch Events (Watermark Pattern)<a class="headerlink" href="#3-fetch-events-watermark-pattern" title="Permanent link">&para;</a></h2>
+<pre><code class="language-sql">-- Fetch events for projection (paginated, watermark-based)
+SELECT
+  RUN_ID,
+  RUN_SEQ,
+  EVENT_ID,
+  STEP_ID,
+  ENGINE_ATTEMPT_ID,
+  LOGICAL_ATTEMPT_ID,
+  EVENT_TYPE,
+  EVENT_DATA,
+  IDEMPOTENCY_KEY,
+  EMITTED_AT,
+  PERSISTED_AT,
+  ADAPTER_VERSION,
+  ENGINE_RUN_REF,
+  CAUSED_BY_SIGNAL_ID,
+  PARENT_EVENT_ID
+FROM RUN_EVENTS
+WHERE RUN_ID = :runId
+  AND RUN_SEQ &gt; :lastEventSeq  -- Watermark filter
+ORDER BY RUN_SEQ ASC
+LIMIT :limit;
+</code></pre>
+<p><strong>Clustering benefit</strong>: <code>CLUSTER BY (RUN_ID, PERSISTED_AT)</code> optimizes this query (single micro-partition scan for most cases).</p>
+<hr />
+<h2 id="4-snapshot-projection-materialized-view">4) Snapshot Projection (Materialized View)<a class="headerlink" href="#4-snapshot-projection-materialized-view" title="Permanent link">&para;</a></h2>
+<h3 id="41-incremental-update-pattern">4.1 Incremental Update Pattern<a class="headerlink" href="#41-incremental-update-pattern" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Projector reconciler: update snapshot with new events
+MERGE INTO RUN_SNAPSHOTS AS target
+USING (
+  -- Aggregate new events since last projection
+  SELECT
+    RUN_ID,
+    MAX(RUN_SEQ) AS LAST_EVENT_SEQ,
+    MAX(CASE WHEN EVENT_TYPE = 'RunCompleted' THEN PERSISTED_AT END) AS COMPLETED_AT,
+    -- ... more derived fields
+    PROJECT_SNAPSHOT(ARRAY_AGG(OBJECT_CONSTRUCT(*))) AS SNAPSHOT_DATA  -- UDF
+  FROM RUN_EVENTS
+  WHERE RUN_ID = :runId
+    AND RUN_SEQ &gt; (SELECT LAST_EVENT_SEQ FROM RUN_SNAPSHOTS WHERE RUN_ID = :runId)
+  GROUP BY RUN_ID
+) AS source
+ON target.RUN_ID = source.RUN_ID
+WHEN MATCHED THEN UPDATE SET
+  target.LAST_EVENT_SEQ = source.LAST_EVENT_SEQ,
+  target.SNAPSHOT_DATA = source.SNAPSHOT_DATA,
+  target.COMPLETED_AT = COALESCE(source.COMPLETED_AT, target.COMPLETED_AT),
+  target.PROJECTED_AT = CURRENT_TIMESTAMP(),
+  target.VERSION = target.VERSION + 1
+WHEN NOT MATCHED THEN INSERT (
+  RUN_ID, LAST_EVENT_SEQ, SNAPSHOT_DATA, PROJECTED_AT, VERSION
+) VALUES (
+  source.RUN_ID, source.LAST_EVENT_SEQ, source.SNAPSHOT_DATA, CURRENT_TIMESTAMP(), 0
+);
+</code></pre>
+<h3 id="42-on-demand-projection-cold-start">4.2 On-Demand Projection (Cold Start)<a class="headerlink" href="#42-on-demand-projection-cold-start" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Project snapshot from scratch (replay all events)
+SELECT PROJECT_SNAPSHOT(ARRAY_AGG(OBJECT_CONSTRUCT(*) ORDER BY RUN_SEQ)) AS snapshot
+FROM RUN_EVENTS
+WHERE RUN_ID = :runId;
+</code></pre>
+<p><strong><code>PROJECT_SNAPSHOT</code> UDF</strong> (JavaScript in Snowflake or application-side):</p>
+<pre><code class="language-javascript">// Snowflake JavaScript UDF (example)
+CREATE OR REPLACE FUNCTION PROJECT_SNAPSHOT(events ARRAY)
+RETURNS VARIANT
+LANGUAGE JAVASCRIPT
+AS $$
+  let snapshot = { runId: null, status: &quot;PENDING&quot;, steps: {}, artifacts: [] };
+
+  for (const evt of EVENTS) {
+    snapshot.runId = evt.RUN_ID;
+
+    switch (evt.EVENT_TYPE) {
+      case &quot;RunStarted&quot;:
+        snapshot.status = &quot;RUNNING&quot;;
+        snapshot.startedAt = evt.EMITTED_AT;
+        break;
+      case &quot;StepCompleted&quot;:
+        snapshot.steps[evt.STEP_ID] = { status: &quot;SUCCESS&quot;, ... };
+        break;
+      // ... other event types
+      case &quot;RunCompleted&quot;:
+        snapshot.status = &quot;COMPLETED&quot;;
+        snapshot.completedAt = evt.EMITTED_AT;
+        break;
+    }
+  }
+
+  return snapshot;
+$$;
+</code></pre>
+<hr />
+<h2 id="5-idempotency-handling">5) Idempotency Handling<a class="headerlink" href="#5-idempotency-handling" title="Permanent link">&para;</a></h2>
+<h3 id="51-merge-pattern-upsert">5.1 MERGE Pattern (Upsert)<a class="headerlink" href="#51-merge-pattern-upsert" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Idempotent append: MERGE ensures duplicate idempotencyKey returns existing runSeq
+MERGE INTO RUN_EVENTS AS target
+USING (
+  SELECT
+    :runId AS RUN_ID,
+    :idempotencyKey AS IDEMPOTENCY_KEY,
+    :eventId AS EVENT_ID,
+    -- ... other fields
+    COALESCE(
+      (SELECT MAX(RUN_SEQ) FROM RUN_EVENTS WHERE RUN_ID = :runId),
+      0
+    ) + 1 AS RUN_SEQ
+) AS source
+ON target.RUN_ID = source.RUN_ID
+   AND target.IDEMPOTENCY_KEY = source.IDEMPOTENCY_KEY
+WHEN NOT MATCHED THEN INSERT (
+  RUN_ID, RUN_SEQ, EVENT_ID, IDEMPOTENCY_KEY, ...
+) VALUES (
+  source.RUN_ID, source.RUN_SEQ, source.EVENT_ID, source.IDEMPOTENCY_KEY, ...
+);
+
+-- Return result (existing or new)
+SELECT RUN_SEQ,
+       (PERSISTED_AT &lt; CURRENT_TIMESTAMP() - INTERVAL '1 second') AS IDEMPOTENT
+FROM RUN_EVENTS
+WHERE RUN_ID = :runId AND IDEMPOTENCY_KEY = :idempotencyKey;
+</code></pre>
+<p><strong>Caveat</strong>: <code>MERGE</code> in Snowflake does NOT guarantee atomicity with concurrent <code>MAX(RUN_SEQ)</code> queries. Use stored procedure or application-side locking.</p>
+<hr />
+<h2 id="6-performance-tuning">6) Performance Tuning<a class="headerlink" href="#6-performance-tuning" title="Permanent link">&para;</a></h2>
+<h3 id="61-clustering-strategy">6.1 Clustering Strategy<a class="headerlink" href="#61-clustering-strategy" title="Permanent link">&para;</a></h3>
+<p><strong>Recommendation</strong>: Cluster by <code>(RUN_ID, PERSISTED_AT)</code></p>
+<pre><code class="language-sql">ALTER TABLE RUN_EVENTS CLUSTER BY (RUN_ID, PERSISTED_AT);
+</code></pre>
+<p><strong>Rationale</strong>:</p>
+<ul>
+<li>✅ Co-locates all events for a run (single micro-partition scan for projection)</li>
+<li>✅ Time-ordering enables efficient watermark queries (<code>RUN_SEQ &gt; lastSeq</code>)</li>
+<li>⚠️ Automatic clustering maintenance (Snowflake reclusters periodically)</li>
+</ul>
+<h3 id="62-search-optimization-service">6.2 Search Optimization Service<a class="headerlink" href="#62-search-optimization-service" title="Permanent link">&para;</a></h3>
+<p>For high-cardinality lookups (e.g., <code>WHERE IDEMPOTENCY_KEY = ?</code>):</p>
+<pre><code class="language-sql">ALTER TABLE RUN_EVENTS ADD SEARCH OPTIMIZATION ON EQUALITY(IDEMPOTENCY_KEY);
+</code></pre>
+<h3 id="63-retention-archival">6.3 Retention &amp; Archival<a class="headerlink" href="#63-retention-archival" title="Permanent link">&para;</a></h3>
+<pre><code class="language-sql">-- Archive completed runs older than 90 days
+CREATE TABLE RUN_EVENTS_ARCHIVE LIKE RUN_EVENTS;
+
+INSERT INTO RUN_EVENTS_ARCHIVE
+SELECT * FROM RUN_EVENTS
+WHERE RUN_ID IN (
+  SELECT DISTINCT RUN_ID FROM RUN_SNAPSHOTS
+  WHERE STATUS IN ('COMPLETED', 'FAILED', 'CANCELLED')
+    AND COMPLETED_AT &lt; DATEADD(day, -90, CURRENT_TIMESTAMP())
+);
+
+DELETE FROM RUN_EVENTS
+WHERE RUN_ID IN (SELECT RUN_ID FROM RUN_EVENTS_ARCHIVE);
+</code></pre>
+<hr />
+<h2 id="7-limitations-trade-offs">7) Limitations &amp; Trade-offs<a class="headerlink" href="#7-limitations-trade-offs" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Limitation</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No PK enforcement</strong></td>
+<td>Snowflake does NOT enforce uniqueness</td>
+<td>Application logic + idempotency checks</td>
+</tr>
+<tr>
+<td><strong>runSeq assignment</strong></td>
+<td>Requires <code>MAX(runSeq) + 1</code> (not atomic without lock)</td>
+<td>Use stored procedure OR application-side lock</td>
+</tr>
+<tr>
+<td><strong>Concurrent writes</strong></td>
+<td>Multiple writers can create gaps</td>
+<td>Expected behavior (see <a href="../../../../contracts/engine/ExecutionSemantics.v1/#10-runseq-design-decision">ExecutionSemantics.v1.md § 1.0</a>)</td>
+</tr>
+<tr>
+<td><strong>Cost</strong></td>
+<td>Clustering maintenance incurs credits</td>
+<td>Monitor with <code>SYSTEM$CLUSTERING_INFORMATION()</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-migration-from-other-backends">8) Migration from Other Backends<a class="headerlink" href="#8-migration-from-other-backends" title="Permanent link">&para;</a></h2>
+<h3 id="81-from-postgres">8.1 From Postgres<a class="headerlink" href="#81-from-postgres" title="Permanent link">&para;</a></h3>
+<p><strong>Key differences</strong>:</p>
+<ul>
+<li>Postgres <code>SERIAL</code> → Snowflake stored procedure with <code>MAX + 1</code></li>
+<li>Postgres <code>ON CONFLICT</code> → Snowflake <code>MERGE</code></li>
+<li>Postgres transactions → Snowflake stored procedure (implicit transaction per statement)</li>
+</ul>
+<p><strong>Migration script</strong>:</p>
+<pre><code class="language-sql">-- Export from Postgres
+COPY (SELECT * FROM run_events) TO '/tmp/run_events.csv' WITH CSV HEADER;
+
+-- Import to Snowflake
+PUT file:///tmp/run_events.csv @my_stage;
+COPY INTO RUN_EVENTS FROM @my_stage/run_events.csv.gz FILE_FORMAT = (TYPE = CSV SKIP_HEADER = 1);
+</code></pre>
+<hr />
+<h2 id="change-log">Change Log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>2026-02-11</td>
+<td>Initial Snowflake adapter (extracted from ExecutionSemantics.v1.md)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../../..", "features": [], "search": "../../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-/* global console, process, URL, __dirname */
 /**
  * Database Migration Script
  *

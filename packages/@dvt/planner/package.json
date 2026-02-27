@@ -1,0 +1,40 @@
+{
+  "name": "@dvt/planner",
+  "version": "2.3.1",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./contracts/planner/*": {
+      "types": "./dist/contracts/planner/*.d.ts",
+      "import": "./dist/contracts/planner/*.js",
+      "default": "./dist/contracts/planner/*.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cross-runtime": "bash test/cross-runtime.sh",
+    "test:slow": "vitest run -c vitest.config.ts --dir test/slow"
+  },
+  "dependencies": {
+    "json-canonicalize": "^1.0.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

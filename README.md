@@ -104,11 +104,11 @@ For engine implementation contributions, ensure:
 
 The project is organized as a monorepo using pnpm workspaces. The primary packages are located under the `packages/` directory:
 
-- `packages/contracts` — Shared contracts and interfaces (`@dvt/contracts`)
-- `packages/engine` — Orchestration engine core (`@dvt/engine`)
-- `packages/adapter-postgres` — PostgreSQL adapter (`@dvt/adapter-postgres`)
-- `packages/adapter-temporal` — Temporal adapter (`@dvt/adapter-temporal`)
-- `packages/cli` — CLI tools and scripts (`@dvt/cli`)
+- `packages/@dvt/contracts` — Shared contracts and interfaces (`@dvt/contracts`)
+- `packages/@dvt/engine` — Orchestration engine core (`@dvt/engine`)
+- `packages/@dvt/adapter-postgres` — PostgreSQL adapter (`@dvt/adapter-postgres`)
+- `packages/@dvt/adapter-temporal` — Temporal adapter (`@dvt/adapter-temporal`)
+- `packages/@dvt/cli` — CLI tools and scripts (`@dvt/cli`)
 
 ### Key Commands
 

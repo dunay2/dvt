@@ -3,7 +3,7 @@ name: Golden Paths Validation
 on:
   pull_request:
     paths:
-      - 'packages/engine/test/contracts/**'
+      - 'packages/@dvt/engine/test/contracts/**'
       - 'docs/architecture/engine/contracts/**'
       - 'scripts/validate-contracts.cjs'
       - '.github/workflows/golden-paths.yml'
@@ -11,7 +11,7 @@ on:
     branches:
       - main
     paths:
-      - 'packages/engine/test/contracts/**'
+      - 'packages/@dvt/engine/test/contracts/**'
       - 'docs/architecture/engine/contracts/**'
       - 'scripts/validate-contracts.cjs'
       - '.github/workflows/golden-paths.yml'
@@ -66,5 +66,5 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: golden-paths-validation-results
-          path: packages/engine/test/contracts/results/
+          path: packages/@dvt/engine/test/contracts/results/
           retention-days: 7

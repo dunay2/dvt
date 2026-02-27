@@ -7,15 +7,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
-      include: ['packages/engine/src/**/*.ts'],
+      include: ['packages/@dvt/engine/src/**/*.ts'],
       exclude: [
-        'packages/engine/src/**/*.test.ts',
-        'packages/engine/src/**/*.spec.ts',
-        'packages/engine/test/**',
+        'packages/@dvt/engine/src/**/*.test.ts',
+        'packages/@dvt/engine/src/**/*.spec.ts',
+        'packages/@dvt/engine/test/**',
         'node_modules/**',
       ],
     },
     include: ['packages/**/*.{test,spec}.ts'],
-    exclude: ['node_modules/**', 'dist/**'],
+    exclude: ['node_modules/**', 'packages/**/node_modules/**', 'dist/**'],
   },
 });

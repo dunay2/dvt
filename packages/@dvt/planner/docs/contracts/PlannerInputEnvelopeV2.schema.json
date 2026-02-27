@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dvt:planner:PlannerInputEnvelopeV2:v2.3.1",
+  "type": "object",
+  "required": ["nodes", "selection"],
+  "additionalProperties": false,
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["nodeId", "resourceType", "dependsOn"],
+        "additionalProperties": false,
+        "properties": {
+          "nodeId": { "type": "string" },
+          "resourceType": { "type": "string" },
+          "dependsOn": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "required": ["selectedNodeIds"],
+      "additionalProperties": false,
+      "properties": {
+        "selectedNodeIds": { "type": "array", "items": { "type": "string" } },
+        "includeUpstream": { "type": "boolean" },
+        "includeDownstream": { "type": "boolean" }
+      }
+    },
+    "policies": { "$ref": "dvt:planner:PlannerPolicies:v2.3.1" },
+    "observability": { "type": "object", "additionalProperties": true },
+    "requestedBy": { "type": "string" },
+    "requestId": { "type": "string" },
+    "requestedAtIso": { "type": "string" }
+  },
+  "$defs": {
+    "PlannerPolicies": {
+      "$id": "dvt:planner:PlannerPolicies:v2.3.1",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stepTimeoutMs": { "type": "number" },
+        "retries": {
+          "type": "object",
+          "required": ["maxAttempts", "backoffMs"],
+          "additionalProperties": false,
+          "properties": {
+            "maxAttempts": { "type": "number" },
+            "backoffMs": { "type": "number" }
+          }
+        },
+        "concurrency": {
+          "type": "object",
+          "required": ["maxInFlight"],
+          "additionalProperties": false,
+          "properties": {
+            "maxInFlight": { "type": "number" }
+          }
+        },
+        "custom": { "type": "object", "additionalProperties": true }
+      }
+    }
+  }
+}

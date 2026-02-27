@@ -95,7 +95,7 @@ node -e "const fs=require('fs');const b=fs.readFileSync('.github/PR_BODY.md','ut
 - [ ] Validation evidence prepared (commands + outputs)
 - [ ] Rollback path documented (safe revert strategy)
 
-> Note: The **Temporal adapter integration (time‑skipping)** test runs automatically for PRs that touch `packages/adapter-temporal/**` or `packages/contracts/**`. The PR Quality Gate will skip that integration when unrelated files are changed to keep CI fast.
+> Note: The **Temporal adapter integration (time‑skipping)** test runs automatically for PRs that touch `packages/@dvt/adapter-temporal/**` or `packages/@dvt/contracts/**`. The PR Quality Gate will skip that integration when unrelated files are changed to keep CI fast.
 
 ### Code Quality
 

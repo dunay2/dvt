@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "governedPaths": [
+    "packages/@dvt/core/**/*.ts",
+    "packages/@dvt/engine/**/*.ts",
+    "packages/@dvt/contracts/**/*.ts",
+    "packages/@dvt/adapter-*/**/*.ts",
+    "!**/*.test.ts",
+    "!**/node_modules/**"
+  ],
+  "exemptPaths": ["apps/web/**", "packages/@dvt/ui/**", "**/*.stories.tsx"],
+  "validation": {
+    "requireDecision": true,
+    "requireConsequence": false,
+    "strictMode": true,
+    "failOnMissingVersion": true
+  },
+  "neo4j": {
+    "uri": "${NEO4J_URI}",
+    "database": "neo4j",
+    "constraints": true
+  },
+  "adrCatalog": {
+    "path": "docs/adr",
+    "pattern": "ADR-*.md"
+  }
+}

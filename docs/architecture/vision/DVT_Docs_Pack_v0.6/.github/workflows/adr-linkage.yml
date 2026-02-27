@@ -1,0 +1,46 @@
+name: ADR Linkage Gate
+
+on:
+  pull_request:
+
+jobs:
+  adr-linkage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect sensitive changes
+        id: diff
+        run: |
+          git fetch origin main --depth=1
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          echo "changed<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Check ADR linkage for sensitive paths
+        run: |
+          CHANGED="${{ steps.diff.outputs.changed }}"
+          echo "$CHANGED" | sed 's/^/ - /'
+
+          SENSITIVE=$(echo "$CHANGED" | grep -E '^packages/@dvt/.+/(schemas|contracts|run-state|run-state-store)/' || true)
+          if [ -z "$SENSITIVE" ]; then
+            echo "No sensitive changes detected."
+            exit 0
+          fi
+
+          echo "Sensitive changes detected:"
+          echo "$SENSITIVE" | sed 's/^/ - /'
+
+          # Rule: PR MUST include at least one ADR file change OR an ADR reference marker in PR body.
+          ADR_FILES=$(echo "$CHANGED" | grep -E '^ADR/ADR-[0-9]{4}.*\.md$' || true)
+          if [ -n "$ADR_FILES" ]; then
+            echo "ADR file(s) present in PR."
+            exit 0
+          fi
+
+          echo "No ADR file found in PR. Failing (example gate)."
+          echo "Expected: add a new ADR under /ADR or reference an accepted ADR as per policy."
+          exit 1

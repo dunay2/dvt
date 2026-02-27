@@ -291,7 +291,7 @@ export function RunView() {
                       <div>
                         <div className="text-muted-foreground mb-1">Duration</div>
                         <div className="text-2xl font-semibold">
-                          {(run.duration / 1000).toFixed(1)}s
+                          {((run.duration ?? 0) / 1000).toFixed(1)}s
                         </div>
                       </div>
                       <div>

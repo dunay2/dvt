@@ -1,0 +1,34 @@
+{
+  "name": "@dvt/adapter-temporal",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "@temporalio/activity": "1.14.1",
+    "@temporalio/client": "1.14.1",
+    "@temporalio/worker": "1.14.1",
+    "@temporalio/workflow": "1.14.1",
+    "@dvt/contracts": "workspace:*",
+    "@dvt/dsl": "workspace:*",
+    "@dvt/engine": "workspace:*",
+    "@dvt/plan-interpreter": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prebuild": "echo '🔨 Building adapter-temporal...'",
+    "postbuild": "echo '✅ Build complete'",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/engine build && pnpm build",
+    "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts",
+    "pretest:integration": "pnpm --filter @dvt/contracts build && pnpm build",
+    "test:integration": "vitest run ./test/",
+    "test:integration:watch": "vitest watch ./test/",
+    "ci:test:integration": "pnpm pretest:integration && pnpm test:integration"
+  },
+  "devDependencies": {
+    "@temporalio/testing": "1.14.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

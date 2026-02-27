@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DVT Plan Compatibility Matrix",
+  "type": "object",
+  "required": ["schema", "versions"],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "ExecutionPlan"
+    },
+    "versions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["version", "adapters"],
+        "properties": {
+          "version": {
+            "type": "string",
+            "pattern": "^v\\d+\\.\\d+$"
+          },
+          "adapters": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

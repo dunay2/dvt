@@ -1,4 +1,5 @@
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import styles from './DbtNodeComponent.module.css';
+import { Handle, Position, Node, NodeProps } from '@xyflow/react';
 import {
   Database,
   Table,
@@ -17,7 +18,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { cn } from '../ui/utils';
 
-interface DbtNodeData {
+export interface DbtNodeData extends Record<string, unknown> {
   name: string;
   type: DbtNodeType;
   status: NodeStatus;
@@ -28,6 +29,8 @@ interface DbtNodeData {
   showColumns?: boolean;
   columns?: Array<{ name: string; type: string }>;
 }
+
+type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
 
 const nodeTypeConfig: Record<DbtNodeType, { icon: any; bgColor: string; borderColor: string }> = {
   SOURCE: { icon: Database, bgColor: 'bg-purple-900/30', borderColor: 'border-purple-500' },
@@ -49,7 +52,9 @@ const statusColors: Record<NodeStatus, string> = {
   warn: 'bg-orange-500',
 };
 
-function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
+function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
+  const data = props.data as DbtNodeData;
+  const { selected } = props;
   const config = nodeTypeConfig[data.type];
   const Icon = config.icon;
   const [columnsExpanded, setColumnsExpanded] = useState(false);
@@ -76,12 +81,12 @@ function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
   return (
     <div
       className={cn(
+        styles.root,
         'relative rounded-lg border-2 transition-all bg-[#0f1116]',
         selected ? 'border-white shadow-lg' : config.borderColor,
         data.isHighlighted && 'ring-2 ring-white ring-offset-2 ring-offset-[#1a1d23]',
         impactBorderColor && impactBorderColor
       )}
-      style={{ minWidth: 200, minHeight: 80 }}
     >
       {/* Target Handle (input) */}
       {shouldShowTargetHandle && (
@@ -152,7 +157,7 @@ function DbtNodeComponent({ data, selected }: NodeProps<DbtNodeData>) {
 
             {columnsExpanded && (
               <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
-                {columns.map((col, idx) => (
+                {columns.map((col: { name: string; type: string }, idx: number) => (
                   <div
                     key={idx}
                     className="flex items-center justify-between text-[10px] px-2 py-1 bg-[#1a1d23] rounded"

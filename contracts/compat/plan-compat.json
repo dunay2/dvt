@@ -1,0 +1,11 @@
+{
+  "schema": "ExecutionPlan",
+  "versions": [
+    {
+      "version": "v1.0",
+      "adapters": {
+        "TemporalAdapter": true
+      }
+    }
+  ]
+}

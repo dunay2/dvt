@@ -11,6 +11,7 @@ import {
   useEdgesState,
   ReactFlowProvider,
   MarkerType,
+  type NodeTypes,
 } from '@xyflow/react';
 import dagre from 'dagre';
 import {
@@ -28,6 +29,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
+import type { DbtNodeData } from '../components/canvas/DbtNodeComponent';
 import DbtExplorer from '../components/DbtExplorer';
 import InspectorPanel from '../components/InspectorPanel';
 import { PlanPreviewModal, ConfirmEdgeModal } from '../components/Modals';
@@ -40,7 +42,7 @@ import { mockNodes, mockEdges, mockExecutionPlan } from '../data/mockDbtData';
 import { useAppStore } from '../stores/appStore';
 import { DbtNode, DbtNodeType } from '../types/dbt';
 
-const nodeTypes = {
+const nodeTypes: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
 

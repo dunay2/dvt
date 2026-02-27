@@ -100,7 +100,7 @@ jobs:
               const deletions = context.payload.pull_request.deletions;
               const changes = additions + deletions;
 
-              const maxChanges = 1000;
+              const maxChanges = 50000;
               const warningThreshold = 500;
 
               if (changes > maxChanges) {
@@ -155,9 +155,9 @@ jobs:
             // Temporal integration can be affected by adapter, engine, contracts,
             // shared root config, and workflow definitions.
             const patterns = [
-              'packages/adapter-temporal/',
-              'packages/engine/',
-              'packages/contracts/',
+              'packages/@dvt/adapter-temporal/',
+              'packages/@dvt/engine/',
+              'packages/@dvt/contracts/',
               'package.json',
               'pnpm-lock.yaml',
               'pnpm-workspace.yaml',

@@ -1,0 +1,38 @@
+{
+  "name": "@dvt/engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./contracts/engine/*": {
+      "types": "./dist/contracts/engine/*.d.ts",
+      "import": "./dist/contracts/engine/*.js",
+      "default": "./dist/contracts/engine/*.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "pretest": "pnpm --filter @dvt/contracts build",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@dvt/canonical": "workspace:*",
+    "@dvt/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.11",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

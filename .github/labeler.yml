@@ -10,34 +10,34 @@
 # Engine core changes
 'engine:core':
   - changed-files:
-      - any-glob-to-any-file: 'packages/engine/src/core/**/*'
-      - any-glob-to-any-file: 'packages/engine/src/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/engine/src/core/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/engine/src/**/*'
 
 # Adapter changes
 'engine:adapters':
   - changed-files:
-      - any-glob-to-any-file: 'packages/engine/src/adapters/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/engine/src/adapters/**/*'
       - any-glob-to-any-file: 'packages/adapter-*/**/*'
 
 # Temporal adapter
 'engine:temporal':
   - changed-files:
-      - any-glob-to-any-file: 'packages/engine/src/adapters/temporal/**/*'
-      - any-glob-to-any-file: 'packages/adapter-temporal/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/engine/src/adapters/temporal/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/adapter-temporal/**/*'
       - any-glob-to-any-file: 'docs/architecture/engine/adapters/temporal/**/*'
 
 # State Store
 'engine:state-store':
   - changed-files:
-      - any-glob-to-any-file: 'packages/engine/src/adapters/state-store/**/*'
-      - any-glob-to-any-file: 'packages/adapter-postgres/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/engine/src/adapters/state-store/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/adapter-postgres/**/*'
       - any-glob-to-any-file: 'docs/architecture/engine/contracts/state-store/**/*'
 
 # Contracts (high scrutiny)
 'contracts':
   - changed-files:
       - any-glob-to-any-file: 'docs/architecture/engine/contracts/**/*'
-      - any-glob-to-any-file: 'packages/contracts/**/*'
+      - any-glob-to-any-file: 'packages/@dvt/contracts/**/*'
 
 # Tests
 'tests':

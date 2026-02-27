@@ -14,7 +14,7 @@ const path = require('path');
 const GOLDEN_HASHES = path.join(__dirname, '../.golden/hashes.json');
 const RESULTS_FILE = path.join(
   __dirname,
-  '../packages/engine/test/contracts/results/golden-paths-run.json'
+  '../packages/@dvt/engine/test/contracts/results/golden-paths-run.json'
 );
 
 async function compareHashes() {

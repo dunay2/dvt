@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.eslint.base.json",
+  "include": ["src/**/*.ts", "vitest.config.cjs"],
+  "exclude": ["dist", "node_modules"]
+}

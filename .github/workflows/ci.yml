@@ -40,18 +40,21 @@ jobs:
               - 'commitlint.config.cjs'
               - '.prettierrc.json'
               - 'scripts/**'
+              - 'packages/@dvt/traceability-service/**'
+              - 'traceability.config.json'
+              - 'docs/adr/**'
             api:
               - 'apps/api/**'
             web:
               - 'apps/web/**'
             contracts:
-              - 'packages/contracts/**'
+              - 'packages/@dvt/contracts/**'
             engine:
-              - 'packages/engine/**'
+              - 'packages/@dvt/engine/**'
             adapter_postgres:
-              - 'packages/adapter-postgres/**'
+              - 'packages/@dvt/adapter-postgres/**'
             adapter_temporal:
-              - 'packages/adapter-temporal/**'
+              - 'packages/@dvt/adapter-temporal/**'
             cli:
               - 'packages/cli/**'
 
@@ -143,6 +146,9 @@ jobs:
       - name: Run changed-file checks
         run: node scripts/check-changed.cjs
 
+      - name: ADR-0000 traceability gate
+        run: pnpm traceability:adr0
+
   workspace-ci:
     name: Workspace CI (${{ matrix.name }})
     needs: detect-affected
@@ -178,8 +184,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build affected workspace
-        run: pnpm --filter "${{ matrix.pkg }}" --if-present run build
+      - name: Build affected workspace (including workspace dependencies)
+        run: pnpm --filter "${{ matrix.pkg }}..." --if-present run build
 
       - name: Test affected workspace
         run: pnpm --filter "${{ matrix.pkg }}" --if-present run test

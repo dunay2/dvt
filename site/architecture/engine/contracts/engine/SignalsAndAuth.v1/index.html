@@ -1,0 +1,2037 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Signals and Authorization Contract (Normative v1) - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#signals-and-authorization-contract-normative-v1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Signals and Authorization Contract (Normative v1)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-supported-signals-catalog-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Supported Signals Catalog (Complete)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) Supported Signals Catalog (Complete)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-signal-types-and-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Signal Types and Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.1 Signal Types and Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-cancel-vs-emergency_stop-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1.1 CANCEL vs EMERGENCY_STOP (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-retry_run-semantics-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1.2 RETRY_RUN semantics (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-alert-levels-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1.3 Alert levels (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-signal-ordering-constraints-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Signal Ordering Constraints (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-signal-payload-schemas-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Signal Payload Schemas (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-signalrequest-schema-required-for-idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) SignalRequest Schema (REQUIRED for Idempotency)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) SignalRequest Schema (REQUIRED for Idempotency)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-idempotency-rule-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Idempotency Rule (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-authorization-signal-decision-records-mandatory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Authorization &amp; Signal Decision Records (MANDATORY)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3) Authorization &amp; Signal Decision Records (MANDATORY)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-signaldecisionrecord-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 SignalDecisionRecord Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-decision-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Decision Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-iauthorization-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) IAuthorization Contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4) IAuthorization Contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-actor-field-mapping-effective-role-resolution-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Actor field mapping + effective role resolution (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-rbac-role-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 RBAC Role Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-reason-requirements-destructive-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Reason Requirements (Destructive Signals)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-policydecisionid-generation-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 policyDecisionId generation (NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-storage-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Storage Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5) Storage Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-persistence-mandatory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Persistence (MANDATORY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-indexing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Indexing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-security-lifecycle-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Security &amp; Lifecycle Considerations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6) Security &amp; Lifecycle Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-tenant-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Tenant Isolation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-audit-trail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Audit Trail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-replay-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Replay Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-error-codes-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Error Codes (Normative)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-rate-limiting-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Rate limiting (RECOMMENDED)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="signals-and-authorization-contract-normative-v1">Signals and Authorization Contract (Normative v1)<a class="headerlink" href="#signals-and-authorization-contract-normative-v1" title="Permanent link">&para;</a></h1>
+<p><a href="../../">← Back to Contracts Registry</a></p>
+<p><strong>Status</strong>: DRAFT<br />
+<strong>Version</strong>: v1
+<strong>Stability</strong>: Contracts — breaking changes require version bump<br />
+<strong>Consumers</strong>: Engine, Authorization Service, Audit Systems, UI<br />
+<strong>Parent Contract</strong>: <a href="../IWorkflowEngine.reference.v1/">IWorkflowEngine.reference.v1.md</a><br />
+<strong>References</strong>: <a href="../ExecutionSemantics.v1/">ExecutionSemantics.v1.md</a></p>
+<p><strong>Version alignment</strong>: Contract v1 aligns with parent IWorkflowEngine.v1 and ExecutionSemantics.v1.</p>
+<hr />
+<h2 id="1-supported-signals-catalog-complete">1) Supported Signals Catalog (Complete)<a class="headerlink" href="#1-supported-signals-catalog-complete" title="Permanent link">&para;</a></h2>
+<p>Signals are <strong>operator actions</strong> routed to the engine and <strong>ALWAYS enforced by <code>IAuthorization</code></strong> (RBAC + tenant scoping).</p>
+<h3 id="11-signal-types-and-requirements">1.1 Signal Types and Requirements<a class="headerlink" href="#11-signal-types-and-requirements" title="Permanent link">&para;</a></h3>
+<p><strong>Destructive signals</strong> (require justification and trigger P1 alerts):</p>
+<ul>
+<li><code>UPDATE_PARAMS</code></li>
+<li><code>INJECT_OVERRIDE</code></li>
+<li><code>UPDATE_TARGET</code></li>
+<li><code>EMERGENCY_STOP</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>SignalType</th>
+<th>Payload</th>
+<th>RBAC Role</th>
+<th>Destructive?</th>
+<th>Effect</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PAUSE</code></td>
+<td><code>{ reason?: string }</code></td>
+<td>Operator</td>
+<td>No</td>
+<td>Pauses future step scheduling</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>RESUME</code></td>
+<td><code>{}</code></td>
+<td>Operator</td>
+<td>No</td>
+<td>Resumes paused run</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>CANCEL</code></td>
+<td><code>{ reason?: string }</code></td>
+<td>Operator</td>
+<td>No</td>
+<td>Cancels run → terminal state <code>CANCELLED</code></td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>RETRY_STEP</code></td>
+<td><code>{ stepId, force?: boolean }</code></td>
+<td>Engineer</td>
+<td>No</td>
+<td>Retries failed step</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>RETRY_RUN</code></td>
+<td><code>{ reason?: string, force?: boolean }</code></td>
+<td>Engineer</td>
+<td>No</td>
+<td>Re-executes run as a new run</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>UPDATE_PARAMS</code></td>
+<td><code>{ params: object }</code></td>
+<td>Admin</td>
+<td><strong>YES</strong></td>
+<td>Updates runtime parameters</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>INJECT_OVERRIDE</code></td>
+<td><code>{ stepId, override: object }</code></td>
+<td>Admin</td>
+<td><strong>YES</strong></td>
+<td>Injects override for next step</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>ESCALATE_ALERT</code></td>
+<td><code>{ level: AlertLevel, note?: string }</code></td>
+<td>System</td>
+<td>No</td>
+<td>Emits escalation audit event</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>SKIP_STEP</code></td>
+<td><code>{ stepId, reason?: string }</code></td>
+<td>Engineer</td>
+<td>No</td>
+<td>Skips a step</td>
+<td>⏳ Phase 2</td>
+</tr>
+<tr>
+<td><code>UPDATE_TARGET</code></td>
+<td><code>{ stepId, newTarget: object }</code></td>
+<td>Admin</td>
+<td><strong>YES</strong></td>
+<td>Changes target schema/db</td>
+<td>✅ Phase 1</td>
+</tr>
+<tr>
+<td><code>EMERGENCY_STOP</code></td>
+<td><code>{ reason: string, forceKill?: boolean }</code></td>
+<td>Admin</td>
+<td><strong>YES</strong></td>
+<td>Immediate termination</td>
+<td>⏳ Phase 3</td>
+</tr>
+</tbody>
+</table>
+<h4 id="111-cancel-vs-emergency_stop-normative">1.1.1 CANCEL vs EMERGENCY_STOP (NORMATIVE)<a class="headerlink" href="#111-cancel-vs-emergency_stop-normative" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>CANCEL</code> is <strong>cooperative</strong>: the engine MUST attempt to terminate safely, preserving invariants, and MUST transition to terminal state <code>CANCELLED</code>.</li>
+<li><code>EMERGENCY_STOP</code> is <strong>non-cooperative</strong>: intended for emergencies; MAY terminate immediately and MAY leave in-flight side effects. It is destructive and triggers P1 alerts.</li>
+<li><code>forceKill</code> is ONLY valid for <code>EMERGENCY_STOP</code>.</li>
+</ul>
+<h4 id="112-retry_run-semantics-normative">1.1.2 RETRY_RUN semantics (NORMATIVE)<a class="headerlink" href="#112-retry_run-semantics-normative" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>RETRY_RUN</code> MUST create a <strong>new run</strong> with a <strong>new <code>runId</code></strong>.</li>
+<li>The original failed run remains <strong>immutable</strong> for audit.</li>
+<li>Correlation MUST be preserved via <code>originalRunId</code> (stored in run context/metadata of the new run).</li>
+</ul>
+<h4 id="113-alert-levels-normative">1.1.3 Alert levels (NORMATIVE)<a class="headerlink" href="#113-alert-levels-normative" title="Permanent link">&para;</a></h4>
+<pre><code class="language-ts">type AlertLevel = 'INFO' | 'WARNING' | 'CRITICAL' | 'P1';
+</code></pre>
+<p><code>ESCALATE_ALERT</code> is <strong>System-only</strong>: external callers MUST NOT invoke it. Engine behavior MUST be:</p>
+<ol>
+<li>persist decision record (even if rejected)</li>
+<li>emit a <code>RunEvent::ALERT_ESCALATED</code> to the run event stream / EventBus (adapter-defined)</li>
+</ol>
+<hr />
+<h3 id="12-signal-ordering-constraints-normative">1.2 Signal Ordering Constraints (NORMATIVE)<a class="headerlink" href="#12-signal-ordering-constraints-normative" title="Permanent link">&para;</a></h3>
+<p>Signals are processed in the order they are received (best-effort). The engine MUST enforce step-state constraints:</p>
+<ul>
+<li><code>RETRY_STEP</code> sent to a step in <code>RUNNING</code> MUST be rejected with <code>STEP_NOT_TERMINAL</code>.</li>
+<li><code>SKIP_STEP</code> sent to a step in <code>COMPLETED</code> or <code>FAILED</code> MUST be rejected with <code>STEP_TERMINAL</code>.</li>
+<li>Signals sent to a <strong>terminal run</strong> MUST be rejected with <code>RUN_TERMINAL</code>, except <code>ESCALATE_ALERT</code> which MAY be allowed if it does not mutate run state (adapter MUST document behavior).</li>
+</ul>
+<hr />
+<h2 id="13-signal-payload-schemas-normative">1.3 Signal Payload Schemas (NORMATIVE)<a class="headerlink" href="#13-signal-payload-schemas-normative" title="Permanent link">&para;</a></h2>
+<p>Each signal payload MUST conform to its schema. Invalid payloads MUST be rejected with <code>SIGNAL_INVALID_PAYLOAD</code> <strong>before</strong> authorization evaluation.</p>
+<table>
+<thead>
+<tr>
+<th>SignalType</th>
+<th>Schema Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PAUSE</code></td>
+<td><a href="../../../schemas/signal/Pause.v1.json">schemas/signal/Pause.v1.json</a></td>
+</tr>
+<tr>
+<td><code>RESUME</code></td>
+<td><a href="../../../schemas/signal/Resume.v1.json">schemas/signal/Resume.v1.json</a></td>
+</tr>
+<tr>
+<td><code>CANCEL</code></td>
+<td><a href="../../../schemas/signal/Cancel.v1.json">schemas/signal/Cancel.v1.json</a></td>
+</tr>
+<tr>
+<td><code>RETRY_STEP</code></td>
+<td><a href="../../../schemas/signal/RetryStep.v1.json">schemas/signal/RetryStep.v1.json</a></td>
+</tr>
+<tr>
+<td><code>RETRY_RUN</code></td>
+<td><a href="../../../schemas/signal/RetryRun.v1.json">schemas/signal/RetryRun.v1.json</a></td>
+</tr>
+<tr>
+<td><code>UPDATE_PARAMS</code></td>
+<td><a href="../../../schemas/signal/UpdateParams.v1.json">schemas/signal/UpdateParams.v1.json</a></td>
+</tr>
+<tr>
+<td><code>INJECT_OVERRIDE</code></td>
+<td><a href="../../../schemas/signal/InjectOverride.v1.json">schemas/signal/InjectOverride.v1.json</a></td>
+</tr>
+<tr>
+<td><code>ESCALATE_ALERT</code></td>
+<td><a href="../../../schemas/signal/EscalateAlert.v1.json">schemas/signal/EscalateAlert.v1.json</a></td>
+</tr>
+<tr>
+<td><code>SKIP_STEP</code></td>
+<td><a href="../../../schemas/signal/SkipStep.v1.json">schemas/signal/SkipStep.v1.json</a></td>
+</tr>
+<tr>
+<td><code>UPDATE_TARGET</code></td>
+<td><a href="../../../schemas/signal/UpdateTarget.v1.json">schemas/signal/UpdateTarget.v1.json</a></td>
+</tr>
+<tr>
+<td><code>EMERGENCY_STOP</code></td>
+<td><a href="../../../schemas/signal/EmergencyStop.v1.json">schemas/signal/EmergencyStop.v1.json</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-signalrequest-schema-required-for-idempotency">2) SignalRequest Schema (REQUIRED for Idempotency)<a class="headerlink" href="#2-signalrequest-schema-required-for-idempotency" title="Permanent link">&para;</a></h2>
+<pre><code class="language-ts">interface SignalRequest {
+  signalId: string; // Client-supplied UUID v4 (idempotency key)
+  signalType: SignalType;
+  payload: Record&lt;string, unknown&gt;; // Signal-specific payload (validated against schema)
+}
+</code></pre>
+<h3 id="21-idempotency-rule-normative">2.1 Idempotency Rule (NORMATIVE)<a class="headerlink" href="#21-idempotency-rule-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>signalId</code> is client-supplied UUID v4</li>
+<li>Engine stores handling result via StateStore upsert</li>
+<li>Repeated <code>signalId</code> delivery is a no-op (engine performs no further action; decision record is retrievable)</li>
+<li>Prevents duplicate signal processing (network retries, client bugs)</li>
+</ul>
+<p><strong>Idempotency key</strong> (normative):</p>
+<pre><code>(tenantId, runId, signalId)
+</code></pre>
+<p><strong>Resolution</strong>:</p>
+<ul>
+<li><code>tenantId</code>: resolved from stored run metadata in StateStore using <code>engineRunRef.runId</code></li>
+<li><code>runId</code>: from <code>engineRunRef.runId</code> (REQUIRED in all EngineRunRef instances)</li>
+<li><code>signalId</code>: from <code>SignalRequest.signalId</code></li>
+</ul>
+<p><strong>Decision record retrieval</strong>:
+Clients can query <code>SignalDecisionRecord</code> by <code>(tenantId, runId, signalId)</code> or <code>policyDecisionId</code> via StateStore.</p>
+<p><strong>Method signature</strong> (see parent contract):</p>
+<pre><code class="language-ts">signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise&lt;void&gt;
+</code></pre>
+<blockquote>
+<p><strong>Future consideration (non-normative, v1.2 candidate)</strong>: return <code>SignalResult</code> with references to decision record ids to avoid out-of-band querying.</p>
+</blockquote>
+<hr />
+<h2 id="3-authorization-signal-decision-records-mandatory">3) Authorization &amp; Signal Decision Records (MANDATORY)<a class="headerlink" href="#3-authorization-signal-decision-records-mandatory" title="Permanent link">&para;</a></h2>
+<p>Every signal MUST generate a <code>SignalDecisionRecord</code> <strong>BEFORE</strong> the engine applies it.</p>
+<h3 id="31-signaldecisionrecord-schema">3.1 SignalDecisionRecord Schema<a class="headerlink" href="#31-signaldecisionrecord-schema" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">interface SignalDecisionRecord {
+  signalDecisionId: string; // UUID v4
+  signalId: string; // Client-supplied (from SignalRequest)
+  decision: 'ACCEPTED' | 'REJECTED' | 'REVISION_REQUIRED';
+  reason?: string; // Decision/policy explanation (e.g., why rejected)
+  policyDecisionId: string; // IAuthorization ref
+
+  audit: {
+    actorId: string;
+    actorRole: string; // Effective role used for this decision
+    tenantId: string;
+    timestamp: string; // ISO 8601 UTC
+    reason?: string; // Operator-provided justification (REQUIRED for destructive signals)
+    sourceIp?: string;
+  };
+
+  signalType: SignalType;
+  signalPayload: Record&lt;string, unknown&gt;; // Validated by schema + policy/runtime
+
+  engineProcessedAt?: string;
+  engineResult?: { status: 'success' | 'failure'; errorCode?: string };
+
+  approvalRequired?: boolean;
+  approvedBy?: string;
+  approvalTimestamp?: string;
+}
+</code></pre>
+<h3 id="32-decision-flow">3.2 Decision Flow<a class="headerlink" href="#32-decision-flow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Signal received → payload validated (schema)</li>
+<li><code>IAuthorization.evaluateSignal()</code> called</li>
+<li>Decision made → <code>SignalDecisionRecord</code> persisted (MANDATORY)</li>
+<li>If ACCEPTED → engine applies signal</li>
+<li>If REJECTED → client receives error with <code>policyDecisionId</code></li>
+<li>If REVISION_REQUIRED → requires approval workflow (out of scope)</li>
+</ol>
+<p><strong>Approval workflow scope</strong>:
+When <code>requiresApproval=true</code>, engine MUST NOT apply the signal until an external approval service updates the decision record to <code>ACCEPTED</code>. Approval workflow contract is pending publication (Draft).</p>
+<hr />
+<h2 id="4-iauthorization-contract">4) IAuthorization Contract<a class="headerlink" href="#4-iauthorization-contract" title="Permanent link">&para;</a></h2>
+<pre><code class="language-ts">interface IAuthorization {
+  evaluateSignal(request: {
+    actor: { userId: string; roles: string[] };
+    signal: { type: SignalType; payload: Record&lt;string, unknown&gt; };
+    tenantId: string;
+    runId: string;
+  }): Promise&lt;{
+    allowed: boolean;
+    reason?: string;
+    requiresApproval?: boolean;
+    policyDecisionId: string;
+  }&gt;;
+}
+</code></pre>
+<h3 id="41-actor-field-mapping-effective-role-resolution-normative">4.1 Actor field mapping + effective role resolution (NORMATIVE)<a class="headerlink" href="#41-actor-field-mapping-effective-role-resolution-normative" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>actor.userId</code>: unique user identifier (maps to <code>audit.actorId</code>)</li>
+<li><code>actor.roles[]</code>: user's assigned roles</li>
+<li>Authorization MUST compute an <strong>effectiveRole</strong> used to satisfy policy for the requested signal.</li>
+<li><code>audit.actorRole</code> MUST equal this <strong>effectiveRole</strong>.</li>
+</ul>
+<p><strong>Effective role resolution rule (NORMATIVE)</strong>:</p>
+<ol>
+<li>Authorization policy MUST determine the set of roles possessed by the actor that individually satisfy the signal RBAC requirement.</li>
+<li>From this set, the <strong>least permissive role</strong> MUST be selected according to role hierarchy:<br />
+<code>Admin &gt; Engineer &gt; Operator &gt; System</code></li>
+<li><code>audit.actorRole</code> MUST be set to the selected role.</li>
+</ol>
+<h3 id="42-rbac-role-requirements">4.2 RBAC Role Requirements<a class="headerlink" href="#42-rbac-role-requirements" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Allowed Signals</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Operator</code></td>
+<td><code>PAUSE</code>, <code>RESUME</code>, <code>CANCEL</code></td>
+</tr>
+<tr>
+<td><code>Engineer</code></td>
+<td><code>RETRY_STEP</code>, <code>RETRY_RUN</code>, <code>SKIP_STEP</code> (+ all Operator signals)</td>
+</tr>
+<tr>
+<td><code>Admin</code></td>
+<td><code>UPDATE_PARAMS</code>, <code>INJECT_OVERRIDE</code>, <code>UPDATE_TARGET</code>, <code>EMERGENCY_STOP</code> (+ all signals)</td>
+</tr>
+<tr>
+<td><code>System</code></td>
+<td><code>ESCALATE_ALERT</code> (automated escalation only)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-reason-requirements-destructive-signals">4.3 Reason Requirements (Destructive Signals)<a class="headerlink" href="#43-reason-requirements-destructive-signals" title="Permanent link">&para;</a></h3>
+<p><strong>Destructive signals</strong> (formal definition):</p>
+<pre><code class="language-ts">type DestructiveSignalType =
+  | 'UPDATE_PARAMS'
+  | 'INJECT_OVERRIDE'
+  | 'UPDATE_TARGET'
+  | 'EMERGENCY_STOP';
+</code></pre>
+<p>Destructive signals MUST include <code>audit.reason</code> (non-empty string).</p>
+<p>If missing/empty, authorization MUST reject with:</p>
+<pre><code>AUTHZ_REASON_REQUIRED: Destructive signal requires justification
+</code></pre>
+<h3 id="44-policydecisionid-generation-normative">4.4 policyDecisionId generation (NORMATIVE)<a class="headerlink" href="#44-policydecisionid-generation-normative" title="Permanent link">&para;</a></h3>
+<p><code>policyDecisionId</code> MUST be a UUID v4 generated by the Authorization service. It MUST be globally unique and stable for audit correlation.</p>
+<hr />
+<h2 id="5-storage-requirements">5) Storage Requirements<a class="headerlink" href="#5-storage-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="51-persistence-mandatory">5.1 Persistence (MANDATORY)<a class="headerlink" href="#51-persistence-mandatory" title="Permanent link">&para;</a></h3>
+<p><code>SignalDecisionRecord</code> MUST be persisted:</p>
+<ul>
+<li>Storage: same database as StateStore</li>
+<li>Transaction: same transaction if possible (atomicity)</li>
+<li>Retention: minimum 7 years (compliance)</li>
+</ul>
+<p><strong>Transactionality (NORMATIVE)</strong>:</p>
+<ul>
+<li>If persistence of the <code>SignalDecisionRecord</code> fails, the engine MUST treat this as a hard failure and MUST NOT apply the signal.</li>
+</ul>
+<p><strong>GDPR stance (NORMATIVE)</strong>:</p>
+<ul>
+<li>Audit records are security/compliance logs and MUST be retained for the retention period.</li>
+<li>PII fields MUST be minimized and MAY be pseudonymized/anonymized according to policy/legal basis.</li>
+</ul>
+<h3 id="52-indexing">5.2 Indexing<a class="headerlink" href="#52-indexing" title="Permanent link">&para;</a></h3>
+<p>Index by:</p>
+<ul>
+<li><code>(tenantId, runId, timestamp)</code> — for audit queries</li>
+<li><code>signalId</code> — for idempotency lookups</li>
+<li><code>policyDecisionId</code> — for audit trail correlation</li>
+</ul>
+<hr />
+<h2 id="6-security-lifecycle-considerations">6) Security &amp; Lifecycle Considerations<a class="headerlink" href="#6-security-lifecycle-considerations" title="Permanent link">&para;</a></h2>
+<h3 id="61-tenant-isolation">6.1 Tenant Isolation<a class="headerlink" href="#61-tenant-isolation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Authorization MUST validate <code>tenantId</code> matches actor's tenant</li>
+<li>Cross-tenant signal delivery MUST be rejected with <code>AUTHZ_TENANT_FORBIDDEN</code></li>
+<li>Audit logs MUST record attempted cross-tenant access</li>
+</ul>
+<h3 id="62-audit-trail">6.2 Audit Trail<a class="headerlink" href="#62-audit-trail" title="Permanent link">&para;</a></h3>
+<ul>
+<li>All signals (accepted, rejected, pending) MUST be logged</li>
+<li>Destructive signals trigger P1 alerts</li>
+<li>Failed authorization attempts trigger security monitoring</li>
+</ul>
+<h3 id="63-replay-protection">6.3 Replay Protection<a class="headerlink" href="#63-replay-protection" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>signalId</code> prevents duplicate processing</li>
+<li>StateStore upsert ensures idempotency via key <code>(tenantId, runId, signalId)</code></li>
+<li>Replay of old <code>signalId</code> is a no-op</li>
+</ul>
+<h3 id="64-error-codes-normative">6.4 Error Codes (Normative)<a class="headerlink" href="#64-error-codes-normative" title="Permanent link">&para;</a></h3>
+<p>The following error codes MUST be used for signal failures (transport mapping is adapter-specific):</p>
+<table>
+<thead>
+<tr>
+<th>Error Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AUTHZ_DENIED</code></td>
+<td>Authorization denied (generic)</td>
+</tr>
+<tr>
+<td><code>AUTHZ_REASON_REQUIRED</code></td>
+<td>Destructive signal missing required justification</td>
+</tr>
+<tr>
+<td><code>AUTHZ_TENANT_FORBIDDEN</code></td>
+<td>Cross-tenant access attempt</td>
+</tr>
+<tr>
+<td><code>SIGNAL_DUPLICATE</code></td>
+<td>Signal already processed (idempotency key collision)</td>
+</tr>
+<tr>
+<td><code>SIGNAL_NOT_FOUND</code></td>
+<td>Decision record not found for query</td>
+</tr>
+<tr>
+<td><code>SIGNAL_INVALID_PAYLOAD</code></td>
+<td>Payload failed schema validation (reject before authorization)</td>
+</tr>
+<tr>
+<td><code>RUN_TERMINAL</code></td>
+<td>Signal rejected because run is already in terminal state</td>
+</tr>
+<tr>
+<td><code>STEP_NOT_TERMINAL</code></td>
+<td>Step is not in a terminal state (e.g., cannot retry RUNNING)</td>
+</tr>
+<tr>
+<td><code>STEP_TERMINAL</code></td>
+<td>Step is already terminal where signal requires non-terminal</td>
+</tr>
+</tbody>
+</table>
+<h3 id="65-rate-limiting-recommended">6.5 Rate limiting (RECOMMENDED)<a class="headerlink" href="#65-rate-limiting-recommended" title="Permanent link">&para;</a></h3>
+<p>Implementations SHOULD enforce per-tenant/per-run signal rate limits to prevent signal storms. Exceeded limits SHOULD return a transport-specific "rate limited" error.</p>
+<hr />
+<h2 id="7-references">7) References<a class="headerlink" href="#7-references" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Parent Contract: <a href="../IWorkflowEngine.reference.v1/">IWorkflowEngine.reference.v1.md</a></li>
+<li>Run Events: <a href="../RunEvents.v1/">RunEvents.v1.md</a></li>
+<li>Execution Semantics: <a href="../ExecutionSemantics.v1/">ExecutionSemantics.v1.md</a></li>
+<li>Approval Workflow (Draft): pending publication</li>
+<li>UUID v4 (RFC 4122): https://www.rfc-editor.org/rfc/rfc4122</li>
+</ul>
+<hr />
+<h2 id="change-log">Change Log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1.1</td>
+<td>2026-02-12</td>
+<td><strong>PATCH</strong>: Align with ExecutionSemantics v1.1.1 and IWorkflowEngine v1.1.1. Add <code>CANCEL</code>, <code>RETRY_RUN</code> to Phase 1; clarify <code>CANCEL</code> vs <code>EMERGENCY_STOP</code> semantics (§1.1.1); move <code>UPDATE_TARGET</code> to Phase 1; define <code>RETRY_RUN</code> immutability semantics (§1.1.2); add <code>AlertLevel</code> enum and System-only enforcement for <code>ESCALATE_ALERT</code> (§1.1.3); add signal ordering constraints (§1.2); add payload schema validation table (§1.3) with 11 JSON Schemas; define effective role resolution rule (§4.1); add <code>policyDecisionId</code> UUID v4 requirement (§4.4); add transactionality rule for decision record persistence (§5.1); add GDPR stance (§5.1); expand error codes: <code>SIGNAL_INVALID_PAYLOAD</code>, <code>RUN_TERMINAL</code>, <code>STEP_NOT_TERMINAL</code>, <code>STEP_TERMINAL</code> (§6.4); remove HTTP status codes (moved to ErrorMapping.v1.md); add rate limiting recommendation (§6.5); update references to v1.1.1; fix RBAC table to include <code>CANCEL</code> in Operator role (§4.2).</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>2026-02-12</td>
+<td>Extracted from IWorkflowEngine.reference.v1.md to reduce churn. Added RBAC table. <strong>Critical fixes</strong>: Declare signal idempotency key (tenantId, runId, signalId), clarify no-op behavior, scope approval workflow, normalize actor fields, define DestructiveSignalType enum, formalize error codes (AUTHZ_DENIED, AUTHZ_TENANT_FORBIDDEN).</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": [], "search": "../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

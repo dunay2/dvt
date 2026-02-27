@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-/* global console, process */
 const { execSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -138,16 +136,19 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-const prettierFiles = changed.filter(f => /\.(ts|js|json|md|yml|yaml|tsx)$/.test(f));
+const prettierFiles = changed.filter((f) => /\.(ts|js|json|md|yml|yaml|tsx)$/.test(f));
 const eslintFiles = changed
-  .filter(f => /\.(ts|tsx|js)$/.test(f))
+  .filter((f) => /\.(ts|tsx|js)$/.test(f))
+  // Exclude declaration files: ESLint typically ignores them and emits
+  // "File ignored because of a matching ignore pattern" warnings.
+  .filter((f) => !f.endsWith('.d.ts'))
   // Frontend is not yet part of the repo's root TypeScript/ESLint project setup.
   // Exclude it from pre-push checks until it has its own tsconfig + eslint config integration.
-  .filter(f => !f.startsWith('packages/frontend/'));
+  .filter((f) => !f.startsWith('packages/frontend/'));
 
 // remove deleted files from the lists
-const existingPrettierFiles = prettierFiles.filter(f => fs.existsSync(f));
-const existingEslintFiles = eslintFiles.filter(f => fs.existsSync(f));
+const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(f));
+const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(f));
 
 if (existingPrettierFiles.length) {
   console.log('Running Prettier check on changed files:');
@@ -166,7 +167,7 @@ if (existingEslintFiles.length) {
   console.log(existingEslintFiles.join('\n'));
   const status = runToolBatched(
     (args) => runNodeCli('ESLint', ESLINT_CLI, args),
-    ['--max-warnings', '0'],
+    ['--max-warnings', '0', '--no-warn-ignored'],
     existingEslintFiles,
     'ESLint files'
   );

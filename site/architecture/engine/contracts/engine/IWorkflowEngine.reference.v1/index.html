@@ -1,0 +1,1755 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>IWorkflowEngine Contract (Reference v1) - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#iworkflowengine-contract-reference-v1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              IWorkflowEngine Contract (Reference v1)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../adr/_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../planning/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-engine-boundary-must-must-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Engine Boundary: MUST / MUST NOT
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) Engine Boundary: MUST / MUST NOT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#must" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MUST
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#must-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MUST NOT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-minimal-contract-iworkflowengine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Minimal Contract: IWorkflowEngine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) Minimal Contract: IWorkflowEngine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#211-enginerunref-structured-adapter-polymorphic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.1 EngineRunRef (Structured, Adapter-Polymorphic)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-runstatussnapshot-status-query-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.2 RunStatusSnapshot (Status Query Result)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-correlation-identifiers-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1.3 Correlation Identifiers (REQUIRED)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-event-emission-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Event Emission Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-signals-and-authorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Signals and Authorization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-execution-plan-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Execution Plan Contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3) Execution Plan Contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-planref-transport-layer-primary-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 PlanRef (Transport Layer) — PRIMARY INPUT
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 PlanRef (Transport Layer) — PRIMARY INPUT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#311-planref-uri-allowlist-security-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.1 PlanRef URI Allowlist (Security - NORMATIVE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-executionplan-full-plan-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 ExecutionPlan (Full Plan Structure)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-cross-adapter-capability-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Cross-Adapter Capability Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terminology-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terminology Consistency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="iworkflowengine-contract-reference-v1">IWorkflowEngine Contract (Reference v1)<a class="headerlink" href="#iworkflowengine-contract-reference-v1" title="Permanent link">&para;</a></h1>
+<p><a href="../../">? Back to Contracts Registry</a></p>
+<p><strong>Status</strong>: DRAFT<br />
+<strong>Version</strong>: v1
+<strong>Stability</strong>: Contracts — breaking changes require version bump<br />
+<strong>Consumers</strong>: Planner, State, UI<br />
+<strong>Sub-Contracts</strong>: <a href="../RunEvents.v1/">RunEvents.v1.md</a>, <a href="../SignalsAndAuth.v1/">SignalsAndAuth.v1.md</a><br />
+<strong>References</strong>: <a href="https://docs.temporal.io/develop/typescript">Temporal SDK</a>, <a href="https://github.com/netflix/conductor/wiki">Conductor API</a></p>
+<hr />
+<h2 id="1-engine-boundary-must-must-not">1) Engine Boundary: MUST / MUST NOT<a class="headerlink" href="#1-engine-boundary-must-must-not" title="Permanent link">&para;</a></h2>
+<h3 id="must">MUST<a class="headerlink" href="#must" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Accept a <strong>versioned</strong> <code>ExecutionPlan</code> and execute its steps reliably.</li>
+<li>Emit <strong>run/step lifecycle events</strong> (persisted into <code>IRunStateStore</code>).</li>
+<li>Support retries/backoff as specified by Planner policy (engine-agnostic rules).</li>
+<li>Support cancellation and "stop" semantics.</li>
+<li>Support <strong>resuming / continuing</strong> after transient failures (see <a href="../ExecutionSemantics.v1/#2-resume-semantics">ExecutionSemantics.v1.md § 2</a> for resume semantics: PAUSE/RESUME signals, step replay rules, at-least-once vs exactly-once guarantees).</li>
+<li>Provide correlation identifiers: <code>tenantId</code>, <code>projectId</code>, <code>environmentId</code>, <code>runId</code>, <code>engineAttemptId</code>, <code>logicalAttemptId</code>.</li>
+</ul>
+<h3 id="must-not">MUST NOT<a class="headerlink" href="#must-not" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Perform planning (ordering/skip/cost decisions belong to <code>IExecutionPlanner</code>).</li>
+<li>Become the source of truth for state (<code>IRunStateStore</code> is the source of truth).</li>
+<li>Store secrets (<code>ISecretsProvider</code> handles that).</li>
+<li>Persist secrets or plan bodies (use <code>PlanRef</code> for storage-agnostic retrieval). Engine MAY persist minimal run metadata needed to resolve correlation IDs for non-start operations (cancel/status/signal).</li>
+</ul>
+<hr />
+<h2 id="2-minimal-contract-iworkflowengine">2) Minimal Contract: IWorkflowEngine<a class="headerlink" href="#2-minimal-contract-iworkflowengine" title="Permanent link">&para;</a></h2>
+<h3 id="21-operations">2.1 Operations<a class="headerlink" href="#21-operations" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">interface IWorkflowEngine {
+  startRun(planRef: PlanRef, context: RunContext): Promise&lt;EngineRunRef&gt;;
+  cancelRun(engineRunRef: EngineRunRef): Promise&lt;void&gt;;
+  getRunStatus(engineRunRef: EngineRunRef): Promise&lt;RunStatusSnapshot&gt;;
+  signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise&lt;void&gt;;
+}
+
+interface RunContext {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string; // MUST be globally unique; UUID v4 RECOMMENDED
+  targetAdapter: 'temporal' | 'conductor';
+}
+
+// Adapter selection MUST be resolved before invoking startRun()
+// (e.g., by a higher-level coordinator using deployment config and/or plan.metadata.targetAdapter)
+</code></pre>
+<h3 id="211-enginerunref-structured-adapter-polymorphic">2.1.1 EngineRunRef (Structured, Adapter-Polymorphic)<a class="headerlink" href="#211-enginerunref-structured-adapter-polymorphic" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">type EngineRunRef =
+  | {
+      provider: 'temporal';
+      namespace: string;
+      workflowId: string;
+      runId: string; // REQUIRED (used in signal idempotency key)
+      taskQueue?: string;
+    }
+  | {
+      provider: 'conductor';
+      workflowId: string;
+      runId: string; // REQUIRED (used in signal idempotency key)
+      conductorUrl: string; // REQUIRED per invariant below
+    };
+</code></pre>
+<p><strong>Invariants</strong>:</p>
+<ul>
+<li><code>namespace</code> (Temporal) MUST be present for Temporal provider.</li>
+<li><code>conductorUrl</code> (Conductor) MUST be present for Conductor provider.</li>
+<li><code>runId</code> MUST be present for all operations (cancellation, query, signal). Used in signal idempotency key: <code>(tenantId, runId, signalId)</code>.</li>
+<li>For debugging, include <code>taskQueue</code> (Temporal) to trace worker routing.</li>
+</ul>
+<hr />
+<h3 id="212-runstatussnapshot-status-query-result">2.1.2 RunStatusSnapshot (Status Query Result)<a class="headerlink" href="#212-runstatussnapshot-status-query-result" title="Permanent link">&para;</a></h3>
+<pre><code class="language-ts">type RunSubstatus =
+  | 'DRAINING' // Pause in progress (Conductor)
+  | 'RETRYING' // Step retry in progress
+  | 'CONTINUE_AS_NEW' // Temporal history rotation
+  | 'WAITING_APPROVAL' // Blocked on planner approval
+  | 'RECOVERING'; // After worker crash / worker recovery
+
+type AdapterScopedSubstatus = `${'temporal' | 'conductor' | 'mock'}/${string}`;
+
+interface RunStatusSnapshot {
+  runId: string;
+  status: RunStatus; // 'PENDING' | 'APPROVED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  substatus?: RunSubstatus | AdapterScopedSubstatus;
+  message?: string; // Human-readable status message
+  startedAt?: string; // ISO 8601 UTC
+  completedAt?: string; // ISO 8601 UTC (only when status is terminal)
+}
+</code></pre>
+<p><strong>Substatus rules</strong>:</p>
+<ul>
+<li>Adapters MUST use canonical <code>RunSubstatus</code> values when applicable.</li>
+<li>If an adapter needs a custom substatus, it MUST use the adapter-scoped format: <code>&lt;adapter&gt;/&lt;VALUE&gt;</code> (e.g., <code>temporal/WORKFLOW_TASK_BACKLOG</code>).</li>
+<li>UI MUST treat unknown substatus values as opaque and display them verbatim.</li>
+<li><strong>Conductor PAUSE (NORMATIVE)</strong>: <code>PAUSED</code> reflects that Conductor stops scheduling <em>new</em> tasks. In-flight tasks <strong>MUST be allowed to finish</strong> because Conductor lacks cancellation tokens. While those tasks drain, adapters MUST emit <code>substatus = 'DRAINING'</code>. UI/API MUST expose both <code>PAUSED</code> status and <code>DRAINING</code> substatus until all running tasks complete.</li>
+</ul>
+<p><strong>Status enum</strong> (see <a href="../ExecutionSemantics.v1/#12-append-only-event-model">ExecutionSemantics.v1.md § 1.2</a>):</p>
+<ul>
+<li><code>PENDING</code>: Run created, awaiting approval</li>
+<li><code>APPROVED</code>: Approved by planner, ready to start</li>
+<li><code>RUNNING</code>: Currently executing steps</li>
+<li><code>PAUSED</code>: Paused by operator signal</li>
+<li><code>COMPLETED</code>: Successfully finished all steps</li>
+<li><code>FAILED</code>: Terminated due to step failure</li>
+<li><code>CANCELLED</code>: Terminated by operator cancellation</li>
+</ul>
+<h3 id="213-correlation-identifiers-required">2.1.3 Correlation Identifiers (REQUIRED)<a class="headerlink" href="#213-correlation-identifiers-required" title="Permanent link">&para;</a></h3>
+<p>All operations and events MUST include these identifiers for traceability:</p>
+<ul>
+<li><strong><code>tenantId</code></strong>: Tenant isolation boundary (MUST be validated for every operation)</li>
+<li><strong><code>projectId</code></strong>: Project scope within tenant</li>
+<li><strong><code>environmentId</code></strong>: Environment (dev/staging/prod) for config/secrets isolation</li>
+<li><strong><code>runId</code></strong>: Unique identifier for this workflow run (MUST be globally unique; UUID v4 RECOMMENDED)</li>
+<li><strong><code>engineAttemptId</code></strong>: Physical attempt counter (engine/worker restarts, infra retries)</li>
+<li>Increments on: workflow restart, worker crash recovery, continue-as-new</li>
+<li>Used for: debugging, infra failure detection, cost attribution</li>
+<li><strong><code>logicalAttemptId</code></strong>: Logical attempt counter (step/run retries per planner policy)</li>
+<li>Increments on: explicit RETRY_STEP signal, automatic retry per plan policy</li>
+<li>Used for: deterministic replay, idempotency key generation, user-visible attempt count</li>
+</ul>
+<p><strong>Semantic difference</strong>:</p>
+<ul>
+<li><code>engineAttemptId</code> = "how many times did the infrastructure restart this?"</li>
+<li><code>logicalAttemptId</code> = "how many times did the user/policy retry this step?"</li>
+</ul>
+<p><strong>Idempotency rule (NORMATIVE)</strong>:</p>
+<ul>
+<li>Event <code>idempotencyKey</code> MUST be derived from <code>logicalAttemptId</code>, NOT <code>engineAttemptId</code>.</li>
+<li><code>engineAttemptId</code> MUST be present in events/audit logs for debugging, but MUST NOT affect idempotency.</li>
+<li>Rationale: Infrastructure retries (network blips, worker restarts) → same logical attempt → same idempotency key. This prevents false duplicates or collisions during infra retries.</li>
+</ul>
+<p><strong>Correlation ID resolution mechanism</strong>:</p>
+<p>The resolution mechanism is adapter-specific. Each adapter MUST implement correlation-id resolution from its native identifiers.</p>
+<ul>
+<li><code>runId</code> is the universal lookup key and MUST be resolvable for all providers.</li>
+<li>StateStore MUST support queries by:</li>
+<li><code>runId</code> (universal), and</li>
+<li><code>(provider, workflowId, providerRunId)</code> (adapter-specific), where applicable.</li>
+</ul>
+<p><strong>Resolution for operations without explicit RunContext</strong>:</p>
+<ul>
+<li><code>startRun(planRef, context)</code>: context explicitly includes all correlation IDs ✅</li>
+<li><code>cancelRun(engineRunRef)</code> / <code>getRunStatus(engineRunRef)</code> / <code>signal(engineRunRef, request)</code>:</li>
+<li>Engine MUST resolve <code>tenantId</code>, <code>projectId</code>, <code>environmentId</code> from stored run metadata in StateStore using <code>engineRunRef.runId</code> or <code>engineRunRef.workflowId</code>.</li>
+<li>Engine MUST validate tenant authorization before processing (RBAC check against resolved <code>tenantId</code>).</li>
+<li>All emitted events/audit logs MUST include resolved correlation IDs.</li>
+</ul>
+<hr />
+<h2 id="22-event-emission-contract">2.2 Event Emission Contract<a class="headerlink" href="#22-event-emission-contract" title="Permanent link">&para;</a></h2>
+<p><strong>See</strong>: <a href="../RunEvents.v1/">RunEvents.v1.md</a> for complete event schema, idempotency rules, and state transition mapping.</p>
+<p><strong>Summary</strong>:</p>
+<ul>
+<li>Engine emits lifecycle events: <code>RunStarted</code>, <code>StepStarted</code>, <code>StepCompleted</code>, <code>StepFailed</code>, <code>RunPaused</code>, <code>RunResumed</code>, <code>RunCompleted</code>, <code>RunFailed</code>, <code>RunCancelled</code></li>
+<li>Events MUST include: <code>runId</code>, <code>stepId</code> (if applicable), <code>engineAttemptId</code>, <code>logicalAttemptId</code>, <code>runSeq</code>, <code>idempotencyKey</code></li>
+<li>Event naming: PascalCase without <code>on</code> prefix (e.g., <code>RunStarted</code>, not <code>onRunStarted</code>)</li>
+<li>StateStore assigns <code>runSeq</code> during write; engine receives assigned seq in write response</li>
+</ul>
+<p><strong>RunQueued ownership</strong>:</p>
+<ul>
+<li><code>RunQueued</code> is emitted by the Run Queue / Admission Control component (see <a href="../ExecutionSemantics.v1/#3-backpressure-and-admission-control">ExecutionSemantics.v1.md § 3</a>).</li>
+<li>If admission control is implemented inside the Engine adapter, the adapter MUST emit <code>RunQueued</code> using the same event schema; otherwise, the external queue component emits it.</li>
+</ul>
+<hr />
+<h2 id="23-signals-and-authorization">2.3 Signals and Authorization<a class="headerlink" href="#23-signals-and-authorization" title="Permanent link">&para;</a></h2>
+<p><strong>See</strong>: <a href="../SignalsAndAuth.v1/">SignalsAndAuth.v1.md</a> for complete signal catalog, authorization rules, and audit requirements.</p>
+<hr />
+<h2 id="3-execution-plan-contract">3) Execution Plan Contract<a class="headerlink" href="#3-execution-plan-contract" title="Permanent link">&para;</a></h2>
+<h3 id="31-planref-transport-layer-primary-input">3.1 PlanRef (Transport Layer) — PRIMARY INPUT<a class="headerlink" href="#31-planref-transport-layer-primary-input" title="Permanent link">&para;</a></h3>
+<p><strong>Normative rule</strong>: <code>startRun()</code> accepts <strong>PlanRef</strong>, not <code>ExecutionPlan</code> directly.</p>
+<p><strong>Rationale</strong>: Workflow engines (Temporal, Conductor) have strict payload size limits (typically 2MB for Temporal). Full execution plans can exceed this. The engine fetches the full plan from storage via an Activity.</p>
+<p>The engine receives a <strong>plan reference</strong> pointing to the full plan stored externally:</p>
+<pre><code class="language-ts">type PlanRef = {
+  uri: string; // Opaque URI: https://..., s3://..., gs://..., azure://..., etc.
+  sha256: string; // integrity hash
+  schemaVersion: string; // MANDATORY, e.g., &quot;v1.2&quot;
+  planId: string;
+  planVersion: string;
+
+  sizeBytes?: number;
+  expiresAt?: string;
+};
+</code></pre>
+<p><strong>Versioning rule</strong>:</p>
+<ul>
+<li><code>schemaVersion</code> MANDATORY.</li>
+<li>Engine MUST reject plans with unknown <code>schemaVersion</code>.</li>
+<li>BACKWARD compatibility: Engine supports ≤3 minor versions back.</li>
+<li>FORWARD compatibility: Define deprecation policy (e.g., "v1.0 deprecated after 2026-Q3").</li>
+</ul>
+<p><strong>Integrity Validation (NORMATIVE)</strong>:</p>
+<p>When the Engine's Worker fetches a plan via <code>fetchPlan(PlanRef)</code> Activity:</p>
+<ol>
+<li>The Worker MUST download the plan from <code>PlanRef.uri</code>.</li>
+<li>The Worker MUST compute the SHA256 hash of the downloaded content.</li>
+<li>If the computed SHA256 does <strong>NOT match</strong> <code>PlanRef.sha256</code>, the Activity MUST:</li>
+<li>Fail immediately with error code <code>PLAN_INTEGRITY_VALIDATION_FAILED</code></li>
+<li>NOT proceed with workflow execution</li>
+<li>Emit a critical alert (P1) to operations/security</li>
+<li>Log both expected and actual hash values for audit</li>
+</ol>
+<p><strong>Rationale</strong>: This prevents execution of plans that have been modified after approval (e.g., cache poisoning, storage corruption, or malicious tampering).</p>
+<p><strong>See</strong>: <a href="../../../adapters/temporal/TemporalAdapter.spec/#21-fetchplan-activity-normative-validation">TemporalAdapter § 2.1</a> for reference implementation.</p>
+<h4 id="311-planref-uri-allowlist-security-normative">3.1.1 PlanRef URI Allowlist (Security - NORMATIVE)<a class="headerlink" href="#311-planref-uri-allowlist-security-normative" title="Permanent link">&para;</a></h4>
+<p>The Engine MUST validate that <code>PlanRef.uri</code> matches a configured allowlist of approved schemes and approved locations (domains/buckets/accounts/containers).</p>
+<ul>
+<li>URIs that do not match the allowlist MUST be rejected with error code <code>PLAN_URI_NOT_ALLOWED</code>.</li>
+<li>The Engine MUST explicitly reject dangerous/local schemes such as: <code>file://</code>, <code>ftp://</code>, <code>gopher://</code>, and link-local / metadata endpoints (cloud instance metadata).</li>
+<li>The allowlist MUST be enforced before any fetch attempt.</li>
+</ul>
+<p><strong>Operational note (non-normative)</strong>: This mitigates SSRF and internal network exfiltration if an attacker injects a malicious PlanRef.</p>
+<h3 id="32-executionplan-full-plan-structure">3.2 ExecutionPlan (Full Plan Structure)<a class="headerlink" href="#32-executionplan-full-plan-structure" title="Permanent link">&para;</a></h3>
+<p><strong>Usage</strong>: Internal only (after fetching via <code>PlanRef.uri</code>). NOT passed to <code>startRun()</code> directly except in local/test environments.</p>
+<pre><code class="language-ts">interface ExecutionPlan {
+  metadata: {
+    planId: string;
+    planVersion: string;
+    requiresCapabilities?: string[];
+    fallbackBehavior?: 'reject' | 'emulate' | 'degrade';
+    targetAdapter?: 'temporal' | 'conductor' | 'any';
+  };
+  steps: Array&lt;{
+    stepId: string;
+    [key: string]: unknown; // Step-specific fields (adapter-dependent)
+  }&gt;;
+}
+</code></pre>
+<p><strong>Note</strong>: Full plan schema is defined by Planner contract (out of scope for this doc). Engine validates <code>metadata.requiresCapabilities</code> only.</p>
+<p><strong>Adapter narrowing rule (NORMATIVE)</strong>:</p>
+<ul>
+<li>Adapters MUST validate and narrow step payload types (<code>steps[].unknown</code> fields) before execution.</li>
+<li>Unrecognized fields MUST be rejected with error code <code>INVALID_STEP_SCHEMA</code>.</li>
+</ul>
+<hr />
+<h2 id="4-cross-adapter-capability-validation">4) Cross-Adapter Capability Validation<a class="headerlink" href="#4-cross-adapter-capability-validation" title="Permanent link">&para;</a></h2>
+<p>Engine <strong>MUST</strong> validate plan capabilities against adapter before <code>startRun()</code>.</p>
+<p><strong>Validation contract</strong>:</p>
+<pre><code class="language-ts">interface ValidationReport {
+  planId: string;
+  status: 'VALID' | 'WARNINGS' | 'ERRORS';
+  errors: { code: string; capability: string; message: string }[];
+  warnings: { code: string; message: string }[];
+}
+
+async function startRun(planRef: PlanRef, ctx: RunContext): Promise&lt;EngineRunRef&gt; {
+  // Step 1: Fetch plan from planRef.uri (via Activity)
+  const plan = await fetchPlan(planRef);
+
+  // Step 2: Validate capabilities
+  const report = await validatePlan(plan, ctx.targetAdapter);
+
+  if (report.status === 'ERRORS' &amp;&amp; plan.metadata.fallbackBehavior === 'reject') {
+    throw new PlanValidationError('Plan validation failed', report);
+  }
+
+  // For emulate/degrade: Engine MUST emit RunStarted with warnings
+  if (report.status === 'WARNINGS' &amp;&amp; plan.metadata.fallbackBehavior !== 'reject') {
+    // Include ValidationReport reference in artifacts/metadata
+    // Emit RunStarted with degraded mode indicator
+  }
+
+  // Step 3: Execute
+  return await adapter.startRun(plan, ctx);
+}
+</code></pre>
+<p><strong>Capability declarations</strong>:</p>
+<ul>
+<li><code>plan.metadata.requiresCapabilities: Capability[]</code></li>
+<li><code>plan.metadata.fallbackBehavior: "reject" | "emulate" | "degrade"</code></li>
+<li><code>plan.metadata.targetAdapter: "temporal" | "conductor" | "any"</code></li>
+</ul>
+<p>See: <a href="../capabilities/">capabilities/</a> for executable enum + adapter matrix.</p>
+<hr />
+<h2 id="5-references">5) References<a class="headerlink" href="#5-references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Temporal SDK</strong>: <a href="https://docs.temporal.io/develop/typescript">https://docs.temporal.io/develop/typescript</a></li>
+<li><strong>Temporal Signals</strong>: <a href="https://docs.temporal.io/workflows">https://docs.temporal.io/workflows</a></li>
+<li><strong>Conductor</strong>: <a href="https://github.com/netflix/conductor/wiki">https://github.com/netflix/conductor/wiki</a></li>
+<li><strong>Sub-Contracts</strong>:</li>
+<li><a href="../RunEvents.v1/">RunEvents.v1.md</a> — Event schema, idempotency, state transitions</li>
+<li><a href="../SignalsAndAuth.v1/">SignalsAndAuth.v1.md</a> — Signal catalog, authorization, audit</li>
+<li><strong>Execution Semantics</strong>: <a href="../ExecutionSemantics.v1/">ExecutionSemantics.v1.md</a></li>
+<li><strong>Capabilities</strong>: <a href="../capabilities/">capabilities/</a></li>
+<li><strong>Plugin Sandbox (Extension)</strong>: <a href="../../extensions/PluginSandbox.v1/">extensions/PluginSandbox.v1.md</a></li>
+<li><strong>TemporalAdapter spec</strong>: <a href="../../../adapters/temporal/TemporalAdapter.spec/">../../adapters/temporal/TemporalAdapter.spec.md</a></li>
+</ul>
+<hr />
+<h2 id="terminology-consistency">Terminology Consistency<a class="headerlink" href="#terminology-consistency" title="Permanent link">&para;</a></h2>
+<p><strong>Event envelope timestamp field</strong>:</p>
+<ul>
+<li>Event envelope time field MUST be named <code>emittedAt</code> across all event schemas and examples.</li>
+<li><code>occurredAt</code> is reserved (if ever introduced) for domain/business timestamps and MUST NOT replace <code>emittedAt</code> without a major version bump.</li>
+</ul>
+<p><strong>Event naming convention</strong>:</p>
+<ul>
+<li>Event names MUST be PascalCase (e.g., <code>RunStarted</code>). <code>onRunStarted</code>-style names MUST NOT appear in normative docs.</li>
+</ul>
+<hr />
+<h2 id="change-log">Change Log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1.1</td>
+<td>2026-02-12</td>
+<td><strong>PATCH</strong>: Fix idempotency key contradiction (derived from logicalAttemptId only, NOT engineAttemptId). Update references to ExecutionSemantics v1.1.1. Add substatus enum (RunSubstatus + adapter-scoped format). Remove targetAdapter 'auto' (resolved before startRun). Add PlanRef URI allowlist security rule (SSRF/RCE mitigation). Add ExecutionPlan narrowing rule. Define emulate/degrade validation outcomes. Add terminology consistency note (emittedAt, PascalCase events). Add RunQueued ownership clarification. Update Conductor reference link. Clarify engine persistence boundary and correlation ID resolution mechanism. Fix runId type (globally unique, UUID v4 RECOMMENDED).</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>2026-02-12</td>
+<td><strong>BREAKING</strong>: Fix contradictions and ambiguities (conductorUrl required, startRun uses PlanRef, signal uses SignalRequest). Add RunStatusSnapshot schema, correlation identifier semantics. Unify event names (RunStarted not onRunStarted), add state transition mapping, clarify correlation ID resolution, remove <code>any</code>. <strong>PARTITION</strong>: Extract RunEvents.v1.md and SignalsAndAuth.v1.md to reduce churn. <strong>Fix EngineRunRef.runId</strong>: Make REQUIRED for signal idempotency.</td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>2026-02-11</td>
+<td>Initial normative contract (Temporal + Conductor)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": [], "search": "../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

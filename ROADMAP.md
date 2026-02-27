@@ -203,6 +203,12 @@ gantt
 - **Open — critical path**: #14, #15, #6, #68
 - **Open — supporting scope**: #66, #67, #70, #72, #73
 - **Audit note (2026-02-14)**: Core engine and CI foundation exist, but active adapter/runtime parity and fixture hardening remain as main blockers
+- **Update (2026-02-21)**: Added/updated contract coverage in `packages/@dvt/engine/test/contracts/engine.test.ts` for WorkflowEngine + MockAdapter to prevent `RUN_NOT_FOUND` regressions and lock deterministic replay/hash expectations in the mocked path (issue #14).
+- **Branch update (2026-02-21)**:
+  - Engine hardening in mock adapter path: avoid `RUN_NOT_FOUND` bootstrap failures and keep deterministic replay assertions aligned with projected status behavior.
+  - Contract tests updated with explicit traceability header and issue impact mapping (issue #14).
+  - CI workspace build order hardened to build workspace dependencies first (pnpm filter with dependency graph) to avoid package entry-resolution failures for `@dvt/contracts` in affected-package jobs.
+  - Test hygiene cleanup: removed orphan snapshot file without owning spec.
 - **Dependency risk**: #6 + #68 + #70 currently gate reliable executable end-to-end validation
 
 ### Phase 1.5: Hardening

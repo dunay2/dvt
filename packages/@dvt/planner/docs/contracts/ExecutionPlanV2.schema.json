@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dvt:planner:ExecutionPlanV2:v2.3.1",
+  "allOf": [
+    { "$ref": "dvt:planner:PlanCore:v2.3.1" },
+    {
+      "type": "object",
+      "required": ["metadata"],
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "required": ["planId", "createdAtIso"],
+          "properties": {
+            "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "createdAtIso": { "type": "string" }
+          }
+        },
+        "observability": { "type": "object", "additionalProperties": true }
+      }
+    }
+  ]
+}

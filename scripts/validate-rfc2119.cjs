@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-/* global __dirname, process, console */
 /**
  * RFC 2119 validator (contracts markdown only).
  *

@@ -15,7 +15,7 @@ module.exports = [
     files: ['packages/**/*.{ts,tsx}', 'apps/*/src/**/*.{ts,tsx}'],
     ignores: [
       'packages/frontend/**',
-      'packages/contracts/vitest.config.ts',
+      'packages/@dvt/contracts/vitest.config.ts',
       'docs/**',
       'dist/**',
       'coverage/**',
@@ -28,8 +28,8 @@ module.exports = [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        // Default to package-level tsconfigs; specific overrides will narrow further
-        project: ['./packages/*/tsconfig.json'],
+        // Use a dedicated ESLint TSConfig that includes src/test entrypoints.
+        project: ['./tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
       },
       globals: {
@@ -56,12 +56,7 @@ module.exports = [
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: [
-            './tsconfig.json',
-            './packages/*/tsconfig.json',
-            './packages/*/tsconfig.eslint.json',
-            './apps/*/tsconfig.json',
-          ],
+          project: ['./tsconfig.eslint.json'],
         },
         node: {
           extensions: ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts', '.json'],
@@ -110,28 +105,60 @@ module.exports = [
       ],
       'import/no-unresolved': 'error',
       'import/no-cycle': 'error',
-
     },
   },
 
-  // Project-specific parserOptions to avoid TS program graph ambiguity
+  // Project-specific parserOptions (kept) — optional, but harmless.
   {
-    files: ['packages/engine/src/**/*.ts', 'packages/engine/vitest.config.ts'],
+    files: ['packages/@dvt/engine/src/**/*.ts', 'packages/@dvt/engine/vitest.config.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/engine/tsconfig.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { tsconfigRootDir: __dirname },
     },
   },
   {
-    files: ['packages/engine/test/**/*.ts'],
+    files: ['packages/@dvt/engine/test/**/*.ts'],
     languageOptions: {
-      parserOptions: { project: ['packages/engine/tsconfig.test.eslint.json'], tsconfigRootDir: __dirname },
+      parserOptions: { tsconfigRootDir: __dirname },
       globals: { TextEncoder: 'readonly', TextDecoder: 'readonly' },
+    },
+  },
+  {
+    files: ['packages/@dvt/adapter-temporal/src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: __dirname,
+      },
+    },
+  },
+  {
+    files: ['packages/@dvt/adapter-postgres/src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: __dirname,
+      },
+    },
+  },
+  {
+    files: ['packages/@dvt/adapter-temporal/**/*.ts', 'packages/@dvt/adapter-postgres/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@dvt/planner', '@dvt/planner/*'],
+              message:
+                'Engine adapters MUST NOT import @dvt/planner. Planner sovereignty is mandatory (ADR-001).',
+            },
+          ],
+        },
+      ],
     },
   },
   {
     files: ['apps/api/src/**/*.{ts,tsx}'],
     languageOptions: {
-      parserOptions: { project: ['apps/api/tsconfig.json'], tsconfigRootDir: __dirname },
+      parserOptions: { tsconfigRootDir: __dirname },
     },
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -140,8 +167,13 @@ module.exports = [
   {
     files: ['apps/web/src/**/*.{ts,tsx}'],
     languageOptions: {
-      parserOptions: { project: ['apps/web/tsconfig.json'], tsconfigRootDir: __dirname },
-      globals: { window: 'readonly', document: 'readonly', navigator: 'readonly', React: 'readonly' },
+      parserOptions: { tsconfigRootDir: __dirname },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        React: 'readonly',
+      },
     },
     rules: {
       // UI app: relajar reglas estrictas que generan miles de warnings/errores sin valor
@@ -164,12 +196,12 @@ module.exports = [
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Determinism rules for engine source (packages/engine/src/**)
+  // Determinism rules for engine source (packages/@dvt/engine/src/**)
   // Forbidden: Date.now(), new Date(), Math.random(), process.env
   // See: CLAUDE.md "Determinism Rules" and docs/architecture/engine/dev/determinism-tooling.md
   // ──────────────────────────────────────────────────────────────────────────
   {
-    files: ['packages/engine/src/**/*.ts'],
+    files: ['packages/@dvt/engine/src/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -189,7 +221,8 @@ module.exports = [
         {
           object: 'Date',
           property: 'now',
-          message: 'Date.now() is non-deterministic in engine code. Use the injected IClock interface.',
+          message:
+            'Date.now() is non-deterministic in engine code. Use the injected IClock interface.',
         },
         {
           object: 'Math',
@@ -205,6 +238,26 @@ module.exports = [
     },
   },
 
+  // Tripwire A1: branded casts are transitional and MUST NOT live in engine core.
+  {
+    files: ['packages/@dvt/engine/src/core/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "TSAsExpression[typeAnnotation.typeName.name='RunId']",
+          message:
+            "`as RunId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.",
+        },
+        {
+          selector: "TSAsExpression[typeAnnotation.typeName.name='TenantId']",
+          message:
+            "`as TenantId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.",
+        },
+      ],
+    },
+  },
+
   // ──────────────────────────────────────────────────────────────────────────
   // Strictest determinism rules for Temporal workflow files
   // Workflows run inside the Temporal sandbox and MUST be fully deterministic.
@@ -212,14 +265,13 @@ module.exports = [
   // See: https://docs.temporal.io/workflows#deterministic-constraints
   // ──────────────────────────────────────────────────────────────────────────
   {
-    files: ['packages/adapter-temporal/src/workflows/**/*.ts'],
+    files: ['packages/@dvt/adapter-temporal/src/workflows/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector: "NewExpression[callee.name='Date']",
-          message:
-            'new Date() is non-deterministic in workflows. Use workflow SDK time utilities.',
+          message: 'new Date() is non-deterministic in workflows. Use workflow SDK time utilities.',
         },
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
@@ -296,9 +348,7 @@ module.exports = [
       vitest: vitestPlugin,
     },
     languageOptions: {
-      parserOptions: {
-        project: './tsconfig.test.json',
-      },
+      parserOptions: {},
       globals: {
         describe: 'readonly',
         it: 'readonly',
@@ -315,6 +365,13 @@ module.exports = [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/explicit-function-return-type': [
+        'warn',
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+        },
+      ],
       'no-restricted-globals': 'off',
       'no-restricted-syntax': 'off',
       'no-restricted-properties': 'off',
@@ -325,13 +382,32 @@ module.exports = [
   // Prettier should be last to override formatting rules
   prettier,
 
+  // Node.js files (scripts, cjs, etc) should be linted with Node globals enabled
+  {
+    files: ['**/*.{js,cjs,mjs}'],
+    languageOptions: {
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+
   // Ignore patterns
   {
     ignores: [
       'dist/',
       'coverage/',
       'node_modules/',
-      'packages/engine/legacy-top-level-engine/**',
+      'packages/@dvt/engine/legacy-top-level-engine/**',
       'packages/adapters-legacy/**',
       '**/*.d.ts',
       '.github/',
@@ -352,7 +428,12 @@ module.exports = [
         ecmaVersion: 2022,
         sourceType: 'module',
       },
-      globals: { __dirname: 'readonly', require: 'readonly', module: 'readonly', process: 'readonly' },
+      globals: {
+        __dirname: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        process: 'readonly',
+      },
     },
     rules: {
       'import/no-unresolved': 'off',
