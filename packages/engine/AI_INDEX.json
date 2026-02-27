@@ -1,0 +1,702 @@
+{
+  "generatedAt": "2026-02-20T09:12:44.906Z",
+  "dir": "packages/engine",
+  "entries": [
+    {
+      "path": "AI_INDEX.json",
+      "title": "AI_INDEX.json",
+      "summary": "{ \"generatedAt\": \"2026-02-20T09:11:37.508Z\", \"dir\": \"packages/engine\", \"entries\": [ { \"path\": \"AI_INDEX.json\", \"title\": \"AI_INDEX.json\", \"summary\": \"{ \\\"generatedAt\\\": \\\"2026-02-20T00:00:00.000Z\\\", \\\"dir\\\": \\\"packages/engine\\\", \\\"entries\\\": [ { \\\"path\\\": \\\"README.md\\\", \\\"title\\\": \\\"README.md\\\", \\\"summary\\\": \\\"Núcleo del motor determinista: reglas de ejecución, pruebas de determinismo y directrices para evitar Date.now()/Math.random().\\\", \\\"keywords\\\": [\\\"engine\\\",\\\"determinism\\\",\\\"tests\\\"], \\\"lastUpdated\\\": \\\"2026-01-20T00:00:00.000Z\\\", \\\"tokenCount\\\": 50 } ] }\", \"keywords\": [], \"lastUpdated\":...",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:11:37.509Z",
+      "tokenCount": 71
+    },
+    {
+      "path": "docs/GAPS_AND_FIXES.md",
+      "title": "GAPS_AND_FIXES.md",
+      "summary": "# GAPS_AND_FIXES.md",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.628Z",
+      "tokenCount": 3
+    },
+    {
+      "path": "legacy-top-level-engine/README.md",
+      "title": "README.md",
+      "summary": "# engine/ (DEPRECATED)",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.635Z",
+      "tokenCount": 4
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/event-bus/InMemoryEventBus.ts",
+      "title": "InMemoryEventBus.ts",
+      "summary": "/** * InMemoryEventBus - Mock implementation for testing * * Simple in-memory implementation of IEventBus for unit tests * NOT for production use */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.651Z",
+      "tokenCount": 32
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/index.ts",
+      "title": "index.ts",
+      "summary": "/** * Adapter Contracts (Normative Interfaces) */ export * from './IStateStoreAdapter.v1'; export * from './IOutboxStorageAdapter.v1'; export * from './IProjectorAdapter.v1'; export * from './IWorkflowEngineAdapter.v1';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.656Z",
+      "tokenCount": 31
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/IOutboxStorageAdapter.v1.ts",
+      "title": "IOutboxStorageAdapter.v1.ts",
+      "summary": "import { TenantId, EventId, IdempotencyKey } from '../contracts/types';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.663Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/IProjectorAdapter.v1.ts",
+      "title": "IProjectorAdapter.v1.ts",
+      "summary": "/** * IProjectorAdapter.v1 * * Normative contract for event projection and state materialization. * * Role: Transform workflow execution events into queryable materialized state. * Context: Used by operational dashboards, reporting systems, and state machines. * * Invariants: * - Idempotent: Same event processed multiple times produces same state * - Ordered: Events applied in causality order * - Complete: All events for a workflow are available for projection * - Durable: Projected state survives failures * - Searchable: Supports querying projected state by workflow/step/status */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.673Z",
+      "tokenCount": 115
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/IStateStoreAdapter.v1.ts",
+      "title": "IStateStoreAdapter.v1.ts",
+      "summary": "import { TenantId, IdempotencyKey } from '../contracts/types';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.681Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/IWorkflowEngineAdapter.v1.ts",
+      "title": "IWorkflowEngineAdapter.v1.ts",
+      "summary": "/** * IWorkflowEngineAdapter.v1 * * Normative contract for the core workflow orchestration engine. * * Role: Drive workflow execution through state transitions, step coordination, * determinism guarantee, and failure recovery. * * Context: The heart of the distributed workflow execution system. * Implements the state machine, handles retries, ensures idempotency, and * coordinates with adapters. * * Key Principles: * - Determinism: Same inputs always produce same outputs (for replay/recovery) * - Idempotency: Duplicate requests produce same result without side effects * - Durability: State tra...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.694Z",
+      "tokenCount": 115
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/state-store/InMemoryStateStore.ts",
+      "title": "InMemoryStateStore.ts",
+      "summary": "/** * InMemoryStateStore - Mock implementation for testing * * Simple in-memory implementation of IOutboxStorage for unit tests * NOT for production use * * Note: Use of Date is intentional for testing infrastructure */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.708Z",
+      "tokenCount": 47
+    },
+    {
+      "path": "legacy-top-level-engine/src/adapters/validatingAdapter.ts",
+      "title": "validatingAdapter.ts",
+      "summary": "import { validateExecutionPlan } from '../contracts/validation/withValidation';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.722Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/errors.ts",
+      "title": "errors.ts",
+      "summary": "export class DVTError extends Error { readonly code: string; readonly context: Record<string, unknown>; constructor(code: string, message: string, context?: Record<string, unknown>) { super(message); this.code = code; this.context = context ?? {}; Object.setPrototypeOf(this, DVTError.prototype); } }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.733Z",
+      "tokenCount": 45
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/index.ts",
+      "title": "index.ts",
+      "summary": "export * from './types'; export * from './errors';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.738Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/schemas/execution-plan.schema.ts",
+      "title": "execution-plan.schema.ts",
+      "summary": "/** * ExecutionPlan Schema (Zod) * * Source of truth for workflow execution plans. * Automatically generates TypeScript types and can generate JSON Schema. * * @see IWorkflowEngine.v1.1.md § 3 - Execution Plan Minimal Contract */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.752Z",
+      "tokenCount": 48
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/schemas/index.ts",
+      "title": "index.ts",
+      "summary": "/** * Contract Schemas (Zod) * * Central export point for all Zod-based contract schemas. * These schemas serve as the single source of truth for contract validation * and type inference. */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.760Z",
+      "tokenCount": 44
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/schemas/validation-report.schema.ts",
+      "title": "validation-report.schema.ts",
+      "summary": "/** * ValidationReport Schema (Zod) * * Schema for workflow engine capability validation reports. * Defines the contract for cross-adapter capability validation. * * @see IWorkflowEngine.v1.1.md § 4 - Cross-Adapter Capability Validation */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.778Z",
+      "tokenCount": 44
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/types.ts",
+      "title": "types.ts",
+      "summary": "/** * Core Type Definitions for DVT Engine */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.787Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/validation/validationErrors.ts",
+      "title": "validationErrors.ts",
+      "summary": "import { ZodError } from 'zod';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.799Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "legacy-top-level-engine/src/contracts/validation/withValidation.ts",
+      "title": "withValidation.ts",
+      "summary": "import { ZodError } from 'zod';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.808Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "legacy-top-level-engine/src/core/index.ts",
+      "title": "index.ts",
+      "summary": "export * from './interfaces/IEventBus';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.814Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "legacy-top-level-engine/src/core/interfaces/IEventBus.ts",
+      "title": "IEventBus.ts",
+      "summary": "/** * IEventBus Interface * * Adapter-agnostic interface for event bus publishers * Based on ROADMAP.md - Anchor Decision: Outbox Semantics * * Supports integration with Kafka, RabbitMQ, or other message brokers * Consumers receive events via this bus and must implement idempotent handling */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.821Z",
+      "tokenCount": 60
+    },
+    {
+      "path": "legacy-top-level-engine/src/core/interfaces/IOutboxStorage.ts",
+      "title": "IOutboxStorage.ts",
+      "summary": "/** * IOutboxStorage Interface * * Adapter-agnostic interface for outbox event storage * Based on ROADMAP.md - Anchor Decision: Outbox Semantics * * All outbox implementations must support: * - Transactional append with state change (consistency) * - Idempotent markDelivered (can safely retry) * - Consistent read for pullUndelivered (no duplicates within batch) */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.827Z",
+      "tokenCount": 72
+    },
+    {
+      "path": "legacy-top-level-engine/src/core/types.ts",
+      "title": "types.ts",
+      "summary": "/** * Core types for DVT Engine * Based on ROADMAP.md - Anchor Decision: Outbox Semantics * * Note: Use of Date is intentional for data structures, not in Temporal workflows */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.837Z",
+      "tokenCount": 43
+    },
+    {
+      "path": "legacy-top-level-engine/src/index.ts",
+      "title": "index.ts",
+      "summary": "/** * DVT Engine - Outbox Delivery Worker Module * * Export main components for outbox pattern implementation */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.842Z",
+      "tokenCount": 25
+    },
+    {
+      "path": "legacy-top-level-engine/src/README.md",
+      "title": "README.md",
+      "summary": "# Outbox Delivery Worker Implementation",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.873Z",
+      "tokenCount": 7
+    },
+    {
+      "path": "legacy-top-level-engine/src/types/artifacts.ts",
+      "title": "artifacts.ts",
+      "summary": "/** * Artifact Types (v1.0) * * TypeScript types for artifact references and step outputs * @see {@link docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md} § 2 - Secrets & Artifacts */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.884Z",
+      "tokenCount": 35
+    },
+    {
+      "path": "legacy-top-level-engine/src/types/contracts.ts",
+      "title": "contracts.ts",
+      "summary": "/** * IWorkflowEngine Contract Types (v1.1.1) * * TypeScript types extracted from IWorkflowEngine.v1.1.md * @see {@link docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md} * * Version 1.1 changes: * - startRun() now accepts PlanRef (not ExecutionPlan directly) * - signal() now accepts SignalRequest (includes signalId for idempotency) * - ConductorEngineRunRef.conductorUrl is REQUIRED (was optional) * - Added RunStatusSnapshot, correlation identifier semantics * * Version 1.1.1 changes: * - Added CANCEL and RETRY_RUN to SignalType * - Removed 'auto' from RunContext.targetAdapter ...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.906Z",
+      "tokenCount": 100
+    },
+    {
+      "path": "legacy-top-level-engine/src/types/index.ts",
+      "title": "index.ts",
+      "summary": "/** * DVT Engine Types * * Centralized export of all TypeScript types for engine contracts * Based on normative contract documentation: * - IWorkflowEngine.v1.md * - ExecutionSemantics.v1.md * - State Store Contract */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.912Z",
+      "tokenCount": 45
+    },
+    {
+      "path": "legacy-top-level-engine/src/types/README.md",
+      "title": "README.md",
+      "summary": "# Engine Contract Types",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.934Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "legacy-top-level-engine/src/types/state-store.ts",
+      "title": "state-store.ts",
+      "summary": "/** * State Store Contract Types (v1.0) * * TypeScript types for State Store adapters and operations * @see {@link docs/architecture/engine/contracts/state-store/README.md} * @see {@link docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md} */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.948Z",
+      "tokenCount": 35
+    },
+    {
+      "path": "legacy-top-level-engine/src/workers/OutboxWorker.ts",
+      "title": "OutboxWorker.ts",
+      "summary": "/** * OutboxWorker - Outbox Delivery Worker * * Implements the transactional outbox pattern for at-least-once event delivery * Based on ROADMAP.md - Anchor Decision: Outbox Semantics * * Features: * - Poll loop: Query undelivered events every 100ms (configurable) * - Batch delivery: Up to 100 events per batch (configurable) * - Retry forever: Exponential backoff with max 30s delay * - Monitoring: Emit metrics (delivery_lag_seconds, delivery_rate) * - Circuit breaker: Alert if lag > 5s (configurable) * * Note: This is a standalone worker, not a Temporal workflow. * Use of Date and setTimeout is...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.973Z",
+      "tokenCount": 129
+    },
+    {
+      "path": "package.json",
+      "title": "package.json",
+      "summary": "{ \"name\": \"@dvt/engine\", \"version\": \"1.0.0\", \"private\": false, \"main\": \"dist/index.js\", \"types\": \"dist/index.d.ts\", \"scripts\": { \"pretest\": \"pnpm --filter @dvt/contracts build\", \"build\": \"tsc -p tsconfig.json\", \"test\": \"vitest run\", \"test:watch\": \"vitest\" }, \"dependencies\": { \"@dvt/contracts\": \"workspace:*\" }, \"devDependencies\": { \"@types/node\": \"22.19.11\", \"typescript\": \"5.9.3\", \"vitest\": \"3.2.4\" } }",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T00:59:42.375Z",
+      "tokenCount": 57
+    },
+    {
+      "path": "README.md",
+      "title": "README.md",
+      "summary": "# DVT Engine (Phase 1) — Engine Core Implementation",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:53.991Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "src/adapters/conductor/ConductorAdapterStub.ts",
+      "title": "ConductorAdapterStub.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.326Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/adapters/IProviderAdapter.ts",
+      "title": "IProviderAdapter.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.333Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/adapters/mock/MockAdapter.ts",
+      "title": "MockAdapter.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.366Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/adapters/temporal/TemporalAdapterStub.ts",
+      "title": "TemporalAdapterStub.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.040Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/application/providerSelection.ts",
+      "title": "providerSelection.ts",
+      "summary": "import type { EngineRunRef } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-15T21:58:50.462Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/contracts/errors.ts",
+      "title": "errors.ts",
+      "summary": "// ...migrated from engine/src/contracts/errors.ts...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.047Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/contracts/executionPlan.ts",
+      "title": "executionPlan.ts",
+      "summary": "export interface ExecutionPlan { metadata: { planId: string; planVersion: string; schemaVersion: string; requiresCapabilities?: string[]; fallbackBehavior?: 'reject' | 'emulate' | 'degrade'; targetAdapter?: 'temporal' | 'conductor' | 'any' | 'mock'; }; steps: Array< { stepId: string; kind?: string; /** * Optional DAG dependencies for interpreter execution. * If omitted, consumers may execute in declaration order. */ dependsOn?: string[]; } & Record<string, unknown> >; }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.401Z",
+      "tokenCount": 83
+    },
+    {
+      "path": "src/contracts/index.ts",
+      "title": "index.ts",
+      "summary": "// ...migrated from engine/src/contracts/index.ts...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.057Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/contracts/IWorkflowEngine.v1_1_1.ts",
+      "title": "IWorkflowEngine.v1_1_1.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, } from './types.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.063Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/contracts/runEvents.ts",
+      "title": "runEvents.ts",
+      "summary": "import type { IsoUtcString, RunStatus } from './types.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:09:46.600Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "src/contracts/types.ts",
+      "title": "types.ts",
+      "summary": "// Contracts: types.ts // Version: v1.1.1 (subset needed for this implementation)",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.081Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "src/core/idempotency.ts",
+      "title": "idempotency.ts",
+      "summary": "import { randomUUID } from 'node:crypto';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:10:11.187Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/core/index.ts",
+      "title": "index.ts",
+      "summary": "// ...migrated from engine/src/core/index.ts...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.097Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/core/SnapshotProjector.ts",
+      "title": "SnapshotProjector.ts",
+      "summary": "import type { RunStatusSnapshot } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.547Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/core/types.ts",
+      "title": "types.ts",
+      "summary": "// ...migrated from engine/src/core/types.ts...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.116Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/core/WorkflowEngine.ts",
+      "title": "WorkflowEngine.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest, } from '@dvt/contracts'; import { parseEngineRunRef, parsePlanRef, parseRunContext, parseSignalRequest, } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T18:36:41.540Z",
+      "tokenCount": 27
+    },
+    {
+      "path": "src/index.ts",
+      "title": "index.ts",
+      "summary": "export * from './contracts/IWorkflowEngine.v1_1_1.js'; export * from './contracts/types.js'; export * from './contracts/runEvents.js'; export * from './contracts/executionPlan.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.652Z",
+      "tokenCount": 21
+    },
+    {
+      "path": "src/outbox/InMemoryEventBus.ts",
+      "title": "InMemoryEventBus.ts",
+      "summary": "import type { RunEventPersisted } from '../contracts/runEvents.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:11:19.655Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/outbox/InMemoryOutboxStorage.ts",
+      "title": "InMemoryOutboxStorage.ts",
+      "summary": "import type { RunEventPersisted } from '../contracts/runEvents.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:11:08.107Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/outbox/OutboxWorker.ts",
+      "title": "OutboxWorker.ts",
+      "summary": "import type { IEventBus, IOutboxStorage } from './types.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.174Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "src/outbox/types.ts",
+      "title": "types.ts",
+      "summary": "import type { RunEventPersisted } from '../contracts/runEvents.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:10:49.254Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/ports/IPlanResolver.ts",
+      "title": "IPlanResolver.ts",
+      "summary": "import type { PlanRef } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.187Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/security/AuthorizationError.ts",
+      "title": "AuthorizationError.ts",
+      "summary": "export class AuthorizationError extends Error { public readonly code = 'AUTHZ_DENIED' as const;",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.766Z",
+      "tokenCount": 17
+    },
+    {
+      "path": "src/security/authorizer.ts",
+      "title": "authorizer.ts",
+      "summary": "export interface IAuthorizer { assertTenantAccess(tenantId: string): Promise<void>; }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.194Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "src/security/planIntegrity.ts",
+      "title": "planIntegrity.ts",
+      "summary": "import type { PlanRef } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.200Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/security/planRefPolicy.ts",
+      "title": "planRefPolicy.ts",
+      "summary": "import { URL } from 'node:url';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.216Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/shims/node.d.ts",
+      "title": "node.d.ts",
+      "summary": "declare module 'node:crypto' { export interface Hash { update(data: Uint8Array | string): Hash; digest(encoding: 'hex'): string; }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.224Z",
+      "tokenCount": 23
+    },
+    {
+      "path": "src/state/InMemoryRunStateStore.ts",
+      "title": "InMemoryRunStateStore.ts",
+      "summary": "import type { AppendResult, RunEventInput, RunEventPersisted, RunMetadata, } from '../contracts/runEvents.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:11:45.019Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "src/state/InMemoryTxStore.ts",
+      "title": "InMemoryTxStore.ts",
+      "summary": "import type { AppendResult, RunEventInput, RunEventPersisted, RunMetadata, } from '../contracts/runEvents.js'; import type { IOutboxStorage, OutboxRecord } from '../outbox/types.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:12:10.340Z",
+      "tokenCount": 24
+    },
+    {
+      "path": "src/state/IRunStateStore.ts",
+      "title": "IRunStateStore.ts",
+      "summary": "import type { AppendResult, RunEventInput, RunEventPersisted, RunMetadata, } from '../contracts/runEvents.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-20T09:10:31.099Z",
+      "tokenCount": 13
+    },
+    {
+      "path": "src/types/index.ts",
+      "title": "index.ts",
+      "summary": "// ...migrated from engine/src/types/index.ts...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.266Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/types/types.ts",
+      "title": "types.ts",
+      "summary": "// ...migrated from engine/src/types/types.ts...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.271Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "src/utils/clock.ts",
+      "title": "clock.ts",
+      "summary": "import type { IsoUtcString } from '@dvt/contracts';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:17:59.911Z",
+      "tokenCount": 9
+    },
+    {
+      "path": "src/utils/jcs.ts",
+      "title": "jcs.ts",
+      "summary": "/** * RFC 8785 JSON Canonicalization Scheme (JCS) implementation. * * Notes: * - Rejects non-finite numbers (NaN/Infinity), functions, symbols, and undefined. * - Serializes numbers using ECMAScript numeric toString(), with -0 normalized to 0. * - Sorts object keys lexicographically by Unicode code units. */",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.310Z",
+      "tokenCount": 61
+    },
+    {
+      "path": "src/utils/sha256.ts",
+      "title": "sha256.ts",
+      "summary": "import { createHash } from 'node:crypto';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.315Z",
+      "tokenCount": 8
+    },
+    {
+      "path": "src/workers/OutboxWorker.ts",
+      "title": "OutboxWorker.ts",
+      "summary": "// ...migrated from engine/src/workers/OutboxWorker.ts...",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.320Z",
+      "tokenCount": 5
+    },
+    {
+      "path": "test/application/providerSelection.test.ts",
+      "title": "providerSelection.test.ts",
+      "summary": "import { describe, expect, it } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-15T21:58:50.510Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "test/contracts/engine.test.ts",
+      "title": "engine.test.ts",
+      "summary": "import { describe, it, expect } from 'vitest'; import { vi } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.001Z",
+      "tokenCount": 19
+    },
+    {
+      "path": "test/contracts/helpers.ts",
+      "title": "helpers.ts",
+      "summary": "import type { IPlanFetcher } from '../../src/security/planIntegrity.js'; import type { PlanRef } from '../src/contracts/types.js';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.361Z",
+      "tokenCount": 19
+    },
+    {
+      "path": "test/contracts/IWorkflowEngine.types.test.ts",
+      "title": "IWorkflowEngine.types.test.ts",
+      "summary": "import { describe, it, expect } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.025Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "test/contracts/plans/plan-cancel-and-resume.json",
+      "title": "plan-cancel-and-resume.json",
+      "summary": "{ \"metadata\": { \"planId\": \"plan-cancel-and-resume\", \"planVersion\": \"1.0.0\", \"schemaVersion\": \"v1.2\", \"targetAdapter\": \"mock\", \"fallbackBehavior\": \"reject\", \"requiresCapabilities\": [\"basic-execution\", \"signal.pause.native\"] }, \"steps\": [ { \"stepId\": \"s1\", \"kind\": \"noop\" }, { \"stepId\": \"s2\", \"kind\": \"noop\" }, { \"stepId\": \"s3\", \"kind\": \"noop\" }, { \"stepId\": \"s4\", \"kind\": \"noop\" }, { \"stepId\": \"s5\", \"kind\": \"noop\" } ] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.034Z",
+      "tokenCount": 68
+    },
+    {
+      "path": "test/contracts/plans/plan-minimal.json",
+      "title": "plan-minimal.json",
+      "summary": "{ \"metadata\": { \"planId\": \"plan-minimal\", \"planVersion\": \"1.0.0\", \"schemaVersion\": \"v1.2\", \"targetAdapter\": \"mock\", \"fallbackBehavior\": \"reject\", \"requiresCapabilities\": [\"basic-execution\"] }, \"steps\": [{ \"stepId\": \"s1\", \"kind\": \"noop\" }] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.039Z",
+      "tokenCount": 32
+    },
+    {
+      "path": "test/contracts/plans/plan-parallel.json",
+      "title": "plan-parallel.json",
+      "summary": "{ \"metadata\": { \"planId\": \"plan-parallel\", \"planVersion\": \"1.0.0\", \"schemaVersion\": \"v1.2\", \"targetAdapter\": \"mock\", \"fallbackBehavior\": \"reject\", \"requiresCapabilities\": [\"basic-execution\", \"workflow.fan.parallel\"] }, \"steps\": [ { \"stepId\": \"s1\", \"kind\": \"noop\" }, { \"stepId\": \"s2\", \"kind\": \"noop\" }, { \"stepId\": \"s3\", \"kind\": \"noop\" }, { \"stepId\": \"s4\", \"kind\": \"noop\" } ] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.045Z",
+      "tokenCount": 60
+    },
+    {
+      "path": "test/contracts/results/golden-paths-run.json",
+      "title": "golden-paths-run.json",
+      "summary": "{ \"timestamp\": \"2026-02-11T23:10:15.489Z\", \"database\": \"not-configured\", \"paths\": { \"plan-minimal\": { \"status\": \"success\", \"duration\": 22, \"hash\": \"f67700e014113dc5\" }, \"plan-parallel\": { \"status\": \"success\", \"duration\": 13, \"hash\": \"de7490f68aa73db8\" }, \"plan-cancel-and-resume\": { \"status\": \"success\", \"duration\": 14, \"hash\": \"b5a138be90164b1a\" }, \"hello-world\": { \"status\": \"success\", \"duration\": 15, \"hash\": \"afa27b44d43b02a9\" }, \"pause-resume\": { \"status\": \"success\", \"duration\": 14, \"hash\": \"fcbdc203a1c9bc81\" }, \"retry\": { \"status\": \"skipped\", \"reason\": \"not-implemented\", \"hash\": \"pending\" } ...",
+      "keywords": [],
+      "lastUpdated": "2026-02-13T19:29:42.474Z",
+      "tokenCount": 83
+    },
+    {
+      "path": "test/core/WorkflowEngine.test.ts",
+      "title": "WorkflowEngine.test.ts",
+      "summary": "import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts'; import { describe, expect, it } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.075Z",
+      "tokenCount": 23
+    },
+    {
+      "path": "test/determinism/README.md",
+      "title": "README.md",
+      "summary": "# Determinism Enforcement",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.116Z",
+      "tokenCount": 4
+    },
+    {
+      "path": "test/security/authorizer.deny.test.ts",
+      "title": "authorizer.deny.test.ts",
+      "summary": "import type { RunContext } from '@dvt/contracts'; import { describe, it, expect } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.136Z",
+      "tokenCount": 20
+    },
+    {
+      "path": "test/types/engine-types.test.ts",
+      "title": "engine-types.test.ts",
+      "summary": "import { describe, it, expect } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.147Z",
+      "tokenCount": 11
+    },
+    {
+      "path": "test/utils/clock.test.ts",
+      "title": "clock.test.ts",
+      "summary": "import type { IsoUtcString } from '@dvt/contracts'; import { describe, it, expect } from 'vitest';",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.160Z",
+      "tokenCount": 20
+    },
+    {
+      "path": "tsconfig.eslint.json",
+      "title": "tsconfig.eslint.json",
+      "summary": "{ \"extends\": \"../../tsconfig.eslint.base.json\", \"include\": [\"src/**/*.ts\", \"src/**/*.d.ts\", \"vitest.config.ts\"], \"exclude\": [\"dist\", \"node_modules\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.165Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "tsconfig.json",
+      "title": "tsconfig.json",
+      "summary": "{ \"extends\": \"../../tsconfig.base.json\", \"compilerOptions\": { \"target\": \"ES2022\", \"module\": \"ES2022\", \"moduleResolution\": \"Bundler\", \"outDir\": \"dist\", \"rootDir\": \".\", \"strict\": true, \"noImplicitAny\": true, \"exactOptionalPropertyTypes\": true, \"noUncheckedIndexedAccess\": true, \"noFallthroughCasesInSwitch\": true, \"noPropertyAccessFromIndexSignature\": true, \"skipLibCheck\": true, \"lib\": [\"ES2022\", \"DOM\"], \"declaration\": true, \"sourceMap\": true, \"paths\": { \"@dvt/contracts\": [\"../contracts/dist/index.d.ts\"], \"@dvt/contracts/*\": [\"../contracts/dist/*\"] } }, \"include\": [\"src/**/*\"], \"exclude\": [\"dist\",...",
+      "keywords": [],
+      "lastUpdated": "2026-02-19T14:18:00.170Z",
+      "tokenCount": 64
+    },
+    {
+      "path": "tsconfig.test.eslint.json",
+      "title": "tsconfig.test.eslint.json",
+      "summary": "{ \"extends\": \"./tsconfig.test.json\", \"include\": [\"test/**/*.ts\"], \"exclude\": [\"dist\", \"node_modules\"] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.419Z",
+      "tokenCount": 12
+    },
+    {
+      "path": "tsconfig.test.json",
+      "title": "tsconfig.test.json",
+      "summary": "{ \"extends\": \"./tsconfig.json\", \"include\": [ \"test/**/*.test.ts\", \"test/**/*.spec.ts\", \"test/**/*.ts\", \"src/**/*.test.ts\" ] }",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.423Z",
+      "tokenCount": 15
+    },
+    {
+      "path": "vitest.config.ts",
+      "title": "vitest.config.ts",
+      "summary": "import { defineConfig } from 'vitest/config';",
+      "keywords": [],
+      "lastUpdated": "2026-02-14T03:19:54.427Z",
+      "tokenCount": 8
+    }
+  ]
+}
