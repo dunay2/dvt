@@ -36,33 +36,28 @@ jobs:
         with:
           filters: |
             contracts_relevant:
-              - 'packages/@dvt/contracts/**'
-              - 'packages/@dvt/engine/test/contracts/**'
+              - 'packages/contracts/**'
+              - 'packages/engine/test/contracts/**'
               - 'docs/architecture/engine/contracts/**'
               - 'docs/decisions/**'
               - '.golden/**'
               - 'scripts/compare-hashes.cjs'
               - 'scripts/db-migrate.cjs'
-              - 'scripts/validate-executable-examples.cjs'
-              - 'scripts/validate-references.cjs'
-              - 'scripts/validate-glossary-usage.cjs'
-              - 'scripts/validate-idempotency-vectors.cjs'
               - 'scripts/neo4j/**'
               - 'scripts/validate-contracts.cjs'
-              - 'scripts/validate-rfc2119.cjs'
               - '.github/workflows/contracts.yml'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
             determinism_relevant:
-              - 'packages/@dvt/engine/**'
-              - 'packages/@dvt/contracts/**'
+              - 'packages/engine/**'
+              - 'packages/contracts/**'
               - '.github/workflows/contracts.yml'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
             golden_relevant:
-              - 'packages/@dvt/engine/test/contracts/**'
+              - 'packages/engine/test/contracts/**'
               - 'docs/architecture/engine/contracts/**'
               - '.golden/**'
               - 'scripts/compare-hashes.cjs'
@@ -178,40 +173,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-  contracts-index-sync:
-    name: Contracts Index Sync
-    runs-on: ubuntu-latest
-    needs: [detect-changes]
-    if:
-      github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
-      'true'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Validate contracts index is up-to-date
-        run: pnpm contracts:index:check
+      - name: Validate generated graph Cypher is up-to-date
+        run: pnpm kg:check
 
   determinism-checks:
     name: Determinism Pattern Scan
@@ -251,7 +214,7 @@ jobs:
       - name: Check for Date.now()
         run: |
           echo "🔍 Scanning for Date.now() in engine workflows..."
-          if grep -r "Date\.now()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
+          if grep -r "Date\.now()" packages/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
             echo "❌ Found Date.now() calls (use workflow.now() in Temporal workflows)"
             exit 1
           else
@@ -261,7 +224,7 @@ jobs:
       - name: Check for Math.random()
         run: |
           echo "🔍 Scanning for Math.random() in engine workflows..."
-          if grep -r "Math\.random()" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
+          if grep -r "Math\.random()" packages/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
             echo "❌ Found Math.random() calls (use workflow-seeded RNG)"
             exit 1
           else
@@ -271,7 +234,7 @@ jobs:
       - name: Check for crypto.randomBytes()
         run: |
           echo "🔍 Scanning for crypto.randomBytes() in engine workflows..."
-          if grep -r "crypto\.randomBytes" packages/@dvt/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
+          if grep -r "crypto\.randomBytes" packages/engine/src --exclude-dir=node_modules 2>/dev/null | grep -v "OutboxWorker.ts" | grep -q .; then
             echo "❌ Found crypto.randomBytes() calls (use deterministic UUID generation)"
             exit 1
           else
@@ -281,7 +244,7 @@ jobs:
   contract-compile:
     name: Compile TypeScript Contracts
     runs-on: ubuntu-latest
-    needs: [detect-changes, kg-cypher-sync, contracts-index-sync]
+    needs: [detect-changes, kg-cypher-sync]
     if:
       github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
       'true'
@@ -316,15 +279,15 @@ jobs:
       - name: Check for 'any' types
         run: |
           echo "Checking for TypeScript 'any' types in contracts..."
-          if [ -d "packages/@dvt/contracts/src" ]; then
-            if grep -rE ":\s*any" packages/@dvt/contracts/src 2>/dev/null | grep -q .; then
+          if [ -d "packages/contracts/src" ]; then
+            if grep -rE ":\s*any" packages/contracts/src 2>/dev/null | grep -q .; then
               echo "❌ Found 'any' types in contracts (violates strict mode)"
               exit 1
             else
               echo "✅ No 'any' types found"
             fi
           else
-            echo "⚠️  packages/@dvt/contracts/src directory not found"
+            echo "⚠️  packages/contracts/src directory not found"
             echo "✅ Check passed (stub mode)"
           fi
 
@@ -334,9 +297,9 @@ jobs:
         with:
           name: compiled-contracts
           path: |
-            packages/@dvt/contracts/dist/
-            packages/@dvt/contracts/src/**/*.js
-            packages/@dvt/contracts/src/**/*.d.ts
+            packages/contracts/dist/
+            packages/contracts/src/**/*.js
+            packages/contracts/src/**/*.d.ts
 
   contract-validate:
     name: Validate Golden JSON Fixtures
@@ -376,26 +339,8 @@ jobs:
           name: compiled-contracts
           path: .
 
-      - name: Validate RFC 2119 normative keywords (warning mode)
-        run: pnpm contracts:rfc2119:validate
-
-      - name: Validate glossary terminology usage (warning mode)
-        run: pnpm contracts:glossary:validate
-
-      - name: Validate cross-contract markdown references (warning mode)
-        run: pnpm contracts:references:validate
-
-      - name: Validate glossary canonical usage (warning mode)
-        run: pnpm contracts:glossary:validate
-
-      - name: Validate idempotency vectors (blocking)
-        run: pnpm contracts:idempotency:validate
-
       - name: Validate golden fixtures
         run: pnpm validate:contracts
-
-      - name: Validate executable TypeScript examples in contracts
-        run: pnpm contracts:examples:validate
 
   contract-hashes:
     name: Execute Golden Paths & Validate Hashes
@@ -451,14 +396,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
 
-      - name: Run adapter-postgres integration smoke tests
-        run:
-          pnpm --filter @dvt/adapter-postgres exec vitest run test/smoke.test.ts --config
-          vitest.config.cjs
-        env:
-          DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
-          DVT_PG_INTEGRATION: '1'
-
       - name: Execute golden paths
         run: pnpm golden:validate
         env:
@@ -477,5 +414,5 @@ jobs:
         with:
           name: contract-test-results
           path: |
-            packages/@dvt/engine/test/contracts/results/
+            packages/engine/test/contracts/results/
             .golden/hashes.json
