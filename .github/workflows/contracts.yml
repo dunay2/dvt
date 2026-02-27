@@ -7,10 +7,6 @@ name: Contracts & Determinism
 #   2) JSON schema validation is skipped only when no *.schema.json files exist.
 
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:

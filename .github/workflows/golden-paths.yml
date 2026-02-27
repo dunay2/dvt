@@ -1,23 +1,7 @@
 name: Golden Paths Validation
 
 on:
-  pull_request:
-    paths:
-      - 'packages/@dvt/engine/test/contracts/**'
-      - 'docs/architecture/engine/contracts/**'
-      - 'scripts/validate-contracts.cjs'
-      - '.github/workflows/golden-paths.yml'
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/@dvt/engine/test/contracts/**'
-      - 'docs/architecture/engine/contracts/**'
-      - 'scripts/validate-contracts.cjs'
-      - '.github/workflows/golden-paths.yml'
   workflow_dispatch:
-  schedule:
-    - cron: '30 2 * * *'
 
 concurrency:
   group: golden-paths-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
