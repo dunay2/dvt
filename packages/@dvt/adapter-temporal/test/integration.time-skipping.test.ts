@@ -1194,7 +1194,7 @@ describe('temporal integration (time-skipping)', () => {
         TEMPORAL_IDENTITY: 'adapter-temporal-it',
       });
 
-      const mkWorker = () =>
+      const mkWorker = (): TemporalWorkerHost =>
         new TemporalWorkerHost({
           temporalConfig: {
             ...temporalConfig,

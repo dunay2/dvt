@@ -20,6 +20,10 @@ import type {
   PlanCore,
 } from './types.js';
 
+type NormalizedPlannerInput = Omit<PlannerInputEnvelopeV2, 'nodes'> & {
+  nodes: readonly GraphNode[];
+};
+
 export interface PlannerOptions {
   limits?: Partial<PlannerLimits>;
   metrics?: PlannerMetrics;
@@ -209,7 +213,7 @@ export class Planner {
     }
   }
 
-  private normalizeInput(input: PlannerInputEnvelopeV2): PlannerInputEnvelopeV2 {
+  private normalizeInput(input: PlannerInputEnvelopeV2): NormalizedPlannerInput {
     const nodes =
       Array.isArray(input.nodes) && input.nodes.length > 0
         ? input.nodes
