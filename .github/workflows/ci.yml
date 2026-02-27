@@ -2,6 +2,12 @@ name: CI - Code Quality
 
 on:
   workflow_dispatch:
+    inputs:
+      run_markdown_lint:
+        description: 'Run markdown lint job'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -199,6 +205,7 @@ jobs:
 
   markdown-lint:
     name: Markdown Documentation
+    if: ${{ github.event.inputs.run_markdown_lint == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
