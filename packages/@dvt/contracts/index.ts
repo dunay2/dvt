@@ -1,12 +1,28 @@
 export * from './src/types/contracts';
 export * from './src/types/artifacts';
-export * from './src/types/state-store';
 export * from './src/workflows';
 export * from './src/adapters/IOutboxStorageAdapter.v1';
 export * from './src/adapters/IProjectorAdapter.v1';
 export * from './src/adapters/IStateStoreAdapter.v1';
 export * from './src/adapters/IWorkflowEngineAdapter.v1';
 export * from './src/adapters/IProviderAdapter.v1';
+export * from './src/contracts/engine/IOutboxStorage.v1';
+export type {
+  DbtManifestLike,
+  DbtManifestRef,
+  ExecutionPlanV2,
+  ExecutionStepV2,
+  GraphNode,
+  PlanCore,
+  PlannerBuildResultV2,
+  PlannerEnvironmentContext,
+  PlannerInputEnvelope,
+  PlannerInputEnvelopeV2,
+  PlannerPolicies,
+  PlannerSelection,
+  StepKind,
+} from './src/contracts/planner/ExecutionPlan.v2';
+export type { IPlanner, IExecutionPlanner } from './src/contracts/planner/IExecutionPlanner.v2';
 export * from './src/errors';
 export * from './src/schemas';
 export * from './src/planner-input';
@@ -17,6 +33,8 @@ export type {
   EventIdempotencyInput,
   EventInput,
   EventType,
+  ListEventsOptions,
+  ListRunsOptions,
   ExecutionPlan,
   IClock,
   IIdempotencyKeyBuilder,

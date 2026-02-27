@@ -29,7 +29,6 @@ var __exportStar =
 Object.defineProperty(exports, '__esModule', { value: true });
 __exportStar(require('./src/types/contracts'), exports);
 __exportStar(require('./src/types/artifacts'), exports);
-__exportStar(require('./src/types/state-store'), exports);
 __exportStar(require('./src/workflows'), exports);
 __exportStar(require('./src/adapters/IOutboxStorageAdapter.v1'), exports);
 __exportStar(require('./src/adapters/IProjectorAdapter.v1'), exports);

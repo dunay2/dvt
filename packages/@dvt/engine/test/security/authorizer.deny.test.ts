@@ -145,6 +145,93 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     expect(adapter.signalCalls).toBe(0);
   });
 
+  it('denies cancelRun before metadata lookup when runRef tenant is unauthorized', async () => {
+    const adapter = new CountingAdapter();
+    const authorizer = new TenantScopeAuthorizer('tenant-allowed');
+    const { engine, store } = makeEngine(authorizer, adapter);
+
+    await store.saveRunMetadata({
+      tenantId: 'tenant-allowed',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId: 'run-tenant-locked-1',
+      planId: 'p',
+      planVersion: '1',
+      logicalAttemptId: 1,
+      provider: 'mock',
+      providerWorkflowId: 'wf',
+      providerRunId: 'run-tenant-locked-1',
+    });
+
+    const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
+      provider: 'mock',
+      tenantId: 'tenant-forbidden',
+      workflowId: 'wf',
+      runId: 'run-tenant-locked-1',
+    };
+
+    await expect(engine.cancelRun(forgedRunRef)).rejects.toBeInstanceOf(AuthorizationError);
+    expect(adapter.cancelCalls).toBe(0);
+  });
+
+  it('denies getRunStatus before metadata lookup when runRef tenant is unauthorized', async () => {
+    const adapter = new CountingAdapter();
+    const authorizer = new TenantScopeAuthorizer('tenant-allowed');
+    const { engine, store } = makeEngine(authorizer, adapter);
+
+    await store.saveRunMetadata({
+      tenantId: 'tenant-allowed',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId: 'run-tenant-locked-2',
+      planId: 'p',
+      planVersion: '1',
+      logicalAttemptId: 1,
+      provider: 'mock',
+      providerWorkflowId: 'wf',
+      providerRunId: 'run-tenant-locked-2',
+    });
+
+    const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
+      provider: 'mock',
+      tenantId: 'tenant-forbidden',
+      workflowId: 'wf',
+      runId: 'run-tenant-locked-2',
+    };
+
+    await expect(engine.getRunStatus(forgedRunRef)).rejects.toBeInstanceOf(AuthorizationError);
+  });
+
+  it('denies signal before metadata lookup when runRef tenant is unauthorized', async () => {
+    const adapter = new CountingAdapter();
+    const authorizer = new TenantScopeAuthorizer('tenant-allowed');
+    const { engine, store } = makeEngine(authorizer, adapter);
+
+    await store.saveRunMetadata({
+      tenantId: 'tenant-allowed',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId: 'run-tenant-locked-3',
+      planId: 'p',
+      planVersion: '1',
+      logicalAttemptId: 1,
+      provider: 'mock',
+      providerWorkflowId: 'wf',
+      providerRunId: 'run-tenant-locked-3',
+    });
+
+    const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
+      provider: 'mock',
+      tenantId: 'tenant-forbidden',
+      workflowId: 'wf',
+      runId: 'run-tenant-locked-3',
+    };
+
+    const req: import('@dvt/contracts').SignalRequest = { signalId: 's-deny', type: 'PAUSE' };
+    await expect(engine.signal(forgedRunRef, req)).rejects.toBeInstanceOf(AuthorizationError);
+    expect(adapter.signalCalls).toBe(0);
+  });
+
   it('denies when tenantId != subjectTenantId (tenant-scope)', async () => {
     const adapter = new CountingAdapter();
     const authorizer = new TenantScopeAuthorizer('tenant-B');

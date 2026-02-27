@@ -1,5 +1,5 @@
 import type { PlanRef, RunContext } from '@dvt/contracts';
-import type { RunStateCommandPort } from '@dvt/state-store';
+import type { RunStateCommandPort } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createActivities, type ActivityDeps } from '../src/activities/stepActivities.js';
@@ -425,6 +425,58 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
+    it('evaluates gateway step in activity boundary and returns gatewayDecision=true', async () => {
+      const deps = buildDeps();
+      const acts = createActivities(deps);
+
+      const result = await acts.executeStep({
+        step: {
+          stepId: 'gw-1',
+          type: 'gateway',
+          gateway: {
+            dslVersion: '1.0',
+            expression: "status='COMPLETED'",
+          },
+        },
+        ctx: CTX,
+        gatewayContext: {
+          status: 'COMPLETED',
+        },
+      });
+
+      expect(result).toEqual({
+        stepId: 'gw-1',
+        status: 'COMPLETED',
+        gatewayDecision: true,
+      });
+    });
+
+    it('evaluates gateway step in activity boundary and returns gatewayDecision=false', async () => {
+      const deps = buildDeps();
+      const acts = createActivities(deps);
+
+      const result = await acts.executeStep({
+        step: {
+          stepId: 'gw-1',
+          type: 'gateway',
+          gateway: {
+            dslVersion: '1.0',
+            expression: "status='COMPLETED'",
+          },
+        },
+        ctx: CTX,
+        gatewayContext: {
+          status: 'FAILED',
+        },
+      });
+
+      expect(result).toEqual({
+        stepId: 'gw-1',
+        status: 'COMPLETED',
+        gatewayDecision: false,
+      });
+    });
+
     function expectExecuteStepRejects(step: any, expectedError: string) {
       return async () => {
         const deps = buildDeps();
@@ -487,6 +539,32 @@ describe('stepActivities', () => {
       expectExecuteStepRejects(
         { stepId: 's1', kind: 'test', simulateError: 'permanent' },
         'PERMANENT_STEP_ERROR:s1'
+      )
+    );
+
+    it(
+      'rejects gateway step without gateway config',
+      expectExecuteStepRejects(
+        {
+          stepId: 'gw-invalid',
+          type: 'gateway',
+        },
+        'INVALID_STEP_SCHEMA: gateway_config_required:gw-invalid'
+      )
+    );
+
+    it(
+      'rejects gateway step with invalid DSL expression',
+      expectExecuteStepRejects(
+        {
+          stepId: 'gw-invalid-dsl',
+          type: 'gateway',
+          gateway: {
+            dslVersion: '1.0',
+            expression: 'status=COMPLETED',
+          },
+        },
+        'INVALID_GATEWAY_DSL:gw-invalid-dsl'
       )
     );
   });

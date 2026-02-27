@@ -95,7 +95,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(result.appended[0]?.runSeq).toBe(1);
       expect(result.lastSeq).toBe(1);
 
-      const meta = await adapter.getRunMetadataByRunId('run-bs-1');
+      const meta = await adapter.getRunMetadataByRunId('t1', 'run-bs-1');
       expect(meta).toMatchObject({
         runId: 'run-bs-1',
         provider: 'mock',
@@ -142,7 +142,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(second.appended).toHaveLength(0);
       expect(second.deduped).toHaveLength(1);
       expect(second.lastSeq).toBe(2);
-      await expect(adapter.listEvents('run-idemp')).resolves.toHaveLength(2);
+      await expect(adapter.listEvents('t1', 'run-idemp')).resolves.toHaveLength(2);
     } finally {
       await adapter.close();
     }
@@ -156,7 +156,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       await adapter.migrate();
       await adapter.bootstrapRunTx(makeBootstrap('run-snap-1'));
 
-      const snap = await adapter.getSnapshot('run-snap-1');
+      const snap = await adapter.getSnapshot('t1', 'run-snap-1');
       expect(snap).not.toBeNull();
       expect(snap?.status).toBe('PENDING');
       expect(snap?.paused).toBe(false);
@@ -179,7 +179,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snap = await adapter.getSnapshot('run-snap-2');
+      const snap = await adapter.getSnapshot('t1', 'run-snap-2');
       expect(snap?.status).toBe('RUNNING');
       expect(snap?.startedAt).toBe(NOW);
     } finally {
@@ -207,7 +207,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snapCancelling = await adapter.getSnapshot('run-cancel');
+      const snapCancelling = await adapter.getSnapshot('t1', 'run-cancel');
       expect(snapCancelling?.status).toBe('RUNNING');
       expect(snapCancelling?.cancelling).toBe(true);
 
@@ -219,7 +219,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snapCancelled = await adapter.getSnapshot('run-cancel');
+      const snapCancelled = await adapter.getSnapshot('t1', 'run-cancel');
       expect(snapCancelled?.status).toBe('CANCELLED');
     } finally {
       await adapter.close();
@@ -275,6 +275,54 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     }
   });
 
+  test('outbox: markFailed applies backoff via nextAttemptAt and listPending respects it', async () => {
+    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
+    try {
+      await adapter.migrate();
+      await adapter.bootstrapRunTx(makeBootstrap('run-backoff'));
+
+      const [rec] = await adapter.listPending(10);
+      expect(rec).toBeDefined();
+
+      await adapter.markFailed(rec!.id, 'transient-backoff');
+
+      // Same NOW -> pending row should be gated by nextAttemptAt and not returned.
+      const pendingNow = await adapter.listPending(10);
+      expect(pendingNow.find((r) => r.id === rec!.id)).toBeUndefined();
+    } finally {
+      await adapter.close();
+    }
+  });
+
+  test('outbox: replayDeadLetters moves records back to pending', async () => {
+    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
+    try {
+      await adapter.migrate();
+      await adapter.bootstrapRunTx(makeBootstrap('run-replay'));
+      const [rec] = await adapter.listPending(10);
+      expect(rec).toBeDefined();
+
+      for (let i = 0; i < 10; i += 1) {
+        await adapter.markFailed(rec!.id, `e-${i}`);
+      }
+
+      const dl = await adapter.listDeadLetter(10);
+      const target = dl.find((r) => r.runId === 'run-replay');
+      expect(target).toBeDefined();
+
+      const moved = await adapter.replayDeadLetters({ runId: 'run-replay', limit: 1 });
+      expect(moved).toBe(1);
+
+      const dlAfter = await adapter.listDeadLetter(10);
+      expect(dlAfter.find((r) => r.runId === 'run-replay')).toBeUndefined();
+
+      const pendingAfter = await adapter.listPending(10);
+      expect(pendingAfter.find((r) => r.id === rec!.id)).toBeDefined();
+    } finally {
+      await adapter.close();
+    }
+  });
+
   // ── Multi-tenant isolation ────────────────────────────────────────────────
 
   test('listRuns: filters by tenantId', async () => {
@@ -290,6 +338,30 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(forA.every((r) => r.tenantId === 'tenant-a')).toBe(true);
       expect(forB.every((r) => r.tenantId === 'tenant-b')).toBe(true);
       expect(forA.find((r) => r.runId === 'run-t-b')).toBeUndefined();
+    } finally {
+      await adapter.close();
+    }
+  });
+
+  test('tenant-scoped reads deny cross-tenant access by default', async () => {
+    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
+    try {
+      await adapter.migrate();
+      await adapter.bootstrapRunTx(makeBootstrap('run-tenant-read-a', 'tenant-a'));
+      await adapter.appendAndEnqueueTx('run-tenant-read-a', [
+        makeEvent({
+          runId: 'run-tenant-read-a',
+          eventType: 'RunStarted',
+          idempotencyKey: 'run-tenant-read-a:started',
+          tenantId: 'tenant-a',
+        }),
+      ]);
+
+      await expect(
+        adapter.getRunMetadataByRunId('tenant-b', 'run-tenant-read-a')
+      ).resolves.toBeNull();
+      await expect(adapter.listEvents('tenant-b', 'run-tenant-read-a')).resolves.toHaveLength(0);
+      await expect(adapter.getSnapshot('tenant-b', 'run-tenant-read-a')).resolves.toBeNull();
     } finally {
       await adapter.close();
     }

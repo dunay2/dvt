@@ -608,6 +608,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
             SELECT id
             FROM ${quoteIdentifier(this.schema)}.outbox
             WHERE delivered_at IS NULL
+              AND (next_attempt_at IS NULL OR next_attempt_at <= $2::timestamptz)
               AND (claimed_at IS NULL OR claimed_at < ($2::timestamptz - INTERVAL '5 minutes'))
             ORDER BY created_at ASC
             LIMIT $1
@@ -617,7 +618,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
             SET claimed_at = $2::timestamptz
             FROM picked
             WHERE o.id = picked.id
-            RETURNING o.id, o.created_at, o.idempotency_key, o.payload, o.attempts, o.last_error
+            RETURNING o.id, o.created_at, o.idempotency_key, o.payload, o.attempts, o.last_error, o.next_attempt_at
           )
           SELECT * FROM claimed
           ORDER BY created_at ASC
@@ -634,6 +635,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         payload: row.payload as EventEnvelope,
         attempts: Number(row.attempts),
         lastError: row.last_error ?? undefined,
+        nextAttemptAt:
+          (row as OutboxRow & { next_attempt_at?: string | null }).next_attempt_at ?? undefined,
       }));
     } catch (error) {
       await client.query('ROLLBACK');
@@ -669,11 +672,15 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           UPDATE ${quoteIdentifier(this.schema)}.outbox
           SET attempts = attempts + 1,
               last_error = $2,
+              next_attempt_at = CASE
+                WHEN attempts + 1 >= ${MAX_OUTBOX_ATTEMPTS} THEN NULL
+                ELSE $3::timestamptz + make_interval(secs => LEAST(60, POWER(2, GREATEST(0, attempts))))
+              END,
               claimed_at = NULL
           WHERE id = $1
           RETURNING attempts, payload, run_id
         `,
-        [id, error]
+        [id, error, this.now()]
       );
 
       const row = result.rows[0];
@@ -724,6 +731,106 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       lastError: row.last_error,
       deadLetteredAt: row.dead_lettered_at,
     }));
+  }
+
+  async replayDeadLetters(options?: {
+    limit?: number;
+    runId?: string;
+    ids?: string[];
+  }): Promise<number> {
+    this.ready();
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const limit = Math.max(0, options?.limit ?? 100);
+      if (limit === 0) {
+        await client.query('COMMIT');
+        return 0;
+      }
+
+      const params: unknown[] = [limit];
+      const where: string[] = [];
+
+      if (options?.runId) {
+        params.push(options.runId);
+        where.push(`run_id = $${params.length}`);
+      }
+
+      if (options?.ids && options.ids.length > 0) {
+        params.push(options.ids);
+        where.push(`id = ANY($${params.length}::text[])`);
+      }
+
+      const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+
+      const replayedAt = this.now();
+      params.push(replayedAt);
+      const replayedAtParam = `$${params.length}`;
+
+      const result = await client.query<{ moved: number }>(
+        `
+          WITH picked AS (
+            SELECT id, original_id, run_id, payload
+            FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter
+            ${whereSql}
+            ORDER BY dead_lettered_at ASC
+            LIMIT $1
+            FOR UPDATE
+          ), inserted AS (
+            INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
+              id,
+              run_id,
+              run_seq,
+              created_at,
+              idempotency_key,
+              payload,
+              attempts,
+              last_error,
+              claimed_at,
+              delivered_at,
+              next_attempt_at
+            )
+            SELECT
+              p.original_id,
+              p.run_id,
+              ((p.payload->>'runSeq')::int),
+              ${replayedAtParam}::timestamptz,
+              (p.payload->>'idempotencyKey'),
+              p.payload,
+              0,
+              NULL,
+              NULL,
+              NULL,
+              NULL
+            FROM picked p
+            ON CONFLICT (id) DO UPDATE
+            SET attempts = 0,
+                last_error = NULL,
+                claimed_at = NULL,
+                delivered_at = NULL,
+                next_attempt_at = NULL,
+                created_at = EXCLUDED.created_at
+            RETURNING id
+          ), deleted AS (
+            DELETE FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
+            USING inserted i
+            WHERE dl.original_id = i.id
+            RETURNING dl.id
+          )
+          SELECT COUNT(*)::int AS moved FROM deleted
+        `,
+        params
+      );
+
+      await client.query('COMMIT');
+      return result.rows[0]?.moved ?? 0;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   private ready(): void {
@@ -803,6 +910,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         attempts INTEGER NOT NULL DEFAULT 0,
         last_error TEXT,
         claimed_at TIMESTAMPTZ,
+        next_attempt_at TIMESTAMPTZ,
         delivered_at TIMESTAMPTZ
       )
     `);
@@ -835,6 +943,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     await client.query(`
       ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
       ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
+      ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ
     `);
 
     await client.query(`
@@ -885,7 +998,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private async ensureIndexes(client: PoolClient): Promise<void> {
     await client.query(`
       CREATE INDEX IF NOT EXISTS outbox_pending_idx
-      ON ${quoteIdentifier(this.schema)}.outbox (created_at, claimed_at)
+      ON ${quoteIdentifier(this.schema)}.outbox (next_attempt_at, created_at, claimed_at)
       WHERE delivered_at IS NULL
     `);
 

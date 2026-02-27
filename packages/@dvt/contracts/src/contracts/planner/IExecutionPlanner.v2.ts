@@ -1,5 +1,13 @@
-import type { ExecutionPlan } from './ExecutionPlan.v2';
+import type { PlannerBuildResultV2, PlannerInputEnvelopeV2 } from './ExecutionPlan.v2';
 
-export interface IExecutionPlanner {
-  plan(input: unknown): Promise<ExecutionPlan>;
+/**
+ * Contrato normativo del planner (GAP-P0-02).
+ */
+export interface IPlanner {
+  buildPlan(input: PlannerInputEnvelopeV2): Promise<PlannerBuildResultV2>;
 }
+
+/**
+ * Alias legacy mantenido por compatibilidad hacia atrás.
+ */
+export interface IExecutionPlanner extends IPlanner {}

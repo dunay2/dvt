@@ -9,6 +9,7 @@
  */
 export type {
   AppendResult,
+  DeadLetterRecord,
   EventEnvelope,
   EventType,
   EventInput,

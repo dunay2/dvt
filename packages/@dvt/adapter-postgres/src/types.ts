@@ -1,22 +1,22 @@
-import type { RunId } from '@dvt/contracts';
 import type {
+  AppendResult,
+  EventInput,
+  EventEnvelope,
+  EventType,
   IRunStateStore,
+  IOutboxStorage,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
-} from '@dvt/engine/contracts/engine/IRunStateStore.v1';
-import type {
-  AppendResult,
-  EventEnvelope,
-  EventType,
-  RunEventInput,
+  RunId,
   RunMetadata,
+  RunStateCommandPort,
   WorkflowSnapshot,
-} from '@dvt/engine/contracts/engine/RunEvents.v2';
-import type { IOutboxStorage } from '@dvt/engine/src/outbox/types';
+} from '@dvt/contracts';
 
 export type {
   AppendResult,
+  EventInput,
   EventEnvelope,
   EventType,
   IOutboxStorage,
@@ -26,16 +26,11 @@ export type {
   RunId,
   RunBootstrapInput,
   RunMetadata,
+  RunStateCommandPort,
   WorkflowSnapshot,
 };
 
-export type EventInput = RunEventInput;
 export type StepSnapshot = WorkflowSnapshot['steps'][string];
-
-export interface RunStateCommandPort {
-  bootstrapRun(input: RunBootstrapInput): Promise<AppendResult>;
-  appendTransitions(runId: RunId, events: EventInput[]): Promise<AppendResult>;
-}
 
 export type IsoUtcString = string;
 export type OutboxId = string;
@@ -49,6 +44,7 @@ export interface OutboxRecord {
   payload: EventEnvelope;
   attempts: number;
   lastError?: string;
+  nextAttemptAt?: string;
 }
 
 export interface DeadLetterRecord {

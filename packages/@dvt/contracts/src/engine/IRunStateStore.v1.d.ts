@@ -63,6 +63,30 @@ export interface RunBootstrapInput {
   metadata: RunMetadata;
   firstEvents: EventInput[];
 }
+export interface ListRunsOptions {
+  /** Tenant scope is mandatory to prevent cross-tenant leaks. */
+  tenantId: string;
+  /** Maximum records to return (default: 50). */
+  limit?: number;
+  /**
+   * Filter by snapshot status. Only returns runs whose materialized snapshot
+   * matches this status. Implementations without snapshot access may ignore this field.
+   */
+  status?: RunStatus;
+}
+export interface ListEventsOptions {
+  /**
+   * Keyset cursor: return only events with run_seq strictly greater than this value.
+   * Omit to start from the beginning.
+   */
+  afterSeq?: number;
+  /**
+   * Maximum events to return in this page.
+   * Omit for no limit (full scan). Only safe on recovery/rebuild paths where
+   * getSnapshot() returned null. The hot read path MUST use getSnapshot() instead.
+   */
+  limit?: number;
+}
 export interface WorkflowSnapshot {
   runId: string;
   status: RunStatus;
@@ -89,7 +113,24 @@ export interface IRunStateStore {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
-  listEvents(tenantId: string, runId: string): Promise<EventEnvelope[]>;
+  listEvents(
+    tenantId: string,
+    runId: string,
+    options?: ListEventsOptions
+  ): Promise<EventEnvelope[]>;
+  /**
+   * Returns run metadata records, most-recently created first.
+   * Useful for dashboard / admin listing — does not include run status.
+   */
+  listRuns(options: ListRunsOptions): Promise<RunMetadata[]>;
+  /**
+   * Returns the latest materialized WorkflowSnapshot for the run, or null if
+   * no snapshot exists yet (run predates snapshot support, or store crashed
+   * between event commit and snapshot upsert).
+   *
+   * Callers MUST fall back to full event replay when null is returned.
+   */
+  getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null>;
 }
 export interface RunStateCommandPort {
   bootstrapRun(input: RunBootstrapInput): Promise<AppendResult>;

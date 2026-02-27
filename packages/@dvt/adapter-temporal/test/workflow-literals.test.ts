@@ -24,4 +24,11 @@ describe('workflow literal parity', () => {
     // Signals listed in WorkflowSignals may include phase-2 entries (e.g. RETRY_*).
     // We intentionally only assert on signals actually implemented in the workflow.
   });
+
+  it('keeps gateway DSL evaluation outside workflow code (activity boundary)', () => {
+    expect(src).not.toContain('parseDslV1');
+    expect(src).not.toContain('evaluateDslV1');
+    expect(src).toContain('activities.executeStep({');
+    expect(src).toContain('gatewayContext');
+  });
 });

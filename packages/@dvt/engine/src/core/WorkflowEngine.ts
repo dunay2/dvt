@@ -253,8 +253,8 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
+    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
-    await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
     const adapter = this.getAdapterOrThrow(meta.provider);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
@@ -283,8 +283,8 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
+    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
-    await this.deps.authorizer.assertTenantAccess(meta.tenantId);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
 
     // ADR-0015: default read path MUST NOT call the provider.
@@ -316,8 +316,8 @@ export class WorkflowEngine implements IWorkflowEngine {
    */
   async enrichRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
+    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
-    await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
     const adapter = this.getAdapterOrThrow(meta.provider);
 
@@ -345,9 +345,9 @@ export class WorkflowEngine implements IWorkflowEngine {
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
     const validatedRequest = normalizeSignalRequest(parseSignalRequest(request));
+    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
 
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
-    await this.deps.authorizer.assertTenantAccess(meta.tenantId);
 
     const adapter = this.getAdapterOrThrow(meta.provider);
 
@@ -511,6 +511,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     limit?: number;
   }): Promise<string[]> {
     const { thresholdMs, tenantId, limit } = options;
+    await this.deps.authorizer.assertTenantAccess(tenantId);
     const nowMs = Date.parse(this.deps.clock.nowIsoUtc());
 
     const candidates = await this.deps.stateStore.listRuns({

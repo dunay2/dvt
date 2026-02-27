@@ -18,7 +18,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
-import type { RunStateCommandPort } from '@dvt/state-store';
+import type { RunStateCommandPort } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -749,6 +749,30 @@ function mkPermanentFailurePlan(): unknown {
   } as const;
 }
 
+function mkGatewaySkipPlan(): unknown {
+  return {
+    metadata: {
+      planId: 'it-plan-gateway-skip',
+      planVersion: '1.0.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+    },
+    steps: [
+      { stepId: 's-1', kind: 'noop' },
+      {
+        stepId: 'gw-1',
+        type: 'gateway',
+        gateway: {
+          dslVersion: '1.0',
+          expression: "status='FAILED'",
+        },
+        dependsOn: ['s-1'],
+      },
+      { stepId: 's-2', kind: 'noop', dependsOn: ['gw-1'] },
+    ],
+  } as const;
+}
+
 function sha256Hex(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
 }
@@ -985,6 +1009,87 @@ describe('temporal integration (time-skipping)', () => {
         ]);
 
         // Verify monotonic runSeq (ADR-0010 Section 3.2)
+        expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
+
+        const projected = projector.rebuild(ctx.runId, events);
+        expect(projected.status).toBe('COMPLETED');
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
+  it(
+    'gateway path: evaluates DSL in activity boundary and emits StepSkipped deterministically',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+      const store = new TestStateStore();
+      const outbox = new TestOutbox();
+      const projector = new TestProjector();
+      const plan = mkGatewaySkipPlan();
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+
+      const planRef = createPlanRef('it-plan-gateway-skip', planBytes);
+      const ctx: RunContext = {
+        ...createRunContext('run-it-gateway-skip'),
+        tenantId: 't-it',
+      };
+
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-gateway-skip',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
+
+      const worker = new TemporalWorkerHost({
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+        },
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, outbox, planBytes),
+      });
+
+      await worker.start(env.nativeConnection);
+
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+        stateStore: store,
+        projector,
+      });
+
+      try {
+        await adapter.startRun(planRef, ctx);
+
+        await waitForCondition(
+          () => store.listEvents(ctx.runId),
+          (events) => events.some((e) => e.eventType === 'RunCompleted'),
+          { timeoutMs: 30_000 }
+        );
+
+        const events = await store.listEvents(ctx.runId);
+        expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
+          'RunStarted:-',
+          'StepStarted:s-1',
+          'StepCompleted:s-1',
+          'StepStarted:gw-1',
+          'StepCompleted:gw-1',
+          'StepSkipped:s-2',
+          'RunCompleted:-',
+        ]);
+
+        const gatewayCompleted = events.find(
+          (e) => e.eventType === 'StepCompleted' && e.stepId === 'gw-1'
+        );
+        expect(gatewayCompleted).toBeDefined();
+        expect(
+          (gatewayCompleted?.payload as { gatewayDecision?: boolean } | undefined)?.gatewayDecision
+        ).toBe(false);
+
         expect(events.every((e, idx) => e.runSeq === idx + 1)).toBe(true);
 
         const projected = projector.rebuild(ctx.runId, events);

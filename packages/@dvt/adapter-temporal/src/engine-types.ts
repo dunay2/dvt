@@ -15,10 +15,9 @@ export type {
   IIdempotencyKeyBuilder,
   IPlanFetcher,
   IPlanIntegrityValidator,
+  IOutboxStorage,
   IRunStateStore,
   RunBootstrapInput,
   RunMetadata,
   RunStateCommandPort,
 } from '@dvt/contracts';
-
-export type { IOutboxStorage } from '@dvt/engine/src/outbox/types';

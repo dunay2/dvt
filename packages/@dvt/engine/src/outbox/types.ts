@@ -15,6 +15,11 @@ export interface OutboxRecord {
   payload: RunEventPersisted;
   attempts: number;
   lastError?: string;
+  /**
+   * Optional retry gate. When present, workers SHOULD NOT redeliver this record
+   * before this timestamp.
+   */
+  nextAttemptAt?: string;
 }
 
 export interface DeadLetterRecord {
@@ -36,6 +41,15 @@ export interface IOutboxStorage {
   listPending(limit: number): Promise<OutboxRecord[]>;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
+  /**
+   * Optional DLQ listing capability for operational tooling.
+   */
+  listDeadLetter?(limit: number): Promise<DeadLetterRecord[]>;
+  /**
+   * Optional manual replay capability from DLQ back into pending outbox.
+   * Returns number of records moved.
+   */
+  replayDeadLetters?(options?: { limit?: number; runId?: string; ids?: string[] }): Promise<number>;
 }
 
 export interface IEventBus {

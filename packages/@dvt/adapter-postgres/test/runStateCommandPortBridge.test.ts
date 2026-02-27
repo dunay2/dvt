@@ -1,4 +1,4 @@
-import type { RunEventInput, RunMetadata } from '@dvt/engine';
+import type { EventInput, RunMetadata } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PostgresRunStateCommandPortBridge } from '../src/runStateCommandPortBridge.js';
@@ -18,7 +18,7 @@ function buildMetadata(runId: string): RunMetadata {
   };
 }
 
-function buildRunStarted(runId: string): RunEventInput {
+function buildRunStarted(runId: string): EventInput {
   return {
     eventId: 'ev-1',
     eventType: 'RunStarted',

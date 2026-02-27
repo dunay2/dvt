@@ -1,5 +1,6 @@
 export type {
   ExecutionPlanV2 as ExecutionPlan,
+  DbtManifestLike,
   ExecutionStepV2,
   PlanCore,
   PlannerInputEnvelopeV2,

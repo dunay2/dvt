@@ -12,6 +12,7 @@ import { TextDecoder } from 'node:util';
 
 import { parsePlanRef, parseRunContext } from '@dvt/contracts';
 import type { PlanRef, RunContext, RunId } from '@dvt/contracts';
+import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { Context } from '@temporalio/activity';
 import { ApplicationFailure } from '@temporalio/activity';
 
@@ -54,11 +55,17 @@ export interface ActivityDeps {
 export interface StepInput {
   step: ExecutionPlan['steps'][number];
   ctx: RunContext;
+  /**
+   * Deterministic context assembled by workflow from previously completed steps.
+   * Used only by gateway steps.
+   */
+  gatewayContext?: Record<string, unknown>;
 }
 
 export interface StepResult {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
+  gatewayDecision?: boolean;
   retriable?: boolean;
   error?: string;
 }
@@ -120,6 +127,26 @@ export function createActivities(deps: ActivityDeps): {
           message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
           nonRetryable: true,
         });
+      }
+
+      if (input.step.type === 'gateway') {
+        const gateway = parseGatewayConfigOrThrow(input.step);
+        try {
+          const parsed = parseDslV1(gateway.expression);
+          const passed = evaluateDslV1(parsed, input.gatewayContext ?? {});
+          return {
+            stepId: input.step.stepId,
+            status: 'COMPLETED',
+            gatewayDecision: passed,
+          };
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          throw ApplicationFailure.create({
+            type: 'PermanentStepError',
+            message: `INVALID_GATEWAY_DSL:${input.step.stepId}:${reason}`,
+            nonRetryable: true,
+          });
+        }
       }
 
       return { stepId: input.step.stepId, status: 'COMPLETED' };
@@ -235,7 +262,11 @@ function parsePlan(bytes: Uint8Array): ExecutionPlan {
   if (!isExecutionPlan(obj)) {
     throw new Error('INVALID_PLAN_SCHEMA');
   }
-  validatePlanContractVersion(obj.metadata.contractVersion);
+  const contractVersion = obj.metadata.contractVersion;
+  if (typeof contractVersion !== 'string') {
+    throw new Error('PLAN_CONTRACT_VERSION_MISSING');
+  }
+  validatePlanContractVersion(contractVersion);
   return obj;
 }
 
@@ -293,4 +324,41 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
   if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
     throw new Error('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
   }
+}
+
+function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
+  dslVersion: '1.0';
+  expression: string;
+} {
+  const gateway = step.gateway;
+  if (typeof gateway !== 'object' || gateway === null) {
+    throw ApplicationFailure.create({
+      type: 'PermanentStepError',
+      message: `INVALID_STEP_SCHEMA: gateway_config_required:${step.stepId}`,
+      nonRetryable: true,
+    });
+  }
+
+  const value = gateway as Record<string, unknown>;
+  if (value['dslVersion'] !== '1.0') {
+    throw ApplicationFailure.create({
+      type: 'PermanentStepError',
+      message: `INVALID_STEP_SCHEMA: gateway_dsl_version:${step.stepId}`,
+      nonRetryable: true,
+    });
+  }
+
+  const expression = value['expression'];
+  if (typeof expression !== 'string' || expression.trim().length === 0) {
+    throw ApplicationFailure.create({
+      type: 'PermanentStepError',
+      message: `INVALID_STEP_SCHEMA: gateway_expression:${step.stepId}`,
+      nonRetryable: true,
+    });
+  }
+
+  return {
+    dslVersion: '1.0',
+    expression,
+  };
 }

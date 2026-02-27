@@ -218,6 +218,124 @@ export const ExecuteStepResultSchema = z.object({
   executedAt: z.number(),
 });
 
+// ─── Planner schemas (GAP-P0-02) ─────────────────────────────────────────────
+
+const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
+
+export const PlannerSelectionSchema = z
+  .object({
+    selectedNodeIds: z.array(z.string().min(1)),
+    includeUpstream: z.boolean().optional(),
+    includeDownstream: z.boolean().optional(),
+  })
+  .strict();
+
+export const PlannerPoliciesSchema = z
+  .object({
+    stepTimeoutMs: z.number().positive().optional(),
+    retries: z
+      .object({
+        maxAttempts: z.number().int().positive(),
+        backoffMs: z.number().nonnegative(),
+      })
+      .strict()
+      .optional(),
+    concurrency: z
+      .object({
+        maxInFlight: z.number().int().positive(),
+      })
+      .strict()
+      .optional(),
+    gatewayDslVersion: z.string().min(1).optional(),
+    custom: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict();
+
+export const PlannerEnvironmentContextSchema = z
+  .object({
+    environmentId: z.string().min(1).optional(),
+    targetProfile: z.string().min(1).optional(),
+    vars: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict();
+
+export const GraphNodeSchema = z
+  .object({
+    nodeId: z.string().min(1),
+    resourceType: z.string().min(1),
+    dependsOn: z.array(z.string().min(1)),
+  })
+  .strict();
+
+export const DbtManifestRefSchema = z
+  .object({
+    uri: z.string().min(1),
+    sha256: HexSha256Schema.optional(),
+    artifactId: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const ExecutionStepV2Schema = z
+  .object({
+    stepId: z.string().min(1),
+    kind: z.string().min(1),
+    dependsOn: z.array(z.string().min(1)),
+    stepTypeConfig: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict();
+
+export const PlanCoreSchema = z
+  .object({
+    metadata: z
+      .object({
+        planVersion: z.literal('2.3'),
+        inputHashSha256: HexSha256Schema,
+      })
+      .strict(),
+    steps: z.array(ExecutionStepV2Schema),
+  })
+  .strict();
+
+export const ExecutionPlanV2Schema = PlanCoreSchema.extend({
+  metadata: z
+    .object({
+      planVersion: z.literal('2.3'),
+      inputHashSha256: HexSha256Schema,
+      planId: HexSha256Schema,
+      createdAtIso: z.string().min(1),
+    })
+    .strict(),
+  observability: z
+    .object({
+      tags: z.record(z.string(), z.string()).optional(),
+      extra: z.record(z.string(), z.unknown()).optional(),
+    })
+    .catchall(z.unknown())
+    .optional(),
+}).strict();
+
+export const PlannerInputEnvelopeV2Schema = z
+  .object({
+    manifest: z.record(z.string(), z.unknown()).optional(),
+    manifestRef: DbtManifestRefSchema.optional(),
+    nodes: z.array(GraphNodeSchema),
+    selection: PlannerSelectionSchema,
+    policies: PlannerPoliciesSchema.optional(),
+    environment: PlannerEnvironmentContextSchema.optional(),
+    observability: ExecutionPlanV2Schema.shape.observability,
+    requestedBy: z.string().min(1).optional(),
+    requestId: z.string().min(1).optional(),
+    requestedAtIso: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const PlannerBuildResultV2Schema = z
+  .object({
+    plan: ExecutionPlanV2Schema,
+    canonicalPlanJson: z.string().min(1),
+  })
+  .strict();
+
 // ─── Inferred types from schemas (B1) ────────────────────────────────────────
 
 export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
@@ -235,3 +353,13 @@ export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
 
 export type ExecuteStepRequestSchemaT = z.infer<typeof ExecuteStepRequestSchema>;
 export type ExecuteStepResultSchemaT = z.infer<typeof ExecuteStepResultSchema>;
+export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
+export type PlannerPoliciesSchemaT = z.infer<typeof PlannerPoliciesSchema>;
+export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
+export type GraphNodeSchemaT = z.infer<typeof GraphNodeSchema>;
+export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;
+export type ExecutionStepV2SchemaT = z.infer<typeof ExecutionStepV2Schema>;
+export type PlanCoreSchemaT = z.infer<typeof PlanCoreSchema>;
+export type ExecutionPlanV2SchemaT = z.infer<typeof ExecutionPlanV2Schema>;
+export type PlannerInputEnvelopeV2SchemaT = z.infer<typeof PlannerInputEnvelopeV2Schema>;
+export type PlannerBuildResultV2SchemaT = z.infer<typeof PlannerBuildResultV2Schema>;

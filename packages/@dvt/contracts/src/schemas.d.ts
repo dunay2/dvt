@@ -41,8 +41,8 @@ export declare const StepStatusSchema: z.ZodEnum<{
   PENDING: 'PENDING';
   RUNNING: 'RUNNING';
   FAILED: 'FAILED';
-  SKIPPED: 'SKIPPED';
   SUCCESS: 'SUCCESS';
+  SKIPPED: 'SKIPPED';
 }>;
 export declare const SignalTypeSchema: z.ZodEnum<{
   PAUSE: 'PAUSE';
@@ -53,8 +53,8 @@ export declare const SignalTypeSchema: z.ZodEnum<{
 }>;
 export declare const StepOutputStatusSchema: z.ZodEnum<{
   FAILED: 'FAILED';
-  SKIPPED: 'SKIPPED';
   SUCCESS: 'SUCCESS';
+  SKIPPED: 'SKIPPED';
 }>;
 export declare const PlanRefSchema: z.ZodObject<
   {
@@ -191,8 +191,8 @@ export declare const StepOutputSchema: z.ZodObject<
   {
     status: z.ZodEnum<{
       FAILED: 'FAILED';
-      SKIPPED: 'SKIPPED';
       SUCCESS: 'SUCCESS';
+      SKIPPED: 'SKIPPED';
     }>;
     artifactRefs: z.ZodArray<
       z.ZodObject<
@@ -247,8 +247,8 @@ export declare const StepSnapshotSchema: z.ZodObject<
       PENDING: 'PENDING';
       RUNNING: 'RUNNING';
       FAILED: 'FAILED';
-      SKIPPED: 'SKIPPED';
       SUCCESS: 'SUCCESS';
+      SKIPPED: 'SKIPPED';
     }>;
     logicalAttemptId: z.ZodString;
     engineAttemptId: z.ZodOptional<z.ZodString>;
@@ -281,8 +281,8 @@ export declare const RunSnapshotSchema: z.ZodObject<
             PENDING: 'PENDING';
             RUNNING: 'RUNNING';
             FAILED: 'FAILED';
-            SKIPPED: 'SKIPPED';
             SUCCESS: 'SUCCESS';
+            SKIPPED: 'SKIPPED';
           }>;
           logicalAttemptId: z.ZodString;
           engineAttemptId: z.ZodOptional<z.ZodString>;

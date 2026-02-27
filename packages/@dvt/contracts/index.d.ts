@@ -1,6 +1,5 @@
 export * from './src/types/contracts';
 export * from './src/types/artifacts';
-export * from './src/types/state-store';
 export * from './src/workflows';
 export * from './src/adapters/IOutboxStorageAdapter.v1';
 export * from './src/adapters/IProjectorAdapter.v1';
@@ -11,5 +10,5 @@ export * from './src/errors';
 export * from './src/schemas';
 export * from './src/planner-input';
 export * from './src/validation';
-export type { WorkflowSnapshot } from './src/engine/IRunStateStore.v1';
+export type { AppendResult, EventEnvelope, EventIdempotencyInput, EventInput, EventType, ListEventsOptions, ListRunsOptions, ExecutionPlan, IClock, IIdempotencyKeyBuilder, IPlanFetcher, IPlanIntegrityValidator, IRunStateStore, RunBootstrapInput, RunMetadata, RunStateCommandPort, WorkflowSnapshot, } from './src/engine/IRunStateStore.v1';
 //# sourceMappingURL=index.d.ts.map

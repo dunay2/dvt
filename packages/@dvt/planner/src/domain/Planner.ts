@@ -6,6 +6,7 @@ import { buildGraph } from './graph/GraphBuilder.js';
 import { topoSort } from './graph/TopoSort.js';
 import { sha256CanonicalJson } from './hashing.js';
 import { resolveLimits, type PlannerLimits, throwLimitExceeded } from './limits.js';
+import { deriveGraphNodesFromManifest } from './manifest.js';
 import { NoopPlannerMetrics, type PlannerMetrics } from './metrics.js';
 import { resolvePolicies } from './policies.js';
 import { binaryCompare } from './sorting.js';
@@ -61,17 +62,23 @@ export class Planner {
       this.checkAbort(started);
       this.validateInputEnvelope(input);
 
+      const normalizedInput = this.normalizeInput(input);
+
       // 1) Build & validate graph
-      const graph = buildGraph(input.nodes, this.limits);
+      const graph = buildGraph(normalizedInput.nodes, this.limits);
       this.metrics.recordNodeCount(graph.nodeIdsSorted.length);
       this.checkAbort(started);
 
       // 2) Resolve policies (known subset)
-      const resolvedPolicies = resolvePolicies(input.policies);
+      const resolvedPolicies = resolvePolicies(normalizedInput.policies);
       this.checkAbort(started);
 
       // 3) Select nodes (upstream/downstream)
-      const selected = selectNodes(graph.nodesById, graph.dependentsById, input.selection);
+      const selected = selectNodes(
+        graph.nodesById,
+        graph.dependentsById,
+        normalizedInput.selection
+      );
       if (selected.length > this.limits.maxNodes) {
         throwLimitExceeded(
           `Selection exceeds maxNodes: ${selected.length} > ${this.limits.maxNodes}`
@@ -110,7 +117,7 @@ export class Planner {
       }));
 
       // 7) Semantic input hash (only nodes, selection, policies)
-      const inputHashSha256 = await computeInputHashSha256(input);
+      const inputHashSha256 = await computeInputHashSha256(normalizedInput);
       this.checkAbort(started);
 
       // 8) Build planCore (the hashed object; no planId / createdAt / observability)
@@ -145,12 +152,23 @@ export class Planner {
       };
 
       const plan: ExecutionPlanV2 =
-        input.observability === undefined
+        normalizedInput.observability === undefined
           ? planBase
           : {
               ...planBase,
-              observability: input.observability,
+              observability: normalizedInput.observability,
             };
+
+      const layerBoundaries = computeLayerBoundaries(normalizedSteps);
+      if (layerBoundaries.length > 0) {
+        plan.observability = {
+          ...(plan.observability ?? {}),
+          extra: {
+            ...(plan.observability?.extra ?? {}),
+            plannerLayers: layerBoundaries,
+          },
+        };
+      }
 
       this.metrics.recordDuration(nowMs() - started);
       return { plan, canonicalPlanJson };
@@ -166,8 +184,11 @@ export class Planner {
     if (typeof input !== 'object' || input === null) {
       throw new PlannerError(PlannerErrorCode.INVALID_INPUT, 'input must be an object.');
     }
-    if (!Array.isArray(input.nodes)) {
-      throw new PlannerError(PlannerErrorCode.INVALID_INPUT, 'input.nodes must be an array.');
+    if (!Array.isArray(input.nodes) && input.manifest === undefined) {
+      throw new PlannerError(
+        PlannerErrorCode.INVALID_INPUT,
+        'input.nodes must be an array when manifest is not provided.'
+      );
     }
     if (typeof input.selection !== 'object' || input.selection === null) {
       throw new PlannerError(PlannerErrorCode.INVALID_INPUT, 'input.selection must be an object.');
@@ -186,6 +207,27 @@ export class Planner {
         );
       }
     }
+  }
+
+  private normalizeInput(input: PlannerInputEnvelopeV2): PlannerInputEnvelopeV2 {
+    const nodes =
+      Array.isArray(input.nodes) && input.nodes.length > 0
+        ? input.nodes
+        : input.manifest !== undefined
+          ? deriveGraphNodesFromManifest(input.manifest)
+          : [];
+
+    if (nodes.length === 0) {
+      throw new PlannerError(
+        PlannerErrorCode.INVALID_INPUT,
+        'Planner requires non-empty nodes (directly or derived from manifest).'
+      );
+    }
+
+    return {
+      ...input,
+      nodes,
+    };
   }
 
   private checkAbort(startedMs: number): void {
@@ -272,4 +314,35 @@ async function computeInputHashSha256(input: PlannerInputEnvelopeV2): Promise<st
   };
   const { sha256 } = await sha256CanonicalJson(semantic);
   return sha256;
+}
+
+function computeLayerBoundaries(
+  steps: readonly { stepId: string; dependsOn: readonly string[] }[]
+): number[] {
+  if (steps.length === 0) return [];
+
+  const depthByStepId = new Map<string, number>();
+  let maxDepth = 0;
+
+  for (const step of steps) {
+    let bestParentDepth = 0;
+    for (const dep of step.dependsOn) {
+      const depDepth = depthByStepId.get(dep);
+      if (depDepth !== undefined && depDepth > bestParentDepth) {
+        bestParentDepth = depDepth;
+      }
+    }
+    const depth = bestParentDepth + 1;
+    depthByStepId.set(step.stepId, depth);
+    if (depth > maxDepth) {
+      maxDepth = depth;
+    }
+  }
+
+  const layers = Array.from({ length: maxDepth }, () => 0);
+  for (const depth of depthByStepId.values()) {
+    layers[depth - 1] = (layers[depth - 1] ?? 0) + 1;
+  }
+
+  return layers;
 }

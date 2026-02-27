@@ -21,7 +21,6 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
-import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { planExecutionLayers } from '@dvt/plan-interpreter';
 import {
   ApplicationFailure,
@@ -252,31 +251,35 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       const layerResults = await Promise.all(
         executableLayer.map(async (step) => {
           try {
-            if (step.type === 'gateway' && isGatewayConfig(step.gateway)) {
-              const gatewayCtx = buildGatewayContext(step, completedStepResults);
-              const parsed = parseDslV1(step.gateway.expression);
-              const passed = evaluateDslV1(parsed, gatewayCtx);
+            const gatewayContext =
+              step.type === 'gateway' ? buildGatewayContext(step, completedStepResults) : undefined;
+
+            const result = await activities.executeStep({
+              step,
+              ctx,
+              ...(gatewayContext ? { gatewayContext } : {}),
+            });
+
+            const gatewayDecision =
+              step.type === 'gateway' && typeof result.gatewayDecision === 'boolean'
+                ? result.gatewayDecision
+                : undefined;
+
+            if (typeof gatewayDecision === 'boolean') {
               if (!state.gatewayDecisions) {
                 state.gatewayDecisions = {};
               }
-              state.gatewayDecisions[step.stepId] = passed;
+              state.gatewayDecisions[step.stepId] = gatewayDecision;
 
-              if (!passed) {
+              if (!gatewayDecision) {
                 const downstream = collectDownstreamStepIds(plan.steps, step.stepId);
                 for (const downstreamStepId of downstream) {
                   skippedSteps.add(downstreamStepId);
                 }
               }
-
-              return {
-                stepId: step.stepId,
-                gatewayDecision: passed,
-                result: { stepId: step.stepId, status: 'COMPLETED' as const },
-              };
             }
 
-            const result = await activities.executeStep({ step, ctx });
-            return { stepId: step.stepId, result };
+            return { stepId: step.stepId, gatewayDecision, result };
           } catch (error) {
             const err = error instanceof Error ? error : new Error(String(error));
             const retriable = !(error instanceof ApplicationFailure) || error.nonRetryable !== true;
@@ -435,14 +438,6 @@ function isNonNegativeIntegerString(val: unknown): boolean {
 function normalizeDependsOn(dependsOn: unknown): string[] {
   if (!Array.isArray(dependsOn)) return [];
   return dependsOn.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
-}
-
-function isGatewayConfig(v: unknown): v is { dslVersion: '1.0'; expression: string } {
-  if (typeof v !== 'object' || v === null) return false;
-  const c = v as Record<string, unknown>;
-  return (
-    c.dslVersion === '1.0' && typeof c.expression === 'string' && c.expression.trim().length > 0
-  );
 }
 
 function buildGatewayContext(

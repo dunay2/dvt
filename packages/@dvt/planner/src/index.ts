@@ -1,5 +1,6 @@
 export { Planner } from './domain/Planner.js';
 export type {
+  DbtManifestLike,
   ExecutionPlanV2,
   ExecutionStepV2,
   GraphNode,

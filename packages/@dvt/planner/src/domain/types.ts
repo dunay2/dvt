@@ -4,6 +4,8 @@
 
 export type StepKind = string;
 
+export type DbtManifestLike = Record<string, unknown>;
+
 // dbt defaults as string literals (backward compatible)
 export const DBT_MODEL = 'DBT_MODEL';
 export const DBT_TEST = 'DBT_TEST';
@@ -86,7 +88,9 @@ export interface ExecutionPlanV2 extends PlanCore {
 }
 
 export interface PlannerInputEnvelopeV2 {
-  nodes: readonly GraphNode[];
+  /** Optional dbt manifest payload; if provided and `nodes` is omitted, nodes are derived from manifest. */
+  manifest?: DbtManifestLike;
+  nodes?: readonly GraphNode[];
   selection: PlannerSelection;
   policies?: PlannerPolicies;
   observability?: ExecutionPlanV2['observability'];
