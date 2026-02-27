@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global console, process, __dirname, Buffer */
 
 const fs = require('fs');
 const path = require('path');
@@ -219,9 +221,7 @@ function parseRoadmapPhases(content) {
 
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-    const match = line.match(
-      /^##\s+.*?Phase\s+([0-9]+(?:\.[0-9]+)?)\s*:\s*(.+?)\s*(?:\(.*\))?\s*$/i
-    );
+    const match = line.match(/^##\s+.*?Phase\s+([0-9]+(?:\.[0-9]+)?)\s*:\s*(.+?)\s*(?:\(.*\))?\s*$/i);
     if (!match) continue;
 
     const phaseNumber = match[1];
@@ -394,16 +394,7 @@ async function ensureSchema(session) {
 }
 
 async function resetGraph(session) {
-  const labels = [
-    'Archivo',
-    'Modulo',
-    'Issue',
-    'Decision',
-    'Funcion',
-    'Persona',
-    'Roadmap',
-    'FaseRoadmap',
-  ];
+  const labels = ['Archivo', 'Modulo', 'Issue', 'Decision', 'Funcion', 'Persona', 'Roadmap', 'FaseRoadmap'];
   for (const label of labels) {
     await session.run(`MATCH (n:${label}) DETACH DELETE n`);
   }
@@ -419,8 +410,13 @@ function collectGraphRows() {
   const adrRows = [];
   const adrIssueRows = [];
   const classRows = [];
-  const { roadmapNodes, phaseNodes, phaseLinks, phaseIssueRows, roadmapStatusRows } =
-    collectRoadmapRows();
+  const {
+    roadmapNodes,
+    phaseNodes,
+    phaseLinks,
+    phaseIssueRows,
+    roadmapStatusRows,
+  } = collectRoadmapRows();
 
   for (const relPath of trackedFiles) {
     const abs = path.join(REPO_ROOT, relPath);

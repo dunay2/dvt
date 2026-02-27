@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global console, process */
 
 const fs = require('fs');
 const path = require('path');
@@ -144,3 +146,4 @@ run().catch((error) => {
   console.error('❌ Roadmap tree query failed:', error.message);
   process.exit(1);
 });
+
