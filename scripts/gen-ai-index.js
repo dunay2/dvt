@@ -1,8 +1,9 @@
 #!/usr/bin/env node
+/* global console */
 import fs from 'fs/promises';
 import path from 'path';
 
-const DEFAULT_TARGETS = ['docs', 'packages/@dvt/contracts', 'packages/engine'];
+const DEFAULT_TARGETS = ['docs', 'packages/contracts', 'packages/engine'];
 
 function isIgnored(name) {
   return (
