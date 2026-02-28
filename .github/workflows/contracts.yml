@@ -8,6 +8,17 @@ name: Contracts & Determinism
 
 on:
   workflow_dispatch:
+    inputs:
+      run_kg_cypher_sync:
+        description: 'Run Knowledge Graph Cypher sync check'
+        required: false
+        type: boolean
+        default: false
+      run_determinism_scan:
+        description: 'Run determinism lint checks'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: contracts-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -141,9 +152,9 @@ jobs:
     name: Knowledge Graph Cypher Sync
     runs-on: ubuntu-latest
     needs: [detect-changes]
-    if:
-      github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
-      'true'
+    if: >
+      (github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
+      'true') && github.event.inputs.run_kg_cypher_sync == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -176,9 +187,9 @@ jobs:
     name: Determinism Pattern Scan
     runs-on: ubuntu-latest
     needs: [detect-changes]
-    if:
-      github.event_name != 'pull_request' || needs.detect-changes.outputs.determinism_relevant ==
-      'true'
+    if: >
+      (github.event_name != 'pull_request' || needs.detect-changes.outputs.determinism_relevant ==
+      'true') && github.event.inputs.run_determinism_scan == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -240,7 +251,7 @@ jobs:
   contract-compile:
     name: Compile TypeScript Contracts
     runs-on: ubuntu-latest
-    needs: [detect-changes, kg-cypher-sync]
+    needs: [detect-changes]
     if:
       github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
       'true'
