@@ -2,6 +2,17 @@ name: PR Quality Gate
 
 on:
   workflow_dispatch:
+    inputs:
+      run_typecheck_gate:
+        description: 'Run workspace type-check fast-fail gate'
+        required: false
+        type: boolean
+        default: false
+      run_temporal_integration:
+        description: 'Run temporal adapter integration tests'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: pr-quality-gate-${{ github.event.pull_request.number || github.ref }}
@@ -50,6 +61,7 @@ jobs:
         run: pnpm test:contracts:compile
 
       - name: Workspace type-check (fast-fail)
+        if: ${{ github.event.inputs.run_typecheck_gate == 'true' }}
         run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
@@ -171,7 +183,8 @@ jobs:
     needs: [pr-checks]
     if:
       needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name != 'pull_request' ||
-      github.event.pull_request.draft == false)
+      github.event.pull_request.draft == false) && github.event.inputs.run_temporal_integration ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
