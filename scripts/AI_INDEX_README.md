@@ -1,28 +1,28 @@
-# AI_INDEX Generator (prototype)
+# Generador de AI_INDEX (prototipo)
 
-This script creates an `AI_INDEX.json` file per target directory containing metadata and a heuristic summary of relevant files.
+Este script crea un archivo `AI_INDEX.json` por directorio objetivo con metadatos y un resumen heurístico de los archivos relevantes.
 
-Quick start:
+Uso rápido:
 
 ```bash
-# install dependencies if needed
+# instalar dependencias si es necesario
 pnpm install
 
-# generate indices for the default directories (docs, packages/@dvt/contracts, packages/engine)
+# generar índices para los directorios por defecto (docs, packages/contracts, packages/engine)
 pnpm run gen:ai-index
 
-# or pass explicit directories
+# o pasar directorios explícitos
 node scripts/gen-ai-index.js apps/web packages/cli
 ```
 
-Generated format:
+Formato generado:
 
-- `AI_INDEX.json` contains: `generatedAt`, `dir`, `entries[]`.
-- Each entry: `path`, `title`, `summary`, `keywords`, `lastUpdated`, `tokenCount`.
+- `AI_INDEX.json` contiene: `generatedAt`, `dir`, `entries[]`.
+- Cada entrada: `path`, `title`, `summary`, `keywords`, `lastUpdated`, `tokenCount`.
 
-Notes:
+Notas:
 
-- This is a simple prototype without embeddings; intended for local integration testing.
-- For production we recommend: 1) normalize metadata, 2) store vectors in `pgvector` or a vector service, 3) automatic regeneration in CI or hooks.
+- Es un prototipo simple sin embeddings; pensado para pruebas de integración local.
+- Para producción se recomienda: 1) normalizar metadatos, 2) almacenar vectores en `pgvector` o servicio de vectores, 3) regeneración automática en CI o hooks.
 
-If you want, I can add a workflow that regenerates indexes on PRs and/or a nightly job for re-embeddings.
+Si quieres, añado un workflow que regenere índices en PRs y/o un job nightly para re-embeddings.
