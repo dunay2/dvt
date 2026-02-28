@@ -65,6 +65,7 @@ jobs:
         run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
+        if: github.event_name == 'pull_request'
         uses: amannn/action-semantic-pull-request@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,6 +89,7 @@ jobs:
           wip: false
 
       - name: Check PR size
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
@@ -123,6 +125,7 @@ jobs:
             }
 
       - name: Check for merge conflicts
+        if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}
           # Verify branch can be merged by checking refs exist
@@ -133,12 +136,14 @@ jobs:
           echo "✅ PR merge conflict status will be determined by GitHub's merge algorithm"
 
       - name: Label PR based on files changed
+        if: github.event_name == 'pull_request'
         uses: actions/labeler@v6
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yml
 
       - name: Check if description is present
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
