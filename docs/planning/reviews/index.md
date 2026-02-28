@@ -18,3 +18,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 ## Notes
 
 - Add section-specific conventions here.
+
+## Documents
+
+- [PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28)](PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md)
