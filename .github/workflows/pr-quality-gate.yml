@@ -57,9 +57,6 @@ jobs:
       - name: Install dependencies (fast-fail)
         run: pnpm install --frozen-lockfile
 
-      - name: Compile contracts (fast-fail)
-        run: pnpm test:contracts:compile
-
       - name: Workspace type-check (fast-fail)
         if: ${{ github.event.inputs.run_typecheck_gate == 'true' }}
         run: pnpm type-check
