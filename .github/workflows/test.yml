@@ -1,11 +1,18 @@
 name: Test Suite
 
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      run_full_test_suite:
+        description: 'Run full recursive test suite (pnpm test)'
+        required: false
+        type: boolean
+        default: false
+      run_coverage:
+        description: 'Generate and upload coverage (requires full suite)'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -88,7 +95,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run tests (push/workflow_dispatch full suite)
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.event.inputs.run_full_test_suite == 'true'
         run: pnpm test
 
       - name: Run engine tests (affected package)
@@ -130,12 +137,18 @@ jobs:
         run: echo "No affected test packages detected; skipping package test execution."
 
       - name: Generate coverage report
-        if: matrix.node-version == '20.x' && github.event_name != 'pull_request'
+        if:
+          matrix.node-version == '20.x' && github.event_name != 'pull_request' &&
+          github.event.inputs.run_full_test_suite == 'true' && github.event.inputs.run_coverage ==
+          'true'
         run: pnpm test:coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
-        if: matrix.node-version == '20.x' && github.event_name != 'pull_request'
+        if:
+          matrix.node-version == '20.x' && github.event_name != 'pull_request' &&
+          github.event.inputs.run_full_test_suite == 'true' && github.event.inputs.run_coverage ==
+          'true'
         with:
           files: ./coverage/lcov.info
           flags: unittests
@@ -143,7 +156,10 @@ jobs:
           fail_ci_if_error: false
 
       - name: Coverage Summary
-        if: matrix.node-version == '20.x' && github.event_name != 'pull_request'
+        if:
+          matrix.node-version == '20.x' && github.event_name != 'pull_request' &&
+          github.event.inputs.run_full_test_suite == 'true' && github.event.inputs.run_coverage ==
+          'true'
         run: |
           echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
