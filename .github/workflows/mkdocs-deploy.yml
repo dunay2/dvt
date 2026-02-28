@@ -2,6 +2,12 @@ name: Build and deploy docs (MkDocs)
 
 on:
   workflow_dispatch:
+    inputs:
+      run_pages_deploy:
+        description: 'Deploy site to gh-pages branch'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-deploy:
@@ -19,6 +25,7 @@ jobs:
       - name: Build site
         run: mkdocs build --clean
       - name: Deploy to GitHub Pages
+        if: ${{ github.event.inputs.run_pages_deploy == 'true' }}
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
