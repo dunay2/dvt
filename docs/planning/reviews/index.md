@@ -23,3 +23,4 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 
 - [PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28)](PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md)
 - [PR #301 — Plan de relanzamiento por lotes (2026-02-28)](PR_301_RELAUNCH_BATCH_PLAN_20260228.md)
+- [Workflow Redundancy Simplification — Pass 1 (2026-02-28)](WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md)
