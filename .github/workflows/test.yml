@@ -53,46 +53,15 @@ jobs:
               - 'tsconfig*.json'
               - '.github/workflows/test.yml'
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup pnpm, cache and dependencies
         if:
           github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
           steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
           'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
           'true' || steps.changes.outputs.root_config == 'true'
-        uses: actions/setup-node@v6
+        uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Setup pnpm
-        if:
-          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
-          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
-          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
-          'true' || steps.changes.outputs.root_config == 'true'
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        if:
-          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
-          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
-          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
-          'true' || steps.changes.outputs.root_config == 'true'
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        if:
-          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
-          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
-          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
-          'true' || steps.changes.outputs.root_config == 'true'
-        run: pnpm install --frozen-lockfile
 
       - name: Run tests (push/workflow_dispatch full suite)
         if: github.event_name != 'pull_request' && github.event.inputs.run_full_test_suite == 'true'
@@ -186,38 +155,11 @@ jobs:
               - 'pnpm-workspace.yaml'
               - '.github/workflows/test.yml'
 
-      - name: Setup Node.js
+      - name: Setup pnpm, cache and dependencies
         if:
           github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
           'true'
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Run determinism tests
         if:
