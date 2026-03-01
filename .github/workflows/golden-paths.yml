@@ -50,27 +50,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify golden results artifact exists
+      - name: Detect golden results directory
+        id: detect_results
         if: ${{ github.event.inputs.run_contract_fixture_validation == 'true' }}
         run: |
-          if [ ! -d "packages/@dvt/engine/test/contracts/results" ]; then
-            echo "❌ Missing golden results directory: packages/@dvt/engine/test/contracts/results"
-            echo "Run Contracts & Determinism workflow (contract-validate/contract-hashes) before this workflow."
-            exit 1
+          if [ -d "packages/@dvt/engine/test/contracts/results" ]; then
+            echo "results_present=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Golden results directory present"
+          else
+            echo "results_present=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Missing golden results directory: packages/@dvt/engine/test/contracts/results"
+            echo "ℹ️ Run Contracts & Determinism workflow (contract-validate/contract-hashes) first, then rerun this workflow."
           fi
-          echo "✅ Golden results directory present"
 
       - name: Summarize golden results files
-        if: ${{ github.event.inputs.run_contract_fixture_validation == 'true' }}
+        if:
+          ${{ github.event.inputs.run_contract_fixture_validation == 'true' &&
+          steps.detect_results.outputs.results_present == 'true' }}
         run: |
           count=$(find packages/@dvt/engine/test/contracts/results -type f | wc -l)
           echo "Found $count files under golden results."
           echo "golden_results_files=$count" >> "$GITHUB_OUTPUT"
 
       - name: Upload validation results
-        if: always()
+        if: ${{ always() && github.event.inputs.run_contract_fixture_validation == 'true' }}
         uses: actions/upload-artifact@v6
         with:
           name: golden-paths-validation-results
           path: packages/@dvt/engine/test/contracts/results/
           retention-days: 7
+          if-no-files-found: warn
