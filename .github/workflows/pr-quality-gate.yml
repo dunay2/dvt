@@ -36,26 +36,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js (for fast-fail checks)
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies (fast-fail)
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies (fast-fail)
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Workspace type-check (fast-fail)
         if: ${{ github.event.inputs.run_typecheck_gate == 'true' }}
@@ -191,26 +173,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build contracts for integration
         run: pnpm --filter @dvt/contracts build
