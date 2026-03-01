@@ -63,7 +63,7 @@ jobs:
             adapter_temporal:
               - 'packages/@dvt/adapter-temporal/**'
             cli:
-              - 'packages/cli/**'
+              - 'packages/@dvt/cli/**'
 
       - name: Build matrix from affected workspaces
         id: matrix
