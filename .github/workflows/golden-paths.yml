@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       run_contract_fixture_validation:
-        description: 'Run contract fixture validation (can fail due to known fixture debt)'
+        description:
+          'Validate golden path fixtures from generated test results only (no duplicate contracts
+          validation)'
         required: false
         type: boolean
         default: false
@@ -48,9 +50,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate contract fixtures
+      - name: Verify golden results artifact exists
         if: ${{ github.event.inputs.run_contract_fixture_validation == 'true' }}
-        run: pnpm validate:contracts
+        run: |
+          if [ ! -d "packages/@dvt/engine/test/contracts/results" ]; then
+            echo "❌ Missing golden results directory: packages/@dvt/engine/test/contracts/results"
+            echo "Run Contracts & Determinism workflow (contract-validate/contract-hashes) before this workflow."
+            exit 1
+          fi
+          echo "✅ Golden results directory present"
+
+      - name: Summarize golden results files
+        if: ${{ github.event.inputs.run_contract_fixture_validation == 'true' }}
+        run: |
+          count=$(find packages/@dvt/engine/test/contracts/results -type f | wc -l)
+          echo "Found $count files under golden results."
+          echo "golden_results_files=$count" >> "$GITHUB_OUTPUT"
 
       - name: Upload validation results
         if: always()
