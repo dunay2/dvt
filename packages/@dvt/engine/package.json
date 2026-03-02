@@ -31,7 +31,7 @@
     "@dvt/contracts": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "22.19.11",
+    "@types/node": "25.3.3",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   }
