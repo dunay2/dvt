@@ -1,5 +1,5 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthorizationError = void 0;
 /**
  * @file packages/@dvt/contracts/src/errors.ts
@@ -11,12 +11,12 @@ exports.AuthorizationError = void 0;
  * @date 2026-02-21
  */
 class AuthorizationError extends Error {
-  constructor(message = 'Authorization denied') {
-    super(message);
-    this.code = 'AUTHZ_DENIED';
-    this.name = 'AuthorizationError';
-    Object.setPrototypeOf(this, AuthorizationError.prototype);
-  }
+    constructor(message = 'Authorization denied') {
+        super(message);
+        this.code = 'AUTHZ_DENIED';
+        this.name = 'AuthorizationError';
+        Object.setPrototypeOf(this, AuthorizationError.prototype);
+    }
 }
 exports.AuthorizationError = AuthorizationError;
 //# sourceMappingURL=errors.js.map

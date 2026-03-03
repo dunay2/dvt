@@ -7,6 +7,11 @@
  * @consequence State-store implementations can enforce deterministic replay and projection consistency
  * @version 1.0.0
  * @date 2026-02-21
+ *
+ * @deprecated The v1 CanonicalEngineEvent type is superseded by RunEventWrite / RunEventRecord
+ * as defined in RunEvents v2.0 (specs/contracts/engine/RunEvents.v2.0.md).
+ * Use RunEventWriteSchema / RunEventRecordSchema from schemas.ts for new code.
+ * The normative persistence contract is IRunStateStore.v2.0.md.
  */
 /**
  * State Store Contract Types (v1.0)

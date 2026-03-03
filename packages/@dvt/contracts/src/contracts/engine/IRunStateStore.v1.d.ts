@@ -1,0 +1,2 @@
+export type { AppendResult, EventEnvelope, EventIdempotencyInput, EventInput, EventType, ExecutionPlan, IClock, IIdempotencyKeyBuilder, IPlanFetcher, IPlanIntegrityValidator, IRunStateStore, RunBootstrapInput, RunMetadata, RunStateCommandPort, WorkflowSnapshot, } from '../../engine/IRunStateStore.v1';
+//# sourceMappingURL=IRunStateStore.v1.d.ts.map

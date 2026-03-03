@@ -60,6 +60,14 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     if (event.runId.trim() === '') {
       throw new Error(`INVALID_EVENT: empty runId at index ${index}`);
     }
+
+    const record = event as unknown as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(record, 'runSeq')) {
+      throw new Error(`INVALID_EVENT_WRITE_SHAPE: runSeq forbidden at index ${index}`);
+    }
+    if (Object.prototype.hasOwnProperty.call(record, 'persistedAt')) {
+      throw new Error(`INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden at index ${index}`);
+    }
   }
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {

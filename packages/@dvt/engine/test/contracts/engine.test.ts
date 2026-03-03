@@ -6,6 +6,7 @@
  * - Issue impact: #14 (IWorkflowEngine + SnapshotProjector), specifically read-model/status
  *   expectations in the mocked adapter path (`PENDING` until completion events are present).
  */
+import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 import { vi } from 'vitest';
 
@@ -19,6 +20,7 @@ import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
@@ -106,6 +108,8 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability: createNoopObservability(),
       adapters: new Map([['mock', mock]]),
     });
 
@@ -143,6 +147,8 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability: createNoopObservability(),
       adapters: new Map([['mock', mock]]),
     });
 
@@ -193,6 +199,8 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability: createNoopObservability(),
       adapters: new Map([['mock', mock]]),
     });
 
@@ -264,6 +272,8 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       clock,
       authorizer,
       planRefPolicy,
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability: createNoopObservability(),
       adapters: new Map([['conductor', adapter]]),
     });
 
