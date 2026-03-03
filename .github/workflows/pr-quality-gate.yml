@@ -1,6 +1,9 @@
 name: PR Quality Gate
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       run_typecheck_gate:
@@ -40,7 +43,9 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Workspace type-check (fast-fail)
-        if: ${{ github.event.inputs.run_typecheck_gate == 'true' }}
+        if:
+          ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
+          'true' }}
         run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
@@ -167,8 +172,8 @@ jobs:
     needs: [pr-checks]
     if:
       needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name != 'pull_request' ||
-      github.event.pull_request.draft == false) && github.event.inputs.run_temporal_integration ==
-      'true'
+      github.event.pull_request.draft == false) && (github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.run_temporal_integration == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@v6

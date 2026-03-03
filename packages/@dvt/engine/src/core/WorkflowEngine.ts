@@ -106,7 +106,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
     const validatedPlanRef = normalizePlanRef(parsePlanRef(planRef));
-    const validatedContext = parseRunContext(context);
+    const validatedContext = normalizeRunContext(parseRunContext(context));
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
     const metricTags = buildMetricTags(validatedContext.targetAdapter, validatedContext.tenantId, {
       operation: 'startRun',
@@ -786,5 +786,16 @@ function normalizeSignalRequest(input: ReturnType<typeof parseSignalRequest>): S
     ...(input.stepId !== undefined ? { stepId: input.stepId } : {}),
     ...(input.reason !== undefined ? { reason: input.reason } : {}),
     ...(input.requestedAt !== undefined ? { requestedAt: input.requestedAt } : {}),
+  };
+}
+
+function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunContext {
+  return {
+    tenantId: input.tenantId,
+    projectId: input.projectId,
+    environmentId: input.environmentId,
+    runId: input.runId,
+    targetAdapter: input.targetAdapter,
+    ...(input.logicalAttemptId !== undefined ? { logicalAttemptId: input.logicalAttemptId } : {}),
   };
 }

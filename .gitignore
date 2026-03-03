@@ -49,10 +49,17 @@ Desktop.ini
 tmp/
 temp/
 *.tmp
+tmpclaude-*-cwd
+--version/
 
 # Generated documentation
 docs-dist/
 .docusaurus/
+
+# Root-local tooling artifacts
+/bfg.jar
+/eslint-issues.txt
+/x[1])
 
 # Private data (must not be public)
 private/finance/
