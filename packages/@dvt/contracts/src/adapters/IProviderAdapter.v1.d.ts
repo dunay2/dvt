@@ -7,18 +7,12 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunStatusSnapshot,
-  SignalRequest,
-} from '../types/contracts';
+import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot, SignalRequest } from '../types/contracts';
 export interface IProviderAdapter {
-  readonly provider: EngineRunRef['provider'];
-  startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef>;
-  cancelRun(runRef: EngineRunRef): Promise<void>;
-  getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
-  signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
+    readonly provider: EngineRunRef['provider'];
+    startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef>;
+    cancelRun(runRef: EngineRunRef): Promise<void>;
+    getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
+    signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
 }
 //# sourceMappingURL=IProviderAdapter.v1.d.ts.map

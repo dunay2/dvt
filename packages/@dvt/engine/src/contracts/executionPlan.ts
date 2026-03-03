@@ -5,6 +5,14 @@
  * @consequence The engine validates and routes execution over a stable plan structure across adapters
  * @version 1.1.0
  * @date 2026-02-22
+ *
+ * Engine-local consumption type for ExecutionPlan.
+ * This is a superset of the normative schema that adds engine-specific interpretation
+ * (gateway evaluation, dispatch routing). The planner-side subset is in
+ * packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts.
+ *
+ * @see specs/contracts/engine/ExecutionPlan.v1.md — Normative prose contract
+ * @see specs/contracts/engine/ExecutionPlan.v1.schema.json — JSON Schema (draft 2020-12)
  */
 export interface ExecutionPlan {
   metadata: {

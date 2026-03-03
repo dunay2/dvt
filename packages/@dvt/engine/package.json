@@ -21,16 +21,18 @@
     "dist"
   ],
   "scripts": {
-    "pretest": "pnpm --filter @dvt/contracts build",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@dvt/canonical": "workspace:*",
+    "@dvt/observability": "workspace:*",
+    "@dvt/crypto": "workspace:*",
     "@dvt/contracts": "workspace:*"
   },
   "devDependencies": {
+    "@dvt/planner": "workspace:*",
     "@types/node": "22.19.11",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

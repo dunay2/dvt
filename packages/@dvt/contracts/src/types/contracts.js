@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 /**
  * @file packages/@dvt/contracts/src/types/contracts.ts
  * @baseline ADR-0005: Contract Formalization Tooling
@@ -10,5 +10,5 @@
  */
 // Contracts: types.ts
 // Version: v1.1.1 (subset needed for this implementation)
-Object.defineProperty(exports, '__esModule', { value: true });
+Object.defineProperty(exports, "__esModule", { value: true });
 //# sourceMappingURL=contracts.js.map

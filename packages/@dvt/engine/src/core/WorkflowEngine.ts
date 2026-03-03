@@ -8,6 +8,7 @@
  * @baseline ADR-0013: bootstrapRunTx atomicity (provider refs included in bootstrap)
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @baseline ADR-0015: getRunStatus read-model separation (no provider call on default path)
+ * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
  * @version 2.0.0
  * @date 2026-02-21
  */
@@ -17,7 +18,6 @@ import type {
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
-  TenantId,
 } from '@dvt/contracts';
 import {
   parseEngineRunRef,
@@ -25,6 +25,7 @@ import {
   parseRunContext,
   parseSignalRequest,
 } from '@dvt/contracts';
+import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import {
@@ -39,10 +40,10 @@ import {
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEvents.js';
-import type { IMetricsCollector } from '../metrics/IMetricsCollector.js';
 import type { IOutboxRateLimiter } from '../outbox/IOutboxRateLimiter.js';
 import type { IOutboxStorage } from '../outbox/types.js';
 import type { IRunStateStore } from '../ports/IRunStateStore.js';
+import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IAuthorizer } from '../security/authorizer.js';
 import { PlanRefPolicy } from '../security/planRefPolicy.js';
 import type { IClock } from '../utils/clock.js';
@@ -58,6 +59,8 @@ export interface WorkflowEngineDeps {
   clock: IClock;
   authorizer: IAuthorizer;
   planRefPolicy: PlanRefPolicy;
+  /** Pre-dispatch intent log for crash-consistency of startRun. */
+  intentStore: IStartRunIntentStore;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
 
   /** Optional providers that MUST be registered at boot time. */
@@ -70,23 +73,14 @@ export interface WorkflowEngineDeps {
    */
   outboxRateLimiter?: IOutboxRateLimiter;
 
-  /** Optional structured metrics collector. No-op when omitted. */
-  metrics?: IMetricsCollector;
-
-  /** Optional structured logger for observability. */
-  logger?: WorkflowEngineLogger;
+  /** Structured observability port used for logs, metrics and traces. */
+  observability: IObservability;
 
   /** Optional operation timeouts for external calls. */
   timeouts?: {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
   };
-}
-
-export interface WorkflowEngineLogger {
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
 }
 
 export interface HealthStatus {
@@ -102,92 +96,120 @@ interface HealthCheckable {
   ping?: () => Promise<void>;
 }
 
-const NOOP_LOGGER: WorkflowEngineLogger = {
-  info: () => {},
-  warn: () => {},
-  error: () => {},
-};
-
-const NOOP_METRICS: IMetricsCollector = {
-  increment: () => {},
-  timing: () => {},
-};
-
 export class WorkflowEngine implements IWorkflowEngine {
-  private readonly logger: WorkflowEngineLogger;
-  private readonly metrics: IMetricsCollector;
+  private readonly observability: IObservability;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
-    this.logger = deps.logger ?? NOOP_LOGGER;
-    this.metrics = deps.metrics ?? NOOP_METRICS;
+    this.observability = deps.observability;
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
     const validatedPlanRef = normalizePlanRef(parsePlanRef(planRef));
     const validatedContext = parseRunContext(context);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = {
-      provider: validatedContext.targetAdapter,
-      tenantId: validatedContext.tenantId,
-    };
-
-    this.logger.info('Starting run', {
-      runId: validatedContext.runId,
-      tenantId: validatedContext.tenantId,
-      provider: validatedContext.targetAdapter,
-      planUri: validatedPlanRef.uri,
+    const metricTags = buildMetricTags(validatedContext.targetAdapter, validatedContext.tenantId, {
+      operation: 'startRun',
     });
+    const traceContext = buildTraceContext(validatedContext, validatedPlanRef.planId);
 
-    try {
-      await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
-      this.checkOutboxRateLimit(validatedContext);
-
-      const provider = validatedContext.targetAdapter;
-      const adapter = this.getAdapterOrThrow(provider);
-      this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
-
-      // ADR-0012: Adapter receives PlanRef, owns plan bytes fetch + SHA-256 verification.
-      // ADR-0014: Adapter is called first so provider refs are available for atomic bootstrap.
-      const runRef = await this.withTimeout(
-        adapter.startRun(validatedPlanRef, validatedContext),
-        this.deps.timeouts?.adapterCallMs ?? 30_000,
-        'adapter.startRun'
-      );
-
-      // ADR-0013: provider refs included in bootstrapRunTx — eliminates two-phase write gap.
-      const bootMeta: RunMetadata = buildRunMetadata(
-        validatedContext,
-        validatedPlanRef,
-        runRef,
-        this.deps.clock.nowIsoUtc()
-      );
-      try {
-        await this.deps.stateStore.bootstrapRunTx({
-          metadata: bootMeta,
-          firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
-        });
-      } catch (bootstrapError) {
-        // Compensate: cancel the adapter run to avoid an orphaned workflow.
-        await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
-          this.logger.error('Compensation cancelRun failed after bootstrap error', {
-            runId: validatedContext.runId,
-            error: toErrorMessage(cancelErr),
+    return this.observability.withContext(traceContext, () =>
+      this.observability.traces.withSpan(
+        'engine.startRun',
+        {
+          context: traceContext,
+          attributes: {
+            provider: validatedContext.targetAdapter,
+            planUri: validatedPlanRef.uri,
+          },
+        },
+        async (span) => {
+          this.observability.logs.info({
+            msg: 'Starting run',
+            context: traceContext,
+            attributes: {
+              provider: validatedContext.targetAdapter,
+              planUri: validatedPlanRef.uri,
+            },
           });
-        });
-        throw bootstrapError;
-      }
 
-      this.metrics.increment('dvt.run.started', metricTags);
-      this.metrics.timing(
-        'dvt.run.start_duration_ms',
-        Date.parse(this.deps.clock.nowIsoUtc()) - startMs,
-        metricTags
-      );
-      return runRef;
-    } catch (error) {
-      return this.handleStartRunError(error, validatedContext, metricTags);
-    }
+          try {
+            await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
+            this.checkOutboxRateLimit(validatedContext);
+
+            const provider = validatedContext.targetAdapter;
+            const adapter = this.getAdapterOrThrow(provider);
+            this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
+
+            // Pre-dispatch intent log: persist intent BEFORE adapter call
+            // so that a reconciliation job can detect orphaned provider workflows
+            // if the process crashes between adapter.startRun() and bootstrapRunTx().
+            const intentId = this.deps.idempotency.eventId();
+            await this.deps.intentStore.createIntent({
+              intentId,
+              tenantId: validatedContext.tenantId,
+              runId: validatedContext.runId,
+              provider,
+              createdAt: this.deps.clock.nowIsoUtc(),
+            });
+
+            // ADR-0012: Adapter receives PlanRef, owns plan bytes fetch + SHA-256 verification.
+            // ADR-0014: Adapter is called first so provider refs are available for atomic bootstrap.
+            const runRef = await this.withTimeout(
+              adapter.startRun(validatedPlanRef, validatedContext),
+              this.deps.timeouts?.adapterCallMs ?? 30_000,
+              'adapter.startRun'
+            );
+
+            // Record engineRunRef in intent so reconciliation can cancel if needed.
+            await this.deps.intentStore.markDispatched(intentId, runRef);
+
+            // ADR-0013: provider refs included in bootstrapRunTx — eliminates two-phase write gap.
+            const bootMeta: RunMetadata = buildRunMetadata(
+              validatedContext,
+              validatedPlanRef,
+              runRef,
+              this.deps.clock.nowIsoUtc()
+            );
+            try {
+              await this.deps.stateStore.bootstrapRunTx({
+                metadata: bootMeta,
+                firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+              });
+              // Intent fulfilled — mark resolved.
+              await this.deps.intentStore.markResolved(intentId).catch(() => {});
+            } catch (bootstrapError) {
+              // Compensate: cancel the adapter run to avoid an orphaned workflow.
+              await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
+                this.observability.logs.error({
+                  msg: 'Compensation cancelRun failed after bootstrap error',
+                  context: traceContext,
+                  err: cancelErr,
+                  attributes: {
+                    error: toErrorMessage(cancelErr),
+                  },
+                });
+              });
+              // Best-effort: mark intent resolved after compensation.
+              // If this fails, the reconciliation job will clean it up.
+              await this.deps.intentStore.markResolved(intentId).catch(() => {});
+              throw bootstrapError;
+            }
+
+            this.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
+            this.observability.metrics
+              .histogram('dvt.run.start.duration_ms', metricTags)
+              .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
+            span.setStatus('ok');
+            return runRef;
+          } catch (error) {
+            span.recordException(error);
+            span.setStatus('error', toErrorMessage(error));
+            return this.handleStartRunError(error, validatedContext, metricTags, traceContext);
+          }
+        }
+      )
+    );
   }
 
   private async validateStartRunPreconditions(
@@ -227,14 +249,18 @@ export class WorkflowEngine implements IWorkflowEngine {
   private async handleStartRunError(
     error: unknown,
     validatedContext: RunContext,
-    metricTags: Record<string, string>
+    metricTags: Record<string, string>,
+    traceContext: ReturnType<typeof buildTraceContext>
   ): Promise<never> {
-    this.metrics.increment('dvt.run.start_failed', metricTags);
-    this.logger.error('startRun failed', {
-      runId: validatedContext.runId,
-      tenantId: validatedContext.tenantId,
-      provider: validatedContext.targetAdapter,
-      error: toErrorMessage(error),
+    this.observability.metrics.counter('dvt.run.start_failed_total', metricTags).add(1);
+    this.observability.logs.error({
+      msg: 'startRun failed',
+      context: traceContext,
+      err: error,
+      attributes: {
+        provider: validatedContext.targetAdapter,
+        error: toErrorMessage(error),
+      },
     });
 
     const failMeta = await this.deps.stateStore
@@ -242,9 +268,13 @@ export class WorkflowEngine implements IWorkflowEngine {
       .catch(() => null);
     if (failMeta) {
       await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
-        this.logger.error('RunFailed emission failed after startRun error', {
-          runId: validatedContext.runId,
-          error: toErrorMessage(emitErr),
+        this.observability.logs.error({
+          msg: 'RunFailed emission failed after startRun error',
+          context: traceContext,
+          err: emitErr,
+          attributes: {
+            error: toErrorMessage(emitErr),
+          },
         });
       });
     }
@@ -258,26 +288,43 @@ export class WorkflowEngine implements IWorkflowEngine {
 
     const adapter = this.getAdapterOrThrow(meta.provider);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = { provider: meta.provider, tenantId: meta.tenantId };
+    const metricTags = buildMetricTags(meta.provider, meta.tenantId, { operation: 'cancelRun' });
+    const traceContext = buildTraceContext(meta, meta.planId);
 
-    this.logger.info('Cancelling run', {
-      runId: meta.runId,
-      tenantId: meta.tenantId,
-      provider: meta.provider,
-    });
+    await this.observability.withContext(traceContext, () =>
+      this.observability.traces.withSpan(
+        'engine.cancelRun',
+        {
+          context: traceContext,
+          attributes: { provider: meta.provider },
+        },
+        async (span) => {
+          try {
+            this.observability.logs.info({
+              msg: 'Cancelling run',
+              context: traceContext,
+              attributes: { provider: meta.provider },
+            });
 
-    await this.withTimeout(
-      adapter.cancelRun(validatedRunRef),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.cancelRun'
-    );
-    // ADR-0007: Engine emits RunCancelRequested (intent). Adapter emits RunCancelled from workflow context.
-    await this.emitRunEvent(meta, 'RunCancelRequested');
-    this.metrics.increment('dvt.run.cancel_requested', metricTags);
-    this.metrics.timing(
-      'dvt.run.cancel_duration_ms',
-      Date.parse(this.deps.clock.nowIsoUtc()) - startMs,
-      metricTags
+            await this.withTimeout(
+              adapter.cancelRun(validatedRunRef),
+              this.deps.timeouts?.adapterCallMs ?? 30_000,
+              'adapter.cancelRun'
+            );
+            // ADR-0007: Engine emits RunCancelRequested (intent). Adapter emits RunCancelled from workflow context.
+            await this.emitRunEvent(meta, 'RunCancelRequested');
+            this.observability.metrics.counter('dvt.run.cancel_requested_total', metricTags).add(1);
+            this.observability.metrics
+              .histogram('dvt.run.cancel.duration_ms', metricTags)
+              .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
+            span.setStatus('ok');
+          } catch (error) {
+            span.recordException(error);
+            span.setStatus('error', toErrorMessage(error));
+            throw error;
+          }
+        }
+      )
     );
   }
 
@@ -286,25 +333,43 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
+    const metricTags = buildMetricTags(meta.provider, meta.tenantId, { operation: 'getRunStatus' });
+    const traceContext = buildTraceContext(meta, meta.planId);
 
-    // ADR-0015: default read path MUST NOT call the provider.
-    // Latency must be independent of adapter availability.
-    // Snapshot-first (O(1)). Falls back to full replay only when no snapshot exists
-    // — e.g. runs predating snapshot support.
-    const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
-    const result = storedSnap
-      ? snapshotToStatus(storedSnap)
-      : this.deps.projector.rebuild(
-          meta.runId,
-          await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
-        );
+    return this.observability.withContext(traceContext, () =>
+      this.observability.traces.withSpan(
+        'engine.getRunStatus',
+        {
+          context: traceContext,
+          attributes: { provider: meta.provider },
+        },
+        async (span) => {
+          try {
+            // ADR-0015: default read path MUST NOT call the provider.
+            // Latency must be independent of adapter availability.
+            // Snapshot-first (O(1)). Falls back to full replay only when no snapshot exists
+            // — e.g. runs predating snapshot support.
+            const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
+            const result = storedSnap
+              ? snapshotToStatus(storedSnap)
+              : this.deps.projector.rebuild(
+                  meta.runId,
+                  await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
+                );
 
-    this.metrics.timing(
-      'dvt.run.status_duration_ms',
-      Date.parse(this.deps.clock.nowIsoUtc()) - startMs,
-      { provider: meta.provider, tenantId: meta.tenantId }
+            this.observability.metrics
+              .histogram('dvt.run.status.duration_ms', metricTags)
+              .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
+            span.setStatus('ok');
+            return result;
+          } catch (error) {
+            span.recordException(error);
+            span.setStatus('error', toErrorMessage(error));
+            throw error;
+          }
+        }
+      )
     );
-    return result;
   }
 
   /**
@@ -320,26 +385,46 @@ export class WorkflowEngine implements IWorkflowEngine {
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
 
     const adapter = this.getAdapterOrThrow(meta.provider);
+    const traceContext = buildTraceContext(meta, meta.planId);
 
-    const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
-    const base = storedSnap
-      ? snapshotToStatus(storedSnap)
-      : this.deps.projector.rebuild(
-          meta.runId,
-          await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
-        );
+    return this.observability.withContext(traceContext, () =>
+      this.observability.traces.withSpan(
+        'engine.enrichRunStatus',
+        {
+          context: traceContext,
+          attributes: { provider: meta.provider },
+        },
+        async (span) => {
+          try {
+            const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
+            const base = storedSnap
+              ? snapshotToStatus(storedSnap)
+              : this.deps.projector.rebuild(
+                  meta.runId,
+                  await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
+                );
 
-    const providerView = await this.withTimeout(
-      adapter.getRunStatus(validatedRunRef),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.getRunStatus'
+            const providerView = await this.withTimeout(
+              adapter.getRunStatus(validatedRunRef),
+              this.deps.timeouts?.adapterCallMs ?? 30_000,
+              'adapter.getRunStatus'
+            );
+            span.setStatus('ok');
+            return {
+              ...base,
+              ...(providerView.substatus !== undefined
+                ? { substatus: providerView.substatus }
+                : {}),
+              ...(providerView.message !== undefined ? { message: providerView.message } : {}),
+            };
+          } catch (error) {
+            span.recordException(error);
+            span.setStatus('error', toErrorMessage(error));
+            throw error;
+          }
+        }
+      )
     );
-
-    return {
-      ...base,
-      ...(providerView.substatus !== undefined ? { substatus: providerView.substatus } : {}),
-      ...(providerView.message !== undefined ? { message: providerView.message } : {}),
-    };
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
@@ -348,20 +433,41 @@ export class WorkflowEngine implements IWorkflowEngine {
     await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
 
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
-
     const adapter = this.getAdapterOrThrow(meta.provider);
+    const traceContext = buildTraceContext(meta, meta.planId);
 
-    // Provider-native signalling.
-    await this.withTimeout(
-      adapter.signal(validatedRunRef, validatedRequest),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.signal'
+    await this.observability.withContext(traceContext, () =>
+      this.observability.traces.withSpan(
+        'engine.signal',
+        {
+          context: traceContext,
+          attributes: {
+            provider: meta.provider,
+            signalType: validatedRequest.type,
+          },
+        },
+        async (span) => {
+          try {
+            // Provider-native signalling.
+            await this.withTimeout(
+              adapter.signal(validatedRunRef, validatedRequest),
+              this.deps.timeouts?.adapterCallMs ?? 30_000,
+              'adapter.signal'
+            );
+
+            const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
+            if (mappedEventType) {
+              await this.emitSignalDerivedRunEvent(meta, validatedRequest, mappedEventType);
+            }
+            span.setStatus('ok');
+          } catch (error) {
+            span.recordException(error);
+            span.setStatus('error', toErrorMessage(error));
+            throw error;
+          }
+        }
+      )
     );
-
-    const mappedEventType = this.mapSignalToRunEventType(validatedRequest.type);
-    if (mappedEventType) {
-      await this.emitSignalDerivedRunEvent(meta, validatedRequest, mappedEventType);
-    }
   }
 
   async healthCheck(): Promise<HealthStatus> {
@@ -493,51 +599,6 @@ export class WorkflowEngine implements IWorkflowEngine {
     };
   }
 
-  /**
-   * Scans for runs stuck in PENDING longer than `options.thresholdMs` and emits
-   * `RunFailed` (payload.reason = 'QUEUED_TIMEOUT') for each.
-   *
-   * Intended to be called from a scheduled job (e.g., every 30 s).
-   * The caller is responsible for circuit-breaking and back-pressure.
-   *
-   * @returns runIds that were transitioned to FAILED.
-   */
-  async detectStuckRuns(options: {
-    /** Runs in PENDING for longer than this many milliseconds are considered stuck. */
-    thresholdMs: number;
-    /** Restrict scan to a single tenant (required). */
-    tenantId: TenantId;
-    /** Maximum candidates to inspect per call (default: 100). */
-    limit?: number;
-  }): Promise<string[]> {
-    const { thresholdMs, tenantId, limit } = options;
-    await this.deps.authorizer.assertTenantAccess(tenantId);
-    const nowMs = Date.parse(this.deps.clock.nowIsoUtc());
-
-    const candidates = await this.deps.stateStore.listRuns({
-      tenantId,
-      status: 'PENDING',
-      limit: limit ?? 100,
-    });
-
-    const stuckRunIds: string[] = [];
-    for (const meta of candidates) {
-      if (!meta.createdAt) continue; // skip runs without timestamp (backward compat)
-      if (nowMs - Date.parse(meta.createdAt) < thresholdMs) continue;
-
-      await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [
-        this.buildRunEvent(meta, 'RunFailed', { reason: 'QUEUED_TIMEOUT' }),
-      ]);
-      this.metrics.increment('dvt.run.queued_timeout', {
-        provider: meta.provider,
-        tenantId: meta.tenantId,
-      });
-      stuckRunIds.push(meta.runId);
-    }
-
-    return stuckRunIds;
-  }
-
   private async ensureRunDoesNotExist(tenantId: string, runId: string): Promise<void> {
     const existing = await this.deps.stateStore.getRunMetadataByRunId(tenantId, runId);
     if (existing) throw new RunAlreadyExistsError(runId);
@@ -571,7 +632,9 @@ export class WorkflowEngine implements IWorkflowEngine {
       ['clock', this.deps.clock],
       ['authorizer', this.deps.authorizer],
       ['planRefPolicy', this.deps.planRefPolicy],
+      ['intentStore', this.deps.intentStore],
       ['adapters', this.deps.adapters],
+      ['observability', this.deps.observability],
     ];
 
     for (const [name, value] of requiredDeps) {
@@ -588,6 +651,43 @@ export class WorkflowEngine implements IWorkflowEngine {
       if (!this.deps.adapters.has(provider)) throw new AdapterNotRegisteredError(provider);
     }
   }
+}
+
+function buildMetricTags(
+  provider: string,
+  tenantId: string,
+  extras?: Record<string, string>
+): Record<string, string> {
+  return {
+    provider,
+    tenantId,
+    ...(extras ?? {}),
+  };
+}
+
+function buildTraceContext(
+  input: Pick<RunContext, 'tenantId' | 'projectId' | 'environmentId' | 'runId'> & {
+    targetAdapter?: string;
+    provider?: string;
+  },
+  planId?: string
+): {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  runId: string;
+  planId?: string;
+  adapter?: 'temporal' | 'conductor' | 'local';
+} {
+  const adapter = (input.targetAdapter ?? input.provider) as 'temporal' | 'conductor' | undefined;
+  return {
+    tenantId: input.tenantId,
+    projectId: input.projectId,
+    environmentId: input.environmentId,
+    runId: input.runId,
+    ...(planId ? { planId } : {}),
+    ...(adapter ? { adapter } : {}),
+  };
 }
 
 function validateSchemaVersionOrThrow(schemaVersion: string): void {
@@ -619,8 +719,9 @@ function buildRunMetadata(
     runId: ctx.runId,
     planId: planRef.planId,
     planVersion: planRef.planVersion,
-    // Phase 1: always 1. Phase 2: planner supplies via RunContext on retry.
-    logicalAttemptId: 1,
+    // API caller provides logicalAttemptId in RunContext on business retries.
+    // Defaults to 1 for first execution.
+    logicalAttemptId: ctx.logicalAttemptId ?? 1,
     provider: ctx.targetAdapter,
     providerWorkflowId: runRef.workflowId,
     providerRunId: runRef.runId,

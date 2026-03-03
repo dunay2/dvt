@@ -1,4 +1,5 @@
 import type { RunContext } from '@dvt/contracts';
+import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
@@ -7,6 +8,7 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AuthorizationError } from '../../src/security/AuthorizationError.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
@@ -84,6 +86,8 @@ function makeEngine(
     clock,
     authorizer,
     planRefPolicy,
+    intentStore: new InMemoryStartRunIntentStore(),
+    observability: createNoopObservability(),
     adapters: new Map([[adapter.provider, adapter]]),
   } as unknown as ConstructorParameters<typeof WorkflowEngine>[0]);
 

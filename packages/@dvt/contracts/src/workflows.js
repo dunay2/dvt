@@ -1,5 +1,5 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkflowSignals = exports.RUN_PLAN_WORKFLOW = void 0;
 /**
  * @file packages/@dvt/contracts/src/workflows.ts
@@ -13,10 +13,10 @@ exports.WorkflowSignals = exports.RUN_PLAN_WORKFLOW = void 0;
 /** Canonical workflow names and signals used across engine & adapters */
 exports.RUN_PLAN_WORKFLOW = 'runPlanWorkflow';
 exports.WorkflowSignals = {
-  PAUSE: 'pause',
-  RESUME: 'resume',
-  CANCEL: 'cancel',
-  RETRY_STEP: 'retry_step',
-  RETRY_RUN: 'retry_run',
+    PAUSE: 'pause',
+    RESUME: 'resume',
+    CANCEL: 'cancel',
+    RETRY_STEP: 'retry_step',
+    RETRY_RUN: 'retry_run',
 };
 //# sourceMappingURL=workflows.js.map
