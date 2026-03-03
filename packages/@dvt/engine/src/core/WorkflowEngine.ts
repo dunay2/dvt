@@ -25,7 +25,7 @@ import {
   parseRunContext,
   parseSignalRequest,
 } from '@dvt/contracts';
-import type { IObservability } from '@dvt/observability';
+import type { IObservability, ISpan } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import {
@@ -132,76 +132,15 @@ export class WorkflowEngine implements IWorkflowEngine {
               planUri: validatedPlanRef.uri,
             },
           });
-
           try {
-            await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
-            this.checkOutboxRateLimit(validatedContext);
-
-            const provider = validatedContext.targetAdapter;
-            const adapter = this.getAdapterOrThrow(provider);
-            this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
-
-            // Pre-dispatch intent log: persist intent BEFORE adapter call
-            // so that a reconciliation job can detect orphaned provider workflows
-            // if the process crashes between adapter.startRun() and bootstrapRunTx().
-            const intentId = this.deps.idempotency.eventId();
-            await this.deps.intentStore.createIntent({
-              intentId,
-              tenantId: validatedContext.tenantId,
-              runId: validatedContext.runId,
-              provider,
-              createdAt: this.deps.clock.nowIsoUtc(),
-            });
-
-            // ADR-0012: Adapter receives PlanRef, owns plan bytes fetch + SHA-256 verification.
-            // ADR-0014: Adapter is called first so provider refs are available for atomic bootstrap.
-            const runRef = await this.withTimeout(
-              adapter.startRun(validatedPlanRef, validatedContext),
-              this.deps.timeouts?.adapterCallMs ?? 30_000,
-              'adapter.startRun'
-            );
-
-            // Record engineRunRef in intent so reconciliation can cancel if needed.
-            await this.deps.intentStore.markDispatched(intentId, runRef);
-
-            // ADR-0013: provider refs included in bootstrapRunTx — eliminates two-phase write gap.
-            const bootMeta: RunMetadata = buildRunMetadata(
-              validatedContext,
+            return await this._startRunCore({
               validatedPlanRef,
-              runRef,
-              this.deps.clock.nowIsoUtc()
-            );
-            try {
-              await this.deps.stateStore.bootstrapRunTx({
-                metadata: bootMeta,
-                firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
-              });
-              // Intent fulfilled — mark resolved.
-              await this.deps.intentStore.markResolved(intentId).catch(() => {});
-            } catch (bootstrapError) {
-              // Compensate: cancel the adapter run to avoid an orphaned workflow.
-              await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
-                this.observability.logs.error({
-                  msg: 'Compensation cancelRun failed after bootstrap error',
-                  context: traceContext,
-                  err: cancelErr,
-                  attributes: {
-                    error: toErrorMessage(cancelErr),
-                  },
-                });
-              });
-              // Best-effort: mark intent resolved after compensation.
-              // If this fails, the reconciliation job will clean it up.
-              await this.deps.intentStore.markResolved(intentId).catch(() => {});
-              throw bootstrapError;
-            }
-
-            this.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
-            this.observability.metrics
-              .histogram('dvt.run.start.duration_ms', metricTags)
-              .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
-            span.setStatus('ok');
-            return runRef;
+              validatedContext,
+              startMs,
+              metricTags,
+              traceContext,
+              span,
+            });
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
@@ -210,6 +149,108 @@ export class WorkflowEngine implements IWorkflowEngine {
         }
       )
     );
+  }
+
+  private async _startRunCore({
+    validatedPlanRef,
+    validatedContext,
+    startMs,
+    metricTags,
+    traceContext,
+    span,
+  }: {
+    validatedPlanRef: PlanRef;
+    validatedContext: RunContext;
+    startMs: number;
+    metricTags: Record<string, string>;
+    traceContext: ReturnType<typeof buildTraceContext>;
+    span: ISpan;
+  }): Promise<EngineRunRef> {
+    await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
+    this.checkOutboxRateLimit(validatedContext);
+
+    const provider = validatedContext.targetAdapter;
+    const adapter = this.getAdapterOrThrow(provider);
+    this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
+
+    const intentId = await this._createStartRunIntent(validatedContext, provider);
+    const runRef = await this.withTimeout(
+      adapter.startRun(validatedPlanRef, validatedContext),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.startRun'
+    );
+    await this.deps.intentStore.markDispatched(intentId, runRef);
+
+    const bootMeta: RunMetadata = buildRunMetadata(
+      validatedContext,
+      validatedPlanRef,
+      runRef,
+      this.deps.clock.nowIsoUtc()
+    );
+    await this._bootstrapRunTxWithCompensation({
+      bootMeta,
+      adapter,
+      runRef,
+      intentId,
+      traceContext,
+    });
+
+    this.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
+    this.observability.metrics
+      .histogram('dvt.run.start.duration_ms', metricTags)
+      .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
+    span.setStatus('ok');
+    return runRef;
+  }
+
+  private async _createStartRunIntent(
+    validatedContext: RunContext,
+    provider: EngineRunRef['provider']
+  ): Promise<string> {
+    const intentId = this.deps.idempotency.eventId();
+    await this.deps.intentStore.createIntent({
+      intentId,
+      tenantId: validatedContext.tenantId,
+      runId: validatedContext.runId,
+      provider,
+      createdAt: this.deps.clock.nowIsoUtc(),
+    });
+    return intentId;
+  }
+
+  private async _bootstrapRunTxWithCompensation({
+    bootMeta,
+    adapter,
+    runRef,
+    intentId,
+    traceContext,
+  }: {
+    bootMeta: RunMetadata;
+    adapter: IProviderAdapter;
+    runRef: EngineRunRef;
+    intentId: string;
+    traceContext: ReturnType<typeof buildTraceContext>;
+  }): Promise<void> {
+    try {
+      await this.deps.stateStore.bootstrapRunTx({
+        metadata: bootMeta,
+        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+      });
+      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+    } catch (bootstrapError) {
+      await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
+        this.observability.logs.error({
+          msg: 'Compensation cancelRun failed after bootstrap error',
+          context: traceContext,
+          err: cancelErr,
+          attributes: {
+            error: toErrorMessage(cancelErr),
+          },
+        });
+      });
+      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+      throw bootstrapError;
+    }
   }
 
   private async validateStartRunPreconditions(
@@ -654,7 +695,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 }
 
 function buildMetricTags(
-  provider: string,
+  provider: EngineRunRef['provider'],
   tenantId: string,
   extras?: Record<string, string>
 ): Record<string, string> {
@@ -667,8 +708,8 @@ function buildMetricTags(
 
 function buildTraceContext(
   input: Pick<RunContext, 'tenantId' | 'projectId' | 'environmentId' | 'runId'> & {
-    targetAdapter?: string;
-    provider?: string;
+    targetAdapter?: EngineRunRef['provider'];
+    provider?: EngineRunRef['provider'];
   },
   planId?: string
 ): {
@@ -679,7 +720,9 @@ function buildTraceContext(
   planId?: string;
   adapter?: 'temporal' | 'conductor' | 'local';
 } {
-  const adapter = (input.targetAdapter ?? input.provider) as 'temporal' | 'conductor' | undefined;
+  const raw = input.targetAdapter ?? input.provider;
+  const adapter: 'temporal' | 'conductor' | undefined =
+    raw === 'temporal' || raw === 'conductor' ? raw : undefined;
   return {
     tenantId: input.tenantId,
     projectId: input.projectId,

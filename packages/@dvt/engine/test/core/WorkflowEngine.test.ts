@@ -1,3 +1,13 @@
+/**
+ * @file packages/@dvt/engine/test/core/WorkflowEngine.test.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0014: Run-Driven Adapter Model
+ * @baseline ADR-0015: getRunStatus read-model separation
+ * @decision Verify engine lifecycle failure modes, observability, idempotency, and boundary validation
+ * @consequence Regression coverage for core engine invariants
+ * @version 1.0.0
+ * @date 2026-03-03
+ */
 import type { EngineRunRef, PlanRef, RunContext, RunId, RunStatusSnapshot } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
@@ -90,6 +100,38 @@ describe('WorkflowEngine (basic failure modes)', () => {
       async signal() {},
       ...(overrides ?? {}),
     };
+  }
+
+  function makeAdapters(
+    overrides?: Partial<IProviderAdapter>
+  ): Map<EngineRunRef['provider'], IProviderAdapter> {
+    return new Map([['temporal', makeTemporalAdapter(overrides)]]);
+  }
+
+  function makeTrackingObservability(): {
+    obs: IObservability;
+    counters: string[];
+    histograms: string[];
+  } {
+    const counters: string[] = [];
+    const histograms: string[] = [];
+    const obs: IObservability = {
+      ...createNoopObservability(),
+      metrics: {
+        counter(name: string) {
+          counters.push(name);
+          return { add: () => {} };
+        },
+        histogram(name: string) {
+          histograms.push(name);
+          return { record: () => {} };
+        },
+        gauge() {
+          return { set: () => {} };
+        },
+      },
+    };
+    return { obs, counters, histograms };
   }
 
   function createEngine(input?: {
@@ -195,28 +237,8 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('emits startRun success metrics via observability', async () => {
-    const counters: string[] = [];
-    const histograms: string[] = [];
-    const obs: IObservability = {
-      ...createNoopObservability(),
-      metrics: {
-        counter(name: string) {
-          counters.push(name);
-          return { add: () => {} };
-        },
-        histogram(name: string) {
-          histograms.push(name);
-          return { record: () => {} };
-        },
-        gauge() {
-          return { set: () => {} };
-        },
-      },
-    };
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
-    const { engine } = createEngine({ adapters, observability: obs });
+    const { obs, counters, histograms } = makeTrackingObservability();
+    const { engine } = createEngine({ adapters: makeAdapters(), observability: obs });
 
     await engine.startRun(makePlanRef(), makeContext('obs-ok-1'));
     expect(counters).toContain('dvt.run.started_total');
@@ -224,32 +246,12 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('emits startRun failure counter via observability', async () => {
-    const counters: string[] = [];
-    const obs: IObservability = {
-      ...createNoopObservability(),
-      metrics: {
-        counter(name: string) {
-          counters.push(name);
-          return { add: () => {} };
-        },
-        histogram() {
-          return { record: () => {} };
-        },
-        gauge() {
-          return { set: () => {} };
-        },
+    const { obs, counters } = makeTrackingObservability();
+    const adapters = makeAdapters({
+      async startRun() {
+        throw new Error('forced failure');
       },
-    };
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async startRun() {
-            throw new Error('forced failure');
-          },
-        }),
-      ],
-    ]);
+    });
     const { engine } = createEngine({ adapters, observability: obs });
 
     await expect(engine.startRun(makePlanRef(), makeContext('obs-fail-1'))).rejects.toThrow(
@@ -285,26 +287,18 @@ describe('WorkflowEngine (basic failure modes)', () => {
       },
     },
   ])('startRun rejects $name', async ({ run }) => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
-    const { engine } = createEngine({ adapters });
+    const { engine } = createEngine({ adapters: makeAdapters() });
     await run(engine);
   });
 
   it('startRun rejects and stores no events when adapter throws before bootstrap', async () => {
     // ADR-0014: Adapter is called first. If it throws, bootstrapRunTx is never called,
     // so no run metadata or events are stored.
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async startRun() {
-            throw new Error('provider failure');
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      async startRun() {
+        throw new Error('provider failure');
+      },
+    });
 
     const { engine, store } = createEngine({ adapters });
 
@@ -319,17 +313,12 @@ describe('WorkflowEngine (basic failure modes)', () => {
   // ADR-0015: getRunStatus must not call the adapter under any circumstances.
   it('getRunStatus returns projected state without calling the adapter', async () => {
     let adapterCalled = false;
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async getRunStatus() {
-            adapterCalled = true;
-            return { runId: 'x', status: 'RUNNING' } as RunStatusSnapshot;
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      async getRunStatus() {
+        adapterCalled = true;
+        return { runId: 'x', status: 'RUNNING' } as RunStatusSnapshot;
+      },
+    });
 
     const { engine } = createEngine({ adapters });
     const runRef = await engine.startRun(makePlanRef(), makeContext('status-pure-1'));
@@ -341,21 +330,16 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('enrichRunStatus calls adapter and merges substatus onto projected base', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async getRunStatus(runRef) {
-            return {
-              runId: runRef.runId,
-              status: 'RUNNING',
-              substatus: 'DRAINING',
-              message: 'graceful shutdown in progress',
-            } as RunStatusSnapshot;
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      async getRunStatus(runRef) {
+        return {
+          runId: runRef.runId,
+          status: 'RUNNING',
+          substatus: 'DRAINING',
+          message: 'graceful shutdown in progress',
+        } as RunStatusSnapshot;
+      },
+    });
 
     const { engine } = createEngine({ adapters });
     const runRef = await engine.startRun(makePlanRef(), makeContext('enrich-1'));
@@ -370,16 +354,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('enrichRunStatus throws when adapter call fails (no silent swallow)', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async getRunStatus() {
-            throw new Error('provider unavailable');
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      async getRunStatus() {
+        throw new Error('provider unavailable');
+      },
+    });
 
     const { engine } = createEngine({ adapters });
     const runRef = await engine.startRun(makePlanRef(), makeContext('enrich-err-1'));
@@ -388,16 +367,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('healthCheck reports degraded when an adapter ping fails', async () => {
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      [
-        'temporal',
-        makeTemporalAdapter({
-          async ping() {
-            throw new Error('ping failed');
-          },
-        }),
-      ],
-    ]);
+    const adapters = makeAdapters({
+      async ping() {
+        throw new Error('ping failed');
+      },
+    });
 
     const { engine } = createEngine({ adapters });
     const health = await engine.healthCheck();
@@ -415,10 +389,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   describe('A2 appendAndEnqueueTx / AppendResult', () => {
     it('returns appended + deduped and preserves runSeq monotonicity', async () => {
-      const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-        ['temporal', makeTemporalAdapter()],
-      ]);
-      const { engine, store } = createEngine({ adapters });
+      const { engine, store } = createEngine({ adapters: makeAdapters() });
       await engine.startRun(makePlanRef(), makeContext('a2-run-1'));
 
       const runId = 'a2-run-1' as RunId;
@@ -449,10 +420,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
 
     it('rejects write-shape inputs that preassign runSeq/persistedAt', async () => {
-      const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-        ['temporal', makeTemporalAdapter()],
-      ]);
-      const { engine, store } = createEngine({ adapters });
+      const { engine, store } = createEngine({ adapters: makeAdapters() });
       await engine.startRun(makePlanRef(), makeContext('a2-run-shape-1'));
 
       const runId = 'a2-run-shape-1' as RunId;
@@ -489,10 +457,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   describe('A4 gatewayDecisions persistence', () => {
     it('reconstructs gatewayDecisions from persisted StepCompleted payloads', async () => {
-      const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-        ['temporal', makeTemporalAdapter()],
-      ]);
-      const { engine, store } = createEngine({ adapters });
+      const { engine, store } = createEngine({ adapters: makeAdapters() });
       await engine.startRun(makePlanRef(), makeContext('a4-run-1'));
 
       const runId = 'a4-run-1' as RunId;
