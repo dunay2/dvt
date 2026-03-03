@@ -2,9 +2,12 @@
  * @file packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
  * @decision Section 2.1 — Append-only event persistence with monotonic sequence semantics
  * @decision Section 2.2 — Read model snapshot projection derived from persisted event stream
+ * @decision All adapter methods enforce tenant scope per ADR-0031
  * @consequence PostgreSQL adapter preserves deterministic replay and transactional state consistency
+ * @consequence Cross-tenant reads/writes are blocked at the adapter boundary
  * @version 1.0.0
  * @date 2026-02-21
  */
@@ -80,6 +83,40 @@ interface MarkFailedRow {
   attempts: number;
   payload: EventEnvelope;
   run_id: string;
+}
+
+const RUN_METADATA_COLUMNS = `
+  tenant_id,
+  project_id,
+  environment_id,
+  run_id,
+  plan_id,
+  plan_version,
+  provider,
+  provider_workflow_id,
+  provider_run_id,
+  provider_namespace,
+  provider_task_queue,
+  provider_conductor_url
+`;
+
+function toRunMetadata(row: RunMetadataRow): RunMetadata {
+  return {
+    tenantId: row.tenant_id,
+    projectId: row.project_id,
+    environmentId: row.environment_id,
+    runId: row.run_id,
+    planId: row.plan_id,
+    planVersion: row.plan_version,
+    // Phase 1: column not yet in schema. Phase 2: read from row.logical_attempt_id.
+    logicalAttemptId: 1,
+    provider: row.provider,
+    providerWorkflowId: row.provider_workflow_id,
+    providerRunId: row.provider_run_id,
+    providerNamespace: row.provider_namespace ?? undefined,
+    providerTaskQueue: row.provider_task_queue ?? undefined,
+    providerConductorUrl: row.provider_conductor_url ?? undefined,
+  } as RunMetadata;
 }
 
 /**
@@ -306,15 +343,13 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   }
 
-  async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
-    this.ready();
+  private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      const append = await this.appendEventsTxWithClient(client, runId, envelopes);
-      await this.enqueueTxWithClient(client, runId, append.appended);
+      const result = await fn(client);
       await client.query('COMMIT');
-      return append;
+      return result;
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -323,34 +358,48 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   }
 
+  private async resolveAndSetTenantContext(client: PoolClient, runId: RunId): Promise<string> {
+    const tenantId = await this.resolveRunTenantWithClient(client, runId);
+    await PostgresStateStoreAdapter.setTenantContext(client, tenantId);
+    return tenantId;
+  }
+
+  async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
+    this.ready();
+    return this.withTransaction(async (client) => {
+      await this.resolveAndSetTenantContext(client, runId);
+      const append = await this.appendEventsTxWithClient(client, runId, envelopes);
+      await this.enqueueTxWithClient(client, runId, append.appended);
+      return append;
+    });
+  }
+
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     this.ready();
-    const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
-      await this.insertRunMetadataWithClient(client, input.metadata);
-      const append = await this.appendEventsTxWithClient(
-        client,
-        input.metadata.runId as RunId,
-        input.firstEvents
-      );
-      await this.enqueueTxWithClient(client, input.metadata.runId as RunId, append.appended);
-      await client.query('COMMIT');
-      return append;
+      return await this.withTransaction(async (client) => {
+        await PostgresStateStoreAdapter.setTenantContext(client, input.metadata.tenantId);
+        await this.insertRunMetadataWithClient(client, input.metadata);
+        const append = await this.appendEventsTxWithClient(
+          client,
+          input.metadata.runId as RunId,
+          input.firstEvents
+        );
+        await this.enqueueTxWithClient(client, input.metadata.runId as RunId, append.appended);
+        return append;
+      });
     } catch (error: unknown) {
-      await client.query('ROLLBACK');
       if (isUniqueViolation(error)) {
         const err = new Error('RUN_ALREADY_EXISTS');
         (err as Error & { cause?: unknown }).cause = error;
         throw err;
       }
       throw error;
-    } finally {
-      client.release();
     }
   }
 
   async saveProviderRef(
+    tenantId: string,
     runId: RunId,
     runRef: {
       providerWorkflowId: string;
@@ -361,7 +410,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   ): Promise<void> {
     this.ready();
-    await this.pool.query(
+    const result = await this.pool.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.run_metadata
         SET provider_workflow_id = $2,
@@ -369,7 +418,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
             provider_namespace = $4,
             provider_task_queue = $5,
             provider_conductor_url = $6
-        WHERE run_id = $1
+        WHERE run_id = $1 AND tenant_id = $7
       `,
       [
         runId,
@@ -378,8 +427,12 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         runRef.providerNamespace ?? null,
         runRef.providerTaskQueue ?? null,
         runRef.providerConductorUrl ?? null,
+        tenantId,
       ]
     );
+    if (!result.rowCount) {
+      throw new Error(`RUN_NOT_FOUND_OR_FORBIDDEN: ${runId}`);
+    }
   }
 
   /**
@@ -390,70 +443,77 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
    */
   async saveRunMetadata(meta: RunMetadata): Promise<void> {
     this.ready();
-    await this.pool.query(
-      `
-        INSERT INTO ${quoteIdentifier(this.schema)}.run_metadata (
-          run_id,
-          tenant_id,
-          project_id,
-          environment_id,
-          plan_id,
-          plan_version,
-          provider,
-          provider_workflow_id,
-          provider_run_id,
-          provider_namespace,
-          provider_task_queue,
-          provider_conductor_url
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        ON CONFLICT (run_id) DO UPDATE SET
-          tenant_id = EXCLUDED.tenant_id,
-          project_id = EXCLUDED.project_id,
-          environment_id = EXCLUDED.environment_id,
-          plan_id = EXCLUDED.plan_id,
-          plan_version = EXCLUDED.plan_version,
-          provider = EXCLUDED.provider,
-          provider_workflow_id = EXCLUDED.provider_workflow_id,
-          provider_run_id = EXCLUDED.provider_run_id,
-          provider_namespace = EXCLUDED.provider_namespace,
-          provider_task_queue = EXCLUDED.provider_task_queue,
-          provider_conductor_url = EXCLUDED.provider_conductor_url
-      `,
-      [
-        meta.runId,
-        meta.tenantId,
-        meta.projectId,
-        meta.environmentId,
-        meta.planId,
-        meta.planVersion,
-        meta.provider,
-        meta.providerWorkflowId,
-        meta.providerRunId,
-        meta.providerNamespace ?? null,
-        meta.providerTaskQueue ?? null,
-        meta.providerConductorUrl ?? null,
-      ]
-    );
+    await this.withTransaction(async (client) => {
+      await PostgresStateStoreAdapter.setTenantContext(client, meta.tenantId);
+
+      const existing = await client.query<{ tenant_id: string }>(
+        `
+          SELECT tenant_id
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE run_id = $1
+          LIMIT 1
+          FOR UPDATE
+        `,
+        [meta.runId]
+      );
+      const existingTenantId = existing.rows[0]?.tenant_id;
+      if (existingTenantId && existingTenantId !== meta.tenantId) {
+        throw new Error(`TENANT_SCOPE_VIOLATION: ${meta.runId}`);
+      }
+
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(this.schema)}.run_metadata (
+            run_id,
+            tenant_id,
+            project_id,
+            environment_id,
+            plan_id,
+            plan_version,
+            provider,
+            provider_workflow_id,
+            provider_run_id,
+            provider_namespace,
+            provider_task_queue,
+            provider_conductor_url
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ON CONFLICT (run_id) DO UPDATE SET
+            tenant_id = EXCLUDED.tenant_id,
+            project_id = EXCLUDED.project_id,
+            environment_id = EXCLUDED.environment_id,
+            plan_id = EXCLUDED.plan_id,
+            plan_version = EXCLUDED.plan_version,
+            provider = EXCLUDED.provider,
+            provider_workflow_id = EXCLUDED.provider_workflow_id,
+            provider_run_id = EXCLUDED.provider_run_id,
+            provider_namespace = EXCLUDED.provider_namespace,
+            provider_task_queue = EXCLUDED.provider_task_queue,
+            provider_conductor_url = EXCLUDED.provider_conductor_url
+        `,
+        [
+          meta.runId,
+          meta.tenantId,
+          meta.projectId,
+          meta.environmentId,
+          meta.planId,
+          meta.planVersion,
+          meta.provider,
+          meta.providerWorkflowId,
+          meta.providerRunId,
+          meta.providerNamespace ?? null,
+          meta.providerTaskQueue ?? null,
+          meta.providerConductorUrl ?? null,
+        ]
+      );
+    });
   }
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
     const result = await this.pool.query<RunMetadataRow>(
       `
-        SELECT
-          tenant_id,
-          project_id,
-          environment_id,
-          run_id,
-          plan_id,
-          plan_version,
-          provider,
-          provider_workflow_id,
-          provider_run_id,
-          provider_namespace,
-          provider_task_queue,
-          provider_conductor_url
+        SELECT ${RUN_METADATA_COLUMNS}
         FROM ${quoteIdentifier(this.schema)}.run_metadata
         WHERE tenant_id = $1 AND run_id = $2
       `,
@@ -463,22 +523,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const row = result.rows[0];
     if (!row) return null;
 
-    return {
-      tenantId: row.tenant_id,
-      projectId: row.project_id,
-      environmentId: row.environment_id,
-      runId: row.run_id,
-      planId: row.plan_id,
-      planVersion: row.plan_version,
-      // Phase 1: column not yet in schema. Phase 2: read from row.logical_attempt_id.
-      logicalAttemptId: 1,
-      provider: row.provider,
-      providerWorkflowId: row.provider_workflow_id,
-      providerRunId: row.provider_run_id,
-      providerNamespace: row.provider_namespace ?? undefined,
-      providerTaskQueue: row.provider_task_queue ?? undefined,
-      providerConductorUrl: row.provider_conductor_url ?? undefined,
-    } as RunMetadata;
+    return toRunMetadata(row);
   }
 
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
@@ -488,19 +533,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
     const result = await this.pool.query<RunMetadataRow>(
       `
-        SELECT
-          tenant_id,
-          project_id,
-          environment_id,
-          run_id,
-          plan_id,
-          plan_version,
-          provider,
-          provider_workflow_id,
-          provider_run_id,
-          provider_namespace,
-          provider_task_queue,
-          provider_conductor_url
+        SELECT ${RUN_METADATA_COLUMNS}
         FROM ${quoteIdentifier(this.schema)}.run_metadata
         WHERE tenant_id = $2
         ORDER BY created_at DESC
@@ -509,22 +542,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       params
     );
 
-    return result.rows.map((row) => ({
-      tenantId: row.tenant_id,
-      projectId: row.project_id,
-      environmentId: row.environment_id,
-      runId: row.run_id,
-      planId: row.plan_id,
-      planVersion: row.plan_version,
-      // Phase 1: column not yet in schema. Phase 2: read from row.logical_attempt_id.
-      logicalAttemptId: 1,
-      provider: row.provider,
-      providerWorkflowId: row.provider_workflow_id,
-      providerRunId: row.provider_run_id,
-      providerNamespace: row.provider_namespace ?? undefined,
-      providerTaskQueue: row.provider_task_queue ?? undefined,
-      providerConductorUrl: row.provider_conductor_url ?? undefined,
-    })) as RunMetadata[];
+    return result.rows.map(toRunMetadata);
   }
 
   /**
@@ -534,18 +552,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
    */
   async appendEventsTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
     this.ready();
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      const result = await this.appendEventsTxWithClient(client, runId, envelopes);
-      await client.query('COMMIT');
-      return result;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    return this.withTransaction(async (client) => {
+      await this.resolveAndSetTenantContext(client, runId);
+      return this.appendEventsTxWithClient(client, runId, envelopes);
+    });
   }
 
   async listEvents(tenantId: string, runId: string): Promise<EventEnvelope[]> {
@@ -579,17 +589,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     this.ready();
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+    await this.withTransaction(async (client) => {
+      await this.resolveAndSetTenantContext(client, runId);
       await this.enqueueTxWithClient(client, runId, events);
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    });
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
@@ -597,9 +600,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) return [];
 
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+    return this.withTransaction(async (client) => {
       const now = this.now();
 
       const result = await client.query<OutboxRow>(
@@ -626,8 +627,6 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         [boundedLimit, now]
       );
 
-      await client.query('COMMIT');
-
       return result.rows.map((row: OutboxRow) => ({
         id: row.id,
         createdAt: row.created_at,
@@ -638,12 +637,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         nextAttemptAt:
           (row as OutboxRow & { next_attempt_at?: string | null }).next_attempt_at ?? undefined,
       }));
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    });
   }
 
   async markDelivered(ids: OutboxId[]): Promise<void> {
@@ -663,10 +657,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async markFailed(id: OutboxId, error: ErrorMessage): Promise<void> {
     this.ready();
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-
+    await this.withTransaction(async (client) => {
       const result = await client.query<MarkFailedRow>(
         `
           UPDATE ${quoteIdentifier(this.schema)}.outbox
@@ -698,29 +689,27 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           id,
         ]);
       }
-
-      await client.query('COMMIT');
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+    });
   }
 
-  async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
+  async listDeadLetter(limit: number, tenantId?: string): Promise<DeadLetterRecord[]> {
     this.ready();
+    if (!tenantId) {
+      throw new Error('TENANT_SCOPE_REQUIRED');
+    }
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) return [];
 
     const result = await this.pool.query<DeadLetterRow>(
       `
-        SELECT id, original_id, run_id, payload, last_error, dead_lettered_at
-        FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter
+        SELECT dl.id, dl.original_id, dl.run_id, dl.payload, dl.last_error, dl.dead_lettered_at
+        FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
+        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
+        WHERE m.tenant_id = $2
         ORDER BY dead_lettered_at DESC
         LIMIT $1
       `,
-      [boundedLimit]
+      [boundedLimit, tenantId]
     );
 
     return result.rows.map((row) => ({
@@ -735,102 +724,119 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async replayDeadLetters(options?: {
     limit?: number;
+    tenantId?: string;
     runId?: string;
     ids?: string[];
   }): Promise<number> {
     this.ready();
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+    const tenantId = options?.tenantId;
+    if (!tenantId) {
+      throw new Error('TENANT_SCOPE_REQUIRED');
+    }
+    const limit = Math.max(0, options?.limit ?? 100);
+    if (limit === 0) return 0;
 
-      const limit = Math.max(0, options?.limit ?? 100);
-      if (limit === 0) {
-        await client.query('COMMIT');
-        return 0;
-      }
+    return this.withTransaction(async (client) => {
+      await PostgresStateStoreAdapter.setTenantContext(client, tenantId);
 
-      const params: unknown[] = [limit];
-      const where: string[] = [];
-
-      if (options?.runId) {
-        params.push(options.runId);
-        where.push(`run_id = $${params.length}`);
-      }
-
-      if (options?.ids && options.ids.length > 0) {
-        params.push(options.ids);
-        where.push(`id = ANY($${params.length}::text[])`);
-      }
-
-      const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
-
-      const replayedAt = this.now();
-      params.push(replayedAt);
-      const replayedAtParam = `$${params.length}`;
-
-      const result = await client.query<{ moved: number }>(
-        `
-          WITH picked AS (
-            SELECT id, original_id, run_id, payload
-            FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter
-            ${whereSql}
-            ORDER BY dead_lettered_at ASC
-            LIMIT $1
-            FOR UPDATE
-          ), inserted AS (
-            INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
-              id,
-              run_id,
-              run_seq,
-              created_at,
-              idempotency_key,
-              payload,
-              attempts,
-              last_error,
-              claimed_at,
-              delivered_at,
-              next_attempt_at
-            )
-            SELECT
-              p.original_id,
-              p.run_id,
-              ((p.payload->>'runSeq')::int),
-              ${replayedAtParam}::timestamptz,
-              (p.payload->>'idempotencyKey'),
-              p.payload,
-              0,
-              NULL,
-              NULL,
-              NULL,
-              NULL
-            FROM picked p
-            ON CONFLICT (id) DO UPDATE
-            SET attempts = 0,
-                last_error = NULL,
-                claimed_at = NULL,
-                delivered_at = NULL,
-                next_attempt_at = NULL,
-                created_at = EXCLUDED.created_at
-            RETURNING id
-          ), deleted AS (
-            DELETE FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
-            USING inserted i
-            WHERE dl.original_id = i.id
-            RETURNING dl.id
-          )
-          SELECT COUNT(*)::int AS moved FROM deleted
-        `,
-        params
+      const { params, where, replayedAtParam } = this.buildReplayDeadLettersParams(
+        options,
+        limit,
+        tenantId
       );
 
-      await client.query('COMMIT');
+      const result = await this.executeReplayDeadLettersQuery(
+        client,
+        params,
+        where,
+        replayedAtParam
+      );
+
       return result.rows[0]?.moved ?? 0;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
+    });
+  }
+
+  private buildReplayDeadLettersParams(
+    options: { limit?: number; tenantId?: string; runId?: string; ids?: string[] } | undefined,
+    limit: number,
+    tenantId: string
+  ): { params: unknown[]; where: string[]; replayedAtParam: string } {
+    const params: unknown[] = [limit, tenantId];
+    const where: string[] = [];
+    if (options?.runId) {
+      params.push(options.runId);
+      where.push(`dl.run_id = $${params.length}`);
     }
+    if (options?.ids && options.ids.length > 0) {
+      params.push(options.ids);
+      where.push(`dl.id = ANY($${params.length}::text[])`);
+    }
+    const replayedAt = this.now();
+    params.push(replayedAt);
+    const replayedAtParam = `$${params.length}`;
+    return { params, where, replayedAtParam };
+  }
+
+  private async executeReplayDeadLettersQuery(
+    client: PoolClient,
+    params: unknown[],
+    where: string[],
+    replayedAtParam: string
+  ): Promise<{ rows: { moved: number }[] }> {
+    const query = `
+      WITH picked AS (
+        SELECT dl.id, dl.original_id, dl.run_id, dl.payload
+        FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
+        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
+        WHERE m.tenant_id = $2
+        ${where.length > 0 ? `AND ${where.join(' AND ')}` : ''}
+        ORDER BY dead_lettered_at ASC
+        LIMIT $1
+        FOR UPDATE
+      ), inserted AS (
+        INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
+          id,
+          run_id,
+          run_seq,
+          created_at,
+          idempotency_key,
+          payload,
+          attempts,
+          last_error,
+          claimed_at,
+          delivered_at,
+          next_attempt_at
+        )
+        SELECT
+          p.original_id,
+          p.run_id,
+          ((p.payload->>'runSeq')::int),
+          ${replayedAtParam}::timestamptz,
+          (p.payload->>'idempotencyKey'),
+          p.payload,
+          0,
+          NULL,
+          NULL,
+          NULL,
+          NULL
+        FROM picked p
+        ON CONFLICT (id) DO UPDATE
+        SET attempts = 0,
+            last_error = NULL,
+            claimed_at = NULL,
+            delivered_at = NULL,
+            next_attempt_at = NULL,
+            created_at = EXCLUDED.created_at
+        RETURNING id
+      ), deleted AS (
+        DELETE FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
+        USING inserted i
+        WHERE dl.original_id = i.id
+        RETURNING dl.id
+      )
+      SELECT COUNT(*)::int AS moved FROM deleted
+    `;
+    return client.query<{ moved: number }>(query, params);
   }
 
   private ready(): void {
@@ -839,21 +845,30 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   }
 
+  private async resolveRunTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
+    const result = await client.query<{ tenant_id: string }>(
+      `
+        SELECT tenant_id
+        FROM ${quoteIdentifier(this.schema)}.run_metadata
+        WHERE run_id = $1
+        LIMIT 1
+      `,
+      [runId]
+    );
+    const tenantId = result.rows[0]?.tenant_id;
+    if (!tenantId) {
+      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    }
+    return tenantId;
+  }
+
   private async ensureSchema(): Promise<void> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+    await this.withTransaction(async (client) => {
       await this.ensureSchemaObjects(client);
       await this.ensureCompatibilityColumns(client);
       await this.ensureCompatibilityCleanup(client);
       await this.ensureIndexes(client);
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    });
   }
 
   private async ensureSchemaObjects(client: PoolClient): Promise<void> {

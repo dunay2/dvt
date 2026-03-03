@@ -3,6 +3,11 @@
  * @baseline ADR-0004: Event Sourcing Strategy
  * @baseline ADR-0013: bootstrapRunTx atomicity
  * @baseline ADR-0007: RunCancelRequested / RunCancelled ownership
+ * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
+ * @decision Verify Postgres adapter lifecycle, idempotency, outbox, snapshot write-through, and tenant isolation
+ * @consequence Regression coverage for adapter-level invariants against a live PostgreSQL instance
+ * @version 1.0.0
+ * @date 2026-03-03
  *
  * Integration tests for PostgresStateStoreAdapter.
  * Requires a live PostgreSQL instance.
@@ -15,7 +20,7 @@ import { afterAll, describe, expect, test } from 'vitest';
 
 import { PostgresStateStoreAdapter } from '../src/index.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
-import type { EventInput, RunBootstrapInput } from '../src/types.js';
+import type { EventInput, RunBootstrapInput, RunId } from '../src/types.js';
 
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
 const describeIfPg = runIntegration ? describe : describe.skip;
@@ -23,6 +28,11 @@ const describeIfPg = runIntegration ? describe : describe.skip;
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const NOW = '2026-02-22T00:00:00.000Z';
+
+/** Cast a plain string to the branded RunId type for test convenience. */
+function rid(s: string): RunId {
+  return s as RunId;
+}
 
 function makeEvent(
   overrides: Partial<EventInput> & {
@@ -57,11 +67,14 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
       runId,
       planId: 'plan-minimal',
       planVersion: '1.0',
+      logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: `wf-${runId}`,
       providerRunId: `pr-${runId}`,
     },
-    firstEvents: [makeEvent({ runId, eventType: 'RunQueued', idempotencyKey: `${runId}:queued` })],
+    firstEvents: [
+      makeEvent({ runId, eventType: 'RunQueued', idempotencyKey: `${runId}:queued`, tenantId }),
+    ],
   };
 }
 
@@ -82,12 +95,22 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     }
   });
 
-  // ── bootstrapRunTx ────────────────────────────────────────────────────────
-
-  test('bootstrapRunTx: stores metadata and RunQueued event atomically', async () => {
+  async function withAdapter(
+    fn: (adapter: PostgresStateStoreAdapter) => Promise<void>
+  ): Promise<void> {
     const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
     try {
       await adapter.migrate();
+      await fn(adapter);
+    } finally {
+      await adapter.close();
+    }
+  }
+
+  // ── bootstrapRunTx ────────────────────────────────────────────────────────
+
+  test('bootstrapRunTx: stores metadata and RunQueued event atomically', () =>
+    withAdapter(async (adapter) => {
       const result = await adapter.bootstrapRunTx(makeBootstrap('run-bs-1'));
 
       expect(result.appended).toHaveLength(1);
@@ -102,30 +125,20 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         planId: 'plan-minimal',
         providerWorkflowId: 'wf-run-bs-1',
       });
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('bootstrapRunTx: throws RUN_ALREADY_EXISTS on duplicate runId', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('bootstrapRunTx: throws RUN_ALREADY_EXISTS on duplicate runId', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-bs-dup'));
       await expect(adapter.bootstrapRunTx(makeBootstrap('run-bs-dup'))).rejects.toThrow(
         'RUN_ALREADY_EXISTS'
       );
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
   // ── appendAndEnqueueTx ────────────────────────────────────────────────────
 
-  test('appendAndEnqueueTx: idempotent — second append deduplicates', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('appendAndEnqueueTx: idempotent — second append deduplicates', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-idemp'));
 
       const event = makeEvent({
@@ -133,8 +146,8 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         eventType: 'RunStarted',
         idempotencyKey: 'run-idemp:started',
       });
-      const first = await adapter.appendAndEnqueueTx('run-idemp', [event]);
-      const second = await adapter.appendAndEnqueueTx('run-idemp', [event]);
+      const first = await adapter.appendAndEnqueueTx(rid('run-idemp'), [event]);
+      const second = await adapter.appendAndEnqueueTx(rid('run-idemp'), [event]);
 
       expect(first.appended).toHaveLength(1);
       expect(first.appended[0]?.runSeq).toBe(2);
@@ -143,35 +156,25 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(second.deduped).toHaveLength(1);
       expect(second.lastSeq).toBe(2);
       await expect(adapter.listEvents('t1', 'run-idemp')).resolves.toHaveLength(2);
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
   // ── Snapshot write-through (W0-7) ─────────────────────────────────────────
 
-  test('getSnapshot: returns PENDING snapshot after bootstrapRunTx', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('getSnapshot: returns PENDING snapshot after bootstrapRunTx', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-snap-1'));
 
-      const snap = await adapter.getSnapshot('t1', 'run-snap-1');
+      const snap = await adapter.getSnapshot('t1', rid('run-snap-1'));
       expect(snap).not.toBeNull();
       expect(snap?.status).toBe('PENDING');
       expect(snap?.paused).toBe(false);
       expect(snap?.cancelling).toBe(false);
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('getSnapshot: advances to RUNNING after RunStarted', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('getSnapshot: advances to RUNNING after RunStarted', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-snap-2'));
-      await adapter.appendAndEnqueueTx('run-snap-2', [
+      await adapter.appendAndEnqueueTx(rid('run-snap-2'), [
         makeEvent({
           runId: 'run-snap-2',
           eventType: 'RunStarted',
@@ -179,22 +182,17 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snap = await adapter.getSnapshot('t1', 'run-snap-2');
+      const snap = await adapter.getSnapshot('t1', rid('run-snap-2'));
       expect(snap?.status).toBe('RUNNING');
       expect(snap?.startedAt).toBe(NOW);
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
   // ── RunCancelRequested → cancelling=true (ADR-0007) ───────────────────────
 
-  test('getSnapshot: sets cancelling=true on RunCancelRequested, CANCELLED on RunCancelled', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('getSnapshot: sets cancelling=true on RunCancelRequested, CANCELLED on RunCancelled', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-cancel'));
-      await adapter.appendAndEnqueueTx('run-cancel', [
+      await adapter.appendAndEnqueueTx(rid('run-cancel'), [
         makeEvent({
           runId: 'run-cancel',
           eventType: 'RunStarted',
@@ -207,11 +205,11 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snapCancelling = await adapter.getSnapshot('t1', 'run-cancel');
+      const snapCancelling = await adapter.getSnapshot('t1', rid('run-cancel'));
       expect(snapCancelling?.status).toBe('RUNNING');
       expect(snapCancelling?.cancelling).toBe(true);
 
-      await adapter.appendAndEnqueueTx('run-cancel', [
+      await adapter.appendAndEnqueueTx(rid('run-cancel'), [
         makeEvent({
           runId: 'run-cancel',
           eventType: 'RunCancelled',
@@ -219,12 +217,9 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         }),
       ]);
 
-      const snapCancelled = await adapter.getSnapshot('t1', 'run-cancel');
+      const snapCancelled = await adapter.getSnapshot('t1', rid('run-cancel'));
       expect(snapCancelled?.status).toBe('CANCELLED');
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
   // ── Outbox lifecycle ──────────────────────────────────────────────────────
 
@@ -268,7 +263,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       const afterDL = await adapter.listPending(10);
       expect(afterDL.find((r) => r.id === rec.id)).toBeUndefined();
 
-      const dl = await adapter.listDeadLetter(10);
+      const dl = await adapter.listDeadLetter(10, 't1');
       expect(dl.find((r) => r.originalId === rec.id)).toBeDefined();
     } finally {
       await adapter.close();
@@ -306,14 +301,18 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         await adapter.markFailed(rec!.id, `e-${i}`);
       }
 
-      const dl = await adapter.listDeadLetter(10);
+      const dl = await adapter.listDeadLetter(10, 't1');
       const target = dl.find((r) => r.runId === 'run-replay');
       expect(target).toBeDefined();
 
-      const moved = await adapter.replayDeadLetters({ runId: 'run-replay', limit: 1 });
+      const moved = await adapter.replayDeadLetters({
+        tenantId: 't1',
+        runId: 'run-replay',
+        limit: 1,
+      });
       expect(moved).toBe(1);
 
-      const dlAfter = await adapter.listDeadLetter(10);
+      const dlAfter = await adapter.listDeadLetter(10, 't1');
       expect(dlAfter.find((r) => r.runId === 'run-replay')).toBeUndefined();
 
       const pendingAfter = await adapter.listPending(10);
@@ -348,7 +347,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     try {
       await adapter.migrate();
       await adapter.bootstrapRunTx(makeBootstrap('run-tenant-read-a', 'tenant-a'));
-      await adapter.appendAndEnqueueTx('run-tenant-read-a', [
+      await adapter.appendAndEnqueueTx(rid('run-tenant-read-a'), [
         makeEvent({
           runId: 'run-tenant-read-a',
           eventType: 'RunStarted',
@@ -361,7 +360,80 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         adapter.getRunMetadataByRunId('tenant-b', 'run-tenant-read-a')
       ).resolves.toBeNull();
       await expect(adapter.listEvents('tenant-b', 'run-tenant-read-a')).resolves.toHaveLength(0);
-      await expect(adapter.getSnapshot('tenant-b', 'run-tenant-read-a')).resolves.toBeNull();
+      await expect(adapter.getSnapshot('tenant-b', rid('run-tenant-read-a'))).resolves.toBeNull();
+    } finally {
+      await adapter.close();
+    }
+  });
+
+  test('saveProviderRef: rejects cross-tenant writes and allows same-tenant update', async () => {
+    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
+    try {
+      await adapter.migrate();
+      await adapter.bootstrapRunTx(makeBootstrap('run-provider-scope', 'tenant-a'));
+
+      await expect(
+        adapter.saveProviderRef('tenant-b', rid('run-provider-scope'), {
+          providerWorkflowId: 'wf-cross',
+          providerRunId: 'pr-cross',
+        })
+      ).rejects.toThrow('RUN_NOT_FOUND_OR_FORBIDDEN');
+
+      await adapter.saveProviderRef('tenant-a', rid('run-provider-scope'), {
+        providerWorkflowId: 'wf-ok',
+        providerRunId: 'pr-ok',
+      });
+
+      await expect(
+        adapter.getRunMetadataByRunId('tenant-a', 'run-provider-scope')
+      ).resolves.toMatchObject({
+        providerWorkflowId: 'wf-ok',
+        providerRunId: 'pr-ok',
+      });
+    } finally {
+      await adapter.close();
+    }
+  });
+
+  test('dead-letter admin methods require tenant scope and stay tenant-bounded', async () => {
+    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
+    try {
+      await adapter.migrate();
+      await adapter.bootstrapRunTx(makeBootstrap('run-dl-tenant-a', 'tenant-a'));
+      await adapter.bootstrapRunTx(makeBootstrap('run-dl-tenant-b', 'tenant-b'));
+
+      const pending = await adapter.listPending(20);
+      const recA = pending.find((r) => r.payload.runId === 'run-dl-tenant-a');
+      const recB = pending.find((r) => r.payload.runId === 'run-dl-tenant-b');
+      expect(recA).toBeDefined();
+      expect(recB).toBeDefined();
+
+      for (let i = 0; i < 10; i += 1) {
+        await adapter.markFailed(recA!.id, `tenant-a-${i}`);
+        await adapter.markFailed(recB!.id, `tenant-b-${i}`);
+      }
+
+      await expect(adapter.listDeadLetter(10)).rejects.toThrow('TENANT_SCOPE_REQUIRED');
+      await expect(
+        adapter.replayDeadLetters({ runId: 'run-dl-tenant-a', limit: 1 })
+      ).rejects.toThrow('TENANT_SCOPE_REQUIRED');
+
+      const dlA = await adapter.listDeadLetter(10, 'tenant-a');
+      const dlB = await adapter.listDeadLetter(10, 'tenant-b');
+      expect(dlA.every((r) => r.runId === 'run-dl-tenant-a')).toBe(true);
+      expect(dlB.every((r) => r.runId === 'run-dl-tenant-b')).toBe(true);
+
+      const moved = await adapter.replayDeadLetters({
+        tenantId: 'tenant-a',
+        runId: 'run-dl-tenant-a',
+        limit: 5,
+      });
+      expect(moved).toBe(1);
+
+      const dlAAfter = await adapter.listDeadLetter(10, 'tenant-a');
+      const dlBAfter = await adapter.listDeadLetter(10, 'tenant-b');
+      expect(dlAAfter.find((r) => r.runId === 'run-dl-tenant-a')).toBeUndefined();
+      expect(dlBAfter.find((r) => r.runId === 'run-dl-tenant-b')).toBeDefined();
     } finally {
       await adapter.close();
     }
