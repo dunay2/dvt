@@ -43,6 +43,7 @@ Specification decisions are the canonical baseline. ADRs below extend or refine 
 | ADR-0006   | Contract Tooling Governance                                      | Accepted | 2026-02-16 | [ADR-0006-contract-tooling-governance.md](ADR-0006-contract-tooling-governance.md)                                                         |
 | ...        | ...                                                              | ...      | ...        | ...                                                                                                                                        |
 | ADR-0030   | Pre-Dispatch Intent Log for startRun Crash Consistency           | Accepted | 2026-03-03 | [ADR-0030-pre-dispatch-intent-log.md](ADR-0030-pre-dispatch-intent-log.md)                                                                 |
+| ADR-0031   | Storage Adapter Tenant Isolation Strategy                        | Accepted | 2026-03-03 | [ADR-0031-adapter-tenant-isolation.md](ADR-0031-adapter-tenant-isolation.md)                                                               |
 
 _Update this table whenever an ADR is added, renamed, or superseded._
 
