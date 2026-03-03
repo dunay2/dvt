@@ -21,92 +21,109 @@ import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js'
  * Must remain a pure value transform — no I/O, no side effects.
  */
 export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): WorkflowSnapshot {
-  switch (e.eventType) {
-    case 'RunQueued':
-      // stays PENDING
-      break;
-    case 'RunStarted':
-      snap.status = 'RUNNING';
-      snap.startedAt = snap.startedAt ?? e.emittedAt;
-      break;
-    case 'RunPaused':
-      snap.status = 'PAUSED';
-      snap.paused = true;
-      break;
-    case 'RunResumed':
-      snap.status = 'RUNNING';
-      snap.paused = false;
-      break;
-    case 'RunCancelRequested':
-      // ADR-0007: Engine emits RunCancelRequested (intent only). Run stays RUNNING.
-      // Adapter emits RunCancelled from workflow context when cancellation completes.
-      snap.cancelling = true;
-      break;
-    case 'RunCancelled':
-      snap.status = 'CANCELLED';
-      snap.cancelling = false;
-      snap.completedAt = e.emittedAt;
-      break;
-    case 'RunCompleted':
-      snap.status = 'COMPLETED';
-      snap.completedAt = e.emittedAt;
-      break;
-    case 'RunFailed':
-      snap.status = 'FAILED';
-      snap.completedAt = e.emittedAt;
-      break;
-    case 'StepStarted': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'RUNNING';
-      s.startedAt = s.startedAt ?? e.emittedAt;
-      s.attempts += 1;
-      snap.steps[stepId] = s;
-      break;
-    }
-    case 'StepCompleted': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'COMPLETED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
+  const handlers: Record<string, (snap: WorkflowSnapshot, e: EventEnvelope) => void> = {
+    RunQueued: () => {},
+    RunStarted: handleRunStarted,
+    RunPaused: handleRunPaused,
+    RunResumed: handleRunResumed,
+    RunCancelRequested: handleRunCancelRequested,
+    RunCancelled: handleRunCancelled,
+    RunCompleted: handleRunCompleted,
+    RunFailed: handleRunFailed,
+    StepStarted: handleStepStarted,
+    StepCompleted: handleStepCompleted,
+    StepFailed: handleStepFailed,
+    StepSkipped: handleStepSkipped,
+  };
 
-      const decision = extractGatewayDecision(e);
-      if (decision !== undefined) {
-        if (!snap.gatewayDecisions) {
-          snap.gatewayDecisions = {};
-        }
-        snap.gatewayDecisions[stepId] = decision;
-      }
-      break;
-    }
-    case 'StepFailed': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'FAILED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
-      break;
-    }
-    case 'StepSkipped': {
-      const stepId = (e as { stepId: string }).stepId;
-      const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      s.status = 'SKIPPED';
-      s.completedAt = e.emittedAt;
-      snap.steps[stepId] = s;
-      break;
-    }
-    default: {
-      // Forward-compatibility: tolerate unknown event types without mutating state.
-      console.warn('SnapshotProjector: unknown eventType skipped', {
-        eventType: (e as { eventType: string }).eventType,
-        runId: snap.runId,
-        runSeq: (e as { runSeq?: number }).runSeq,
-      });
-      break;
-    }
-  }
+  const handler = handlers[e.eventType] ?? handleUnknownEvent;
+  handler(snap, e);
   return snap;
+}
+
+function handleRunStarted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'RUNNING';
+  snap.startedAt = snap.startedAt ?? e.emittedAt;
+}
+
+function handleRunPaused(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  snap.status = 'PAUSED';
+  snap.paused = true;
+}
+
+function handleRunResumed(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  snap.status = 'RUNNING';
+  snap.paused = false;
+}
+
+function handleRunCancelRequested(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  snap.cancelling = true;
+}
+
+function handleRunCancelled(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'CANCELLED';
+  snap.cancelling = false;
+  snap.completedAt = e.emittedAt;
+}
+
+function handleRunCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'COMPLETED';
+  snap.completedAt = e.emittedAt;
+}
+
+function handleRunFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  snap.status = 'FAILED';
+  snap.completedAt = e.emittedAt;
+}
+
+function handleStepStarted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'RUNNING';
+  s.startedAt = s.startedAt ?? e.emittedAt;
+  s.attempts += 1;
+  snap.steps[stepId] = s;
+}
+
+function handleStepCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'COMPLETED';
+  s.completedAt = e.emittedAt;
+  snap.steps[stepId] = s;
+
+  const decision = extractGatewayDecision(e);
+  if (decision !== undefined) {
+    if (!snap.gatewayDecisions) {
+      snap.gatewayDecisions = {};
+    }
+    snap.gatewayDecisions[stepId] = decision;
+  }
+}
+
+function handleStepFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'FAILED';
+  s.completedAt = e.emittedAt;
+  snap.steps[stepId] = s;
+}
+
+function handleStepSkipped(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  const stepId = (e as { stepId: string }).stepId;
+  const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
+  s.status = 'SKIPPED';
+  s.completedAt = e.emittedAt;
+  snap.steps[stepId] = s;
+}
+
+function handleUnknownEvent(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  // Forward-compatibility: tolerate unknown event types without mutating state.
+  console.warn('SnapshotProjector: unknown eventType skipped', {
+    eventType: (e as { eventType: string }).eventType,
+    runId: snap.runId,
+    runSeq: (e as { runSeq?: number }).runSeq,
+  });
 }
 
 /**

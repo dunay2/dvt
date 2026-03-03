@@ -82,16 +82,17 @@ function makeCtx(runId: string): RunContext {
 }
 
 describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
-  it('golden path: submit hello-world plan → completes with deterministic hash', async () => {
-    const plan = makeHelloWorldPlan();
-    const uri = 'https://plans.example.com/hello-world.json';
+  function setupEngineWithMock(plan: ExecutionPlan): {
+    engine: WorkflowEngine;
+    planRef: PlanRef;
+    store: InMemoryTxStore;
+  } {
+    const uri = `https://plans.example.com/${plan.metadata.planId}.json`;
     const planRef = makePlanRef(uri, plan);
-
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const idempotency = new IdempotencyKeyBuilder();
-
     const mock = new MockAdapter({
       stateStore: store,
       clock,
@@ -99,7 +100,6 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       projector,
       planFetcher: { fetch: async () => plan },
     });
-
     const engine = new WorkflowEngine({
       stateStore: store,
       outbox: store,
@@ -112,10 +112,22 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       observability: createNoopObservability(),
       adapters: new Map([['mock', mock]]),
     });
+    return { engine, planRef, store };
+  }
 
-    const runRef = await engine.startRun(planRef, makeCtx('run-1'));
-    const snapshot = await engine.getRunStatus(runRef);
+  async function submitPlanAndGetSnapshot(
+    engine: WorkflowEngine,
+    planRef: PlanRef,
+    runId: string
+  ): Promise<import('../../src/contracts/engine/index.js').RunStatusSnapshot> {
+    const runRef = await engine.startRun(planRef, makeCtx(runId));
+    return await engine.getRunStatus(runRef);
+  }
 
+  it('golden path: submit hello-world plan → completes with deterministic hash', async () => {
+    const plan = makeHelloWorldPlan();
+    const { engine, planRef } = setupEngineWithMock(plan);
+    const snapshot = await submitPlanAndGetSnapshot(engine, planRef, 'run-1');
     expect(snapshot.status).toBe('PENDING');
     expect(snapshot.hash).toBeTypeOf('string');
     expect(snapshot.hash).toMatch(/^[a-f0-9]{64}$/);
@@ -156,13 +168,13 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const first = await engine.getRunStatus(runRef);
 
     // Replay: attempt to append duplicates of all events repeatedly.
-    const events = await store.listEvents('run-2');
+    const events = await store.listEvents('t1', 'run-2');
     for (let i = 0; i < 100; i += 1) {
       // Strip runSeq and re-append. Dedup is by idempotencyKey.
       await store.appendEventsTx(
         'run-2',
         events.map((e) => {
-          const { runSeq: _runSeq, ...rest } = e;
+          const { runSeq: _runSeq, persistedAt: _persistedAt, ...rest } = e;
           return rest;
         })
       );
@@ -175,35 +187,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
   it('accepts ExecutionPlan steps with dependsOn in mock adapter path', async () => {
     const plan = makeDagPlanWithDependsOn();
-    const uri = 'https://plans.example.com/dag-plan.json';
-    const planRef = makePlanRef(uri, plan);
-
-    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-    const store = new InMemoryTxStore();
-    const projector = new SnapshotProjector();
-    const idempotency = new IdempotencyKeyBuilder();
-
-    const mock = new MockAdapter({
-      stateStore: store,
-      clock,
-      idempotency,
-      projector,
-      planFetcher: { fetch: async () => plan },
-    });
-
-    const engine = new WorkflowEngine({
-      stateStore: store,
-      outbox: store,
-      projector,
-      idempotency,
-      clock,
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      intentStore: new InMemoryStartRunIntentStore(),
-      observability: createNoopObservability(),
-      adapters: new Map([['mock', mock]]),
-    });
-
+    const { engine, planRef } = setupEngineWithMock(plan);
     const runRef = await engine.startRun(planRef, makeCtx('run-dag-1'));
     const snapshot = await engine.getRunStatus(runRef);
 
@@ -241,6 +225,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const startRunMock: IProviderAdapter['startRun'] = vi.fn(
       async (_planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> => ({
         provider: 'conductor',
+        tenantId: ctx.tenantId,
         workflowId: 'wf',
         runId: ctx.runId,
         conductorUrl: 'http://conductor',
