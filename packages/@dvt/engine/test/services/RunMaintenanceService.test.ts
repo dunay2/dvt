@@ -1,8 +1,4 @@
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-} from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 

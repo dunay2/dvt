@@ -1,1 +1,1 @@
-export * from "./OtelObservability";
+export * from './OtelObservability';
