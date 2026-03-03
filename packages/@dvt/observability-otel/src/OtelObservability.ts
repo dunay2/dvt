@@ -13,9 +13,9 @@ import type {
   ObservabilityContext,
   SpanOptions,
   SpanStatus,
-} from "@dvt/observability";
+} from '@dvt/observability';
 
-import { defaultCardinalityPolicy, validateMetricLabels } from "@dvt/observability";
+import { defaultCardinalityPolicy, validateMetricLabels } from '@dvt/observability';
 
 // NOTE: This is a scaffold. Replace the placeholder implementations with OpenTelemetry SDK bindings.
 // The goal is strict typing and an adapter boundary that can be tested.
@@ -64,10 +64,20 @@ class NoopMetrics implements IMetrics {
 
 class NoopSpan implements ISpan {
   private ended = false;
-  setAttribute(key: string, value: unknown): void { void key; void value; }
-  setAttributes(attrs: Attributes): void { void attrs; }
-  recordException(err: unknown): void { void err; }
-  setStatus(status: SpanStatus, message?: string): void { void status; void message; }
+  setAttribute(key: string, value: unknown): void {
+    void key;
+    void value;
+  }
+  setAttributes(attrs: Attributes): void {
+    void attrs;
+  }
+  recordException(err: unknown): void {
+    void err;
+  }
+  setStatus(status: SpanStatus, message?: string): void {
+    void status;
+    void message;
+  }
   end(): void {
     if (this.ended) return;
     this.ended = true;
@@ -76,20 +86,33 @@ class NoopSpan implements ISpan {
 
 class NoopTraces implements ITraces {
   startSpan(name: string, options?: SpanOptions): ISpan {
-    void name; void options;
+    void name;
+    void options;
     return new NoopSpan();
   }
   withSpan<T>(name: string, options: SpanOptions | undefined, fn: (span: ISpan) => T): T {
     const span = this.startSpan(name, options);
-    try { return fn(span); } finally { span.end(); }
+    try {
+      return fn(span);
+    } finally {
+      span.end();
+    }
   }
 }
 
 class JsonConsoleLogs implements ILogs {
-  debug(entry: Omit<LogEntry, "level">): void { this.emit({ ...entry, level: "debug" }); }
-  info(entry: Omit<LogEntry, "level">): void { this.emit({ ...entry, level: "info" }); }
-  warn(entry: Omit<LogEntry, "level">): void { this.emit({ ...entry, level: "warn" }); }
-  error(entry: Omit<LogEntry, "level">): void { this.emit({ ...entry, level: "error" }); }
+  debug(entry: Omit<LogEntry, 'level'>): void {
+    this.emit({ ...entry, level: 'debug' });
+  }
+  info(entry: Omit<LogEntry, 'level'>): void {
+    this.emit({ ...entry, level: 'info' });
+  }
+  warn(entry: Omit<LogEntry, 'level'>): void {
+    this.emit({ ...entry, level: 'warn' });
+  }
+  error(entry: Omit<LogEntry, 'level'>): void {
+    this.emit({ ...entry, level: 'error' });
+  }
 
   private emit(entry: LogEntry): void {
     // Replace with OTel Logs API if/when adopted.
@@ -123,6 +146,10 @@ export class OtelObservability implements IObservability {
   withContext<T>(ctx: ObservabilityContext, fn: () => T): T {
     const prev = this.currentContext;
     this.currentContext = ctx;
-    try { return fn(); } finally { this.currentContext = prev; }
+    try {
+      return fn();
+    } finally {
+      this.currentContext = prev;
+    }
   }
 }

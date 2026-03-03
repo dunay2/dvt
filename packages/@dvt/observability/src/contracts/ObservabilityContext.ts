@@ -1,4 +1,4 @@
-export type ExecutionAdapterName = "temporal" | "conductor" | "local";
+export type ExecutionAdapterName = 'temporal' | 'conductor' | 'local';
 
 export interface ObservabilityContext {
   readonly tenantId?: string;
@@ -19,10 +19,7 @@ export interface ObservabilityContext {
 
 export type JsonPrimitive = string | number | boolean | null;
 
-export type JsonValue =
-  | JsonPrimitive
-  | { readonly [k: string]: JsonValue }
-  | readonly JsonValue[];
+export type JsonValue = JsonPrimitive | { readonly [k: string]: JsonValue } | readonly JsonValue[];
 
 export type Attributes = Readonly<Record<string, JsonValue>>;
 

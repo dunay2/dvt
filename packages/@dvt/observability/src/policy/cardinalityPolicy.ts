@@ -1,4 +1,4 @@
-import type { MetricLabels } from "../contracts/ObservabilityContext";
+import type { MetricLabels } from '../contracts/ObservabilityContext';
 
 export interface CardinalityPolicy {
   readonly forbiddenLabelKeys: ReadonlySet<string>;
@@ -6,13 +6,7 @@ export interface CardinalityPolicy {
   readonly maxLabelValueLength: number;
 }
 
-const DEFAULT_FORBIDDEN = new Set<string>([
-  "runId",
-  "stepId",
-  "planId",
-  "attemptId",
-  "userId",
-]);
+const DEFAULT_FORBIDDEN = new Set<string>(['runId', 'stepId', 'planId', 'attemptId', 'userId']);
 
 export const defaultCardinalityPolicy: CardinalityPolicy = {
   forbiddenLabelKeys: DEFAULT_FORBIDDEN,
@@ -22,7 +16,7 @@ export const defaultCardinalityPolicy: CardinalityPolicy = {
 
 export function validateMetricLabels(
   labels: MetricLabels | undefined,
-  policy: CardinalityPolicy,
+  policy: CardinalityPolicy
 ): void {
   if (!labels) return;
 

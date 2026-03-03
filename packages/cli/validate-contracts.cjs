@@ -162,7 +162,8 @@ function validatePlanFile(filePath) {
 
   checks.push(
     runCheck('ExecuteStepRequest schema', () => {
-      const firstStep = Array.isArray(payload?.steps) && payload.steps.length ? payload.steps[0] : null;
+      const firstStep =
+        Array.isArray(payload?.steps) && payload.steps.length ? payload.steps[0] : null;
       parseExecuteStepRequest({
         tenantId: 'tenant-demo',
         planId: payload?.metadata?.planId || 'unknown',
@@ -176,7 +177,8 @@ function validatePlanFile(filePath) {
 
   checks.push(
     runCheck('ExecuteStepResult schema', () => {
-      const firstStep = Array.isArray(payload?.steps) && payload.steps.length ? payload.steps[0] : null;
+      const firstStep =
+        Array.isArray(payload?.steps) && payload.steps.length ? payload.steps[0] : null;
       parseExecuteStepResult({
         runId: 'run-1',
         stepId: firstStep?.stepId || 's1',
@@ -211,7 +213,8 @@ function validateGoldenResultsFile(filePath) {
     const payload = readJson(filePath);
 
     const hasTimestamp = typeof payload.timestamp === 'string';
-    const hasPaths = payload.paths && typeof payload.paths === 'object' && !Array.isArray(payload.paths);
+    const hasPaths =
+      payload.paths && typeof payload.paths === 'object' && !Array.isArray(payload.paths);
 
     if (!hasTimestamp || !hasPaths) {
       return {
@@ -270,7 +273,8 @@ function main() {
     console.log(`❌ ${label} (${goldenReport.message})`);
   }
 
-  const totalChecks = planReports.reduce((acc, r) => acc + r.totalChecks, 0) + (goldenReport.exists ? 1 : 0);
+  const totalChecks =
+    planReports.reduce((acc, r) => acc + r.totalChecks, 0) + (goldenReport.exists ? 1 : 0);
   const totalFailures =
     planReports.reduce((acc, r) => acc + r.failed.length, 0) + (goldenReport.ok ? 0 : 1);
 

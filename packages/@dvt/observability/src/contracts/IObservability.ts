@@ -1,4 +1,4 @@
-import type { Attributes, MetricLabels, ObservabilityContext } from "./ObservabilityContext";
+import type { Attributes, MetricLabels, ObservabilityContext } from './ObservabilityContext';
 
 export interface ICounter {
   add(value: number, labels?: MetricLabels): void;
@@ -18,7 +18,7 @@ export interface IMetrics {
   gauge(name: string, baseLabels?: MetricLabels): IGauge;
 }
 
-export type SpanStatus = "ok" | "error";
+export type SpanStatus = 'ok' | 'error';
 
 export interface ISpan {
   setAttribute(key: string, value: unknown): void;
@@ -41,7 +41,7 @@ export interface ITraces {
 }
 
 export interface LogEntry {
-  readonly level: "debug" | "info" | "warn" | "error";
+  readonly level: 'debug' | 'info' | 'warn' | 'error';
   readonly msg: string;
   readonly context?: ObservabilityContext;
   readonly attributes?: Attributes;
@@ -49,10 +49,10 @@ export interface LogEntry {
 }
 
 export interface ILogs {
-  debug(entry: Omit<LogEntry, "level">): void;
-  info(entry: Omit<LogEntry, "level">): void;
-  warn(entry: Omit<LogEntry, "level">): void;
-  error(entry: Omit<LogEntry, "level">): void;
+  debug(entry: Omit<LogEntry, 'level'>): void;
+  info(entry: Omit<LogEntry, 'level'>): void;
+  warn(entry: Omit<LogEntry, 'level'>): void;
+  error(entry: Omit<LogEntry, 'level'>): void;
 }
 
 export interface IObservability {

@@ -4,4 +4,3 @@ module.exports = {
     include: ['test/**/*.test.ts'],
   },
 };
-

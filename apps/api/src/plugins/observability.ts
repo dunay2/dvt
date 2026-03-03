@@ -11,11 +11,7 @@ export function buildObservability(env: Env): IObservability {
 
   return new OtelObservability({
     serviceName: env.OTEL_SERVICE_NAME ?? env.SERVICE_NAME,
-    ...(env.OTEL_EXPORTER_OTLP_ENDPOINT
-      ? { otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT }
-      : {}),
-    ...(env.OTEL_RESOURCE_ATTRIBUTES
-      ? { resourceAttributes: env.OTEL_RESOURCE_ATTRIBUTES }
-      : {}),
+    ...(env.OTEL_EXPORTER_OTLP_ENDPOINT ? { otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT } : {}),
+    ...(env.OTEL_RESOURCE_ATTRIBUTES ? { resourceAttributes: env.OTEL_RESOURCE_ATTRIBUTES } : {}),
   });
 }

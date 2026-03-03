@@ -247,12 +247,12 @@ module.exports = [
         {
           selector: "TSAsExpression[typeAnnotation.typeName.name='RunId']",
           message:
-            "`as RunId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.",
+            '`as RunId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.',
         },
         {
           selector: "TSAsExpression[typeAnnotation.typeName.name='TenantId']",
           message:
-            "`as TenantId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.",
+            '`as TenantId` is forbidden in engine/src/core. Move branding casts to API/adapter boundaries.',
         },
       ],
     },
