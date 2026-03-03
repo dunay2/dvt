@@ -79,7 +79,15 @@ export class InMemoryRunStateStore implements IRunStateStore {
     const deduped: RunEventPersisted[] = [];
     const persistedAt = '1970-01-01T00:00:00.000Z';
 
-    for (const env of eventsToAppend) {
+    for (const [i, env] of eventsToAppend.entries()) {
+      const record = env as unknown as Record<string, unknown>;
+      if (Object.prototype.hasOwnProperty.call(record, 'runSeq')) {
+        throw new Error(`INVALID_EVENT_WRITE_SHAPE: runSeq forbidden at index ${i}`);
+      }
+      if (Object.prototype.hasOwnProperty.call(record, 'persistedAt')) {
+        throw new Error(`INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden at index ${i}`);
+      }
+
       const existing = idx.get(env.idempotencyKey);
       if (existing) {
         deduped.push(existing);

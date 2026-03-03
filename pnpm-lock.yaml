@@ -107,6 +107,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@dvt/observability':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/observability
+      '@dvt/observability-otel':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/observability-otel
       '@fastify/cors':
         specifier: ^10.0.0
         version: 10.1.0
@@ -355,9 +361,6 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@dvt/engine':
-        specifier: workspace:*
-        version: link:../engine
       pg:
         specifier: ^8.16.3
         version: 8.18.0
@@ -409,15 +412,6 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/@dvt/canonical:
-    devDependencies:
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-      vitest:
-        specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
   packages/@dvt/cli:
     dependencies:
       '@dvt/contracts':
@@ -447,6 +441,15 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/@dvt/crypto:
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/@dvt/dsl:
     dependencies:
       '@dvt/contracts':
@@ -462,16 +465,56 @@ importers:
 
   packages/@dvt/engine:
     dependencies:
-      '@dvt/canonical':
+      '@dvt/contracts':
         specifier: workspace:*
-        version: link:../canonical
+        version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
+      '@dvt/observability':
+        specifier: workspace:*
+        version: link:../observability
+    devDependencies:
+      '@dvt/planner':
+        specifier: workspace:*
+        version: link:../planner
+      '@types/node':
+        specifier: 22.19.11
+        version: 22.19.11
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/engine-contracts:
+    dependencies:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
-      '@types/node':
-        specifier: 22.19.11
-        version: 22.19.11
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/@dvt/observability:
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/observability-chassis-plugins: {}
+
+  packages/@dvt/observability-otel:
+    dependencies:
+      '@dvt/observability':
+        specifier: workspace:*
+        version: link:../observability
+    devDependencies:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -488,6 +531,15 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/@dvt/plan-verifier:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/@dvt/planner:
     dependencies:
       json-canonicalize:
@@ -496,6 +548,39 @@ importers:
     devDependencies:
       typescript:
         specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/planner-contracts:
+    dependencies:
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/@dvt/state-contracts:
+    dependencies:
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/@dvt/state-store:
+    dependencies:
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
         version: 5.9.3
       vitest:
         specifier: 3.2.4

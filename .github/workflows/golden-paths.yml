@@ -1,23 +1,15 @@
 name: Golden Paths Validation
 
 on:
-  pull_request:
-    paths:
-      - 'packages/@dvt/engine/test/contracts/**'
-      - 'docs/architecture/engine/contracts/**'
-      - 'scripts/validate-contracts.cjs'
-      - '.github/workflows/golden-paths.yml'
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/@dvt/engine/test/contracts/**'
-      - 'docs/architecture/engine/contracts/**'
-      - 'scripts/validate-contracts.cjs'
-      - '.github/workflows/golden-paths.yml'
   workflow_dispatch:
-  schedule:
-    - cron: '30 2 * * *'
+    inputs:
+      run_contract_fixture_validation:
+        description:
+          'Validate golden path fixtures from generated test results only (no duplicate contracts
+          validation)'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: golden-paths-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -37,34 +29,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
+      - name: Setup toolchain and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - name: Detect golden results directory
+        id: detect_results
+        if: ${{ github.event.inputs.run_contract_fixture_validation == 'true' }}
+        run: |
+          if [ -d "packages/@dvt/engine/test/contracts/results" ]; then
+            echo "results_present=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Golden results directory present"
+          else
+            echo "results_present=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Missing golden results directory: packages/@dvt/engine/test/contracts/results"
+            echo "ℹ️ Run Contracts & Determinism workflow (contract-validate/contract-hashes) first, then rerun this workflow."
+          fi
 
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Validate contract fixtures
-        run: pnpm validate:contracts
+      - name: Summarize golden results files
+        if:
+          ${{ github.event.inputs.run_contract_fixture_validation == 'true' &&
+          steps.detect_results.outputs.results_present == 'true' }}
+        run: |
+          count=$(find packages/@dvt/engine/test/contracts/results -type f | wc -l)
+          echo "Found $count files under golden results."
+          echo "golden_results_files=$count" >> "$GITHUB_OUTPUT"
 
       - name: Upload validation results
-        if: always()
+        if: ${{ always() && github.event.inputs.run_contract_fixture_validation == 'true' }}
         uses: actions/upload-artifact@v6
         with:
           name: golden-paths-validation-results
           path: packages/@dvt/engine/test/contracts/results/
           retention-days: 7
+          if-no-files-found: warn

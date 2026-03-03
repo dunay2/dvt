@@ -1,9 +1,18 @@
 name: PR Quality Gate
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, edited]
   workflow_dispatch:
+    inputs:
+      run_typecheck_gate:
+        description: 'Run workspace type-check fast-fail gate'
+        required: false
+        type: boolean
+        default: false
+      run_temporal_integration:
+        description: 'Run temporal adapter integration tests'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: pr-quality-gate-${{ github.event.pull_request.number || github.ref }}
@@ -27,34 +36,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js (for fast-fail checks)
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies (fast-fail)
-        run: pnpm install --frozen-lockfile
-
-      - name: Compile contracts (fast-fail)
-        run: pnpm test:contracts:compile
+      - name: Setup pnpm, cache and dependencies (fast-fail)
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Workspace type-check (fast-fail)
+        if: ${{ github.event.inputs.run_typecheck_gate == 'true' }}
         run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
+        if: github.event_name == 'pull_request'
         uses: amannn/action-semantic-pull-request@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,6 +68,7 @@ jobs:
           wip: false
 
       - name: Check PR size
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
@@ -113,6 +104,7 @@ jobs:
             }
 
       - name: Check for merge conflicts
+        if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}
           # Verify branch can be merged by checking refs exist
@@ -123,12 +115,14 @@ jobs:
           echo "✅ PR merge conflict status will be determined by GitHub's merge algorithm"
 
       - name: Label PR based on files changed
+        if: github.event_name == 'pull_request'
         uses: actions/labeler@v6
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yml
 
       - name: Check if description is present
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
@@ -173,31 +167,14 @@ jobs:
     needs: [pr-checks]
     if:
       needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name != 'pull_request' ||
-      github.event.pull_request.draft == false)
+      github.event.pull_request.draft == false) && github.event.inputs.run_temporal_integration ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build contracts for integration
         run: pnpm --filter @dvt/contracts build

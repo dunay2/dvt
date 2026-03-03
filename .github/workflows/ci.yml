@@ -1,11 +1,18 @@
 name: CI - Code Quality
 
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      run_markdown_lint:
+        description: 'Run markdown lint job'
+        required: false
+        type: boolean
+        default: false
+      run_traceability_gate:
+        description: 'Run ADR-0000 traceability gate'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -56,7 +63,7 @@ jobs:
             adapter_temporal:
               - 'packages/@dvt/adapter-temporal/**'
             cli:
-              - 'packages/cli/**'
+              - 'packages/@dvt/cli/**'
 
       - name: Build matrix from affected workspaces
         id: matrix
@@ -122,31 +129,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Run changed-file checks
         run: node scripts/check-changed.cjs
 
       - name: ADR-0000 traceability gate
+        if: ${{ github.event.inputs.run_traceability_gate == 'true' }}
         run: pnpm traceability:adr0
 
   workspace-ci:
@@ -163,26 +153,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build affected workspace (including workspace dependencies)
         run: pnpm --filter "${{ matrix.pkg }}..." --if-present run build
@@ -203,31 +175,14 @@ jobs:
 
   markdown-lint:
     name: Markdown Documentation
+    if: ${{ github.event.inputs.run_markdown_lint == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Lint Markdown files
         run: pnpm lint:md

@@ -12,6 +12,10 @@ const EnvSchema = z.object({
   // Postgres connection string used by /db/ready (and later persistence)
   DATABASE_URL: z.string().optional(),
   SERVICE_NAME: z.string().default('dbf-api'),
+  OBS_ENABLED: z.coerce.boolean().default(false),
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
+  OTEL_SERVICE_NAME: z.string().optional(),
+  OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

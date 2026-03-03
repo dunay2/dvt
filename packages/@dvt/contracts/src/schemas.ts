@@ -64,6 +64,7 @@ export const RunContextSchema = z.object({
   environmentId: z.string().min(1),
   runId: z.string().min(1),
   targetAdapter: ProviderSchema,
+  logicalAttemptId: z.number().int().positive().optional(),
 });
 
 export const SignalRequestSchema = z.object({
@@ -141,17 +142,50 @@ export const StepOutputSchema = z.object({
   error: StepErrorSchema.optional(),
 });
 
-// ─── Event & snapshot schemas ────────────────────────────────────────────────
+// ─── Event schemas (aligned to RunEvents v2.0.1) ─────────────────────────────
+// @see specs/contracts/engine/RunEvents.v2.0.md — Normative event contract
 
+/** Write-side event envelope: what the engine/adapter emits before persistence. */
+export const RunEventWriteSchema = z.object({
+  eventId: z.string().min(1),
+  eventType: z.string().min(1),
+  emittedAt: z.string().min(1),
+  runId: z.string().min(1),
+  tenantId: z.string().min(1),
+  projectId: z.string().min(1),
+  environmentId: z.string().min(1),
+  planId: z.string().min(1),
+  planVersion: z.string().min(1),
+  engineAttemptId: z.number().int().positive(),
+  logicalAttemptId: z.number().int().positive(),
+  idempotencyKey: z.string().min(1),
+  stepId: z.string().min(1).optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
+});
+
+/** Persisted event record: extends RunEventWrite with Append Authority fields. */
+export const RunEventRecordSchema = RunEventWriteSchema.extend({
+  runSeq: z.number().int().positive(),
+  persistedAt: z.string().min(1),
+});
+
+/**
+ * @deprecated Use RunEventWriteSchema / RunEventRecordSchema.
+ * Kept for backward compatibility with v1 consumers.
+ * The v1 CanonicalEngineEvent used `eventData` (now `payload`),
+ * optional string attempt IDs (now required numbers), and extra
+ * fields not in the normative v2.0 contract.
+ */
 export const CanonicalEngineEventSchema = z.object({
   runId: z.string().min(1),
   runSeq: z.number().int().nonnegative(),
   eventId: z.string().min(1),
   stepId: z.string().optional(),
-  engineAttemptId: z.string().optional(),
-  logicalAttemptId: z.string().optional(),
+  engineAttemptId: z.number().int().positive().optional(),
+  logicalAttemptId: z.number().int().positive().optional(),
   eventType: z.string().min(1),
-  eventData: z.unknown(),
+  eventData: z.unknown().optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
   idempotencyKey: z.string().min(1),
   emittedAt: z.string().min(1),
   persistedAt: z.string().optional(),
@@ -164,8 +198,8 @@ export const CanonicalEngineEventSchema = z.object({
 export const StepSnapshotSchema = z.object({
   stepId: z.string().min(1),
   status: StepStatusSchema,
-  logicalAttemptId: z.string().min(1),
-  engineAttemptId: z.string().optional(),
+  logicalAttemptId: z.number().int().positive(),
+  engineAttemptId: z.number().int().positive().optional(),
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
   artifacts: z.array(z.unknown()),
@@ -219,6 +253,8 @@ export const ExecuteStepResultSchema = z.object({
 });
 
 // ─── Planner schemas (GAP-P0-02) ─────────────────────────────────────────────
+// @see specs/contracts/engine/ExecutionPlan.v1.md — Normative prose contract
+// @see specs/contracts/engine/ExecutionPlan.v1.schema.json — JSON Schema (draft 2020-12)
 
 const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 
@@ -347,6 +383,9 @@ export type EngineRunRefSchemaT = z.infer<typeof EngineRunRefSchema>;
 export type ArtifactRefSchemaT = z.infer<typeof ArtifactRefSchema>;
 export type StepOutputSchemaT = z.infer<typeof StepOutputSchema>;
 
+export type RunEventWriteSchemaT = z.infer<typeof RunEventWriteSchema>;
+export type RunEventRecordSchemaT = z.infer<typeof RunEventRecordSchema>;
+/** @deprecated Use RunEventWriteSchemaT / RunEventRecordSchemaT */
 export type CanonicalEngineEventSchemaT = z.infer<typeof CanonicalEngineEventSchema>;
 export type StepSnapshotSchemaT = z.infer<typeof StepSnapshotSchema>;
 export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;

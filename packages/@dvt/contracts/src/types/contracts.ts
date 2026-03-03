@@ -75,6 +75,12 @@ export interface RunContext {
   environmentId: string;
   runId: string;
   targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+  /**
+   * Business retry counter. Starts at 1 for first execution.
+   * The API caller increments on business-level retries.
+   * Defaults to 1 when omitted.
+   */
+  logicalAttemptId?: number;
 }
 
 export type EngineRunRef =

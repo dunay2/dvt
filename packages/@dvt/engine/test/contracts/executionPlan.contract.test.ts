@@ -12,6 +12,7 @@
  *   - Step metadata passthrough: extra step fields are rejected by the mock adapter narrowing rule.
  */
 import type { EngineRunRef, PlanRef } from '@dvt/contracts';
+import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
@@ -21,9 +22,11 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -79,6 +82,8 @@ function createEngine(plan: ExecutionPlan): { engine: WorkflowEngine; planRef: P
     clock: new SequenceClock('2026-02-23T00:00:00.000Z'),
     authorizer: new AllowAllAuthorizer(),
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    intentStore: new InMemoryStartRunIntentStore(),
+    observability: createNoopObservability(),
     adapters: new Map<EngineRunRef['provider'], typeof mock>([['mock', mock]]),
   });
 

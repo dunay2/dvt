@@ -8,8 +8,8 @@
  * @version 1.1.0
  * @date 2026-02-21
  */
-import { jcsCanonicalize, sha256Hex } from '@dvt/canonical';
 import type { RunStatusSnapshot } from '@dvt/contracts';
+import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 
 import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
 
