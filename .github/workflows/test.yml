@@ -1,6 +1,9 @@
 name: Test Suite
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       run_full_test_suite:
@@ -64,7 +67,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Run tests (push/workflow_dispatch full suite)
-        if: github.event_name != 'pull_request' && github.event.inputs.run_full_test_suite == 'true'
+        if:
+          github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' ||
+          github.event.inputs.run_full_test_suite == 'true')
         run: pnpm test
 
       - name: Run engine tests (affected package)

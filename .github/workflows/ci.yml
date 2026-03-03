@@ -1,6 +1,9 @@
 name: CI - Code Quality
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       run_markdown_lint:
@@ -136,7 +139,9 @@ jobs:
         run: node scripts/check-changed.cjs
 
       - name: ADR-0000 traceability gate
-        if: ${{ github.event.inputs.run_traceability_gate == 'true' }}
+        if:
+          ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_traceability_gate
+          == 'true' }}
         run: pnpm traceability:adr0
 
   workspace-ci:
@@ -175,7 +180,9 @@ jobs:
 
   markdown-lint:
     name: Markdown Documentation
-    if: ${{ github.event.inputs.run_markdown_lint == 'true' }}
+    if:
+      ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_markdown_lint ==
+      'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
