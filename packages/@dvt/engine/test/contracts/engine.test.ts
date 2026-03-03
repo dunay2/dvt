@@ -241,6 +241,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const startRunMock: IProviderAdapter['startRun'] = vi.fn(
       async (_planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> => ({
         provider: 'conductor',
+        tenantId: ctx.tenantId,
         workflowId: 'wf',
         runId: ctx.runId,
         conductorUrl: 'http://conductor',
