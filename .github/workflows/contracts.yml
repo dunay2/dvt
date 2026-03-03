@@ -7,6 +7,9 @@ name: Contracts & Determinism
 #   2) JSON schema validation is skipped only when no *.schema.json files exist.
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       run_determinism_scan:
@@ -92,38 +95,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Validate JSON schemas
         run: |
           set -euo pipefail
           echo "Checking for JSON schema files..."
-          if ! find docs/architecture/engine/contracts -name "*.schema.json" -type f 2>/dev/null | grep -q .; then
-            echo "No schema files found — skipping"
+
+          schema_roots=()
+          [[ -d "docs/architecture/engine/contracts" ]] && schema_roots+=("docs/architecture/engine/contracts")
+          [[ -d "docs/contracts" ]] && schema_roots+=("docs/contracts")
+
+          if [ ${#schema_roots[@]} -eq 0 ]; then
+            echo "No schema root directories found; skipping"
+            exit 0
+          fi
+
+          mapfile -t all_schemas < <(find "${schema_roots[@]}" -name "*.schema.json" -type f 2>/dev/null)
+          if [ ${#all_schemas[@]} -eq 0 ]; then
+            echo "No schema files found; skipping"
             exit 0
           fi
 
           echo "Validating draft 2020-12 schemas..."
-          mapfile -t draft2020_schemas < <(grep -RIl --include="*.schema.json" '"\$schema"[[:space:]]*:[[:space:]]*"https://json-schema.org/draft/2020-12/schema"' docs/architecture/engine/contracts || true)
+          mapfile -t draft2020_schemas < <(
+            for schema in "${all_schemas[@]}"; do
+              if grep -q '"\$schema"[[:space:]]*:[[:space:]]*"https://json-schema.org/draft/2020-12/schema"' "$schema"; then
+                echo "$schema"
+              fi
+            done
+          )
           if [ ${#draft2020_schemas[@]} -gt 0 ]; then
             for schema in "${draft2020_schemas[@]}"; do
               npx --yes ajv-cli@5 compile --spec=draft2020 --strict=false -s "$schema"
@@ -133,7 +135,7 @@ jobs:
           fi
 
           echo "Validating draft-07/legacy schemas..."
-          mapfile -t draft7_schemas < <(find docs/architecture/engine/contracts -name "*.schema.json" -type f 2>/dev/null | while read -r f; do
+          mapfile -t draft7_schemas < <(for f in "${all_schemas[@]}"; do
             if ! grep -q '"\$schema"[[:space:]]*:[[:space:]]*"https://json-schema.org/draft/2020-12/schema"' "$f"; then
               echo "$f"
             fi
@@ -146,7 +148,7 @@ jobs:
             echo "No draft-07/legacy schemas found"
           fi
 
-          echo "✅ Schema validation complete"
+          echo "Schema validation complete"
 
   determinism-checks:
     name: Determinism Pattern Scan
@@ -154,31 +156,14 @@ jobs:
     needs: [detect-changes]
     if: >
       (github.event_name != 'pull_request' || needs.detect-changes.outputs.determinism_relevant ==
-      'true') && github.event.inputs.run_determinism_scan == 'true'
+      'true') && (github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.run_determinism_scan == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Run determinism linting
         run: pnpm lint:determinism
@@ -224,26 +209,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Compile contracts
         run: pnpm test:contracts:compile
@@ -270,8 +237,6 @@ jobs:
           name: compiled-contracts
           path: |
             packages/@dvt/contracts/dist/
-            packages/@dvt/contracts/src/**/*.js
-            packages/@dvt/contracts/src/**/*.d.ts
 
   contract-validate:
     name: Validate Golden JSON Fixtures
@@ -279,31 +244,14 @@ jobs:
     needs: [detect-changes, contract-compile]
     if: >
       (github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
-      'true') && github.event.inputs.run_golden_validation == 'true'
+      'true') && (github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.run_golden_validation == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Download compiled contracts artifact
         uses: actions/download-artifact@v6
@@ -320,7 +268,8 @@ jobs:
     needs: [detect-changes, contract-compile]
     if: >
       (github.event_name != 'pull_request' || needs.detect-changes.outputs.golden_relevant ==
-      'true') && github.event.inputs.run_golden_validation == 'true'
+      'true') && (github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.run_golden_validation == 'true')
     services:
       postgres:
         image: postgres:15
@@ -337,26 +286,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Cache pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Download compiled contracts artifact
         uses: actions/download-artifact@v6
