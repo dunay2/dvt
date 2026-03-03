@@ -223,10 +223,8 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
 
   // ── Outbox lifecycle ──────────────────────────────────────────────────────
 
-  test('outbox: enqueue → listPending → markDelivered', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('outbox: enqueue → listPending → markDelivered', () =>
+    withAdapter(async (adapter) => {
       const { appended } = await adapter.bootstrapRunTx(makeBootstrap('run-outbox'));
       expect(appended).toHaveLength(1);
 
@@ -238,25 +236,20 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       await adapter.markDelivered([mine!.id]);
       const after = await adapter.listPending(10);
       expect(after.find((r) => r.id === mine!.id)).toBeUndefined();
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('outbox: markFailed increments attempts; dead-letters after MAX_OUTBOX_ATTEMPTS', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('outbox: markFailed increments attempts; dead-letters after MAX_OUTBOX_ATTEMPTS', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-dl'));
       const pending = await adapter.listPending(10);
       const rec = pending.find((r) => r.payload.runId === 'run-dl')!;
 
-      // 9 failures — still pending
+      // 9 failures — not yet dead-lettered (still in pending table, gated by backoff)
       for (let i = 0; i < 9; i++) {
         await adapter.markFailed(rec.id, 'transient');
       }
-      const stillPending = await adapter.listPending(10);
-      expect(stillPending.find((r) => r.id === rec.id)).toBeDefined();
+      const dlBefore = await adapter.listDeadLetter(10, 't1');
+      expect(dlBefore.find((r) => r.originalId === rec.id)).toBeUndefined();
 
       // 10th failure — dead-lettered
       await adapter.markFailed(rec.id, 'final');
@@ -265,15 +258,10 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
 
       const dl = await adapter.listDeadLetter(10, 't1');
       expect(dl.find((r) => r.originalId === rec.id)).toBeDefined();
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('outbox: markFailed applies backoff via nextAttemptAt and listPending respects it', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('outbox: markFailed applies backoff via nextAttemptAt and listPending respects it', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-backoff'));
 
       const [rec] = await adapter.listPending(10);
@@ -284,15 +272,10 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       // Same NOW -> pending row should be gated by nextAttemptAt and not returned.
       const pendingNow = await adapter.listPending(10);
       expect(pendingNow.find((r) => r.id === rec!.id)).toBeUndefined();
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('outbox: replayDeadLetters moves records back to pending', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('outbox: replayDeadLetters moves records back to pending', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-replay'));
       const [rec] = await adapter.listPending(10);
       expect(rec).toBeDefined();
@@ -317,17 +300,12 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
 
       const pendingAfter = await adapter.listPending(10);
       expect(pendingAfter.find((r) => r.id === rec!.id)).toBeDefined();
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
   // ── Multi-tenant isolation ────────────────────────────────────────────────
 
-  test('listRuns: filters by tenantId', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('listRuns: filters by tenantId', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-t-a', 'tenant-a'));
       await adapter.bootstrapRunTx(makeBootstrap('run-t-b', 'tenant-b'));
 
@@ -337,15 +315,10 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(forA.every((r) => r.tenantId === 'tenant-a')).toBe(true);
       expect(forB.every((r) => r.tenantId === 'tenant-b')).toBe(true);
       expect(forA.find((r) => r.runId === 'run-t-b')).toBeUndefined();
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('tenant-scoped reads deny cross-tenant access by default', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('tenant-scoped reads deny cross-tenant access by default', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-tenant-read-a', 'tenant-a'));
       await adapter.appendAndEnqueueTx(rid('run-tenant-read-a'), [
         makeEvent({
@@ -361,15 +334,10 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       ).resolves.toBeNull();
       await expect(adapter.listEvents('tenant-b', 'run-tenant-read-a')).resolves.toHaveLength(0);
       await expect(adapter.getSnapshot('tenant-b', rid('run-tenant-read-a'))).resolves.toBeNull();
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('saveProviderRef: rejects cross-tenant writes and allows same-tenant update', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('saveProviderRef: rejects cross-tenant writes and allows same-tenant update', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-provider-scope', 'tenant-a'));
 
       await expect(
@@ -390,15 +358,10 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         providerWorkflowId: 'wf-ok',
         providerRunId: 'pr-ok',
       });
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 
-  test('dead-letter admin methods require tenant scope and stay tenant-bounded', async () => {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
-    try {
-      await adapter.migrate();
+  test('dead-letter admin methods require tenant scope and stay tenant-bounded', () =>
+    withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-dl-tenant-a', 'tenant-a'));
       await adapter.bootstrapRunTx(makeBootstrap('run-dl-tenant-b', 'tenant-b'));
 
@@ -434,8 +397,5 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       const dlBAfter = await adapter.listDeadLetter(10, 'tenant-b');
       expect(dlAAfter.find((r) => r.runId === 'run-dl-tenant-a')).toBeUndefined();
       expect(dlBAfter.find((r) => r.runId === 'run-dl-tenant-b')).toBeDefined();
-    } finally {
-      await adapter.close();
-    }
-  });
+    }));
 });
