@@ -2,99 +2,31 @@
  * @file packages/@dvt/engine/src/contracts/runEvents.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
- * @decision Decision — The run/step event model is append-only and typed for deterministic state replay
- * @consequence Persistence, projection and outbox share a canonical envelope with idempotency semantics
- * @version 1.0.0
- * @date 2026-02-21
+ * @decision Re-export event types from @dvt/contracts with engine-legacy aliases
+ * @version 2.0.0
+ * @date 2026-03-03
  */
-import type { WorkflowSnapshot as SharedWorkflowSnapshot } from '@dvt/contracts';
 
-import type { IsoUtcString } from './types.js';
+// Direct re-exports (names match between engine and contracts)
+export type {
+  AppendResult,
+  EventEnvelope,
+  EventType,
+  RunEventInputBase,
+  RunMetadata,
+  WorkflowSnapshot,
+} from '@dvt/contracts';
 
-export type EventType =
-  | 'RunQueued'
-  | 'RunStarted'
-  | 'RunPaused'
-  | 'RunResumed'
-  | 'RunCancelRequested'
-  | 'RunCancelled'
-  | 'RunCompleted'
-  | 'RunFailed'
-  | 'StepStarted'
-  | 'StepCompleted'
-  | 'StepFailed'
-  | 'StepSkipped';
+// Alias re-exports (engine uses different names than contracts)
 
-export interface RunEventInputBase {
-  eventId: string;
-  eventType: EventType;
-  runId: string;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  planId: string;
-  planVersion: string;
-  logicalAttemptId: number;
-  engineAttemptId: number;
-  emittedAt: IsoUtcString;
-  idempotencyKey: string;
-  payload?: Record<string, unknown>;
-}
+// Engine "RunEventInput" (the union) = contracts "EventInput"
+export type { EventInput as RunEventInput } from '@dvt/contracts';
 
-export type RunLevelEventInput = RunEventInputBase & {
-  stepId?: never;
-};
+// Engine "RunEventPersisted" = contracts "EventEnvelope"
+export type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 
-export type StepLevelEventInput = RunEventInputBase & {
-  stepId: string;
-};
+// Engine "RunLevelEventInput" = contracts "RunEventInput" (run-level sub-type)
+export type { RunEventInput as RunLevelEventInput } from '@dvt/contracts';
 
-export type RunEventInput = RunLevelEventInput | StepLevelEventInput;
-
-export type RunEventPersisted = RunEventInput & {
-  runSeq: number;
-  persistedAt: IsoUtcString;
-};
-
-// Backward-compat aliases used by existing packages.
-export type EventEnvelope = RunEventPersisted;
-
-export interface AppendResult {
-  appended: RunEventPersisted[];
-  deduped: RunEventPersisted[];
-  /** Maximum run sequence after the transactional append attempt. */
-  lastSeq: number;
-}
-
-export interface RunMetadata {
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  runId: string;
-  planId: string;
-  planVersion: string;
-  /**
-   * Planner-driven retry counter. Must be included in all idempotency key preimages
-   * so that events from different logical attempts do not collide.
-   * Phase 1: always 1. Phase 2: planner increments on retry.
-   */
-  logicalAttemptId: number;
-  provider: 'temporal' | 'conductor' | 'mock';
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
-  /**
-   * ISO UTC timestamp when bootstrapRunTx was called (= when the run entered PENDING).
-   * Used by detectStuckRuns to compute time-in-PENDING against a SLA threshold.
-   * Optional for backward compatibility with runs bootstrapped before this field was added.
-   */
-  createdAt?: IsoUtcString;
-}
-
-/**
- * Shared-kernel alias. Ownership moved to @dvt/contracts so external adapters
- * can implement IRunStateStore without depending on engine internals.
- */
-export type WorkflowSnapshot = SharedWorkflowSnapshot;
+// Engine "StepLevelEventInput" = contracts "StepEventInput"
+export type { StepEventInput as StepLevelEventInput } from '@dvt/contracts';

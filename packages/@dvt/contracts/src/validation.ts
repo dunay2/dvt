@@ -45,6 +45,10 @@ import {
   type PlanRefSchemaT,
   RunContextSchema,
   type RunContextSchemaT,
+  RunEventWriteSchema,
+  type RunEventWriteSchemaT,
+  RunEventRecordSchema,
+  type RunEventRecordSchemaT,
   RunSnapshotSchema,
   type RunSnapshotSchemaT,
   RunStatusSnapshotSchema,
@@ -157,8 +161,19 @@ export function parseStepOutput(input: unknown): StepOutputSchemaT {
   return parseWithSchema(StepOutputSchema, input);
 }
 
+/** @deprecated Use parseRunEventWrite or parseRunEventRecord. */
 export function parseCanonicalEngineEvent(input: unknown): CanonicalEngineEventSchemaT {
   return parseWithSchema(CanonicalEngineEventSchema, input);
+}
+
+/** Validate a write-side event envelope (RunEvents v2.0.1). */
+export function parseRunEventWrite(input: unknown): RunEventWriteSchemaT {
+  return parseWithSchema(RunEventWriteSchema, input);
+}
+
+/** Validate a persisted event record (RunEvents v2.0.1). */
+export function parseRunEventRecord(input: unknown): RunEventRecordSchemaT {
+  return parseWithSchema(RunEventRecordSchema, input);
 }
 
 export function parseStepSnapshot(input: unknown): StepSnapshotSchemaT {

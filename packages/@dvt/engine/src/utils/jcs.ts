@@ -1,4 +1,4 @@
 /**
  * @baseline ADR-0003
  */
-export { jcsCanonicalize } from '@dvt/canonical';
+export { jcsCanonicalize } from '@dvt/crypto';

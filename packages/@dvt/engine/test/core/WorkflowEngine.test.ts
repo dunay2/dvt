@@ -1,11 +1,6 @@
-import type {
-  EngineRunRef,
-  PlanRef,
-  RunContext,
-  RunId,
-  RunStatusSnapshot,
-  TenantId,
-} from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, RunContext, RunId, RunStatusSnapshot } from '@dvt/contracts';
+import { createNoopObservability } from '@dvt/observability';
+import type { IObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
@@ -14,8 +9,11 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
+
+type StoreEventInput = Parameters<InMemoryTxStore['appendAndEnqueueTx']>[1][number];
 
 function makeRunEventInput(args: {
   runId: string;
@@ -97,8 +95,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
   function createEngine(input?: {
     adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
     requiredProviders?: EngineRunRef['provider'][];
-  }): { engine: WorkflowEngine; store: InMemoryTxStore } {
+    observability?: IObservability;
+  }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
     const store = new InMemoryTxStore();
+    const intentStore = new InMemoryStartRunIntentStore();
 
     const engine = new WorkflowEngine({
       stateStore: store,
@@ -108,11 +108,13 @@ describe('WorkflowEngine (basic failure modes)', () => {
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      intentStore,
+      observability: input?.observability ?? createNoopObservability(),
       adapters: input?.adapters ?? new Map(),
       requiredProviders: input?.requiredProviders,
     });
 
-    return { engine, store };
+    return { engine, store, intentStore };
   }
 
   it('startRun fails when no adapter registered for provider', async () => {
@@ -190,6 +192,70 @@ describe('WorkflowEngine (basic failure modes)', () => {
     } as any;
 
     await expect(engine.signal(runRef, badSignal)).rejects.toThrow(/Validation failed/);
+  });
+
+  it('emits startRun success metrics via observability', async () => {
+    const counters: string[] = [];
+    const histograms: string[] = [];
+    const obs: IObservability = {
+      ...createNoopObservability(),
+      metrics: {
+        counter(name: string) {
+          counters.push(name);
+          return { add: () => {} };
+        },
+        histogram(name: string) {
+          histograms.push(name);
+          return { record: () => {} };
+        },
+        gauge() {
+          return { set: () => {} };
+        },
+      },
+    };
+    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+      ['temporal', makeTemporalAdapter()],
+    ]);
+    const { engine } = createEngine({ adapters, observability: obs });
+
+    await engine.startRun(makePlanRef(), makeContext('obs-ok-1'));
+    expect(counters).toContain('dvt.run.started_total');
+    expect(histograms).toContain('dvt.run.start.duration_ms');
+  });
+
+  it('emits startRun failure counter via observability', async () => {
+    const counters: string[] = [];
+    const obs: IObservability = {
+      ...createNoopObservability(),
+      metrics: {
+        counter(name: string) {
+          counters.push(name);
+          return { add: () => {} };
+        },
+        histogram() {
+          return { record: () => {} };
+        },
+        gauge() {
+          return { set: () => {} };
+        },
+      },
+    };
+    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+      [
+        'temporal',
+        makeTemporalAdapter({
+          async startRun() {
+            throw new Error('forced failure');
+          },
+        }),
+      ],
+    ]);
+    const { engine } = createEngine({ adapters, observability: obs });
+
+    await expect(engine.startRun(makePlanRef(), makeContext('obs-fail-1'))).rejects.toThrow(
+      /forced failure/
+    );
+    expect(counters).toContain('dvt.run.start_failed_total');
   });
 
   it('constructor validates requiredProviders', () => {
@@ -347,125 +413,6 @@ describe('WorkflowEngine (basic failure modes)', () => {
     );
   });
 
-  // detectStuckRuns: runs stranded in PENDING longer than the SLA threshold.
-  describe('detectStuckRuns', () => {
-    function makeAdapters(): Map<EngineRunRef['provider'], IProviderAdapter> {
-      return new Map<EngineRunRef['provider'], IProviderAdapter>([
-        ['temporal', makeTemporalAdapter()],
-      ]);
-    }
-
-    it('returns empty array when no runs are PENDING', async () => {
-      const { engine } = createEngine({ adapters: makeAdapters() });
-      const stuck = await engine.detectStuckRuns({ thresholdMs: 0, tenantId: 't' as TenantId });
-      expect(stuck).toEqual([]);
-    });
-
-    it('returns empty array when PENDING run is younger than threshold', async () => {
-      const { engine } = createEngine({ adapters: makeAdapters() });
-      await engine.startRun(makePlanRef(), makeContext('young-1'));
-      // thresholdMs large enough that the run (created ms ago) is not stuck yet.
-      const stuck = await engine.detectStuckRuns({
-        thresholdMs: 999_999,
-        tenantId: 't' as TenantId,
-      });
-      expect(stuck).toEqual([]);
-    });
-
-    it('marks a PENDING run as RunFailed when it exceeds the threshold', async () => {
-      const { engine, store } = createEngine({ adapters: makeAdapters() });
-      await engine.startRun(makePlanRef(), makeContext('stuck-1'));
-
-      // thresholdMs: 0 → any PENDING run (regardless of age) is treated as stuck.
-      const stuck = await engine.detectStuckRuns({ thresholdMs: 0, tenantId: 't' as TenantId });
-
-      expect(stuck).toEqual(['stuck-1']);
-      const events = await store.listEvents('t', 'stuck-1');
-      const failedEvent = events.find((e) => e.eventType === 'RunFailed');
-      expect(failedEvent).toBeDefined();
-      expect(failedEvent?.payload).toMatchObject({ reason: 'QUEUED_TIMEOUT' });
-    });
-
-    it('transitions snapshot to FAILED after detection', async () => {
-      const { engine, store } = createEngine({ adapters: makeAdapters() });
-      const runRef = await engine.startRun(makePlanRef(), makeContext('stuck-snap-1'));
-
-      expect((await engine.getRunStatus(runRef)).status).toBe('PENDING');
-
-      await engine.detectStuckRuns({ thresholdMs: 0, tenantId: 't' as TenantId });
-
-      const snap = await store.getSnapshot('t', 'stuck-snap-1');
-      expect(snap?.status).toBe('FAILED');
-    });
-
-    it('only marks PENDING runs — ignores RUNNING/COMPLETED runs', async () => {
-      const { engine } = createEngine({ adapters: makeAdapters() });
-      // Run 1: start but leave PENDING.
-      await engine.startRun(makePlanRef(), makeContext('pending-only-1'));
-      // Run 2: stays PENDING (engine never emits RunStarted — adapter owns that).
-      await engine.startRun(makePlanRef(), makeContext('pending-only-2'));
-
-      const stuck = await engine.detectStuckRuns({ thresholdMs: 0, tenantId: 't' as TenantId });
-      // Both runs are PENDING, so both should be detected.
-      expect(stuck.sort()).toEqual(['pending-only-1', 'pending-only-2'].sort());
-    });
-
-    it('respects tenantId filter — does not mark other tenants runs', async () => {
-      const { engine } = createEngine({ adapters: makeAdapters() });
-
-      const ctxA: RunContext = { ...makeContext('run-t-a'), tenantId: 'tenant-a' };
-      const ctxB: RunContext = { ...makeContext('run-t-b'), tenantId: 'tenant-b' };
-      await engine.startRun(makePlanRef(), ctxA);
-      await engine.startRun(makePlanRef(), ctxB);
-
-      const stuck = await engine.detectStuckRuns({
-        thresholdMs: 0,
-        tenantId: 'tenant-a' as TenantId,
-      });
-
-      expect(stuck).toEqual(['run-t-a']);
-    });
-
-    it('respects limit — scans at most N candidates per call', async () => {
-      const { engine } = createEngine({ adapters: makeAdapters() });
-      await engine.startRun(makePlanRef(), makeContext('limit-1'));
-      await engine.startRun(makePlanRef(), makeContext('limit-2'));
-      await engine.startRun(makePlanRef(), makeContext('limit-3'));
-
-      const stuck = await engine.detectStuckRuns({
-        thresholdMs: 0,
-        tenantId: 't' as TenantId,
-        limit: 1,
-      });
-      // With limit:1 only one run should be processed.
-      expect(stuck).toHaveLength(1);
-    });
-
-    it('skips runs with missing createdAt (backward compat)', async () => {
-      const { engine, store } = createEngine({ adapters: makeAdapters() });
-      // Manually bootstrap a run without createdAt (simulates pre-migration rows).
-      await store.bootstrapRunTx({
-        metadata: {
-          tenantId: 't',
-          projectId: 'p',
-          environmentId: 'dev',
-          runId: 'no-created-at',
-          planId: 'plan',
-          planVersion: '1',
-          logicalAttemptId: 1,
-          provider: 'temporal',
-          providerWorkflowId: 'wf-no-created-at',
-          providerRunId: 'no-created-at',
-          // createdAt intentionally absent
-        },
-        firstEvents: [],
-      });
-
-      const stuck = await engine.detectStuckRuns({ thresholdMs: 0, tenantId: 't' as TenantId });
-      expect(stuck).not.toContain('no-created-at');
-    });
-  });
-
   describe('A2 appendAndEnqueueTx / AppendResult', () => {
     it('returns appended + deduped and preserves runSeq monotonicity', async () => {
       const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
@@ -499,6 +446,44 @@ describe('WorkflowEngine (basic failure modes)', () => {
       const all = await store.listEvents('t', runId);
       const seqs = all.map((e) => e.runSeq);
       expect(seqs).toEqual([1, 2, 3]);
+    });
+
+    it('rejects write-shape inputs that preassign runSeq/persistedAt', async () => {
+      const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+        ['temporal', makeTemporalAdapter()],
+      ]);
+      const { engine, store } = createEngine({ adapters });
+      await engine.startRun(makePlanRef(), makeContext('a2-run-shape-1'));
+
+      const runId = 'a2-run-shape-1' as RunId;
+
+      const invalidWithRunSeq = {
+        ...makeRunEventInput({
+          runId: 'a2-run-shape-1',
+          eventId: 'evt-shape-runseq',
+          eventType: 'RunStarted',
+          idempotencyKey: 'a2-shape-runseq',
+        }),
+        runSeq: 99,
+      } as unknown as StoreEventInput;
+
+      await expect(store.appendAndEnqueueTx(runId, [invalidWithRunSeq])).rejects.toThrow(
+        /INVALID_EVENT_WRITE_SHAPE: runSeq forbidden/
+      );
+
+      const invalidWithPersistedAt = {
+        ...makeRunEventInput({
+          runId: 'a2-run-shape-1',
+          eventId: 'evt-shape-persisted',
+          eventType: 'RunStarted',
+          idempotencyKey: 'a2-shape-persisted',
+        }),
+        persistedAt: '2026-02-12T00:00:01.000Z',
+      } as unknown as StoreEventInput;
+
+      await expect(store.appendAndEnqueueTx(runId, [invalidWithPersistedAt])).rejects.toThrow(
+        /INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden/
+      );
     });
   });
 

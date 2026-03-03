@@ -46,7 +46,7 @@ export interface RunMetadata {
   runId: string;
   planId: string;
   planVersion: string;
-  logicalAttemptId?: number;
+  logicalAttemptId: number;
   provider: 'temporal' | 'conductor' | 'mock';
   providerWorkflowId: string;
   providerRunId: string;

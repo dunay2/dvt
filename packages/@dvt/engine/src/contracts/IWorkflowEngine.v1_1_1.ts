@@ -6,8 +6,6 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type { TenantId } from '@dvt/contracts';
-
 import type {
   EngineRunRef,
   PlanRef,
@@ -34,19 +32,4 @@ export interface IWorkflowEngine {
   enrichRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot>;
 
   signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void>;
-
-  /**
-   * Scans for runs stuck in PENDING longer than `options.thresholdMs` and emits
-   * `RunFailed` (payload.reason = 'QUEUED_TIMEOUT') for each.
-   *
-   * Intended to be called from a scheduled job (e.g., every 30 s).
-   * The caller is responsible for circuit-breaking and back-pressure.
-   *
-   * @returns runIds that were transitioned to FAILED.
-   */
-  detectStuckRuns(options: {
-    thresholdMs: number;
-    tenantId: TenantId;
-    limit?: number;
-  }): Promise<string[]>;
 }

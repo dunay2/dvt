@@ -17,6 +17,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import type { EngineRunRef, PlanRef } from '@dvt/contracts';
+import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
 import { ConductorAdapterStub } from '../../src/adapters/conductor/ConductorAdapterStub.js';
@@ -27,16 +28,18 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MATRIX_PATH = path.resolve(
   __dirname,
-  '../../../../../docs/architecture/engine/contracts/capabilities/adapters.capabilities.json'
+  '../../../../../specs/contracts/capabilities/adapters.capabilities.json'
 );
 
 function utf8(s: string): Uint8Array {
@@ -88,6 +91,8 @@ function createEngine(adapter?: IProviderAdapter): { engine: WorkflowEngine; moc
     clock: new SequenceClock('2026-02-23T00:00:00.000Z'),
     authorizer: new AllowAllAuthorizer(),
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    intentStore: new InMemoryStartRunIntentStore(),
+    observability: createNoopObservability(),
     adapters: new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', effective]]),
   });
 
