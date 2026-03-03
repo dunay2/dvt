@@ -1,69 +1,46 @@
 # Architecture Decision Records (ADR) Index
 
-This document is the main entry point for architecture decisions in the DVT+ repository.
-
-## Specification Decisions vs ADRs
-
-**Specification Decisions** are the canonical, versioned baseline for product and technical rules. They define the core contracts, invariants, and system-wide requirements. These documents are stable and serve as the foundation for all architectural work.
-
-**ADRs (Architecture Decision Records)** extend, refine, or adapt Specification Decisions for specific implementation, migration, integration, or governance needs. ADRs never contradict Specification Decisions; they clarify, detail, or evolve the architecture in response to real-world requirements.
-
-**Relationship:**
-
-- Specification Decisions are the "what" and "why" of the system.
-- ADRs are the "how" and "when" for architectural choices and changes.
-- ADRs must reference Specification Decisions when relevant, and always respect their baseline.
-
-**Navigation:**
-
-- Use Specification Decisions for canonical rules and contracts.
-- Use ADRs for implementation details, migrations, and architectural history.
-
----
-
-## Canonical Specification Decisions
-
-- [Specification Decisions (Latest)](../decisions/SPECIFICATION_DECISIONS.md)
-- DVT+ — Specification Decisions (Canonical Specs) — v1
-
-Specification decisions are the canonical baseline. ADRs below extend or refine those decisions over time.
-
----
+Canonical catalog of ADRs in this repository.
 
 ## ADR Catalog
 
-| ADR Number | Title                                                            | Status   | Date       | File                                                                                                                                       |
-| ---------- | ---------------------------------------------------------------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| ADR-0000   | Code Generation with Enforced Normative Traceability (Automated) | Accepted | 2026-02-14 | [ADR-0000-Code-generation-with-normative-traceability-required.en.md](ADR-0000-Code-generation-with-normative-traceability-required.en.md) |
-| ADR-0001   | Temporal Integration Test Policy                                 | Accepted | 2026-02-14 | [ADR-0001-temporal-integration-test-policy.md](ADR-0001-temporal-integration-test-policy.md)                                               |
-| ADR-0002   | Neo4j as Central Knowledge Graph Repository                      | Accepted | 2026-02-16 | [ADR-0002-neo4j-knowledge-graph-context-repository.md](ADR-0002-neo4j-knowledge-graph-context-repository.md)                               |
-| ADR-0003   | Execution Model Sovereignty                                      | Accepted | 2026-02-16 | [ADR-0003-execution-model.md](ADR-0003-execution-model.md)                                                                                 |
-| ADR-0004   | Event Sourcing Strategy                                          | Accepted | 2026-02-16 | [ADR-0004-event-sourcing-strategy.md](ADR-0004-event-sourcing-strategy.md)                                                                 |
-| ADR-0005   | Contract Formalization Tooling                                   | Accepted | 2026-02-16 | [ADR-0005-contract-formalization-tooling.md](ADR-0005-contract-formalization-tooling.md)                                                   |
-| ADR-0006   | Contract Tooling Governance                                      | Accepted | 2026-02-16 | [ADR-0006-contract-tooling-governance.md](ADR-0006-contract-tooling-governance.md)                                                         |
-| ...        | ...                                                              | ...      | ...        | ...                                                                                                                                        |
-| ADR-0030   | Pre-Dispatch Intent Log for startRun Crash Consistency           | Accepted | 2026-03-03 | [ADR-0030-pre-dispatch-intent-log.md](ADR-0030-pre-dispatch-intent-log.md)                                                                 |
+| ADR Number | Title | Status | Date | File |
+| --- | --- | --- | --- | --- |
+| ADR-0000 | Code Generation with Enforced Normative Traceability (Automated) | Accepted | 2026-02-14 | [ADR-0000-Code-generation-with-normative-traceability-required.en.md](ADR-0000-Code-generation-with-normative-traceability-required.en.md) |
+| ADR-0000 (ES) | Generación de código con trazabilidad normativa obligatoria | Accepted | 2026-02-14 | [ADR-0000-Generación de código con trazabilidad normativa obligatoria.md](ADR-0000-Generación de código con trazabilidad normativa obligatoria.md) |
+| ADR-0001 | Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline) | Accepted | 2026-02-14 | [ADR-0001-temporal-integration-test-policy.md](ADR-0001-temporal-integration-test-policy.md) |
+| ADR-0002 | Neo4j as Central Knowledge Graph Repository | Accepted | 2026-02-16 | [ADR-0002-neo4j-knowledge-graph-context-repository.md](ADR-0002-neo4j-knowledge-graph-context-repository.md) |
+| ADR-0003 | Execution Model Sovereignty | Accepted | 2026-02-16 | [ADR-0003-execution-model.md](ADR-0003-execution-model.md) |
+| ADR-0004 | Event Sourcing Strategy (Extended) | Accepted | 2026-02-16 | [ADR-0004-event-sourcing-strategy.md](ADR-0004-event-sourcing-strategy.md) |
+| ADR-0005 | Contract Formalization Tooling | Accepted | 2026-02-16 | [ADR-0005-contract-formalization-tooling.md](ADR-0005-contract-formalization-tooling.md) |
+| ADR-0006 | Contract Tooling Governance (Repository-Authoritative, Editor-Supportive) | Accepted | 2026-02-16 | [ADR-0006-contract-tooling-governance.md](ADR-0006-contract-tooling-governance.md) |
+| ADR-0007 | Run Cancellation Semantics and Event Ownership | Accepted | 2026-02-21 | [ADR-0007_RunCancellation.md](ADR-0007_RunCancellation.md) |
+| ADR-0008 | Signal Idempotency Key Derivation | Accepted | 2026-02-21 | [ADR-0008_Signal_Idempotency.md](ADR-0008_Signal_Idempotency.md) |
+| ADR-0009 | Outbox Publication Ordering Guarantees | Proposed (Hardened revB) | 2026-02-21 | [ADR-0009_Outbox_Ordering.md](ADR-0009_Outbox_Ordering.md) |
+| ADR-0010 | Run Event Envelope Split, Idempotency, and Runtime Integrity Governance (Comprehensive Version) | Approved | 2026-02-20 (updated: 2026-02-21) | [ADR-0010-run-event-envelope-split.md](ADR-0010-run-event-envelope-split.md) |
+| ADR-0011 | RunStarted Ownership | Approved | 2026-02-20 | [ADR-0011-run-started-ownership.md](ADR-0011-run-started-ownership.md) |
+| ADR-0012 | Plan Integrity Ownership | Accepted | 2026-02-20 (updated: 2026-02-21) | [ADR-0012-plan-integrity-ownership.md](ADR-0012-plan-integrity-ownership.md) |
+| ADR-0012A | Canonical Plan Error Code Strategy | Accepted | 2026-02-21 | [ADR-0012a_Canonical_Error_Code_Strategy.md](ADR-0012a_Canonical_Error_Code_Strategy.md) |
+| ADR-0013 | IRunStateStore.bootstrapRunTx | Accepted | 2026-02-20 | [ADR-0013-run-state-store-bootstrapRunTx.md](ADR-0013-run-state-store-bootstrapRunTx.md) |
+| ADR-0014 | Run-Driven Adapter Model | Accepted | 2026-02-20 | [ADR-0014-run-driven-adapter-model.md](ADR-0014-run-driven-adapter-model.md) |
+| ADR-0015 | getRunStatus Read Model Separation | Accepted | 2026-02-20 | [ADR-0015-getRunStatus-read-model-separation.md](ADR-0015-getRunStatus-read-model-separation.md) |
+| ADR-0016 | logicalAttemptId Ownership by Adapter | Accepted | 2026-02-20 | [ADR-0016-logicalAttemptId-adapter-ownership.md](ADR-0016-logicalAttemptId-adapter-ownership.md) |
+| ADR-0017 | ExecutionPlan Schema Versioning & Compatibility | Accepted | 2026-02-21 | [ADR-0017_ExecutionPlan_Schema_Versioning.md](ADR-0017_ExecutionPlan_Schema_Versioning.md) |
+| ADR-0018 | Shared Kernel Ownership Governance (`@dvt/contracts`) | Accepted | 2026-02-25 | [ADR-0018_Shared_Kernel_Ownership_Governance.md](ADR-0018_Shared_Kernel_Ownership_Governance.md) |
+| ADR-0019 | Adapter Equivalence and Maintenance Boundary | Accepted | 2026-02-26 | [ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md](ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md) |
+| ADR-0029 | Run Maintenance Service Extraction | Accepted | 2026-03-03 | [ADR-0029-run-maintenance-service.md](ADR-0029-run-maintenance-service.md) |
+| ADR-0030 | Pre-Dispatch Intent Log for startRun Crash Consistency | Accepted | 2026-03-03 | [ADR-0030-pre-dispatch-intent-log.md](ADR-0030-pre-dispatch-intent-log.md) |
 | ADR-0031   | Storage Adapter Tenant Isolation Strategy                        | Accepted | 2026-03-03 | [ADR-0031-adapter-tenant-isolation.md](ADR-0031-adapter-tenant-isolation.md)                                                               |
 
-_Update this table whenever an ADR is added, renamed, or superseded._
-
----
-
-## Usage Rules
+## Usage rules
 
 - New ADRs MUST use the next sequential identifier.
-- ADR filenames MUST be lowercase kebab-case (except the ADR-XXXX prefix).
-- ADR content SHOULD follow the structure used by [ADR-0000-Code-generation-with-normative-traceability-required.en.md](ADR-0000-Code-generation-with-normative-traceability-required.en.md).
-- This index MUST be updated whenever an ADR is added, renamed, or superseded.
-- SPECIFICATION_DECISIONS.md MUST be updated whenever a new specification-decisions version is accepted.
+- ADR filenames SHOULD follow `ADR-XXXX-kebab-case.md` (historical files are kept as-is).
+- This index MUST be updated whenever an ADR is added, renamed, superseded, or archived.
 
----
+## Related
 
-## References
-
-- [ADR Implementation Status](ADR-Implementation%20Status.md)
-- [ADR Template](ADR-0000-Code-generation-with-normative-traceability-required.en.md)
-
----
+- [ADR landing page](index.md)
+- [ADR implementation status](ADR-Implementation%20Status.md)
 
 _Last updated: 2026-03-03_

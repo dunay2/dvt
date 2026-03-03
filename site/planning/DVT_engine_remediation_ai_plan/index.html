@@ -1,0 +1,2736 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>DVT+ — AI-Executable Remediation Plan (Engine + Planner + State) - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dvt-ai-executable-remediation-plan-engine-planner-state" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#0-nonnegotiable-invariants-freeze-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0) Non‑negotiable invariants (freeze now)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-operating-model-for-the-remediation-how-the-ai-should-execute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Operating model for the remediation (how the AI should execute)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) Operating model for the remediation (how the AI should execute)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-execution-cadence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Execution cadence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-no-gaps-gates-must-pass-after-each-p0-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 “No-gaps” gates (must pass after each P0 task)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pattern-library-what-to-implement-using-proven-oss-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Pattern library (what to implement, using proven OSS patterns)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) Pattern library (what to implement, using proven OSS patterns)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-transactional-outbox-relay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Transactional outbox + relay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-deterministic-gateway-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Deterministic gateway expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-dbt-planning-inputs-real-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 dbt planning inputs (real artifacts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-postgres-scaling-primitives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Postgres scaling primitives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-multi-tenant-hardening-idor-prevention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Multi-tenant hardening (IDOR prevention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-remediation-roadmap-p0p1p2-with-step-by-step-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Remediation roadmap (P0/P1/P2) with step-by-step tasks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3) Remediation roadmap (P0/P1/P2) with step-by-step tasks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-02-unify-irunstatestore-contracts-as-single-source-of-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-02 — Unify IRunStateStore (contracts as single source of truth)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-02 — Unify IRunStateStore (contracts as single source of truth)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steps-ai-executable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps (AI-executable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this decision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-03-remove-type-drift-add-runtime-validation-on-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-03 — Remove type drift + add runtime validation on boundaries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-03 — Remove type drift + add runtime validation on boundaries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternatives_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-04-implement-snapshotprojector-layer-3-mandatory-fsm-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-04 — Implement SnapshotProjector Layer-3 (mandatory FSM enforcement)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-04 — Implement SnapshotProjector Layer-3 (mandatory FSM enforcement)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steps_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-05-tenantid-mandatory-everywhere-stop-idor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-05 — tenantId mandatory everywhere (stop IDOR)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-05 — tenantId mandatory everywhere (stop IDOR)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steps_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-06p0-07-planner-define-contract-implement-mvp-dbt-manifest-executionplan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-06/P0-07 — Planner: define contract + implement MVP (dbt manifest → ExecutionPlan)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-06/P0-07 — Planner: define contract + implement MVP (dbt manifest → ExecutionPlan)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p0-06-define-iplanner-contract-normative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-06: Define IPlanner contract (normative)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p0-07-implement-planner-mvp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-07: Implement Planner MVP
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-07: Implement Planner MVP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steps_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternatives_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-08-plan-cache-by-content-hash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-08 — Plan cache by content hash
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-08 — Plan cache by content hash">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cache-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cache key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-09p0-10-gateway-dsl-persist-gatewaydecisions-across-continueasnew" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-09/P0-10 — Gateway DSL + persist gatewayDecisions across continueAsNew
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-09/P0-10 — Gateway DSL + persist gatewayDecisions across continueAsNew">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p0-09-cel-evaluator-spec-deterministic-execution-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-09: CEL evaluator spec + deterministic execution boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p0-10-continueasnew-state-preservation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-10: continueAsNew state preservation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-11-outbox-relay-mvp-polling-dlq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-11 — Outbox relay MVP (polling) + DLQ
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-11 — Outbox relay MVP (polling) + DLQ">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternatives_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-12-startrun-concurrency-fix-temporal-workflowid-runid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-12 — startRun concurrency fix (Temporal workflowId = runId)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-12 — startRun concurrency fix (Temporal workflowId = runId)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporal approach
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steps_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-13-extract-detectstuckruns-into-maintenance-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-13 — Extract detectStuckRuns into maintenance service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-13 — Extract detectStuckRuns into maintenance service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steps_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p0-14-ci-no-gaps-suite-replayidempotencechaos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0-14 — CI “no-gaps” suite (replay/idempotence/chaos)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0-14 — CI “no-gaps” suite (replay/idempotence/chaos)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#suite-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suite composition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dod_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DoD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#p1p2-design-now-implement-after-p0-is-stable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1/P2 (design now, implement after P0 is stable)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P1/P2 (design now, implement after P0 is stable)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p1-01-contract-migration-tooling-dual-read-executable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1-01 — Contract migration tooling (dual-read executable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-02-postgres-partitioning-for-run_events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1-02 — Postgres partitioning for run_events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-03-pgbouncer-in-staging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1-03 — PgBouncer in staging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-05-plugin-sandbox-decision-poc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1-05 — Plugin sandbox decision + PoC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-ai-runbook-how-to-verify-correctness-after-each-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) AI runbook: how to verify correctness after each change
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4) AI runbook: how to verify correctness after each change">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-verification-checklist-per-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Verification checklist per PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-production-rollout-checklist-per-feature-flag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Production rollout checklist (per feature flag)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-status-board-from-your-provided-baseline-requires-repo-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Status board (from your provided baseline; requires repo verification)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-quick-next-actions-zero-ambiguity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Quick next actions (zero ambiguity)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dvt-ai-executable-remediation-plan-engine-planner-state">DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)<a class="headerlink" href="#dvt-ai-executable-remediation-plan-engine-planner-state" title="Permanent link">&para;</a></h1>
+<p><strong>Reference date:</strong> 2026-02-26 (Atlantic/Canary)<br />
+<strong>Scope:</strong> Convert the architectural review into an <em>implementation-grade</em>, step-by-step plan that an AI (or a team) can execute with verification gates, production-safe rollout steps, and “no-gaps” checks.</p>
+<hr />
+<h2 id="0-nonnegotiable-invariants-freeze-now">0) Non‑negotiable invariants (freeze now)<a class="headerlink" href="#0-nonnegotiable-invariants-freeze-now" title="Permanent link">&para;</a></h2>
+<p>These must <strong>not change</strong> during remediation (or you re-open correctness/security risk).</p>
+<ol>
+<li>
+<p><strong>Adapter-first startRun ordering</strong><br />
+<code>adapter.startRun() → bootstrapRunTx → (on failure) adapter.cancelRun()</code><br />
+<em>Why:</em> closes the two-phase write gap and preserves compensation semantics.<br />
+<em>Risk if changed:</em> “phantom runs” in Postgres or orphan workflows.</p>
+</li>
+<li>
+<p><strong>Idempotency key derivation</strong> (SHA‑256 preimage formula and golden vectors)<br />
+<em>Why:</em> stable dedupe and safe retries/replays; changing it creates irreversible drift.</p>
+</li>
+<li>
+<p><strong>Plan integrity ownership</strong><br />
+   Adapter fetches plan bytes + validates SHA-256; engine receives <strong>PlanRef only</strong>.<br />
+<em>Why:</em> keeps engine pure and testable; prevents “engine touches plan bytes” drift.</p>
+</li>
+<li>
+<p><strong>Timestamp split</strong><br />
+<code>emittedAt</code> (producer) vs <code>persistedAt</code> (append authority).<br />
+<em>Why:</em> audit correctness under clock skew.</p>
+</li>
+</ol>
+<hr />
+<h2 id="1-operating-model-for-the-remediation-how-the-ai-should-execute">1) Operating model for the remediation (how the AI should execute)<a class="headerlink" href="#1-operating-model-for-the-remediation-how-the-ai-should-execute" title="Permanent link">&para;</a></h2>
+<h3 id="11-execution-cadence">1.1 Execution cadence<a class="headerlink" href="#11-execution-cadence" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>One task at a time</strong>, always in this sequence:</li>
+<li><strong>Change spec/contracts/ADR</strong>,</li>
+<li><strong>Implement</strong>,</li>
+<li><strong>Add tests (unit + integration)</strong>,</li>
+<li><strong>Run CI gates</strong>,</li>
+<li><strong>Ship behind a feature flag</strong>,</li>
+<li><strong>Deploy</strong>,</li>
+<li><strong>Observe</strong>,</li>
+<li><strong>Promote flag</strong>.</li>
+</ul>
+<h3 id="12-no-gaps-gates-must-pass-after-each-p0-task">1.2 “No-gaps” gates (must pass after each P0 task)<a class="headerlink" href="#12-no-gaps-gates-must-pass-after-each-p0-task" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Type boundary gate:</strong> every cross-package boundary validates with runtime schemas (Zod).</li>
+<li><strong>Determinism gate (Temporal):</strong> replay tests + ban non-deterministic primitives in workflow code.</li>
+<li><strong>Multi-tenant gate:</strong> negative tests for cross-tenant reads and operations (IDOR prevention).</li>
+<li><strong>Outbox gate:</strong> outbox queue must drain under load (at-least-once) and projector must catch up.</li>
+</ul>
+<blockquote>
+<p>Temporal testing and safe deployment references: citeturn3search0turn3search1turn3search4</p>
+</blockquote>
+<hr />
+<h2 id="2-pattern-library-what-to-implement-using-proven-oss-patterns">2) Pattern library (what to implement, using proven OSS patterns)<a class="headerlink" href="#2-pattern-library-what-to-implement-using-proven-oss-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="21-transactional-outbox-relay">2.1 Transactional outbox + relay<a class="headerlink" href="#21-transactional-outbox-relay" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Pattern:</strong> transactional outbox (write event + outbox row in the same DB tx), then relay to the bus.<br />
+  Source: microservices.io outbox pattern citeturn0search1</li>
+<li><strong>Relay options:</strong></li>
+<li><strong>Polling relay (P0)</strong>: simplest, reliable, acceptable for Phase 1–2.</li>
+<li><strong>CDC relay (P1)</strong>: Debezium Outbox Event Router for scale. citeturn1search3</li>
+</ul>
+<h3 id="22-deterministic-gateway-expressions">2.2 Deterministic gateway expressions<a class="headerlink" href="#22-deterministic-gateway-expressions" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Pick:</strong> CEL (Common Expression Language) for deterministic, constrained evaluation.</li>
+<li>CEL spec: https://cel.dev/</li>
+<li>JS/TS implementation: bufbuild/cel-es citeturn0search2</li>
+<li><strong>Hard rule:</strong> gateway evaluation runs <strong>in Activity context</strong>, not workflow code.</li>
+</ul>
+<h3 id="23-dbt-planning-inputs-real-artifacts">2.3 dbt planning inputs (real artifacts)<a class="headerlink" href="#23-dbt-planning-inputs-real-artifacts" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Use real dbt artifacts:</li>
+<li>manifest.json reference citeturn1search0</li>
+<li>node selection/graph operators citeturn1search1</li>
+<li>sample project for fixtures: dbt-labs/jaffle-shop citeturn0search1</li>
+</ul>
+<h3 id="24-postgres-scaling-primitives">2.4 Postgres scaling primitives<a class="headerlink" href="#24-postgres-scaling-primitives" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Partition run_events</strong> by time and/or tenant to prevent runaway table growth. citeturn2search2turn2search4</li>
+<li>PgBouncer for connection pooling (staging first): https://www.pgbouncer.org/config.html</li>
+</ul>
+<h3 id="25-multi-tenant-hardening-idor-prevention">2.5 Multi-tenant hardening (IDOR prevention)<a class="headerlink" href="#25-multi-tenant-hardening-idor-prevention" title="Permanent link">&para;</a></h3>
+<ul>
+<li>OWASP Multi-Tenant Security + IDOR cheat sheets citeturn1search2</li>
+<li><strong>Rule:</strong> every read/list/cancel/signal requires tenantId and authz checks.</li>
+</ul>
+<hr />
+<h2 id="3-remediation-roadmap-p0p1p2-with-step-by-step-tasks">3) Remediation roadmap (P0/P1/P2) with step-by-step tasks<a class="headerlink" href="#3-remediation-roadmap-p0p1p2-with-step-by-step-tasks" title="Permanent link">&para;</a></h2>
+<h3 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>DoD</strong> = Definition of Done</li>
+<li><strong>AI checks</strong> = what an AI must verify before marking “DONE”</li>
+<li><strong>Alternatives</strong> = viable options with tradeoffs</li>
+<li><strong>Rollout</strong> = production-safe deployment notes</li>
+</ul>
+<hr />
+<h2 id="p0-02-unify-irunstatestore-contracts-as-single-source-of-truth">P0-02 — Unify <code>IRunStateStore</code> (contracts as single source of truth)<a class="headerlink" href="#p0-02-unify-irunstatestore-contracts-as-single-source-of-truth" title="Permanent link">&para;</a></h2>
+<h3 id="goal">Goal<a class="headerlink" href="#goal" title="Permanent link">&para;</a></h3>
+<p>Eliminate the 3 incompatible interfaces and force every package to import the same contract.</p>
+<h3 id="steps-ai-executable">Steps (AI-executable)<a class="headerlink" href="#steps-ai-executable" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Inventory current variants</strong></li>
+<li><code>packages/@dvt/engine/src/state/IRunStateStore.ts</code></li>
+<li><code>packages/@dvt/contracts/...IRunStateStore...</code></li>
+<li><code>packages/@dvt/engine/src/ports/IRunStateStore.ts</code></li>
+<li><strong>Design canonical interface</strong> in <code>@dvt/contracts</code>:</li>
+<li>MUST include:<ul>
+<li><code>bootstrapRunTx(...)</code></li>
+<li><code>appendAndEnqueueTx(...)</code> returning <strong>AppendResult</strong> (not void)</li>
+<li><code>listRuns(tenantId, ...)</code> (<strong>tenantId required</strong>)</li>
+<li><code>listEvents(tenantId, runId, fromSeq, limit)</code> (tenant-scoped)</li>
+<li><code>getSnapshot(tenantId, runId)</code></li>
+</ul>
+</li>
+<li><strong>Delete/replace</strong> engine-local copies with re-exports from contracts.</li>
+<li>Add <strong>boundary validation</strong> for store inputs with Zod schemas.</li>
+</ol>
+<h3 id="why-this-decision">Why this decision<a class="headerlink" href="#why-this-decision" title="Permanent link">&para;</a></h3>
+<p>Contracts must be the single source of truth; otherwise drift causes silent incompatibilities.</p>
+<h3 id="alternatives">Alternatives<a class="headerlink" href="#alternatives" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Keep interface in engine and re-export from contracts (rejected): breaks “contracts are universal boundary”.</li>
+</ul>
+<h3 id="dod">DoD<a class="headerlink" href="#dod" title="Permanent link">&para;</a></h3>
+<ul>
+<li>One interface exists, all imports converge, compilation breaks if any legacy copy used.</li>
+</ul>
+<h3 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Type-level: <code>tsd</code> (or strict <code>pnpm -r typecheck</code>) ensures no conflicting duplicates.</li>
+<li>Integration: adapter + engine compile against the same interface.</li>
+</ul>
+<hr />
+<h2 id="p0-03-remove-type-drift-add-runtime-validation-on-boundaries">P0-03 — Remove type drift + add runtime validation on boundaries<a class="headerlink" href="#p0-03-remove-type-drift-add-runtime-validation-on-boundaries" title="Permanent link">&para;</a></h2>
+<h3 id="goal_1">Goal<a class="headerlink" href="#goal_1" title="Permanent link">&para;</a></h3>
+<p>No duplicated core types across packages; all boundary payloads validated.</p>
+<h3 id="steps">Steps<a class="headerlink" href="#steps" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Identify duplicated types: <code>RunStatus</code>, <code>PlanRef</code>, <code>RunContext</code>, <code>EngineRunRef</code>, <code>SignalRequest</code>, etc.</li>
+<li>Move canonical definitions to <code>@dvt/contracts</code>:</li>
+<li><code>types.ts</code> + <code>schemas.ts</code> (Zod)</li>
+<li><code>vX</code> discriminated unions for evolvable payloads</li>
+<li>Enforce:</li>
+<li>API → Engine boundary: validate request payload schema</li>
+<li>Adapter → Engine boundary: validate adapter outputs (PlanRef, EngineRunRef)</li>
+<li>Outbox → Projector boundary: validate event envelope schema</li>
+</ol>
+<h3 id="why">Why<a class="headerlink" href="#why" title="Permanent link">&para;</a></h3>
+<p>TypeScript structural typing does not protect runtime payloads; Zod does.</p>
+<h3 id="alternatives_1">Alternatives<a class="headerlink" href="#alternatives_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>JSON Schema only (possible, but Zod is faster for TS-first validation).</li>
+</ul>
+<h3 id="dod_1">DoD<a class="headerlink" href="#dod_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Every boundary call site has <code>schema.parse()</code> (or safeParse + mapped error).</li>
+<li>Negative tests for invalid payloads.</li>
+</ul>
+<hr />
+<h2 id="p0-04-implement-snapshotprojector-layer-3-mandatory-fsm-enforcement">P0-04 — Implement SnapshotProjector Layer-3 (mandatory FSM enforcement)<a class="headerlink" href="#p0-04-implement-snapshotprojector-layer-3-mandatory-fsm-enforcement" title="Permanent link">&para;</a></h2>
+<h3 id="goal_2">Goal<a class="headerlink" href="#goal_2" title="Permanent link">&para;</a></h3>
+<p>Implement the mandatory contract: projector validation detects invalid transitions and marks run inconsistent.</p>
+<h3 id="design-pattern">Design pattern<a class="headerlink" href="#design-pattern" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Finite State Machine</strong> for Run + per-step state.</li>
+<li><strong>Reduction</strong>: <code>snapshot = reduce(snapshot, event)</code>; reject invalid events.</li>
+</ul>
+<h3 id="steps_1">Steps<a class="headerlink" href="#steps_1" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Define state machine:</li>
+<li>Run states: <code>QUEUED → RUNNING → (SUCCEEDED|FAILED|CANCELLED)</code> plus transitional <code>CANCELLING</code>.</li>
+<li>Step states: <code>PENDING → RUNNING → (SUCCEEDED|FAILED|SKIPPED)</code></li>
+<li>Define transition table (matrix) and implement reducer:</li>
+<li>If invalid transition: emit <code>INCONSISTENT</code> marker in snapshot + attach reason code.</li>
+<li>Implement <code>projectBatch(events[])</code> for performance and projector idempotence.</li>
+<li>Add <strong>golden tests</strong>:</li>
+<li>Valid sequences</li>
+<li>Invalid sequences</li>
+<li>Duplicated events (idempotency)</li>
+<li>Retry sequences with logicalAttemptId (Phase 2 readiness)</li>
+</ol>
+<h3 id="dod_2">DoD<a class="headerlink" href="#dod_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Projector passes contract compliance: Layer-3 validation enforced.</li>
+<li>Snapshot explicitly records invalid transition outcomes.</li>
+</ul>
+<hr />
+<h2 id="p0-05-tenantid-mandatory-everywhere-stop-idor">P0-05 — tenantId mandatory everywhere (stop IDOR)<a class="headerlink" href="#p0-05-tenantid-mandatory-everywhere-stop-idor" title="Permanent link">&para;</a></h2>
+<h3 id="goal_3">Goal<a class="headerlink" href="#goal_3" title="Permanent link">&para;</a></h3>
+<p>Prevent cross-tenant access by construction.</p>
+<h3 id="steps_2">Steps<a class="headerlink" href="#steps_2" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Make <code>tenantId</code> <strong>required</strong> in all engine/service/store reads and lists:</li>
+<li><code>listRuns(tenantId, ...)</code></li>
+<li><code>getRunStatus(tenantId, runId)</code></li>
+<li><code>cancelRun(tenantId, runId)</code></li>
+<li><code>signal(tenantId, runId, ...)</code></li>
+<li>At the API boundary:</li>
+<li>derive tenantId from auth token/session, never from request body.</li>
+<li>Add cross-tenant negative tests:</li>
+<li>create run in tenantA; attempt read/cancel from tenantB must fail.</li>
+<li>Add OWASP IDOR test cases as regression suite. citeturn1search2</li>
+</ol>
+<h3 id="dod_3">DoD<a class="headerlink" href="#dod_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>No method accepts missing tenantId.</li>
+<li>Security regression suite in CI.</li>
+</ul>
+<hr />
+<h2 id="p0-06p0-07-planner-define-contract-implement-mvp-dbt-manifest-executionplan">P0-06/P0-07 — Planner: define contract + implement MVP (dbt manifest → ExecutionPlan)<a class="headerlink" href="#p0-06p0-07-planner-define-contract-implement-mvp-dbt-manifest-executionplan" title="Permanent link">&para;</a></h2>
+<h3 id="goal_4">Goal<a class="headerlink" href="#goal_4" title="Permanent link">&para;</a></h3>
+<p>Make the system executable: planner produces real plans from real dbt artifacts.</p>
+<h3 id="p0-06-define-iplanner-contract-normative">P0-06: Define <code>IPlanner</code> contract (normative)<a class="headerlink" href="#p0-06-define-iplanner-contract-normative" title="Permanent link">&para;</a></h3>
+<p><strong>Inputs</strong></p>
+<ul>
+<li><code>manifest.json</code> (or reference to immutable artifact)</li>
+<li>selection spec (dbt selectors or expanded node set)</li>
+<li>environment context (envId, target profile, vars)</li>
+<li>policy inputs (retry policy defaults, gateway DSL version)</li>
+</ul>
+<p><strong>Outputs</strong></p>
+<ul>
+<li><code>ExecutionPlan</code> (versioned)</li>
+<li>layers/stages topologically sorted</li>
+<li>steps with stable <code>stepId</code> derived from dbt <code>unique_id</code></li>
+<li>gateway info (dslVersion/expression) for conditional steps</li>
+<li>metadata: planId hash, contractVersion, createdAt</li>
+</ul>
+<p><strong>Validation</strong></p>
+<ul>
+<li>cycle detection</li>
+<li>missing dependencies</li>
+<li>unreachable node detection</li>
+<li>selection validity per dbt semantics</li>
+</ul>
+<p>References: dbt manifest + selection docs citeturn1search0turn1search1</p>
+<h3 id="p0-07-implement-planner-mvp">P0-07: Implement Planner MVP<a class="headerlink" href="#p0-07-implement-planner-mvp" title="Permanent link">&para;</a></h3>
+<h4 id="steps_3">Steps<a class="headerlink" href="#steps_3" title="Permanent link">&para;</a></h4>
+<ol>
+<li>Build graph from <code>manifest.nodes</code> and <code>depends_on.nodes</code>.</li>
+<li>Expand selection to a concrete set of nodes (respect dbt graph operators).</li>
+<li>Topologically sort and produce layers (Kahn’s algorithm).</li>
+<li>Produce <code>ExecutionPlan</code> with stable identifiers:</li>
+<li><code>stepId = sha256(dbt_unique_id)</code> or canonical mapping table.</li>
+<li>Fixtures:</li>
+<li>10-node: derived from jaffle-shop</li>
+<li>100-node: synthetic expansion (repeatable generator)</li>
+<li>500-node: large synthetic, plus one real bigger manifest if available</li>
+<li>Golden tests:</li>
+<li>deterministic planId for same inputs</li>
+<li>stable layering</li>
+<li>cycle detection failures</li>
+</ol>
+<h3 id="alternatives_2">Alternatives<a class="headerlink" href="#alternatives_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Reuse dbt’s own selection expansion by calling dbt CLI (rejected for purity and deploy complexity).</li>
+<li>Use <code>@dbt-labs</code> internal libs (not stable or not TS-native in practice).</li>
+</ul>
+<h3 id="dod_4">DoD<a class="headerlink" href="#dod_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Planner produces ExecutionPlan for real manifest fixtures.</li>
+<li>Tests cover: determinism, selection semantics, cycles, missing deps.</li>
+</ul>
+<hr />
+<h2 id="p0-08-plan-cache-by-content-hash">P0-08 — Plan cache by content hash<a class="headerlink" href="#p0-08-plan-cache-by-content-hash" title="Permanent link">&para;</a></h2>
+<h3 id="goal_5">Goal<a class="headerlink" href="#goal_5" title="Permanent link">&para;</a></h3>
+<p>Avoid re-parsing manifest and recomputing DAG on repeated runs.</p>
+<h3 id="cache-key">Cache key<a class="headerlink" href="#cache-key" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>cacheKey = sha256(manifestSha256 + selectionSpec + envId + plannerVersion + policyHash)</code></li>
+<li><strong>Include tenantId</strong> if plans can embed tenant-specific config (safer default).</li>
+</ul>
+<h3 id="implement">Implement<a class="headerlink" href="#implement" title="Permanent link">&para;</a></h3>
+<ul>
+<li>P0: in-process LRU</li>
+<li>P1: Redis (shared cache)</li>
+</ul>
+<h3 id="dod_5">DoD<a class="headerlink" href="#dod_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Cache hit/miss metrics exported.</li>
+<li>Tests validate identical inputs reuse cached plan.</li>
+</ul>
+<hr />
+<h2 id="p0-09p0-10-gateway-dsl-persist-gatewaydecisions-across-continueasnew">P0-09/P0-10 — Gateway DSL + persist gatewayDecisions across continueAsNew<a class="headerlink" href="#p0-09p0-10-gateway-dsl-persist-gatewaydecisions-across-continueasnew" title="Permanent link">&para;</a></h2>
+<h3 id="p0-09-cel-evaluator-spec-deterministic-execution-boundary">P0-09: CEL evaluator spec + deterministic execution boundary<a class="headerlink" href="#p0-09-cel-evaluator-spec-deterministic-execution-boundary" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Standardize DSL: CEL v1; restrict functions to pure set.</li>
+<li>Implementation using <code>cel-es</code> (TS) citeturn0search2</li>
+<li>Execute evaluator in <strong>Activity</strong>, return boolean decision to workflow.</li>
+<li>Add CI determinism gate:</li>
+<li>Run Temporal replay tests for workflows with gateway steps (no nondeterministic use).</li>
+</ol>
+<p>Temporal determinism/testing references: citeturn3search1turn3search0</p>
+<h3 id="p0-10-continueasnew-state-preservation">P0-10: continueAsNew state preservation<a class="headerlink" href="#p0-10-continueasnew-state-preservation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Extend workflow input with <code>gatewayDecisions: Record&lt;stepId, boolean&gt;</code></li>
+<li>Ensure each continueAsNew call forwards full map.</li>
+</ul>
+<h3 id="dod_6">DoD<a class="headerlink" href="#dod_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Repeated continueAsNew produces same gating decisions given same step results.</li>
+<li>Replay tests pass.</li>
+</ul>
+<hr />
+<h2 id="p0-11-outbox-relay-mvp-polling-dlq">P0-11 — Outbox relay MVP (polling) + DLQ<a class="headerlink" href="#p0-11-outbox-relay-mvp-polling-dlq" title="Permanent link">&para;</a></h2>
+<h3 id="goal_6">Goal<a class="headerlink" href="#goal_6" title="Permanent link">&para;</a></h3>
+<p>Complete the outbox pattern: events are published and consumers (projectors/UI) observe them.</p>
+<h3 id="design">Design<a class="headerlink" href="#design" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>OutboxRelayWorker</code>:</li>
+<li>polls <code>outbox</code> table for pending rows</li>
+<li>publishes to <code>IEventBus.publish(envelope)</code></li>
+<li>marks delivered or failed (with retry/backoff)</li>
+<li>Delivery semantics:</li>
+<li>at-least-once</li>
+<li>idempotent consumers required (dedupe by <code>(runId, seq)</code>)</li>
+</ul>
+<p>Outbox references: citeturn0search1turn1search3</p>
+<h3 id="alternatives_3">Alternatives<a class="headerlink" href="#alternatives_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CDC with Debezium (P1). citeturn1search3</li>
+</ul>
+<h3 id="dod_7">DoD<a class="headerlink" href="#dod_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Outbox drains continuously.</li>
+<li>Injected failure tests: publish fails → retry → DLQ after N attempts.</li>
+</ul>
+<hr />
+<h2 id="p0-12-startrun-concurrency-fix-temporal-workflowid-runid">P0-12 — startRun concurrency fix (Temporal workflowId = runId)<a class="headerlink" href="#p0-12-startrun-concurrency-fix-temporal-workflowid-runid" title="Permanent link">&para;</a></h2>
+<h3 id="goal_7">Goal<a class="headerlink" href="#goal_7" title="Permanent link">&para;</a></h3>
+<p>Prevent duplicate workflows for same runId across concurrent API calls.</p>
+<h3 id="temporal-approach">Temporal approach<a class="headerlink" href="#temporal-approach" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Use <code>workflowId = runId</code></li>
+<li>Set WorkflowIdConflictPolicy / reuse policy appropriate to desired semantics<br />
+  (Temporal TS API reference) citeturn3search1turn3search5</li>
+</ul>
+<h3 id="steps_4">Steps<a class="headerlink" href="#steps_4" title="Permanent link">&para;</a></h3>
+<ol>
+<li>In adapter.startRun: always use workflowId=runId.</li>
+<li>If workflow exists:</li>
+<li>treat as idempotent start (return existing EngineRunRef)</li>
+<li>do <strong>not cancel</strong> a legitimate workflow due to losing race.</li>
+<li>Add a race test:</li>
+<li>N parallel startRun calls → exactly one Temporal workflow execution, all callers get same runRef.</li>
+</ol>
+<h3 id="dod_8">DoD<a class="headerlink" href="#dod_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Race test passes; no cancel of legitimate workflow occurs.</li>
+</ul>
+<hr />
+<h2 id="p0-13-extract-detectstuckruns-into-maintenance-service">P0-13 — Extract detectStuckRuns into maintenance service<a class="headerlink" href="#p0-13-extract-detectstuckruns-into-maintenance-service" title="Permanent link">&para;</a></h2>
+<h3 id="goal_8">Goal<a class="headerlink" href="#goal_8" title="Permanent link">&para;</a></h3>
+<p>Remove operational batch behavior from IWorkflowEngine.</p>
+<h3 id="steps_5">Steps<a class="headerlink" href="#steps_5" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Define <code>IRunMaintenanceService</code>:</li>
+<li><code>detectStuckRuns(tenantId, limit, policy)</code> (or internal scheduled worker)</li>
+<li>Engine remains lifecycle-only: start/cancel/status/signal.</li>
+<li>Implement maintenance worker as separate process (or separate queue).</li>
+</ol>
+<h3 id="dod_9">DoD<a class="headerlink" href="#dod_9" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Engine interface minimal again.</li>
+<li>Maintenance runs cannot race engine calls without explicit locking policy.</li>
+</ul>
+<hr />
+<h2 id="p0-14-ci-no-gaps-suite-replayidempotencechaos">P0-14 — CI “no-gaps” suite (replay/idempotence/chaos)<a class="headerlink" href="#p0-14-ci-no-gaps-suite-replayidempotencechaos" title="Permanent link">&para;</a></h2>
+<h3 id="suite-composition">Suite composition<a class="headerlink" href="#suite-composition" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Determinism replay tests</strong> (Temporal testing suite) citeturn3search0turn3search1</li>
+<li><strong>Idempotency vectors</strong> (existing golden vectors) must remain passing.</li>
+<li><strong>Cross-tenant negative tests</strong> for every API/store route.</li>
+<li><strong>Outbox drain test</strong> (integration with Postgres + fake bus).</li>
+<li><strong>Projector gap/backfill</strong> tests: missing seq triggers catch-up correctly.</li>
+</ol>
+<h3 id="dod_10">DoD<a class="headerlink" href="#dod_10" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CI fails if any gate fails; gates are mandatory.</li>
+</ul>
+<hr />
+<h2 id="p1p2-design-now-implement-after-p0-is-stable">P1/P2 (design now, implement after P0 is stable)<a class="headerlink" href="#p1p2-design-now-implement-after-p0-is-stable" title="Permanent link">&para;</a></h2>
+<h3 id="p1-01-contract-migration-tooling-dual-read-executable">P1-01 — Contract migration tooling (dual-read executable)<a class="headerlink" href="#p1-01-contract-migration-tooling-dual-read-executable" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Implement discriminated unions + migrators; follow blueprint dual-read protocol.</li>
+<li>Add “compatibility matrix” tests: v1 input accepted → v2 output.</li>
+</ul>
+<h3 id="p1-02-postgres-partitioning-for-run_events">P1-02 — Postgres partitioning for run_events<a class="headerlink" href="#p1-02-postgres-partitioning-for-run_events" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Use declarative partitioning by time (persistedAt) and optionally sub-partition by tenantId. citeturn2search2turn2search4</li>
+<li>Add maintenance job to create future partitions; evaluate pg_partman.</li>
+</ul>
+<h3 id="p1-03-pgbouncer-in-staging">P1-03 — PgBouncer in staging<a class="headerlink" href="#p1-03-pgbouncer-in-staging" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Enforce connection pooling and observe pool saturation.</li>
+</ul>
+<h3 id="p1-05-plugin-sandbox-decision-poc">P1-05 — Plugin sandbox decision + PoC<a class="headerlink" href="#p1-05-plugin-sandbox-decision-poc" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Do not ship vm2</strong> (EOL / vulnerable).</li>
+<li>Evaluate isolated-vm for JS plugin execution. (project link: https://github.com/laverdet/isolated-vm)</li>
+<li>Contractually enforce: plugins only run in Activities.</li>
+</ul>
+<hr />
+<h2 id="4-ai-runbook-how-to-verify-correctness-after-each-change">4) AI runbook: how to verify correctness after each change<a class="headerlink" href="#4-ai-runbook-how-to-verify-correctness-after-each-change" title="Permanent link">&para;</a></h2>
+<h3 id="41-verification-checklist-per-pr">4.1 Verification checklist per PR<a class="headerlink" href="#41-verification-checklist-per-pr" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] <code>pnpm -r typecheck</code> passes</li>
+<li>[ ] <code>pnpm -r test</code> passes (unit + integration)</li>
+<li>[ ] Replay tests (Temporal) pass for workflows changed</li>
+<li>[ ] Cross-tenant negative tests pass</li>
+<li>[ ] Outbox drains in docker-compose (or staging) with synthetic load</li>
+<li>[ ] Projector rebuild from event log produces identical snapshots</li>
+</ul>
+<h3 id="42-production-rollout-checklist-per-feature-flag">4.2 Production rollout checklist (per feature flag)<a class="headerlink" href="#42-production-rollout-checklist-per-feature-flag" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Deploy relay worker first (safe, no behavior change if disabled)</li>
+<li>[ ] Enable new projector on a subset of tenants (shadow mode)</li>
+<li>[ ] Compare snapshots old vs new (diff tool)</li>
+<li>[ ] Promote flag progressively</li>
+<li>[ ] Confirm SLOs and DB load</li>
+</ul>
+<hr />
+<h2 id="5-status-board-from-your-provided-baseline-requires-repo-verification">5) Status board (from your provided baseline; requires repo verification)<a class="headerlink" href="#5-status-board-from-your-provided-baseline-requires-repo-verification" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Note:</strong> Marking as HECHO/PARCIAL here reflects your pasted status table, not a live repo scan.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th style="text-align: right;">Priority</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0-01</td>
+<td>ADRs clave actualizados</td>
+<td style="text-align: right;">P0</td>
+<td>HECHO</td>
+</tr>
+<tr>
+<td>P0-02</td>
+<td>IRunStateStore unificado</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-03</td>
+<td>Tipos únicos + validación runtime</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-04</td>
+<td>Projector Layer-3 FSM</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-05</td>
+<td>tenantId obligatorio</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-06</td>
+<td>IPlanner spec + schema</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-07</td>
+<td>Planner MVP</td>
+<td style="text-align: right;">P0</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P0-08</td>
+<td>Plan cache</td>
+<td style="text-align: right;">P0</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P0-09</td>
+<td>Gateway CEL</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-10</td>
+<td>continueAsNew + gatewayDecisions</td>
+<td style="text-align: right;">P0</td>
+<td>HECHO</td>
+</tr>
+<tr>
+<td>P0-11</td>
+<td>Outbox relay</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-12</td>
+<td>startRun concurrency</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P0-13</td>
+<td>Maintenance service</td>
+<td style="text-align: right;">P0</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P0-14</td>
+<td>CI no-gaps suite</td>
+<td style="text-align: right;">P0</td>
+<td>PARCIAL</td>
+</tr>
+<tr>
+<td>P1-01</td>
+<td>Contract migration tooling</td>
+<td style="text-align: right;">P1</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P1-02</td>
+<td>Postgres partitioning</td>
+<td style="text-align: right;">P1</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P1-03</td>
+<td>PgBouncer pooling</td>
+<td style="text-align: right;">P1</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P1-04</td>
+<td>Snowflake tagging PoC</td>
+<td style="text-align: right;">P1</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P1-05</td>
+<td>Plugin sandbox</td>
+<td style="text-align: right;">P1</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P1-06</td>
+<td>Conductor strategy</td>
+<td style="text-align: right;">P1</td>
+<td>HECHO</td>
+</tr>
+<tr>
+<td>P2-01</td>
+<td>Retención + GDPR</td>
+<td style="text-align: right;">P2</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P2-02</td>
+<td>Señales extensibles</td>
+<td style="text-align: right;">P2</td>
+<td>PENDIENTE</td>
+</tr>
+<tr>
+<td>P2-03</td>
+<td>Capacity planning Temporal</td>
+<td style="text-align: right;">P2</td>
+<td>PENDIENTE</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-quick-next-actions-zero-ambiguity">6) Quick next actions (zero ambiguity)<a class="headerlink" href="#6-quick-next-actions-zero-ambiguity" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>P0-02</strong> unify <code>IRunStateStore</code> (contracts only)</li>
+<li><strong>P0-11</strong> outbox relay polling worker (end-to-end visibility)</li>
+<li><strong>P0-06 → P0-07</strong> IPlanner + planner MVP (system becomes runnable)</li>
+<li><strong>P0-04</strong> projector FSM layer‑3 (contract compliance)</li>
+<li><strong>P0-05</strong> tenant scoping gate (security)</li>
+</ol>
+<p>This ordering produces the fastest path to a production-grade “vertical slice” with correctness + observability.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
