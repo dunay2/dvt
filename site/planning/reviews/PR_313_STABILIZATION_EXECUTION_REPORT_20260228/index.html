@@ -1,0 +1,1604 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28) - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pr-313-informe-de-ejecucion-de-estabilizacion-cicd-2026-02-28" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../adr/_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../adr/_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#resumen-ejecutivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resumen ejecutivo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contexto-y-objetivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto y objetivo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alcance-del-cambio-en-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alcance del cambio en workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alcance del cambio en workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflows-puestos-en-modo-manual-workflow_dispatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflows puestos en modo manual (workflow_dispatch)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inputs-temporales-gates-opcionales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inputs temporales (gates opcionales)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ajustes-funcionales-destacados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ajustes funcionales destacados
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#incidentes-relevantes-durante-la-ejecucion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Incidentes relevantes durante la ejecución
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolucion-del-conflicto-en-contractsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolución del conflicto en contracts.yml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validaciones-ejecutadas-evidencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validaciones ejecutadas (evidencia)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Validaciones ejecutadas (evidencia)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contracts-determinism-smoke" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contracts &amp; Determinism (smoke)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr-quality-gate-smoke" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Quality Gate (smoke)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estado-de-pr-313" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estado de PR #313
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#que-incluye-exactamente-el-cambio-de-contractsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Qué incluye exactamente el cambio de contracts.yml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#riesgos-residuales-conocidos-y-aceptados-en-estabilizacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Riesgos residuales (conocidos y aceptados en estabilización)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proximos-pasos-recomendados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Próximos pasos recomendados
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anexo-a-linea-temporal-resumida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anexo A — Línea temporal resumida
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anexo-b-comandos-operativos-usados-referencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anexo B — Comandos operativos usados (referencia)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="pr-313-informe-de-ejecucion-de-estabilizacion-cicd-2026-02-28">PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28)<a class="headerlink" href="#pr-313-informe-de-ejecucion-de-estabilizacion-cicd-2026-02-28" title="Permanent link">&para;</a></h1>
+<h2 id="resumen-ejecutivo">Resumen ejecutivo<a class="headerlink" href="#resumen-ejecutivo" title="Permanent link">&para;</a></h2>
+<p>Este informe documenta, de extremo a extremo, qué cambios se aplicaron en la rama <code>split/pr299-contracts-workflow</code>, cómo se resolvieron conflictos de integración con <code>main</code>, qué validaciones manuales se ejecutaron, y por qué la PR <a href="https://github.com/dunay2/dvt/pull/313">#313</a> sigue bloqueada en el momento de este informe.</p>
+<p>Resultado técnico global:</p>
+<ul>
+<li>Se completó la estrategia de estabilización (modo manual con <code>workflow_dispatch</code>) en workflows críticos.</li>
+<li>Se resolvió el conflicto de merge en <code>.github/workflows/contracts.yml</code>.</li>
+<li>Se corrigieron rutas de paquetes a la estructura real <code>packages/@dvt/...</code>.</li>
+<li>Los smoke runs manuales clave quedaron en verde.</li>
+<li>El merge quedó bloqueado por política de rama protegida (no por conflicto de código ni checks rojos).</li>
+</ul>
+<hr />
+<h2 id="contexto-y-objetivo">Contexto y objetivo<a class="headerlink" href="#contexto-y-objetivo" title="Permanent link">&para;</a></h2>
+<p>La iniciativa partía de un estado de CI/CD inestable con múltiples fallos históricos (lint docs, trazabilidad ADR, type-check temporal, fixtures golden, permisos de deploy docs). El objetivo fue:</p>
+<ol>
+<li>Pasar temporalmente a <strong>modo estabilización</strong>.</li>
+<li>Recuperar verde por capas mediante ejecuciones manuales.</li>
+<li>Dejar trazabilidad de rollback a modo normal.</li>
+<li>Preparar y abrir PR para integración.</li>
+</ol>
+<p>Documento marco de rollback asociado:</p>
+<ul>
+<li><code>docs/planning/CI_CD_ROLLBACK_PLAN_20260228.md</code></li>
+</ul>
+<hr />
+<h2 id="alcance-del-cambio-en-workflows">Alcance del cambio en workflows<a class="headerlink" href="#alcance-del-cambio-en-workflows" title="Permanent link">&para;</a></h2>
+<h3 id="workflows-puestos-en-modo-manual-workflow_dispatch">Workflows puestos en modo manual (<code>workflow_dispatch</code>)<a class="headerlink" href="#workflows-puestos-en-modo-manual-workflow_dispatch" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>.github/workflows/ci.yml</code></li>
+<li><code>.github/workflows/contracts.yml</code></li>
+<li><code>.github/workflows/golden-paths.yml</code></li>
+<li><code>.github/workflows/test.yml</code></li>
+<li><code>.github/workflows/pr-quality-gate.yml</code></li>
+<li><code>.github/workflows/mkdocs-deploy.yml</code></li>
+<li><code>.github/workflows/release.yml</code></li>
+</ul>
+<h3 id="inputs-temporales-gates-opcionales">Inputs temporales (gates opcionales)<a class="headerlink" href="#inputs-temporales-gates-opcionales" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>ci.yml</code></li>
+<li><code>run_markdown_lint</code></li>
+<li><code>run_traceability_gate</code></li>
+<li><code>contracts.yml</code></li>
+<li><code>run_determinism_scan</code></li>
+<li><code>run_golden_validation</code></li>
+<li><code>test.yml</code></li>
+<li><code>run_full_test_suite</code></li>
+<li><code>run_coverage</code></li>
+<li><code>golden-paths.yml</code></li>
+<li><code>run_contract_fixture_validation</code></li>
+<li><code>pr-quality-gate.yml</code></li>
+<li><code>run_typecheck_gate</code></li>
+<li><code>run_temporal_integration</code></li>
+<li><code>mkdocs-deploy.yml</code></li>
+<li><code>run_pages_deploy</code></li>
+</ul>
+<h3 id="ajustes-funcionales-destacados">Ajustes funcionales destacados<a class="headerlink" href="#ajustes-funcionales-destacados" title="Permanent link">&para;</a></h3>
+<ul>
+<li>En <code>pr-quality-gate.yml</code> los checks de formato PR (título, labels, tamaño, descripción) quedaron condicionados a evento <code>pull_request</code>, evitando falsos fallos en <code>workflow_dispatch</code>.</li>
+<li>En <code>contracts.yml</code> se retiró temporalmente la ruta de KG (<code>kg-cypher-sync</code>) para reducir superficie de fallo en fase de estabilización.</li>
+</ul>
+<hr />
+<h2 id="incidentes-relevantes-durante-la-ejecucion">Incidentes relevantes durante la ejecución<a class="headerlink" href="#incidentes-relevantes-durante-la-ejecucion" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Conflicto de merge con <code>origin/main</code></strong> en <code>.github/workflows/contracts.yml</code>.</li>
+<li>Estado inicial: archivo con marcadores <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>.</li>
+<li>
+<p>Resolución: merge manual conservando estrategia de estabilización y eliminando markers.</p>
+</li>
+<li>
+<p><strong>Rutas incoherentes respecto al monorepo real</strong>.</p>
+</li>
+<li><code>main</code> y parte del histórico tenían referencias <code>packages/contracts</code> y <code>packages/engine/...</code>.</li>
+<li>El repositorio usa <code>packages/@dvt/...</code>.</li>
+<li>
+<p>Se corrigieron filtros, escaneos y paths de artifacts/resultados a:</p>
+<ul>
+<li><code>packages/@dvt/contracts/**</code></li>
+<li><code>packages/@dvt/engine/**</code></li>
+<li><code>packages/@dvt/engine/test/contracts/**</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Bloqueo de merge en PR #313 tras dejar todo en verde manual</strong>.</p>
+</li>
+<li>Mensaje UI: “Merging is blocked — All comments must be resolved”.</li>
+<li>Confirmado por API/CLI: existe hilo de review no resuelto (outdated) de <code>chatgpt-codex-connector</code>.</li>
+</ol>
+<hr />
+<h2 id="resolucion-del-conflicto-en-contractsyml">Resolución del conflicto en <code>contracts.yml</code><a class="headerlink" href="#resolucion-del-conflicto-en-contractsyml" title="Permanent link">&para;</a></h2>
+<p>Durante la integración de <code>origin/main</code> se presentaron dos choques principales:</p>
+<ol>
+<li>Reintroducción de job <code>kg-cypher-sync</code> desde <code>main</code>.</li>
+<li>Dependencia <code>contract-compile</code> hacia <code>kg-cypher-sync</code>.</li>
+</ol>
+<p>Decisión aplicada en PR #313:</p>
+<ul>
+<li>Mantener <strong>sin</strong> <code>kg-cypher-sync</code> en estabilización.</li>
+<li>Mantener <code>contract-compile</code> con <code>needs: [detect-changes]</code>.</li>
+<li>Corregir paths al layout real <code>@dvt</code>.</li>
+</ul>
+<p>Esto alinea la PR con la decisión operativa de estabilización: primero recuperar verde base, luego reintroducir checks pesados por fases.</p>
+<hr />
+<h2 id="validaciones-ejecutadas-evidencia">Validaciones ejecutadas (evidencia)<a class="headerlink" href="#validaciones-ejecutadas-evidencia" title="Permanent link">&para;</a></h2>
+<h3 id="contracts-determinism-smoke">Contracts &amp; Determinism (smoke)<a class="headerlink" href="#contracts-determinism-smoke" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Workflow: <code>.github/workflows/contracts.yml</code></li>
+<li>Run ID: <code>22524141501</code></li>
+<li>Resultado: <strong>success</strong></li>
+<li>Configuración:</li>
+<li><code>run_determinism_scan=false</code></li>
+<li><code>run_golden_validation=false</code></li>
+</ul>
+<p>Jobs ejecutados exitosos:</p>
+<ul>
+<li>Detect contracts/determinism scope</li>
+<li>Validate JSON Schemas</li>
+<li>Compile TypeScript Contracts</li>
+</ul>
+<p>Jobs omitidos por diseño de smoke:</p>
+<ul>
+<li>Determinism Pattern Scan</li>
+<li>Validate Golden JSON Fixtures</li>
+<li>Execute Golden Paths &amp; Validate Hashes</li>
+</ul>
+<h3 id="pr-quality-gate-smoke">PR Quality Gate (smoke)<a class="headerlink" href="#pr-quality-gate-smoke" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Workflow: <code>.github/workflows/pr-quality-gate.yml</code></li>
+<li>Run ID: <code>22524181044</code></li>
+<li>Resultado: <strong>success</strong></li>
+<li>Configuración:</li>
+<li><code>run_typecheck_gate=false</code></li>
+<li><code>run_temporal_integration=false</code></li>
+</ul>
+<hr />
+<h2 id="estado-de-pr-313">Estado de PR #313<a class="headerlink" href="#estado-de-pr-313" title="Permanent link">&para;</a></h2>
+<ul>
+<li>PR: https://github.com/dunay2/dvt/pull/313</li>
+<li>Head: <code>split/pr299-contracts-workflow</code></li>
+<li>Base: <code>main</code></li>
+<li>Estado de mergeabilidad técnica: <code>mergeable=true</code></li>
+<li>Estado global de merge en GitHub: <code>mergeStateStatus=BLOCKED</code></li>
+</ul>
+<p>Motivo de bloqueo observado:</p>
+<ul>
+<li>Política de rama protegida que exige resolver comentarios/hilos de review.</li>
+<li>Existe al menos un thread no resuelto (<code>isResolved=false</code>) en la PR.</li>
+</ul>
+<p>Intentos de merge por CLI (<code>gh pr merge ...</code>) rechazados por policy.</p>
+<hr />
+<h2 id="que-incluye-exactamente-el-cambio-de-contractsyml">Qué incluye exactamente el cambio de <code>contracts.yml</code><a class="headerlink" href="#que-incluye-exactamente-el-cambio-de-contractsyml" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Trigger exclusivamente manual (<code>workflow_dispatch</code>) para estabilización.</li>
+<li>Filtros de rutas de <code>dorny/paths-filter</code> ajustados a <code>packages/@dvt/...</code>.</li>
+<li>Escaneos de determinismo apuntando a <code>packages/@dvt/engine/src</code>.</li>
+<li>Comprobación de <code>any</code> en <code>packages/@dvt/contracts/src</code>.</li>
+<li>Artifact de compilados en <code>packages/@dvt/contracts/...</code>.</li>
+<li>Resultados golden en <code>packages/@dvt/engine/test/contracts/results/...</code>.</li>
+<li>Eliminación del bloque de <code>kg-cypher-sync</code> en esta fase.</li>
+</ol>
+<hr />
+<h2 id="riesgos-residuales-conocidos-y-aceptados-en-estabilizacion">Riesgos residuales (conocidos y aceptados en estabilización)<a class="headerlink" href="#riesgos-residuales-conocidos-y-aceptados-en-estabilizacion" title="Permanent link">&para;</a></h2>
+<p>Estos riesgos no se “ocultan”; se gestionan por gating temporal mientras se corrigen de raíz:</p>
+<ul>
+<li>Deuda en <code>markdownlint</code> docs legacy.</li>
+<li>Deuda de trazabilidad ADR-0000.</li>
+<li>Type-check pendiente en adapter temporal (<code>@dvt/plan-interpreter</code> + <code>implicit any</code>).</li>
+<li>Fixtures golden incompletos (ej. <code>tenantId</code> en <code>EngineRunRef</code>).</li>
+<li>Permisos de <code>gh-pages</code> para deploy docs.</li>
+</ul>
+<hr />
+<h2 id="proximos-pasos-recomendados">Próximos pasos recomendados<a class="headerlink" href="#proximos-pasos-recomendados" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Resolver el thread pendiente en PR #313 (UI GitHub, “Resolve conversation”).</li>
+<li>Reintentar merge de la PR una vez levantado el bloqueo de policy.</li>
+<li>Tras merge, iniciar fase de rollback gradual siguiendo:</li>
+<li><code>docs/planning/CI_CD_ROLLBACK_PLAN_20260228.md</code></li>
+<li>Reactivar checks opcionales por dominio hasta volver a automático sin toggles temporales.</li>
+</ol>
+<hr />
+<h2 id="anexo-a-linea-temporal-resumida">Anexo A — Línea temporal resumida<a class="headerlink" href="#anexo-a-linea-temporal-resumida" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Se estabilizan workflows y se validan manualmente.</li>
+<li>Se abre PR #313 para integrar a <code>main</code>.</li>
+<li>Aparece conflicto al sincronizar con <code>origin/main</code> en <code>contracts.yml</code>.</li>
+<li>Se resuelve conflicto + corrección de paths <code>@dvt</code> + commit de merge.</li>
+<li>Push exitoso de rama (<code>split/pr299-contracts-workflow</code>).</li>
+<li>Smoke runs manuales en verde (<code>contracts</code> y <code>pr-quality-gate</code>).</li>
+<li>Merge bloqueado por policy de comentarios no resueltos.</li>
+</ol>
+<hr />
+<h2 id="anexo-b-comandos-operativos-usados-referencia">Anexo B — Comandos operativos usados (referencia)<a class="headerlink" href="#anexo-b-comandos-operativos-usados-referencia" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">git fetch origin &amp;&amp; git merge origin/main
+git add .github/workflows/contracts.yml
+git commit --no-edit
+git push origin split/pr299-contracts-workflow
+
+gh workflow run .github/workflows/contracts.yml --ref split/pr299-contracts-workflow -f run_determinism_scan=false -f run_golden_validation=false
+gh run watch 22524141501 --exit-status
+
+gh workflow run .github/workflows/pr-quality-gate.yml --ref split/pr299-contracts-workflow -f run_typecheck_gate=false -f run_temporal_integration=false
+gh run watch 22524181044 --exit-status
+
+gh pr view 313 --json mergeStateStatus,mergeable,url
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

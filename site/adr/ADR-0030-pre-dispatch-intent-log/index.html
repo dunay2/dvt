@@ -1,0 +1,1720 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Canonical documentation structure (baseline)">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>ADR-0030 — Pre-Dispatch Intent Log for startRun Crash Consistency - DVT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adr-0030-pre-dispatch-intent-log-for-startrun-crash-consistency" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ADR-0030 — Pre-Dispatch Intent Log for startRun Crash Consistency
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVT Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Draft ADRs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engine Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/shared/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Active"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning Index
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/reviews/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reviews
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planning/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Review"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Archived"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-distributed-consistency-gap-in-startrun" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The distributed consistency gap in startRun()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-why-existing-mechanisms-are-insufficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Why existing mechanisms are insufficient
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-alternatives-considered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Alternatives Considered
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Alternatives Considered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-reverse-call-order-bootstrap-first-then-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Reverse call order (bootstrap first, then adapter)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-write-ahead-log-in-irunstatestore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Write-ahead log in IRunStateStore
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-adapter-level-idempotency-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option C: Adapter-level idempotency only
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-d-separate-pre-dispatch-intent-store-selected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option D: Separate pre-dispatch intent store (selected)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-new-port-istartrunintentstore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 New port: IStartRunIntentStore
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-modified-startrun-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Modified startRun() flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-crash-scenario-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Crash scenario coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-reconciliation-via-runmaintenanceservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Reconciliation via RunMaintenanceService
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-error-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Error types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-dependency-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Dependency requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Consequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negative-trade-offs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negative / Trade-offs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#out-of-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out of scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-verification-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Verification Invariants
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="adr-0030-pre-dispatch-intent-log-for-startrun-crash-consistency">ADR-0030 — Pre-Dispatch Intent Log for startRun Crash Consistency<a class="headerlink" href="#adr-0030-pre-dispatch-intent-log-for-startrun-crash-consistency" title="Permanent link">&para;</a></h1>
+<ul>
+<li>Status: Accepted</li>
+<li>Date: 2026-03-03</li>
+<li>Owners: Engine Domain</li>
+<li>Related files:</li>
+<li><a href="../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts">IStartRunIntentStore.ts</a> (new)</li>
+<li><a href="../../packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts">InMemoryStartRunIntentStore.ts</a> (new)</li>
+<li><a href="../../packages/@dvt/engine/src/contracts/intentErrors.ts">intentErrors.ts</a> (new)</li>
+<li><a href="../../packages/@dvt/engine/src/core/WorkflowEngine.ts">WorkflowEngine.ts</a> (modified)</li>
+<li><a href="../../packages/@dvt/engine/src/services/RunMaintenanceService.ts">RunMaintenanceService.ts</a> (modified)</li>
+<li><a href="../../packages/@dvt/engine/src/ports/IRunMaintenanceService.ts">IRunMaintenanceService.ts</a> (modified)</li>
+<li><a href="../ADR-0003-execution-model/">ADR-0003 — Execution Model</a></li>
+<li><a href="../ADR-0013-run-state-store-bootstrapRunTx/">ADR-0013 — bootstrapRunTx Atomicity</a></li>
+<li><a href="../ADR-0014-run-driven-adapter-model/">ADR-0014 — Adapter-First Execution</a></li>
+<li><a href="../ADR-0029-run-maintenance-service/">ADR-0029 — Run Maintenance Service Extraction</a></li>
+</ul>
+<hr />
+<h2 id="1-context">1. Context<a class="headerlink" href="#1-context" title="Permanent link">&para;</a></h2>
+<h3 id="11-the-distributed-consistency-gap-in-startrun">1.1 The distributed consistency gap in startRun()<a class="headerlink" href="#11-the-distributed-consistency-gap-in-startrun" title="Permanent link">&para;</a></h3>
+<p><code>WorkflowEngine.startRun()</code> follows the adapter-first execution model (ADR-0014): the provider workflow is created via <code>adapter.startRun()</code> <strong>before</strong> the engine persists run metadata via <code>stateStore.bootstrapRunTx()</code>. This ordering is intentional — it ensures that provider references (<code>engineRunRef</code>) are available for atomic bootstrap (ADR-0013), eliminating a two-phase write gap.</p>
+<p>However, this creates a crash-consistency window:</p>
+<pre><code>1.  validateStartRunPreconditions()        ← pure validation
+2.  adapter.startRun() → engineRunRef      ← side effect: provider workflow exists
+    ┌─── CRASH WINDOW ───────────────────────────────────────┐
+    │ Process crash here → orphaned provider workflow         │
+    │ DVT+ has no record of the workflow                      │
+    │ Compensation (cancelRun) never fires                    │
+    └────────────────────────────────────────────────────────┘
+3.  stateStore.bootstrapRunTx()            ← atomically persist run
+4.  On bootstrap failure: adapter.cancelRun()  ← compensation
+</code></pre>
+<p>The existing compensation logic (step 4) only handles exceptions during bootstrap. It does not protect against process death, OOM kills, or node failures between steps 2 and 3.</p>
+<h3 id="12-why-existing-mechanisms-are-insufficient">1.2 Why existing mechanisms are insufficient<a class="headerlink" href="#12-why-existing-mechanisms-are-insufficient" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Handles exceptions</th>
+<th>Handles process crash</th>
+<th>Detects orphaned workflows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>try/catch</code> compensation</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Adapter-level timeouts</td>
+<td>N/A</td>
+<td>Partial (provider may TTL)</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Manual ops review</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>Ad-hoc, not systematic</td>
+</tr>
+<tr>
+<td><strong>Pre-dispatch intent log</strong></td>
+<td>Yes</td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Without an intent log, a crash between <code>adapter.startRun()</code> and <code>bootstrapRunTx()</code> leaves a provider workflow (e.g., a Temporal workflow) running indefinitely with no DVT+ record to track, cancel, or reconcile it.</p>
+<hr />
+<h2 id="2-alternatives-considered">2. Alternatives Considered<a class="headerlink" href="#2-alternatives-considered" title="Permanent link">&para;</a></h2>
+<h3 id="option-a-reverse-call-order-bootstrap-first-then-adapter">Option A: Reverse call order (bootstrap first, then adapter)<a class="headerlink" href="#option-a-reverse-call-order-bootstrap-first-then-adapter" title="Permanent link">&para;</a></h3>
+<p>Persist run metadata before calling <code>adapter.startRun()</code>. If the adapter call fails, roll back the bootstrap.</p>
+<p><strong>Rationale for rejection</strong>: Violates ADR-0014 (adapter-first). The <code>engineRunRef</code> would not be available at bootstrap time, requiring a two-phase write (bootstrap without refs, then update with refs). This reintroduces the gap that ADR-0013 explicitly closes. Additionally, rolling back a committed <code>bootstrapRunTx</code> is not supported — the event store is append-only.</p>
+<h3 id="option-b-write-ahead-log-in-irunstatestore">Option B: Write-ahead log in IRunStateStore<a class="headerlink" href="#option-b-write-ahead-log-in-irunstatestore" title="Permanent link">&para;</a></h3>
+<p>Add intent tracking as a column or table within the event store itself.</p>
+<p><strong>Rationale for rejection</strong>: The event store (<code>IRunStateStore</code>) is scoped to run lifecycle persistence (events, metadata, projections). Intent tracking has a fundamentally different lifecycle: intents are short-lived, transient records that exist only during the <code>startRun()</code> call window. Mixing these concerns in the same store violates separation of concerns (ADR-0003) and complicates the state store contract.</p>
+<h3 id="option-c-adapter-level-idempotency-only">Option C: Adapter-level idempotency only<a class="headerlink" href="#option-c-adapter-level-idempotency-only" title="Permanent link">&para;</a></h3>
+<p>Rely on the adapter's workflowId derivation from runId (StartRunIdempotency spec §3.3) to deduplicate on retry. Accept the orphaned workflow as harmless.</p>
+<p><strong>Rationale for rejection</strong>: While workflowId derivation provides dedup on retry, it does not solve the actual orphan — the provider workflow continues running, consuming resources and potentially producing side effects. Without a record in DVT+, there is no way to cancel, monitor, or reconcile it. This is unacceptable for production systems.</p>
+<h3 id="option-d-separate-pre-dispatch-intent-store-selected">Option D: Separate pre-dispatch intent store (selected)<a class="headerlink" href="#option-d-separate-pre-dispatch-intent-store-selected" title="Permanent link">&para;</a></h3>
+<p>Create a dedicated <code>IStartRunIntentStore</code> port. Persist an intent record in PENDING status <strong>before</strong> <code>adapter.startRun()</code>. Transition through DISPATCHED to RESOLVED on the happy path. A reconciliation job in <code>RunMaintenanceService</code> periodically scans for orphaned intents and cancels the associated provider workflows.</p>
+<p><strong>Why this option</strong>:</p>
+<ul>
+<li>Covers both exception and process-crash scenarios.</li>
+<li>Maintains adapter-first ordering (ADR-0014) and atomic bootstrap (ADR-0013).</li>
+<li>Clean separation: intent tracking is orthogonal to event-sourced run state.</li>
+<li>Reconciliation is automated, idempotent, and observable.</li>
+<li>Required dependency ensures no deployment can skip the consistency guarantee.</li>
+</ul>
+<hr />
+<h2 id="3-decision">3. Decision<a class="headerlink" href="#3-decision" title="Permanent link">&para;</a></h2>
+<h3 id="31-new-port-istartrunintentstore">3.1 New port: <code>IStartRunIntentStore</code><a class="headerlink" href="#31-new-port-istartrunintentstore" title="Permanent link">&para;</a></h3>
+<p>A new port interface at <code>engine/src/ports/IStartRunIntentStore.ts</code>:</p>
+<pre><code class="language-typescript">type StartRunIntentStatus = 'PENDING' | 'DISPATCHED' | 'RESOLVED' | 'EXPIRED';
+
+interface StartRunIntent {
+  intentId: string;
+  tenantId: string;
+  runId: string;
+  provider: EngineRunRef['provider'];
+  status: StartRunIntentStatus;
+  engineRunRef?: EngineRunRef; // set after adapter.startRun() returns
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface IStartRunIntentStore {
+  createIntent(input: CreateIntentInput): Promise&lt;StartRunIntent&gt;;
+  markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise&lt;void&gt;;
+  markResolved(intentId: string): Promise&lt;void&gt;;
+  markExpired(intentId: string): Promise&lt;void&gt;;
+  listOrphaned(thresholdMs: number, nowMs: number, limit?: number): Promise&lt;StartRunIntent[]&gt;;
+  getIntent(intentId: string): Promise&lt;StartRunIntent | null&gt;;
+}
+</code></pre>
+<p>Intent lifecycle state machine:</p>
+<pre><code>PENDING ──adapter.startRun()──▶ DISPATCHED ──bootstrapRunTx()──▶ RESOLVED
+    │                               │
+    └── reconcile (expire) ──▶ EXPIRED
+                                    └── reconcile (cancel) ──▶ RESOLVED
+</code></pre>
+<p>Valid transitions:</p>
+<ul>
+<li><code>PENDING → DISPATCHED</code> — after <code>adapter.startRun()</code> returns successfully</li>
+<li><code>PENDING → EXPIRED</code> — reconciliation: no provider workflow was created</li>
+<li><code>DISPATCHED → RESOLVED</code> — after <code>bootstrapRunTx()</code> succeeds, or reconciliation resolves</li>
+<li><code>PENDING → RESOLVED</code> — after compensation (bootstrap failure on <code>PENDING</code> is possible if <code>markDispatched</code> was skipped)</li>
+</ul>
+<p>All other transitions throw <code>IntentInvalidTransitionError</code>.</p>
+<h3 id="32-modified-startrun-flow">3.2 Modified <code>startRun()</code> flow<a class="headerlink" href="#32-modified-startrun-flow" title="Permanent link">&para;</a></h3>
+<p>The <code>WorkflowEngine.startRun()</code> method now includes three intent store calls:</p>
+<pre><code>1.  validateStartRunPreconditions()            (existing)
+2.  checkOutboxRateLimit()                     (existing)
+3.  getAdapterOrThrow() + validateCapabilities (existing)
+4.  intentStore.createIntent()                 [NEW] status=PENDING
+5.  adapter.startRun() → runRef               (existing)
+6.  intentStore.markDispatched(intentId, runRef)[NEW] status=DISPATCHED
+7.  bootstrapRunTx()                           (existing)
+8.  intentStore.markResolved(intentId)         [NEW] status=RESOLVED
+    On bootstrap failure:
+      adapter.cancelRun()                      (existing compensation)
+      intentStore.markResolved() best-effort   [NEW]
+</code></pre>
+<p>Key implementation details:</p>
+<ul>
+<li><code>createIntent</code> is called <strong>before</strong> any adapter interaction (step 4).</li>
+<li><code>markResolved</code> after success and after compensation both use <code>.catch(() =&gt; {})</code> — best-effort. If the intent store call fails, the reconciliation job will clean it up on the next sweep.</li>
+<li>The <code>intentId</code> is generated from <code>idempotency.eventId()</code> — a fresh UUID per call. The intent store's <code>createIntent</code> is idempotent on <code>intentId</code>.</li>
+</ul>
+<h3 id="33-crash-scenario-coverage">3.3 Crash scenario coverage<a class="headerlink" href="#33-crash-scenario-coverage" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Crash Point</th>
+<th>Intent Status</th>
+<th>Reconciliation Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Between steps 4 and 5</td>
+<td>PENDING</td>
+<td>Expire (no workflow exists)</td>
+</tr>
+<tr>
+<td>Between steps 5 and 6</td>
+<td>PENDING</td>
+<td>Expire (orphaned workflow relies on workflowId⟵runId dedup on retry, per StartRunIdempotency §3.3)</td>
+</tr>
+<tr>
+<td>Between steps 6 and 7</td>
+<td>DISPATCHED</td>
+<td>Cancel workflow via stored <code>engineRunRef</code></td>
+</tr>
+<tr>
+<td>Between steps 7 and 8</td>
+<td>DISPATCHED</td>
+<td>Reconciler checks <code>stateStore.getRunMetadataByRunId()</code> — run exists → <code>markResolved()</code> (no cancel)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34-reconciliation-via-runmaintenanceservice">3.4 Reconciliation via <code>RunMaintenanceService</code><a class="headerlink" href="#34-reconciliation-via-runmaintenanceservice" title="Permanent link">&para;</a></h3>
+<p>A new method <code>reconcileOrphanedIntents()</code> is added to <code>IRunMaintenanceService</code> (extending ADR-0029):</p>
+<pre><code class="language-typescript">interface ReconcileOrphanedIntentsOptions {
+  thresholdMs: number;
+  limit?: number;
+  dryRun?: boolean;
+}
+
+interface ReconcileOrphanedIntentsResult {
+  inspected: number;
+  expired: string[]; // PENDING intents expired
+  cancelled: string[]; // DISPATCHED intents cancelled/resolved
+  cancelFailed: string[]; // cancellation failed, retry next sweep
+}
+</code></pre>
+<p>Reconciliation logic:</p>
+<ol>
+<li><code>intentStore.listOrphaned(thresholdMs, nowMs, limit)</code> — find PENDING + DISPATCHED intents older than threshold, ordered by <code>createdAt</code> ASC.</li>
+<li>For each PENDING intent: <code>markExpired()</code> — no provider workflow to cancel.</li>
+<li>For each DISPATCHED intent:</li>
+<li>Check <code>stateStore.getRunMetadataByRunId()</code> — if run exists, <code>markResolved()</code>. This handles the crash-between-bootstrap-and-markResolved scenario without issuing a spurious cancel.</li>
+<li>If run does not exist: <code>adapter.cancelRun(intent.engineRunRef)</code>, then <code>markResolved()</code>.</li>
+<li>If cancel fails (adapter unavailable, network error): report in <code>cancelFailed[]</code> for retry on next sweep.</li>
+</ol>
+<h3 id="35-error-types">3.5 Error types<a class="headerlink" href="#35-error-types" title="Permanent link">&para;</a></h3>
+<p>Two new error classes extending <code>DvtError</code>:</p>
+<ul>
+<li><code>IntentNotFoundError</code> (<code>code: 'INTENT_NOT_FOUND'</code>) — thrown when an operation references a non-existent intent.</li>
+<li><code>IntentInvalidTransitionError</code> (<code>code: 'INTENT_INVALID_TRANSITION'</code>) — thrown on illegal state transitions (e.g., <code>RESOLVED → PENDING</code>).</li>
+</ul>
+<h3 id="36-dependency-requirements">3.6 Dependency requirements<a class="headerlink" href="#36-dependency-requirements" title="Permanent link">&para;</a></h3>
+<p><code>intentStore</code> is a <strong>required</strong> dependency on <code>WorkflowEngineDeps</code>. The engine's <code>validateDependencies()</code> method rejects construction if <code>intentStore</code> is not provided. This ensures that no deployment can skip the crash-consistency guarantee.</p>
+<p><code>RunMaintenanceServiceDeps</code> is extended with <code>intentStore</code> and <code>adapters</code> (the adapter map) to support reconciliation.</p>
+<hr />
+<h2 id="4-consequences">4. Consequences<a class="headerlink" href="#4-consequences" title="Permanent link">&para;</a></h2>
+<h3 id="positive">Positive<a class="headerlink" href="#positive" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Closes the crash-consistency gap</strong>: orphaned provider workflows are detected and cancelled automatically.</li>
+<li><strong>Reconciliation is automated and idempotent</strong>: the sweep can run repeatedly without side effects on already-resolved intents.</li>
+<li><strong>Required dependency</strong>: ensures the consistency guarantee cannot be accidentally omitted.</li>
+<li><strong>Observable</strong>: metrics (<code>dvt.intent.expired_total</code>, <code>dvt.intent.cancelled_total</code>) and structured logs provide operational visibility into orphan detection and cleanup.</li>
+<li><strong>Extends the existing <code>RunMaintenanceService</code></strong> (ADR-0029) pattern: no new service class needed.</li>
+</ul>
+<h3 id="negative-trade-offs">Negative / Trade-offs<a class="headerlink" href="#negative-trade-offs" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Additional dependency and port</strong>: one more interface to implement for production (e.g., a Postgres-backed intent store).</li>
+<li><strong>PENDING crash gap</strong>: a crash between <code>adapter.startRun()</code> return and <code>markDispatched()</code> leaves the intent in PENDING (not DISPATCHED), so the reconciler cannot use <code>engineRunRef</code> to cancel. Mitigated by workflowId derivation from runId (StartRunIdempotency spec §3.3), which enables natural dedup on retry.</li>
+<li><strong>Threshold tuning</strong>: the reconciliation threshold must be set above the maximum expected <code>adapter.startRun()</code> latency to avoid false positives on slow responses.</li>
+</ul>
+<h3 id="out-of-scope">Out of scope<a class="headerlink" href="#out-of-scope" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Production intent store implementation</strong> (Postgres, DynamoDB, etc.) — only the in-memory implementation for tests is provided.</li>
+<li><strong>Periodic scheduler / cron</strong> for invoking <code>reconcileOrphanedIntents()</code> — the scheduler is a separate infrastructure concern.</li>
+<li><strong>Multi-region reconciliation</strong> — single-region assumption for now.</li>
+</ul>
+<hr />
+<h2 id="5-verification-invariants">5. Verification Invariants<a class="headerlink" href="#5-verification-invariants" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>INV-INTENT-001</strong>: <code>createIntent()</code> MUST be called <strong>before</strong> <code>adapter.startRun()</code> in the <code>startRun()</code> flow.</li>
+<li><strong>INV-INTENT-002</strong>: <code>markDispatched()</code> MUST be called immediately after <code>adapter.startRun()</code> returns, attaching the <code>engineRunRef</code>.</li>
+<li><strong>INV-INTENT-003</strong>: <code>markResolved()</code> MUST be called after <code>bootstrapRunTx()</code> succeeds.</li>
+<li><strong>INV-INTENT-004</strong>: <code>markResolved()</code> on the compensation path is best-effort (<code>.catch(() =&gt; {})</code>).</li>
+<li><strong>INV-INTENT-005</strong>: <code>intentStore</code> is a required dependency — <code>WorkflowEngine</code> MUST reject construction without it.</li>
+<li><strong>INV-INTENT-006</strong>: The happy path transitions are <code>PENDING → DISPATCHED → RESOLVED</code>.</li>
+<li><strong>INV-INTENT-007</strong>: Reconciliation expires PENDING intents beyond the threshold via <code>markExpired()</code>.</li>
+<li><strong>INV-INTENT-008</strong>: Reconciliation checks <code>stateStore.getRunMetadataByRunId()</code> before cancelling a DISPATCHED intent — if the run exists, it marks the intent resolved without cancelling.</li>
+<li><strong>INV-INTENT-009</strong>: <code>listOrphaned()</code> returns only PENDING and DISPATCHED intents older than the threshold, ordered by <code>createdAt</code> ASC.</li>
+<li><strong>INV-INTENT-010</strong>: Failed cancellations are reported in <code>cancelFailed[]</code> for retry on the next sweep.</li>
+</ul>
+<hr />
+<h2 id="6-references">6. References<a class="headerlink" href="#6-references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../ADR-0003-execution-model/">ADR-0003 — Execution Model Sovereignty</a> — Engine domain boundary</li>
+<li><a href="../ADR-0013-run-state-store-bootstrapRunTx/">ADR-0013 — bootstrapRunTx Atomicity</a> — Provider refs in atomic bootstrap</li>
+<li><a href="../ADR-0014-run-driven-adapter-model/">ADR-0014 — Adapter-First Execution Order</a> — Why adapter is called before state persistence</li>
+<li><a href="../ADR-0029-run-maintenance-service/">ADR-0029 — Run Maintenance Service Extraction</a> — Reconciliation added to this service</li>
+<li><a href="../../architecture/engine/adapters/temporal/EnginePolicies/">Temporal Engine Policies</a> — workflowId derivation from <code>runId</code></li>
+</ul>
+<hr />
+<p>End of ADR-0030</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

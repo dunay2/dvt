@@ -11,8 +11,8 @@
   - [RunMaintenanceService.ts](../../packages/@dvt/engine/src/services/RunMaintenanceService.ts) (modified)
   - [IRunMaintenanceService.ts](../../packages/@dvt/engine/src/ports/IRunMaintenanceService.ts) (modified)
   - [ADR-0003 — Execution Model](ADR-0003-execution-model.md)
-  - [ADR-0013 — bootstrapRunTx Atomicity](ADR-0013-bootstrap-run-tx-atomicity.md)
-  - [ADR-0014 — Adapter-First Execution](ADR-0014-adapter-first-execution-order.md)
+  - [ADR-0013 — bootstrapRunTx Atomicity](ADR-0013-run-state-store-bootstrapRunTx.md)
+  - [ADR-0014 — Adapter-First Execution](ADR-0014-run-driven-adapter-model.md)
   - [ADR-0029 — Run Maintenance Service Extraction](ADR-0029-run-maintenance-service.md)
 
 ---
@@ -252,10 +252,10 @@ Two new error classes extending `DvtError`:
 ## 6. References
 
 - [ADR-0003 — Execution Model Sovereignty](ADR-0003-execution-model.md) — Engine domain boundary
-- [ADR-0013 — bootstrapRunTx Atomicity](ADR-0013-bootstrap-run-tx-atomicity.md) — Provider refs in atomic bootstrap
-- [ADR-0014 — Adapter-First Execution Order](ADR-0014-adapter-first-execution-order.md) — Why adapter is called before state persistence
+- [ADR-0013 — bootstrapRunTx Atomicity](ADR-0013-run-state-store-bootstrapRunTx.md) — Provider refs in atomic bootstrap
+- [ADR-0014 — Adapter-First Execution Order](ADR-0014-run-driven-adapter-model.md) — Why adapter is called before state persistence
 - [ADR-0029 — Run Maintenance Service Extraction](ADR-0029-run-maintenance-service.md) — Reconciliation added to this service
-- [StartRunIdempotency.v1.md](../../specs/contracts/engine/StartRunIdempotency.v1.md) — §3.3: workflowId derivation from runId
+- [Temporal Engine Policies](../architecture/engine/adapters/temporal/EnginePolicies.md) — workflowId derivation from `runId`
 
 ---
 
