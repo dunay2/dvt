@@ -301,7 +301,13 @@ describe('RunMaintenanceService', () => {
       };
     }
 
-    function createFixtureWith(adapter: IProviderAdapter) {
+    function createFixtureWith(adapter: IProviderAdapter): {
+      service: RunMaintenanceService;
+      store: InMemoryTxStore;
+      intentStore: InMemoryStartRunIntentStore;
+      clock: SequenceClock;
+      idempotency: IdempotencyKeyBuilder;
+    } {
       const store = new InMemoryTxStore();
       const intentStore = new InMemoryStartRunIntentStore();
       const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
@@ -329,7 +335,7 @@ describe('RunMaintenanceService', () => {
       runId: string,
       intentId: string,
       provider: EngineRunRef['provider'] = 'temporal'
-    ) {
+    ): ReturnType<InMemoryStartRunIntentStore['createIntent']> {
       return intentStore.createIntent({
         intentId,
         tenantId: 't',
