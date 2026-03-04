@@ -156,4 +156,19 @@ describe('TemporalAdapter.lookupRunRef', () => {
     expect(result).toBeNull();
     expect(handle.cancel).not.toHaveBeenCalled();
   });
+
+  it('propagates a timeout error when describe() exceeds requestTimeoutMs', async () => {
+    // describe() returns a promise that never resolves — simulates a hung Temporal server.
+    const handle = makeWorkflowHandleMock(() => new Promise<never>(() => undefined));
+    const timeoutAdapter = new TemporalAdapter({
+      workflowClient: { start: vi.fn(), getHandle: vi.fn(() => handle) },
+      config: { ...BASE_CONFIG, requestTimeoutMs: 20 },
+      stateStore: { listEvents: vi.fn(async () => []) },
+      projector: { rebuild: vi.fn() },
+    });
+
+    await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
+      'lookupRunRef.describe timed out after 20ms'
+    );
+  });
 });

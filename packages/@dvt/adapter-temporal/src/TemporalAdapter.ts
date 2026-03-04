@@ -181,7 +181,13 @@ export class TemporalAdapter implements IProviderAdapter {
     const client = await this.getClient();
 
     try {
-      await client.getHandle(workflowId).describe();
+      // Apply requestTimeoutMs so a slow/unresponsive Temporal server does not
+      // block the reconciliation sweep indefinitely (ADR-0030 §3.4 threshold note).
+      await withTimeoutMs(
+        client.getHandle(workflowId).describe(),
+        this.deps.config.requestTimeoutMs,
+        'lookupRunRef.describe'
+      );
       return toTemporalRunRef({
         tenantId,
         workflowId,
@@ -240,4 +246,23 @@ function isWorkflowNotFound(err: unknown): boolean {
   // gRPC NOT_FOUND = 5; ServiceError from older @temporalio/client versions
   const asRecord = err as unknown as Record<string, unknown>;
   return err.name === 'ServiceError' && asRecord['code'] === 5;
+}
+
+/**
+ * Races a promise against a timeout.
+ * Rejects with a descriptive error when the timeout fires first.
+ * The timer is always cleared on settlement to avoid keeping the event loop alive.
+ */
+async function withTimeoutMs<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`));
+    }, ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
 }
