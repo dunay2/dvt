@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
+    "noEmit": true,
     "allowImportingTsExtensions": true,
     "strict": true,
     "baseUrl": ".",

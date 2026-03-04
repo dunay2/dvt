@@ -1,5 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"]
+  },
   "include": [
     "packages/@dvt/engine/src/**/*.ts",
     "packages/@dvt/engine/test/**/*.ts",

@@ -27,7 +27,6 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": ".",
-    "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "@dvt/canonical": ["packages/@dvt/canonical/src/index.ts"],
