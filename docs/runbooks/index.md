@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Runbooks
-
 Operational runbooks for incidents, recovery, and maintenance.
 
 ## Purpose

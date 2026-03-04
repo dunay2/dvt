@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Archive
-
 Frozen historical documentation retained for reference.
 
 ## Purpose

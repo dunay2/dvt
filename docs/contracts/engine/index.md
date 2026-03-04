@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Engine Contracts
-
 Execution lifecycle, command, and event contracts.
 
 ## Purpose

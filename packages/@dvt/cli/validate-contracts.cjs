@@ -110,6 +110,7 @@ function validatePlanFile(filePath) {
   checks.push(
     runCheck('EngineRunRef schema', () => {
       parseEngineRunRef({
+        tenantId: 'tenant-demo',
         provider: 'mock',
         workflowId: payload?.metadata?.planId || 'workflow',
         runId: 'run-1',
@@ -153,7 +154,7 @@ function validatePlanFile(filePath) {
         steps: (Array.isArray(payload?.steps) ? payload.steps : []).map((step, index) => ({
           stepId: String(step.stepId || `s${index + 1}`),
           status: 'PENDING',
-          logicalAttemptId: `attempt-${index + 1}`,
+          logicalAttemptId: index + 1,
           artifacts: [],
         })),
         artifacts: [],

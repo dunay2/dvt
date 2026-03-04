@@ -5,8 +5,6 @@ owner: ci-cd
 last_reviewed: 2026-02-28
 ---
 
-# Simplificación de redundancia de workflows de GitHub (Pass 1)
-
 ## Objetivo
 
 Reducir duplicidad de checks en workflows de GitHub Actions durante el modo de estabilización manual (`workflow_dispatch`), manteniendo bajo riesgo operativo y trazabilidad explícita de ownership.

@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Architecture
-
 Technical architecture specifications (normative when marked Accepted/Active).
 
 ## Purpose

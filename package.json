@@ -8,8 +8,8 @@
   "scripts": {
     "lint": "eslint \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" --ignore-pattern vitest.config.ts --max-warnings 0",
     "lint:fix": "eslint \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" --fix",
-    "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"README.md\" --ignore-path .markdownlintignore",
-    "lint:determinism": "eslint \"packages/@dvt/engine/src/**/*.ts\" \"packages/@dvt/adapter-temporal/src/**/*.ts\" --max-warnings 0",
+    "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"README.md\" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc",
+    "lint:determinism": "pnpm --filter @dvt/crypto build && pnpm --filter @dvt/plan-interpreter build && eslint \"packages/@dvt/engine/src/**/*.ts\" \"packages/@dvt/adapter-temporal/src/**/*.ts\" --max-warnings 0",
     "format": "prettier --write '**/*.{ts,tsx,js,jsx,json,md,yml,yaml}'",
     "format:check": "prettier --check '**/*.{ts,tsx,js,jsx,json,md,yml,yaml}'",
     "type-check": "tsc --noEmit",

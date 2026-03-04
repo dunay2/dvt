@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Infrastructure Architecture
-
 Deployment, runtime, networking, and platform architecture documents.
 
 ## Purpose

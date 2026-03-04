@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Shared Contracts
-
 Cross-cutting types and shared validation contracts.
 
 ## Purpose

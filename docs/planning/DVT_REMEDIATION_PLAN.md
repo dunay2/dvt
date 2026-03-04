@@ -162,7 +162,7 @@ Plugin execution hooks: Any plugin that introduces non-deterministic behavior (n
 
 continueAsNew without persisted gateway state: If a workflow calls continueAsNew and the new workflow instance reconstructs gateway decisions from replay (which won't exist since history was truncated), the routing logic will produce different results than the original run.
 
-4. Execution Planning Layer Analysis
+1. Execution Planning Layer Analysis
    Is this layer over-engineered?
    Yes, partially. The diagram shows five concurrent sub-components of IExecutionPlanner (DAGAnalyzer, CostEstimator, PartialExec, RetryPolicy, EnvResolver), each feeding into a single ExecutionPlan. None of them exist in code yet. The interface contract (IPlanner/IExecutionPlanner) is not defined (P0-06 TODO). Building five components toward an undefined interface is guaranteed rework.
 
@@ -177,7 +177,7 @@ Plan versioning on in-flight runs: If a plan is updated while a run is executing
 Does it introduce hidden Snowflake coupling?
 Yes. CostEstimator is described as "Snowflake + heuristics". Even labeled "pluggable," the heuristics are necessarily Snowflake-specific (warehouse size, credit cost, query history patterns). This component cannot be generalized without stripping its domain knowledge. Call it what it is: SnowflakeCostEstimator. Don't pretend it's adapter-agnostic.
 
-5. State & Metadata Layer Review
+1. State & Metadata Layer Review
    Is Postgres sufficient?
    For transactional state at the scale described (1000 tenants, thousands of concurrent runs), Postgres is sufficient with partitioning. Without it (P1-02 TODO), run_events will have sequential scan degradation before 18 months. The fact that partitioning is P1 and not P0 is an underestimation of this risk.
 
@@ -198,7 +198,7 @@ Outbox relay reads and publishes to event bus
 Projector writes to read model (materialized view)
 For a 1000-node DAG completing every step, this is 1000+ step-completion events, each causing 4 writes. Without batching in the projector (projectBatch() is defined but usage is unspecified), this creates read model write contention.
 
-6. Plugin System Evaluation
+1. Plugin System Evaluation
    Isolation strategy is broken
    vm2 is EOL. This is not a risk — it is a fact. The Belgian Centre for Cyber Security issued an advisory on critical vm2 vulnerabilities. Using vm2 in production for untrusted code is indefensible. The Remediation Plan lists this under RP-08 but places the sandbox decision at P1-05. This cannot be P1 if plugins are a product feature.
 
@@ -217,7 +217,7 @@ No. The PluginManifest declares capabilities, perms, UI modules but there is no 
 Mixed execution/UI concerns in plugin types
 Plugin types include both Nodes (execution) and Panels (UI modules). These have different security profiles. Execution plugins run in a backend sandbox with access to execution context. UI plugins run in a browser renderer. Conflating them in a single PluginManifest model creates a category error. Separate the contracts.
 
-7. What Is Overbuilt
+1. What Is Overbuilt
    Nine workflow engine candidates in the architecture diagram. Temporal + Conductor is the stated strategy. BullMQ is a queue, not a workflow engine (no replay, no history, no saga). Argo/Airflow/Prefect/Dagster/Flyte are Python-native. Kestra is JVM. Listing them as "candidates" adds no value and misleads future contributors about the portability guarantee.
 
 Seven observability stack components before core contracts exist. OTel spans should be wired in core adapters now. Prometheus scraping, Grafana dashboards, Loki log aggregation, Jaeger/Tempo traces, ELK — these are operational decisions for when there's something running. Building adapter stubs for all of them before the outbox relay is implemented (P0-11 TODO) is misallocation.
@@ -226,7 +226,7 @@ Snowflake cost attribution depth. Pre-run cost estimation from Snowflake heurist
 
 D&D lore as normative onboarding material (Annex 20). It's in docs/lore.md and flagged as "a supported artifact" in the Blueprint. The Blueprint's canonical status means lore changes need to reflect in MASTER. This adds maintenance overhead to flavor text.
 
-8. What Is Underbuilt
+1. What Is Underbuilt
    Migration strategy for run_events schema evolution. Events are immutable by design, but the schema of the event payload (e.g., RunStarted.v1 → v2) requires migration handling. The dual-read protocol is specified but there is no migration runner, no version-tagged query path in the store, and no tooling (P1-01 TODO). Schema evolution without tooling means manual, error-prone migrations.
 
 Rollback guarantees for partial execution. dbt models execute DDL in Snowflake (CREATE TABLE, CREATE VIEW, MERGE). A run that fails at step 347 of 1000 has already mutated the warehouse. There is no rollback story. The architecture assumes idempotency of dbt runs but does not address the case where a model creates a table on run N and fails on run N+1 after a partial overwrite.
@@ -239,7 +239,7 @@ Signal versioning. SignalRequest has type: 'PAUSE'|'RESUME'|'CANCEL'|.... P2-02 
 
 Run retention and GDPR delete. P2-01 is TODO. run_events is immutable by design. If a customer requests GDPR deletion of their data, immutable event logs with PII (e.g., triggeredBy user identifiers) create a legal problem. The architecture needs a tenant-scoped deletion strategy that is compatible with immutable event sourcing (cryptographic erasure or tombstone events).
 
-9. Scalability Outlook (3-Year Horizon)
+1. Scalability Outlook (3-Year Horizon)
    1000+ tenants, thousands of concurrent runs
    ApiStateSvc becomes the primary bottleneck. It is the read/write hub for everything. Without horizontal sharding by tenantId and explicit read replica routing, this single service will be the failure point for all tenants simultaneously.
 
@@ -259,29 +259,29 @@ Snowflake cost data latency. WAREHOUSE_METERING_HISTORY has a 3-hour data freshn
 Projector gap detection under load
 At high event volume, the gap detection policy (Tshort=10s, Tmax=10min) will trigger backfill frequently. Backfill requires a read from RunStateStore for missing sequences. At 1000 concurrent runs, multiple projectors simultaneously triggering backfill creates read amplification on the primary Postgres. This is not analyzed in the Blueprint.
 
-10. Architectural Scorecard
-    Dimension Score Justification
-    Conceptual clarity 7/10 Core triad (Planner/Engine/State) is clear. ApiStateSvc is a conceptual hole. IPlanner doesn't exist.
-    Separation of concerns 5/10 Good in theory. In practice: ApiStateSvc God service, detectStuckRuns still in engine, plugins hooking into workflow code, mixed execution/UI plugin types.
-    Replaceability of engine 6/10 ADR-0019 "state-equivalent" is realistic. But no conformance test suite exists. Conductor adapter is stub. Determinism verification only works for Temporal.
-    Determinism 6/10 Temporal path is properly specified. Non-Temporal adapters have no replay mechanism. continueAsNew + gateway state is an open bug. CEL boundary with Temporal is unspecified.
-    Extensibility 5/10 Plugin system design is promising but sandbox is broken (vm2 EOL), capability enforcement is declarative-only, execution/UI plugin boundary is wrong.
-    Operational realism 4/10 14 P0 items TODO. No outbox relay. No plan cache. No IPlanner. No tenantId enforcement. No partitioning. This is a pre-alpha system presented as a working architecture.
-    Long-term maintainability 5/10 Event model and ADR governance are solid foundations. But type drift between packages, absent schema migration tooling, God service, and no retention policy will compound over time.
-11. Strategic Recommendations
-    3 Structural Changes
-12. Decompose ApiStateSvc immediately.
-    Split into three bounded services:
+1. Architectural Scorecard
+   Dimension Score Justification
+   Conceptual clarity 7/10 Core triad (Planner/Engine/State) is clear. ApiStateSvc is a conceptual hole. IPlanner doesn't exist.
+   Separation of concerns 5/10 Good in theory. In practice: ApiStateSvc God service, detectStuckRuns still in engine, plugins hooking into workflow code, mixed execution/UI plugin types.
+   Replaceability of engine 6/10 ADR-0019 "state-equivalent" is realistic. But no conformance test suite exists. Conductor adapter is stub. Determinism verification only works for Temporal.
+   Determinism 6/10 Temporal path is properly specified. Non-Temporal adapters have no replay mechanism. continueAsNew + gateway state is an open bug. CEL boundary with Temporal is unspecified.
+   Extensibility 5/10 Plugin system design is promising but sandbox is broken (vm2 EOL), capability enforcement is declarative-only, execution/UI plugin boundary is wrong.
+   Operational realism 4/10 14 P0 items TODO. No outbox relay. No plan cache. No IPlanner. No tenantId enforcement. No partitioning. This is a pre-alpha system presented as a working architecture.
+   Long-term maintainability 5/10 Event model and ADR governance are solid foundations. But type drift between packages, absent schema migration tooling, God service, and no retention policy will compound over time.
+2. Strategic Recommendations
+   3 Structural Changes
+3. Decompose ApiStateSvc immediately.
+   Split into three bounded services:
 
 ArtifactIngestionService (owns dbt artifact parsing and storage)
 RunQueryService (owns read model queries, backed by projector output)
 LiveUpdateHub (owns WebSocket/SSE, consumes from event bus directly)
 Each gets its own interface contract in @dvt/contracts. ApiStateSvc as a single class mediating all of these will not survive production.
 
-2. Define IPlanner before building any planning sub-component.
+1. Define IPlanner before building any planning sub-component.
    The entire planning layer (DAGAnalyzer, CostEstimator, PartialExec, RetryPolicy, EnvResolver) is being designed bottom-up without a stable top-level interface. P0-06 must ship first. The contract must specify: inputs (manifest + selection + environment), outputs (ExecutionPlan + stages + metadata), failure modes (invalid selection, cyclic DAG, missing model), and versioning policy. Only then build DAGAnalyzer as the first concrete implementation.
 
-3. Enforce the plugin execution boundary at the contract level.
+2. Enforce the plugin execution boundary at the contract level.
    The architecture currently allows PluginSandbox → "Execution hooks" → IWorkflowEngine. This must be blocked. The contract for IPluginRuntime must explicitly state: plugins MUST NOT be invoked from workflow code (Temporal or otherwise). Plugins are invoked exclusively within Activities. Separate IExecutionPlugin (backend, Activity-scoped) from IUIPlugin (frontend, renderer-scoped) with distinct sandbox models and capability sets.
 
 3 Clarifications Needed

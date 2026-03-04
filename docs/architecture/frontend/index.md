@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Frontend Architecture
-
 UI, interaction, and client-side architecture documents.
 
 ## Purpose

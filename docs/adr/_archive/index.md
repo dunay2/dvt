@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# ADR Archive
-
 Superseded or retired ADRs. Historical reference only.
 
 ## Purpose
