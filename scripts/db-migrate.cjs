@@ -39,7 +39,14 @@ async function runMigrations() {
   console.log(`   Database: ${url.pathname.substring(1)}`);
   console.log(`   User: ${url.username}`);
 
-  const migrationsDir = path.join(__dirname, '..', 'packages', 'adapter-postgres', 'migrations');
+  const migrationsDir = path.join(
+    __dirname,
+    '..',
+    'packages',
+    '@dvt',
+    'adapter-postgres',
+    'migrations'
+  );
   const migrationFiles = fs
     .readdirSync(migrationsDir)
     .filter((file) => file.endsWith('.sql'))

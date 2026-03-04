@@ -17,9 +17,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import type { EngineRunRef, PlanRef } from '@dvt/contracts';
-import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
+import { createNoopObservability } from '../../../observability/src/noopObservability.js';
 import { ConductorAdapterStub } from '../../src/adapters/conductor/ConductorAdapterStub.js';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
