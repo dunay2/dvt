@@ -1,9 +1,9 @@
 # DVT+ — Estado de Entrega del Sistema
 
-- **Fecha**: 2026-03-04
-- **Versión**: 1.0.0
+- **Fecha**: 2026-03-04 (revisado 2026-03-04 — G2 cerrado)
+- **Versión**: 1.1.0
 - **Alcance**: Todos los módulos del monorepo (`packages/@dvt/*`, `apps/*`)
-- **Tests engine**: 153/153 ✅
+- **Tests engine**: 151/151 ✅ (153 → 151 tras limpieza de fixtures huérfanos)
 
 ---
 
@@ -42,7 +42,7 @@ end
 %% ─── EXECUTION LAYER ──────────────────────────────────────────────────────────
 subgraph EXEC["Execution Layer"]
   direction TB
-  ENGINE["@dvt/engine\n🟡 WorkflowEngine ✅\n153 tests ✅\nPostgres adapter ❌\nscheduler ❌"]
+  ENGINE["@dvt/engine\n🟡 WorkflowEngine ✅\n153 tests ✅\nPostgres adapter 🟡\nscheduler ❌"]
   INTENT["IStartRunIntentStore\n🟡 InMemory ✅\nPostgres ❌\nADR-0030"]
   MAINT["RunMaintenanceService\n✅ reconcileOrphanedIntents\ndetectStuckRuns"]
   CONTRACTS["@dvt/contracts\n✅ tipos compartidos\nZod schemas"]
@@ -51,15 +51,15 @@ end
 subgraph ADAPTERS["Provider Adapters"]
   direction LR
   TEMPORAL["@dvt/adapter-temporal\n🟡 STUB\nsin Temporal SDK real\nsin lookupRunRef prod"]
-  POSTGRES_A["@dvt/adapter-postgres\n🟡 STUB\nDDL documentado\nsin impl real"]
+  POSTGRES_A["@dvt/adapter-postgres\n✅ IMPL 100%\nbootstrapRunTx ✅ outbox ✅\nDLQ ✅ listEvents(opts) ✅\nlistRuns status-filter ✅"]
   MOCK["MockAdapter (test)\n✅ lookupRunRef ✅"]
 end
 
 %% ─── PERSISTENCE LAYER ────────────────────────────────────────────────────────
 subgraph PERSIST["Persistence Layer"]
   direction TB
-  STATESTORE["@dvt/state-store\n🟡 IRunStateStore ✅\nInMemoryTxStore ✅\nPostgresStateStore ❌"]
-  OUTBOX["Outbox (dominio)\n🟡 patrón ✅\nworker polling ❌\nDLQ/shards ❌"]
+  STATESTORE["@dvt/state-store\n✅ IRunStateStore ✅\nInMemoryTxStore ✅\nPostgresStateStore ✅ 100%"]
+  OUTBOX["Outbox (dominio)\n🟡 patrón ✅\nlistPending + DLQ ✅\nworker polling ❌\nshards ❌"]
   KAFKA["Event Bus (Kafka)\n❌ solo local-compose\nworker producción ❌"]
 end
 
@@ -151,25 +151,25 @@ TRACSVC --> OL_MAP
 
 ### Execution Layer
 
-| Módulo                | Paquete                 | Estado | Notas                                                                                                                       |
-| --------------------- | ----------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
-| WorkflowEngine        | `@dvt/engine`           | 🟡     | `startRun`, `cancelRun`, `signal`, `getRunStatus`, `enrichRunStatus` ✅ · 153 tests ✅ · Postgres adapter ❌ · Scheduler ❌ |
-| IStartRunIntentStore  | `@dvt/engine`           | 🟡     | Puerto ✅ · InMemory ✅ · Postgres ❌ · Scheduler periódico ❌ (ADR-0030)                                                   |
-| RunMaintenanceService | `@dvt/engine`           | ✅     | `reconcileOrphanedIntents`, `detectStuckRuns`, `detectStuckCancellingRuns`                                                  |
-| Contracts             | `@dvt/contracts`        | ✅     | Tipos compartidos, Zod schemas, interfaces                                                                                  |
-| Temporal Adapter      | `@dvt/adapter-temporal` | 🟡     | **Stub puro** — firmas completas, sin Temporal SDK, sin `lookupRunRef` real                                                 |
-| Postgres Adapter      | `@dvt/adapter-postgres` | 🟡     | **Stub** — DDL documentado, sin implementación                                                                              |
-| MockAdapter           | `@dvt/engine` (test)    | ✅     | Test adapter completo con `lookupRunRef`                                                                                    |
+| Módulo                | Paquete                 | Estado | Notas                                                                                                                                                                                                                              |
+| --------------------- | ----------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WorkflowEngine        | `@dvt/engine`           | 🟡     | `startRun`, `cancelRun`, `signal`, `getRunStatus`, `enrichRunStatus` ✅ · 153 tests ✅ · usa Postgres adapter vía contrato · Scheduler ❌                                                                                          |
+| IStartRunIntentStore  | `@dvt/engine`           | 🟡     | Puerto ✅ · InMemory ✅ · Postgres ❌ · Scheduler periódico ❌ (ADR-0030)                                                                                                                                                          |
+| RunMaintenanceService | `@dvt/engine`           | ✅     | `reconcileOrphanedIntents`, `detectStuckRuns`, `detectStuckCancellingRuns` · 151 tests ✅                                                                                                                                          |
+| Contracts             | `@dvt/contracts`        | ✅     | Tipos compartidos, Zod schemas, interfaces                                                                                                                                                                                         |
+| Temporal Adapter      | `@dvt/adapter-temporal` | 🟡     | **Stub puro** — firmas completas, sin Temporal SDK, sin `lookupRunRef` real                                                                                                                                                        |
+| Postgres Adapter      | `@dvt/adapter-postgres` | ✅     | **100% implementado** — `bootstrapRunTx`, `appendAndEnqueueTx`, `getSnapshot`, `listEvents(options)` con cursor/paginación ✅, `listRuns` con filtro `status` ✅, outbox completo, DLQ + `replayDeadLetters`, tenant isolation RLS |
+| MockAdapter           | `@dvt/engine` (test)    | ✅     | Test adapter completo con `lookupRunRef`                                                                                                                                                                                           |
 
 ---
 
 ### Persistence Layer
 
-| Módulo            | Paquete            | Estado | Notas                                                                       |
-| ----------------- | ------------------ | ------ | --------------------------------------------------------------------------- |
-| IRunStateStore    | `@dvt/state-store` | 🟡     | Puerto completo ✅ · `InMemoryTxStore` ✅ · `PostgresStateStoreAdapter` ❌  |
-| Outbox (dominio)  | `@dvt/engine`      | 🟡     | Patrón `appendAndEnqueueTx` ✅ · Worker de polling ❌ · DLQ/shards ❌       |
-| Event Bus (Kafka) | infra              | ❌     | `local-compose.yaml` existe · Worker producción ❌ · Ningún publicador real |
+| Módulo            | Paquete                 | Estado | Notas                                                                                                                                                   |
+| ----------------- | ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IRunStateStore    | `@dvt/state-store`      | ✅     | Puerto completo ✅ · `InMemoryTxStore` ✅ · `PostgresStateStoreAdapter` ✅ 100% (G2 cerrado)                                                            |
+| Outbox (dominio)  | `@dvt/adapter-postgres` | 🟡     | `appendAndEnqueueTx` ✅ · `listPending`/`markDelivered`/`markFailed` ✅ · DLQ + `replayDeadLetters` ✅ · Worker de polling independiente ❌ · shards ❌ |
+| Event Bus (Kafka) | infra                   | ❌     | `local-compose.yaml` existe · Worker producción ❌ · Ningún publicador real                                                                             |
 
 ---
 
@@ -207,18 +207,18 @@ TRACSVC --> OL_MAP
 
 ## Gaps críticos por fase
 
-| #   | Gap                                                               | Módulo afectado                    | Fase      |
-| --- | ----------------------------------------------------------------- | ---------------------------------- | --------- |
-| G1  | **Temporal Adapter real** (SDK, namespace, tasks, `lookupRunRef`) | `adapter-temporal`                 | Phase 1   |
-| G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | Phase 1   |
-| G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliación   | `engine`                           | Phase 1   |
-| G4  | **compiledCodeRef ownership** — decisión de arquitectura          | planner / traceability             | Phase 1   |
-| G5  | **Outbox Worker** (polling, DLQ, shards)                          | infra + engine                     | Phase 1.5 |
-| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | Phase 1.5 |
-| G7  | **Read Models** + proyector standalone                            | state-store / infra                | Phase 1.5 |
-| G8  | **Auth real** en `apps/api`                                       | api                                | Phase 1.5 |
-| G9  | **StepTypeRegistry** + tipado `stepTypeConfig`                    | planner / engine                   | Phase 2   |
-| G10 | **outbox_lineage Worker** + fail-open DLQ                         | traceability-service               | Phase 2   |
+| #   | Gap                                                               | Módulo afectado                    | Estado                                                                                           | Fase      |
+| --- | ----------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ | --------- |
+| G1  | **Temporal Adapter real** (SDK, namespace, tasks, `lookupRunRef`) | `adapter-temporal`                 | ❌ Pendiente                                                                                     | Phase 1   |
+| G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | ✅ Cerrado — `listEvents(options)` con `afterSeq`/`limit` ✅ · `listRuns` con filtro `status` ✅ | Phase 1   |
+| G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliación   | `engine`                           | ❌ Pendiente                                                                                     | Phase 1   |
+| G4  | **compiledCodeRef ownership** — decisión de arquitectura          | planner / traceability             | ❌ Decisión abierta                                                                              | Phase 1   |
+| G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | ❌ Pendiente                                                                                     | Phase 1.5 |
+| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | ❌ Pendiente                                                                                     | Phase 1.5 |
+| G7  | **Read Models** + proyector standalone                            | state-store / infra                | ❌ Pendiente                                                                                     | Phase 1.5 |
+| G8  | **Auth real** en `apps/api`                                       | api                                | ❌ Pendiente                                                                                     | Phase 1.5 |
+| G9  | **StepTypeRegistry** + tipado `stepTypeConfig`                    | planner / engine                   | ❌ Pendiente                                                                                     | Phase 2   |
+| G10 | **outbox_lineage Worker** + fail-open DLQ                         | traceability-service               | ❌ Pendiente                                                                                     | Phase 2   |
 
 ---
 

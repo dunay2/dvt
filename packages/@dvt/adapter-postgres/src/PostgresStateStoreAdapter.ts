@@ -22,6 +22,7 @@ import type {
   EventEnvelope,
   IOutboxStorage,
   IRunStateStore,
+  ListEventsOptions,
   ListRunsOptions,
   OutboxId,
   OutboxRecord,
@@ -531,17 +532,46 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const limit = Math.min(options.limit ?? 50, 500);
     const params: unknown[] = [limit, options.tenantId];
 
+    if (options.status === undefined) {
+      const result = await this.pool.query<RunMetadataRow>(
+        `
+          SELECT ${RUN_METADATA_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE tenant_id = $2
+          ORDER BY created_at DESC
+          LIMIT $1
+        `,
+        params
+      );
+      return result.rows.map(toRunMetadata);
+    }
+
+    params.push(options.status);
+    const statusParam = `$${params.length}`;
     const result = await this.pool.query<RunMetadataRow>(
       `
-        SELECT ${RUN_METADATA_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.run_metadata
-        WHERE tenant_id = $2
-        ORDER BY created_at DESC
+        SELECT
+          m.tenant_id,
+          m.project_id,
+          m.environment_id,
+          m.run_id,
+          m.plan_id,
+          m.plan_version,
+          m.provider,
+          m.provider_workflow_id,
+          m.provider_run_id,
+          m.provider_namespace,
+          m.provider_task_queue,
+          m.provider_conductor_url
+        FROM ${quoteIdentifier(this.schema)}.run_metadata m
+        INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+        WHERE m.tenant_id = $2
+          AND s.snapshot->>'status' = ${statusParam}
+        ORDER BY m.created_at DESC
         LIMIT $1
       `,
       params
     );
-
     return result.rows.map(toRunMetadata);
   }
 
@@ -558,16 +588,35 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     });
   }
 
-  async listEvents(tenantId: string, runId: string): Promise<EventEnvelope[]> {
+  async listEvents(
+    tenantId: string,
+    runId: string,
+    options?: ListEventsOptions
+  ): Promise<EventEnvelope[]> {
     this.ready();
+    const params: unknown[] = [tenantId, runId];
+    let afterSeqClause = '';
+    let limitClause = '';
+
+    if (options?.afterSeq !== undefined) {
+      params.push(options.afterSeq);
+      afterSeqClause = `AND run_seq > $${params.length}`;
+    }
+    if (options?.limit !== undefined) {
+      params.push(Math.max(1, options.limit));
+      limitClause = `LIMIT $${params.length}`;
+    }
+
     const result = await this.pool.query<EventPayloadRow>(
       `
         SELECT payload
         FROM ${quoteIdentifier(this.schema)}.run_events
         WHERE tenant_id = $1 AND run_id = $2
+        ${afterSeqClause}
         ORDER BY run_seq ASC
+        ${limitClause}
       `,
-      [tenantId, runId]
+      params
     );
 
     return result.rows.map((row: EventPayloadRow) => row.payload as EventEnvelope);

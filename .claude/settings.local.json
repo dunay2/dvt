@@ -6,7 +6,13 @@
       "Bash(node:*)",
       "Bash(npx tsc:*)",
       "Bash(pnpm test)",
-      "Bash(npx vitest run:*)"
+      "Bash(npx vitest run:*)",
+      "Bash(gh issue list --state open --label \"phase-1\")",
+      "Bash(gh issue list --state open --milestone \"EPICA-1 Foundation & Core Contracts\")",
+      "Bash(gh issue list --state open)",
+      "Bash(pnpm --filter @dvt/adapter-postgres exec tsc --noEmit)",
+      "Bash(pnpm --filter @dvt/adapter-postgres test)",
+      "Bash(pnpm --filter @dvt/engine test)"
     ]
   }
 }
