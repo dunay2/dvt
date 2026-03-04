@@ -58,6 +58,8 @@ export interface PostgresStartRunIntentStoreConfig {
   schema?: string;
   pool?: Pool;
   now?: () => string;
+  statementTimeoutMs?: number;
+  queryTimeoutMs?: number;
 }
 
 export class PostgresStartRunIntentStore implements IStartRunIntentStore {
@@ -81,6 +83,9 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
           process.env.DVT_PG_URL ??
           process.env.DATABASE_URL ??
           'postgresql://dvt:dvt@localhost:5432/dvt',
+        statement_timeout:
+          config.statementTimeoutMs ?? Number(process.env.DVT_PG_STATEMENT_TIMEOUT_MS ?? 0),
+        query_timeout: config.queryTimeoutMs ?? Number(process.env.DVT_PG_QUERY_TIMEOUT_MS ?? 0),
       });
       this.ownsPool = true;
     }
@@ -248,22 +253,64 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 
   private async ensureSchema(): Promise<void> {
+    const statusType = `${quoteIdentifier(this.schema)}.${quoteIdentifier('start_run_intent_status')}`;
+    const schemaLiteral = this.schema.replace(/'/g, "''");
+
     await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
+    await this.pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_type t
+          JOIN pg_namespace n ON n.oid = t.typnamespace
+          WHERE t.typname = 'start_run_intent_status'
+            AND n.nspname = '${schemaLiteral}'
+        ) THEN
+          CREATE TYPE ${statusType} AS ENUM ('PENDING', 'DISPATCHED', 'RESOLVED', 'EXPIRED');
+        END IF;
+      END$$;
+    `);
+
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.start_run_intents (
         intent_id TEXT PRIMARY KEY,
         tenant_id TEXT NOT NULL,
         run_id TEXT NOT NULL,
         provider TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'PENDING',
+        status ${statusType} NOT NULL DEFAULT 'PENDING',
         engine_run_ref JSONB,
         created_at TIMESTAMPTZ NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL
+        updated_at TIMESTAMPTZ NOT NULL,
+        CONSTRAINT dispatched_requires_run_ref
+          CHECK (status <> 'DISPATCHED' OR engine_run_ref IS NOT NULL),
+        CONSTRAINT engine_run_ref_shape
+          CHECK (
+            engine_run_ref IS NULL OR (
+              jsonb_typeof(engine_run_ref) = 'object'
+              AND engine_run_ref ? 'provider'
+              AND engine_run_ref ? 'tenantId'
+            )
+          )
       )
+    `);
+    await this.pool.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.start_run_intents
+      ALTER COLUMN status TYPE ${statusType}
+      USING status::text::${statusType}
     `);
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS intents_orphaned_idx
       ON ${quoteIdentifier(this.schema)}.start_run_intents (status, created_at ASC)
+      WHERE status IN ('PENDING', 'DISPATCHED')
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS start_run_intents_tenant_run_idx
+      ON ${quoteIdentifier(this.schema)}.start_run_intents (tenant_id, run_id)
+    `);
+    await this.pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS start_run_intents_active_run_uniq
+      ON ${quoteIdentifier(this.schema)}.start_run_intents (tenant_id, run_id)
       WHERE status IN ('PENDING', 'DISPATCHED')
     `);
   }
@@ -282,7 +329,7 @@ function toIntent(row: IntentRow): StartRunIntent {
   };
 }
 
-class IntentNotFoundError extends Error {
+export class IntentNotFoundError extends Error {
   readonly code = 'INTENT_NOT_FOUND';
 
   constructor(intentId: string) {
@@ -291,7 +338,7 @@ class IntentNotFoundError extends Error {
   }
 }
 
-class IntentInvalidTransitionError extends Error {
+export class IntentInvalidTransitionError extends Error {
   readonly code = 'INTENT_INVALID_TRANSITION';
 
   constructor(intentId: string, from: string, to: string) {
