@@ -8,10 +8,12 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "pretest": "pnpm --filter @dvt/observability build && pnpm --filter @dvt/observability-otel build",
+    "pretest": "pnpm --filter @dvt/observability build && pnpm --filter @dvt/observability-otel build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/engine build",
     "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
+    "@dvt/adapter-postgres": "workspace:*",
+    "@dvt/engine": "workspace:*",
     "@dvt/observability": "workspace:*",
     "@dvt/observability-otel": "workspace:*",
     "@fastify/cors": "^10.0.0",
