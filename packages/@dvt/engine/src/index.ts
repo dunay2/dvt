@@ -22,8 +22,10 @@ export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';
 export * from './state/InMemoryStartRunIntentStore.js';
 export * from './state/InMemoryTxStore.js';
+export * from './adapters/IProviderAdapter.js';
 
 export * from './services/RunMaintenanceService.js';
+export * from './workers/IntentReconcilerWorker.js';
 
 export * from './outbox/types.js';
 export * from './outbox/IOutboxRateLimiter.js';
