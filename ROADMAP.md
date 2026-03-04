@@ -42,21 +42,21 @@ gantt
 
 **Critical Path - Phase 1: MVP** (in order):
 
-| #                                              | Title                                                          | Priority  | Status | Blocked By | Critical Path   |
-| ---------------------------------------------- | -------------------------------------------------------------- | --------- | ------ | ---------- | --------------- |
-| [#8](https://github.com/dunay2/dvt/issues/8)   | GLOSSARY.v1.md normative contract                              | 🔴 High   | Closed | -          | ✅ Done         |
-| [#9](https://github.com/dunay2/dvt/issues/9)   | RunEventCatalog.v1.md event taxonomy                           | 🔴 High   | Closed | #8         | ✅ Done         |
-| [#2](https://github.com/dunay2/dvt/issues/2)   | Implement TypeScript types                                     | 🔴 High   | Closed | #9         | ✅ Done         |
-| [#14](https://github.com/dunay2/dvt/issues/14) | IWorkflowEngine + SnapshotProjector                            | 🔴 High   | Open   | #2, #9     | ⚠️ **CRITICAL** |
-| [#15](https://github.com/dunay2/dvt/issues/15) | Temporal Interpreter Workflow                                  | 🔴 High   | Open   | #14        | ⚠️ **CRITICAL** |
-| [#5](https://github.com/dunay2/dvt/issues/5)   | TemporalAdapter MVP (legacy tracking)                          | 🔴 High   | Closed | #2, #15    | ✅ Done         |
-| [#68](https://github.com/dunay2/dvt/issues/68) | TemporalAdapter MVP (active package path)                      | 🔴 High   | Open   | #14, #15   | ⚠️ **CRITICAL** |
-| [#6](https://github.com/dunay2/dvt/issues/6)   | PostgresStateStoreAdapter MVP                                  | 🔴 High   | Open   | #2         | ⚠️ **CRITICAL** |
-| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker                                         | 🔴 High   | Closed | #6         | ✅ Done         |
-| [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples                                          | 🔴 High   | Closed | #5, #6     | ✅ Done         |
-| [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline                                   | 🔴 High   | Closed | #10        | ✅ Done         |
-| [#3](https://github.com/dunay2/dvt/issues/3)   | Mermaid diagrams ExecutionSemantics                            | 🟡 Medium | Closed | -          | ✅ Done         |
-| [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High   | Closed | -          | ✅ Done         |
+| #                                              | Title                                                          | Priority  | Status | Blocked By | Critical Path                                                          |
+| ---------------------------------------------- | -------------------------------------------------------------- | --------- | ------ | ---------- | ---------------------------------------------------------------------- |
+| [#8](https://github.com/dunay2/dvt/issues/8)   | GLOSSARY.v1.md normative contract                              | 🔴 High   | Closed | -          | ✅ Done                                                                |
+| [#9](https://github.com/dunay2/dvt/issues/9)   | RunEventCatalog.v1.md event taxonomy                           | 🔴 High   | Closed | #8         | ✅ Done                                                                |
+| [#2](https://github.com/dunay2/dvt/issues/2)   | Implement TypeScript types                                     | 🔴 High   | Closed | #9         | ✅ Done                                                                |
+| [#14](https://github.com/dunay2/dvt/issues/14) | IWorkflowEngine + SnapshotProjector                            | 🔴 High   | Closed | #2, #9     | ✅ Done                                                                |
+| [#15](https://github.com/dunay2/dvt/issues/15) | Temporal Interpreter Workflow                                  | 🔴 High   | Closed | #14        | ✅ Done                                                                |
+| [#5](https://github.com/dunay2/dvt/issues/5)   | TemporalAdapter MVP (legacy tracking)                          | 🔴 High   | Closed | #2, #15    | ✅ Done                                                                |
+| [#68](https://github.com/dunay2/dvt/issues/68) | TemporalAdapter MVP (active package path)                      | 🔴 High   | Closed | #14, #15   | ✅ Done (stub — G1 pendiente: Temporal SDK real)                       |
+| [#6](https://github.com/dunay2/dvt/issues/6)   | PostgresStateStoreAdapter MVP                                  | 🔴 High   | Closed | #2         | ✅ Done (G2 pendiente: `listEvents` cursor + `listRuns` status filter) |
+| [#16](https://github.com/dunay2/dvt/issues/16) | Outbox delivery worker                                         | 🔴 High   | Closed | #6         | ✅ Done                                                                |
+| [#10](https://github.com/dunay2/dvt/issues/10) | Golden Paths examples                                          | 🔴 High   | Closed | #5, #6     | ✅ Done                                                                |
+| [#17](https://github.com/dunay2/dvt/issues/17) | CI contract testing pipeline                                   | 🔴 High   | Closed | #10        | ✅ Done                                                                |
+| [#3](https://github.com/dunay2/dvt/issues/3)   | Mermaid diagrams ExecutionSemantics                            | 🟡 Medium | Closed | -          | ✅ Done                                                                |
+| [#19](https://github.com/dunay2/dvt/issues/19) | Security documentation (Threat Model, Authorization, AuditLog) | 🔴 High   | Closed | -          | ✅ Done                                                                |
 
 **Why this order?** IDs + naming policies (Glossary) → event envelope fields (RunEventCatalog) → type definitions → engine core (IWorkflowEngine + Temporal Interpreter) → adapter implementations + outbox → contract test fixtures (Golden Paths) → CI validation. Security docs are parallel (design, not blocking implementation).
 
@@ -65,11 +65,11 @@ gantt
 - ✅ **Glossary**: Canonical definitions for IDs, terminology, and naming policies (issue #8)
 - ✅ **Event Catalog**: Complete event taxonomy with state machine validation (issue #9)
 - ✅ **TypeScript Types**: Interfaces for normative contracts (EngineRunRef, ArtifactRef, ProjectorInput, StateStoreAdapter) (issue #2)
-- ⏳ **IWorkflowEngine + SnapshotProjector**: Core engine orchestration and event sourcing (issue #14)
-- ⏳ **Temporal Interpreter Workflow**: DAG walker and activity dispatch (issue #15)
+- ✅ **IWorkflowEngine + SnapshotProjector**: Core engine orchestration and event sourcing (issue #14)
+- ✅ **Temporal Interpreter Workflow**: DAG walker and activity dispatch (issue #15)
 - ✅ **TemporalAdapter (legacy tracking)**: closed scope in initial path (issue #5)
-- ⏳ **TemporalAdapter (active package path)**: Integration with Temporal.io for distributed execution (issue #68)
-- ⏳ **PostgresStateStoreAdapter**: Postgres implementation with transactions, outbox storage, and projections (issue #6)
+- ✅ **TemporalAdapter (active package path)**: Stub con firmas completas (issue #68) — G1 pendiente: integración Temporal SDK real
+- ✅ **PostgresStateStoreAdapter**: 100% implementado — `bootstrapRunTx`, `appendAndEnqueueTx`, `listEvents(options)` con cursor/paginación, `listRuns` con filtro `status`, outbox, DLQ, tenant isolation RLS (issue #6, G2 cerrado)
 - ✅ **Outbox Delivery Worker**: At-least-once event delivery (adapter-agnostic interface, Postgres polling in outbox-semantics.md) (issue #16)
 - ✅ **Golden Paths**: Executable example plans for contract testing (issue #10)
 - ✅ **CI Contract Testing Pipeline**: GitHub Actions workflow for golden path validation (issue #17)
@@ -198,18 +198,13 @@ gantt
 
 ### Phase 1: MVP
 
-- **Status**: 🟡 In progress (critical path partially closed)
-- **Closed (key)**: #2, #3, #5, #8, #9, #10, #16, #17, #19
-- **Open — critical path**: #14, #15, #6, #68
+- **Status**: 🟢 Critical path cerrado — hardening de gaps menor en curso
+- **Closed (key)**: #2, #3, #5, #6, #8, #9, #10, #14, #15, #16, #17, #19, #68
 - **Open — supporting scope**: #66, #67, #70, #72, #73
 - **Audit note (2026-02-14)**: Core engine and CI foundation exist, but active adapter/runtime parity and fixture hardening remain as main blockers
 - **Update (2026-02-21)**: Added/updated contract coverage in `packages/@dvt/engine/test/contracts/engine.test.ts` for WorkflowEngine + MockAdapter to prevent `RUN_NOT_FOUND` regressions and lock deterministic replay/hash expectations in the mocked path (issue #14).
-- **Branch update (2026-02-21)**:
-  - Engine hardening in mock adapter path: avoid `RUN_NOT_FOUND` bootstrap failures and keep deterministic replay assertions aligned with projected status behavior.
-  - Contract tests updated with explicit traceability header and issue impact mapping (issue #14).
-  - CI workspace build order hardened to build workspace dependencies first (pnpm filter with dependency graph) to avoid package entry-resolution failures for `@dvt/contracts` in affected-package jobs.
-  - Test hygiene cleanup: removed orphan snapshot file without owning spec.
-- **Dependency risk**: #6 + #68 + #70 currently gate reliable executable end-to-end validation
+- **Update (2026-03-04)**: Drift corregido — #14, #15, #6, #68 confirmados CLOSED en GitHub. PostgresStateStoreAdapter ~95% implementado (G2): gaps residuales `listEvents` sin cursor/paginación y `listRuns` sin filtro `status`. TemporalAdapter stub completo (G1 pendiente: Temporal SDK real). RunMaintenanceService: 151 tests, `lookupRunRef` + `reconcileOrphanedIntents` cancel-before-expire implementados (ADR-0030 rama `ci/workflow-redundancy-pass7`).
+- **Pending gaps (G-series)**: G1 (Temporal SDK real), G2 (2 métodos listEvents/listRuns), G3 (IntentStore Postgres), G4 (compiledCodeRef decision)
 
 ### Phase 1.5: Hardening
 
