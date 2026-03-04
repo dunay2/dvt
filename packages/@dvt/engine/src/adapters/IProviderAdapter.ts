@@ -3,6 +3,7 @@
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0012: Plan Integrity Ownership (adapter receives PlanRef, not ExecutionPlan)
  * @baseline ADR-0014: Run-Driven Adapter Model
+ * @baseline ADR-0030: Pre-Dispatch Intent Log (lookupRunRef? for PENDING intent reconciliation)
  * @decision Decision — Define an adapter contract oriented to run-driven execution and explicit signaling
  * @decision ADR-0012: Adapter owns plan bytes fetch + SHA-256 verification; engine must not fetch bytes
  * @consequence The engine retains semantic control and allows swapping runtimes without breaking the domain
@@ -42,4 +43,18 @@ export interface IProviderAdapter {
    * Optional: adapters that omit this method skip capability validation.
    */
   capabilities?(): readonly string[];
+
+  /**
+   * ADR-0030 §3.3 — Pre-dispatch intent reconciliation.
+   *
+   * Given a runId and tenantId, derive the provider's workflowId (per StartRunIdempotency §3.3)
+   * and return the EngineRunRef if the workflow exists on the provider side, or null otherwise.
+   *
+   * Used by ReconcileOrphanedIntents to detect and cancel provider workflows that were
+   * started (adapter.startRun() returned) but never recorded (markDispatched() was not called
+   * before process crash).
+   *
+   * Optional: adapters that omit this method treat all PENDING intents as having no workflow.
+   */
+  lookupRunRef?(runId: string, tenantId: string): Promise<EngineRunRef | null>;
 }

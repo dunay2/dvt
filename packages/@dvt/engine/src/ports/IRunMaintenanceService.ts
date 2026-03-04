@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/engine/src/ports/IRunMaintenanceService.ts
- * @baseline ADR-0029: Run Maintenance Service Extraction
+ * @baseline ADR-0009: Outbox Publication Ordering Guarantees
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
  * @decision Batch/operational maintenance operations are separated from lifecycle methods on IWorkflowEngine
  * @decision reconcileOrphanedIntents added per ADR-0030 for intent orphan detection

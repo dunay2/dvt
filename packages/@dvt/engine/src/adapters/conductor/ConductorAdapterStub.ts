@@ -54,4 +54,9 @@ export class ConductorAdapterStub implements IProviderAdapter {
   capabilities(): readonly string[] {
     return CONDUCTOR_CAPABILITIES;
   }
+
+  /** ADR-0030 §3.3: Stub — returns null until Phase 2+ Conductor integration. */
+  async lookupRunRef(_runId: string, _tenantId: string): Promise<EngineRunRef | null> {
+    return null;
+  }
 }

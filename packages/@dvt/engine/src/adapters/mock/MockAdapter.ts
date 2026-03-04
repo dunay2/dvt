@@ -47,6 +47,9 @@ const MOCK_CAPABILITIES = [
 export class MockAdapter implements IProviderAdapter {
   readonly provider = 'mock' as const;
 
+  /** Tracks runIds that have been started, for lookupRunRef. */
+  private readonly startedRuns = new Set<string>();
+
   constructor(private readonly deps: MockAdapterDeps) {}
 
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
@@ -75,6 +78,7 @@ export class MockAdapter implements IProviderAdapter {
       validateMockStep(step);
     }
 
+    this.startedRuns.add(ctx.runId);
     return runRef;
   }
 
@@ -93,6 +97,12 @@ export class MockAdapter implements IProviderAdapter {
 
   capabilities(): readonly string[] {
     return MOCK_CAPABILITIES;
+  }
+
+  /** ADR-0030 §3.3: Derives workflowId from runId (mock_${runId}) and returns ref if started. */
+  async lookupRunRef(runId: string, tenantId: string): Promise<EngineRunRef | null> {
+    if (!this.startedRuns.has(runId)) return null;
+    return { provider: 'mock', tenantId, workflowId: `mock_${runId}`, runId };
   }
 }
 
