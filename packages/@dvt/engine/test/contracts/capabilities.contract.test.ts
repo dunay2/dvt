@@ -33,13 +33,12 @@ import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 import { sha256Hex } from '../../src/utils/sha256.js';
 
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MATRIX_PATH = path.resolve(
   __dirname,
-  '../../../../../specs/contracts/capabilities/adapters.capabilities.json'
+  '../../../../../docs/architecture/engine/contracts/capabilities/adapters.capabilities.json'
 );
 
 function utf8(s: string): Uint8Array {
