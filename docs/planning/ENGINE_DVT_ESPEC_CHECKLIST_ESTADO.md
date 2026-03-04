@@ -1,3 +1,10 @@
+---
+title: Engine DVT — Checklist de estado de implementación (contra la especificación solicitada)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: status
+---
 # Engine DVT — Checklist de estado de implementación (contra la especificación solicitada)
 
 Fecha: 2026-02-26

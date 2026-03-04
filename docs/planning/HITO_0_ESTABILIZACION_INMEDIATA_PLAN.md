@@ -1,3 +1,10 @@
+---
+title: Hito 0 — Estabilización Inmediata (Sprint 1–2)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: proposal
+---
 # Hito 0 — Estabilización Inmediata (Sprint 1–2)
 
 ## Objetivo

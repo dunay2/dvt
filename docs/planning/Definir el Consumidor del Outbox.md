@@ -1,3 +1,12 @@
+---
+title: Definir El Consumidor Del Outbox
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: proposal
+---
+# Definir El Consumidor Del Outbox
+
 Plan General: Definir el Consumidor del Outbox
 Problema: Actualmente, la tabla outbox acumula eventos sin un consumidor claramente especificado. Esto provoca que los eventos no se entreguen a los proyectores, dejando las proyecciones obsoletas y rompiendo la consistencia eventual del sistema. Se requiere definir el contrato, comportamiento y operación del consumidor para garantizar la entrega confiable de eventos.
 

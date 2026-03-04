@@ -1,3 +1,10 @@
+---
+title: Plan de reversión CI/CD tras estabilización (2026-02-28)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: status
+---
 # Plan de reversión CI/CD tras estabilización (2026-02-28)
 
 ## Objetivo

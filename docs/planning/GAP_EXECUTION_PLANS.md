@@ -1,3 +1,10 @@
+---
+title: DVT+ — Planes de ejecución por Gap
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: proposal
+---
 # DVT+ — Planes de ejecución por Gap
 
 **Fecha**: 2026-03-04

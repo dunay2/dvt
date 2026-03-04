@@ -1,3 +1,10 @@
+---
+title: Plan ejecutable de remediación y completitud para DVT+
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: proposal
+---
 # Plan ejecutable de remediación y completitud para DVT+
 
 Fecha de referencia: 2026-02-26 (Atlantic/Canary)

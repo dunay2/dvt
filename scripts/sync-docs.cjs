@@ -5,11 +5,19 @@ const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const docsRoot = path.join(repoRoot, 'docs');
+
 const docsIndex = path.join(docsRoot, 'index.md');
 const docsIndexUpper = path.join(docsRoot, 'INDEX.md');
 const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
+
 const adrDir = path.join(docsRoot, 'adr');
 const adrLandingPath = path.join(adrDir, 'index.md');
+
+const planningDir = path.join(docsRoot, 'planning');
+const planningIndexPath = path.join(planningDir, 'index.md');
+const planningProposalsPath = path.join(planningDir, 'proposals', 'index.md');
+const planningReviewsPath = path.join(planningDir, 'reviews', 'index.md');
+const planningStatusPath = path.join(planningDir, 'status', 'index.md');
 
 function readIfExists(filePath) {
   if (!fs.existsSync(filePath)) {
@@ -35,44 +43,48 @@ function toIsoDateUTC() {
   return `${year}-${month}-${day}`;
 }
 
-function parseFrontmatter(source) {
-  const result = {};
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+function splitFrontmatter(source) {
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) {
-    return result;
+    return { frontmatter: {}, body: source };
   }
 
+  const frontmatter = {};
   const lines = match[1].split(/\r?\n/);
   for (const line of lines) {
     const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
     if (kv) {
-      result[kv[1]] = kv[2];
+      frontmatter[kv[1]] = kv[2];
     }
   }
-  return result;
+
+  return { frontmatter, body: source.slice(match[0].length) };
 }
 
 function frontmatterWithDefaults(currentContent, defaults) {
-  const current = currentContent ? parseFrontmatter(currentContent) : {};
+  const current = currentContent ? splitFrontmatter(currentContent).frontmatter : {};
   return {
     title: current.title || defaults.title || 'Index',
     status: current.status || defaults.status || 'Active',
     owner: current.owner || defaults.owner || 'docs',
-    last_reviewed:
-      current.last_reviewed || defaults.last_reviewed || toIsoDateUTC(),
+    last_reviewed: current.last_reviewed || defaults.last_reviewed || toIsoDateUTC(),
+    planning_type: current.planning_type || defaults.planning_type || undefined,
   };
 }
 
 function renderFrontmatter(meta) {
-  return [
+  const lines = [
     '---',
     `title: ${meta.title}`,
     `status: ${meta.status}`,
     `owner: ${meta.owner}`,
     `last_reviewed: ${meta.last_reviewed}`,
-    '---',
-    '',
-  ].join('\n');
+  ];
+  if (meta.planning_type) {
+    lines.push(`planning_type: ${meta.planning_type}`);
+  }
+  lines.push('---', '');
+  return lines.join('\n');
 }
 
 function humanizeName(fileName) {
@@ -87,72 +99,6 @@ function humanizeName(fileName) {
 function extractFirstHeading(content) {
   const heading = content.match(/^#\s+(.+)$/m);
   return heading ? heading[1].trim() : null;
-}
-
-function scanSectionEntries(sectionRelativePath) {
-  const dirAbs = path.join(docsRoot, sectionRelativePath);
-  if (!fs.existsSync(dirAbs)) {
-    return [];
-  }
-
-  const entries = fs.readdirSync(dirAbs, { withFileTypes: true });
-  const rows = [];
-
-  for (const entry of entries) {
-    if (entry.name.startsWith('.')) {
-      continue;
-    }
-
-    const absPath = path.join(dirAbs, entry.name);
-    if (entry.isDirectory()) {
-      const lowerIndex = path.join(absPath, 'index.md');
-      const upperIndex = path.join(absPath, 'INDEX.md');
-      if (fs.existsSync(lowerIndex)) {
-        rows.push({
-          type: 'dir',
-          label: humanizeName(entry.name),
-          link: `${entry.name}/index.md`,
-        });
-      } else if (fs.existsSync(upperIndex)) {
-        rows.push({
-          type: 'dir',
-          label: humanizeName(entry.name),
-          link: `${entry.name}/INDEX.md`,
-        });
-      }
-      continue;
-    }
-
-    if (!entry.isFile()) {
-      continue;
-    }
-
-    const ext = path.extname(entry.name).toLowerCase();
-    if (ext !== '.md' && ext !== '.txt') {
-      continue;
-    }
-
-    if (/^index\.md$/i.test(entry.name)) {
-      continue;
-    }
-
-    const fileContent = readIfExists(absPath) || '';
-    const heading = ext === '.md' ? extractFirstHeading(fileContent) : null;
-    rows.push({
-      type: 'file',
-      label: heading || humanizeName(entry.name),
-      link: entry.name,
-    });
-  }
-
-  rows.sort((a, b) => {
-    if (a.type !== b.type) {
-      return a.type === 'dir' ? -1 : 1;
-    }
-    return a.label.localeCompare(b.label, 'en', { sensitivity: 'base' });
-  });
-
-  return rows;
 }
 
 function ensureCanonicalDocsHome() {
@@ -225,39 +171,30 @@ function extractAdrTitle(content, fileName) {
   const heading = content.match(/^#\s+(.+)$/m);
   if (heading) {
     return heading[1]
-      .replace(/^ADR-\d{4}[A-Za-z]?\s*(:|-|--|–|—|â€“|â€”)\s*/i, '')
+      .replace(/^ADR-\d{4}[A-Za-z]?\s*(:|-|--|â€“|â€”|Ã¢â‚¬â€œ|Ã¢â‚¬â€)\s*/i, '')
       .trim();
   }
-
   const nonEmpty = content
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
-
   if (nonEmpty.length >= 2 && /^ADR-\d{4}[A-Za-z]?$/i.test(nonEmpty[0])) {
     return nonEmpty[1];
   }
-
   return fileName.replace(/\.md$/i, '');
 }
 
 function extractField(content, fieldName) {
-  const bulletPattern = new RegExp(
-    `^-\\s*\\*\\*${fieldName}\\*\\*:\\s*(.+)$`,
-    'im'
-  );
+  const bulletPattern = new RegExp(`^-\\s*\\*\\*${fieldName}\\*\\*:\\s*(.+)$`, 'im');
   const plainPattern = new RegExp(`^${fieldName}:\\s*(.+)$`, 'im');
-
   const bulletMatch = content.match(bulletPattern);
   if (bulletMatch) {
     return bulletMatch[1].trim();
   }
-
   const plainMatch = content.match(plainPattern);
   if (plainMatch) {
     return plainMatch[1].trim();
   }
-
   return '-';
 }
 
@@ -272,10 +209,7 @@ function generateAdrLanding() {
     .map((entry) => entry.name)
     .filter((name) => /^ADR-.*\.md$/i.test(name))
     .filter(
-      (name) =>
-        !/^ADR-(Index|Implementation Status|Status_Board_Extensive)\.md$/i.test(
-          name
-        )
+      (name) => !/^ADR-(Index|Implementation Status|Status_Board_Extensive)\.md$/i.test(name)
     );
 
   const adrRows = entries
@@ -301,11 +235,7 @@ function generateAdrLanding() {
     });
 
   const current = readIfExists(adrLandingPath);
-  const meta = frontmatterWithDefaults(current, {
-    title: 'ADRs',
-    status: 'Active',
-    owner: 'docs',
-  });
+  const meta = frontmatterWithDefaults(current, { title: 'ADRs', status: 'Active', owner: 'docs' });
 
   const lines = [
     renderFrontmatter(meta),
@@ -341,78 +271,307 @@ function generateAdrLanding() {
   }
 }
 
+function inferPlanningType(fileNameLower) {
+  if (/(review|pass_2|architectural_review)/.test(fileNameLower)) {
+    return 'review';
+  }
+  if (/(pending|debt|checklist|status|impact|rollback|estado)/.test(fileNameLower)) {
+    return 'status';
+  }
+  if (/(proposal|specification|task|gap|plan|remediation|consumidor|migration|hito)/.test(fileNameLower)) {
+    return 'proposal';
+  }
+  return 'reference';
+}
+
+function normalizePlanningDocs() {
+  if (!fs.existsSync(planningDir)) {
+    return;
+  }
+
+  const entries = fs
+    .readdirSync(planningDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .filter((name) => /\.(md|txt)$/i.test(name))
+    .filter((name) => !/^index\.md$/i.test(name))
+    .filter((name) => !/^TEMPLATE_PLANNING_DOC\.md$/i.test(name));
+
+  for (const name of entries) {
+    if (!/\.md$/i.test(name)) {
+      continue;
+    }
+    const fullPath = path.join(planningDir, name);
+    const original = fs.readFileSync(fullPath, 'utf8');
+    const parts = splitFrontmatter(original);
+    const heading = extractFirstHeading(parts.body);
+    const inferredTitle = heading || humanizeName(name);
+    const inferredType = inferPlanningType(name.toLowerCase());
+
+    const meta = {
+      title: parts.frontmatter.title || inferredTitle,
+      status: parts.frontmatter.status || 'Draft',
+      owner: parts.frontmatter.owner || 'docs',
+      last_reviewed: parts.frontmatter.last_reviewed || toIsoDateUTC(),
+      planning_type: parts.frontmatter.planning_type || inferredType,
+    };
+
+    const body = heading ? parts.body.trimStart() : `# ${inferredTitle}\n\n${parts.body.trimStart()}`;
+    const next = `${renderFrontmatter(meta)}${body.trimEnd()}\n`;
+    if (writeIfChanged(fullPath, next)) {
+      console.log(`[docs:sync] Normalized planning doc ${name}`);
+    }
+  }
+}
+
+function relativeMdLink(fromDir, target) {
+  const rel = path.posix.relative(fromDir, target);
+  return rel.length === 0 ? '.' : rel;
+}
+
+function collectPlanningDocs() {
+  const rows = [];
+  const roots = [
+    { dir: planningDir, prefix: 'planning' },
+    { dir: path.join(planningDir, 'proposals'), prefix: 'planning/proposals', forcedType: 'proposal' },
+    { dir: path.join(planningDir, 'reviews'), prefix: 'planning/reviews', forcedType: 'review' },
+    { dir: path.join(planningDir, 'status'), prefix: 'planning/status', forcedType: 'status' },
+  ];
+
+  for (const root of roots) {
+    if (!fs.existsSync(root.dir)) continue;
+    const files = fs
+      .readdirSync(root.dir, { withFileTypes: true })
+      .filter((e) => e.isFile())
+      .map((e) => e.name)
+      .filter((n) => /\.(md|txt)$/i.test(n))
+      .filter((n) => !/^index\.md$/i.test(n))
+      .filter((n) => !/^TEMPLATE_PLANNING_DOC\.md$/i.test(n));
+
+    for (const name of files) {
+      const abs = path.join(root.dir, name);
+      const content = fs.readFileSync(abs, 'utf8');
+      const parsed = splitFrontmatter(content);
+      const title = parsed.frontmatter.title || extractFirstHeading(parsed.body) || humanizeName(name);
+      const type = root.forcedType || parsed.frontmatter.planning_type || inferPlanningType(name.toLowerCase());
+      rows.push({
+        title,
+        type,
+        relPath: `${root.prefix}/${name}`.replace(/\\/g, '/'),
+      });
+    }
+  }
+
+  rows.sort((a, b) => a.title.localeCompare(b.title, 'en', { sensitivity: 'base' }));
+  return rows;
+}
+
+function bulletsFor(rows, fromDir) {
+  return rows.map((row) => {
+    const target = row.relPath.replace(/^planning\//, '');
+    const link = relativeMdLink(fromDir, target);
+    return `- [${row.title}](${encodeURI(link)})`;
+  });
+}
+
+function generatePlanningIndexes() {
+  const docs = collectPlanningDocs();
+  const proposals = docs.filter((d) => d.type === 'proposal');
+  const reviews = docs.filter((d) => d.type === 'review');
+  const status = docs.filter((d) => d.type === 'status');
+  const reference = docs.filter((d) => d.type === 'reference');
+
+  const currentPlanning = readIfExists(planningIndexPath);
+  const planningMeta = frontmatterWithDefaults(currentPlanning, {
+    title: 'Planning',
+    status: 'Review',
+    owner: 'docs',
+  });
+  const planningLines = [
+    renderFrontmatter(planningMeta),
+    '# Planning',
+    '',
+    'Roadmaps, proposals, reviews, and non-normative planning artifacts.',
+    '',
+    '## Navigation',
+    '',
+    '- [Proposals](proposals/index.md)',
+    '- [Reviews](reviews/index.md)',
+    '- [Status](status/index.md)',
+    '',
+    '## Proposals',
+    '',
+    ...bulletsFor(proposals, '.'),
+    '',
+    '## Reviews',
+    '',
+    ...bulletsFor(reviews, '.'),
+    '',
+    '## Status',
+    '',
+    ...bulletsFor(status, '.'),
+    '',
+    '## Reference',
+    '',
+    ...bulletsFor(reference, '.'),
+    '',
+    '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+    '',
+  ];
+  if (writeIfChanged(planningIndexPath, planningLines.join('\n'))) {
+    console.log('[docs:sync] Regenerated docs/planning/index.md');
+  } else {
+    console.log('[docs:sync] docs/planning/index.md already up to date.');
+  }
+
+  const currentProposals = readIfExists(planningProposalsPath);
+  const proposalsMeta = frontmatterWithDefaults(currentProposals, {
+    title: 'Planning Proposals',
+    status: 'Draft',
+    owner: 'docs',
+  });
+  const proposalsLines = [
+    renderFrontmatter(proposalsMeta),
+    '# Planning Proposals',
+    '',
+    'Draft proposals and candidate changes. Non-normative.',
+    '',
+    '## Index',
+    '',
+    ...bulletsFor(proposals, 'proposals'),
+    '',
+    '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+    '',
+  ];
+  if (writeIfChanged(planningProposalsPath, proposalsLines.join('\n'))) {
+    console.log('[docs:sync] Regenerated docs/planning/proposals/index.md');
+  } else {
+    console.log('[docs:sync] docs/planning/proposals/index.md already up to date.');
+  }
+
+  const currentReviews = readIfExists(planningReviewsPath);
+  const reviewsMeta = frontmatterWithDefaults(currentReviews, {
+    title: 'Planning Reviews',
+    status: 'Review',
+    owner: 'docs',
+  });
+  const reviewsLines = [
+    renderFrontmatter(reviewsMeta),
+    '# Planning Reviews',
+    '',
+    'Architecture reviews, critiques, and analysis notes. Non-normative.',
+    '',
+    '## Index',
+    '',
+    ...bulletsFor(reviews, 'reviews'),
+    '',
+    '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+    '',
+  ];
+  if (writeIfChanged(planningReviewsPath, reviewsLines.join('\n'))) {
+    console.log('[docs:sync] Regenerated docs/planning/reviews/index.md');
+  } else {
+    console.log('[docs:sync] docs/planning/reviews/index.md already up to date.');
+  }
+
+  const currentStatus = readIfExists(planningStatusPath);
+  const statusMeta = frontmatterWithDefaults(currentStatus, {
+    title: 'Planning Status',
+    status: 'Review',
+    owner: 'docs',
+  });
+  const statusLines = [
+    renderFrontmatter(statusMeta),
+    '# Planning Status',
+    '',
+    'Current status snapshots and implementation tracking.',
+    '',
+    '## Index',
+    '',
+    ...bulletsFor(status, 'status'),
+    '',
+    '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+    '',
+  ];
+  if (writeIfChanged(planningStatusPath, statusLines.join('\n'))) {
+    console.log('[docs:sync] Regenerated docs/planning/status/index.md');
+  } else {
+    console.log('[docs:sync] docs/planning/status/index.md already up to date.');
+  }
+}
+
+function scanSectionEntries(sectionRelativePath) {
+  const dirAbs = path.join(docsRoot, sectionRelativePath);
+  if (!fs.existsSync(dirAbs)) {
+    return [];
+  }
+
+  const entries = fs.readdirSync(dirAbs, { withFileTypes: true });
+  const rows = [];
+  for (const entry of entries) {
+    if (entry.name.startsWith('.')) continue;
+    const absPath = path.join(dirAbs, entry.name);
+    if (entry.isDirectory()) {
+      const lowerIndex = path.join(absPath, 'index.md');
+      const upperIndex = path.join(absPath, 'INDEX.md');
+      if (fs.existsSync(lowerIndex)) {
+        rows.push({ type: 'dir', label: humanizeName(entry.name), link: `${entry.name}/index.md` });
+      } else if (fs.existsSync(upperIndex)) {
+        rows.push({ type: 'dir', label: humanizeName(entry.name), link: `${entry.name}/INDEX.md` });
+      }
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    const ext = path.extname(entry.name).toLowerCase();
+    if (ext !== '.md' && ext !== '.txt') continue;
+    if (/^index\.md$/i.test(entry.name)) continue;
+    const fileContent = readIfExists(absPath) || '';
+    const heading = ext === '.md' ? extractFirstHeading(fileContent) : null;
+    rows.push({ type: 'file', label: heading || humanizeName(entry.name), link: entry.name });
+  }
+
+  rows.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+    return a.label.localeCompare(b.label, 'en', { sensitivity: 'base' });
+  });
+  return rows;
+}
+
 const sectionConfigs = [
   {
     relPath: 'architecture',
-    defaults: {
-      title: 'Architecture',
-      status: 'Active',
-      owner: 'docs',
-    },
+    defaults: { title: 'Architecture', status: 'Active', owner: 'docs' },
     intro:
       'Technical architecture specifications (normative when marked Accepted/Active).',
   },
   {
     relPath: 'contracts',
-    defaults: {
-      title: 'Contracts',
-      status: 'Active',
-      owner: 'docs',
-    },
+    defaults: { title: 'Contracts', status: 'Active', owner: 'docs' },
     intro: 'Normative contracts (schemas, version matrices, API/event contracts).',
   },
   {
-    relPath: 'planning',
-    defaults: {
-      title: 'Planning',
-      status: 'Review',
-      owner: 'docs',
-    },
-    intro: 'Roadmaps, proposals, reviews, and non-normative planning artifacts.',
-  },
-  {
     relPath: 'guides',
-    defaults: {
-      title: 'Guides',
-      status: 'Active',
-      owner: 'docs',
-    },
+    defaults: { title: 'Guides', status: 'Active', owner: 'docs' },
     intro: 'Developer guides, contribution guides, and quality standards.',
   },
   {
     relPath: 'runbooks',
-    defaults: {
-      title: 'Runbooks',
-      status: 'Active',
-      owner: 'docs',
-    },
+    defaults: { title: 'Runbooks', status: 'Active', owner: 'docs' },
     intro: 'Operational runbooks for incidents, recovery, and maintenance.',
   },
   {
     relPath: 'archive',
-    defaults: {
-      title: 'Archive',
-      status: 'Archived',
-      owner: 'docs',
-    },
+    defaults: { title: 'Archive', status: 'Archived', owner: 'docs' },
     intro: 'Frozen historical documentation retained for reference.',
   },
   {
     relPath: 'adr/_drafts',
-    defaults: {
-      title: 'ADR Drafts',
-      status: 'Draft',
-      owner: 'docs',
-    },
+    defaults: { title: 'ADR Drafts', status: 'Draft', owner: 'docs' },
     intro: 'Work-in-progress ADRs. Not normative.',
   },
   {
     relPath: 'adr/_archive',
-    defaults: {
-      title: 'ADR Archive',
-      status: 'Archived',
-      owner: 'docs',
-    },
+    defaults: { title: 'ADR Archive', status: 'Archived', owner: 'docs' },
     intro: 'Superseded or retired ADRs. Historical reference only.',
   },
 ];
@@ -423,7 +582,6 @@ function generateSectionIndexes() {
     const current = readIfExists(indexPath);
     const meta = frontmatterWithDefaults(current, section.defaults);
     const rows = scanSectionEntries(section.relPath);
-
     const lines = [
       renderFrontmatter(meta),
       `# ${meta.title}`,
@@ -437,14 +595,10 @@ function generateSectionIndexes() {
       '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
       '',
     ];
-
-    const next = lines.join('\n');
-    if (writeIfChanged(indexPath, next)) {
+    if (writeIfChanged(indexPath, lines.join('\n'))) {
       console.log(`[docs:sync] Regenerated ${path.relative(repoRoot, indexPath)}`);
     } else {
-      console.log(
-        `[docs:sync] ${path.relative(repoRoot, indexPath)} already up to date.`
-      );
+      console.log(`[docs:sync] ${path.relative(repoRoot, indexPath)} already up to date.`);
     }
   }
 }
@@ -452,7 +606,9 @@ function generateSectionIndexes() {
 function main() {
   ensureCanonicalDocsHome();
   ensureMkdocsHomeRoot();
+  normalizePlanningDocs();
   generateAdrLanding();
+  generatePlanningIndexes();
   generateSectionIndexes();
   console.log('[docs:sync] Completed.');
 }

@@ -1,3 +1,10 @@
+---
+title: DVT+ — Tareas de subsanación de carencias (2026-02-26)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: review
+---
 # DVT+ — Tareas de subsanación de carencias (2026-02-26)
 
 Fuente principal de carencias: [DVT+\_Architectural_Review_20260226_AI.md](../review/DVT+_Architectural_Review_20260226_AI.md)

@@ -1,3 +1,10 @@
+---
+title: Plan de migración Engine: gap actual → target blueprint v0.6
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: proposal
+---
 # Plan de migración Engine: gap actual → target blueprint v0.6
 
 ## 1. Contexto
