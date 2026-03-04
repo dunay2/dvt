@@ -5,7 +5,7 @@
   "paths": {
     "plan-minimal": {
       "description": "Single step echo task - simplest possible plan",
-      "hash": "f67700e014113dc5",
+      "hash": "a27a58699f571a58",
       "status": "implemented",
       "location": "packages/@dvt/engine/test/contracts/plans/plan-minimal.json",
       "metadata": {
@@ -16,7 +16,7 @@
     },
     "plan-parallel": {
       "description": "3 parallel steps with fan-in merge",
-      "hash": "de7490f68aa73db8",
+      "hash": "b9ec7ef1db63550a",
       "status": "implemented",
       "location": "packages/@dvt/engine/test/contracts/plans/plan-parallel.json",
       "metadata": {
@@ -27,7 +27,7 @@
     },
     "plan-cancel-and-resume": {
       "description": "5 sequential steps with PAUSE/RESUME signals",
-      "hash": "b5a138be90164b1a",
+      "hash": "95a853f65ff3fb21",
       "status": "implemented",
       "location": "packages/@dvt/engine/test/contracts/plans/plan-cancel-and-resume.json",
       "metadata": {

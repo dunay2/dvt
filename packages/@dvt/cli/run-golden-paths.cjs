@@ -34,10 +34,6 @@ function computePlanHash(plan) {
   return crypto.createHash('sha256').update(normalized).digest('hex').substring(0, 16);
 }
 
-function legacyPathHash(pathName) {
-  return crypto.createHash('sha256').update(pathName).digest('hex').substring(0, 16);
-}
-
 function resolvePlanFile(pathName, pathConfig) {
   if (typeof pathConfig.location === 'string' && pathConfig.location.length > 0) {
     return path.resolve(REPO_ROOT, pathConfig.location);
@@ -100,7 +96,7 @@ async function runGoldenPaths() {
 
       const plan = JSON.parse(fs.readFileSync(planFile, 'utf8'));
       const planHash = computePlanHash(plan);
-      const hash = legacyPathHash(pathName);
+      const hash = planHash;
       const duration = Date.now() - startTime;
 
       console.log(`   ✅ Computed hash in ${duration}ms`);
