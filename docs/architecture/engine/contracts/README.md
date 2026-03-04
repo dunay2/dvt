@@ -14,7 +14,7 @@ This file tracks:
 
 | Area         | Contract                                                                           | Version | Lifecycle | Type      | Path                                                                                         |
 | ------------ | ---------------------------------------------------------------------------------- | ------- | --------- | --------- | -------------------------------------------------------------------------------------------- |
-| capabilities | [Adapter Capability Matrix](./capabilities/adapters.capabilities.json)             | v1      | DRAFT     | Matrix    | [capabilities/adapters.capabilities.json](./capabilities/adapters.capabilities.json)         |
+| capabilities | [Adapters Capabilities](./capabilities/adapters.capabilities.json)                 | v1      | DRAFT     | Schema    | [capabilities/adapters.capabilities.json](./capabilities/adapters.capabilities.json)         |
 | capabilities | [Capability Enum](./capabilities/capabilities.schema.json)                         | v1      | DRAFT     | Schema    | [capabilities/capabilities.schema.json](./capabilities/capabilities.schema.json)             |
 | capabilities | [ValidationReport](./capabilities/validation-report.schema.json)                   | v1      | DRAFT     | Schema    | [capabilities/validation-report.schema.json](./capabilities/validation-report.schema.json)   |
 | engine       | [Agnostic Event Layer Strategy](./engine/AgnosticEventLayerStrategy.v2.0.1.md)     | v2.0.1  | DRAFT     | Core      | [engine/AgnosticEventLayerStrategy.v2.0.1.md](./engine/AgnosticEventLayerStrategy.v2.0.1.md) |

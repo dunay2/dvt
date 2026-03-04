@@ -10,10 +10,12 @@
   - [WorkflowEngine.ts](../../packages/@dvt/engine/src/core/WorkflowEngine.ts) (modified)
   - [RunMaintenanceService.ts](../../packages/@dvt/engine/src/services/RunMaintenanceService.ts) (modified)
   - [IRunMaintenanceService.ts](../../packages/@dvt/engine/src/ports/IRunMaintenanceService.ts) (modified)
+  - [IProviderAdapter.ts](../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts) (modified — `lookupRunRef?`)
   - [ADR-0003 — Execution Model](ADR-0003-execution-model.md)
   - [ADR-0013 — bootstrapRunTx Atomicity](ADR-0013-bootstrap-run-tx-atomicity.md)
   - [ADR-0014 — Adapter-First Execution](ADR-0014-adapter-first-execution-order.md)
-  - [ADR-0029 — Run Maintenance Service Extraction](ADR-0029-run-maintenance-service.md)
+  - [ADR-0019 — Adapter Equivalence and Maintenance Boundary](ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md)
+  - [ADR-0009 — Outbox Publication Ordering Guarantees](ADR-0009_Outbox_Ordering.md)
 
 ---
 
@@ -160,16 +162,16 @@ Key implementation details:
 
 ### 3.3 Crash scenario coverage
 
-| Crash Point           | Intent Status | Reconciliation Action                                                                              |
-| --------------------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| Between steps 4 and 5 | PENDING       | Expire (no workflow exists)                                                                        |
-| Between steps 5 and 6 | PENDING       | Expire (orphaned workflow relies on workflowId⟵runId dedup on retry, per StartRunIdempotency §3.3) |
-| Between steps 6 and 7 | DISPATCHED    | Cancel workflow via stored `engineRunRef`                                                          |
-| Between steps 7 and 8 | DISPATCHED    | Reconciler checks `stateStore.getRunMetadataByRunId()` — run exists → `markResolved()` (no cancel) |
+| Crash Point           | Intent Status | Reconciliation Action                                                                                                                         |
+| --------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Between steps 4 and 5 | PENDING       | `lookupRunRef` returns null (no workflow created) → expire directly                                                                           |
+| Between steps 5 and 6 | PENDING       | `lookupRunRef` returns ref (workflow exists) → cancel then expire; if cancel fails → leave PENDING for retry (INV-INTENT-011, INV-INTENT-012) |
+| Between steps 6 and 7 | DISPATCHED    | Cancel workflow via stored `engineRunRef`                                                                                                     |
+| Between steps 7 and 8 | DISPATCHED    | Reconciler checks `stateStore.getRunMetadataByRunId()` — run exists → `markResolved()` (no cancel)                                            |
 
 ### 3.4 Reconciliation via `RunMaintenanceService`
 
-A new method `reconcileOrphanedIntents()` is added to `IRunMaintenanceService` (extending ADR-0029):
+A new method `reconcileOrphanedIntents()` is added to `IRunMaintenanceService` (the maintenance service boundary established in ADR-0019 §Decision 3):
 
 ```typescript
 interface ReconcileOrphanedIntentsOptions {
@@ -189,7 +191,12 @@ interface ReconcileOrphanedIntentsResult {
 Reconciliation logic:
 
 1. `intentStore.listOrphaned(thresholdMs, nowMs, limit)` — find PENDING + DISPATCHED intents older than threshold, ordered by `createdAt` ASC.
-2. For each PENDING intent: `markExpired()` — no provider workflow to cancel.
+2. For each PENDING intent:
+   - Resolve adapter via `adapters.get(intent.provider)` (§3.8).
+   - If adapter implements `lookupRunRef?` (§3.7): call `adapter.lookupRunRef(intent.runId, intent.tenantId)`.
+     - If a ref is returned (workflow exists on provider side): `adapter.cancelRun(ref)` then `markExpired()`. If cancel fails, leave intent PENDING for retry (INV-INTENT-011, INV-INTENT-012).
+     - If null is returned (no workflow): `markExpired()` directly.
+   - If adapter does not implement `lookupRunRef`: `markExpired()` directly (INV-INTENT-013).
 3. For each DISPATCHED intent:
    - Check `stateStore.getRunMetadataByRunId()` — if run exists, `markResolved()`. This handles the crash-between-bootstrap-and-markResolved scenario without issuing a spurious cancel.
    - If run does not exist: `adapter.cancelRun(intent.engineRunRef)`, then `markResolved()`.
@@ -208,6 +215,49 @@ Two new error classes extending `DvtError`:
 
 `RunMaintenanceServiceDeps` is extended with `intentStore` and `adapters` (the adapter map) to support reconciliation.
 
+### 3.7 `lookupRunRef?` extension on `IProviderAdapter`
+
+A new **optional** method is added to the `IProviderAdapter` port:
+
+```typescript
+lookupRunRef?(runId: string, tenantId: string): Promise<EngineRunRef | null>;
+```
+
+Semantics:
+
+- Derives the provider workflowId from `runId` using the same derivation as `startRun()` (StartRunIdempotency §3.3).
+- Returns the `EngineRunRef` if the workflow exists on the provider side; returns `null` if it does not.
+- MUST be idempotent and side-effect-free.
+- Adapters that cannot support this operation (e.g., stateless stubs) MUST return `null` or omit the method. The reconciler treats absence of the method as "no workflow found" (INV-INTENT-013).
+
+This capability closes the PENDING crash gap: a crash between `adapter.startRun()` returning and `markDispatched()` being called leaves the intent PENDING, but the reconciler can detect and cancel the orphaned workflow on the next sweep.
+
+### 3.8 Multi-adapter selector
+
+`RunMaintenanceService` receives a `Map<EngineRunRef['provider'], IProviderAdapter>` as the `adapters` dependency. Adapter selection during reconciliation is:
+
+```typescript
+const adapter = this.deps.adapters.get(intent.provider);
+```
+
+If `intent.provider` is not in the map (e.g., an adapter was removed from the deployment after the intent was created), the intent is reported in `cancelFailed[]` and left for the next sweep. No implicit fallback or default adapter is used.
+
+### 3.9 Observability bindings
+
+All reconciliation metrics use the `IObservability` port from `@dvt/observability`:
+
+| Metric                                  | Type    | Labels                  | Emitted when                                           |
+| --------------------------------------- | ------- | ----------------------- | ------------------------------------------------------ |
+| `dvt.intent.expired_total`              | Counter | `operation`             | PENDING intent expired (no provider workflow detected) |
+| `dvt.intent.expired_after_cancel_total` | Counter | `provider`, `operation` | PENDING intent expired after successful cancel         |
+| `dvt.intent.cancelled_total`            | Counter | `provider`, `operation` | DISPATCHED intent cancelled and resolved               |
+
+All calls follow the pattern `this.observability.metrics.counter(name, labels).add(1)`. Structured logs (`observability.logs.info/error`) accompany every state transition for operational traceability.
+
+### 3.10 Threshold recommendation
+
+The `thresholdMs` parameter of `reconcileOrphanedIntents()` MUST be set above the maximum observed `adapter.startRun()` p99 latency to avoid false positives on slow responses. The recommended default is **300 000 ms (5 minutes)**. Deployments with higher adapter latency MUST increase this value and document it in the deployment configuration.
+
 ---
 
 ## 4. Consequences
@@ -218,12 +268,12 @@ Two new error classes extending `DvtError`:
 - **Reconciliation is automated and idempotent**: the sweep can run repeatedly without side effects on already-resolved intents.
 - **Required dependency**: ensures the consistency guarantee cannot be accidentally omitted.
 - **Observable**: metrics (`dvt.intent.expired_total`, `dvt.intent.cancelled_total`) and structured logs provide operational visibility into orphan detection and cleanup.
-- **Extends the existing `RunMaintenanceService`** (ADR-0029) pattern: no new service class needed.
+- **Extends the existing `RunMaintenanceService`** (ADR-0019 §Decision 3) pattern: no new service class needed.
 
 ### Negative / Trade-offs
 
 - **Additional dependency and port**: one more interface to implement for production (e.g., a Postgres-backed intent store).
-- **PENDING crash gap**: a crash between `adapter.startRun()` return and `markDispatched()` leaves the intent in PENDING (not DISPATCHED), so the reconciler cannot use `engineRunRef` to cancel. Mitigated by workflowId derivation from runId (StartRunIdempotency spec §3.3), which enables natural dedup on retry.
+- **PENDING crash gap** (mitigated via `lookupRunRef?`, §3.7): a crash between `adapter.startRun()` returning and `markDispatched()` leaves the intent PENDING without an `engineRunRef`. The reconciler calls `adapter.lookupRunRef(runId, tenantId)` to detect the orphaned workflow and cancel it before expiring. If the adapter does not support `lookupRunRef`, the workflow is not cancelled on this path — dedup on retry (StartRunIdempotency §3.3) prevents re-execution. If cancellation fails, the intent remains PENDING for retry on the next sweep (INV-INTENT-012).
 - **Threshold tuning**: the reconciliation threshold must be set above the maximum expected `adapter.startRun()` latency to avoid false positives on slow responses.
 
 ### Out of scope
@@ -246,6 +296,9 @@ Two new error classes extending `DvtError`:
 - **INV-INTENT-008**: Reconciliation checks `stateStore.getRunMetadataByRunId()` before cancelling a DISPATCHED intent — if the run exists, it marks the intent resolved without cancelling.
 - **INV-INTENT-009**: `listOrphaned()` returns only PENDING and DISPATCHED intents older than the threshold, ordered by `createdAt` ASC.
 - **INV-INTENT-010**: Failed cancellations are reported in `cancelFailed[]` for retry on the next sweep.
+- **INV-INTENT-011**: If `adapter.lookupRunRef?` returns a non-null ref for a PENDING intent, the reconciler MUST attempt `adapter.cancelRun()` before marking the intent EXPIRED.
+- **INV-INTENT-012**: If cancellation fails for a PENDING intent with a detected provider workflow, the intent MUST remain in PENDING status (not be marked EXPIRED) so the next sweep retries.
+- **INV-INTENT-013**: Adapters that do not implement `lookupRunRef?` are treated as "no workflow found" for PENDING intent reconciliation — the intent is marked EXPIRED directly.
 
 ---
 
@@ -254,7 +307,8 @@ Two new error classes extending `DvtError`:
 - [ADR-0003 — Execution Model Sovereignty](ADR-0003-execution-model.md) — Engine domain boundary
 - [ADR-0013 — bootstrapRunTx Atomicity](ADR-0013-bootstrap-run-tx-atomicity.md) — Provider refs in atomic bootstrap
 - [ADR-0014 — Adapter-First Execution Order](ADR-0014-adapter-first-execution-order.md) — Why adapter is called before state persistence
-- [ADR-0029 — Run Maintenance Service Extraction](ADR-0029-run-maintenance-service.md) — Reconciliation added to this service
+- [ADR-0019 — Adapter Equivalence and Maintenance Boundary](ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md) — §Decision 3 establishes `IRunMaintenanceService` as the boundary for maintenance operations
+- [ADR-0009 — Outbox Publication Ordering Guarantees](ADR-0009_Outbox_Ordering.md) — Ordering invariants applied to events emitted by maintenance operations
 - [StartRunIdempotency.v1.md](../../specs/contracts/engine/StartRunIdempotency.v1.md) — §3.3: workflowId derivation from runId
 
 ---
