@@ -252,6 +252,11 @@ function isWorkflowNotFound(err: unknown): boolean {
  * Races a promise against a timeout.
  * Rejects with a descriptive error when the timeout fires first.
  * The timer is always cleared on settlement to avoid keeping the event loop alive.
+ *
+ * Limitation: the underlying operation (e.g. describe()) is not cancelled when
+ * the timeout fires — @temporalio/client 1.14.x does not expose AbortSignal on
+ * handle.describe(). The in-flight gRPC call will eventually complete or time out
+ * at the SDK/network level. Track cancellation support for a future SDK upgrade.
  */
 async function withTimeoutMs<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
