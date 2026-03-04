@@ -17,7 +17,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="zensical-0.0.24">
     
     
       
@@ -25,10 +25,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.28978c9b.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -42,12 +47,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -88,15 +93,15 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -121,7 +126,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
     
   
 </form>
@@ -136,55 +141,28 @@
       
         <label class="md-header__button md-icon" for="__search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -210,10 +188,10 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     DVT Documentation
@@ -223,7 +201,7 @@
       <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -240,7 +218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.md" class="md-nav__link">
+      <a href="/" class="md-nav__link">
         
   
   
@@ -1109,7 +1087,8 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1118,7 +1097,7 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
@@ -1168,10 +1147,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#32-estado-resumido-por-evidencia-interna" class="md-nav__link">
+  <a href="#32-estado-resumido-por-evidencia-interna-auditado-2026-03-04" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.2 Estado resumido por evidencia interna
+        3.2 Estado resumido por evidencia interna (auditado 2026-03-04)
       
     </span>
   </a>
@@ -1197,8 +1176,6 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
@@ -1206,23 +1183,23 @@
 <h1 id="roadmap-estado-e-issues-mapa-de-conocimiento">Roadmap, Estado e Issues — Mapa de Conocimiento<a class="headerlink" href="#roadmap-estado-e-issues-mapa-de-conocimiento" title="Permanent link">&para;</a></h1>
 <h2 id="1-fuentes-principales">1. Fuentes principales<a class="headerlink" href="#1-fuentes-principales" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Roadmap global: <a href="../../ROADMAP.md"><code>ROADMAP.md</code></a></li>
+<li>Roadmap global: <a href="../../../ROADMAP/"><code>ROADMAP.md</code></a></li>
 <li>Índice docs: <a href="../../INDEX/"><code>docs/INDEX.md</code></a></li>
-<li>Estado de implementación: <a href="../status/IMPLEMENTATION_SUMMARY.md"><code>docs/status/IMPLEMENTATION_SUMMARY.md</code></a></li>
-<li>Backlog V2 funcional: <a href="../planning/BACKLOG_V2_EPICS_AND_STORIES.md"><code>docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md</code></a></li>
-<li>Backlog V2 ejecución GitHub: <a href="../planning/BACKLOG_V2_GITHUB_EXECUTION.md"><code>docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md</code></a></li>
-<li>Evidencia/refresh issues (local): <a href="../../.gh-comments"><code>.gh-comments</code></a></li>
+<li>Estado de implementación: <a href="../../status/IMPLEMENTATION_SUMMARY/"><code>docs/status/IMPLEMENTATION_SUMMARY.md</code></a></li>
+<li>Backlog V2 funcional: <a href="../../planning/BACKLOG_V2_EPICS_AND_STORIES/"><code>docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md</code></a></li>
+<li>Backlog V2 ejecución GitHub: <a href="../../planning/BACKLOG_V2_GITHUB_EXECUTION/"><code>docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md</code></a></li>
+<li>Evidencia/refresh issues (local): <a href="../../../.gh-comments"><code>.gh-comments</code></a></li>
 </ul>
 <hr />
 <h2 id="2-estado-estrategico-sintesis">2. Estado estratégico (síntesis)<a class="headerlink" href="#2-estado-estrategico-sintesis" title="Permanent link">&para;</a></h2>
-<p>Según <a href="../../ROADMAP.md"><code>ROADMAP.md</code></a>:</p>
+<p>Según <a href="../../../ROADMAP/"><code>ROADMAP.md</code></a>:</p>
 <ul>
 <li>Fase 1 MVP: en progreso con varios hitos cerrados y bloqueos críticos aún abiertos.</li>
 <li>Fase 1.5 Hardening: planificada.</li>
 <li>Fase 2 Tooling: parcialmente planificada, con deuda en determinismo/adapters.</li>
 <li>Track Frontend DVT+: backlog y estructura GitHub creados.</li>
 </ul>
-<p>Según <a href="../status/IMPLEMENTATION_SUMMARY.md"><code>docs/status/IMPLEMENTATION_SUMMARY.md</code></a>:</p>
+<p>Según <a href="../../status/IMPLEMENTATION_SUMMARY/"><code>docs/status/IMPLEMENTATION_SUMMARY.md</code></a>:</p>
 <ul>
 <li>Base de contratos/golden-path funcional en CI.</li>
 <li>Engine core y hardening relevante ya mergeados.</li>
@@ -1231,35 +1208,39 @@
 <hr />
 <h2 id="3-issues-y-dependencias-clave-lectura-operativa">3. Issues y dependencias clave (lectura operativa)<a class="headerlink" href="#3-issues-y-dependencias-clave-lectura-operativa" title="Permanent link">&para;</a></h2>
 <h3 id="31-cadena-critica-historica-mvp">3.1 Cadena crítica histórica (MVP)<a class="headerlink" href="#31-cadena-critica-historica-mvp" title="Permanent link">&para;</a></h3>
-<p>Documentada en <a href="../../ROADMAP.md"><code>ROADMAP.md</code></a>: #8 → #9 → #2 → #14 → #15 → #5/#6 → #16 → #10 → #17.</p>
-<h3 id="32-estado-resumido-por-evidencia-interna">3.2 Estado resumido por evidencia interna<a class="headerlink" href="#32-estado-resumido-por-evidencia-interna" title="Permanent link">&para;</a></h3>
+<p>Documentada en <a href="../../../ROADMAP/"><code>ROADMAP.md</code></a>: #8 → #9 → #2 → #14 → #15 → #5/#6 → #16 → #10 → #17.</p>
+<h3 id="32-estado-resumido-por-evidencia-interna-auditado-2026-03-04">3.2 Estado resumido por evidencia interna (auditado 2026-03-04)<a class="headerlink" href="#32-estado-resumido-por-evidencia-interna-auditado-2026-03-04" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
-<h1 id="14-mayormente-implementado-con-drift-de-checklistnomenclatura-ver-gh-commentsissue-14-status-refresh-2026-02-15md">14: mayormente implementado, con drift de checklist/nomenclatura (ver <a href="../../.gh-comments/issue-14-status-refresh-2026-02-15.md"><code>.gh-comments/issue-14-status-refresh-2026-02-15.md</code></a>).<a class="headerlink" href="#14-mayormente-implementado-con-drift-de-checklistnomenclatura-ver-gh-commentsissue-14-status-refresh-2026-02-15md" title="Permanent link">&para;</a></h1>
+<h1 id="14-closed-iworkflowengine-snapshotprojector-implementados-y-testeados">14: <strong>CLOSED</strong> ✅ — <code>IWorkflowEngine</code> + <code>SnapshotProjector</code> implementados y testeados.<a class="headerlink" href="#14-closed-iworkflowengine-snapshotprojector-implementados-y-testeados" title="Permanent link">&para;</a></h1>
 </li>
 <li>
-<h1 id="68-adapter-temporal-activo-casi-cerrable-pendiente-alineacion-final-de-tracking">68: adapter temporal activo casi cerrable (pendiente alineación final de tracking).<a class="headerlink" href="#68-adapter-temporal-activo-casi-cerrable-pendiente-alineacion-final-de-tracking" title="Permanent link">&para;</a></h1>
+<h1 id="15-closed-temporal-interpreter-workflow-stub-con-firmas-completas">15: <strong>CLOSED</strong> ✅ — Temporal Interpreter Workflow (stub con firmas completas).<a class="headerlink" href="#15-closed-temporal-interpreter-workflow-stub-con-firmas-completas" title="Permanent link">&para;</a></h1>
 </li>
 <li>
-<h1 id="6-base-postgres-mvp-implementada-falta-hardening-full">6: base Postgres MVP implementada; falta hardening full.<a class="headerlink" href="#6-base-postgres-mvp-implementada-falta-hardening-full" title="Permanent link">&para;</a></h1>
+<h1 id="68-closed-temporaladapter-stub-g1-pendiente-temporal-sdk-real-lookuprunref-produccion">68: <strong>CLOSED</strong> ✅ — TemporalAdapter stub. G1 pendiente: Temporal SDK real + <code>lookupRunRef</code> producción.<a class="headerlink" href="#68-closed-temporaladapter-stub-g1-pendiente-temporal-sdk-real-lookuprunref-produccion" title="Permanent link">&para;</a></h1>
 </li>
 <li>
-<h1 id="6971-expansion-conductor-aun-bloqueadano-iniciada">69/#71: expansión Conductor aún bloqueada/no iniciada.<a class="headerlink" href="#6971-expansion-conductor-aun-bloqueadano-iniciada" title="Permanent link">&para;</a></h1>
+<h1 id="6-closed-postgresstatestoreadapter-95-implementado-g2-pendiente-listevents-sin-listeventsoptions-cursorpaginacion-y-listruns-sin-filtro-status">6: <strong>CLOSED</strong> ✅ — PostgresStateStoreAdapter ~95% implementado. G2 pendiente: <code>listEvents</code> sin <code>ListEventsOptions</code> (cursor/paginación) y <code>listRuns</code> sin filtro <code>status</code>.<a class="headerlink" href="#6-closed-postgresstatestoreadapter-95-implementado-g2-pendiente-listevents-sin-listeventsoptions-cursorpaginacion-y-listruns-sin-filtro-status" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="6971-expansion-conductor-aun-bloqueadano-iniciada-phase-2">69/#71: expansión Conductor aún bloqueada/no iniciada (Phase 2).<a class="headerlink" href="#6971-expansion-conductor-aun-bloqueadano-iniciada-phase-2" title="Permanent link">&para;</a></h1>
 </li>
 <li>
 <h1 id="7273-enforcementversion-binding-y-determinismo-cross-adapter-incompletos">72/#73: enforcement/version-binding y determinismo cross-adapter incompletos.<a class="headerlink" href="#7273-enforcementversion-binding-y-determinismo-cross-adapter-incompletos" title="Permanent link">&para;</a></h1>
 </li>
+<li>ADR-0030 (RunMaintenanceService): <code>lookupRunRef</code> + cancel-before-expire implementados en rama <code>ci/workflow-redundancy-pass7</code>. Ver <code>docs/planning/CHANGE_IMPACT_ADR0030_20260304.md</code>.</li>
 </ul>
 <hr />
 <h2 id="4-backlog-v2-productoplataforma">4. Backlog V2 (producto/plataforma)<a class="headerlink" href="#4-backlog-v2-productoplataforma" title="Permanent link">&para;</a></h2>
 <h3 id="estado-de-alineacion-funcional">Estado de alineación funcional<a class="headerlink" href="#estado-de-alineacion-funcional" title="Permanent link">&para;</a></h3>
-<p>Fuente: <a href="../planning/BACKLOG_V2_EPICS_AND_STORIES.md"><code>docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md</code></a></p>
+<p>Fuente: <a href="../../planning/BACKLOG_V2_EPICS_AND_STORIES/"><code>docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md</code></a></p>
 <ul>
 <li>Parcial/alta alineación: contratos base, parte de execution planning, seguridad base.</li>
 <li>Baja alineación: ingestión dbt, runner dbt aislado, workspace UI, roundtrip controlado, performance 50k.</li>
 </ul>
 <h3 id="estado-de-ejecucion-github">Estado de ejecución GitHub<a class="headerlink" href="#estado-de-ejecucion-github" title="Permanent link">&para;</a></h3>
-<p>Fuente: <a href="../planning/BACKLOG_V2_GITHUB_EXECUTION.md"><code>docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md</code></a></p>
+<p>Fuente: <a href="../../planning/BACKLOG_V2_GITHUB_EXECUTION/"><code>docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md</code></a></p>
 <ul>
 <li>Define 10 milestones + 26 historias como plan ejecutable.</li>
 <li>Tabla de evidencia aún marcada como pendiente.</li>
@@ -1288,10 +1269,12 @@
 <li>Normalizar estados de issues críticos según evidencia actual.</li>
 <li>Convertir backlog V2 en milestones/issues reales con evidencias UTC.</li>
 <li>Mantener sincronía semanal entre:</li>
-<li><a href="../../ROADMAP.md"><code>ROADMAP.md</code></a></li>
-<li><a href="../status/IMPLEMENTATION_SUMMARY.md"><code>docs/status/IMPLEMENTATION_SUMMARY.md</code></a></li>
-<li><a href="../planning/BACKLOG_V2_GITHUB_EXECUTION.md"><code>docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md</code></a></li>
+<li><a href="../../../ROADMAP/"><code>ROADMAP.md</code></a></li>
+<li><a href="../../status/IMPLEMENTATION_SUMMARY/"><code>docs/status/IMPLEMENTATION_SUMMARY.md</code></a></li>
+<li><a href="../../planning/BACKLOG_V2_GITHUB_EXECUTION/"><code>docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md</code></a></li>
 </ol>
+
+
 
 
 
@@ -1322,8 +1305,8 @@
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1341,10 +1324,11 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":[],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.16f8adc2.min.js"></script>
       
     
   </body>
