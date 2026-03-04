@@ -19,7 +19,7 @@
     "build": "tsc -p tsconfig.json",
     "prebuild": "echo '🔨 Building adapter-temporal...'",
     "postbuild": "echo '✅ Build complete'",
-    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/engine build && pnpm --filter @dvt/plan-interpreter build && pnpm build",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build && pnpm --filter @dvt/engine build && pnpm --filter @dvt/plan-interpreter build && pnpm build",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts",
     "pretest:integration": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/plan-interpreter build && pnpm build",
     "test:integration": "vitest run ./test/",

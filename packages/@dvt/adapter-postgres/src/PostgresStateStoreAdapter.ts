@@ -22,6 +22,7 @@ import type {
   EventEnvelope,
   IOutboxStorage,
   IRunStateStore,
+  ListEventsOptions,
   ListRunsOptions,
   OutboxId,
   OutboxRecord,
@@ -224,11 +225,12 @@ function handleStepCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
   const payload = e.payload;
   if (payload && typeof payload === 'object') {
-    const maybeDecision = (payload as Record<string, unknown>).gatewayDecision;
+    const maybeDecision =
+      typeof payload === 'object' && payload !== null && 'gatewayDecision' in payload
+        ? (payload as { gatewayDecision?: unknown }).gatewayDecision
+        : undefined;
     if (typeof maybeDecision === 'boolean') {
-      if (!snap.gatewayDecisions) {
-        snap.gatewayDecisions = {};
-      }
+      snap.gatewayDecisions ??= {};
       snap.gatewayDecisions[stepId] = maybeDecision;
     }
   }
@@ -306,13 +308,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
    * migrations are run as a separate privileged step.
    */
   async migrate(): Promise<void> {
-    if (!this.migratePromise) {
-      this.migratePromise = this.ensureSchema().catch((error: unknown) => {
-        // Allow retry if migration fails once (transient DB/network issue).
-        this.migratePromise = null;
-        throw error;
-      });
-    }
+    this.migratePromise ??= this.ensureSchema().catch((error: unknown) => {
+      // Allow retry if migration fails once (transient DB/network issue).
+      this.migratePromise = null;
+      throw error;
+    });
     return this.migratePromise;
   }
 
@@ -531,17 +531,46 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const limit = Math.min(options.limit ?? 50, 500);
     const params: unknown[] = [limit, options.tenantId];
 
+    if (options.status === undefined) {
+      const result = await this.pool.query<RunMetadataRow>(
+        `
+          SELECT ${RUN_METADATA_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE tenant_id = $2
+          ORDER BY created_at DESC
+          LIMIT $1
+        `,
+        params
+      );
+      return result.rows.map(toRunMetadata);
+    }
+
+    params.push(options.status);
+    const statusParam = `$${params.length}`;
     const result = await this.pool.query<RunMetadataRow>(
       `
-        SELECT ${RUN_METADATA_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.run_metadata
-        WHERE tenant_id = $2
-        ORDER BY created_at DESC
+        SELECT
+          m.tenant_id,
+          m.project_id,
+          m.environment_id,
+          m.run_id,
+          m.plan_id,
+          m.plan_version,
+          m.provider,
+          m.provider_workflow_id,
+          m.provider_run_id,
+          m.provider_namespace,
+          m.provider_task_queue,
+          m.provider_conductor_url
+        FROM ${quoteIdentifier(this.schema)}.run_metadata m
+        INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+        WHERE m.tenant_id = $2
+          AND s.snapshot->>'status' = ${statusParam}
+        ORDER BY m.created_at DESC
         LIMIT $1
       `,
       params
     );
-
     return result.rows.map(toRunMetadata);
   }
 
@@ -558,19 +587,38 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     });
   }
 
-  async listEvents(tenantId: string, runId: string): Promise<EventEnvelope[]> {
+  async listEvents(
+    tenantId: string,
+    runId: string,
+    options?: ListEventsOptions
+  ): Promise<EventEnvelope[]> {
     this.ready();
+    const params: unknown[] = [tenantId, runId];
+    let afterSeqClause = '';
+    let limitClause = '';
+
+    if (options?.afterSeq !== undefined) {
+      params.push(options.afterSeq);
+      afterSeqClause = `AND run_seq > $${params.length}`;
+    }
+    if (options?.limit !== undefined) {
+      params.push(Math.max(1, options.limit));
+      limitClause = `LIMIT $${params.length}`;
+    }
+
     const result = await this.pool.query<EventPayloadRow>(
       `
         SELECT payload
         FROM ${quoteIdentifier(this.schema)}.run_events
         WHERE tenant_id = $1 AND run_id = $2
+        ${afterSeqClause}
         ORDER BY run_seq ASC
+        ${limitClause}
       `,
-      [tenantId, runId]
+      params
     );
 
-    return result.rows.map((row: EventPayloadRow) => row.payload as EventEnvelope);
+    return result.rows.map((row: EventPayloadRow) => row.payload);
   }
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
@@ -631,7 +679,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         id: row.id,
         createdAt: row.created_at,
         idempotencyKey: row.idempotency_key,
-        payload: row.payload as EventEnvelope,
+        payload: row.payload,
         attempts: Number(row.attempts),
         lastError: row.last_error ?? undefined,
         nextAttemptAt:
@@ -716,7 +764,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       id: row.id,
       originalId: row.original_id,
       runId: row.run_id,
-      payload: row.payload as EventEnvelope,
+      payload: row.payload,
       lastError: row.last_error,
       deadLetteredAt: row.dead_lettered_at,
     }));
@@ -1118,7 +1166,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       );
 
       if (existing.rows[0]?.payload) {
-        deduped.push(existing.rows[0].payload as EventEnvelope);
+        deduped.push(existing.rows[0].payload);
       }
     }
 
@@ -1141,21 +1189,21 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       }
       await client.query(
         `
-          INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
-          VALUES ($1, $2::jsonb, $3, $4::timestamptz)
-          ON CONFLICT (run_id) DO UPDATE SET
-            snapshot = EXCLUDED.snapshot,
-            last_run_seq = EXCLUDED.last_run_seq,
-            updated_at = EXCLUDED.updated_at
-        `,
-        [runId, JSON.stringify(snap), appended[appended.length - 1]!.runSeq, this.now()]
+            INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
+            VALUES ($1, $2::jsonb, $3, $4::timestamptz)
+            ON CONFLICT (run_id) DO UPDATE SET
+              snapshot = EXCLUDED.snapshot,
+              last_run_seq = EXCLUDED.last_run_seq,
+              updated_at = EXCLUDED.updated_at
+          `,
+        [runId, JSON.stringify(snap), appended.at(-1)!.runSeq, this.now()]
       );
     }
 
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+      lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
     };
   }
 
@@ -1231,6 +1279,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
 function isUniqueViolation(error: unknown): error is { code: string } {
   return (
-    typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505'
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === '23505'
   );
 }

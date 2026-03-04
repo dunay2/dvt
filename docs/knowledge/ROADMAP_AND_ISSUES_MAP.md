@@ -34,13 +34,15 @@ Según [`docs/status/IMPLEMENTATION_SUMMARY.md`](../status/IMPLEMENTATION_SUMMAR
 
 Documentada en [`ROADMAP.md`](../../ROADMAP.md): #8 → #9 → #2 → #14 → #15 → #5/#6 → #16 → #10 → #17.
 
-### 3.2 Estado resumido por evidencia interna
+### 3.2 Estado resumido por evidencia interna (auditado 2026-03-04)
 
-- #14: mayormente implementado, con drift de checklist/nomenclatura (ver [`.gh-comments/issue-14-status-refresh-2026-02-15.md`](../../.gh-comments/issue-14-status-refresh-2026-02-15.md)).
-- #68: adapter temporal activo casi cerrable (pendiente alineación final de tracking).
-- #6: base Postgres MVP implementada; falta hardening full.
-- #69/#71: expansión Conductor aún bloqueada/no iniciada.
+- #14: **CLOSED** ✅ — `IWorkflowEngine` + `SnapshotProjector` implementados y testeados.
+- #15: **CLOSED** ✅ — Temporal Interpreter Workflow (stub con firmas completas).
+- #68: **CLOSED** ✅ — TemporalAdapter stub. G1 pendiente: Temporal SDK real + `lookupRunRef` producción.
+- #6: **CLOSED** ✅ — PostgresStateStoreAdapter ~95% implementado. G2 pendiente: `listEvents` sin `ListEventsOptions` (cursor/paginación) y `listRuns` sin filtro `status`.
+- #69/#71: expansión Conductor aún bloqueada/no iniciada (Phase 2).
 - #72/#73: enforcement/version-binding y determinismo cross-adapter incompletos.
+- ADR-0030 (RunMaintenanceService): `lookupRunRef` + cancel-before-expire implementados en rama `ci/workflow-redundancy-pass7`. Ver `docs/planning/CHANGE_IMPACT_ADR0030_20260304.md`.
 
 ---
 
