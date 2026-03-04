@@ -4,10 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const docsIndex = path.join(repoRoot, 'docs', 'index.md');
-const docsIndexUpper = path.join(repoRoot, 'docs', 'INDEX.md');
+const docsRoot = path.join(repoRoot, 'docs');
+const docsIndex = path.join(docsRoot, 'index.md');
+const docsIndexUpper = path.join(docsRoot, 'INDEX.md');
 const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
-const adrDir = path.join(repoRoot, 'docs', 'adr');
+const adrDir = path.join(docsRoot, 'adr');
 const adrLandingPath = path.join(adrDir, 'index.md');
 
 function readIfExists(filePath) {
@@ -15,6 +16,143 @@ function readIfExists(filePath) {
     return null;
   }
   return fs.readFileSync(filePath, 'utf8');
+}
+
+function writeIfChanged(filePath, next) {
+  const current = readIfExists(filePath);
+  if (current === next) {
+    return false;
+  }
+  fs.writeFileSync(filePath, next, 'utf8');
+  return true;
+}
+
+function toIsoDateUTC() {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(now.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseFrontmatter(source) {
+  const result = {};
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) {
+    return result;
+  }
+
+  const lines = match[1].split(/\r?\n/);
+  for (const line of lines) {
+    const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (kv) {
+      result[kv[1]] = kv[2];
+    }
+  }
+  return result;
+}
+
+function frontmatterWithDefaults(currentContent, defaults) {
+  const current = currentContent ? parseFrontmatter(currentContent) : {};
+  return {
+    title: current.title || defaults.title || 'Index',
+    status: current.status || defaults.status || 'Active',
+    owner: current.owner || defaults.owner || 'docs',
+    last_reviewed:
+      current.last_reviewed || defaults.last_reviewed || toIsoDateUTC(),
+  };
+}
+
+function renderFrontmatter(meta) {
+  return [
+    '---',
+    `title: ${meta.title}`,
+    `status: ${meta.status}`,
+    `owner: ${meta.owner}`,
+    `last_reviewed: ${meta.last_reviewed}`,
+    '---',
+    '',
+  ].join('\n');
+}
+
+function humanizeName(fileName) {
+  const stem = fileName.replace(/\.[^.]+$/i, '');
+  return stem
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function extractFirstHeading(content) {
+  const heading = content.match(/^#\s+(.+)$/m);
+  return heading ? heading[1].trim() : null;
+}
+
+function scanSectionEntries(sectionRelativePath) {
+  const dirAbs = path.join(docsRoot, sectionRelativePath);
+  if (!fs.existsSync(dirAbs)) {
+    return [];
+  }
+
+  const entries = fs.readdirSync(dirAbs, { withFileTypes: true });
+  const rows = [];
+
+  for (const entry of entries) {
+    if (entry.name.startsWith('.')) {
+      continue;
+    }
+
+    const absPath = path.join(dirAbs, entry.name);
+    if (entry.isDirectory()) {
+      const lowerIndex = path.join(absPath, 'index.md');
+      const upperIndex = path.join(absPath, 'INDEX.md');
+      if (fs.existsSync(lowerIndex)) {
+        rows.push({
+          type: 'dir',
+          label: humanizeName(entry.name),
+          link: `${entry.name}/index.md`,
+        });
+      } else if (fs.existsSync(upperIndex)) {
+        rows.push({
+          type: 'dir',
+          label: humanizeName(entry.name),
+          link: `${entry.name}/INDEX.md`,
+        });
+      }
+      continue;
+    }
+
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    const ext = path.extname(entry.name).toLowerCase();
+    if (ext !== '.md' && ext !== '.txt') {
+      continue;
+    }
+
+    if (/^index\.md$/i.test(entry.name)) {
+      continue;
+    }
+
+    const fileContent = readIfExists(absPath) || '';
+    const heading = ext === '.md' ? extractFirstHeading(fileContent) : null;
+    rows.push({
+      type: 'file',
+      label: heading || humanizeName(entry.name),
+      link: entry.name,
+    });
+  }
+
+  rows.sort((a, b) => {
+    if (a.type !== b.type) {
+      return a.type === 'dir' ? -1 : 1;
+    }
+    return a.label.localeCompare(b.label, 'en', { sensitivity: 'base' });
+  });
+
+  return rows;
 }
 
 function ensureCanonicalDocsHome() {
@@ -75,34 +213,19 @@ function ensureMkdocsHomeRoot() {
   }
 }
 
-function toIsoDateUTC() {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(now.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function escapePipes(text) {
-  return text.replace(/\|/g, '\\|');
-}
-
 function adrSortKey(fileName) {
   const match = /^ADR-(\d{4})([A-Za-z]?)/.exec(fileName);
   if (!match) {
     return { num: -1, suffix: '' };
   }
-  return {
-    num: Number(match[1]),
-    suffix: (match[2] || '').toUpperCase(),
-  };
+  return { num: Number(match[1]), suffix: (match[2] || '').toUpperCase() };
 }
 
 function extractAdrTitle(content, fileName) {
   const heading = content.match(/^#\s+(.+)$/m);
   if (heading) {
     return heading[1]
-      .replace(/^ADR-\d{4}[A-Za-z]?\s*(:|-|–|—|â€“|â€”)\s*/i, '')
+      .replace(/^ADR-\d{4}[A-Za-z]?\s*(:|-|--|–|—|â€“|â€”)\s*/i, '')
       .trim();
   }
 
@@ -124,14 +247,17 @@ function extractField(content, fieldName) {
     'im'
   );
   const plainPattern = new RegExp(`^${fieldName}:\\s*(.+)$`, 'im');
+
   const bulletMatch = content.match(bulletPattern);
   if (bulletMatch) {
     return bulletMatch[1].trim();
   }
+
   const plainMatch = content.match(plainPattern);
   if (plainMatch) {
     return plainMatch[1].trim();
   }
+
   return '-';
 }
 
@@ -158,10 +284,9 @@ function generateAdrLanding() {
       const content = fs.readFileSync(fullPath, 'utf8');
       const key = adrSortKey(name);
       const adrIdMatch = /^ADR-\d{4}[A-Za-z]?/i.exec(name);
-      const adrId = adrIdMatch ? adrIdMatch[0].toUpperCase() : name;
       return {
         fileName: name,
-        adrId,
+        adrId: adrIdMatch ? adrIdMatch[0].toUpperCase() : name,
         title: extractAdrTitle(content, name),
         status: extractField(content, 'Status'),
         date: extractField(content, 'Date'),
@@ -175,14 +300,15 @@ function generateAdrLanding() {
       return a.sortKey.suffix.localeCompare(b.sortKey.suffix);
     });
 
+  const current = readIfExists(adrLandingPath);
+  const meta = frontmatterWithDefaults(current, {
+    title: 'ADRs',
+    status: 'Active',
+    owner: 'docs',
+  });
+
   const lines = [
-    '---',
-    'title: ADRs',
-    'status: Active',
-    'owner: docs',
-    `last_reviewed: ${toIsoDateUTC()}`,
-    '---',
-    '',
+    renderFrontmatter(meta),
     '# ADRs',
     '',
     'Canonical catalog of architecture decisions in this repository.',
@@ -193,7 +319,7 @@ function generateAdrLanding() {
     '| --- | ----- | ------ | ---- | ---- |',
     ...adrRows.map(
       (row) =>
-        `| ${escapePipes(row.adrId)} | ${escapePipes(row.title)} | ${escapePipes(row.status)} | ${escapePipes(row.date)} | [${row.fileName}](${encodeURI(row.fileName)}) |`
+        `| ${row.adrId} | ${row.title.replace(/\|/g, '\\|')} | ${row.status.replace(/\|/g, '\\|')} | ${row.date.replace(/\|/g, '\\|')} | [${row.fileName}](${encodeURI(row.fileName)}) |`
     ),
     '',
     '## Related',
@@ -208,12 +334,118 @@ function generateAdrLanding() {
   ];
 
   const next = lines.join('\n');
-  const current = readIfExists(adrLandingPath);
-  if (current !== next) {
-    fs.writeFileSync(adrLandingPath, next, 'utf8');
+  if (writeIfChanged(adrLandingPath, next)) {
     console.log('[docs:sync] Regenerated docs/adr/index.md');
   } else {
     console.log('[docs:sync] docs/adr/index.md already up to date.');
+  }
+}
+
+const sectionConfigs = [
+  {
+    relPath: 'architecture',
+    defaults: {
+      title: 'Architecture',
+      status: 'Active',
+      owner: 'docs',
+    },
+    intro:
+      'Technical architecture specifications (normative when marked Accepted/Active).',
+  },
+  {
+    relPath: 'contracts',
+    defaults: {
+      title: 'Contracts',
+      status: 'Active',
+      owner: 'docs',
+    },
+    intro: 'Normative contracts (schemas, version matrices, API/event contracts).',
+  },
+  {
+    relPath: 'planning',
+    defaults: {
+      title: 'Planning',
+      status: 'Review',
+      owner: 'docs',
+    },
+    intro: 'Roadmaps, proposals, reviews, and non-normative planning artifacts.',
+  },
+  {
+    relPath: 'guides',
+    defaults: {
+      title: 'Guides',
+      status: 'Active',
+      owner: 'docs',
+    },
+    intro: 'Developer guides, contribution guides, and quality standards.',
+  },
+  {
+    relPath: 'runbooks',
+    defaults: {
+      title: 'Runbooks',
+      status: 'Active',
+      owner: 'docs',
+    },
+    intro: 'Operational runbooks for incidents, recovery, and maintenance.',
+  },
+  {
+    relPath: 'archive',
+    defaults: {
+      title: 'Archive',
+      status: 'Archived',
+      owner: 'docs',
+    },
+    intro: 'Frozen historical documentation retained for reference.',
+  },
+  {
+    relPath: 'adr/_drafts',
+    defaults: {
+      title: 'ADR Drafts',
+      status: 'Draft',
+      owner: 'docs',
+    },
+    intro: 'Work-in-progress ADRs. Not normative.',
+  },
+  {
+    relPath: 'adr/_archive',
+    defaults: {
+      title: 'ADR Archive',
+      status: 'Archived',
+      owner: 'docs',
+    },
+    intro: 'Superseded or retired ADRs. Historical reference only.',
+  },
+];
+
+function generateSectionIndexes() {
+  for (const section of sectionConfigs) {
+    const indexPath = path.join(docsRoot, section.relPath, 'index.md');
+    const current = readIfExists(indexPath);
+    const meta = frontmatterWithDefaults(current, section.defaults);
+    const rows = scanSectionEntries(section.relPath);
+
+    const lines = [
+      renderFrontmatter(meta),
+      `# ${meta.title}`,
+      '',
+      section.intro,
+      '',
+      '## Index',
+      '',
+      ...rows.map((row) => `- [${row.label}](${encodeURI(row.link)})`),
+      '',
+      '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+      '',
+    ];
+
+    const next = lines.join('\n');
+    if (writeIfChanged(indexPath, next)) {
+      console.log(`[docs:sync] Regenerated ${path.relative(repoRoot, indexPath)}`);
+    } else {
+      console.log(
+        `[docs:sync] ${path.relative(repoRoot, indexPath)} already up to date.`
+      );
+    }
   }
 }
 
@@ -221,6 +453,7 @@ function main() {
   ensureCanonicalDocsHome();
   ensureMkdocsHomeRoot();
   generateAdrLanding();
+  generateSectionIndexes();
   console.log('[docs:sync] Completed.');
 }
 
