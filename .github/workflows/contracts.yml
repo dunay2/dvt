@@ -306,7 +306,26 @@ jobs:
           DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
         timeout-minutes: 5
 
+      - name: Detect hash-compare scope (PR only)
+        id: hash_scope
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          changed_files="$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD)"
+          if echo "$changed_files" | grep -Eq '^(packages/@dvt/engine/test/contracts/|docs/architecture/engine/contracts/|\.golden/|scripts/compare-hashes\.cjs|scripts/db-migrate\.cjs)'; then
+            echo "run_hash_compare=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_hash_compare=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Compare snapshot hashes (blocking)
+        if: >-
+          ${{
+            github.event_name != 'pull_request' ||
+            steps.hash_scope.outputs.run_hash_compare == 'true'
+          }}
         run: |
           set -euo pipefail
           echo "Comparing snapshot hashes..."
