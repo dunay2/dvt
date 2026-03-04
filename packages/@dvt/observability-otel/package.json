@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/observability-otel/test/OtelObservability.test.ts"
+    "test": "pnpm -C ../../.. --filter @dvt/observability build && pnpm -C ../../.. exec vitest run packages/@dvt/observability-otel/test/OtelObservability.test.ts"
   },
   "dependencies": {
     "@dvt/observability": "workspace:*"

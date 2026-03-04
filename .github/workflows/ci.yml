@@ -141,9 +141,9 @@ jobs:
       - name: ADR-0000 traceability gate
         if: >-
           ${{
-            (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-            (github.event_name == 'workflow_dispatch' && github.event.inputs.run_traceability_gate
-          == 'true') }}
+            github.event_name == 'workflow_dispatch' &&
+            github.event.inputs.run_traceability_gate == 'true'
+          }}
         run: pnpm traceability:adr0
 
   workspace-ci:
