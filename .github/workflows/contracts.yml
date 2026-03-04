@@ -287,6 +287,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -314,8 +316,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin "${{ github.base_ref }}" --depth=1
-          changed_files="$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD)"
+          changed_files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")"
           if echo "$changed_files" | grep -Eq '^(packages/@dvt/engine/test/contracts/|docs/architecture/engine/contracts/|\.golden/|scripts/compare-hashes\.cjs|scripts/db-migrate\.cjs)'; then
             echo "run_hash_compare=true" >> "$GITHUB_OUTPUT"
           else
