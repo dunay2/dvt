@@ -16,8 +16,6 @@ evidence:
     - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts (lookupRunRef, isWorkflowNotFound, WorkflowHandleLike.describe)
 ---
 
-# Evidence Doc (ED): TemporalAdapter.lookupRunRef implementation
-
 ## What changed (bullets)
 
 - Added `describe(): Promise<unknown>` to the local `WorkflowHandleLike` interface in `TemporalAdapter.ts`.
