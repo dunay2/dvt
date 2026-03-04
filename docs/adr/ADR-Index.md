@@ -31,6 +31,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0029      | Run Maintenance Service Extraction                                                              | Accepted                 | 2026-03-03                       | [ADR-0029-run-maintenance-service.md](ADR-0029-run-maintenance-service.md)                                                                         |
 | ADR-0030      | Pre-Dispatch Intent Log for startRun Crash Consistency                                          | Accepted                 | 2026-03-03                       | [ADR-0030-pre-dispatch-intent-log.md](ADR-0030-pre-dispatch-intent-log.md)                                                                         |
 | ADR-0031      | Storage Adapter Tenant Isolation Strategy                                                       | Accepted                 | 2026-03-03                       | [ADR-0031-adapter-tenant-isolation.md](ADR-0031-adapter-tenant-isolation.md)                                                                       |
+| ADR-0032      | compiledCodeRef Ownership: Reference in StepStarted Payload                                     | Accepted                 | 2026-03-04                       | [ADR-0032-compiledcoderef-ownership.md](ADR-0032-compiledcoderef-ownership.md)                                                                     |
 
 ## Usage rules
 
