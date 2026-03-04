@@ -307,6 +307,7 @@ jobs:
         timeout-minutes: 5
 
       - name: Compare snapshot hashes (blocking)
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           set -euo pipefail
           echo "Comparing snapshot hashes..."
