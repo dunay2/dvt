@@ -225,11 +225,12 @@ function handleStepCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
   const payload = e.payload;
   if (payload && typeof payload === 'object') {
-    const maybeDecision = (payload as Record<string, unknown>).gatewayDecision;
+    const maybeDecision =
+      typeof payload === 'object' && payload !== null && 'gatewayDecision' in payload
+        ? (payload as { gatewayDecision?: unknown }).gatewayDecision
+        : undefined;
     if (typeof maybeDecision === 'boolean') {
-      if (!snap.gatewayDecisions) {
-        snap.gatewayDecisions = {};
-      }
+      snap.gatewayDecisions ??= {};
       snap.gatewayDecisions[stepId] = maybeDecision;
     }
   }
@@ -307,13 +308,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
    * migrations are run as a separate privileged step.
    */
   async migrate(): Promise<void> {
-    if (!this.migratePromise) {
-      this.migratePromise = this.ensureSchema().catch((error: unknown) => {
-        // Allow retry if migration fails once (transient DB/network issue).
-        this.migratePromise = null;
-        throw error;
-      });
-    }
+    this.migratePromise ??= this.ensureSchema().catch((error: unknown) => {
+      // Allow retry if migration fails once (transient DB/network issue).
+      this.migratePromise = null;
+      throw error;
+    });
     return this.migratePromise;
   }
 
@@ -619,7 +618,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       params
     );
 
-    return result.rows.map((row: EventPayloadRow) => row.payload as EventEnvelope);
+    return result.rows.map((row: EventPayloadRow) => row.payload);
   }
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
@@ -680,7 +679,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         id: row.id,
         createdAt: row.created_at,
         idempotencyKey: row.idempotency_key,
-        payload: row.payload as EventEnvelope,
+        payload: row.payload,
         attempts: Number(row.attempts),
         lastError: row.last_error ?? undefined,
         nextAttemptAt:
@@ -765,7 +764,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       id: row.id,
       originalId: row.original_id,
       runId: row.run_id,
-      payload: row.payload as EventEnvelope,
+      payload: row.payload,
       lastError: row.last_error,
       deadLetteredAt: row.dead_lettered_at,
     }));
@@ -1167,7 +1166,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       );
 
       if (existing.rows[0]?.payload) {
-        deduped.push(existing.rows[0].payload as EventEnvelope);
+        deduped.push(existing.rows[0].payload);
       }
     }
 
@@ -1190,21 +1189,21 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       }
       await client.query(
         `
-          INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
-          VALUES ($1, $2::jsonb, $3, $4::timestamptz)
-          ON CONFLICT (run_id) DO UPDATE SET
-            snapshot = EXCLUDED.snapshot,
-            last_run_seq = EXCLUDED.last_run_seq,
-            updated_at = EXCLUDED.updated_at
-        `,
-        [runId, JSON.stringify(snap), appended[appended.length - 1]!.runSeq, this.now()]
+            INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
+            VALUES ($1, $2::jsonb, $3, $4::timestamptz)
+            ON CONFLICT (run_id) DO UPDATE SET
+              snapshot = EXCLUDED.snapshot,
+              last_run_seq = EXCLUDED.last_run_seq,
+              updated_at = EXCLUDED.updated_at
+          `,
+        [runId, JSON.stringify(snap), appended.at(-1)!.runSeq, this.now()]
       );
     }
 
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+      lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
     };
   }
 
@@ -1280,6 +1279,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
 function isUniqueViolation(error: unknown): error is { code: string } {
   return (
-    typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505'
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === '23505'
   );
 }
