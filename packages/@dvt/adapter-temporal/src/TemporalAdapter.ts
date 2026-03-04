@@ -2,11 +2,13 @@
  * @file packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0030: Pre-Dispatch Intent Log — lookupRunRef for PENDING intent reconciliation
  * @decision Section 3 — Provider adapter delegates run lifecycle to Temporal workflow primitives
  * @decision Section 5 — Status reconstruction uses persisted events + projector for deterministic snapshots
+ * @decision ADR-0030 §3.3 — lookupRunRef derives workflowId from runId and probes Temporal to detect orphans
  * @consequence Temporal provider operations remain deterministic and aligned with engine lifecycle semantics
- * @version 1.0.0
- * @date 2026-02-21
+ * @version 1.1.0
+ * @date 2026-03-04
  */
 import {
   type EngineRunRef,
@@ -29,6 +31,12 @@ import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './W
 interface WorkflowHandleLike {
   cancel(): Promise<unknown>;
   signal(signalName: string, ...args: unknown[]): Promise<void>;
+  /**
+   * Fetches the workflow execution description from the Temporal server.
+   * Throws a WorkflowNotFoundError (name === 'WorkflowNotFoundError') when the
+   * workflow does not exist. Used by lookupRunRef for orphan detection.
+   */
+  describe(): Promise<unknown>;
 }
 
 interface WorkflowClientLike {
@@ -154,6 +162,42 @@ export class TemporalAdapter implements IProviderAdapter {
   }
 
   /**
+   * ADR-0030 §3.3 — Probes the Temporal server to determine whether a workflow
+   * for the given runId exists, without requiring a stored EngineRunRef.
+   *
+   * Used by RunMaintenanceService.reconcileOrphanedIntents() to detect the crash
+   * scenario where adapter.startRun() returned successfully but markDispatched()
+   * was never called (process died between steps 5 and 6 in ADR-0030 §3.2).
+   *
+   * workflowId derivation mirrors startRun() exactly (toTemporalWorkflowId(runId)),
+   * so the same deterministic mapping used to create the workflow is used to find it.
+   *
+   * Returns null when the workflow does not exist on the Temporal server.
+   * Propagates any non-"not found" error (network failure, auth error, etc.).
+   */
+  async lookupRunRef(runId: string, tenantId: string): Promise<EngineRunRef | null> {
+    const workflowId = toTemporalWorkflowId(runId);
+    const taskQueue = toTemporalTaskQueue(tenantId, this.deps.config);
+    const client = await this.getClient();
+
+    try {
+      await client.getHandle(workflowId).describe();
+      return toTemporalRunRef({
+        tenantId,
+        workflowId,
+        runId,
+        config: this.deps.config,
+        taskQueue,
+      });
+    } catch (err) {
+      if (isWorkflowNotFound(err)) {
+        return null;
+      }
+      throw err;
+    }
+  }
+
+  /**
    * Verifies the Temporal connection is alive.
    * Called by WorkflowEngine.healthCheck() to report adapter liveness.
    */
@@ -180,4 +224,20 @@ export class TemporalAdapter implements IProviderAdapter {
     }
     return this.deps.clientManager.getClient().client.workflow;
   }
+}
+
+/**
+ * Detects "workflow not found" responses from the Temporal server.
+ *
+ * The Temporal TypeScript SDK (≥1.x) throws WorkflowNotFoundError (name ===
+ * 'WorkflowNotFoundError') when describe() is called on a non-existent workflow.
+ * Older SDK versions may surface a ServiceError with gRPC status NOT_FOUND (code 5).
+ * Both are treated as "not found" so the adapter is robust across SDK patch versions.
+ */
+function isWorkflowNotFound(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  if (err.name === 'WorkflowNotFoundError') return true;
+  // gRPC NOT_FOUND = 5; ServiceError from older @temporalio/client versions
+  const asRecord = err as unknown as Record<string, unknown>;
+  return err.name === 'ServiceError' && asRecord['code'] === 5;
 }
