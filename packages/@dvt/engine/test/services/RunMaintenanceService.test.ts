@@ -1,7 +1,7 @@
 import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
-import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
+import { createNoopObservability } from '../../../observability/src/noopObservability.js';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
