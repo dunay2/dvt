@@ -6,7 +6,10 @@
       "Bash(node:*)",
       "Bash(npx tsc:*)",
       "Bash(pnpm test)",
-      "Bash(npx vitest run:*)"
+      "Bash(npx vitest run:*)",
+      "Bash(ls c:dvtdocsadrADR-002*.md c:dvtdocsadrADR-003*.md)",
+      "Bash(xargs grep -l -i \"observ\\\\|telemetry\\\\|metrics\\\\|otel\")",
+      "Bash(xargs grep -l \"MockAdapter\\\\|ConductorAdapterStub\")"
     ]
   }
 }
