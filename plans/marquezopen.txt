@@ -1,0 +1,738 @@
+se critico con lo que tedigo:_ Toma tu diseño, ponlo al lado de OpenLineage + Marquez, y observa cómo el 90% de tu sufrimiento desaparece. No es que sean compatibles; es que ellos ya ejecutaron tu tesis, la probaron en batalla, y la empaquetaron como estándar abierto.
+
+Evalúo cada uno de tus 7 puntos contra la realidad de estas herramientas, con ejemplos concretos de código y eventos.
+
+1. Catálogo parcial (docs generate --select) → OpenLineage ya lo resuelve con facets
+Tu diagnóstico: El catalog.json puede ser parcial, y una UI ingenua mostraría "no existe" cuando en realidad el dato sí existe pero no fue seleccionado.
+
+La solución OpenLineage: No depende de catalog.json. El wrapper dbt-ol (o openlineage-dbt) ejecuta dbt docs generate antes de emitir eventos, y extrae los esquemas de columnas del catalog.json generado para los modelos ejecutados . Pero el punto clave: OpenLineage modela los esquemas de columna como un facet del dataset, no como un artefacto separado .
+
+Ejemplo concreto: Cuando ejecutas dbt-ol run, para cada dataset de salida se emite un evento como este, que incluye el facet schema con las columnas reales que ese modelo produjo:
+
+json
+{
+  "eventType": "COMPLETE",
+  "outputs": [{
+    "namespace": "snowflake://my_account",
+    "name": "analytics.dim_customers",
+    "facets": {
+      "schema": {
+        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.0/integration/dbt",
+        "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
+        "fields": [
+          {"name": "customer_id", "type": "NUMBER"},
+          {"name": "customer_name", "type": "VARCHAR"},
+          {"name": "first_order_date", "type": "DATE"}
+        ]
+      }
+    }
+  }]
+}
+Tu miedo a "falsos negativos" desaparece: Si un modelo no se ejecutó (por --select), no hay evento, no hay dataset en Marquez. Si se ejecutó pero no se generó catalog.json, el facet schema simplemente no aparece, y la UI muestra "sin metadatos de columna" sin ambigüedad. No hay lugar para "no existe" vs "parcial".
+
+2. Identidad: versiones + acceso + contratos → OpenLineage lo maneja con Job versioning
+Tu acierto: No puedes usar unique_id directamente, y las versiones de modelos deben ser entidades separadas.
+
+Cómo lo hace OpenLineage: La identidad de un Job en OpenLineage es la tupla (namespace, name) . Para modelos versionados, generas nombres distintos: dim_customers_v1, dim_customers_v2. El wrapper dbt-ol ya hace esto: toma el unique_id de dbt y lo transforma en un nombre de Job estable, pero conservando la versión .
+
+Ejemplo:
+
+Modelo dim_customers versión 1 en dbt → unique_id = "model.my_project.dim_customers.v1"
+
+En OpenLineage: job.name = "my_project.dim_customers_v1", namespace = "dbt" (o tu proyecto/entorno)
+
+Acceso y contratos: Estos se modelan como facets del Job . Puedes tener un facet personalizado dbt_contract_facet que indique si el contrato está forzado, el nivel de acceso, etc. Marquez almacena estos facets y permite consultarlos.
+
+Tu preocupación por "reachability": En OpenLineage, el grafo de linaje se construye a partir de las dependencias reales capturadas en los eventos (inputs/outputs). Si un modelo cambia su acceso (ej: de protected a public), eso no afecta al grafo; afecta a quién puede referenciarlo en futuras compilaciones. Pero ese es un problema de la capa de autoría, no del linaje. Lo capturas en el facet y dejas que la política decida.
+
+3. compiled, compiled_code, relation_name son de run_results → OpenLineage ya los emite en los eventos
+Tu crítica: El manifest no tiene estos campos, y el run_results llega después.
+
+La solución probada: El wrapper dbt-ol ejecuta dbt, espera a que termine, y luego:
+
+Lee target/manifest.json
+
+Lee target/run_results.json
+
+Lee target/catalog.json (si existe)
+
+Por cada nodo ejecutado, emite eventos OpenLineage que incluyen en los facets la información relevante .
+
+Ejemplo de facet personalizado para dbt (lo que AWS implementa en su muestra ):
+
+json
+{
+  "job": {
+    "namespace": "dbt",
+    "name": "my_project.dim_customers",
+    "facets": {
+      "dbt_details": {
+        "_producer": "...",
+        "compiled_code": "SELECT ... FROM ...",
+        "relation_name": "analytics.dim_customers",
+        "materialization": "table",
+        "unique_id": "model.my_project.dim_customers"
+      }
+    }
+  }
+}
+Tu preocupación por la asincronía: En OpenLineage, los eventos se emiten después de que dbt termina, pero todos juntos. No hay un modelo de "bundle" con artefactos que llegan en diferente orden; hay un único proceso que genera todos los eventos de una invocación. Si usas dbt-ol en modo streaming (con logs estructurados), puedes obtener eventos a medida que cada modelo termina, pero el compiled_code y relation_name solo están disponibles al final. En cualquier caso, el modelo de eventos es inmutable y content-addressed (por runId), así que no hay problema de consistencia.
+
+4. deps_fingerprint y package-lock.yml → OpenLineage lo captura en el contexto del Job
+Tu intuición: El grafo cambia si cambian las dependencias, aunque el código del modelo no cambie.
+
+La realidad OpenLineage: Cuando ejecutas dbt-ol run, el wrapper captura el entorno completo de ejecución. No hay un "hash de dependencias" explícito, pero cada evento de Job incluye el contexto (versión de dbt, etc.). Además, Marquez versiona los Jobs: si el mismo nombre de Job aparece con un código diferente (porque cambió el paquete), se crea una nueva versión del Job .
+
+Implementación concreta: El proyecto de AWS  muestra cómo integrar dbt con OpenLineage en un entorno productivo, incluyendo gestión de dependencias. El wrapper dbt-ol ya incluye en los metadatos la información de paquetes disponible en el manifest.
+
+Pero si quieres ser explícito: Puedes extender el wrapper para añadir un facet dbt_dependencies que contenga el hash de package-lock.yml. Eso es lo bueno de OpenLineage: puedes añadir facets personalizados sin romper el estándar .
+
+5. config_fingerprint en plan_hash → OpenLineage lo resuelve con la distinción Job vs Run
+Tu diseño: Separar graph_hash (estructura) de exec_hash (configuración de ejecución).
+
+Cómo lo hace OpenLineage: Esta separación es exactamente la distinción entre Job (definición estática) y Run (ejecución concreta) .
+
+Job: representa la definición del modelo (equivalente a tu graph_hash implícito). Tiene facets como sql, sourceCodeLocation, etc. .
+
+Run: representa una ejecución concreta (equivalente a tu exec_hash). Tiene facets como nominalTime, errorMessage, y facets personalizados con configuración específica de esa ejecución .
+
+Ejemplo: El proyecto "Budgets as Code"  muestra exactamente cómo se usan los facets de Run para capturar políticas de ejecución (en su caso, presupuestos). Cada ejecución lleva un facet budget con la decisión de admisión, el Git SHA de la política, etc. .
+
+Tu plan_hash sería simplemente el hash del runId + facets seleccionados.
+
+6. Concurrencia: ON CONFLICT DO NOTHING no basta → OpenLineage + Marquez usan inmutabilidad
+Tu propuesta: Separar artifact (inmutable por hash) de bundle (mutable, referencia a artifacts).
+
+La implementación Marquez: Marquez almacena eventos OpenLineage de forma inmutable. Cada evento tiene un runId único y se almacena tal cual. No hay "actualizaciones", solo inserciones. La concurrencia se maneja a nivel de base de datos (PostgreSQL) con transacciones .
+
+Ejemplo de cómo Marquez maneja múltiples runs con el mismo manifest:
+
+Run A: se ingiere, se crea un Job y un Run en Marquez.
+
+Run B: mismo manifest, pero diferente runId. Marquez crea otro Run para el mismo Job (porque el nombre del Job es el mismo). No hay conflicto, porque los Runs son entidades separadas.
+
+Tu modelo de bundle_artifact es equivalente a cómo Marquez almacena eventos: cada evento es un "artifact", y cada run es un "bundle" implícito. La diferencia es que Marquez ya tiene las relaciones y la API para consultarlos.
+
+7. Lo "invendible": coste, impacto, sandboxing, gobernanza → todo se puede construir sobre OpenLineage
+7.1 Coste / FinOps
+Tu propuesta: Ingerir desde Snowflake query history, keyed by relation_name y ventana de tiempo.
+
+Ejemplo real: El proyecto "Budgets as Code"  implementa exactamente esto, pero para GPU-hours. Usan OpenLineage para emitir eventos con facets de coste, y Marquez para almacenarlos y consultarlos. La clave: el facet de coste se adjunta al Run, y contiene projected_gpu_hours, admitted_gpu_hours, decision, etc. .
+
+Para Snowflake: Podrías tener un facet snowflake_cost con credits_used, bytes_scanned, execution_time. Luego, consultas en Marquez: "dame todos los Runs de este Job en la última semana, suma credits_used".
+
+7.2 Impact analysis with real consumption
+Tu idea: Consumir APIs de Looker/PowerBI, logs de queries ad-hoc.
+
+Ejemplo AWS : El proyecto sample-agentic-data-lineage integra:
+
+dbt + Redshift + OpenLineage para linaje de transformación.
+
+Agentes IA (con Amazon Bedrock) que analizan el linaje y responden preguntas en lenguaje natural sobre impacto.
+
+Multi-agent collaboration para análisis complejos .
+
+Cómo se hace: Los agentes consultan la API de Marquez para obtener el grafo, y luego cruzan con metadatos de consumo (por ejemplo, de un catálogo de Looker). No es magia, es ingeniería. Pero la base es OpenLineage.
+
+7.3 Sandboxing / branches
+Tu diseño: graph_ref con overlay pattern.
+
+Limitación de Marquez: Marquez asume un entorno único (producción). No tiene ramas. Pero puedes simularlo con diferentes namespaces:
+
+namespace = "dbt_prod" para el grafo de producción.
+
+namespace = "dbt_pr_123" para el grafo de una rama.
+
+Cuando ejecutas dbt en una rama y envías eventos a Marquez con un namespace diferente, tienes un grafo aislado. Luego, la UI puede mostrar ambos y hasta compararlos (con trabajo extra).
+
+El overlay pattern es más complejo y requeriría una capa encima de Marquez. Pero al menos tienes los bloques base: Jobs inmutables, versionados, y Runs que los ejecutan.
+
+7.4 Governance: retention + access + audit
+Tu checklist:
+
+Retention policy → Marquez puede tener políticas de borrado de eventos antiguos (a implementar por ti).
+
+RBAC → Marquez tiene un sistema básico de API keys, pero RBAC fino es cosa tuya.
+
+Audit de reads → Marquez no audita lecturas de la UI/API. Tendrías que implementar un proxy que registre accesos.
+
+Lo que Marquez sí da: Inmutabilidad y procedencia. Cada cambio en un Job (nueva versión) es un evento. Puedes reconstruir quién ejecutó qué y cuándo, porque los Runs tienen eventTime .
+
+Seguridad de compiled_code: Si almacenas facets con el SQL compilado (como el ejemplo de AWS), esos facets están en Marquez. Marquez no cifra a nivel de campo, así que tendrías que implementar políticas de acceso a nivel de API o no almacenar el SQL si es muy sensible.
+
+Conclusión despiadada: tu diseño sobrevive, pero OpenLineage + Marquez son su realización en acero
+Punto por punto:
+
+Tu concepto	En OpenLineage/Marquez	¿Coincide?
+artifact_hash	Hash del evento (runId)	✅
+bundle	Colección de eventos de un run	✅
+GraphSnapshot	Jobs + versiones	✅ (mejor: inmutabilidad)
+CatalogSnapshot	Dataset facets (schema)	✅ (en tiempo real)
+plan_hash	runId + facets	✅
+identity_key	job.name + namespace	✅
+exec_hash	Run facets	✅
+deps_fingerprint	Contexto del Job (facet)	⚠️ (requiere extensión)
+Coste	Budget facet 	⚠️ (a implementar)
+Impacto	Agentes + Marquez API 	⚠️ (capa propia)
+Sandboxing	Namespaces	⚠️ (simulable)
+Gobernanza	Inmutabilidad + API	⚠️ (RBAC propio)
+Lo que OpenLineage + Marquez te dan GRATIS:
+
+Modelo de datos probado en producción por miles de empresas.
+
+Eventos inmutables y content-addressed (tu sueño hecho realidad).
+
+API para consultar linaje, jobs, runs, facets.
+
+UI funcional (Marquez) que puedes extender o reemplazar.
+
+Integraciones con dbt, Airflow, Spark que ya existen y se mantienen .
+
+Comunidad y gobernanza de LF AI & Data Foundation.
+
+Lo que tú construyes (tu valor diferencial):
+
+Multi-tenancy si lo necesitas (aunque Marquez puede correr por tenant).
+
+Políticas de retención y acceso específicas.
+
+Integración de costes con facets personalizados.
+
+Consumption lineage desde BI tools.
+
+Sandboxing/ramas con namespaces y lógica de overlay.
+
+Agentes IA como los de AWS .
+
+La decisión final: Si implementas tu diseño desde cero, en 2 años tendrás una copia defectuosa de Marquez con menos features y más bugs. Si usas OpenLineage + Marquez, en 2 meses tienes un MVP y el resto del tiempo construyes lo que realmente importa para tu negocio.
+
+El mercado ya votó: Snowflake acaba de lanzar "External lineage" compatible con OpenLineage. Las FAANG (Apple, Oracle , AWS ) están invirtiendo en este ecosistema. Subirse a ese tren no es una opción técnica, es una decisión de supervivencia.
+
+continua
+We are at a point where the user has been presented with a thorough critique and a strong recommendation to adopt OpenLineage + Marquez. The conversation has evolved into a validation of that approach and a detailed mapping of the original design onto the OpenLineage ecosystem. The user's last message is "continua", which likely means "continue" in Spanish/Portuguese. They want us to continue the analysis or provide further insights.
+
+We need to decide what to continue with. The user might want us to:
+
+Provide a more concrete migration path from the proposed design to OpenLineage/Marquez.
+
+Show how specific features (like cost, governance, sandboxing) can be implemented on top.
+
+Compare OpenLineage with other alternatives (like OpenMetadata) and justify the choice.
+
+Detail the integration of dbt with OpenLineage, including code examples and configuration.
+
+Discuss the operational aspects: running Marquez in production, scaling, etc.
+
+Address potential pitfalls or gaps in OpenLineage that the user's design might still need to fill.
+
+Given the tone, the user appreciates the brutal honesty and concrete examples. We should continue with a pragmatic, "how to build it" approach. Let's structure the continuation as:
+
+Recap the current understanding: The user agrees that OpenLineage + Marquez is the way.
+
+Next step: Show how to implement the specific requirements (cost, governance, sandboxing) on top of this foundation.
+
+Provide a phased roadmap: Phase 1: Basic integration with dbt and Marquez. Phase 2: Add cost tracking. Phase 3: Add consumption lineage and impact analysis. Phase 4: Add sandboxing/branches. Phase 5: Governance and security.
+
+Include concrete code snippets, configuration examples, and references to existing projects (like AWS sample, Budgets as Code).
+
+Discuss trade-offs: What Marquez doesn't do well, and how to extend it (e.g., using custom facets, building a UI layer on top).
+
+End with a call to action: next steps for the team to validate this approach with a proof of concept.
+
+We should also acknowledge that the user might need to convince others in their organization, so we can provide arguments and evidence.
+
+Let's craft a response that continues the analysis with this practical angle.
+
+Perfecto. Ahora que tienes el diagnóstico y la dirección clara, el siguiente paso es materializarlo. No basta con saber que OpenLineage + Marquez es el camino; hay que trazar la ruta concreta para implementar todo lo que tu diseño exige (costes, impacto, ramas, gobernanza) sobre esa base.
+
+Te voy a dar el plan de batalla fase por fase, con ejemplos reales, código y referencias a proyectos que ya lo han hecho. Así no teorizas más, construyes.
+
+Fase 0: Despliegue base de Marquez y primer evento dbt
+Objetivo
+Tener Marquez corriendo, con un evento de dbt visible en la UI.
+
+Pasos concretos
+Levanta Marquez con Docker (la vía más rápida):
+
+bash
+git clone https://github.com/MarquezProject/marquez.git
+cd marquez
+docker-compose up
+Esto te da:
+
+API en http://localhost:5000
+
+UI en http://localhost:3000
+
+Base de datos PostgreSQL
+
+Instala el wrapper dbt-ol en tu proyecto dbt:
+
+bash
+pip install openlineage-dbt
+Configura el cliente OpenLineage apuntando a Marquez:
+
+bash
+export OPENLINEAGE_URL=http://localhost:5000
+export OPENLINEAGE_NAMESPACE=dbt_sandbox
+Ejecuta dbt con el wrapper:
+
+bash
+dbt-ol run --project-dir . --profiles-dir .
+Si todo funciona, verás en la UI de Marquez los jobs y runs creados.
+
+Verifica:
+
+Entra a http://localhost:3000
+
+Busca tu proyecto. Verás el grafo de linaje con los modelos ejecutados.
+
+Haz clic en un job: verás los facets (inputs/outputs, SQL, etc.).
+
+Resultado: Tienes la columna vertebral funcionando. Todo lo que sigue se construye sobre esto.
+
+Fase 1: Catálogo parcial y metadatos de columna
+Problema original
+dbt docs generate --select produce un catálogo parcial. Queremos que la UI muestre claramente cuándo los metadatos de columna están incompletos.
+
+Solución con OpenLineage
+El wrapper dbt-ol ya extrae el esquema de columnas del catalog.json de los modelos que se ejecutaron y lo incluye como un facet schema en los eventos de dataset . Si un modelo no se ejecutó, no hay evento, luego no hay metadatos.
+
+Pero para casos donde quieras ver el esquema sin ejecutar (solo con docs generate), puedes usar el comando:
+
+bash
+dbt-ol docs-generate
+Esto ejecuta dbt docs generate y emite eventos de linaje sin ejecutar los modelos, pero con los metadatos de columna del catálogo .
+
+Mejora para tu UI:
+
+Cuando consultes un dataset en Marquez, el facet schema puede venir o no.
+
+Si no viene, la UI debe mostrar "Sin metadatos de columna" en lugar de asumir que no existe.
+
+Si viene, puedes mostrar las columnas y además añadir un indicador de cobertura: por ejemplo, si el job se ejecutó con --select, el dataset puede tener un facet dbt_coverage con selector y completeness: partial.
+
+Ejemplo de facet personalizado:
+
+json
+{
+  "dataset": {
+    "facets": {
+      "dbt_coverage": {
+        "_producer": "...",
+        "selector": "tag:nightly",
+        "completeness": "partial",
+        "total_models": 50,
+        "executed_models": 10
+      }
+    }
+  }
+}
+Implementación: Tendrías que modificar el wrapper dbt-ol o crear un post-procesador que añada este facet. Pero es factible.
+
+Fase 2: Identidad estable con versiones y contratos
+Problema original
+Los modelos versionados (dim_customers_v1, dim_customers_v2) deben ser jobs distintos, y los contratos/accesos deben capturarse.
+
+Solución OpenLineage
+El wrapper dbt-ol ya genera nombres de job estables usando el unique_id de dbt, pero puedes personalizarlo mediante una función de transformación . Por ejemplo, en el archivo de configuración openlineage.yml:
+
+yaml
+job_name_mapping:
+  "model.my_project.dim_customers.v1": "dim_customers_v1"
+  "model.my_project.dim_customers.v2": "dim_customers_v2"
+Para contratos y accesos, usa facets de job . Define un facet dbt_contract:
+
+json
+{
+  "job": {
+    "facets": {
+      "dbt_contract": {
+        "enforced": true,
+        "access": "protected",
+        "version": "v1"
+      }
+    }
+  }
+}
+Estos facets se almacenan en Marquez y son consultables vía API.
+
+Verificación: En la UI de Marquez, al inspeccionar un job, podrías ver estos facets (si extiendes la UI o usas la API directamente).
+
+Fase 3: compiled_code y relation_name en eventos
+Problema original
+Estos campos están en run_results.json, no en manifest, y son cruciales para auditoría y re-ejecución.
+
+Solución OpenLineage
+El wrapper dbt-ol ya los incluye en los facets de job (o run) . Por defecto, el facet sourceCode contiene el SQL compilado, y dbt_details incluye relation_name.
+
+Ejemplo (tomado del proyecto AWS ):
+
+json
+{
+  "job": {
+    "facets": {
+      "sourceCode": {
+        "language": "sql",
+        "code": "SELECT ..."
+      },
+      "dbt_details": {
+        "relation_name": "analytics.dim_customers",
+        "materialization": "table"
+      }
+    }
+  }
+}
+Seguridad: Si el SQL compilado es sensible, puedes configurar el wrapper para no emitir el facet sourceCode, o cifrarlo antes de enviarlo (aunque Marquez no soporta cifrado por campo). Otra opción: almacenar el SQL en un bucket seguro y solo guardar una referencia en el facet.
+
+Fase 4: Dependencias (deps_fingerprint) y versionado de paquetes
+Problema original
+El grafo debe cambiar si cambian las dependencias (paquetes), aunque el código del modelo no varíe.
+
+Solución OpenLineage
+Marquez versiona automáticamente los jobs cuando cambia su código o facets . Cuando ejecutas dbt-ol run, si el código SQL cambia (por ejemplo, porque un paquete se actualizó), se crea una nueva versión del job.
+
+Para ser explícito: puedes añadir un facet dbt_packages que contenga el hash de package-lock.yml:
+
+json
+{
+  "job": {
+    "facets": {
+      "dbt_packages": {
+        "hash": "sha256:abc123...",
+        "packages": {
+          "dbt_utils": "1.2.0",
+          "snowplow": "0.8.1"
+        }
+      }
+    }
+  }
+}
+Así, aunque el SQL no cambie, si el hash de paquetes difiere, el facet cambia y Marquez crea una nueva versión del job.
+
+Implementación: Tendrías que modificar el wrapper para leer package-lock.yml y añadir este facet.
+
+Fase 5: config_fingerprint en el plan (Job vs Run)
+Problema original
+Separar la estructura del grafo (graph_hash) de la configuración de ejecución (exec_hash).
+
+Solución OpenLineage
+Esto ya está modelado como Job (estático) y Run (ejecución). Cada run tiene su propio runId y facets. El exec_hash sería simplemente el hash de los facets del run.
+
+Ejemplo: Un job puede ejecutarse con diferentes exec_hash si se usa un selector distinto. En OpenLineage, eso se refleja en que el run tiene un facet dbt_selector que indica qué modelos se seleccionaron.
+
+Para tu plan_hash: Puedes calcularlo como sha256(job_version + run_facets + env). Pero Marquez ya te da un identificador único del run (runId), que puedes usar como PK en tu sistema.
+
+Fase 6: Concurrencia y bundles
+Problema original
+Múltiples ejecuciones pueden producir el mismo manifest, pero deben tratarse como runs independientes.
+
+Solución OpenLineage + Marquez
+Cada ejecución de dbt-ol run genera un runId único (UUID).
+
+Todos los eventos de esa ejecución comparten el mismo runId.
+
+Marquez almacena cada evento por separado, pero los agrupa por runId.
+
+Si dos ejecuciones producen el mismo manifest (mismo código), se crearán dos runs independientes, cada uno con sus propios eventos. El job (definición) puede ser el mismo (si no cambia el código), pero los runs son distintos.
+
+Tu modelo bundle es equivalente al conjunto de eventos con el mismo runId. La ventaja es que no necesitas una tabla bundle_artifact; Marquez ya lo gestiona.
+
+Fase 7: Coste / FinOps
+Problema original
+dbt no da coste por nodo; hay que ingerir desde Snowflake query history.
+
+Solución con OpenLineage
+Ejecuta un proceso que consulte SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY (o equivalente) y obtenga el coste de cada consulta.
+
+Relaciona cada consulta con un run de OpenLineage usando relation_name y ventana de tiempo (o mejor, usando query_id si lo propagas).
+
+Emite un evento OpenLineage adicional (o un facet en el run existente) con el coste.
+
+Ejemplo de facet de coste:
+
+json
+{
+  "run": {
+    "facets": {
+      "snowflake_cost": {
+        "credits_used": 0.15,
+        "bytes_scanned": 1024000,
+        "execution_time_ms": 3400
+      }
+    }
+  }
+}
+Proyecto de referencia: "Budgets as Code" hace exactamente esto para GPU-hours. Adapta su lógica.
+
+Consulta posterior: En Marquez, puedes obtener todos los runs de un job y sumar los credits_used de sus facets. La API de Marquez permite filtrar por facets (aunque no de serie, puedes añadirlo).
+
+Fase 8: Impact analysis with real consumption
+Problema original
+Saber qué dashboards o consultas ad-hoc consumen un modelo.
+
+Solución: Multi-source lineage
+BI tools: Usa sus APIs para obtener los modelos que consumen. Por ejemplo, Looker tiene una API que devuelve el linaje de un explore.
+
+Ad-hoc queries: Analiza QUERY_HISTORY de Snowflake para ver qué tablas se consultan y por qué usuario.
+
+Convierte esa información en eventos OpenLineage de tipo "consumo", con un namespace diferente (ej: looker, snowflake_ad_hoc).
+
+Ejemplo de evento de consumo:
+
+json
+{
+  "eventType": "COMPLETE",
+  "job": {
+    "namespace": "looker",
+    "name": "dashboard/123"
+  },
+  "inputs": [
+    {"namespace": "dbt", "name": "analytics.dim_customers"}
+  ]
+}
+Luego, en Marquez, tendrás un grafo que conecta jobs de dbt con jobs de Looker. La UI puede mostrar "este modelo es usado por X dashboards".
+
+Proyecto AWS ya incluye agentes IA que responden preguntas sobre impacto usando el grafo de Marquez. Puedes replicar esa lógica.
+
+Fase 9: Sandboxing / branches
+Problema original
+Probar cambios en un modelo sin afectar producción.
+
+Solución con namespaces
+Usa un namespace diferente para cada rama/entorno:
+
+namespace = "dbt_prod"
+
+namespace = "dbt_pr_123"
+
+Ejecuta dbt-ol run con OPENLINEAGE_NAMESPACE=dbt_pr_123.
+
+En Marquez, los jobs de la rama estarán aislados.
+
+Para visualizar el impacto del cambio, puedes comparar el grafo de la rama con el de producción (por ejemplo, viendo qué jobs nuevos aparecen o cuáles cambian de versión).
+
+Overlay pattern: Más complejo. Necesitarías una capa que calcule la diferencia entre dos namespaces y genere un grafo combinado. Pero al menos tienes los datos base.
+
+Fase 10: Gobernanza (retención, acceso, auditoría)
+Problema original
+Controlar quién ve qué y durante cuánto tiempo.
+
+Solución sobre Marquez
+Retención: Programa un job que borre eventos antiguos de Marquez (directamente en PostgreSQL) según política. Por ejemplo, borrar runs con más de 90 días.
+
+Acceso: Marquez tiene un sistema de API keys, pero no RBAC fino. Puedes poner un proxy (como Kong) delante de la API de Marquez que añada autenticación y autorización basada en el namespace.
+
+Auditoría: Cada vez que alguien consulta la API de Marquez (o la UI), el proxy puede registrar el acceso. También puedes loggear quién ejecutó cada run (ya que los eventos de OpenLineage pueden incluir un facet user).
+
+Ejemplo de facet de usuario:
+
+json
+{
+  "run": {
+    "facets": {
+      "user": {
+        "name": "juan.perez",
+        "email": "juan@empresa.com"
+      }
+    }
+  }
+}
+Resumen de implementación: lo que haces tú vs. lo que ya está hecho
+Componente	Quién lo hace
+API de linaje, almacenamiento, UI básica	Marquez
+Integración con dbt (eventos)	openlineage-dbt (wrapper)
+Metadatos de columna en eventos	openlineage-dbt (ya incluye schema facet)
+Versionado de jobs	Marquez (automático)
+Facets personalizados (coste, políticas)	Tú (extiendes wrapper o post-procesas)
+Ingesta de costes desde Snowflake	Tú (proceso ETL que emite eventos)
+Linaje de consumo (BI, ad-hoc)	Tú (APIs + eventos)
+Sandboxing con namespaces	Tú (orquestas múltiples entornos)
+Gobernanza (RBAC, retención, auditoría)	Tú (proxy + jobs de limpieza)
+Próximos pasos concretos
+Prueba de concepto (1 semana)
+
+Levanta Marquez.
+
+Integra un proyecto dbt pequeño con dbt-ol.
+
+Explora la UI y la API.
+
+Verifica que los facets de columna y SQL están presentes.
+
+Diseña los facets personalizados para tu dominio:
+
+dbt_contract
+
+dbt_packages
+
+snowflake_cost
+
+dbt_coverage (para catálogo parcial)
+
+Implementa un primer ingestor de costes:
+
+Script Python que consulta QUERY_HISTORY y emite eventos OpenLineage con facet de coste para cada run (usando runId como correlación).
+
+Construye una UI propia (opcional):
+
+Si la UI de Marquez no satisface, puedes construir una capa que consuma su API y añada visualizaciones de coste, ramas, etc.
+
+Valida con usuarios reales:
+
+Muestra el grafo, el coste por modelo, el impacto de un cambio simulado.
+
+Conclusión final
+Ya no estás diseñando en el vacío. Tienes un estándar, una implementación de referencia y casos de éxito documentados. Tu trabajo ahora es ensamblar piezas existentes y añadir el valor diferencial que justifica DVT+. No reinventes la rueda; ponle neumáticos mejores.
+
+El mercado se mueve rápido: Snowflake ya soporta OpenLineage, y las FAANG están invirtiendo. Si DVT+ no se sube a este tren, en dos años será irrelevante. Si lo hace, será parte del ecosistema que define el futuro del linaje de datos
+Pensó durante 17s
+
+Vale. Si pones OpenLineage + Marquez como plataforma de ingestión/almacenamiento de linaje, el 90% del “diseño defensivo” que veníamos discutiendo desaparece porque:
+
+la unidad de consistencia pasa a ser el Run (runId) + sus eventos inmutables
+
+la extensibilidad se resuelve con facets (estándar + custom)
+
+la proyección/UI ya existe (Marquez) y tú construyes encima lo diferencial
+
+Esto no es teoría: el wrapper de dbt en OpenLineage (dbt-ol) corre dbt y después lee manifest.json, run_results.json y catalog.json y emite eventos al endpoint OpenLineage.
+
+A partir de aquí, la conversación deja de ser “cómo inventamos un modelo” y pasa a ser:
+
+1) Qué partes de DVT+ se sustituyen por OpenLineage/Marquez y qué queda como valor
+Sustituible (deberías NO reinventarlo)
+
+“bundle de artifacts” → Run (runId) + stream de eventos OpenLineage (inmutable)
+
+“schema/column metadata” → SchemaDatasetFacet en outputs (cuando exista)
+
+“custom metadata” (selector, deps hash, contratos, etc.) → Custom facets
+
+“UI básica de lineage” → Marquez
+
+Diferencial DVT+ (sí merece el tiempo)
+
+multi-tenant real (RBAC/aislamiento) y gobernanza (retención/auditoría de lecturas)
+
+coste/FinOps por nodo (Snowflake credits/bytes)
+
+consumption lineage (Looker/PowerBI/queries ad-hoc) como eventos adicionales
+
+sandboxing/branches (namespaces por branch + overlay/compare)
+
+plan/execution engine (Temporal/Conductor) y políticas (skip inteligente, control de blast radius)
+
+2) Diseño concreto: “OpenLineage is the append-only log”
+
+Tu DVT+ se convierte en un sistema que escribe y lee de OpenLineage (y opcionalmente persiste un “cache” propio).
+
+2.1 Eventos mínimos que tienes que emitir para dbt
+
+Con dbt-ol ya tienes la base (job/run/inputs/outputs).
+
+Tú añades 4 facets custom (pragmáticos) sin romper el estándar:
+
+A) dvt_selector (Run facet)
+
+selector text (--select, --exclude)
+
+“scope intent” (full/partial)
+
+B) dvt_deps (Job facet o Run facet)
+
+package_lock_sha256
+
+lista de packages resueltas si quieres
+
+OpenLineage permite custom facets; nombrar facets de forma estable es importante porque “un facet con el mismo nombre reemplaza al anterior para esa entidad”.
+
+C) dvt_dbt_details (Job facet)
+
+unique_id, materialization, access, contract_enforced, model_version
+
+compiled_code_ref (NO metas SQL si es sensible; mete referencia a blob/secure store)
+
+D) dvt_cost (Run facet)
+
+credits_used, bytes_scanned, exec_ms, warehouse
+
+correlación (por ejemplo query_ids si los puedes obtener)
+
+3) Catálogo parcial: sí, tu argumento gana… pero la solución OL es “coverage explícita”
+
+La idea clave que has expuesto es: si no hay schema facet, no hay ambigüedad. Correcto.
+
+Pero en la práctica te interesa distinguir:
+
+“no hay columnas porque no se ejecutó”
+
+“se ejecutó, pero no tenemos metadata de columnas (o es parcial)”
+
+OpenLineage ya modela el schema como facet opcional.
+Lo que falta es marcar “coverage”. Eso lo resuelves con dvt_coverage facet (dataset facet u opcionalmente run facet).
+
+Regla UI:
+
+dataset existe pero sin schema facet ⇒ “sin metadata de columnas”
+
+dataset con schema facet + dvt_coverage.partial=true ⇒ “metadata parcial por selector”
+
+(Esto te salva del “DVT+ es basura” que describes.)
+
+4) Asincronía dbt Cloud: tu “bundle” se reemplaza por “Run is the bundle”
+
+Tu crítica a mi bundle era válida para la ingesta por archivos desordenados.
+
+Con OpenLineage, el runId es el pegamento. Cada ejecución produce eventos asociados al mismo runId; Marquez almacena runs separadamente incluso si el job es el mismo. Esto elimina el caso “manifest duplicado rompe correlación”.
+
+Prácticamente:
+
+Run A y Run B pueden tener el mismo job.name (misma definición) y conviven como runs distintos.
+
+Tu “inmutabilidad” ya está en el modelo.
+
+5) El “mercado ya votó”: Snowflake External Lineage acepta OpenLineage
+
+Esto importa porque te da una salida empresarial: no dependes solo de Marquez.
+
+Snowflake documenta “External lineage” y su release note 2026-01-16 dice explícitamente que acepta eventos OpenLineage vía endpoint REST y los incorpora al lineage nativo en Snowsight.
+
+Implicación: tu pipeline puede ser:
+
+dbt-ol → OpenLineage endpoint (Marquez)
+
+y/o dbt-ol → Snowflake external lineage endpoint
+
+(En algunos entornos, el “buyer” corporativo va a preferir Snowflake como backend de visualización.)
+
+6) Qué queda por resolver (y no lo resuelve Marquez “gratis”)
+6.1 RBAC fino + auditoría de lecturas
+
+Marquez no te va a dar “quién vio el SQL compilado”. Eso exige:
+
+proxy delante de API/UI con authn/authz
+
+audit log de lecturas
+
+y probablemente no almacenar SQL en Marquez (solo referencias) si es sensible
+
+6.2 Branching real
+
+Namespacing por branch funciona, pero comparar/overlay es tu capa.
+
+6.3 Coste
+
+OpenLineage te da el “sitio” (facet); tú tienes que traer datos de Snowflake y correlacionarlos.
+
+7) La decisión técnica (sin romanticismo): “DVT+ como plataforma sobre OL”
+
+Si la estrategia es correcta, el “core” de DVT+ cambia:
+
+Planner ya no parte de manifest.json como verdad primaria.
+
+Parte del grafo en Marquez (jobs/datasets/edges) + facets.
+
+dbt artifacts pasan a ser fuente de generación de eventos, no el objeto de persistencia central.
+
+Esto es exactamente lo que estás insinuando: absorber dbt, no “arreglar dbt”.
