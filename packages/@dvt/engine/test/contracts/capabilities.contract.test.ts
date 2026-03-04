@@ -17,9 +17,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import type { EngineRunRef, PlanRef } from '@dvt/contracts';
-import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
+import { createNoopObservability } from '../../../observability/src/noopObservability.js';
 import { ConductorAdapterStub } from '../../src/adapters/conductor/ConductorAdapterStub.js';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
@@ -36,10 +36,20 @@ import { sha256Hex } from '../../src/utils/sha256.js';
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const MATRIX_PATH = path.resolve(
-  __dirname,
-  '../../../../../specs/contracts/capabilities/adapters.capabilities.json'
-);
+const MATRIX_PATH_CANDIDATES = [
+  path.resolve(
+    __dirname,
+    '../../../../../docs/architecture/engine/contracts/capabilities/adapters.capabilities.json'
+  ),
+  path.resolve(__dirname, '../../../../../specs/contracts/capabilities/adapters.capabilities.json'),
+];
+
+function resolveMatrixPath(): string {
+  const found = MATRIX_PATH_CANDIDATES.find((p) => fs.existsSync(p));
+  return found ?? MATRIX_PATH_CANDIDATES[0]!;
+}
+
+const MATRIX_PATH = resolveMatrixPath();
 
 function utf8(s: string): Uint8Array {
   return new TextEncoder().encode(s);

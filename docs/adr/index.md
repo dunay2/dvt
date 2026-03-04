@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-03-03
 ---
 
-# ADRs
-
 Single source of truth for accepted architecture decisions.
 
 ## Purpose

@@ -21,7 +21,7 @@
     "dist"
   ],
   "scripts": {
-    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"

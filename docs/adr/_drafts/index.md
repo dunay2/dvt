@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# ADR Drafts
-
 Work-in-progress ADRs. Not normative.
 
 ## Purpose

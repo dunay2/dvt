@@ -1139,6 +1139,7 @@ Use this checklist during code review to validate invariant implementation:
 - [THREAT_MODEL.md](THREAT_MODEL.md) - Threat scenarios and mitigations
 - [PLUGIN_PROVENANCE_POLICY.v1.md](PLUGIN_PROVENANCE_POLICY.v1.md) - Plugin signature verification requirements (INV-PLUGIN-01/05)
 - [TENANT_ISOLATION_TESTS.v1.md](TENANT_ISOLATION_TESTS.v1.md) - Isolation test suite (INV-SCOPE-03, INV-RATE-01)
+- [ADR-0031 - Storage Adapter Tenant Isolation Strategy](../../../adr/ADR-0031-adapter-tenant-isolation.md) - Adapter-level tenant enforcement strategy
 - [IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md) - Authorization interface (INV-AUTHZ-01/02/03)
 - [AuditLog.v1.md](../contracts/security/AuditLog.v1.md) - Audit log schema (INV-AUDIT-01/02)
 - [ISecretsProvider.v1.md](../contracts/security/ISecretsProvider.v1.md) - Secrets resolution interface (INV-SECRETS-01)

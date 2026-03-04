@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Guides
-
 Developer guides, contribution guides, and quality standards.
 
 ## Purpose

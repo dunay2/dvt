@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Planning
-
 Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 ## Purpose

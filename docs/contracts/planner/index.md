@@ -5,8 +5,6 @@ owner: docs
 last_reviewed: 2026-02-25
 ---
 
-# Planner Contracts
-
 ExecutionPlan and planner-related schemas and compatibility matrices.
 
 ## Purpose
