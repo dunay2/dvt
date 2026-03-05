@@ -17,18 +17,23 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="zensical-0.0.24">
     
     
       
-        <title>DVT+ — Tareas de subsanación de carencias (2026-02-26) - DVT Documentation</title>
+        <title>DVT+ - Architectural Gap Remediation Tasks (2026-02-26) - DVT Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.28978c9b.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -42,12 +47,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -72,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dvt-tareas-de-subsanacion-de-carencias-2026-02-26" class="md-skip">
+        <a href="#dvt-architectural-gap-remediation-tasks-2026-02-26" class="md-skip">
           Skip to content
         </a>
       
@@ -88,15 +93,15 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -108,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              DVT+ — Tareas de subsanación de carencias (2026-02-26)
+              DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
             
           </span>
         </div>
@@ -121,7 +126,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
     
   
 </form>
@@ -136,55 +141,28 @@
       
         <label class="md-header__button md-icon" for="__search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -210,10 +188,10 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     DVT Documentation
@@ -223,7 +201,7 @@
       <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -240,7 +218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.md" class="md-nav__link">
+      <a href="/" class="md-nav__link">
         
   
   
@@ -1109,7 +1087,8 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1118,7 +1097,7 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
@@ -1134,10 +1113,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#politica-de-ejecucion" class="md-nav__link">
+  <a href="#polatica-de-ejecucia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Política de ejecución
+        PolÃ­tica de ejecuciÃ³n
       
     </span>
   </a>
@@ -1145,22 +1124,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#backlog-de-subsanacion" class="md-nav__link">
+  <a href="#backlog-de-subsanacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Backlog de subsanación
+        Backlog de subsanaciÃ³n
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Backlog de subsanación">
+    <nav class="md-nav" aria-label="Backlog de subsanaciÃ³n">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#evidencia-de-cierre-gap-p0-02-2026-02-26" class="md-nav__link">
+  <a href="#evidencia-de-cierre-a-gap-p0-02-2026-02-26" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evidencia de cierre — GAP-P0-02 (2026-02-26)
+        Evidencia de cierre â€” GAP-P0-02 (2026-02-26)
       
     </span>
   </a>
@@ -1168,10 +1147,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evidencia-de-cierre-gap-p0-03-2026-02-27" class="md-nav__link">
+  <a href="#evidencia-de-cierre-a-gap-p0-03-2026-02-27" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evidencia de cierre — GAP-P0-03 (2026-02-27)
+        Evidencia de cierre â€” GAP-P0-03 (2026-02-27)
       
     </span>
   </a>
@@ -1179,10 +1158,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evidencia-de-cierre-gap-p0-04-2026-02-27" class="md-nav__link">
+  <a href="#evidencia-de-cierre-a-gap-p0-04-2026-02-27" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evidencia de cierre — GAP-P0-04 (2026-02-27)
+        Evidencia de cierre â€” GAP-P0-04 (2026-02-27)
       
     </span>
   </a>
@@ -1190,10 +1169,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evidencia-de-cierre-gap-p0-05-2026-02-27" class="md-nav__link">
+  <a href="#evidencia-de-cierre-a-gap-p0-05-2026-02-27" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evidencia de cierre — GAP-P0-05 (2026-02-27)
+        Evidencia de cierre â€” GAP-P0-05 (2026-02-27)
       
     </span>
   </a>
@@ -1201,10 +1180,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evidencia-de-cierre-gap-p0-06-2026-02-27" class="md-nav__link">
+  <a href="#evidencia-de-cierre-a-gap-p0-06-2026-02-27" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evidencia de cierre — GAP-P0-06 (2026-02-27)
+        Evidencia de cierre â€” GAP-P0-06 (2026-02-27)
       
     </span>
   </a>
@@ -1217,10 +1196,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#orden-de-ejecucion-recomendado-primer-corte" class="md-nav__link">
+  <a href="#orden-de-ejecucia3n-recomendado-primer-corte" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Orden de ejecución recomendado (primer corte)
+        Orden de ejecuciÃ³n recomendado (primer corte)
       
     </span>
   </a>
@@ -1252,25 +1231,30 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
 
-<h1 id="dvt-tareas-de-subsanacion-de-carencias-2026-02-26">DVT+ — Tareas de subsanación de carencias (2026-02-26)<a class="headerlink" href="#dvt-tareas-de-subsanacion-de-carencias-2026-02-26" title="Permanent link">&para;</a></h1>
-<p>Fuente principal de carencias: <a href="../../review/DVT%2B_Architectural_Review_20260226_AI/">DVT+_Architectural_Review_20260226_AI.md</a></p>
+<hr />
+<p>title: DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: review</p>
+<hr />
+<h1 id="dvt-architectural-gap-remediation-tasks-2026-02-26">DVT+ - Architectural Gap Remediation Tasks (2026-02-26)<a class="headerlink" href="#dvt-architectural-gap-remediation-tasks-2026-02-26" title="Permanent link">&para;</a></h1>
+<p>Fuente principal de carencias: <a href="../../review/DVT+_Architectural_Review_20260226_AI/">DVT+_Architectural_Review_20260226_AI.md</a></p>
 <hr />
 <h2 id="objetivo">Objetivo<a class="headerlink" href="#objetivo" title="Permanent link">&para;</a></h2>
 <p>Cerrar los huecos estructurales detectados en arquitectura con tareas ejecutables, verificables y priorizadas.</p>
-<h2 id="politica-de-ejecucion">Política de ejecución<a class="headerlink" href="#politica-de-ejecucion" title="Permanent link">&para;</a></h2>
+<h2 id="polatica-de-ejecucia3n">PolÃ­tica de ejecuciÃ³n<a class="headerlink" href="#polatica-de-ejecucia3n" title="Permanent link">&para;</a></h2>
 <ol>
-<li>No avanzar a P1 sin cerrar P0 crítico.</li>
+<li>No avanzar a P1 sin cerrar P0 crÃ­tico.</li>
 <li>Cada tarea requiere DoD + evidencia en CI.</li>
-<li>Ningún “HECHO” sin prueba automática asociada.</li>
+<li>NingÃºn â€œHECHOâ€ sin prueba automÃ¡tica asociada.</li>
 </ol>
 <hr />
-<h2 id="backlog-de-subsanacion">Backlog de subsanación<a class="headerlink" href="#backlog-de-subsanacion" title="Permanent link">&para;</a></h2>
+<h2 id="backlog-de-subsanacia3n">Backlog de subsanaciÃ³n<a class="headerlink" href="#backlog-de-subsanacia3n" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1279,7 +1263,7 @@
 <th>Carencia</th>
 <th>Tarea</th>
 <th>Entregable</th>
-<th>Verificación</th>
+<th>VerificaciÃ³n</th>
 <th>Estado</th>
 </tr>
 </thead>
@@ -1288,25 +1272,25 @@
 <td>GAP-P0-01</td>
 <td>P0</td>
 <td>Drift de contrato State Store</td>
-<td>Unificar contrato canónico de state store en <code>@dvt/contracts</code> y eliminar variantes legacy</td>
-<td>Un único contrato exportado y consumido por engine/adapters</td>
-<td><code>pnpm -r typecheck</code> + búsqueda sin referencias legacy</td>
+<td>Unificar contrato canÃ³nico de state store en <code>@dvt/contracts</code> y eliminar variantes legacy</td>
+<td>Un Ãºnico contrato exportado y consumido por engine/adapters</td>
+<td><code>pnpm -r typecheck</code> + bÃºsqueda sin referencias legacy</td>
 <td>HECHO</td>
 </tr>
 <tr>
 <td>GAP-P0-02</td>
 <td>P0</td>
 <td>Planner subespecificado</td>
-<td>Definir contrato normativo <code>IPlanner</code> (inputs dbt manifest, selección, políticas; output ExecutionPlan versionado)</td>
-<td>Especificación + tipos + schemas + fixtures mínimos</td>
-<td>Tests de contrato + validación de schemas</td>
+<td>Definir contrato normativo <code>IPlanner</code> (inputs dbt manifest, selecciÃ³n, polÃ­ticas; output ExecutionPlan versionado)</td>
+<td>EspecificaciÃ³n + tipos + schemas + fixtures mÃ­nimos</td>
+<td>Tests de contrato + validaciÃ³n de schemas</td>
 <td>HECHO</td>
 </tr>
 <tr>
 <td>GAP-P0-03</td>
 <td>P0</td>
 <td>Planner no ejecutable</td>
-<td>Implementar Planner MVP (<code>manifest.json</code> → DAG → layers → ExecutionPlan) con fixtures 10/100/500</td>
+<td>Implementar Planner MVP (<code>manifest.json</code> â†’ DAG â†’ layers â†’ ExecutionPlan) con fixtures 10/100/500</td>
 <td>Paquete planner funcional con golden tests deterministas</td>
 <td><code>pnpm --filter @dvt/planner test</code></td>
 <td>HECHO</td>
@@ -1314,8 +1298,8 @@
 <tr>
 <td>GAP-P0-04</td>
 <td>P0</td>
-<td>Creep engine/decisión</td>
-<td>Mover evaluación de gateway DSL a Activity boundary y dejar workflow sin decisión de política</td>
+<td>Creep engine/decisiÃ³n</td>
+<td>Mover evaluaciÃ³n de gateway DSL a Activity boundary y dejar workflow sin decisiÃ³n de polÃ­tica</td>
 <td>Refactor de runtime temporal + pruebas replay</td>
 <td><code>pnpm --filter @dvt/adapter-temporal test:integration</code> + <code>pnpm lint:determinism</code></td>
 <td>HECHO</td>
@@ -1334,7 +1318,7 @@
 <td>P0</td>
 <td>Outbox incompleto</td>
 <td>Implementar outbox relay polling + retry/backoff + DLQ + replay manual</td>
-<td>Worker operativo + runbook de reenvío</td>
+<td>Worker operativo + runbook de reenvÃ­o</td>
 <td><code>pnpm --filter @dvt/engine test</code> + <code>pnpm --filter @dvt/adapter-postgres build &amp;&amp; pnpm --filter @dvt/adapter-postgres test</code> (+ <code>DVT_PG_INTEGRATION=1</code> para smoke real)</td>
 <td>HECHO</td>
 </tr>
@@ -1342,9 +1326,9 @@
 <td>GAP-P0-07</td>
 <td>P0</td>
 <td>Concurrencia startRun</td>
-<td>Garantizar idempotencia de arranque con <code>workflowId=runId</code> y política de conflicto explícita</td>
+<td>Garantizar idempotencia de arranque con <code>workflowId=runId</code> y polÃ­tica de conflicto explÃ­cita</td>
 <td>Un solo workflow por runId bajo carrera</td>
-<td>Test de carrera N-paralelo, 1 ejecución real</td>
+<td>Test de carrera N-paralelo, 1 ejecuciÃ³n real</td>
 <td>TODO</td>
 </tr>
 <tr>
@@ -1359,27 +1343,27 @@
 <tr>
 <td>GAP-P1-01</td>
 <td>P1</td>
-<td>Evolución contractual frágil</td>
-<td>Tooling de migración de contratos/eventos (dual-read + transform + compat matrix)</td>
-<td>Runner + tests de compat vN→vN+1</td>
-<td>Tests de migración automáticos</td>
+<td>EvoluciÃ³n contractual frÃ¡gil</td>
+<td>Tooling de migraciÃ³n de contratos/eventos (dual-read + transform + compat matrix)</td>
+<td>Runner + tests de compat vNâ†’vN+1</td>
+<td>Tests de migraciÃ³n automÃ¡ticos</td>
 <td>TODO</td>
 </tr>
 <tr>
 <td>GAP-P1-02</td>
 <td>P1</td>
 <td>Escalabilidad de event log</td>
-<td>Particionar <code>run_events</code> + política de retención hot/cold + archivado</td>
+<td>Particionar <code>run_events</code> + polÃ­tica de retenciÃ³n hot/cold + archivado</td>
 <td>DDL + jobs de mantenimiento + runbook</td>
-<td>Bench de consultas + pruebas de rotación</td>
+<td>Bench de consultas + pruebas de rotaciÃ³n</td>
 <td>TODO</td>
 </tr>
 <tr>
 <td>GAP-P1-03</td>
 <td>P1</td>
-<td>Sin backpressure/admisión</td>
-<td>Definir y aplicar control de admisión por tenant + cuotas + rate limit + circuit breaking</td>
-<td>Módulo de admisión + métricas</td>
+<td>Sin backpressure/admisiÃ³n</td>
+<td>Definir y aplicar control de admisiÃ³n por tenant + cuotas + rate limit + circuit breaking</td>
+<td>MÃ³dulo de admisiÃ³n + mÃ©tricas</td>
 <td>Test de carga con bursts multi-tenant</td>
 <td>TODO</td>
 </tr>
@@ -1387,7 +1371,7 @@
 <td>GAP-P1-04</td>
 <td>P1</td>
 <td>Sandbox plugins inmaduro</td>
-<td>Cerrar decisión e implementación de sandbox productivo (sin vm2) + capability enforcement runtime</td>
+<td>Cerrar decisiÃ³n e implementaciÃ³n de sandbox productivo (sin vm2) + capability enforcement runtime</td>
 <td>Sandbox aislado + contrato de capacidades ejecutable</td>
 <td>Pruebas de aislamiento + security tests</td>
 <td>TODO</td>
@@ -1396,8 +1380,8 @@
 <td>GAP-P1-05</td>
 <td>P1</td>
 <td>Paridad multi-engine sobreprometida</td>
-<td>Formalizar y testear “state-equivalent” Temporal/Conductor con matriz de conformidad</td>
-<td>Conformance suite + documento de límites</td>
+<td>Formalizar y testear â€œstate-equivalentâ€ Temporal/Conductor con matriz de conformidad</td>
+<td>Conformance suite + documento de lÃ­mites</td>
 <td>Tests de equivalencia de estado</td>
 <td>TODO</td>
 </tr>
@@ -1405,80 +1389,80 @@
 <td>GAP-P2-01</td>
 <td>P2</td>
 <td>Cost attribution incompleto</td>
-<td>Separar coste pre-run (estimación) de post-run (atribución real) y construir pipeline fiable</td>
+<td>Separar coste pre-run (estimaciÃ³n) de post-run (atribuciÃ³n real) y construir pipeline fiable</td>
 <td>Modelo de costes + ETL + dashboards</td>
-<td>Validación contra metering real</td>
+<td>ValidaciÃ³n contra metering real</td>
 <td>TODO</td>
 </tr>
 <tr>
 <td>GAP-P2-02</td>
 <td>P2</td>
 <td>SLA no vinculados a runtime</td>
-<td>Convertir SLO/SLA en políticas ejecutables (degradación, shedding, alertas)</td>
-<td>Reglas de degradación + runbooks</td>
+<td>Convertir SLO/SLA en polÃ­ticas ejecutables (degradaciÃ³n, shedding, alertas)</td>
+<td>Reglas de degradaciÃ³n + runbooks</td>
 <td>Chaos/SLO tests</td>
 <td>TODO</td>
 </tr>
 <tr>
 <td>GAP-P2-03</td>
 <td>P2</td>
-<td>Retención/GDPR sin cierre</td>
-<td>Definir estrategia de borrado y retención compatible con event sourcing</td>
-<td>Política legal/técnica + mecanismo operativo</td>
-<td>Auditoría de cumplimiento + tests</td>
+<td>RetenciÃ³n/GDPR sin cierre</td>
+<td>Definir estrategia de borrado y retenciÃ³n compatible con event sourcing</td>
+<td>PolÃ­tica legal/tÃ©cnica + mecanismo operativo</td>
+<td>AuditorÃ­a de cumplimiento + tests</td>
 <td>TODO</td>
 </tr>
 </tbody>
 </table>
-<h3 id="evidencia-de-cierre-gap-p0-02-2026-02-26">Evidencia de cierre — GAP-P0-02 (2026-02-26)<a class="headerlink" href="#evidencia-de-cierre-gap-p0-02-2026-02-26" title="Permanent link">&para;</a></h3>
+<h3 id="evidencia-de-cierre-a-gap-p0-02-2026-02-26">Evidencia de cierre â€” GAP-P0-02 (2026-02-26)<a class="headerlink" href="#evidencia-de-cierre-a-gap-p0-02-2026-02-26" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Contrato normativo planner con alias de compatibilidad en <code>@dvt/contracts</code>.</li>
-<li>Tipos y schemas v2.3 de planner presentes y validados con fixtures mínimos.</li>
-<li>Suite de contrato añadida para input envelope, plan versionado y build result.</li>
-<li>Verificación local ejecutada:</li>
+<li>Tipos y schemas v2.3 de planner presentes y validados con fixtures mÃ­nimos.</li>
+<li>Suite de contrato aÃ±adida para input envelope, plan versionado y build result.</li>
+<li>VerificaciÃ³n local ejecutada:</li>
 <li><code>pnpm --filter @dvt/contracts build</code></li>
 <li><code>pnpm --filter @dvt/contracts test</code></li>
 </ul>
-<h3 id="evidencia-de-cierre-gap-p0-03-2026-02-27">Evidencia de cierre — GAP-P0-03 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-gap-p0-03-2026-02-27" title="Permanent link">&para;</a></h3>
+<h3 id="evidencia-de-cierre-a-gap-p0-03-2026-02-27">Evidencia de cierre â€” GAP-P0-03 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-a-gap-p0-03-2026-02-27" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Planner MVP operativo desde manifest con DAG/layers/ExecutionPlan en <code>@dvt/planner</code>.</li>
 <li>Fixtures 10/100/500 cubiertos por suite dedicada y hash determinista validado.</li>
-<li>Verificación local ejecutada:</li>
+<li>VerificaciÃ³n local ejecutada:</li>
 <li><code>pnpm --filter @dvt/planner test</code></li>
 </ul>
-<h3 id="evidencia-de-cierre-gap-p0-04-2026-02-27">Evidencia de cierre — GAP-P0-04 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-gap-p0-04-2026-02-27" title="Permanent link">&para;</a></h3>
+<h3 id="evidencia-de-cierre-a-gap-p0-04-2026-02-27">Evidencia de cierre â€” GAP-P0-04 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-a-gap-p0-04-2026-02-27" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Evaluación gateway DSL movida a Activity boundary (<code>executeStep</code>) en adapter Temporal.</li>
-<li>Workflow sin evaluación de DSL inline; consume <code>gatewayDecision</code> devuelto por Activity.</li>
-<li>Cobertura añadida:</li>
-<li>unit tests de Activity para gateway true/false e inválidos.</li>
-<li>test de literals para asegurar ausencia de evaluación DSL en workflow.</li>
-<li>integración time-skipping con camino gateway + <code>StepSkipped</code> + payload <code>gatewayDecision</code>.</li>
-<li>Verificación local ejecutada:</li>
+<li>EvaluaciÃ³n gateway DSL movida a Activity boundary (<code>executeStep</code>) en adapter Temporal.</li>
+<li>Workflow sin evaluaciÃ³n de DSL inline; consume <code>gatewayDecision</code> devuelto por Activity.</li>
+<li>Cobertura aÃ±adida:</li>
+<li>unit tests de Activity para gateway true/false e invÃ¡lidos.</li>
+<li>test de literals para asegurar ausencia de evaluaciÃ³n DSL en workflow.</li>
+<li>integraciÃ³n time-skipping con camino gateway + <code>StepSkipped</code> + payload <code>gatewayDecision</code>.</li>
+<li>VerificaciÃ³n local ejecutada:</li>
 <li><code>pnpm --filter @dvt/adapter-temporal test</code></li>
 <li><code>pnpm --filter @dvt/adapter-temporal test:integration</code></li>
 <li><code>pnpm lint:determinism</code></li>
 </ul>
-<h3 id="evidencia-de-cierre-gap-p0-05-2026-02-27">Evidencia de cierre — GAP-P0-05 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-gap-p0-05-2026-02-27" title="Permanent link">&para;</a></h3>
+<h3 id="evidencia-de-cierre-a-gap-p0-05-2026-02-27">Evidencia de cierre â€” GAP-P0-05 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-a-gap-p0-05-2026-02-27" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Endurecimiento en engine: validación de tenant scope antes de lookup de metadata para operaciones de lectura/acción sobre runRef:</li>
+<li>Endurecimiento en engine: validaciÃ³n de tenant scope antes de lookup de metadata para operaciones de lectura/acciÃ³n sobre runRef:</li>
 <li><code>cancelRun</code></li>
 <li><code>getRunStatus</code></li>
 <li><code>enrichRunStatus</code></li>
 <li><code>signal</code></li>
 <li><code>detectStuckRuns</code> (tenant-scoped read/list)</li>
 <li>Se mantiene <code>tenantId</code> obligatorio por contrato en store (<code>getRunMetadataByRunId</code>, <code>listEvents</code>, <code>getSnapshot</code>, <code>listRuns</code>).</li>
-<li>Cobertura negativa añadida:</li>
+<li>Cobertura negativa aÃ±adida:</li>
 <li>tests de <code>authorizer</code> para denegar <code>cancelRun/getRunStatus/signal</code> con <code>runRef.tenantId</code> no autorizado (sin tocar adapter).</li>
-<li>test de aislamiento en adapter Postgres para denegar lecturas cross-tenant por defecto (<code>null</code>/<code>[]</code> según operación).</li>
-<li>Verificación local ejecutada:</li>
+<li>test de aislamiento en adapter Postgres para denegar lecturas cross-tenant por defecto (<code>null</code>/<code>[]</code> segÃºn operaciÃ³n).</li>
+<li>VerificaciÃ³n local ejecutada:</li>
 <li><code>pnpm --filter @dvt/engine test</code></li>
 <li><code>pnpm --filter @dvt/adapter-postgres test</code> (unit, smoke integration skipped sin DB)</li>
 <li><code>DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres test</code> (requiere Postgres local; en este entorno no disponible: <code>ECONNREFUSED</code> a <code>localhost:5432</code>)</li>
 </ul>
-<h3 id="evidencia-de-cierre-gap-p0-06-2026-02-27">Evidencia de cierre — GAP-P0-06 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-gap-p0-06-2026-02-27" title="Permanent link">&para;</a></h3>
+<h3 id="evidencia-de-cierre-a-gap-p0-06-2026-02-27">Evidencia de cierre â€” GAP-P0-06 (2026-02-27)<a class="headerlink" href="#evidencia-de-cierre-a-gap-p0-06-2026-02-27" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Outbox relay polling endurecido en worker con entrega por registro (no por batch ambiguo) y manejo explícito de fallo por evento en <code>OutboxWorker</code>.</li>
+<li>Outbox relay polling endurecido en worker con entrega por registro (no por batch ambiguo) y manejo explÃ­cito de fallo por evento en <code>OutboxWorker</code>.</li>
 <li>Retry/backoff implementado en storage:</li>
 <li>campo <code>nextAttemptAt</code> para gate temporal de reintento,</li>
 <li>backoff exponencial con tope,</li>
@@ -1486,34 +1470,34 @@
 <li>DLQ y replay manual operativos:</li>
 <li>soporte <code>listDeadLetter</code>,</li>
 <li><code>replayDeadLetters({ limit, runId, ids })</code> para reinsertar en pending con reseteo de intentos.</li>
-<li>Cobertura añadida:</li>
+<li>Cobertura aÃ±adida:</li>
 <li>tests de worker outbox (<code>drain</code>, <code>fail+retry</code>, <code>DLQ+replay</code>) en <code>@dvt/engine</code>.</li>
 <li>smoke tests Postgres ampliados para backoff y replay DLQ (se ejecutan con <code>DVT_PG_INTEGRATION=1</code>).</li>
-<li>Runbook operativo añadido:</li>
+<li>Runbook operativo aÃ±adido:</li>
 <li><code>runbooks/OUTBOX_RELAY_OPERATIONS.md</code>.</li>
-<li>Verificación local ejecutada:</li>
+<li>VerificaciÃ³n local ejecutada:</li>
 <li><code>pnpm --filter @dvt/engine build</code></li>
 <li><code>pnpm --filter @dvt/engine test</code></li>
 <li><code>pnpm --filter @dvt/adapter-postgres build</code></li>
 <li><code>pnpm --filter @dvt/adapter-postgres test</code> (unit, smoke integration skipped sin DB)</li>
 </ul>
 <hr />
-<h2 id="orden-de-ejecucion-recomendado-primer-corte">Orden de ejecución recomendado (primer corte)<a class="headerlink" href="#orden-de-ejecucion-recomendado-primer-corte" title="Permanent link">&para;</a></h2>
+<h2 id="orden-de-ejecucia3n-recomendado-primer-corte">Orden de ejecuciÃ³n recomendado (primer corte)<a class="headerlink" href="#orden-de-ejecucia3n-recomendado-primer-corte" title="Permanent link">&para;</a></h2>
 <ol>
-<li>GAP-P0-01 → GAP-P0-02 → GAP-P0-03</li>
-<li>GAP-P0-05 → GAP-P0-07</li>
-<li>GAP-P0-06 → GAP-P0-08</li>
+<li>GAP-P0-01 â†’ GAP-P0-02 â†’ GAP-P0-03</li>
+<li>GAP-P0-05 â†’ GAP-P0-07</li>
+<li>GAP-P0-06 â†’ GAP-P0-08</li>
 <li>GAP-P0-04 (tras estabilizar planner/state)</li>
 </ol>
 <hr />
 <h2 id="criterio-de-salida-de-fase-p0">Criterio de salida de fase P0<a class="headerlink" href="#criterio-de-salida-de-fase-p0" title="Permanent link">&para;</a></h2>
-<p>P0 se considera cerrado únicamente si:</p>
+<p>P0 se considera cerrado Ãºnicamente si:</p>
 <ul>
 <li>No hay drift contractual en state store.</li>
-<li>Planner genera planes válidos y deterministas para fixtures reales.</li>
-<li>Tenant isolation está forzado y probado en negativo.</li>
+<li>Planner genera planes vÃ¡lidos y deterministas para fixtures reales.</li>
+<li>Tenant isolation estÃ¡ forzado y probado en negativo.</li>
 <li>Outbox entrega de punta a punta bajo fallo/reintento.</li>
-<li>CI no-gaps está activo como bloqueo.</li>
+<li>CI no-gaps estÃ¡ activo como bloqueo.</li>
 </ul>
 
 
@@ -1521,6 +1505,11 @@
 
 
 
+
+
+
+  
+  
 
 
 
@@ -1545,8 +1534,8 @@
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1564,10 +1553,11 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":[],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.16f8adc2.min.js"></script>
       
     
   </body>

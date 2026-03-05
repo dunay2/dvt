@@ -32,11 +32,11 @@ pnpm test
 
 ## Documentation
 
-> **[Documentation Index](docs/INDEX.md)**
+> **[Documentation Index](docs/index.md)**
 
 ### Architecture & Contracts
 
-> **[Engine Architecture Index](docs/architecture/engine/INDEX.md)** — Start here
+> **[Engine Architecture Index](docs/architecture/engine/index.md)** — Start here
 
 The engine is documented as **modular, versioned contracts** (not a monolith):
 

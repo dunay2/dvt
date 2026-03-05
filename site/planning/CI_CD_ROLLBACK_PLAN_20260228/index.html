@@ -17,18 +17,23 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="zensical-0.0.24">
     
     
       
-        <title>Plan de reversión CI/CD tras estabilización (2026-02-28) - DVT Documentation</title>
+        <title>CI/CD Rollback Plan After Stabilization (2026-02-28) - DVT Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.28978c9b.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -42,12 +47,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -72,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#plan-de-reversion-cicd-tras-estabilizacion-2026-02-28" class="md-skip">
+        <a href="#cicd-rollback-plan-after-stabilization-2026-02-28" class="md-skip">
           Skip to content
         </a>
       
@@ -88,15 +93,15 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -108,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Plan de reversión CI/CD tras estabilización (2026-02-28)
+              CI/CD Rollback Plan After Stabilization (2026-02-28)
             
           </span>
         </div>
@@ -121,7 +126,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
     
   
 </form>
@@ -136,55 +141,28 @@
       
         <label class="md-header__button md-icon" for="__search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -210,10 +188,10 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     DVT Documentation
@@ -223,7 +201,7 @@
       <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -240,7 +218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.md" class="md-nav__link">
+      <a href="/" class="md-nav__link">
         
   
   
@@ -1109,7 +1087,8 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1118,7 +1097,7 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
@@ -1134,10 +1113,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#estado-actual-modo-estabilizacion" class="md-nav__link">
+  <a href="#estado-actual-modo-estabilizacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Estado actual (modo estabilización)
+        Estado actual (modo estabilizaciÃ³n)
       
     </span>
   </a>
@@ -1187,7 +1166,7 @@
   <a href="#riesgos-conocidos-antes-de-volver-a-automatico" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Riesgos conocidos antes de volver a automático
+        Riesgos conocidos antes de volver a automÃ¡tico
       
     </span>
   </a>
@@ -1195,22 +1174,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#estrategia-de-reversion-recomendada" class="md-nav__link">
+  <a href="#estrategia-de-reversia3n-recomendada" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Estrategia de reversión recomendada
+        Estrategia de reversiÃ³n recomendada
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Estrategia de reversión recomendada">
+    <nav class="md-nav" aria-label="Estrategia de reversiÃ³n recomendada">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fase-1-rehabilitacion-controlada-sin-bloquear-merges" class="md-nav__link">
+  <a href="#fase-1-a-rehabilitacia3n-controlada-sin-bloquear-merges" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fase 1 — Rehabilitación controlada (sin bloquear merges)
+        Fase 1 â€” RehabilitaciÃ³n controlada (sin bloquear merges)
       
     </span>
   </a>
@@ -1218,10 +1197,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fase-2-reintroduccion-de-triggers-automaticos" class="md-nav__link">
+  <a href="#fase-2-a-reintroduccia3n-de-triggers-automaticos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fase 2 — Reintroducción de triggers automáticos
+        Fase 2 â€” ReintroducciÃ³n de triggers automÃ¡ticos
       
     </span>
   </a>
@@ -1229,10 +1208,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fase-3-endurecimiento-final" class="md-nav__link">
+  <a href="#fase-3-a-endurecimiento-final" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fase 3 — Endurecimiento final
+        Fase 3 â€” Endurecimiento final
       
     </span>
   </a>
@@ -1245,10 +1224,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checklist-de-salida-de-estabilizacion" class="md-nav__link">
+  <a href="#checklist-de-salida-de-estabilizacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checklist de salida de estabilización
+        Checklist de salida de estabilizaciÃ³n
       
     </span>
   </a>
@@ -1256,10 +1235,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#criterio-de-finalizacion" class="md-nav__link">
+  <a href="#criterio-de-finalizacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Criterio de finalización
+        Criterio de finalizaciÃ³n
       
     </span>
   </a>
@@ -1280,19 +1259,24 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
 
-<h1 id="plan-de-reversion-cicd-tras-estabilizacion-2026-02-28">Plan de reversión CI/CD tras estabilización (2026-02-28)<a class="headerlink" href="#plan-de-reversion-cicd-tras-estabilizacion-2026-02-28" title="Permanent link">&para;</a></h1>
+<hr />
+<p>title: CI/CD Rollback Plan After Stabilization (2026-02-28)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: status</p>
+<hr />
+<h1 id="cicd-rollback-plan-after-stabilization-2026-02-28">CI/CD Rollback Plan After Stabilization (2026-02-28)<a class="headerlink" href="#cicd-rollback-plan-after-stabilization-2026-02-28" title="Permanent link">&para;</a></h1>
 <h2 id="objetivo">Objetivo<a class="headerlink" href="#objetivo" title="Permanent link">&para;</a></h2>
-<p>Restaurar progresivamente el modo normal de CI/CD después del periodo de estabilización, minimizando riesgo de rotura y manteniendo trazabilidad de cada cambio.</p>
-<h2 id="estado-actual-modo-estabilizacion">Estado actual (modo estabilización)<a class="headerlink" href="#estado-actual-modo-estabilizacion" title="Permanent link">&para;</a></h2>
+<p>Restaurar progresivamente el modo normal de CI/CD despuÃ©s del periodo de estabilizaciÃ³n, minimizando riesgo de rotura y manteniendo trazabilidad de cada cambio.</p>
+<h2 id="estado-actual-modo-estabilizacia3n">Estado actual (modo estabilizaciÃ³n)<a class="headerlink" href="#estado-actual-modo-estabilizacia3n" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Triggers automáticos de <code>push</code>/<code>pull_request</code> desactivados temporalmente en workflows críticos.</li>
-<li>Ejecución manual habilitada con <code>workflow_dispatch</code>.</li>
+<li>Triggers automÃ¡ticos de <code>push</code>/<code>pull_request</code> desactivados temporalmente en workflows crÃ­ticos.</li>
+<li>EjecuciÃ³n manual habilitada con <code>workflow_dispatch</code>.</li>
 <li>Gates pesados puestos como opcionales por <code>inputs</code> para poder recuperar verde por capas.</li>
 </ul>
 <h2 id="cambios-temporales-aplicados">Cambios temporales aplicados<a class="headerlink" href="#cambios-temporales-aplicados" title="Permanent link">&para;</a></h2>
@@ -1319,7 +1303,7 @@
 <li><code>run_determinism_scan</code></li>
 <li><code>run_golden_validation</code></li>
 <li>
-<p>Se retiró temporalmente <code>Knowledge Graph Cypher Sync</code>.</p>
+<p>Se retirÃ³ temporalmente <code>Knowledge Graph Cypher Sync</code>.</p>
 </li>
 <li>
 <p>En <code>.github/workflows/test.yml</code></p>
@@ -1340,21 +1324,21 @@
 <li><code>run_typecheck_gate</code></li>
 <li><code>run_temporal_integration</code></li>
 <li>
-<p>Checks de PR (título, tamaño, labels, descripción) condicionados a evento <code>pull_request</code>.</p>
+<p>Checks de PR (tÃ­tulo, tamaÃ±o, labels, descripciÃ³n) condicionados a evento <code>pull_request</code>.</p>
 </li>
 <li>
 <p>En <code>.github/workflows/mkdocs-deploy.yml</code></p>
 </li>
 <li><code>run_pages_deploy</code></li>
 </ul>
-<h2 id="riesgos-conocidos-antes-de-volver-a-automatico">Riesgos conocidos antes de volver a automático<a class="headerlink" href="#riesgos-conocidos-antes-de-volver-a-automatico" title="Permanent link">&para;</a></h2>
+<h2 id="riesgos-conocidos-antes-de-volver-a-automatico">Riesgos conocidos antes de volver a automÃ¡tico<a class="headerlink" href="#riesgos-conocidos-antes-de-volver-a-automatico" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Trazabilidad ADR-0000</strong></li>
 <li>
-<p>Deuda histórica de <code>MISSING_BASELINE</code>, <code>MISSING_VERSION</code>, <code>ADR_NOT_ACCEPTED</code>.</p>
+<p>Deuda histÃ³rica de <code>MISSING_BASELINE</code>, <code>MISSING_VERSION</code>, <code>ADR_NOT_ACCEPTED</code>.</p>
 </li>
 <li>
-<p><strong>Markdown lint de documentación</strong></p>
+<p><strong>Markdown lint de documentaciÃ³n</strong></p>
 </li>
 <li>
 <p>Errores acumulados (<code>MD025</code>, <code>MD029</code>) en docs legacy.</p>
@@ -1363,10 +1347,10 @@
 <p><strong>Type-check de adapter temporal</strong></p>
 </li>
 <li>
-<p><code>@dvt/plan-interpreter</code> no resuelto y parámetros implícitos <code>any</code> en <code>RunPlanWorkflow.ts</code>.</p>
+<p><code>@dvt/plan-interpreter</code> no resuelto y parÃ¡metros implÃ­citos <code>any</code> en <code>RunPlanWorkflow.ts</code>.</p>
 </li>
 <li>
-<p><strong>Validación de fixtures golden</strong></p>
+<p><strong>ValidaciÃ³n de fixtures golden</strong></p>
 </li>
 <li>
 <p>Falta <code>tenantId</code> en <code>EngineRunRef</code> en varios JSON de planes.</p>
@@ -1376,14 +1360,14 @@
 </li>
 <li>El token por defecto no tiene permisos de push en ciertos contextos.</li>
 </ol>
-<h2 id="estrategia-de-reversion-recomendada">Estrategia de reversión recomendada<a class="headerlink" href="#estrategia-de-reversion-recomendada" title="Permanent link">&para;</a></h2>
-<h3 id="fase-1-rehabilitacion-controlada-sin-bloquear-merges">Fase 1 — Rehabilitación controlada (sin bloquear merges)<a class="headerlink" href="#fase-1-rehabilitacion-controlada-sin-bloquear-merges" title="Permanent link">&para;</a></h3>
+<h2 id="estrategia-de-reversia3n-recomendada">Estrategia de reversiÃ³n recomendada<a class="headerlink" href="#estrategia-de-reversia3n-recomendada" title="Permanent link">&para;</a></h2>
+<h3 id="fase-1-a-rehabilitacia3n-controlada-sin-bloquear-merges">Fase 1 â€” RehabilitaciÃ³n controlada (sin bloquear merges)<a class="headerlink" href="#fase-1-a-rehabilitacia3n-controlada-sin-bloquear-merges" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Mantener <code>workflow_dispatch</code> y ejecutar manualmente cada workflow.</li>
-<li>Resolver deuda técnica por dominio (tests, contracts, docs, release).</li>
+<li>Resolver deuda tÃ©cnica por dominio (tests, contracts, docs, release).</li>
 <li>Activar gates opcionales uno a uno en runs manuales hasta verde estable.</li>
 </ol>
-<h3 id="fase-2-reintroduccion-de-triggers-automaticos">Fase 2 — Reintroducción de triggers automáticos<a class="headerlink" href="#fase-2-reintroduccion-de-triggers-automaticos" title="Permanent link">&para;</a></h3>
+<h3 id="fase-2-a-reintroduccia3n-de-triggers-automaticos">Fase 2 â€” ReintroducciÃ³n de triggers automÃ¡ticos<a class="headerlink" href="#fase-2-a-reintroduccia3n-de-triggers-automaticos" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Reponer <code>pull_request</code> en:</li>
 <li><code>ci.yml</code></li>
@@ -1400,33 +1384,40 @@
 <li><code>test.yml</code></li>
 <li><code>release.yml</code></li>
 <li>
-<p><code>mkdocs-deploy.yml</code> (cuando permisos/pages estén validados)</p>
+<p><code>mkdocs-deploy.yml</code> (cuando permisos/pages estÃ©n validados)</p>
 </li>
 <li>
-<p>Reponer <code>schedule</code> en <code>golden-paths.yml</code> solo cuando golden fixtures estén limpios.</p>
+<p>Reponer <code>schedule</code> en <code>golden-paths.yml</code> solo cuando golden fixtures estÃ©n limpios.</p>
 </li>
 </ol>
-<h3 id="fase-3-endurecimiento-final">Fase 3 — Endurecimiento final<a class="headerlink" href="#fase-3-endurecimiento-final" title="Permanent link">&para;</a></h3>
+<h3 id="fase-3-a-endurecimiento-final">Fase 3 â€” Endurecimiento final<a class="headerlink" href="#fase-3-a-endurecimiento-final" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Eliminar <code>inputs</code> temporales y volver a gates obligatorios.</li>
 <li>Reintroducir (si aplica) checks retirados temporalmente (por ejemplo, KG sync).</li>
-<li>Confirmar que los checks obligatorios de merge quedan sincronizados con la política real.</li>
+<li>Confirmar que los checks obligatorios de merge quedan sincronizados con la polÃ­tica real.</li>
 </ol>
-<h2 id="checklist-de-salida-de-estabilizacion">Checklist de salida de estabilización<a class="headerlink" href="#checklist-de-salida-de-estabilizacion" title="Permanent link">&para;</a></h2>
+<h2 id="checklist-de-salida-de-estabilizacia3n">Checklist de salida de estabilizaciÃ³n<a class="headerlink" href="#checklist-de-salida-de-estabilizacia3n" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[ ] CI automática reactivada en PR y push.</li>
+<li>[ ] CI automÃ¡tica reactivada en PR y push.</li>
 <li>[ ] Gates de trazabilidad y markdown en verde sin bypass.</li>
 <li>[ ] Type-check global en verde sin excepciones.</li>
 <li>[ ] Golden fixtures validados con esquema completo.</li>
 <li>[ ] Deploy docs y release verificados con permisos correctos.</li>
-<li>[ ] Eliminados inputs temporales de estabilización.</li>
+<li>[ ] Eliminados inputs temporales de estabilizaciÃ³n.</li>
 </ul>
-<h2 id="criterio-de-finalizacion">Criterio de finalización<a class="headerlink" href="#criterio-de-finalizacion" title="Permanent link">&para;</a></h2>
-<p>Se considera completada la reversión cuando todos los workflows estén en modo automático, sin toggles temporales, y con verdes consecutivos en PRs reales durante al menos una ventana de cambios normal.</p>
+<h2 id="criterio-de-finalizacia3n">Criterio de finalizaciÃ³n<a class="headerlink" href="#criterio-de-finalizacia3n" title="Permanent link">&para;</a></h2>
+<p>Se considera completada la reversiÃ³n cuando todos los workflows estÃ©n en modo automÃ¡tico, sin toggles temporales, y con verdes consecutivos en PRs reales durante al menos una ventana de cambios normal.</p>
 
 
 
 
+
+
+
+
+
+  
+  
 
 
 
@@ -1453,8 +1444,8 @@
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1472,10 +1463,11 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":[],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.16f8adc2.min.js"></script>
       
     
   </body>

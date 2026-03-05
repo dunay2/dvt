@@ -20,7 +20,7 @@ plugins:
   - search
 
 nav:
-  - Home: index.md
+  - Home: /
   - ADRs:
       - ADR Index: adr/index.md
       - Draft ADRs: adr/_drafts/index.md

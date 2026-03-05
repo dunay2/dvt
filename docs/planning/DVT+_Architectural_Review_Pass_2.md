@@ -1,11 +1,10 @@
 ---
 title: 'DVT+ Architectural Review — Pass 2'
-date: 2026-03-02
-session: 'same session as Pass 1'
-delta_from_pass_1: 'ADR-0020 and ADR-0021 now exist; lineage direction settled; review evaluates new risks + unchanged findings.'
 status: Review
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: review
 ---
-
 # DVT+ Architectural Review — Pass 2
 
 **Date:** 2026-03-02 (same session)  

@@ -17,7 +17,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="zensical-0.0.24">
     
     
       
@@ -25,10 +25,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.28978c9b.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -42,12 +47,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -88,15 +93,15 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../guides/" title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -121,7 +126,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
     
   
 </form>
@@ -136,55 +141,28 @@
       
         <label class="md-header__button md-icon" for="__search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -210,10 +188,10 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../guides/" title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     DVT Documentation
@@ -223,7 +201,7 @@
       <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -240,7 +218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../index.md" class="md-nav__link">
+      <a href="/" class="md-nav__link">
         
   
   
@@ -1109,7 +1087,8 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1118,7 +1097,7 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
@@ -1192,7 +1171,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="CI/CD Quality Gates">
+    <nav class="md-nav" aria-label="CI&#x2f;CD Quality Gates">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1206,335 +1185,8 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#2-typescript-code-block-validation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2️⃣ TypeScript Code Block Validation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-internal-link-validation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3️⃣ Internal Link Validation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-normative-contract-structure-validation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4️⃣ Normative Contract Structure Validation
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#normative-contract-guidelines" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Normative Contract Guidelines
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Normative Contract Guidelines">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-is-a-normative-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What is a Normative Contract?
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#normative-contract-template" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Normative Contract Template
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-to-create-a-new-version" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to Create a New Version
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#versioning-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Versioning Policy
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Versioning Policy">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#file-naming-convention" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        File Naming Convention
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#git-tagging-for-patches" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Git Tagging for Patches
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#local-development-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local Development Workflow
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Local Development Workflow">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pre-commit-checklist" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pre-commit Checklist
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#troubleshooting-eslint-typescript-parser-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting: ESLint / TypeScript parser errors ⚠️
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tooling-config-convention-single-config-per-tool" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tooling config convention (single-config per tool)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vs-code-extensions-recommended" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        VS Code Extensions (Recommended)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contract-tooling-workflow-immediate-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Contract Tooling Workflow (Immediate Policy)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Contract Tooling Workflow (Immediate Policy)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mandatory-checks-for-contract-changes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mandatory checks for contract changes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#approved-validator-rollout-tracked-as-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Approved validator rollout (tracked as issues)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#adr-requirement-semantic-contract-changes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ADR requirement (semantic contract changes)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#faq" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        FAQ
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="FAQ">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#q-i-need-to-fix-a-typo-in-a-normative-contract-do-i-create-a-new-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Q: I need to fix a typo in a normative contract. Do I create a new file?
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#q-i-want-to-add-a-new-optional-method-to-iworkflowenginev11md-is-that-a-patch-or-minor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Q: I want to add a new optional method to IWorkflowEngine.v1.1.md. Is that a patch or MINOR?
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#q-how-do-i-deprecate-an-old-contract-version" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Q: How do I deprecate an old contract version?
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#q-ci-failed-with-missing-version-field-how-do-i-fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Q: CI failed with "Missing Version field". How do I fix?
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#q-ci-failed-with-typescript-validation-failed-but-its-pseudocode" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Q: CI failed with "TypeScript validation failed". But it's pseudocode
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#support" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Support
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#additional-resources" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Additional Resources
-      
-    </span>
-  </a>
   
 </li>
       
@@ -1552,8 +1204,6 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
@@ -1572,7 +1222,8 @@ including normative contracts, runbooks, and architectural decisions.</p>
 </ol>
 <hr />
 <h2 id="documentation-structure">Documentation Structure<a class="headerlink" href="#documentation-structure" title="Permanent link">&para;</a></h2>
-<pre><code class="language-text">docs/
+<p><code>text
+docs/
 ├── architecture/engine/
 │   ├── INDEX.md                    # Navigation hub
 │   ├── VERSIONING.md               # Contract evolution policy (MUST READ)
@@ -1587,8 +1238,7 @@ including normative contracts, runbooks, and architectural decisions.</p>
 │   ├── dev/                        # Developer tooling
 │   └── roadmap/                    # Phases &amp; milestones
 ├── runbooks/                       # SRE procedures
-└── decisions/                      # ADRs (Architecture Decision Records)
-</code></pre>
+└── decisions/                      # ADRs (Architecture Decision Records)</code></p>
 <hr />
 <h2 id="code-owners-review-process">Code Owners &amp; Review Process<a class="headerlink" href="#code-owners-review-process" title="Permanent link">&para;</a></h2>
 <h3 id="required-reviewers-automated-via-githubcodeowners">Required Reviewers (Automated via <code>.github/CODEOWNERS</code>)<a class="headerlink" href="#required-reviewers-automated-via-githubcodeowners" title="Permanent link">&para;</a></h3>
@@ -1667,13 +1317,13 @@ including normative contracts, runbooks, and architectural decisions.</p>
 <p>Every PR goes through <strong>4 automated validation stages</strong> before merge:</p>
 <h3 id="pr-metadata-gate-required-before-rerun">PR metadata gate (required before rerun)<a class="headerlink" href="#pr-metadata-gate-required-before-rerun" title="Permanent link">&para;</a></h3>
 <p>Before rerunning failed PR checks, verify PR metadata first. The workflow
-<a href="../../.github/workflows/pr-quality-gate.yml"><code>pr-quality-gate.yml</code></a> fails if these
+<a href="../../../.github/workflows/pr-quality-gate.yml"><code>pr-quality-gate.yml</code></a> fails if these
 rules are not met:</p>
 <ol>
 <li><strong>PR title must use Conventional Commits format</strong></li>
 <li>Required shape: <code>&lt;type&gt;: &lt;Subject&gt;</code></li>
 <li>Allowed types are defined in
-     <a href="../../.github/workflows/pr-quality-gate.yml"><code>Check PR title follows Conventional Commits</code></a>.</li>
+     <a href="../../../.github/workflows/pr-quality-gate.yml"><code>Check PR title follows Conventional Commits</code></a>.</li>
 <li>Current policy requires subject to start with uppercase (pattern <code>^[A-Z].+$</code>).</li>
 <li>
 <p>Example: <code>chore: Safe integrate pr85</code></p>
@@ -1689,9 +1339,9 @@ rules are not met:</p>
 <p><strong>Operational procedure for agents (mandatory order)</strong></p>
 </li>
 <li>Read failed job logs first (do not assume cause).</li>
-<li>Fix title/body with <a href="../../package.json"><code>gh pr edit</code></a>.</li>
+<li>Fix title/body with <a href="../../../package.json"><code>gh pr edit</code></a>.</li>
 <li>Re-run checks only after metadata is corrected.</li>
-<li>Confirm state with <a href="../../package.json"><code>gh pr checks</code></a> until all required checks are green.</li>
+<li>Confirm state with <a href="../../../package.json"><code>gh pr checks</code></a> until all required checks are green.</li>
 </ol>
 <p><strong>Tool</strong>: <code>markdownlint-cli2</code><br />
 <strong>Workflow</strong>: <code>.github/workflows/markdown_lint.yml</code><br />
@@ -1703,12 +1353,12 @@ rules are not met:</p>
 <li>Link syntax</li>
 </ul>
 <p><strong>Fix failures</strong>:</p>
-<pre><code class="language-bash"># Install markdownlint CLI
-npm install -g markdownlint-cli2
-
-# Run locally before pushing
-markdownlint-cli2 &quot;docs/**/*.md&quot;
-</code></pre>
+<p>```bash</p>
+<h1 id="install-markdownlint-cli">Install markdownlint CLI<a class="headerlink" href="#install-markdownlint-cli" title="Permanent link">&para;</a></h1>
+<p>npm install -g markdownlint-cli2</p>
+<h1 id="run-locally-before-pushing">Run locally before pushing<a class="headerlink" href="#run-locally-before-pushing" title="Permanent link">&para;</a></h1>
+<p>markdownlint-cli2 "docs/*<em>/</em>.md"
+```</p>
 <h3 id="2-typescript-code-block-validation">2️⃣ TypeScript Code Block Validation<a class="headerlink" href="#2-typescript-code-block-validation" title="Permanent link">&para;</a></h3>
 <p><strong>Tool</strong>: <code>tsc</code> (TypeScript compiler)<br />
 <strong>Workflow</strong>: <code>.github/workflows/markdown_lint.yml</code> (job: <code>validate-typescript-blocks</code>)<br />
@@ -1719,12 +1369,12 @@ markdownlint-cli2 &quot;docs/**/*.md&quot;
 <li>Validates syntax (catches typos, missing brackets, etc.)</li>
 </ul>
 <p><strong>Fix failures</strong>:</p>
-<pre><code class="language-bash"># Extract TypeScript blocks manually
-sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md | sed '1d;$d' &gt; /tmp/test.ts
-
-# Validate with tsc
-npx tsc --noEmit --skipLibCheck /tmp/test.ts
-</code></pre>
+<p>````bash</p>
+<h1 id="extract-typescript-blocks-manually">Extract TypeScript blocks manually<a class="headerlink" href="#extract-typescript-blocks-manually" title="Permanent link">&para;</a></h1>
+<p>sed -n '/<code>ts/,/</code>/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md | sed '1d;$d' &gt; /tmp/test.ts</p>
+<h1 id="validate-with-tsc">Validate with tsc<a class="headerlink" href="#validate-with-tsc" title="Permanent link">&para;</a></h1>
+<p>npx tsc --noEmit --skipLibCheck /tmp/test.ts
+````</p>
 <h3 id="3-internal-link-validation">3️⃣ Internal Link Validation<a class="headerlink" href="#3-internal-link-validation" title="Permanent link">&para;</a></h3>
 <p><strong>Tool</strong>: <code>markdown-link-check</code><br />
 <strong>Workflow</strong>: <code>.github/workflows/markdown_lint.yml</code> (job: <code>validate-internal-links</code>)<br />
@@ -1734,10 +1384,11 @@ npx tsc --noEmit --skipLibCheck /tmp/test.ts
 <li>Anchor links (e.g., <code>#section-heading</code>) exist in target files</li>
 </ul>
 <p><strong>Fix failures</strong>:</p>
-<pre><code class="language-bash"># Check links locally
-npm install -g markdown-link-check
+<p>```bash</p>
+<h1 id="check-links-locally">Check links locally<a class="headerlink" href="#check-links-locally" title="Permanent link">&para;</a></h1>
+<p>npm install -g markdown-link-check
 markdown-link-check docs/architecture/engine/INDEX.md
-</code></pre>
+```</p>
 <p><strong>Common causes</strong>:</p>
 <ul>
 <li>Typo in filename: <code>IWorkflowEngine.v1.1.md</code> vs <code>IWorkflowEngine.v1.0.md</code></li>
@@ -1775,61 +1426,63 @@ markdown-link-check docs/architecture/engine/INDEX.md
 </ul>
 <h3 id="normative-contract-template">Normative Contract Template<a class="headerlink" href="#normative-contract-template" title="Permanent link">&para;</a></h3>
 <p>When creating a new versioned contract (e.g., <code>MyContract.v1.md</code>):</p>
-<pre><code class="language-markdown"># MyContract (Normative v1.0)
-
-**Status**: Normative (MUST / MUST NOT)  
-**Version**: 1.0  
-**Stability**: [Core | Experimental | Deprecated]  
-**Consumers**: [List who depends on this: Engine, SDK, Adapter, etc.]
-
-**References**:
-[Contract Versioning Policy](../../VERSIONING.md)  
- [Related Contract](./OtherContract.v1.md)
-
----
-
-## 1) Problem Statement
-
-What problem does this contract solve?
-
-## 2) Normative Requirements
-
-### 2.1 Requirement Category
-
-**MUST**: ...
-
-**MUST NOT**: ...
-
-**SHOULD**: ...
-
----
-
-## Schema Evolution (Versioning)
-
-Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../../VERSIONING.md)):
-
-**MINOR Bump (v1.0 → v1.1)**: Backward-compatible additions
-
-- ...
-
-**MAJOR Bump (v1.0 → v2.0)**: Breaking changes
-
-- ...
-
-**Patch Update (v1.0.1, v1.0.2, etc.)**: Clarifications only
-
-- ...
-
----
-
-## Change Log
-
-| Version | Date       | Change                     |
-| ------- | ---------- | -------------------------- |
-| 1.0     | YYYY-MM-DD | Initial normative contract |
-</code></pre>
+<p>```markdown</p>
+<h1 id="mycontract-normative-v10">MyContract (Normative v1.0)<a class="headerlink" href="#mycontract-normative-v10" title="Permanent link">&para;</a></h1>
+<p><strong>Status</strong>: Normative (MUST / MUST NOT)<br />
+<strong>Version</strong>: 1.0<br />
+<strong>Stability</strong>: [Core | Experimental | Deprecated]<br />
+<strong>Consumers</strong>: [List who depends on this: Engine, SDK, Adapter, etc.]</p>
+<p><strong>References</strong>:
+<a href="../../../VERSIONING/">Contract Versioning Policy</a><br />
+<a href=".././OtherContract.v1/">Related Contract</a></p>
+<hr />
+<h2 id="1-problem-statement">1) Problem Statement<a class="headerlink" href="#1-problem-statement" title="Permanent link">&para;</a></h2>
+<p>What problem does this contract solve?</p>
+<h2 id="2-normative-requirements">2) Normative Requirements<a class="headerlink" href="#2-normative-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="21-requirement-category">2.1 Requirement Category<a class="headerlink" href="#21-requirement-category" title="Permanent link">&para;</a></h3>
+<p><strong>MUST</strong>: ...</p>
+<p><strong>MUST NOT</strong>: ...</p>
+<p><strong>SHOULD</strong>: ...</p>
+<hr />
+<h2 id="schema-evolution-versioning">Schema Evolution (Versioning)<a class="headerlink" href="#schema-evolution-versioning" title="Permanent link">&para;</a></h2>
+<p>Changes to this contract follow <strong>Semantic Versioning</strong> (see <a href="../../../VERSIONING/">VERSIONING.md</a>):</p>
+<p><strong>MINOR Bump (v1.0 → v1.1)</strong>: Backward-compatible additions</p>
+<ul>
+<li>...</li>
+</ul>
+<p><strong>MAJOR Bump (v1.0 → v2.0)</strong>: Breaking changes</p>
+<ul>
+<li>...</li>
+</ul>
+<p><strong>Patch Update (v1.0.1, v1.0.2, etc.)</strong>: Clarifications only</p>
+<ul>
+<li>...</li>
+</ul>
+<hr />
+<h2 id="change-log">Change Log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>YYYY-MM-DD</td>
+<td>Initial normative contract</td>
+</tr>
+<tr>
+<td>```</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h3 id="when-to-create-a-new-version">When to Create a New Version<a class="headerlink" href="#when-to-create-a-new-version" title="Permanent link">&para;</a></h3>
-<p>See <strong><a href="architecture/engine/VERSIONING.md">VERSIONING.md</a></strong> for the complete policy. Quick reference:</p>
+<p>See <strong><a href="../architecture/engine/VERSIONING/">VERSIONING.md</a></strong> for the complete policy. Quick reference:</p>
 <table>
 <thead>
 <tr>
@@ -1874,7 +1527,7 @@ Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../
 </ul>
 <hr />
 <h2 id="versioning-policy">Versioning Policy<a class="headerlink" href="#versioning-policy" title="Permanent link">&para;</a></h2>
-<p><strong>Critical reading</strong>: <a href="architecture/engine/VERSIONING.md">VERSIONING.md</a></p>
+<p><strong>Critical reading</strong>: <a href="../architecture/engine/VERSIONING/">VERSIONING.md</a></p>
 <h3 id="file-naming-convention">File Naming Convention<a class="headerlink" href="#file-naming-convention" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1917,18 +1570,16 @@ Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../
 <h2 id="local-development-workflow">Local Development Workflow<a class="headerlink" href="#local-development-workflow" title="Permanent link">&para;</a></h2>
 <h3 id="pre-commit-checklist">Pre-commit Checklist<a class="headerlink" href="#pre-commit-checklist" title="Permanent link">&para;</a></h3>
 <p>Before pushing your branch:</p>
-<pre><code class="language-bash"># 1. Lint Markdown
-markdownlint-cli2 &quot;docs/**/*.md&quot;
-
-# 2. Check internal links
-markdown-link-check docs/architecture/engine/INDEX.md
-
-# 3. Validate TypeScript snippets (if you added code blocks)
-# (Extract block manually and run tsc --noEmit)
-
-# 4. Preview rendering (VS Code)
-# Open .md file → Press Ctrl+Shift+V (Windows) or Cmd+Shift+V (Mac)
-</code></pre>
+<p>```bash</p>
+<h1 id="1-lint-markdown">1. Lint Markdown<a class="headerlink" href="#1-lint-markdown" title="Permanent link">&para;</a></h1>
+<p>markdownlint-cli2 "docs/*<em>/</em>.md"</p>
+<h1 id="2-check-internal-links">2. Check internal links<a class="headerlink" href="#2-check-internal-links" title="Permanent link">&para;</a></h1>
+<p>markdown-link-check docs/architecture/engine/INDEX.md</p>
+<h1 id="3-validate-typescript-snippets-if-you-added-code-blocks">3. Validate TypeScript snippets (if you added code blocks)<a class="headerlink" href="#3-validate-typescript-snippets-if-you-added-code-blocks" title="Permanent link">&para;</a></h1>
+<h1 id="extract-block-manually-and-run-tsc-noemit">(Extract block manually and run tsc --noEmit)<a class="headerlink" href="#extract-block-manually-and-run-tsc-noemit" title="Permanent link">&para;</a></h1>
+<h1 id="4-preview-rendering-vs-code">4. Preview rendering (VS Code)<a class="headerlink" href="#4-preview-rendering-vs-code" title="Permanent link">&para;</a></h1>
+<h1 id="open-md-file-press-ctrlshiftv-windows-or-cmdshiftv-mac">Open .md file → Press Ctrl+Shift+V (Windows) or Cmd+Shift+V (Mac)<a class="headerlink" href="#open-md-file-press-ctrlshiftv-windows-or-cmdshiftv-mac" title="Permanent link">&para;</a></h1>
+<p>```</p>
 <h3 id="troubleshooting-eslint-typescript-parser-errors">Troubleshooting: ESLint / TypeScript parser errors ⚠️<a class="headerlink" href="#troubleshooting-eslint-typescript-parser-errors" title="Permanent link">&para;</a></h3>
 <p>If CI shows errors like <code>@typescript-eslint/parser</code> complaining that files listed in <code>parserOptions.project</code> cannot be found (for example <code>packages/engine/legacy-top-level-engine/...</code>), clean up stale references using the steps below.</p>
 <hr />
@@ -1957,15 +1608,16 @@ markdown-link-check docs/architecture/engine/INDEX.md
 <li>Ensure ESLint is not explicitly targeting removed code (check <code>eslint.config.cjs</code> / <code>.eslintrc.*</code>).</li>
 <li>Search for lingering imports or test references and update/remove them:</li>
 </ol>
-<pre><code class="language-bash">git grep -n &quot;legacy-top-level-engine&quot; || true
-</code></pre>
+<p><code>bash
+git grep -n "legacy-top-level-engine" || true</code></p>
 <ol>
 <li>Run linter auto-fix for ordering/spacing issues and re-run CI:</li>
 </ol>
-<pre><code class="language-bash">pnpm lint --fix
-# or
-npx eslint . --ext .ts --fix
-</code></pre>
+<p>```bash
+pnpm lint --fix</p>
+<h1 id="or">or<a class="headerlink" href="#or" title="Permanent link">&para;</a></h1>
+<p>npx eslint . --ext .ts --fix
+```</p>
 <ol>
 <li>Commit the cleanup and re-run CI.</li>
 </ol>
@@ -1982,9 +1634,9 @@ npx eslint . --ext .ts --fix
 <p>Contract quality is enforced by repository automation first, editor tooling second.</p>
 <h3 id="mandatory-checks-for-contract-changes">Mandatory checks for contract changes<a class="headerlink" href="#mandatory-checks-for-contract-changes" title="Permanent link">&para;</a></h3>
 <p>For changes under <code>docs/architecture/engine/contracts/**</code>, contributors MUST run:</p>
-<pre><code class="language-bash">pnpm validate:contracts
-</code></pre>
-<p>CI remains authoritative through <a href="../.github/workflows/contracts.yml"><code>contracts.yml</code></a>.</p>
+<p><code>bash
+pnpm validate:contracts</code></p>
+<p>CI remains authoritative through <a href="../../.github/workflows/contracts.yml"><code>contracts.yml</code></a>.</p>
 <h3 id="approved-validator-rollout-tracked-as-issues">Approved validator rollout (tracked as issues)<a class="headerlink" href="#approved-validator-rollout-tracked-as-issues" title="Permanent link">&para;</a></h3>
 <p>The following validator streams are approved and tracked as dedicated GitHub issues:</p>
 <ul>
@@ -1999,7 +1651,7 @@ npx eslint . --ext .ts --fix
 <p>Contract semantic changes SHOULD include an ADR in <code>docs/decisions/</code>.</p>
 <p>In hardened phase, semantic changes (required fields, event semantics, deprecations)
 MUST include an ADR and will be enforced by CI gate.</p>
-<p>Reference policy: <a href="../decisions/ADR-0006-contract-tooling-governance/"><code>ADR-0006-contract-tooling-governance.md</code></a></p>
+<p>Reference policy: <a href=".././decisions/ADR-0006-contract-tooling-governance/"><code>ADR-0006-contract-tooling-governance.md</code></a></p>
 <hr />
 <h2 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">&para;</a></h2>
 <h3 id="q-i-need-to-fix-a-typo-in-a-normative-contract-do-i-create-a-new-file">Q: I need to fix a typo in a normative contract. Do I create a new file?<a class="headerlink" href="#q-i-need-to-fix-a-typo-in-a-normative-contract-do-i-create-a-new-file" title="Permanent link">&para;</a></h3>
@@ -2021,14 +1673,14 @@ MUST include an ADR and will be enforced by CI gate.</p>
 <li>Update <code>INDEX.md</code> to reference both <code>v1.md</code> and <code>v1.1.md</code></li>
 </ol>
 <h3 id="q-how-do-i-deprecate-an-old-contract-version">Q: How do I deprecate an old contract version?<a class="headerlink" href="#q-how-do-i-deprecate-an-old-contract-version" title="Permanent link">&para;</a></h3>
-<p><strong>A</strong>: See <a href="architecture/engine/VERSIONING.md#deprecation-process">VERSIONING.md § Deprecation Process</a>:</p>
+<p><strong>A</strong>: See <a href="../architecture/engine/VERSIONING/#deprecation-process">VERSIONING.md § Deprecation Process</a>:</p>
 <ol>
 <li>Add deprecation banner to old file:</li>
 </ol>
 <p>```markdown</p>
 <blockquote>
 <p><strong>⚠️ DEPRECATED</strong>: This contract is deprecated as of 2026-02-01.
-Use <a href="./MyContract.v2.md">MyContract.v2.md</a> instead.
+Use <a href=".././MyContract.v2/">MyContract.v2.md</a> instead.
 Support ends: 2026-05-01 (90 days after release tag).
    ```</p>
 </blockquote>
@@ -2039,11 +1691,11 @@ Support ends: 2026-05-01 (90 days after release tag).
 </ol>
 <h3 id="q-ci-failed-with-missing-version-field-how-do-i-fix">Q: CI failed with "Missing <strong>Version</strong> field". How do I fix?<a class="headerlink" href="#q-ci-failed-with-missing-version-field-how-do-i-fix" title="Permanent link">&para;</a></h3>
 <p><strong>A</strong>: Your contract file is missing required metadata. Add:</p>
-<pre><code class="language-markdown">**Status**: Normative (MUST / MUST NOT)  
+<p><code>markdown
+**Status**: Normative (MUST / MUST NOT)  
 **Version**: 1.0  
 **Stability**: Core semantics — breaking changes require version bump  
-**Consumers**: Engine, StateStore, Projector
-</code></pre>
+**Consumers**: Engine, StateStore, Projector</code></p>
 <h3 id="q-ci-failed-with-typescript-validation-failed-but-its-pseudocode">Q: CI failed with "TypeScript validation failed". But it's pseudocode<a class="headerlink" href="#q-ci-failed-with-typescript-validation-failed-but-its-pseudocode" title="Permanent link">&para;</a></h3>
 <p><strong>A</strong>: Use a different code block type:</p>
 <ul>
@@ -2062,11 +1714,13 @@ Support ends: 2026-05-01 (90 days after release tag).
 <hr />
 <h2 id="additional-resources">Additional Resources<a class="headerlink" href="#additional-resources" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="architecture/engine/VERSIONING.md">VERSIONING.md</a> — Complete contract evolution policy</li>
-<li><a href="architecture/engine/INDEX.md">INDEX.md</a> — Navigation hub for all engine docs</li>
+<li><a href="../architecture/engine/VERSIONING/">VERSIONING.md</a> — Complete contract evolution policy</li>
+<li><a href="../architecture/engine/">index.md</a> — Navigation hub for all engine docs</li>
 <li><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners">GitHub CODEOWNERS docs</a></li>
 <li><a href="https://www.ietf.org/rfc/rfc2119.txt">RFC 2119 (Normative keywords)</a></li>
 </ul>
+
+
 
 
 
@@ -2097,8 +1751,8 @@ Support ends: 2026-05-01 (90 days after release tag).
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -2116,10 +1770,11 @@ Support ends: 2026-05-01 (90 days after release tag).
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"search":"../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.16f8adc2.min.js"></script>
       
     
   </body>

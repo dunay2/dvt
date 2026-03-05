@@ -353,7 +353,7 @@ async function startRunWithErrorHandling(req: Request) {
 
 - [THREAT_MODEL.md](../../security/THREAT_MODEL.md) - Security boundaries, threat scenarios
 - [AuditLog.v1.md](AuditLog.v1.md) - Audit log schema (populated by auditAuthDecision)
-- [Engine architecture index](../../INDEX.md) - Architecture principles and navigation
+- [Engine architecture index](../../index.md) - Architecture principles and navigation
 
 ---
 

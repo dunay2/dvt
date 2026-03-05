@@ -17,7 +17,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="zensical-0.0.24">
     
     
       
@@ -25,10 +25,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.28978c9b.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -42,12 +47,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -88,15 +93,15 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-header__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -121,7 +126,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
     
   
 </form>
@@ -136,55 +141,28 @@
       
         <label class="md-header__button md-icon" for="__search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -210,10 +188,10 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
+    <a href="../../guides/" title="DVT Documentation" class="md-nav__button md-logo" aria-label="DVT Documentation" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
 
     </a>
     DVT Documentation
@@ -223,7 +201,7 @@
       <a href="https://github.com/dunay2/dvt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -240,7 +218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.md" class="md-nav__link">
+      <a href="/" class="md-nav__link">
         
   
   
@@ -1109,7 +1087,8 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1118,7 +1097,7 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
@@ -1225,7 +1204,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4. Relaciones clase/archivo más relevantes">
+    <nav class="md-nav" aria-label="4. Relaciones clase&#x2f;archivo más relevantes">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1302,8 +1281,6 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
@@ -1311,100 +1288,102 @@
 <h1 id="mapa-del-repositorio-y-relaciones-base-de-conocimiento">Mapa del Repositorio y Relaciones (Base de Conocimiento)<a class="headerlink" href="#mapa-del-repositorio-y-relaciones-base-de-conocimiento" title="Permanent link">&para;</a></h1>
 <h2 id="1-contexto-rapido">1. Contexto rápido<a class="headerlink" href="#1-contexto-rapido" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Workspace monorepo con <a href="../../pnpm-workspace.yaml"><code>pnpm-workspace.yaml</code></a>.</li>
-<li>Paquetes canónicos en <a href="../../packages"><code>packages/*</code></a>.</li>
-<li>Contratos/documentación como fuente de verdad en <a href="../../INDEX/"><code>docs/</code></a>.</li>
+<li>Workspace monorepo con <a href="../../../pnpm-workspace.yaml"><code>pnpm-workspace.yaml</code></a>.</li>
+<li>Paquetes canónicos en <a href="../../../packages"><code>packages/*</code></a>.</li>
+<li>Contratos/documentación como fuente de verdad en <a href="../../"><code>docs/</code></a>.</li>
 </ul>
 <hr />
 <h2 id="2-capas-principales">2. Capas principales<a class="headerlink" href="#2-capas-principales" title="Permanent link">&para;</a></h2>
 <h3 id="21-contratos-dvtcontracts">2.1 Contratos (<code>@dvt/contracts</code>)<a class="headerlink" href="#21-contratos-dvtcontracts" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Paquete: <a href="../../packages/contracts/package.json"><code>packages/contracts/package.json</code></a></li>
-<li>Exporta tipos, esquemas y validación en <a href="../../packages/contracts/index.ts"><code>packages/contracts/index.ts</code></a></li>
+<li>Paquete: <a href="../../../packages/contracts/package.json"><code>packages/contracts/package.json</code></a></li>
+<li>Exporta tipos, esquemas y validación en <a href="../../../packages/contracts/index.ts"><code>packages/contracts/index.ts</code></a></li>
 <li>Es dependencia transversal de engine/adapters/cli.</li>
 </ul>
 <h3 id="22-nucleo-engine-dvtengine">2.2 Núcleo engine (<code>@dvt/engine</code>)<a class="headerlink" href="#22-nucleo-engine-dvtengine" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Paquete: <a href="../../packages/engine/package.json"><code>packages/engine/package.json</code></a></li>
-<li>API pública en <a href="../../packages/engine/src/index.ts"><code>packages/engine/src/index.ts</code></a></li>
-<li>Orquestador central en <a href="../../packages/engine/src/core/WorkflowEngine.ts:93"><code>WorkflowEngine</code></a></li>
-<li>Proyección determinista en <a href="../../packages/engine/src/core/SnapshotProjector.ts:7"><code>SnapshotProjector</code></a></li>
-<li>Idempotencia en <a href="../../packages/engine/src/core/idempotency.ts:19"><code>IdempotencyKeyBuilder</code></a></li>
+<li>Paquete: <a href="../../../packages/engine/package.json"><code>packages/engine/package.json</code></a></li>
+<li>API pública en <a href="../../../packages/engine/src/index.ts"><code>packages/engine/src/index.ts</code></a></li>
+<li>Orquestador central en <a href="../../../packages/engine/src/core/WorkflowEngine.ts:93"><code>WorkflowEngine</code></a></li>
+<li>Proyección determinista en <a href="../../../packages/engine/src/core/SnapshotProjector.ts:7"><code>SnapshotProjector</code></a></li>
+<li>Idempotencia en <a href="../../../packages/engine/src/core/idempotency.ts:19"><code>IdempotencyKeyBuilder</code></a></li>
 </ul>
 <h3 id="23-adaptador-temporal-dvtadapter-temporal">2.3 Adaptador Temporal (<code>@dvt/adapter-temporal</code>)<a class="headerlink" href="#23-adaptador-temporal-dvtadapter-temporal" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Paquete: <a href="../../packages/adapter-temporal/package.json"><code>packages/adapter-temporal/package.json</code></a></li>
-<li>Implementación principal en <a href="../../packages/adapter-temporal/src/TemporalAdapter.ts:47"><code>TemporalAdapter</code></a></li>
-<li>Worker host en <a href="../../packages/adapter-temporal/src/TemporalWorkerHost.ts:22"><code>TemporalWorkerHost</code></a></li>
-<li>Actividades en <a href="../../packages/adapter-temporal/src/activities/stepActivities.ts:67"><code>createActivities()</code></a></li>
-<li>Workflow en <a href="../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:31"><code>RunPlanWorkflow</code></a></li>
+<li>Paquete: <a href="../../../packages/adapter-temporal/package.json"><code>packages/adapter-temporal/package.json</code></a></li>
+<li>Implementación principal en <a href="../../../packages/adapter-temporal/src/TemporalAdapter.ts:47"><code>TemporalAdapter</code></a></li>
+<li>Worker host en <a href="../../../packages/adapter-temporal/src/TemporalWorkerHost.ts:22"><code>TemporalWorkerHost</code></a></li>
+<li>Actividades en <a href="../../../packages/adapter-temporal/src/activities/stepActivities.ts:67"><code>createActivities()</code></a></li>
+<li>Workflow en <a href="../../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:31"><code>RunPlanWorkflow</code></a></li>
 </ul>
 <h3 id="24-adaptador-postgres-dvtadapter-postgres">2.4 Adaptador Postgres (<code>@dvt/adapter-postgres</code>)<a class="headerlink" href="#24-adaptador-postgres-dvtadapter-postgres" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Paquete: <a href="../../packages/adapter-postgres/package.json"><code>packages/adapter-postgres/package.json</code></a></li>
-<li>Implementación principal en <a href="../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts:24"><code>PostgresStateStoreAdapter</code></a></li>
+<li>Paquete: <a href="../../../packages/adapter-postgres/package.json"><code>packages/adapter-postgres/package.json</code></a></li>
+<li>Implementación principal en <a href="../../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts:24"><code>PostgresStateStoreAdapter</code></a></li>
 <li>Estado actual: base MVP con cobertura smoke.</li>
 </ul>
 <h3 id="25-cli-tooling-dvtcli">2.5 CLI / tooling (<code>@dvt/cli</code>)<a class="headerlink" href="#25-cli-tooling-dvtcli" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Paquete: <a href="../../packages/cli/package.json"><code>packages/cli/package.json</code></a></li>
-<li>Scripts operativos/validación en <a href="../../packages/cli"><code>packages/cli/*.cjs</code></a>.</li>
+<li>Paquete: <a href="../../../packages/cli/package.json"><code>packages/cli/package.json</code></a></li>
+<li>Scripts operativos/validación en <a href="../../../packages/cli"><code>packages/cli/*.cjs</code></a>.</li>
 </ul>
 <hr />
 <h2 id="3-relaciones-entre-paquetes-dependencias">3. Relaciones entre paquetes (dependencias)<a class="headerlink" href="#3-relaciones-entre-paquetes-dependencias" title="Permanent link">&para;</a></h2>
-<pre><code class="language-mermaid">graph TD
+<p><code>mermaid
+graph TD
   C[@dvt/contracts] --&gt; E[@dvt/engine]
   C --&gt; T[@dvt/adapter-temporal]
   C --&gt; P[@dvt/adapter-postgres]
   C --&gt; L[@dvt/cli]
   E --&gt; T
   E --&gt; P
-  E --&gt; L
-</code></pre>
+  E --&gt; L</code></p>
 <p>Evidencia en:</p>
 <ul>
-<li><a href="../../packages/engine/package.json"><code>packages/engine/package.json</code></a></li>
-<li><a href="../../packages/adapter-temporal/package.json"><code>packages/adapter-temporal/package.json</code></a></li>
-<li><a href="../../packages/adapter-postgres/package.json"><code>packages/adapter-postgres/package.json</code></a></li>
-<li><a href="../../packages/cli/package.json"><code>packages/cli/package.json</code></a></li>
+<li><a href="../../../packages/engine/package.json"><code>packages/engine/package.json</code></a></li>
+<li><a href="../../../packages/adapter-temporal/package.json"><code>packages/adapter-temporal/package.json</code></a></li>
+<li><a href="../../../packages/adapter-postgres/package.json"><code>packages/adapter-postgres/package.json</code></a></li>
+<li><a href="../../../packages/cli/package.json"><code>packages/cli/package.json</code></a></li>
 </ul>
 <hr />
 <h2 id="4-relaciones-clasearchivo-mas-relevantes">4. Relaciones clase/archivo más relevantes<a class="headerlink" href="#4-relaciones-clasearchivo-mas-relevantes" title="Permanent link">&para;</a></h2>
 <h3 id="41-flujo-de-inicio-de-ejecucion">4.1 Flujo de inicio de ejecución<a class="headerlink" href="#41-flujo-de-inicio-de-ejecucion" title="Permanent link">&para;</a></h3>
 <ol>
-<li><a href="../../packages/engine/src/core/WorkflowEngine.ts:102"><code>WorkflowEngine.startRun()</code></a></li>
+<li><a href="../../../packages/engine/src/core/WorkflowEngine.ts:102"><code>WorkflowEngine.startRun()</code></a></li>
 <li>validaciones de contrato (<code>parse*</code> desde <code>@dvt/contracts</code>)</li>
-<li>autorización <a href="../../packages/engine/src/security/authorizer.ts:2"><code>assertTenantAccess()</code></a></li>
-<li>integridad de plan <a href="../../packages/engine/src/security/planIntegrity.ts:9"><code>PlanIntegrityValidator.fetchAndValidate()</code></a></li>
+<li>autorización <a href="../../../packages/engine/src/security/authorizer.ts:2"><code>assertTenantAccess()</code></a></li>
+<li>integridad de plan <a href="../../../packages/engine/src/security/planIntegrity.ts:9"><code>PlanIntegrityValidator.fetchAndValidate()</code></a></li>
 <li>delegación a adapter (<code>startRun</code>)</li>
 <li>persistencia metadata/eventos en StateStore/Outbox</li>
 </ol>
 <h3 id="42-estado-y-proyeccion">4.2 Estado y proyección<a class="headerlink" href="#42-estado-y-proyeccion" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Motor consulta eventos y reconstruye snapshot vía <a href="../../packages/engine/src/core/SnapshotProjector.ts:8"><code>SnapshotProjector.rebuild()</code></a></li>
-<li>Idempotencia para eventos/señales con <a href="../../packages/engine/src/core/idempotency.ts:19"><code>IdempotencyKeyBuilder</code></a></li>
+<li>Motor consulta eventos y reconstruye snapshot vía <a href="../../../packages/engine/src/core/SnapshotProjector.ts:8"><code>SnapshotProjector.rebuild()</code></a></li>
+<li>Idempotencia para eventos/señales con <a href="../../../packages/engine/src/core/idempotency.ts:19"><code>IdempotencyKeyBuilder</code></a></li>
 </ul>
 <h3 id="43-adapter-selection">4.3 Adapter selection<a class="headerlink" href="#43-adapter-selection" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Resolución de proveedor en <a href="../../packages/engine/src/application/providerSelection.ts:14"><code>resolveEngineProvider()</code></a></li>
-<li>Contrato de provider en <a href="../../packages/engine/src/adapters/IProviderAdapter.ts:10"><code>IProviderAdapter</code></a></li>
+<li>Resolución de proveedor en <a href="../../../packages/engine/src/application/providerSelection.ts:14"><code>resolveEngineProvider()</code></a></li>
+<li>Contrato de provider en <a href="../../../packages/engine/src/adapters/IProviderAdapter.ts:10"><code>IProviderAdapter</code></a></li>
 </ul>
 <hr />
 <h2 id="5-documentacionadrs-conectados-a-codigo">5. Documentación/ADRs conectados a código<a class="headerlink" href="#5-documentacionadrs-conectados-a-codigo" title="Permanent link">&para;</a></h2>
 <ul>
-<li>ADR Temporal tests: <a href="../decisions/ADR-0001-temporal-integration-test-policy.md"><code>ADR-0001</code></a></li>
-<li>conecta con <a href="../../packages/adapter-temporal/test/integration.time-skipping.test.ts"><code>packages/adapter-temporal/test/integration.time-skipping.test.ts</code></a></li>
+<li>ADR Temporal tests: <a href="../../decisions/ADR-0001-temporal-integration-test-policy/"><code>ADR-0001</code></a></li>
+<li>conecta con <a href="../../../packages/adapter-temporal/test/integration.time-skipping.test.ts"><code>packages/adapter-temporal/test/integration.time-skipping.test.ts</code></a></li>
 <li>ADR Neo4j KG: <a href="../../decisions/ADR-0002-neo4j-knowledge-graph-context-repository/"><code>ADR-0002</code></a></li>
-<li>conecta con <a href="../../docker-compose.neo4j.yml"><code>docker-compose.neo4j.yml</code></a></li>
-<li>y scripts en <a href="../../scripts/neo4j"><code>scripts/neo4j</code></a></li>
+<li>conecta con <a href="../../../docker-compose.neo4j.yml"><code>docker-compose.neo4j.yml</code></a></li>
+<li>y scripts en <a href="../../../scripts/neo4j"><code>scripts/neo4j</code></a></li>
 </ul>
 <hr />
 <h2 id="6-legacy-y-frontera-canonica">6. Legacy y frontera canónica<a class="headerlink" href="#6-legacy-y-frontera-canonica" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Zona legacy explícita en <a href="../../packages/engine/legacy-top-level-engine"><code>packages/engine/legacy-top-level-engine</code></a>.</li>
-<li>La ruta activa/canónica está en <a href="../../packages/engine/src"><code>packages/engine/src</code></a>.</li>
+<li>Zona legacy explícita en <a href="../../../packages/engine/legacy-top-level-engine"><code>packages/engine/legacy-top-level-engine</code></a>.</li>
+<li>La ruta activa/canónica está en <a href="../../../packages/engine/src"><code>packages/engine/src</code></a>.</li>
 </ul>
-<p>Referencia de consolidación: <a href="../REPO_STRUCTURE_SUMMARY.md"><code>docs/REPO_STRUCTURE_SUMMARY.md</code></a></p>
+<p>Referencia de consolidación: <a href="../../REPO_STRUCTURE_SUMMARY/"><code>docs/REPO_STRUCTURE_SUMMARY.md</code></a></p>
+
+
 
 
 
@@ -1435,8 +1414,8 @@
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1454,10 +1433,11 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":[],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.16f8adc2.min.js"></script>
       
     
   </body>

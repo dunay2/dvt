@@ -3,7 +3,7 @@
 ## 1. Fuentes principales
 
 - Roadmap global: [`ROADMAP.md`](../../ROADMAP.md)
-- Índice docs: [`docs/INDEX.md`](../INDEX.md)
+- Índice docs: [`docs/index.md`](../index.md)
 - Estado de implementación: [`docs/status/IMPLEMENTATION_SUMMARY.md`](../status/IMPLEMENTATION_SUMMARY.md)
 - Backlog V2 funcional: [`docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md`](../planning/BACKLOG_V2_EPICS_AND_STORIES.md)
 - Backlog V2 ejecución GitHub: [`docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md`](../planning/BACKLOG_V2_GITHUB_EXECUTION.md)

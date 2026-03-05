@@ -1,3 +1,10 @@
+---
+title: G4 — compiledCodeRef: Task Specification for Development Team
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: proposal
+---
 # G4 — compiledCodeRef: Task Specification for Development Team
 
 **Status**: Ready for development
