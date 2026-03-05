@@ -1,8 +1,10 @@
 import { PostgresStartRunIntentStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import type { EngineRunRef } from '@dvt/contracts';
 import {
   MockAdapter,
   IdempotencyKeyBuilder,
   IntentReconcilerWorker,
+  type IntentReconcilerWorkerOptions,
   type IntentReconcilerWorkerLogger,
   type IntentReconcilerWorkerMetrics,
   RunMaintenanceService,
@@ -10,7 +12,6 @@ import {
   type IClock,
   type IProviderAdapter,
 } from '@dvt/engine';
-import type { EngineRunRef } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 import type { FastifyBaseLogger } from 'fastify';
 
@@ -22,38 +23,25 @@ interface RuntimeHandle {
   stop(): Promise<void>;
 }
 
-function resolveReconcilerAdapters(
-  providersEnv: string,
-  stateStore: PostgresStateStoreAdapter
-): Map<EngineRunRef['provider'], IProviderAdapter> {
-  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>();
-  const providers = providersEnv
-    .split(',')
-    .map((p) => p.trim().toLowerCase())
-    .filter((p) => p.length > 0);
-
-  for (const provider of providers) {
-    if (provider === 'mock') {
-      adapters.set(
-        'mock',
-        new MockAdapter({
-          stateStore,
-          projector: new SnapshotProjector(),
-        })
-      );
-      continue;
-    }
-    throw new Error(`UNSUPPORTED_RECONCILER_PROVIDER: ${provider}`);
-  }
-
-  return adapters;
+interface RuntimeStores {
+  stateStore: PostgresStateStoreAdapter;
+  intentStore: PostgresStartRunIntentStore;
 }
 
-export async function createIntentReconcilerRuntime(
-  env: Env,
-  logger: FastifyBaseLogger,
-  observability: IObservability
-): Promise<RuntimeHandle | null> {
+interface ReconcilerRuntimeConfig {
+  databaseUrl: string;
+  schema: string;
+  statementTimeoutMs: number;
+  queryTimeoutMs: number;
+  providers: readonly EngineRunRef['provider'][];
+  workerOptions: IntentReconcilerWorkerOptions;
+}
+
+const SYSTEM_CLOCK: Pick<IClock, 'nowIsoUtc'> = {
+  nowIsoUtc: () => new Date().toISOString(),
+};
+
+function resolveRuntimeConfig(env: Env, logger: FastifyBaseLogger): ReconcilerRuntimeConfig | null {
   if (!env.DVT_INTENT_RECONCILER_ENABLED) {
     logger.info({ enabled: false }, 'intent reconciler disabled');
     return null;
@@ -63,37 +51,96 @@ export async function createIntentReconcilerRuntime(
     return null;
   }
 
-  const pool = getPgPool(env.DATABASE_URL);
-  const stateStore = new PostgresStateStoreAdapter({
-    pool,
+  return {
+    databaseUrl: env.DATABASE_URL,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+    providers: parseProviderList(env.DVT_INTENT_RECONCILER_PROVIDERS),
+    workerOptions: {
+      intervalMs: env.DVT_INTENT_RECONCILER_INTERVAL_MS,
+      orphanThresholdMs: env.DVT_INTENT_RECONCILER_ORPHAN_THRESHOLD_MS,
+      limit: env.DVT_INTENT_RECONCILER_LIMIT,
+      errorBackoffMsBase: env.DVT_INTENT_RECONCILER_BACKOFF_BASE_MS,
+      errorBackoffMsMax: env.DVT_INTENT_RECONCILER_BACKOFF_MAX_MS,
+      tickTimeoutMs: env.DVT_INTENT_RECONCILER_TICK_TIMEOUT_MS,
+    },
+  };
+}
+
+function parseProviderList(value: string): readonly EngineRunRef['provider'][] {
+  return value
+    .split(',')
+    .map((p) => p.trim().toLowerCase())
+    .filter((p) => p.length > 0)
+    .map((provider) => {
+      if (provider === 'mock') return 'mock';
+      throw new Error(`UNSUPPORTED_RECONCILER_PROVIDER: ${provider}`);
+    });
+}
+
+function createRuntimeStores(config: ReconcilerRuntimeConfig): RuntimeStores {
+  const pool = getPgPool(config.databaseUrl);
+  const stateStore = new PostgresStateStoreAdapter({
+    pool,
+    schema: config.schema,
+    statementTimeoutMs: config.statementTimeoutMs,
+    queryTimeoutMs: config.queryTimeoutMs,
   });
   const intentStore = new PostgresStartRunIntentStore({
     pool,
-    schema: env.DVT_PG_SCHEMA,
-    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
-    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+    schema: config.schema,
+    statementTimeoutMs: config.statementTimeoutMs,
+    queryTimeoutMs: config.queryTimeoutMs,
   });
+  return { stateStore, intentStore };
+}
 
-  await Promise.all([stateStore.migrate(), intentStore.migrate()]);
-  const adapters = resolveReconcilerAdapters(env.DVT_INTENT_RECONCILER_PROVIDERS, stateStore);
-  if (adapters.size === 0) {
-    throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');
+function resolveReconcilerAdapters(
+  providers: readonly EngineRunRef['provider'][],
+  stateStore: PostgresStateStoreAdapter
+): Map<EngineRunRef['provider'], IProviderAdapter> {
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>();
+  for (const provider of providers) {
+    if (provider === 'mock') {
+      adapters.set(
+        'mock',
+        new MockAdapter({
+          stateStore,
+          projector: new SnapshotProjector(),
+        })
+      );
+    }
   }
+  return adapters;
+}
 
-  const maintenance = new RunMaintenanceService({
+function createMaintenanceService(
+  stateStore: PostgresStateStoreAdapter,
+  intentStore: PostgresStartRunIntentStore,
+  adapters: Map<EngineRunRef['provider'], IProviderAdapter>,
+  observability: IObservability
+): RunMaintenanceService {
+  return new RunMaintenanceService({
     stateStore,
     intentStore,
     adapters,
+    // reconcileOrphanedIntents does not perform tenant-gated operations.
+    // This no-op authorizer is intentionally scoped to background reconciliation.
     authorizer: { assertTenantAccess: async () => {} },
-    clock: { nowIsoUtc: () => new Date().toISOString() } as IClock,
+    clock: SYSTEM_CLOCK as IClock,
     idempotency: new IdempotencyKeyBuilder(),
     observability,
   });
+}
 
-  const worker = new IntentReconcilerWorker(
+function createWorker(
+  maintenance: RunMaintenanceService,
+  logger: FastifyBaseLogger,
+  observability: IObservability,
+  options: IntentReconcilerWorkerOptions
+): IntentReconcilerWorker {
+  return new IntentReconcilerWorker(
     maintenance,
     {
       info: (data) => logger.info(data, 'intent reconciler sweep'),
@@ -110,16 +157,15 @@ export async function createIntentReconcilerRuntime(
         observability.metrics.gauge(name).set(value);
       },
     } satisfies IntentReconcilerWorkerMetrics,
-    {
-      intervalMs: env.DVT_INTENT_RECONCILER_INTERVAL_MS,
-      orphanThresholdMs: env.DVT_INTENT_RECONCILER_ORPHAN_THRESHOLD_MS,
-      limit: env.DVT_INTENT_RECONCILER_LIMIT,
-      errorBackoffMsBase: env.DVT_INTENT_RECONCILER_BACKOFF_BASE_MS,
-      errorBackoffMsMax: env.DVT_INTENT_RECONCILER_BACKOFF_MAX_MS,
-      tickTimeoutMs: env.DVT_INTENT_RECONCILER_TICK_TIMEOUT_MS,
-    }
+    options
   );
+}
 
+function createRuntimeHandle(
+  worker: IntentReconcilerWorker,
+  stores: RuntimeStores,
+  logger: FastifyBaseLogger
+): RuntimeHandle {
   return {
     start: () => {
       worker.start();
@@ -127,8 +173,29 @@ export async function createIntentReconcilerRuntime(
     },
     stop: async () => {
       await worker.stop();
-      await Promise.all([stateStore.close(), intentStore.close()]);
-      logger.info('intent reconciler stopped');
+      await Promise.all([stores.stateStore.close(), stores.intentStore.close()]);
+      logger.info({ enabled: false }, 'intent reconciler stopped');
     },
   };
+}
+
+export async function createIntentReconcilerRuntime(
+  env: Env,
+  logger: FastifyBaseLogger,
+  observability: IObservability
+): Promise<RuntimeHandle | null> {
+  const config = resolveRuntimeConfig(env, logger);
+  if (config === null) return null;
+
+  const stores = createRuntimeStores(config);
+  const { stateStore, intentStore } = stores;
+  await Promise.all([stateStore.migrate(), intentStore.migrate()]);
+  const adapters = resolveReconcilerAdapters(config.providers, stateStore);
+  if (adapters.size === 0) {
+    throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');
+  }
+
+  const maintenance = createMaintenanceService(stateStore, intentStore, adapters, observability);
+  const worker = createWorker(maintenance, logger, observability, config.workerOptions);
+  return createRuntimeHandle(worker, stores, logger);
 }
