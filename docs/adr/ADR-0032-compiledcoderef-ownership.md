@@ -12,7 +12,7 @@
   - [ADR-0012 — Plan Integrity Ownership](ADR-0012-plan-integrity-ownership.md)
   - [ADR-0020 — OpenLineage Integration Strategy](ADR-0020-openlineage-integration.md) (if exists)
   - [ADR-0021 — RunEvents → OL Mapping](ADR-0021-runevents-ol-mapping.md) (if exists)
-  - [GAP_EXECUTION_PLANS.md — G4](../../plans/GAP_EXECUTION_PLANS.md#g4--compiledcoderef-ownership)
+  - [GAP_EXECUTION_PLANS.md — G4](../planning/GAP_EXECUTION_PLANS.md#g4--compiledcoderef-ownership)
 
 ---
 

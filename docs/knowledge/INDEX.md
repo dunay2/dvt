@@ -16,8 +16,8 @@ Este índice centraliza el conocimiento operativo/técnico del repositorio para 
 
 ## 2) Arquitectura y contratos
 
-- [Arquitectura engine (índice)](../architecture/engine/INDEX.md)
-- [Arquitectura frontend (índice)](../architecture/frontend/INDEX.md)
+- [Arquitectura engine (índice)](../architecture/engine/index.md)
+- [Arquitectura frontend (índice)](../architecture/frontend/index.md)
 - [Contratos automatización](../CONTRACTS_AUTOMATION_INDEX.md)
 
 ## 3) Decisiones arquitectónicas (ADR)

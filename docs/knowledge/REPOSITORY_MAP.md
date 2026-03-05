@@ -4,7 +4,7 @@
 
 - Workspace monorepo con [`pnpm-workspace.yaml`](../../pnpm-workspace.yaml).
 - Paquetes canónicos en [`packages/*`](../../packages).
-- Contratos/documentación como fuente de verdad en [`docs/`](../INDEX.md).
+- Contratos/documentación como fuente de verdad en [`docs/`](../index.md).
 
 ---
 

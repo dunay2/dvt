@@ -57,7 +57,8 @@
     "contracts:examples:validate": "node scripts/validate-executable-examples.cjs",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",
     "docs:sync": "node scripts/sync-docs.cjs",
-    "docs:sync:check": "pnpm docs:sync && git diff --exit-code -- docs/index.md docs/adr/index.md mkdocs.yml",
+    "docs:quality:check": "node scripts/docs-quality-check.cjs",
+    "docs:sync:check": "pnpm docs:sync && git diff --exit-code -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml",
     "docs:serve": "pnpm docs:sync && zensical serve",
     "docs:build": "pnpm docs:sync && zensical build",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
@@ -86,9 +87,9 @@
       "pnpm kg:generate",
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='scripts/neo4j/generated-repo.cypher';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
-    "docs/adr/ADR-*.md": [
+    "docs/**/*.{md,txt}": [
       "pnpm docs:sync",
-      "node -e \"const cp=require('child_process');cp.execSync('git add -- docs/adr/index.md docs/index.md mkdocs.yml',{stdio:'inherit'})\""
+      "node -e \"const cp=require('child_process');cp.execSync('git add -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml',{stdio:'inherit'})\""
     ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"

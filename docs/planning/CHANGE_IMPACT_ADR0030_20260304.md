@@ -1,3 +1,10 @@
+---
+title: Change Impact Report — ADR-0030 Session 2026-03-04
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: status
+---
 # Change Impact Report — ADR-0030 Session 2026-03-04
 
 **Branch:** `ci/workflow-redundancy-pass7`

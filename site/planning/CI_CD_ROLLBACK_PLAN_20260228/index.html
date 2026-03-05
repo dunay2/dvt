@@ -21,7 +21,7 @@
     
     
       
-        <title>Plan de reversión CI/CD tras estabilización (2026-02-28) - DVT Documentation</title>
+        <title>CI/CD Rollback Plan After Stabilization (2026-02-28) - DVT Documentation</title>
       
     
     
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#plan-de-reversion-cicd-tras-estabilizacion-2026-02-28" class="md-skip">
+        <a href="#cicd-rollback-plan-after-stabilization-2026-02-28" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Plan de reversión CI/CD tras estabilización (2026-02-28)
+              CI/CD Rollback Plan After Stabilization (2026-02-28)
             
           </span>
         </div>
@@ -1113,10 +1113,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#estado-actual-modo-estabilizacion" class="md-nav__link">
+  <a href="#estado-actual-modo-estabilizacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Estado actual (modo estabilización)
+        Estado actual (modo estabilizaciÃ³n)
       
     </span>
   </a>
@@ -1166,7 +1166,7 @@
   <a href="#riesgos-conocidos-antes-de-volver-a-automatico" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Riesgos conocidos antes de volver a automático
+        Riesgos conocidos antes de volver a automÃ¡tico
       
     </span>
   </a>
@@ -1174,22 +1174,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#estrategia-de-reversion-recomendada" class="md-nav__link">
+  <a href="#estrategia-de-reversia3n-recomendada" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Estrategia de reversión recomendada
+        Estrategia de reversiÃ³n recomendada
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Estrategia de reversión recomendada">
+    <nav class="md-nav" aria-label="Estrategia de reversiÃ³n recomendada">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fase-1-rehabilitacion-controlada-sin-bloquear-merges" class="md-nav__link">
+  <a href="#fase-1-a-rehabilitacia3n-controlada-sin-bloquear-merges" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fase 1 — Rehabilitación controlada (sin bloquear merges)
+        Fase 1 â€” RehabilitaciÃ³n controlada (sin bloquear merges)
       
     </span>
   </a>
@@ -1197,10 +1197,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fase-2-reintroduccion-de-triggers-automaticos" class="md-nav__link">
+  <a href="#fase-2-a-reintroduccia3n-de-triggers-automaticos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fase 2 — Reintroducción de triggers automáticos
+        Fase 2 â€” ReintroducciÃ³n de triggers automÃ¡ticos
       
     </span>
   </a>
@@ -1208,10 +1208,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fase-3-endurecimiento-final" class="md-nav__link">
+  <a href="#fase-3-a-endurecimiento-final" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fase 3 — Endurecimiento final
+        Fase 3 â€” Endurecimiento final
       
     </span>
   </a>
@@ -1224,10 +1224,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checklist-de-salida-de-estabilizacion" class="md-nav__link">
+  <a href="#checklist-de-salida-de-estabilizacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checklist de salida de estabilización
+        Checklist de salida de estabilizaciÃ³n
       
     </span>
   </a>
@@ -1235,10 +1235,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#criterio-de-finalizacion" class="md-nav__link">
+  <a href="#criterio-de-finalizacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Criterio de finalización
+        Criterio de finalizaciÃ³n
       
     </span>
   </a>
@@ -1263,13 +1263,20 @@
   
 
 
-<h1 id="plan-de-reversion-cicd-tras-estabilizacion-2026-02-28">Plan de reversión CI/CD tras estabilización (2026-02-28)<a class="headerlink" href="#plan-de-reversion-cicd-tras-estabilizacion-2026-02-28" title="Permanent link">&para;</a></h1>
+<hr />
+<p>title: CI/CD Rollback Plan After Stabilization (2026-02-28)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: status</p>
+<hr />
+<h1 id="cicd-rollback-plan-after-stabilization-2026-02-28">CI/CD Rollback Plan After Stabilization (2026-02-28)<a class="headerlink" href="#cicd-rollback-plan-after-stabilization-2026-02-28" title="Permanent link">&para;</a></h1>
 <h2 id="objetivo">Objetivo<a class="headerlink" href="#objetivo" title="Permanent link">&para;</a></h2>
-<p>Restaurar progresivamente el modo normal de CI/CD después del periodo de estabilización, minimizando riesgo de rotura y manteniendo trazabilidad de cada cambio.</p>
-<h2 id="estado-actual-modo-estabilizacion">Estado actual (modo estabilización)<a class="headerlink" href="#estado-actual-modo-estabilizacion" title="Permanent link">&para;</a></h2>
+<p>Restaurar progresivamente el modo normal de CI/CD despuÃ©s del periodo de estabilizaciÃ³n, minimizando riesgo de rotura y manteniendo trazabilidad de cada cambio.</p>
+<h2 id="estado-actual-modo-estabilizacia3n">Estado actual (modo estabilizaciÃ³n)<a class="headerlink" href="#estado-actual-modo-estabilizacia3n" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Triggers automáticos de <code>push</code>/<code>pull_request</code> desactivados temporalmente en workflows críticos.</li>
-<li>Ejecución manual habilitada con <code>workflow_dispatch</code>.</li>
+<li>Triggers automÃ¡ticos de <code>push</code>/<code>pull_request</code> desactivados temporalmente en workflows crÃ­ticos.</li>
+<li>EjecuciÃ³n manual habilitada con <code>workflow_dispatch</code>.</li>
 <li>Gates pesados puestos como opcionales por <code>inputs</code> para poder recuperar verde por capas.</li>
 </ul>
 <h2 id="cambios-temporales-aplicados">Cambios temporales aplicados<a class="headerlink" href="#cambios-temporales-aplicados" title="Permanent link">&para;</a></h2>
@@ -1296,7 +1303,7 @@
 <li><code>run_determinism_scan</code></li>
 <li><code>run_golden_validation</code></li>
 <li>
-<p>Se retiró temporalmente <code>Knowledge Graph Cypher Sync</code>.</p>
+<p>Se retirÃ³ temporalmente <code>Knowledge Graph Cypher Sync</code>.</p>
 </li>
 <li>
 <p>En <code>.github/workflows/test.yml</code></p>
@@ -1317,21 +1324,21 @@
 <li><code>run_typecheck_gate</code></li>
 <li><code>run_temporal_integration</code></li>
 <li>
-<p>Checks de PR (título, tamaño, labels, descripción) condicionados a evento <code>pull_request</code>.</p>
+<p>Checks de PR (tÃ­tulo, tamaÃ±o, labels, descripciÃ³n) condicionados a evento <code>pull_request</code>.</p>
 </li>
 <li>
 <p>En <code>.github/workflows/mkdocs-deploy.yml</code></p>
 </li>
 <li><code>run_pages_deploy</code></li>
 </ul>
-<h2 id="riesgos-conocidos-antes-de-volver-a-automatico">Riesgos conocidos antes de volver a automático<a class="headerlink" href="#riesgos-conocidos-antes-de-volver-a-automatico" title="Permanent link">&para;</a></h2>
+<h2 id="riesgos-conocidos-antes-de-volver-a-automatico">Riesgos conocidos antes de volver a automÃ¡tico<a class="headerlink" href="#riesgos-conocidos-antes-de-volver-a-automatico" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Trazabilidad ADR-0000</strong></li>
 <li>
-<p>Deuda histórica de <code>MISSING_BASELINE</code>, <code>MISSING_VERSION</code>, <code>ADR_NOT_ACCEPTED</code>.</p>
+<p>Deuda histÃ³rica de <code>MISSING_BASELINE</code>, <code>MISSING_VERSION</code>, <code>ADR_NOT_ACCEPTED</code>.</p>
 </li>
 <li>
-<p><strong>Markdown lint de documentación</strong></p>
+<p><strong>Markdown lint de documentaciÃ³n</strong></p>
 </li>
 <li>
 <p>Errores acumulados (<code>MD025</code>, <code>MD029</code>) en docs legacy.</p>
@@ -1340,10 +1347,10 @@
 <p><strong>Type-check de adapter temporal</strong></p>
 </li>
 <li>
-<p><code>@dvt/plan-interpreter</code> no resuelto y parámetros implícitos <code>any</code> en <code>RunPlanWorkflow.ts</code>.</p>
+<p><code>@dvt/plan-interpreter</code> no resuelto y parÃ¡metros implÃ­citos <code>any</code> en <code>RunPlanWorkflow.ts</code>.</p>
 </li>
 <li>
-<p><strong>Validación de fixtures golden</strong></p>
+<p><strong>ValidaciÃ³n de fixtures golden</strong></p>
 </li>
 <li>
 <p>Falta <code>tenantId</code> en <code>EngineRunRef</code> en varios JSON de planes.</p>
@@ -1353,14 +1360,14 @@
 </li>
 <li>El token por defecto no tiene permisos de push en ciertos contextos.</li>
 </ol>
-<h2 id="estrategia-de-reversion-recomendada">Estrategia de reversión recomendada<a class="headerlink" href="#estrategia-de-reversion-recomendada" title="Permanent link">&para;</a></h2>
-<h3 id="fase-1-rehabilitacion-controlada-sin-bloquear-merges">Fase 1 — Rehabilitación controlada (sin bloquear merges)<a class="headerlink" href="#fase-1-rehabilitacion-controlada-sin-bloquear-merges" title="Permanent link">&para;</a></h3>
+<h2 id="estrategia-de-reversia3n-recomendada">Estrategia de reversiÃ³n recomendada<a class="headerlink" href="#estrategia-de-reversia3n-recomendada" title="Permanent link">&para;</a></h2>
+<h3 id="fase-1-a-rehabilitacia3n-controlada-sin-bloquear-merges">Fase 1 â€” RehabilitaciÃ³n controlada (sin bloquear merges)<a class="headerlink" href="#fase-1-a-rehabilitacia3n-controlada-sin-bloquear-merges" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Mantener <code>workflow_dispatch</code> y ejecutar manualmente cada workflow.</li>
-<li>Resolver deuda técnica por dominio (tests, contracts, docs, release).</li>
+<li>Resolver deuda tÃ©cnica por dominio (tests, contracts, docs, release).</li>
 <li>Activar gates opcionales uno a uno en runs manuales hasta verde estable.</li>
 </ol>
-<h3 id="fase-2-reintroduccion-de-triggers-automaticos">Fase 2 — Reintroducción de triggers automáticos<a class="headerlink" href="#fase-2-reintroduccion-de-triggers-automaticos" title="Permanent link">&para;</a></h3>
+<h3 id="fase-2-a-reintroduccia3n-de-triggers-automaticos">Fase 2 â€” ReintroducciÃ³n de triggers automÃ¡ticos<a class="headerlink" href="#fase-2-a-reintroduccia3n-de-triggers-automaticos" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Reponer <code>pull_request</code> en:</li>
 <li><code>ci.yml</code></li>
@@ -1377,35 +1384,40 @@
 <li><code>test.yml</code></li>
 <li><code>release.yml</code></li>
 <li>
-<p><code>mkdocs-deploy.yml</code> (cuando permisos/pages estén validados)</p>
+<p><code>mkdocs-deploy.yml</code> (cuando permisos/pages estÃ©n validados)</p>
 </li>
 <li>
-<p>Reponer <code>schedule</code> en <code>golden-paths.yml</code> solo cuando golden fixtures estén limpios.</p>
+<p>Reponer <code>schedule</code> en <code>golden-paths.yml</code> solo cuando golden fixtures estÃ©n limpios.</p>
 </li>
 </ol>
-<h3 id="fase-3-endurecimiento-final">Fase 3 — Endurecimiento final<a class="headerlink" href="#fase-3-endurecimiento-final" title="Permanent link">&para;</a></h3>
+<h3 id="fase-3-a-endurecimiento-final">Fase 3 â€” Endurecimiento final<a class="headerlink" href="#fase-3-a-endurecimiento-final" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Eliminar <code>inputs</code> temporales y volver a gates obligatorios.</li>
 <li>Reintroducir (si aplica) checks retirados temporalmente (por ejemplo, KG sync).</li>
-<li>Confirmar que los checks obligatorios de merge quedan sincronizados con la política real.</li>
+<li>Confirmar que los checks obligatorios de merge quedan sincronizados con la polÃ­tica real.</li>
 </ol>
-<h2 id="checklist-de-salida-de-estabilizacion">Checklist de salida de estabilización<a class="headerlink" href="#checklist-de-salida-de-estabilizacion" title="Permanent link">&para;</a></h2>
+<h2 id="checklist-de-salida-de-estabilizacia3n">Checklist de salida de estabilizaciÃ³n<a class="headerlink" href="#checklist-de-salida-de-estabilizacia3n" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[ ] CI automática reactivada en PR y push.</li>
+<li>[ ] CI automÃ¡tica reactivada en PR y push.</li>
 <li>[ ] Gates de trazabilidad y markdown en verde sin bypass.</li>
 <li>[ ] Type-check global en verde sin excepciones.</li>
 <li>[ ] Golden fixtures validados con esquema completo.</li>
 <li>[ ] Deploy docs y release verificados con permisos correctos.</li>
-<li>[ ] Eliminados inputs temporales de estabilización.</li>
+<li>[ ] Eliminados inputs temporales de estabilizaciÃ³n.</li>
 </ul>
-<h2 id="criterio-de-finalizacion">Criterio de finalización<a class="headerlink" href="#criterio-de-finalizacion" title="Permanent link">&para;</a></h2>
-<p>Se considera completada la reversión cuando todos los workflows estén en modo automático, sin toggles temporales, y con verdes consecutivos en PRs reales durante al menos una ventana de cambios normal.</p>
+<h2 id="criterio-de-finalizacia3n">Criterio de finalizaciÃ³n<a class="headerlink" href="#criterio-de-finalizacia3n" title="Permanent link">&para;</a></h2>
+<p>Se considera completada la reversiÃ³n cuando todos los workflows estÃ©n en modo automÃ¡tico, sin toggles temporales, y con verdes consecutivos en PRs reales durante al menos una ventana de cambios normal.</p>
 
 
 
 
 
 
+
+
+
+  
+  
 
 
 

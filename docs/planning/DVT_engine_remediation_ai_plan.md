@@ -1,3 +1,10 @@
+---
+title: DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: proposal
+---
 # DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)
 
 **Reference date:** 2026-02-26 (Atlantic/Canary)  
