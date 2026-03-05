@@ -34,10 +34,13 @@
       "@dvt/canonical/*": ["packages/@dvt/canonical/src/*"],
       "@dvt/dsl": ["packages/@dvt/dsl/src/index.ts"],
       "@dvt/dsl/*": ["packages/@dvt/dsl/src/*"],
+      "@dvt/engine": ["packages/@dvt/engine/src/index.ts"],
       "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
       "@dvt/contracts": ["packages/@dvt/contracts/index.ts"],
       "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
+      "@dvt/adapter-postgres": ["packages/@dvt/adapter-postgres/src/index.ts"],
       "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
+      "@dvt/adapter-temporal": ["packages/@dvt/adapter-temporal/src/index.ts"],
       "@dvt/adapter-temporal/*": ["packages/@dvt/adapter-temporal/src/*"]
     }
   },

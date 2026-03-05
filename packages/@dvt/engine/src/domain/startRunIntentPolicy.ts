@@ -1,22 +1,13 @@
-import type { StartRunIntentStatus } from '../ports/IStartRunIntentStore.js';
-
-export type StartRunIntentTransitionTarget = Exclude<StartRunIntentStatus, 'PENDING'>;
-
-const TRANSITION_RULES: Record<StartRunIntentTransitionTarget, readonly StartRunIntentStatus[]> = {
-  DISPATCHED: ['PENDING'],
-  RESOLVED: ['PENDING', 'DISPATCHED'],
-  EXPIRED: ['PENDING'],
-};
-
-export function getAllowedFromStatuses(
-  toStatus: StartRunIntentTransitionTarget
-): readonly StartRunIntentStatus[] {
-  return TRANSITION_RULES[toStatus];
-}
-
-export function canTransitionStartRunIntent(
-  fromStatus: StartRunIntentStatus,
-  toStatus: StartRunIntentTransitionTarget
-): boolean {
-  return getAllowedFromStatuses(toStatus).includes(fromStatus);
-}
+/**
+ * @file packages/@dvt/engine/src/domain/startRunIntentPolicy.ts
+ * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @decision Engine domain policy delegates to canonical contract policy
+ * @consequence Transition rules have a single source of truth across adapters and engine
+ * @version 1.0.0
+ * @date 2026-03-05
+ */
+export {
+  canTransitionStartRunIntent,
+  getAllowedFromStatuses,
+  type StartRunIntentTransitionTarget,
+} from '@dvt/contracts';

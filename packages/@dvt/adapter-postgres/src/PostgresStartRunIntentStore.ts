@@ -7,10 +7,23 @@
  * @version 1.0.0
  * @date 2026-03-04
  */
-import type { EngineRunRef } from '@dvt/contracts';
+import type {
+  CreateIntentInput,
+  IStartRunIntentStore,
+  StartRunIntentTransitionTarget,
+  StartRunIntent,
+  StartRunIntentStatus,
+} from '@dvt/contracts';
+import {
+  getAllowedFromStatuses,
+  IntentInvalidTransitionError,
+  IntentNotFoundError,
+  StoreNotReadyError,
+} from '@dvt/contracts';
 import { Pool } from 'pg';
 
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
+import { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
 
 interface IntentRow {
   intent_id: string;
@@ -23,49 +36,16 @@ interface IntentRow {
   updated_at: string;
 }
 
-type StartRunIntentStatus = 'PENDING' | 'DISPATCHED' | 'RESOLVED' | 'EXPIRED';
-type TransitionTargetStatus = 'RESOLVED' | 'EXPIRED';
+type NonDispatchTransitionTarget = Exclude<StartRunIntentTransitionTarget, 'DISPATCHED'>;
+type TransitionOutcome = 'UPDATED' | 'INVALID' | 'NOT_FOUND';
 
-interface IntentTransition {
-  toStatus: TransitionTargetStatus;
-  allowedFrom: readonly StartRunIntentStatus[];
+interface TransitionOutcomeRow {
+  outcome: TransitionOutcome;
+  current_status: StartRunIntentStatus | null;
 }
-
-const NON_DISPATCH_TRANSITIONS: Record<TransitionTargetStatus, IntentTransition> = {
-  RESOLVED: { toStatus: 'RESOLVED', allowedFrom: ['PENDING', 'DISPATCHED'] },
-  EXPIRED: { toStatus: 'EXPIRED', allowedFrom: ['PENDING'] },
-};
 
 const INTENT_SELECT_COLUMNS =
   'intent_id, tenant_id, run_id, provider, status, engine_run_ref, created_at, updated_at';
-
-interface StartRunIntent {
-  intentId: string;
-  tenantId: string;
-  runId: string;
-  provider: EngineRunRef['provider'];
-  status: StartRunIntentStatus;
-  engineRunRef?: EngineRunRef;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateIntentInput {
-  intentId: string;
-  tenantId: string;
-  runId: string;
-  provider: EngineRunRef['provider'];
-  createdAt: string;
-}
-
-interface IStartRunIntentStore {
-  createIntent(input: CreateIntentInput): Promise<StartRunIntent>;
-  markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void>;
-  markResolved(intentId: string): Promise<void>;
-  markExpired(intentId: string): Promise<void>;
-  listOrphaned(thresholdMs: number, nowMs: number, limit?: number): Promise<StartRunIntent[]>;
-  getIntent(intentId: string): Promise<StartRunIntent | null>;
-}
 
 export interface PostgresStartRunIntentStoreConfig {
   connectionString?: string;
@@ -74,6 +54,7 @@ export interface PostgresStartRunIntentStoreConfig {
   now?: () => string;
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
+  schemaManager?: StartRunIntentSchemaManager;
 }
 
 export class PostgresStartRunIntentStore implements IStartRunIntentStore {
@@ -81,10 +62,11 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   private readonly ownsPool: boolean;
   private readonly schema: string;
   private readonly now: () => string;
+  private readonly schemaManager: StartRunIntentSchemaManager;
   private migratePromise: Promise<void> | null = null;
   private migrated = false;
 
-  constructor(readonly config: PostgresStartRunIntentStoreConfig = {}) {
+  constructor(config: PostgresStartRunIntentStoreConfig = {}) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
     this.now = config.now ?? (() => new Date().toISOString());
 
@@ -104,10 +86,17 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
       });
       this.ownsPool = true;
     }
+    this.schemaManager =
+      config.schemaManager ??
+      new StartRunIntentSchemaManager({
+        pool: this.pool,
+        schema: this.schema,
+      });
   }
 
   async migrate(): Promise<void> {
-    this.migratePromise ??= this.ensureSchema()
+    this.migratePromise ??= this.schemaManager
+      .migrate()
       .then(() => {
         this.migrated = true;
       })
@@ -128,29 +117,39 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   async createIntent(input: CreateIntentInput): Promise<StartRunIntent> {
     this.ready();
     const now = this.now();
-    await this.pool.query(
+    const result = await this.pool.query<IntentRow>(
       `
-        INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
-          intent_id,
-          tenant_id,
-          run_id,
-          provider,
-          status,
-          engine_run_ref,
-          created_at,
-          updated_at
+        WITH inserted AS (
+          INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
+            intent_id,
+            tenant_id,
+            run_id,
+            provider,
+            status,
+            engine_run_ref,
+            created_at,
+            updated_at
+          )
+          VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
+          ON CONFLICT (intent_id) DO NOTHING
+          RETURNING ${INTENT_SELECT_COLUMNS}
         )
-        VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
-        ON CONFLICT (intent_id) DO NOTHING
+        SELECT ${INTENT_SELECT_COLUMNS}
+        FROM inserted
+        UNION ALL
+        SELECT ${INTENT_SELECT_COLUMNS}
+        FROM ${quoteIdentifier(this.schema)}.start_run_intents
+        WHERE intent_id = $1
+          AND NOT EXISTS (SELECT 1 FROM inserted)
+        LIMIT 1
       `,
       [input.intentId, input.tenantId, input.runId, input.provider, input.createdAt, now]
     );
-
-    const intent = await this.getIntent(input.intentId);
-    if (intent === null) {
+    const row = result.rows[0];
+    if (!row) {
       throw new IntentNotFoundError(input.intentId);
     }
-    return intent;
+    return toIntent(row);
   }
 
   async markDispatched(
@@ -158,43 +157,47 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     engineRunRef: NonNullable<StartRunIntent['engineRunRef']>
   ): Promise<void> {
     this.ready();
-    const result = await this.pool.query(
+    const outcome = await this.resolveTransitionOutcome(
       `
         UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
         SET status = 'DISPATCHED',
             engine_run_ref = $2::jsonb,
             updated_at = $3::timestamptz
-        WHERE intent_id = $1 AND status = 'PENDING'
+        WHERE intent_id = $1
+          AND status = 'PENDING'
+        RETURNING status
       `,
       [intentId, JSON.stringify(engineRunRef), this.now()]
     );
-    await this.assertTransitionApplied(intentId, result.rowCount ?? 0, 'DISPATCHED');
+    this.assertTransitionOutcome(intentId, outcome, 'DISPATCHED');
   }
 
   async markResolved(intentId: string): Promise<void> {
-    await this.applyTransition(intentId, NON_DISPATCH_TRANSITIONS.RESOLVED);
+    await this.applyTransition(intentId, 'RESOLVED');
   }
 
   async markExpired(intentId: string): Promise<void> {
-    await this.applyTransition(intentId, NON_DISPATCH_TRANSITIONS.EXPIRED);
+    await this.applyTransition(intentId, 'EXPIRED');
   }
 
-  private async applyTransition(intentId: string, transition: IntentTransition): Promise<void> {
+  private async applyTransition(
+    intentId: string,
+    toStatus: NonDispatchTransitionTarget
+  ): Promise<void> {
     this.ready();
-    if (transition.allowedFrom.length === 0) {
-      throw new Error('INVALID_TRANSITION_GUARD: fromStatuses cannot be empty');
-    }
-    const result = await this.pool.query(
+    const allowedFrom = getAllowedFromStatuses(toStatus);
+    const outcome = await this.resolveTransitionOutcome(
       `
         UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
         SET status = $2,
             updated_at = $3::timestamptz
         WHERE intent_id = $1
           AND status::text = ANY($4::text[])
+        RETURNING status
       `,
-      [intentId, transition.toStatus, this.now(), transition.allowedFrom]
+      [intentId, toStatus, this.now(), allowedFrom]
     );
-    await this.assertTransitionApplied(intentId, result.rowCount ?? 0, transition.toStatus);
+    this.assertTransitionOutcome(intentId, outcome, toStatus);
   }
 
   async listOrphaned(
@@ -203,7 +206,10 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     limit?: number
   ): Promise<StartRunIntent[]> {
     this.ready();
-    const boundedLimit = Math.max(1, Math.min(limit ?? 100, 1000));
+    if (limit !== undefined && (limit < 1 || limit > 1000)) {
+      throw new RangeError('INVALID_LIMIT: listOrphaned limit must be between 1 and 1000');
+    }
+    const boundedLimit = limit ?? 100;
     const cutoffIso = new Date(nowMs - thresholdMs).toISOString();
     const result = await this.pool.query<IntentRow>(
       `
@@ -233,111 +239,54 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     return row ? toIntent(row) : null;
   }
 
-  private async assertTransitionApplied(
+  private async resolveTransitionOutcome(
+    updateSql: string,
+    updateParams: unknown[]
+  ): Promise<TransitionOutcomeRow> {
+    const result = await this.pool.query<TransitionOutcomeRow>(
+      `
+        WITH updated AS (
+          ${updateSql}
+        ),
+        existing AS (
+          SELECT status::text AS current_status
+          FROM ${quoteIdentifier(this.schema)}.start_run_intents
+          WHERE intent_id = $1
+        )
+        SELECT
+          CASE
+            WHEN EXISTS (SELECT 1 FROM updated) THEN 'UPDATED'
+            WHEN EXISTS (SELECT 1 FROM existing) THEN 'INVALID'
+            ELSE 'NOT_FOUND'
+          END::text AS outcome,
+          (SELECT current_status FROM existing LIMIT 1)::text AS current_status
+      `,
+      updateParams
+    );
+    return {
+      outcome: (result.rows[0]?.outcome ?? 'NOT_FOUND') as TransitionOutcome,
+      current_status: (result.rows[0]?.current_status ?? null) as StartRunIntentStatus | null,
+    };
+  }
+
+  private assertTransitionOutcome(
     intentId: string,
-    rowCount: number,
+    transition: TransitionOutcomeRow,
     to: StartRunIntentStatus
-  ): Promise<void> {
-    if (rowCount > 0) return;
-    const existing = await this.getIntent(intentId);
-    if (existing === null) {
+  ): void {
+    if (transition.outcome === 'UPDATED') return;
+    if (transition.outcome === 'NOT_FOUND') {
       throw new IntentNotFoundError(intentId);
     }
-    throw new IntentInvalidTransitionError(intentId, existing.status, to);
+    throw new IntentInvalidTransitionError(intentId, transition.current_status ?? 'UNKNOWN', to);
   }
 
   private ready(): void {
     if (!this.migrated) {
-      throw new Error('MIGRATE_NOT_READY: call and await store.migrate() before using the store');
+      throw new StoreNotReadyError(
+        'MIGRATE_NOT_READY: call and await store.migrate() before using the store'
+      );
     }
-  }
-
-  private async ensureSchema(): Promise<void> {
-    const statusType = `${quoteIdentifier(this.schema)}.${quoteIdentifier('start_run_intent_status')}`;
-
-    await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
-    await this.createStatusType(statusType);
-    await this.createIntentsTable(statusType);
-    await this.migrateStatusColumn(statusType);
-    await this.createIndexes();
-  }
-
-  private async createStatusType(statusType: string): Promise<void> {
-    await this.pool.query(`
-      DO $$
-      BEGIN
-        CREATE TYPE ${statusType} AS ENUM ('PENDING', 'DISPATCHED', 'RESOLVED', 'EXPIRED');
-      EXCEPTION
-        WHEN duplicate_object THEN NULL;
-      END
-      $$;
-    `);
-  }
-
-  private async createIntentsTable(statusType: string): Promise<void> {
-    await this.pool.query(`
-      CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.start_run_intents (
-        intent_id TEXT PRIMARY KEY,
-        tenant_id TEXT NOT NULL,
-        run_id TEXT NOT NULL,
-        provider TEXT NOT NULL,
-        status ${statusType} NOT NULL DEFAULT 'PENDING',
-        engine_run_ref JSONB,
-        created_at TIMESTAMPTZ NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL,
-        CONSTRAINT dispatched_requires_run_ref
-          CHECK (status <> 'DISPATCHED' OR engine_run_ref IS NOT NULL),
-        CONSTRAINT engine_run_ref_shape
-          CHECK (
-            engine_run_ref IS NULL OR (
-              jsonb_typeof(engine_run_ref) = 'object'
-              AND engine_run_ref ? 'provider'
-              AND engine_run_ref ? 'tenantId'
-            )
-          )
-      )
-    `);
-  }
-
-  private async migrateStatusColumn(statusType: string): Promise<void> {
-    const statusTypeInfo = await this.pool.query<{ data_type: string; udt_name: string }>(
-      `
-        SELECT data_type, udt_name
-        FROM information_schema.columns
-        WHERE table_schema = $1
-          AND table_name = 'start_run_intents'
-          AND column_name = 'status'
-      `,
-      [this.schema]
-    );
-    const statusColumn = statusTypeInfo.rows[0];
-    const isCorrectType =
-      statusColumn?.data_type === 'USER-DEFINED' &&
-      statusColumn?.udt_name === 'start_run_intent_status';
-    if (statusColumn && !isCorrectType) {
-      await this.pool.query(`
-        ALTER TABLE ${quoteIdentifier(this.schema)}.start_run_intents
-        ALTER COLUMN status TYPE ${statusType}
-        USING status::text::${statusType}
-      `);
-    }
-  }
-
-  private async createIndexes(): Promise<void> {
-    await this.pool.query(`
-      CREATE INDEX IF NOT EXISTS intents_orphaned_idx
-      ON ${quoteIdentifier(this.schema)}.start_run_intents (status, created_at ASC)
-      WHERE status IN ('PENDING', 'DISPATCHED')
-    `);
-    await this.pool.query(`
-      CREATE INDEX IF NOT EXISTS start_run_intents_tenant_run_idx
-      ON ${quoteIdentifier(this.schema)}.start_run_intents (tenant_id, run_id)
-    `);
-    await this.pool.query(`
-      CREATE UNIQUE INDEX IF NOT EXISTS start_run_intents_active_run_uniq
-      ON ${quoteIdentifier(this.schema)}.start_run_intents (tenant_id, run_id)
-      WHERE status IN ('PENDING', 'DISPATCHED')
-    `);
   }
 }
 
@@ -352,22 +301,4 @@ function toIntent(row: IntentRow): StartRunIntent {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
-}
-
-export class IntentNotFoundError extends Error {
-  readonly code = 'INTENT_NOT_FOUND';
-
-  constructor(intentId: string) {
-    super(`Start-run intent not found: ${intentId}`);
-    this.name = 'IntentNotFoundError';
-  }
-}
-
-export class IntentInvalidTransitionError extends Error {
-  readonly code = 'INTENT_INVALID_TRANSITION';
-
-  constructor(intentId: string, from: string, to: string) {
-    super(`Cannot transition intent ${intentId} from ${from} to ${to}`);
-    this.name = 'IntentInvalidTransitionError';
-  }
 }

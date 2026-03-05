@@ -121,52 +121,32 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
 }
 
 /**
+ * Handler registry for event type mutations.
  * Pure local apply function — mirrors engine's applyRunEvent without creating
  * a cross-package source dependency. Both implementations must be kept in sync
  * whenever a new EventType is added to the catalog.
  */
+const EVENT_HANDLERS: Record<string, (snap: WorkflowSnapshot, e: EventEnvelope) => void> = {
+  RunQueued: handleRunQueued,
+  RunStarted: handleRunStarted,
+  RunPaused: handleRunPaused,
+  RunResumed: handleRunResumed,
+  RunCancelRequested: handleRunCancelRequested,
+  RunCancelled: handleRunCancelled,
+  RunCompleted: handleRunCompleted,
+  RunFailed: handleRunFailed,
+  StepStarted: handleStepStarted,
+  StepCompleted: handleStepCompleted,
+  StepFailed: handleStepFailed,
+  StepSkipped: handleStepSkipped,
+};
+
 function applyEventToSnapshot(snap: WorkflowSnapshot, e: EventEnvelope): void {
-  switch (e.eventType) {
-    case 'RunQueued':
-      handleRunQueued(snap, e);
-      break;
-    case 'RunStarted':
-      handleRunStarted(snap, e);
-      break;
-    case 'RunPaused':
-      handleRunPaused(snap, e);
-      break;
-    case 'RunResumed':
-      handleRunResumed(snap, e);
-      break;
-    case 'RunCancelRequested':
-      handleRunCancelRequested(snap);
-      break;
-    case 'RunCancelled':
-      handleRunCancelled(snap, e);
-      break;
-    case 'RunCompleted':
-      handleRunCompleted(snap, e);
-      break;
-    case 'RunFailed':
-      handleRunFailed(snap, e);
-      break;
-    case 'StepStarted':
-      handleStepStarted(snap, e);
-      break;
-    case 'StepCompleted':
-      handleStepCompleted(snap, e);
-      break;
-    case 'StepFailed':
-      handleStepFailed(snap, e);
-      break;
-    case 'StepSkipped':
-      handleStepSkipped(snap, e);
-      break;
-    default:
-      // Forward-compatibility: unknown event types do not mutate snapshot.
-      break;
+  const handler = EVENT_HANDLERS[e.eventType];
+  if (handler) {
+    handler(snap, e);
   }
+  // Forward-compatibility: unknown event types do not mutate snapshot.
 }
 
 function handleRunQueued(_snap: WorkflowSnapshot, _e: EventEnvelope): void {
@@ -278,6 +258,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private readonly statementTimeoutMs: number;
   /** Deduplicated promise for concurrent migrate() callers. */
   private migratePromise: Promise<void> | null = null;
+  private migrated = false;
 
   constructor(readonly config: PostgresAdapterConfig = {}) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
@@ -318,8 +299,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     this.migratePromise ??= this.ensureSchema().catch((error: unknown) => {
       // Allow retry if migration fails once (transient DB/network issue).
       this.migratePromise = null;
+      this.migrated = false;
       throw error;
     });
+    await this.migratePromise;
+    this.migrated = true;
     return this.migratePromise;
   }
 
@@ -901,6 +885,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     if (!this.migratePromise) {
       throw new Error('MIGRATE_NOT_CALLED: call await adapter.migrate() before using the adapter');
     }
+    if (!this.migrated) {
+      throw new Error('MIGRATE_IN_PROGRESS: await adapter.migrate() before using the adapter');
+    }
   }
 
   private async resolveRunTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
@@ -930,25 +917,15 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   private async ensureSchemaObjects(client: PoolClient): Promise<void> {
-    const statusType = `${quoteIdentifier(this.schema)}.${quoteIdentifier('start_run_intent_status')}`;
-    const schemaLiteral = this.schema.replace(/'/g, "''");
-
     await client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
-    await client.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1
-          FROM pg_type t
-          JOIN pg_namespace n ON n.oid = t.typnamespace
-          WHERE t.typname = 'start_run_intent_status'
-            AND n.nspname = '${schemaLiteral}'
-        ) THEN
-          CREATE TYPE ${statusType} AS ENUM ('PENDING', 'DISPATCHED', 'RESOLVED', 'EXPIRED');
-        END IF;
-      END$$;
-    `);
+    await this.ensureRunMetadataTable(client);
+    await this.ensureRunEventsTable(client);
+    await this.ensureOutboxTable(client);
+    await this.ensureRunSnapshotsTable(client);
+    await this.ensureOutboxDeadLetterTable(client);
+  }
 
+  private async ensureRunMetadataTable(client: PoolClient): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_metadata (
         run_id TEXT PRIMARY KEY,
@@ -966,7 +943,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
+  }
 
+  private async ensureRunEventsTable(client: PoolClient): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_events (
         run_id TEXT NOT NULL,
@@ -988,7 +967,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         UNIQUE (run_id, idempotency_key)
       )
     `);
+  }
 
+  private async ensureOutboxTable(client: PoolClient): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.outbox (
         id TEXT PRIMARY KEY,
@@ -1004,8 +985,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         delivered_at TIMESTAMPTZ
       )
     `);
+  }
 
-    // Materialized snapshot table: O(1) read path for getRunStatus.
+  private async ensureRunSnapshotsTable(client: PoolClient): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_snapshots (
         run_id TEXT PRIMARY KEY,
@@ -1014,9 +996,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         updated_at TIMESTAMPTZ NOT NULL
       )
     `);
+  }
 
-    // Dead-letter table for outbox records that exceeded MAX_OUTBOX_ATTEMPTS.
-    // Records here are never retried automatically; use manual replay tooling.
+  private async ensureOutboxDeadLetterTable(client: PoolClient): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.outbox_dead_letter (
         id TEXT PRIMARY KEY,
@@ -1026,34 +1008,6 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         last_error TEXT NOT NULL,
         dead_lettered_at TIMESTAMPTZ NOT NULL
       )
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.start_run_intents (
-        intent_id TEXT PRIMARY KEY,
-        tenant_id TEXT NOT NULL,
-        run_id TEXT NOT NULL,
-        provider TEXT NOT NULL,
-        status ${statusType} NOT NULL DEFAULT 'PENDING',
-        engine_run_ref JSONB,
-        created_at TIMESTAMPTZ NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL,
-        CONSTRAINT dispatched_requires_run_ref
-          CHECK (status <> 'DISPATCHED' OR engine_run_ref IS NOT NULL),
-        CONSTRAINT engine_run_ref_shape
-          CHECK (
-            engine_run_ref IS NULL OR (
-              jsonb_typeof(engine_run_ref) = 'object'
-              AND engine_run_ref ? 'provider'
-              AND engine_run_ref ? 'tenantId'
-            )
-          )
-      )
-    `);
-    await client.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.start_run_intents
-      ALTER COLUMN status TYPE ${statusType}
-      USING status::text::${statusType}
     `);
   }
 
@@ -1130,23 +1084,6 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       CREATE INDEX IF NOT EXISTS run_metadata_tenant_created_idx
       ON ${quoteIdentifier(this.schema)}.run_metadata (tenant_id, created_at DESC)
     `);
-
-    await client.query(`
-      CREATE INDEX IF NOT EXISTS intents_orphaned_idx
-      ON ${quoteIdentifier(this.schema)}.start_run_intents (status, created_at ASC)
-      WHERE status IN ('PENDING', 'DISPATCHED')
-    `);
-
-    await client.query(`
-      CREATE INDEX IF NOT EXISTS start_run_intents_tenant_run_idx
-      ON ${quoteIdentifier(this.schema)}.start_run_intents (tenant_id, run_id)
-    `);
-
-    await client.query(`
-      CREATE UNIQUE INDEX IF NOT EXISTS start_run_intents_active_run_uniq
-      ON ${quoteIdentifier(this.schema)}.start_run_intents (tenant_id, run_id)
-      WHERE status IN ('PENDING', 'DISPATCHED')
-    `);
   }
 
   private async appendEventsTxWithClient(
@@ -1154,129 +1091,212 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     runId: RunId,
     envelopes: EventInput[]
   ): Promise<AppendResult> {
-    // Use 64-bit MD5-derived lock key to avoid hashtext()'s 32-bit collision space.
-    // Birthday bound is now ~2^32 rather than ~2^16 concurrent distinct runIds.
-    await client.query(
-      `SELECT pg_advisory_xact_lock(('x' || left(md5($1), 16))::bit(64)::bigint)`,
-      [runId]
+    await this.acquireRunLock(client, runId);
+    const baseRunSeq = await this.getMaxRunSeq(client, runId);
+    const { appended, deduped } = await this.insertAndDedupEvents(
+      client,
+      runId,
+      envelopes,
+      baseRunSeq
     );
-
-    const seqResult = await client.query<MaxSeqRow>(
-      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(this.schema)}.run_events WHERE run_id = $1`,
-      [runId]
-    );
-
-    const baseRunSeq = Number(seqResult.rows[0]?.max_seq ?? 0);
-    let nextRunSeq = baseRunSeq + 1;
-    const appended: EventEnvelope[] = [];
-    const deduped: EventEnvelope[] = [];
-
-    for (const envelope of envelopes) {
-      const persistedAt = this.now();
-      const withSeq: EventEnvelope = {
-        ...envelope,
-        runSeq: nextRunSeq,
-        persistedAt,
-      } as EventEnvelope;
-
-      const inserted = await client.query<EventPayloadRow>(
-        `
-          INSERT INTO ${quoteIdentifier(this.schema)}.run_events (
-            run_id,
-            run_seq,
-            event_type,
-            emitted_at,
-            tenant_id,
-            project_id,
-            environment_id,
-            engine_attempt_id,
-            logical_attempt_id,
-            plan_id,
-            plan_version,
-            persisted_at,
-            step_id,
-            idempotency_key,
-            payload
-          )
-          VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz, $13, $14, $15::jsonb)
-          ON CONFLICT (run_id, idempotency_key) DO NOTHING
-          RETURNING payload
-        `,
-        [
-          runId,
-          nextRunSeq,
-          withSeq.eventType,
-          withSeq.emittedAt,
-          withSeq.tenantId,
-          withSeq.projectId,
-          withSeq.environmentId,
-          withSeq.engineAttemptId,
-          withSeq.logicalAttemptId,
-          withSeq.planId,
-          withSeq.planVersion,
-          withSeq.persistedAt,
-          'stepId' in withSeq ? withSeq.stepId : null,
-          withSeq.idempotencyKey,
-          JSON.stringify(withSeq),
-        ]
-      );
-
-      if (inserted.rowCount && inserted.rowCount > 0) {
-        appended.push(withSeq);
-        nextRunSeq += 1;
-        continue;
-      }
-
-      const existing = await client.query<EventPayloadRow>(
-        `
-          SELECT payload
-          FROM ${quoteIdentifier(this.schema)}.run_events
-          WHERE run_id = $1 AND idempotency_key = $2
-          LIMIT 1
-        `,
-        [runId, withSeq.idempotencyKey]
-      );
-
-      if (existing.rows[0]?.payload) {
-        deduped.push(existing.rows[0].payload);
-      }
-    }
-
-    // Upsert materialized snapshot within the same transaction (O(1) read path).
-    if (appended.length > 0) {
-      const currentSnap = await client.query<SnapshotRow>(
-        `SELECT snapshot FROM ${quoteIdentifier(this.schema)}.run_snapshots WHERE run_id = $1`,
-        [runId]
-      );
-      const snap: WorkflowSnapshot = currentSnap.rows[0]?.snapshot ?? {
-        runId,
-        status: 'PENDING',
-        paused: false,
-        cancelling: false,
-        gatewayDecisions: {},
-        steps: {},
-      };
-      for (const e of appended) {
-        applyEventToSnapshot(snap, e);
-      }
-      await client.query(
-        `
-            INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
-            VALUES ($1, $2::jsonb, $3, $4::timestamptz)
-            ON CONFLICT (run_id) DO UPDATE SET
-              snapshot = EXCLUDED.snapshot,
-              last_run_seq = EXCLUDED.last_run_seq,
-              updated_at = EXCLUDED.updated_at
-          `,
-        [runId, JSON.stringify(snap), appended.at(-1)!.runSeq, this.now()]
-      );
-    }
+    await this.updateRunSnapshot(client, runId, appended, baseRunSeq);
 
     return {
       appended,
       deduped,
       lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
     };
+  }
+
+  private async acquireRunLock(client: PoolClient, runId: RunId): Promise<void> {
+    // Use 64-bit MD5-derived lock key to avoid hashtext()'s 32-bit collision space.
+    // Birthday bound is now ~2^32 rather than ~2^16 concurrent distinct runIds.
+    await client.query(
+      `SELECT pg_advisory_xact_lock(('x' || left(md5($1), 16))::bit(64)::bigint)`,
+      [runId]
+    );
+  }
+
+  private async getMaxRunSeq(client: PoolClient, runId: RunId): Promise<number> {
+    const seqResult = await client.query<MaxSeqRow>(
+      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(this.schema)}.run_events WHERE run_id = $1`,
+      [runId]
+    );
+    return Number(seqResult.rows[0]?.max_seq ?? 0);
+  }
+
+  private async insertAndDedupEvents(
+    client: PoolClient,
+    runId: RunId,
+    envelopes: EventInput[],
+    baseRunSeq: number
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+    const appended: EventEnvelope[] = [];
+    const deduped: EventEnvelope[] = [];
+    let nextRunSeq = baseRunSeq + 1;
+
+    for (const envelope of envelopes) {
+      const withSeq = this.enrichEnvelopeWithSeq(envelope, nextRunSeq);
+      await this.processEnvelopeInsertion(client, runId, withSeq, { appended, deduped });
+      nextRunSeq += 1;
+    }
+
+    return { appended, deduped };
+  }
+
+  private async processEnvelopeInsertion(
+    client: PoolClient,
+    runId: RunId,
+    withSeq: EventEnvelope,
+    result: { appended: EventEnvelope[]; deduped: EventEnvelope[] }
+  ): Promise<void> {
+    const inserted = await this.tryInsertEvent(client, runId, withSeq);
+
+    if (inserted) {
+      result.appended.push(withSeq);
+      return;
+    }
+
+    const existing = await this.getExistingEvent(client, runId, withSeq.idempotencyKey);
+    if (existing) {
+      result.deduped.push(existing);
+    }
+  }
+
+  private enrichEnvelopeWithSeq(envelope: EventInput, runSeq: number): EventEnvelope {
+    return {
+      ...envelope,
+      runSeq,
+      persistedAt: this.now(),
+    } as EventEnvelope;
+  }
+
+  private async tryInsertEvent(
+    client: PoolClient,
+    runId: RunId,
+    withSeq: EventEnvelope
+  ): Promise<boolean> {
+    const inserted = await client.query<EventPayloadRow>(
+      `
+        INSERT INTO ${quoteIdentifier(this.schema)}.run_events (
+          run_id,
+          run_seq,
+          event_type,
+          emitted_at,
+          tenant_id,
+          project_id,
+          environment_id,
+          engine_attempt_id,
+          logical_attempt_id,
+          plan_id,
+          plan_version,
+          persisted_at,
+          step_id,
+          idempotency_key,
+          payload
+        )
+        VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz, $13, $14, $15::jsonb)
+        ON CONFLICT (run_id, idempotency_key) DO NOTHING
+        RETURNING payload
+      `,
+      [
+        runId,
+        withSeq.runSeq,
+        withSeq.eventType,
+        withSeq.emittedAt,
+        withSeq.tenantId,
+        withSeq.projectId,
+        withSeq.environmentId,
+        withSeq.engineAttemptId,
+        withSeq.logicalAttemptId,
+        withSeq.planId,
+        withSeq.planVersion,
+        withSeq.persistedAt,
+        'stepId' in withSeq ? withSeq.stepId : null,
+        withSeq.idempotencyKey,
+        JSON.stringify(withSeq),
+      ]
+    );
+    return (inserted.rowCount ?? 0) > 0;
+  }
+
+  private async getExistingEvent(
+    client: PoolClient,
+    runId: RunId,
+    idempotencyKey: string
+  ): Promise<EventEnvelope | null> {
+    const result = await client.query<EventPayloadRow>(
+      `
+        SELECT payload
+        FROM ${quoteIdentifier(this.schema)}.run_events
+        WHERE run_id = $1 AND idempotency_key = $2
+        LIMIT 1
+      `,
+      [runId, idempotencyKey]
+    );
+    return result.rows[0]?.payload ?? null;
+  }
+
+  private async updateRunSnapshot(
+    client: PoolClient,
+    runId: RunId,
+    appended: EventEnvelope[],
+    baseRunSeq: number
+  ): Promise<void> {
+    if (appended.length === 0) {
+      return;
+    }
+
+    const snap = await this.getOrCreateSnapshot(client, runId, baseRunSeq);
+    for (const e of appended) {
+      applyEventToSnapshot(snap, e);
+    }
+    await this.persistSnapshot(client, runId, snap, appended);
+  }
+
+  private async getOrCreateSnapshot(
+    client: PoolClient,
+    runId: RunId,
+    baseRunSeq: number
+  ): Promise<WorkflowSnapshot> {
+    if (baseRunSeq > 0) {
+      const currentSnap = await client.query<SnapshotRow>(
+        `SELECT snapshot FROM ${quoteIdentifier(this.schema)}.run_snapshots WHERE run_id = $1`,
+        [runId]
+      );
+      if (currentSnap.rows[0]?.snapshot) {
+        return currentSnap.rows[0].snapshot;
+      }
+    }
+
+    return {
+      runId,
+      status: 'PENDING',
+      paused: false,
+      cancelling: false,
+      gatewayDecisions: {},
+      steps: {},
+    };
+  }
+
+  private async persistSnapshot(
+    client: PoolClient,
+    runId: RunId,
+    snap: WorkflowSnapshot,
+    appended: EventEnvelope[]
+  ): Promise<void> {
+    const lastSeq = appended.at(-1)!.runSeq;
+    await client.query(
+      `
+        INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
+        VALUES ($1, $2::jsonb, $3, $4::timestamptz)
+        ON CONFLICT (run_id) DO UPDATE SET
+          snapshot = EXCLUDED.snapshot,
+          last_run_seq = EXCLUDED.last_run_seq,
+          updated_at = EXCLUDED.updated_at
+      `,
+      [runId, JSON.stringify(snap), lastSeq, this.now()]
+    );
   }
 
   private async insertRunMetadataWithClient(client: PoolClient, meta: RunMetadata): Promise<void> {
