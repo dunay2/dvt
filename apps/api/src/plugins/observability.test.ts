@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildObservability } from './observability.js';
 import type { Env } from './env.js';
+import { buildObservability } from './observability.js';
 
 function baseEnv(overrides?: Partial<Env>): Env {
   return {
@@ -32,13 +32,13 @@ function baseEnv(overrides?: Partial<Env>): Env {
   };
 }
 
-test('buildObservability returns no-op implementation when OBS_ENABLED=false', () => {
+void test('buildObservability returns no-op implementation when OBS_ENABLED=false', () => {
   const obs = buildObservability(baseEnv({ OBS_ENABLED: false }));
   assert.equal(typeof obs.withContext, 'function');
   assert.doesNotThrow(() => obs.metrics.counter('test.counter').add(1));
 });
 
-test('buildObservability returns OTel implementation when OBS_ENABLED=true', () => {
+void test('buildObservability returns OTel implementation when OBS_ENABLED=true', () => {
   const obs = buildObservability(
     baseEnv({
       OBS_ENABLED: true,
