@@ -31,6 +31,7 @@ export interface IntentReconcilerOptions {
   errorBackoffMsBase?: number;
   errorBackoffMsMax?: number;
   jitterRatio?: number;
+  tickTimeoutMs?: number;
 }
 
 const DEFAULT_OPTIONS: Required<IntentReconcilerOptions> = {
@@ -40,6 +41,7 @@ const DEFAULT_OPTIONS: Required<IntentReconcilerOptions> = {
   errorBackoffMsBase: 1_000,
   errorBackoffMsMax: 60_000,
   jitterRatio: 0.2,
+  tickTimeoutMs: 20_000,
 };
 
 /**
@@ -77,7 +79,7 @@ export class IntentReconciler {
       clearTimeout(this.timeout);
       this.timeout = null;
     }
-    if (this.inFlight) {
+    if (this.inFlight !== null) {
       await this.inFlight;
     }
   }
@@ -95,15 +97,18 @@ export class IntentReconciler {
     const startedAt = Date.now();
     this.metrics.increment('dvt.intent.reconcile.sweeps_total', 1);
     try {
-      const result = await this.service.reconcileOrphanedIntents({
-        thresholdMs: this.options.orphanThresholdMs,
-        limit: this.options.limit,
-      });
+      const result = await this.withTimeout(
+        this.service.reconcileOrphanedIntents({
+          thresholdMs: this.options.orphanThresholdMs,
+          limit: this.options.limit,
+        })
+      );
 
       this.consecutiveInfraErrors = 0;
       this.metrics.increment('dvt.intent.reconcile.inspected_total', result.inspected);
       this.metrics.increment('dvt.intent.reconcile.expired_total', result.expired.length);
       this.metrics.increment('dvt.intent.reconcile.cancelled_total', result.cancelled.length);
+      this.metrics.increment('dvt.intent.reconcile.cancelFailed_total', result.cancelFailed.length);
       this.metrics.timing('dvt.intent.reconcile.duration_ms', Date.now() - startedAt);
       this.logger.info({
         msg: 'Intent reconciliation sweep completed',
@@ -128,11 +133,27 @@ export class IntentReconciler {
         msg: 'Intent reconciliation sweep failed',
         errorClass: isInfra ? 'infrastructure' : 'logic',
         errorCode: extractErrorCode(error),
-        errorMessage: error instanceof Error ? error.message : String(error),
+        errorMessage: extractErrorMessage(error),
         attempt: this.consecutiveInfraErrors,
         backoffMs,
       });
       this.scheduleNext(backoffMs);
+    }
+  }
+
+  private async withTimeout<T>(operation: Promise<T>): Promise<T> {
+    let timer: NodeJS.Timeout | null = null;
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          const error = new Error('TICK_TIMEOUT');
+          (error as Error & { code?: string }).code = 'ETIMEDOUT';
+          reject(error);
+        }, this.options.tickTimeoutMs);
+      });
+      return await Promise.race([operation, timeoutPromise]);
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   }
 
@@ -160,14 +181,17 @@ function isInfrastructureError(error: unknown): boolean {
   if (!code) {
     return error instanceof Error && /timeout|connection|network|socket/i.test(error.message);
   }
-  if (
-    code.startsWith('ECONN') ||
-    code === '57P01' ||
-    code === '53300' ||
-    code === '08006' ||
-    code === 'ETIMEDOUT'
-  ) {
-    return true;
-  }
-  return false;
+  
+  const infraErrorCodes = ['ECONN', '57P01', '53300', '08006', 'ETIMEDOUT'];
+  return infraErrorCodes.some(infraCode => 
+    code === infraCode || code.startsWith(infraCode)
+  );
+}
+
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (typeof error === 'number' || typeof error === 'boolean' || typeof error === 'bigint')
+    return String(error);
+  return 'Unknown error';
 }

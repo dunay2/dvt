@@ -28,7 +28,7 @@ function baseEnv(overrides?: Partial<Env>): Env {
     OTEL_EXPORTER_OTLP_ENDPOINT: undefined,
     OTEL_SERVICE_NAME: undefined,
     OTEL_RESOURCE_ATTRIBUTES: undefined,
-    ...(overrides ?? {}),
+    ...overrides,
   };
 }
 

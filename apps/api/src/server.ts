@@ -25,16 +25,17 @@ async function main(): Promise<void> {
   app.log.info({ address }, 'server listening');
 
   reconcilerRuntimePromise = createIntentReconcilerRuntime(ctx.env, app.log, ctx.observability);
-  void reconcilerRuntimePromise
-    .then((reconcilerRuntime) => {
-      reconcilerRuntime?.start();
-    })
-    .catch((err) => {
-      app.log.error({ err }, 'intent reconciler bootstrap failed');
-    });
+  try {
+    const reconcilerRuntime = await reconcilerRuntimePromise;
+    reconcilerRuntime?.start();
+  } catch (err) {
+    app.log.error({ err }, 'intent reconciler bootstrap failed');
+  }
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error(err);
   process.exit(1);
-});
+}

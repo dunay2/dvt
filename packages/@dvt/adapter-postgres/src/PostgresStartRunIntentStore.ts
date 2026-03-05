@@ -68,6 +68,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   private readonly schema: string;
   private readonly now: () => string;
   private migratePromise: Promise<void> | null = null;
+  private migrated = false;
 
   constructor(readonly config: PostgresStartRunIntentStoreConfig = {}) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
@@ -92,11 +93,16 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 
   async migrate(): Promise<void> {
-    if (!this.migratePromise) {
-      this.migratePromise = this.ensureSchema().catch((error: unknown) => {
-        this.migratePromise = null;
-        throw error;
-      });
+    if (this.migratePromise === null) {
+      this.migratePromise = this.ensureSchema()
+        .then(() => {
+          this.migrated = true;
+        })
+        .catch((error: unknown) => {
+          this.migratePromise = null;
+          this.migrated = false;
+          throw error;
+        });
     }
     return this.migratePromise;
   }
@@ -129,7 +135,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     );
 
     const intent = await this.getIntent(input.intentId);
-    if (!intent) {
+    if (intent === null) {
       throw new IntentNotFoundError(input.intentId);
     }
     return intent;
@@ -154,31 +160,29 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 
   async markResolved(intentId: string): Promise<void> {
-    this.ready();
-    const result = await this.pool.query(
-      `
-        UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
-        SET status = 'RESOLVED',
-            updated_at = $2::timestamptz
-        WHERE intent_id = $1 AND status IN ('PENDING', 'DISPATCHED')
-      `,
-      [intentId, this.now()]
-    );
-    await this.assertTransitionApplied(intentId, result.rowCount ?? 0, 'RESOLVED');
+    await this.updateIntentStatus(intentId, 'RESOLVED', `status IN ('PENDING', 'DISPATCHED')`);
   }
 
   async markExpired(intentId: string): Promise<void> {
+    await this.updateIntentStatus(intentId, 'EXPIRED', `status = 'PENDING'`);
+  }
+
+  private async updateIntentStatus(
+    intentId: string,
+    toStatus: StartRunIntentStatus,
+    fromCondition: string
+  ): Promise<void> {
     this.ready();
     const result = await this.pool.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
-        SET status = 'EXPIRED',
-            updated_at = $2::timestamptz
-        WHERE intent_id = $1 AND status = 'PENDING'
+        SET status = $2,
+            updated_at = $3::timestamptz
+        WHERE intent_id = $1 AND ${fromCondition}
       `,
-      [intentId, this.now()]
+      [intentId, toStatus, this.now()]
     );
-    await this.assertTransitionApplied(intentId, result.rowCount ?? 0, 'EXPIRED');
+    await this.assertTransitionApplied(intentId, result.rowCount ?? 0, toStatus);
   }
 
   async listOrphaned(
@@ -191,15 +195,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     const cutoffIso = new Date(nowMs - thresholdMs).toISOString();
     const result = await this.pool.query<IntentRow>(
       `
-        SELECT
-          intent_id,
-          tenant_id,
-          run_id,
-          provider,
-          status,
-          engine_run_ref,
-          created_at,
-          updated_at
+        SELECT ${this.selectIntentColumns()}
         FROM ${quoteIdentifier(this.schema)}.start_run_intents
         WHERE status IN ('PENDING', 'DISPATCHED')
           AND created_at < $1::timestamptz
@@ -215,15 +211,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     this.ready();
     const result = await this.pool.query<IntentRow>(
       `
-        SELECT
-          intent_id,
-          tenant_id,
-          run_id,
-          provider,
-          status,
-          engine_run_ref,
-          created_at,
-          updated_at
+        SELECT ${this.selectIntentColumns()}
         FROM ${quoteIdentifier(this.schema)}.start_run_intents
         WHERE intent_id = $1
       `,
@@ -240,38 +228,41 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   ): Promise<void> {
     if (rowCount > 0) return;
     const existing = await this.getIntent(intentId);
-    if (!existing) {
+    if (existing === null) {
       throw new IntentNotFoundError(intentId);
     }
     throw new IntentInvalidTransitionError(intentId, existing.status, to);
   }
 
   private ready(): void {
-    if (!this.migratePromise) {
+    if (!this.migrated) {
       throw new Error('MIGRATE_NOT_CALLED: call await store.migrate() before using the store');
     }
   }
 
   private async ensureSchema(): Promise<void> {
     const statusType = `${quoteIdentifier(this.schema)}.${quoteIdentifier('start_run_intent_status')}`;
-    const schemaLiteral = this.schema.replace(/'/g, "''");
 
     await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
+    await this.createStatusType(statusType);
+    await this.createIntentsTable(statusType);
+    await this.migrateStatusColumn(statusType);
+    await this.createIndexes();
+  }
+
+  private async createStatusType(statusType: string): Promise<void> {
     await this.pool.query(`
       DO $$
       BEGIN
-        IF NOT EXISTS (
-          SELECT 1
-          FROM pg_type t
-          JOIN pg_namespace n ON n.oid = t.typnamespace
-          WHERE t.typname = 'start_run_intent_status'
-            AND n.nspname = '${schemaLiteral}'
-        ) THEN
-          CREATE TYPE ${statusType} AS ENUM ('PENDING', 'DISPATCHED', 'RESOLVED', 'EXPIRED');
-        END IF;
-      END$$;
+        CREATE TYPE ${statusType} AS ENUM ('PENDING', 'DISPATCHED', 'RESOLVED', 'EXPIRED');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END
+      $$;
     `);
+  }
 
+  private async createIntentsTable(statusType: string): Promise<void> {
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.start_run_intents (
         intent_id TEXT PRIMARY KEY,
@@ -294,11 +285,33 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
           )
       )
     `);
-    await this.pool.query(`
-      ALTER TABLE ${quoteIdentifier(this.schema)}.start_run_intents
-      ALTER COLUMN status TYPE ${statusType}
-      USING status::text::${statusType}
-    `);
+  }
+
+  private async migrateStatusColumn(statusType: string): Promise<void> {
+    const statusTypeInfo = await this.pool.query<{ data_type: string; udt_name: string }>(
+      `
+        SELECT data_type, udt_name
+        FROM information_schema.columns
+        WHERE table_schema = $1
+          AND table_name = 'start_run_intents'
+          AND column_name = 'status'
+      `,
+      [this.schema]
+    );
+    const statusColumn = statusTypeInfo.rows[0];
+    const isCorrectType =
+      statusColumn?.data_type === 'USER-DEFINED' &&
+      statusColumn?.udt_name === 'start_run_intent_status';
+    if (statusColumn && !isCorrectType) {
+      await this.pool.query(`
+        ALTER TABLE ${quoteIdentifier(this.schema)}.start_run_intents
+        ALTER COLUMN status TYPE ${statusType}
+        USING status::text::${statusType}
+      `);
+    }
+  }
+
+  private async createIndexes(): Promise<void> {
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS intents_orphaned_idx
       ON ${quoteIdentifier(this.schema)}.start_run_intents (status, created_at ASC)
