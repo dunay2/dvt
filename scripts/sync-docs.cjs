@@ -18,6 +18,10 @@ const planningIndexPath = path.join(planningDir, 'index.md');
 const planningProposalsPath = path.join(planningDir, 'proposals', 'index.md');
 const planningReviewsPath = path.join(planningDir, 'reviews', 'index.md');
 const planningStatusPath = path.join(planningDir, 'status', 'index.md');
+const contractsDir = path.join(docsRoot, 'contracts');
+const contractsEngineIndexPath = path.join(contractsDir, 'engine', 'index.md');
+const contractsPlannerIndexPath = path.join(contractsDir, 'planner', 'index.md');
+const contractsSharedIndexPath = path.join(contractsDir, 'shared', 'index.md');
 
 function readIfExists(filePath) {
   if (!fs.existsSync(filePath)) {
@@ -104,28 +108,30 @@ function extractFirstHeading(content) {
 }
 
 function ensureCanonicalDocsHome() {
-  const lower = readIfExists(docsIndex);
-  const upper = readIfExists(docsIndexUpper);
+  const names = fs.existsSync(docsRoot) ? fs.readdirSync(docsRoot) : [];
+  const hasLowerExact = names.includes('index.md');
+  const hasUpperExact = names.includes('INDEX.md');
+  const lower = hasLowerExact ? readIfExists(docsIndex) : null;
+  const upper = hasUpperExact ? readIfExists(docsIndexUpper) : null;
 
-  if (lower === null && upper === null) {
+  if (!hasLowerExact && !hasUpperExact) {
     throw new Error('Missing docs home file: expected docs/index.md.');
   }
 
-  if (lower === null && upper !== null) {
-    fs.copyFileSync(docsIndexUpper, docsIndex);
-    console.log('[docs:sync] Created docs/index.md from docs/INDEX.md');
+  if (!hasLowerExact && hasUpperExact && upper !== null) {
+    fs.renameSync(docsIndexUpper, docsIndex);
+    console.log('[docs:sync] Created docs/index.md from docs/INDEX.md and removed duplicate uppercase file.');
     return;
   }
 
-  if (lower !== null && upper !== null) {
+  if (hasLowerExact && hasUpperExact && lower !== null && upper !== null) {
     if (lower !== upper) {
       throw new Error(
         'Detected divergent docs/index.md and docs/INDEX.md. Keep only docs/index.md to avoid homepage routing issues.'
       );
     }
-    console.log(
-      '[docs:sync] docs/INDEX.md duplicate detected with identical content. Keeping docs/index.md as canonical.'
-    );
+    fs.rmSync(docsIndexUpper);
+    console.log('[docs:sync] Removed duplicate docs/INDEX.md; docs/index.md is canonical.');
     return;
   }
 
@@ -338,6 +344,28 @@ function relativeMdLink(fromDir, target) {
   return rel.length === 0 ? '.' : rel;
 }
 
+function scanFilesRecursive(dirAbs, predicate) {
+  if (!fs.existsSync(dirAbs)) return [];
+  const rows = [];
+  const walk = (dir) => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.')) continue;
+      const abs = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(abs);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      if (predicate && !predicate(abs, entry.name)) continue;
+      rows.push(abs);
+    }
+  };
+  walk(dirAbs);
+  rows.sort((a, b) => a.localeCompare(b));
+  return rows;
+}
+
 function collectPlanningDocs() {
   const rows = [];
   const roots = [
@@ -527,6 +555,134 @@ function generatePlanningIndexes() {
   }
 }
 
+function renderContractSourceList(absFiles) {
+  if (absFiles.length === 0) {
+    return ['- No contracts detected yet.'];
+  }
+  return absFiles.map((abs) => {
+    const rel = path.relative(repoRoot, abs).replace(/\\/g, '/');
+    return `- \`${rel}\``;
+  });
+}
+
+function renderContractDocsList(absFiles, fromDirAbs) {
+  if (absFiles.length === 0) {
+    return ['- No documentation references detected yet.'];
+  }
+  return absFiles.map((abs) => {
+    const relFromDocs = path.relative(fromDirAbs, abs).replace(/\\/g, '/');
+    const label = path.basename(abs);
+    return `- [${label}](${encodeURI(relFromDocs)})`;
+  });
+}
+
+function generateContractSubIndexes() {
+  const contractsPkgSrc = path.join(repoRoot, 'packages', '@dvt', 'contracts', 'src');
+  const engineSrc = scanFilesRecursive(path.join(contractsPkgSrc, 'contracts', 'engine'), (abs, name) =>
+    /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+  );
+  const plannerSrc = scanFilesRecursive(path.join(contractsPkgSrc, 'contracts', 'planner'), (abs, name) =>
+    /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+  );
+  const sharedSrc = [
+    ...scanFilesRecursive(path.join(contractsPkgSrc, 'adapters'), (abs, name) =>
+      /\.ts$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+    ),
+    ...scanFilesRecursive(path.join(contractsPkgSrc, 'types'), (abs, name) =>
+      /\.ts$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+    ),
+    ...scanFilesRecursive(contractsPkgSrc, (abs, name) =>
+      /^(schemas|validation|planner-input|workflows)\.ts$/i.test(name)
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+
+  const engineDocsRoot = path.join(docsRoot, 'architecture', 'engine', 'contracts');
+  const engineDocs = scanFilesRecursive(engineDocsRoot, (abs, name) => /\.md$/i.test(name));
+
+  const engineCurrent = readIfExists(contractsEngineIndexPath);
+  const engineMeta = frontmatterWithDefaults(engineCurrent, {
+    title: 'Engine Contracts',
+    status: 'Active',
+    owner: 'docs',
+  });
+  const engineLines = [
+    renderFrontmatter(engineMeta),
+    '# Engine Contracts',
+    '',
+    'Execution lifecycle, command, and event contracts for the workflow engine.',
+    '',
+    '## Normative Sources (`@dvt/contracts`)',
+    '',
+    ...renderContractSourceList(engineSrc),
+    '',
+    '## Reference Documentation',
+    '',
+    ...renderContractDocsList(engineDocs, path.dirname(contractsEngineIndexPath)),
+    '',
+    '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+    '',
+  ];
+  if (writeIfChanged(contractsEngineIndexPath, engineLines.join('\n'))) {
+    console.log('[docs:sync] Regenerated docs/contracts/engine/index.md');
+  }
+
+  const plannerCurrent = readIfExists(contractsPlannerIndexPath);
+  const plannerMeta = frontmatterWithDefaults(plannerCurrent, {
+    title: 'Planner Contracts',
+    status: 'Active',
+    owner: 'docs',
+  });
+  const plannerLines = [
+    renderFrontmatter(plannerMeta),
+    '# Planner Contracts',
+    '',
+    'ExecutionPlan and planner-related schemas and compatibility contracts.',
+    '',
+    '## Normative Sources (`@dvt/contracts`)',
+    '',
+    ...renderContractSourceList(plannerSrc),
+    '',
+    '## Related',
+    '',
+    '- [Contracts Index](../index.md)',
+    '- [Architecture Engine Contracts](../../architecture/engine/contracts/README.md)',
+    '',
+    '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+    '',
+  ];
+  if (writeIfChanged(contractsPlannerIndexPath, plannerLines.join('\n'))) {
+    console.log('[docs:sync] Regenerated docs/contracts/planner/index.md');
+  }
+
+  const sharedCurrent = readIfExists(contractsSharedIndexPath);
+  const sharedMeta = frontmatterWithDefaults(sharedCurrent, {
+    title: 'Shared Contracts',
+    status: 'Active',
+    owner: 'docs',
+  });
+  const sharedLines = [
+    renderFrontmatter(sharedMeta),
+    '# Shared Contracts',
+    '',
+    'Cross-cutting types and shared validation contracts.',
+    '',
+    '## Normative Sources (`@dvt/contracts`)',
+    '',
+    ...renderContractSourceList(sharedSrc),
+    '',
+    '## Related',
+    '',
+    '- [Contracts Index](../index.md)',
+    '- [Capabilities Contracts](../../architecture/engine/contracts/capabilities/README.md)',
+    '',
+    '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
+    '',
+  ];
+  if (writeIfChanged(contractsSharedIndexPath, sharedLines.join('\n'))) {
+    console.log('[docs:sync] Regenerated docs/contracts/shared/index.md');
+  }
+}
+
 function scanSectionEntries(sectionRelativePath) {
   const dirAbs = path.join(docsRoot, sectionRelativePath);
   if (!fs.existsSync(dirAbs)) {
@@ -636,6 +792,7 @@ function main() {
   normalizePlanningDocs();
   generateAdrLanding();
   generatePlanningIndexes();
+  generateContractSubIndexes();
   generateSectionIndexes();
   console.log('[docs:sync] Completed.');
 }

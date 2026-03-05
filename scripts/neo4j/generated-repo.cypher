@@ -15,7 +15,7 @@ CREATE CONSTRAINT fase_roadmap_id_unique IF NOT EXISTS FOR (p:FaseRoadmap) REQUI
 MERGE (m:Modulo { path: '.claude/settings.local.json' })
 SET m += { nombre: 'settings.local.json', lenguaje: 'json' }
 MERGE (a:Archivo { path: '.claude/settings.local.json' })
-SET a += { nombre: 'settings.local.json', tipo: 'json', bytes: 286, topico: 'config' }
+SET a += { nombre: 'settings.local.json', tipo: 'json', bytes: 655, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.editorconfig' })
 SET m += { nombre: '.editorconfig', lenguaje: 'text' }
@@ -71,6 +71,11 @@ MERGE (m:Modulo { path: '.git.bfg-report/2026-02-19' })
 SET m += { nombre: '2026-02-19', lenguaje: 'text' }
 MERGE (a:Archivo { path: '.git.bfg-report/2026-02-19/14-48-28/object-id-map.old-new.txt' })
 SET a += { nombre: 'object-id-map.old-new.txt', tipo: 'txt', bytes: 1558, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.gitattributes' })
+SET m += { nombre: '.gitattributes', lenguaje: 'text' }
+MERGE (a:Archivo { path: '.gitattributes' })
+SET a += { nombre: '.gitattributes', tipo: 'none', bytes: 72, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/CODEOWNERS' })
 SET m += { nombre: 'CODEOWNERS', lenguaje: 'text' }
@@ -152,6 +157,11 @@ SET m += { nombre: 'ROLLBACK.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: '.github/ROLLBACK.md' })
 SET a += { nombre: 'ROLLBACK.md', tipo: 'md', bytes: 11394, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.github/actions' })
+SET m += { nombre: 'actions', lenguaje: 'yaml' }
+MERGE (a:Archivo { path: '.github/actions/setup-node-pnpm/action.yml' })
+SET a += { nombre: 'action.yml', tipo: 'yml', bytes: 1060, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/dependabot.yml' })
 SET m += { nombre: 'dependabot.yml', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/dependabot.yml' })
@@ -170,12 +180,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/workflows/ci.yml' })
-SET a += { nombre: 'ci.yml', tipo: 'yml', bytes: 7818, topico: 'config' }
+SET a += { nombre: 'ci.yml', tipo: 'yml', bytes: 6593, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/workflows/contracts.yml' })
-SET a += { nombre: 'contracts.yml', tipo: 'yml', bytes: 12894, topico: 'config' }
+SET a += { nombre: 'contracts.yml', tipo: 'yml', bytes: 12114, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
@@ -185,7 +195,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/workflows/golden-paths.yml' })
-SET a += { nombre: 'golden-paths.yml', tipo: 'yml', bytes: 1596, topico: 'config' }
+SET a += { nombre: 'golden-paths.yml', tipo: 'yml', bytes: 2262, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
@@ -195,7 +205,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/workflows/pr-quality-gate.yml' })
-SET a += { nombre: 'pr-quality-gate.yml', tipo: 'yml', bytes: 8411, topico: 'config' }
+SET a += { nombre: 'pr-quality-gate.yml', tipo: 'yml', bytes: 7791, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
@@ -205,12 +215,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.github/workflows' })
 SET m += { nombre: 'workflows', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: '.github/workflows/test.yml' })
-SET a += { nombre: 'test.yml', tipo: 'yml', bytes: 9278, topico: 'config' }
+SET a += { nombre: 'test.yml', tipo: 'yml', bytes: 7055, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.gitignore' })
 SET m += { nombre: '.gitignore', lenguaje: 'text' }
 MERGE (a:Archivo { path: '.gitignore' })
-SET a += { nombre: '.gitignore', tipo: 'none', bytes: 935, topico: 'other' }
+SET a += { nombre: '.gitignore', tipo: 'none', bytes: 1036, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.golden/README.md' })
 SET m += { nombre: 'README.md', lenguaje: 'markdown' }
@@ -236,6 +246,11 @@ MERGE (m:Modulo { path: '.husky/pre-push' })
 SET m += { nombre: 'pre-push', lenguaje: 'text' }
 MERGE (a:Archivo { path: '.husky/pre-push' })
 SET a += { nombre: 'pre-push', tipo: 'none', bytes: 89, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: '.markdownlint-cli2.jsonc' })
+SET m += { nombre: '.markdownlint-cli2.jsonc', lenguaje: 'text' }
+MERGE (a:Archivo { path: '.markdownlint-cli2.jsonc' })
+SET a += { nombre: '.markdownlint-cli2.jsonc', tipo: 'jsonc', bytes: 24, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: '.markdownlint.json' })
 SET m += { nombre: '.markdownlint.json', lenguaje: 'json' }
@@ -280,7 +295,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'ROADMAP.md' })
 SET m += { nombre: 'ROADMAP.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'ROADMAP.md' })
-SET a += { nombre: 'ROADMAP.md', tipo: 'md', bytes: 24084, topico: 'doc' }
+SET a += { nombre: 'ROADMAP.md', tipo: 'md', bytes: 24950, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/api' })
 SET m += { nombre: 'api', lenguaje: 'text' }
@@ -320,12 +335,17 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/api' })
 SET m += { nombre: 'api', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'apps/api/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 616, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 864, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/app.test.ts' })
+SET a += { nombre: 'app.test.ts', tipo: 'ts', bytes: 514, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/api' })
 SET m += { nombre: 'api', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'apps/api/src/app.ts' })
-SET a += { nombre: 'app.ts', tipo: 'ts', bytes: 1232, topico: 'code' }
+SET a += { nombre: 'app.ts', tipo: 'ts', bytes: 3013, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/api' })
 SET m += { nombre: 'api', lenguaje: 'typescript' }
@@ -335,12 +355,22 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/api' })
 SET m += { nombre: 'api', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'apps/api/src/plugins/env.ts' })
-SET a += { nombre: 'env.ts', tipo: 'ts', bytes: 1107, topico: 'code' }
+SET a += { nombre: 'env.ts', tipo: 'ts', bytes: 1306, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/api' })
 SET m += { nombre: 'api', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'apps/api/src/plugins/logger.ts' })
 SET a += { nombre: 'logger.ts', tipo: 'ts', bytes: 170, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/plugins/observability.test.ts' })
+SET a += { nombre: 'observability.test.ts', tipo: 'ts', bytes: 1180, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'apps/api' })
+SET m += { nombre: 'api', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'apps/api/src/plugins/observability.ts' })
+SET a += { nombre: 'observability.ts', tipo: 'ts', bytes: 651, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/api' })
 SET m += { nombre: 'api', lenguaje: 'typescript' }
@@ -870,12 +900,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/web' })
 SET m += { nombre: 'web', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'apps/web/src/styles/tailwind.css' })
-SET a += { nombre: 'tailwind.css', tipo: 'css', bytes: 98, topico: 'other' }
+SET a += { nombre: 'tailwind.css', tipo: 'css', bytes: 102, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/web' })
 SET m += { nombre: 'web', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'apps/web/src/styles/theme.css' })
-SET a += { nombre: 'theme.css', tipo: 'css', bytes: 5448, topico: 'other' }
+SET a += { nombre: 'theme.css', tipo: 'css', bytes: 5629, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'apps/web' })
 SET m += { nombre: 'web', lenguaje: 'json' }
@@ -886,11 +916,6 @@ MERGE (m:Modulo { path: 'apps/web' })
 SET m += { nombre: 'web', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'apps/web/vite.config.ts' })
 SET a += { nombre: 'vite.config.ts', tipo: 'ts', bytes: 623, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'bfg.jar' })
-SET m += { nombre: 'bfg.jar', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'bfg.jar' })
-SET a += { nombre: 'bfg.jar', tipo: 'jar', bytes: 14483456, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'commitlint.config.cjs' })
 SET m += { nombre: 'commitlint.config.cjs', lenguaje: 'javascript' }
@@ -926,11 +951,6 @@ MERGE (m:Modulo { path: 'docs/DOCS_README.md' })
 SET m += { nombre: 'DOCS_README.md', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/DOCS_README.md' })
 SET a += { nombre: 'DOCS_README.md', tipo: 'md', bytes: 696, topico: 'doc' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'docs/INDEX.md' })
-SET m += { nombre: 'INDEX.md', lenguaje: 'markdown' }
-MERGE (a:Archivo { path: 'docs/INDEX.md' })
-SET a += { nombre: 'INDEX.md', tipo: 'md', bytes: 2555, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/adr' })
 SET m += { nombre: 'adr', lenguaje: 'markdown' }
@@ -1039,8 +1059,33 @@ SET a += { nombre: 'ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md', t
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/adr' })
 SET m += { nombre: 'adr', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/adr/ADR-0029-run-maintenance-service.md' })
+SET a += { nombre: 'ADR-0029-run-maintenance-service.md', tipo: 'md', bytes: 2129, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/adr' })
+SET m += { nombre: 'adr', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/adr/ADR-0030-pre-dispatch-intent-log.md' })
+SET a += { nombre: 'ADR-0030-pre-dispatch-intent-log.md', tipo: 'md', bytes: 15205, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/adr' })
+SET m += { nombre: 'adr', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/adr/ADR-0031-adapter-tenant-isolation.md' })
+SET a += { nombre: 'ADR-0031-adapter-tenant-isolation.md', tipo: 'md', bytes: 2434, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/adr' })
+SET m += { nombre: 'adr', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/adr/ADR-0032-compiledcoderef-ownership.md' })
+SET a += { nombre: 'ADR-0032-compiledcoderef-ownership.md', tipo: 'md', bytes: 52892, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/adr' })
+SET m += { nombre: 'adr', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/adr/ADR-Implementation Status.md' })
-SET a += { nombre: 'ADR-Implementation Status.md', tipo: 'md', bytes: 23443, topico: 'doc' }
+SET a += { nombre: 'ADR-Implementation Status.md', tipo: 'md', bytes: 7710, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/adr' })
+SET m += { nombre: 'adr', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/adr/ADR-Index.md' })
+SET a += { nombre: 'ADR-Index.md', tipo: 'md', bytes: 9652, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/adr' })
 SET m += { nombre: 'adr', lenguaje: 'markdown' }
@@ -1050,7 +1095,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/adr' })
 SET m += { nombre: 'adr', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/adr/_archive/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 371, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 238, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
@@ -1060,17 +1105,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/adr' })
 SET m += { nombre: 'adr', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/adr/_drafts/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 349, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 273, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/adr' })
 SET m += { nombre: 'adr', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/adr/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 680, topico: 'doc' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'docs/architecture' })
-SET m += { nombre: 'architecture', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'docs/architecture/engine.zip' })
-SET a += { nombre: 'engine.zip', tipo: 'zip', bytes: 237560, topico: 'other' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 5343, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
@@ -1304,6 +1344,11 @@ SET a += { nombre: 'index.md', tipo: 'md', bytes: 23795, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/architecture/engine/metrics-catalog.md' })
+SET a += { nombre: 'metrics-catalog.md', tipo: 'md', bytes: 5835, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/engine/ops/SLOs.md' })
 SET a += { nombre: 'SLOs.md', tipo: 'md', bytes: 6048, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
@@ -1395,7 +1440,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/engine/security/SECURITY_INVARIANTS.v1.md' })
-SET a += { nombre: 'SECURITY_INVARIANTS.v1.md', tipo: 'md', bytes: 67602, topico: 'doc' }
+SET a += { nombre: 'SECURITY_INVARIANTS.v1.md', tipo: 'md', bytes: 67754, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
@@ -1410,17 +1455,17 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/frontend/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 391, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 366, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 492, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 402, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/architecture/infra/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 416, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 385, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
@@ -1428,9 +1473,9 @@ MERGE (a:Archivo { path: 'docs/architecture/modulos canonicos.png' })
 SET a += { nombre: 'modulos canonicos.png', tipo: 'png', bytes: 2253046, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
-SET m += { nombre: 'architecture', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'docs/architecture/vision.zip' })
-SET a += { nombre: 'vision.zip', tipo: 'zip', bytes: 20134, topico: 'other' }
+SET m += { nombre: 'architecture', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/architecture/system-delivery-status.md' })
+SET a += { nombre: 'system-delivery-status.md', tipo: 'md', bytes: 20027, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'yaml' }
@@ -1495,27 +1540,27 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/archive' })
 SET m += { nombre: 'archive', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/archive/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 364, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 231, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/contracts/engine/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 375, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 3061, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/contracts/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 507, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 333, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/contracts/planner/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 396, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 732, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/contracts/shared/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 377, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 1027, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/decisions' })
 SET m += { nombre: 'decisions', lenguaje: 'markdown' }
@@ -1547,6 +1592,21 @@ SET m += { nombre: 'decisions', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/decisions/INDEX.md' })
 SET a += { nombre: 'INDEX.md', tipo: 'md', bytes: 2896, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/evidence' })
+SET m += { nombre: 'evidence', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/evidence/ED-20260304-compiledcoderef-ownership.md' })
+SET a += { nombre: 'ED-20260304-compiledcoderef-ownership.md', tipo: 'md', bytes: 5817, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/evidence' })
+SET m += { nombre: 'evidence', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md' })
+SET a += { nombre: 'ED-20260304-g3-intentstore-postgres-reconciler.md', tipo: 'md', bytes: 5045, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/evidence' })
+SET m += { nombre: 'evidence', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/evidence/ED-20260304-temporal-lookup-run-ref.md' })
+SET a += { nombre: 'ED-20260304-temporal-lookup-run-ref.md', tipo: 'md', bytes: 3923, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/guides' })
 SET m += { nombre: 'guides', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md' })
@@ -1555,7 +1615,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/guides' })
 SET m += { nombre: 'guides', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/guides/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 366, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 329, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/index.md' })
+SET m += { nombre: 'index.md', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/index.md' })
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 2833, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/knowledge' })
 SET m += { nombre: 'knowledge', lenguaje: 'markdown' }
@@ -1570,62 +1635,292 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/knowledge' })
 SET m += { nombre: 'knowledge', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/knowledge/ROADMAP_AND_ISSUES_MAP.md' })
-SET a += { nombre: 'ROADMAP_AND_ISSUES_MAP.md', tipo: 'md', bytes: 3466, topico: 'doc' }
+SET a += { nombre: 'ROADMAP_AND_ISSUES_MAP.md', tipo: 'md', bytes: 3809, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/CHANGE_IMPACT_ADR0030_20260304.md' })
+SET a += { nombre: 'CHANGE_IMPACT_ADR0030_20260304.md', tipo: 'md', bytes: 12373, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/CI_CD_ROLLBACK_PLAN_20260228.md' })
-SET a += { nombre: 'CI_CD_ROLLBACK_PLAN_20260228.md', tipo: 'md', bytes: 3784, topico: 'doc' }
+SET a += { nombre: 'CI_CD_ROLLBACK_PLAN_20260228.md', tipo: 'md', bytes: 4143, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/DVT+_Architectural_Review_Pass_2.md' })
+SET a += { nombre: 'DVT+_Architectural_Review_Pass_2.md', tipo: 'md', bytes: 21905, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/DVT_ARCH_REVIEW_GAP_TASKS_20260226.md' })
-SET a += { nombre: 'DVT_ARCH_REVIEW_GAP_TASKS_20260226.md', tipo: 'md', bytes: 12160, topico: 'doc' }
+SET a += { nombre: 'DVT_ARCH_REVIEW_GAP_TASKS_20260226.md', tipo: 'md', bytes: 12684, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/DVT_REMEDIATION_PLAN.md' })
-SET a += { nombre: 'DVT_REMEDIATION_PLAN.md', tipo: 'md', bytes: 38970, topico: 'doc' }
+SET a += { nombre: 'DVT_REMEDIATION_PLAN.md', tipo: 'md', bytes: 39610, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/DVT_engine_remediation_ai_plan.md' })
-SET a += { nombre: 'DVT_engine_remediation_ai_plan.md', tipo: 'md', bytes: 17917, topico: 'doc' }
+SET a += { nombre: 'DVT_engine_remediation_ai_plan.md', tipo: 'md', bytes: 18075, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/Definir el Consumidor del Outbox.md' })
+SET a += { nombre: 'Definir el Consumidor del Outbox.md', tipo: 'md', bytes: 10822, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md' })
-SET a += { nombre: 'ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md', tipo: 'md', bytes: 4197, topico: 'doc' }
+SET a += { nombre: 'ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md', tipo: 'md', bytes: 4597, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/G4-TASK-SPECIFICATION.md' })
+SET a += { nombre: 'G4-TASK-SPECIFICATION.md', tipo: 'md', bytes: 33060, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/GAP_EXECUTION_PLANS.md' })
+SET a += { nombre: 'GAP_EXECUTION_PLANS.md', tipo: 'md', bytes: 27034, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md' })
-SET a += { nombre: 'HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md', tipo: 'md', bytes: 13929, topico: 'doc' }
+SET a += { nombre: 'HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md', tipo: 'md', bytes: 14454, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/TEMPLATE_PLANNING_DOC.md' })
+SET a += { nombre: 'TEMPLATE_PLANNING_DOC.md', tipo: 'md', bytes: 429, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'yaml' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/.arc-policy.yaml' })
+SET a += { nombre: '.arc-policy.yaml', tipo: 'yaml', bytes: 2003, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/ADR-0000c-modular-traceability-policy.en.md' })
+SET a += { nombre: 'ADR-0000c-modular-traceability-policy.en.md', tipo: 'md', bytes: 6449, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/ADR-012-design-quality-criteria.en.md' })
+SET a += { nombre: 'ADR-012-design-quality-criteria.en.md', tipo: 'md', bytes: 3703, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/AI-GUIDE-doc-generation.md' })
+SET a += { nombre: 'AI-GUIDE-doc-generation.md', tipo: 'md', bytes: 2753, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/EXAMPLE-arc3-breaking-change.md' })
+SET a += { nombre: 'EXAMPLE-arc3-breaking-change.md', tipo: 'md', bytes: 2838, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/EXAMPLE-real-change.md' })
+SET a += { nombre: 'EXAMPLE-real-change.md', tipo: 'md', bytes: 3016, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/GUIDE-adr012-self-eval.md' })
+SET a += { nombre: 'GUIDE-adr012-self-eval.md', tipo: 'md', bytes: 1472, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/GUIDE-ci-implementation.md' })
+SET a += { nombre: 'GUIDE-ci-implementation.md', tipo: 'md', bytes: 3571, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/GUIDE-risk-register.md' })
+SET a += { nombre: 'GUIDE-risk-register.md', tipo: 'md', bytes: 891, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/POLICY-arc-policy.yaml.md' })
+SET a += { nombre: 'POLICY-arc-policy.yaml.md', tipo: 'md', bytes: 1576, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/QUICKSTART-dev.md' })
+SET a += { nombre: 'QUICKSTART-dev.md', tipo: 'md', bytes: 1179, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 2759, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/TEMPLATE-evidence-doc.md' })
+SET a += { nombre: 'TEMPLATE-evidence-doc.md', tipo: 'md', bytes: 866, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/TEMPLATE-pr-checklist.md' })
+SET a += { nombre: 'TEMPLATE-pr-checklist.md', tipo: 'md', bytes: 469, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/TEMPLATE-risk-register.md' })
+SET a += { nombre: 'TEMPLATE-risk-register.md', tipo: 'md', bytes: 768, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/TOOLS-vscode-productivity.md' })
+SET a += { nombre: 'TOOLS-vscode-productivity.md', tipo: 'md', bytes: 3704, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-12factor.md' })
+SET a += { nombre: 'GUIDE-12factor.md', tipo: 'md', bytes: 876, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-adapter-semantics.md' })
+SET a += { nombre: 'GUIDE-adapter-semantics.md', tipo: 'md', bytes: 1137, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-api-design.md' })
+SET a += { nombre: 'GUIDE-api-design.md', tipo: 'md', bytes: 1866, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-append-authority-eventstore.md' })
+SET a += { nombre: 'GUIDE-append-authority-eventstore.md', tipo: 'md', bytes: 1603, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-dbt-artifacts-ingestion.md' })
+SET a += { nombre: 'GUIDE-dbt-artifacts-ingestion.md', tipo: 'md', bytes: 1108, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-determinism-replay.md' })
+SET a += { nombre: 'GUIDE-determinism-replay.md', tipo: 'md', bytes: 1651, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-event-driven.md' })
+SET a += { nombre: 'GUIDE-event-driven.md', tipo: 'md', bytes: 1711, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-lineage-openlineage-marquez.md' })
+SET a += { nombre: 'GUIDE-lineage-openlineage-marquez.md', tipo: 'md', bytes: 1385, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-observability.md' })
+SET a += { nombre: 'GUIDE-observability.md', tipo: 'md', bytes: 1128, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-sbom-supplychain.md' })
+SET a += { nombre: 'GUIDE-sbom-supplychain.md', tipo: 'md', bytes: 685, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-security-advanced.md' })
+SET a += { nombre: 'GUIDE-security-advanced.md', tipo: 'md', bytes: 1101, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/docs/guides/GUIDE-typescript-strictness.md' })
+SET a += { nombre: 'GUIDE-typescript-strictness.md', tipo: 'md', bytes: 1045, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/tools/ci/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 547, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/tools/ci/arc-check.mjs' })
+SET a += { nombre: 'arc-check.mjs', tipo: 'mjs', bytes: 5166, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/tools/ci/doc-check.mjs' })
+SET a += { nombre: 'doc-check.mjs', tipo: 'mjs', bytes: 3617, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/tools/risk/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 99, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'docs/planning/dvt-traceability-pack-v2-lite-R6/tools/risk/generate-index.mjs' })
+SET a += { nombre: 'generate-index.mjs', tipo: 'mjs', bytes: 2129, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/engine-gap-to-target-migration-plan.md' })
+SET a += { nombre: 'engine-gap-to-target-migration-plan.md', tipo: 'md', bytes: 5769, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 479, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 2132, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'docs/planning/marquezopen.txt' })
+SET a += { nombre: 'marquezopen.txt', tipo: 'txt', bytes: 33581, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/pending-golden-path-coverage-debt.md' })
+SET a += { nombre: 'pending-golden-path-coverage-debt.md', tipo: 'md', bytes: 6926, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/pending-release-please-continuous.md' })
+SET a += { nombre: 'pending-release-please-continuous.md', tipo: 'md', bytes: 986, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/proposals/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 381, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 881, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/reviews/PR_301_RELAUNCH_BATCH_PLAN_20260228.md' })
+SET a += { nombre: 'PR_301_RELAUNCH_BATCH_PLAN_20260228.md', tipo: 'md', bytes: 4354, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/reviews/PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md' })
-SET a += { nombre: 'PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md', tipo: 'md', bytes: 7817, topico: 'doc' }
+SET a += { nombre: 'PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md', tipo: 'md', bytes: 8242, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'docs/planning/reviews/WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md' })
+SET a += { nombre: 'WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md', tipo: 'md', bytes: 3176, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/reviews/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 534, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 749, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/planning' })
 SET m += { nombre: 'planning', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/planning/status/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 376, topico: 'doc' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 704, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'docs/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'docs/planning/temporal adapter improvve.txt' })
+SET a += { nombre: 'temporal adapter improvve.txt', tipo: 'txt', bytes: 400, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/review' })
 SET m += { nombre: 'review', lenguaje: 'markdown' }
@@ -1640,12 +1935,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'docs/runbooks' })
 SET m += { nombre: 'runbooks', lenguaje: 'markdown' }
 MERGE (a:Archivo { path: 'docs/runbooks/index.md' })
-SET a += { nombre: 'index.md', tipo: 'md', bytes: 371, topico: 'doc' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'eslint-issues.txt' })
-SET m += { nombre: 'eslint-issues.txt', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'eslint-issues.txt' })
-SET a += { nombre: 'eslint-issues.txt', tipo: 'txt', bytes: 0, topico: 'other' }
+SET a += { nombre: 'index.md', tipo: 'md', bytes: 238, topico: 'doc' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'eslint.config.cjs' })
 SET m += { nombre: 'eslint.config.cjs', lenguaje: 'javascript' }
@@ -1815,12 +2105,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'mkdocs.yml' })
 SET m += { nombre: 'mkdocs.yml', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: 'mkdocs.yml' })
-SET a += { nombre: 'mkdocs.yml', tipo: 'yml', bytes: 1225, topico: 'config' }
+SET a += { nombre: 'mkdocs.yml', tipo: 'yml', bytes: 1218, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'package.json' })
 SET m += { nombre: 'package.json', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 7301, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 8797, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -1849,8 +2139,13 @@ SET a += { nombre: 'package.json', tipo: 'json', bytes: 520, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts' })
+SET a += { nombre: 'PostgresStartRunIntentStore.ts', tipo: 'ts', bytes: 8834, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts' })
-SET a += { nombre: 'PostgresStateStoreAdapter.ts', tipo: 'ts', bytes: 37141, topico: 'code' }
+SET a += { nombre: 'PostgresStateStoreAdapter.ts', tipo: 'ts', bytes: 39687, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -1880,7 +2175,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/adapter-postgres/test/smoke.test.ts' })
-SET a += { nombre: 'smoke.test.ts', tipo: 'ts', bytes: 13924, topico: 'code' }
+SET a += { nombre: 'smoke.test.ts', tipo: 'ts', bytes: 15821, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -1905,12 +2200,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/adapter-temporal/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 1196, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 1363, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts' })
-SET a += { nombre: 'TemporalAdapter.ts', tipo: 'ts', bytes: 6014, topico: 'code' }
+SET a += { nombre: 'TemporalAdapter.ts', tipo: 'ts', bytes: 9859, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -1956,6 +2251,11 @@ MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts' })
 SET a += { nombre: 'RunPlanWorkflow.ts', tipo: 'ts', bytes: 15643, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts' })
+SET a += { nombre: 'TemporalAdapter.lookupRunRef.test.ts', tipo: 'ts', bytes: 6115, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2015,17 +2315,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/canonical/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 495, topico: 'config' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/canonical/src/index.d.ts' })
-SET a += { nombre: 'index.d.ts', tipo: 'ts', bytes: 121, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/canonical/src/index.js' })
-SET a += { nombre: 'index.js', tipo: 'js', bytes: 512, topico: 'code' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 502, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2034,28 +2324,8 @@ SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 85, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/canonical/src/jcs.d.ts' })
-SET a += { nombre: 'jcs.d.ts', tipo: 'ts', bytes: 446, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/canonical/src/jcs.js' })
-SET a += { nombre: 'jcs.js', tipo: 'js', bytes: 2140, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/canonical/src/jcs.ts' })
 SET a += { nombre: 'jcs.ts', tipo: 'ts', bytes: 2122, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/canonical/src/sha256.d.ts' })
-SET a += { nombre: 'sha256.d.ts', tipo: 'ts', bytes: 107, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/canonical/src/sha256.js' })
-SET a += { nombre: 'sha256.js', tipo: 'js', bytes: 345, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2100,7 +2370,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'packages/@dvt/cli/run-golden-paths.cjs' })
-SET a += { nombre: 'run-golden-paths.cjs', tipo: 'cjs', bytes: 4940, topico: 'code' }
+SET a += { nombre: 'run-golden-paths.cjs', tipo: 'cjs', bytes: 4799, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2120,7 +2390,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'packages/@dvt/cli/validate-contracts.cjs' })
-SET a += { nombre: 'validate-contracts.cjs', tipo: 'cjs', bytes: 8063, topico: 'code' }
+SET a += { nombre: 'validate-contracts.cjs', tipo: 'cjs', bytes: 8083, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -2135,17 +2405,17 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
-SET a += { nombre: 'index.d.ts', tipo: 'ts', bytes: 926, topico: 'code' }
+SET a += { nombre: 'index.d.ts', tipo: 'ts', bytes: 1456, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/index.js' })
-SET a += { nombre: 'index.js', tipo: 'js', bytes: 1661, topico: 'code' }
+SET a += { nombre: 'index.js', tipo: 'js', bytes: 1737, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 1364, topico: 'code' }
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 29, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -2154,28 +2424,8 @@ SET a += { nombre: 'package.json', tipo: 'json', bytes: 550, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.d.ts' })
-SET a += { nombre: 'IOutboxStorageAdapter.v1.d.ts', tipo: 'ts', bytes: 1341, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.js' })
-SET a += { nombre: 'IOutboxStorageAdapter.v1.js', tipo: 'js', bytes: 130, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.ts' })
 SET a += { nombre: 'IOutboxStorageAdapter.v1.ts', tipo: 'ts', bytes: 1288, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.d.ts' })
-SET a += { nombre: 'IProjectorAdapter.v1.d.ts', tipo: 'ts', bytes: 1743, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.js' })
-SET a += { nombre: 'IProjectorAdapter.v1.js', tipo: 'js', bytes: 126, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2184,43 +2434,13 @@ SET a += { nombre: 'IProjectorAdapter.v1.ts', tipo: 'ts', bytes: 1685, topico: '
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.d.ts' })
-SET a += { nombre: 'IProviderAdapter.v1.d.ts', tipo: 'ts', bytes: 952, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.js' })
-SET a += { nombre: 'IProviderAdapter.v1.js', tipo: 'js', bytes: 125, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts' })
 SET a += { nombre: 'IProviderAdapter.v1.ts', tipo: 'ts', bytes: 904, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.d.ts' })
-SET a += { nombre: 'IStateStoreAdapter.v1.d.ts', tipo: 'ts', bytes: 863, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.js' })
-SET a += { nombre: 'IStateStoreAdapter.v1.js', tipo: 'js', bytes: 127, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.ts' })
 SET a += { nombre: 'IStateStoreAdapter.v1.ts', tipo: 'ts', bytes: 812, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.d.ts' })
-SET a += { nombre: 'IWorkflowEngineAdapter.v1.d.ts', tipo: 'ts', bytes: 2201, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.js' })
-SET a += { nombre: 'IWorkflowEngineAdapter.v1.js', tipo: 'js', bytes: 131, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2260,7 +2480,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts' })
-SET a += { nombre: 'ExecutionPlan.v2.ts', tipo: 'ts', bytes: 2741, topico: 'code' }
+SET a += { nombre: 'ExecutionPlan.v2.ts', tipo: 'ts', bytes: 3184, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2279,28 +2499,8 @@ SET a += { nombre: 'PlannerPolicies.v2.schema.json', tipo: 'json', bytes: 800, t
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/engine/IRunStateStore.v1.d.ts' })
-SET a += { nombre: 'IRunStateStore.v1.d.ts', tipo: 'ts', bytes: 5348, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/engine/IRunStateStore.v1.js' })
-SET a += { nombre: 'IRunStateStore.v1.js', tipo: 'js', bytes: 123, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts' })
-SET a += { nombre: 'IRunStateStore.v1.ts', tipo: 'ts', bytes: 5312, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/errors.d.ts' })
-SET a += { nombre: 'errors.d.ts', tipo: 'ts', bytes: 570, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/errors.js' })
-SET a += { nombre: 'errors.js', tipo: 'js', bytes: 857, topico: 'code' }
+SET a += { nombre: 'IRunStateStore.v1.ts', tipo: 'ts', bytes: 5311, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2309,13 +2509,8 @@ SET a += { nombre: 'errors.ts', tipo: 'ts', bytes: 685, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/planner-input.d.ts' })
-SET a += { nombre: 'planner-input.d.ts', tipo: 'ts', bytes: 2114, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/planner-input.js' })
-SET a += { nombre: 'planner-input.js', tipo: 'js', bytes: 1256, topico: 'code' }
+MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 1356, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2324,28 +2519,8 @@ SET a += { nombre: 'planner-input.ts', tipo: 'ts', bytes: 967, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/schemas.d.ts' })
-SET a += { nombre: 'schemas.d.ts', tipo: 'ts', bytes: 9980, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/schemas.js' })
-SET a += { nombre: 'schemas.js', tipo: 'js', bytes: 8486, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/schemas.ts' })
-SET a += { nombre: 'schemas.ts', tipo: 'ts', bytes: 12124, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/types/artifacts.d.ts' })
-SET a += { nombre: 'artifacts.d.ts', tipo: 'ts', bytes: 1205, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/types/artifacts.js' })
-SET a += { nombre: 'artifacts.js', tipo: 'js', bytes: 649, topico: 'code' }
+SET a += { nombre: 'schemas.ts', tipo: 'ts', bytes: 13916, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2354,53 +2529,13 @@ SET a += { nombre: 'artifacts.ts', tipo: 'ts', bytes: 1153, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.d.ts' })
-SET a += { nombre: 'contracts.d.ts', tipo: 'ts', bytes: 2878, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.js' })
-SET a += { nombre: 'contracts.js', tipo: 'js', bytes: 637, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
-SET a += { nombre: 'contracts.ts', tipo: 'ts', bytes: 2980, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/types/state-store.d.ts' })
-SET a += { nombre: 'state-store.d.ts', tipo: 'ts', bytes: 2587, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/types/state-store.js' })
-SET a += { nombre: 'state-store.js', tipo: 'js', bytes: 710, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/validation.d.ts' })
-SET a += { nombre: 'validation.d.ts', tipo: 'ts', bytes: 1985, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/validation.js' })
-SET a += { nombre: 'validation.js', tipo: 'js', bytes: 3960, topico: 'code' }
+SET a += { nombre: 'contracts.ts', tipo: 'ts', bytes: 3174, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/validation.ts' })
-SET a += { nombre: 'validation.ts', tipo: 'ts', bytes: 6547, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'typescript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/workflows.d.ts' })
-SET a += { nombre: 'workflows.d.ts', tipo: 'ts', bytes: 867, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'packages/@dvt' })
-SET m += { nombre: '@dvt', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'packages/@dvt/contracts/src/workflows.js' })
-SET a += { nombre: 'workflows.js', tipo: 'js', bytes: 850, topico: 'code' }
+SET a += { nombre: 'validation.ts', tipo: 'ts', bytes: 7111, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2430,7 +2565,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/contracts/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 324, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 291, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/contracts/vitest.config.d.ts' })
+SET a += { nombre: 'vitest.config.d.ts', tipo: 'ts', bytes: 120, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2475,7 +2615,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'packages/@dvt/dsl/vitest.config.cjs' })
-SET a += { nombre: 'vitest.config.cjs', tipo: 'cjs', bytes: 117, topico: 'code' }
+SET a += { nombre: 'vitest.config.cjs', tipo: 'cjs', bytes: 116, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2490,7 +2630,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine-contracts/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 304, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 291, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -2505,7 +2645,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/package.json' })
-SET a += { nombre: 'package.json', tipo: 'json', bytes: 869, topico: 'config' }
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 1055, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'markdown' }
@@ -2530,7 +2670,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/adapters/IProviderAdapter.ts' })
-SET a += { nombre: 'IProviderAdapter.ts', tipo: 'ts', bytes: 1816, topico: 'code' }
+SET a += { nombre: 'IProviderAdapter.ts', tipo: 'ts', bytes: 2582, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2560,7 +2700,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/contracts/IWorkflowEngine.v1_1_1.ts' })
-SET a += { nombre: 'IWorkflowEngine.v1_1_1.ts', tipo: 'ts', bytes: 1852, topico: 'code' }
+SET a += { nombre: 'IWorkflowEngine.v1_1_1.ts', tipo: 'ts', bytes: 1319, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2610,7 +2750,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/contracts/executionPlan.ts' })
-SET a += { nombre: 'executionPlan.ts', tipo: 'ts', bytes: 1960, topico: 'code' }
+SET a += { nombre: 'executionPlan.ts', tipo: 'ts', bytes: 2420, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2619,23 +2759,28 @@ SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 398, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/src/contracts/intentErrors.ts' })
+SET a += { nombre: 'intentErrors.ts', tipo: 'ts', bytes: 992, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/contracts/runEvents.ts' })
-SET a += { nombre: 'runEvents.ts', tipo: 'ts', bytes: 2893, topico: 'code' }
+SET a += { nombre: 'runEvents.ts', tipo: 'ts', bytes: 1125, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/contracts/types.ts' })
-SET a += { nombre: 'types.ts', tipo: 'ts', bytes: 2283, topico: 'code' }
+SET a += { nombre: 'types.ts', tipo: 'ts', bytes: 451, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts' })
-SET a += { nombre: 'SnapshotProjector.ts', tipo: 'ts', bytes: 5497, topico: 'code' }
+SET a += { nombre: 'SnapshotProjector.ts', tipo: 'ts', bytes: 6141, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts' })
-SET a += { nombre: 'WorkflowEngine.ts', tipo: 'ts', bytes: 23923, topico: 'code' }
+SET a += { nombre: 'WorkflowEngine.ts', tipo: 'ts', bytes: 28822, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2665,7 +2810,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/index.ts' })
-SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 1555, topico: 'code' }
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 1612, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2709,8 +2854,18 @@ SET a += { nombre: 'IPlanResolver.ts', tipo: 'ts', bytes: 629, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/src/ports/IRunMaintenanceService.ts' })
+SET a += { nombre: 'IRunMaintenanceService.ts', tipo: 'ts', bytes: 1797, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/ports/IRunStateStore.ts' })
 SET a += { nombre: 'IRunStateStore.ts', tipo: 'ts', bytes: 2410, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/src/ports/IStartRunIntentStore.ts' })
+SET a += { nombre: 'IStartRunIntentStore.ts', tipo: 'ts', bytes: 2779, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2720,7 +2875,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/security/authorizer.ts' })
-SET a += { nombre: 'authorizer.ts', tipo: 'ts', bytes: 604, topico: 'code' }
+SET a += { nombre: 'authorizer.ts', tipo: 'ts', bytes: 1296, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2734,18 +2889,28 @@ SET a += { nombre: 'planRefPolicy.ts', tipo: 'ts', bytes: 2807, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/src/services/RunMaintenanceService.ts' })
+SET a += { nombre: 'RunMaintenanceService.ts', tipo: 'ts', bytes: 13053, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/state/IRunStateStore.ts' })
 SET a += { nombre: 'IRunStateStore.ts', tipo: 'ts', bytes: 226, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/state/InMemoryRunStateStore.ts' })
-SET a += { nombre: 'InMemoryRunStateStore.ts', tipo: 'ts', bytes: 5358, topico: 'code' }
+SET a += { nombre: 'InMemoryRunStateStore.ts', tipo: 'ts', bytes: 5772, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts' })
+SET a += { nombre: 'InMemoryStartRunIntentStore.ts', tipo: 'ts', bytes: 3413, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/state/InMemoryTxStore.ts' })
-SET a += { nombre: 'InMemoryTxStore.ts', tipo: 'ts', bytes: 9296, topico: 'code' }
+SET a += { nombre: 'InMemoryTxStore.ts', tipo: 'ts', bytes: 9691, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2765,12 +2930,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/utils/jcs.ts' })
-SET a += { nombre: 'jcs.ts', tipo: 'ts', bytes: 80, topico: 'code' }
+SET a += { nombre: 'jcs.ts', tipo: 'ts', bytes: 77, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/src/utils/sha256.ts' })
-SET a += { nombre: 'sha256.ts', tipo: 'ts', bytes: 74, topico: 'code' }
+SET a += { nombre: 'sha256.ts', tipo: 'ts', bytes: 71, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2790,22 +2955,27 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/test/contracts/capabilities.contract.test.ts' })
-SET a += { nombre: 'capabilities.contract.test.ts', tipo: 'ts', bytes: 8790, topico: 'code' }
+SET a += { nombre: 'capabilities.contract.test.ts', tipo: 'ts', bytes: 9398, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/test/contracts/engine.test.ts' })
-SET a += { nombre: 'engine.test.ts', tipo: 'ts', bytes: 10001, topico: 'code' }
+SET a += { nombre: 'engine.test.ts', tipo: 'ts', bytes: 10320, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/test/contracts/executionPlan.contract.test.ts' })
-SET a += { nombre: 'executionPlan.contract.test.ts', tipo: 'ts', bytes: 7580, topico: 'code' }
+SET a += { nombre: 'executionPlan.contract.test.ts', tipo: 'ts', bytes: 7834, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/test/contracts/helpers.ts' })
 SET a += { nombre: 'helpers.ts', tipo: 'ts', bytes: 540, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/test/contracts/planner-engine-contract.test.ts' })
+SET a += { nombre: 'planner-engine-contract.test.ts', tipo: 'ts', bytes: 16017, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -2829,8 +2999,13 @@ SET a += { nombre: 'run-golden-paths.hash.test.ts', tipo: 'ts', bytes: 4530, top
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts' })
+SET a += { nombre: 'WorkflowEngine.intentLog.test.ts', tipo: 'ts', bytes: 14277, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/test/core/WorkflowEngine.test.ts' })
-SET a += { nombre: 'WorkflowEngine.test.ts', tipo: 'ts', bytes: 18459, topico: 'code' }
+SET a += { nombre: 'WorkflowEngine.test.ts', tipo: 'ts', bytes: 16343, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'markdown' }
@@ -2849,8 +3024,28 @@ SET a += { nombre: 'OutboxWorker.test.ts', tipo: 'ts', bytes: 4125, topico: 'cod
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/test/security/authorizer.allowAll.test.ts' })
+SET a += { nombre: 'authorizer.allowAll.test.ts', tipo: 'ts', bytes: 949, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/test/security/authorizer.deny.test.ts' })
-SET a += { nombre: 'authorizer.deny.test.ts', tipo: 'ts', bytes: 8228, topico: 'code' }
+SET a += { nombre: 'authorizer.deny.test.ts', tipo: 'ts', bytes: 8482, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/test/services/RunMaintenanceService.intentReconciliation.test.ts' })
+SET a += { nombre: 'RunMaintenanceService.intentReconciliation.test.ts', tipo: 'ts', bytes: 14669, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/test/services/RunMaintenanceService.test.ts' })
+SET a += { nombre: 'RunMaintenanceService.test.ts', tipo: 'ts', bytes: 29174, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/engine/test/state/InMemoryStartRunIntentStore.test.ts' })
+SET a += { nombre: 'InMemoryStartRunIntentStore.test.ts', tipo: 'ts', bytes: 8383, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -2886,6 +3081,81 @@ MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/@dvt/engine/vitest.config.ts' })
 SET a += { nombre: 'vitest.config.ts', tipo: 'ts', bytes: 157, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability-otel/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 627, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability-otel/package.json' })
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 714, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability-otel/src/OtelObservability.ts' })
+SET a += { nombre: 'OtelObservability.ts', tipo: 'ts', bytes: 4202, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability-otel/src/index.ts' })
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 37, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability-otel/test/OtelObservability.test.ts' })
+SET a += { nombre: 'OtelObservability.test.ts', tipo: 'ts', bytes: 701, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability-otel/tsconfig.json' })
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 454, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'markdown' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/README.md' })
+SET a += { nombre: 'README.md', tipo: 'md', bytes: 354, topico: 'doc' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/package.json' })
+SET a += { nombre: 'package.json', tipo: 'json', bytes: 585, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/src/contracts/IObservability.ts' })
+SET a += { nombre: 'IObservability.ts', tipo: 'ts', bytes: 1736, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/src/contracts/ObservabilityContext.ts' })
+SET a += { nombre: 'ObservabilityContext.ts', tipo: 'ts', bytes: 796, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/src/index.ts' })
+SET a += { nombre: 'index.ts', tipo: 'ts', bytes: 175, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/src/noopObservability.ts' })
+SET a += { nombre: 'noopObservability.ts', tipo: 'ts', bytes: 2023, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/src/policy/cardinalityPolicy.ts' })
+SET a += { nombre: 'cardinalityPolicy.ts', tipo: 'ts', bytes: 1051, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'typescript' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/test/cardinalityPolicy.test.ts' })
+SET a += { nombre: 'cardinalityPolicy.test.ts', tipo: 'ts', bytes: 563, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'packages/@dvt' })
+SET m += { nombre: '@dvt', lenguaje: 'json' }
+MERGE (a:Archivo { path: 'packages/@dvt/observability/tsconfig.json' })
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 286, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -2990,7 +3260,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/planner-contracts/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 304, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 291, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'markdown' }
@@ -3235,7 +3505,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/planner/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 576, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 622, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'typescript' }
@@ -3255,7 +3525,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
 MERGE (a:Archivo { path: 'packages/@dvt/state-contracts/tsconfig.json' })
-SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 304, topico: 'config' }
+SET a += { nombre: 'tsconfig.json', tipo: 'json', bytes: 291, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/@dvt' })
 SET m += { nombre: '@dvt', lenguaje: 'json' }
@@ -3400,7 +3670,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/cli' })
 SET m += { nombre: 'cli', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'packages/cli/validate-contracts.cjs' })
-SET a += { nombre: 'validate-contracts.cjs', tipo: 'cjs', bytes: 7588, topico: 'code' }
+SET a += { nombre: 'validate-contracts.cjs', tipo: 'cjs', bytes: 7614, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'packages/frontend' })
 SET m += { nombre: 'frontend', lenguaje: 'json' }
@@ -3452,15 +3722,10 @@ SET m += { nombre: 'test', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'packages/test/matrix-alignment.test.ts' })
 SET a += { nombre: 'matrix-alignment.test.ts', tipo: 'ts', bytes: 2916, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'plans/engine-gap-to-target-migration-plan.md' })
-SET m += { nombre: 'engine-gap-to-target-migration-plan.md', lenguaje: 'markdown' }
-MERGE (a:Archivo { path: 'plans/engine-gap-to-target-migration-plan.md' })
-SET a += { nombre: 'engine-gap-to-target-migration-plan.md', tipo: 'md', bytes: 5362, topico: 'doc' }
-MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'pnpm-lock.yaml' })
 SET m += { nombre: 'pnpm-lock.yaml', lenguaje: 'yaml' }
 MERGE (a:Archivo { path: 'pnpm-lock.yaml' })
-SET a += { nombre: 'pnpm-lock.yaml', tipo: 'yaml', bytes: 424607, topico: 'config' }
+SET a += { nombre: 'pnpm-lock.yaml', tipo: 'yaml', bytes: 425777, topico: 'config' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'pnpm-workspace.yaml' })
 SET m += { nombre: 'pnpm-workspace.yaml', lenguaje: 'yaml' }
@@ -3500,7 +3765,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/db-migrate.cjs' })
 SET m += { nombre: 'db-migrate.cjs', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/db-migrate.cjs' })
-SET a += { nombre: 'db-migrate.cjs', tipo: 'cjs', bytes: 3019, topico: 'code' }
+SET a += { nombre: 'db-migrate.cjs', tipo: 'cjs', bytes: 3055, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/docs-quality-check.cjs' })
+SET m += { nombre: 'docs-quality-check.cjs', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/docs-quality-check.cjs' })
+SET a += { nombre: 'docs-quality-check.cjs', tipo: 'cjs', bytes: 2264, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/enable-workflow.sh' })
 SET m += { nombre: 'enable-workflow.sh', lenguaje: 'text' }
@@ -3525,7 +3795,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'scripts/neo4j/generated-repo.cypher' })
-SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 384914, topico: 'other' }
+SET a += { nombre: 'generated-repo.cypher', tipo: 'cypher', bytes: 391851, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/neo4j' })
 SET m += { nombre: 'neo4j', lenguaje: 'javascript' }
@@ -3572,6 +3842,11 @@ SET m += { nombre: 'run-golden-paths.cjs', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/run-golden-paths.cjs' })
 SET a += { nombre: 'run-golden-paths.cjs', tipo: 'cjs', bytes: 4233, topico: 'code' }
 MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'scripts/sync-docs.cjs' })
+SET m += { nombre: 'sync-docs.cjs', lenguaje: 'javascript' }
+MERGE (a:Archivo { path: 'scripts/sync-docs.cjs' })
+SET a += { nombre: 'sync-docs.cjs', tipo: 'cjs', bytes: 26625, topico: 'code' }
+MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'scripts/validate-contracts.cjs' })
 SET m += { nombre: 'validate-contracts.cjs', lenguaje: 'javascript' }
 MERGE (a:Archivo { path: 'scripts/validate-contracts.cjs' })
@@ -3605,122 +3880,152 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/404.html' })
 SET m += { nombre: '404.html', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/404.html' })
-SET a += { nombre: '404.html', tipo: 'html', bytes: 23112, topico: 'other' }
+SET a += { nombre: '404.html', tipo: 'html', bytes: 21757, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/CONTRIBUTING' })
+SET m += { nombre: 'CONTRIBUTING', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/CONTRIBUTING/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 52954, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/DOCS_README' })
 SET m += { nombre: 'DOCS_README', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/DOCS_README/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 25575, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24178, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0000-Code-generation-with-normative-traceability-required.en/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 42211, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 40142, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0001-temporal-integration-test-policy/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 27273, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31769, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0002-neo4j-knowledge-graph-context-repository/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 27113, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31186, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0003-execution-model/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 35076, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 33273, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0004-event-sourcing-strategy/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 41500, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 39323, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0005-contract-formalization-tooling/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26166, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 30099, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0006-contract-tooling-governance/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26852, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 30193, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0007_RunCancellation/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 32572, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31118, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0008_Signal_Idempotency/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 29621, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 28186, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0009_Outbox_Ordering/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 32489, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31028, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0010-run-event-envelope-split/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 40325, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 38685, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0011-run-started-ownership/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 29099, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 27696, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0012-plan-integrity-ownership/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 34020, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 32501, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0012a_Canonical_Error_Code_Strategy/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 27424, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 26007, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0013-run-state-store-bootstrapRunTx/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 28119, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 26667, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0014-run-driven-adapter-model/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 25974, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24589, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0015-getRunStatus-read-model-separation/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 25884, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24507, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0016-logicalAttemptId-adapter-ownership/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26207, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24827, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-0017_ExecutionPlan_Schema_Versioning/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 45410, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 43760, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/adr' })
+SET m += { nombre: 'adr', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/adr/ADR-0018_Shared_Kernel_Ownership_Governance/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 35364, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/adr' })
+SET m += { nombre: 'adr', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 26616, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/adr' })
+SET m += { nombre: 'adr', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/adr/ADR-0029-run-maintenance-service/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 27159, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/adr' })
+SET m += { nombre: 'adr', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/adr/ADR-0030-pre-dispatch-intent-log/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 47937, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR-Implementation Status/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 48300, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 34245, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/adr' })
+SET m += { nombre: 'adr', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/adr/ADR-Index/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 30165, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/ADR_Status_Board_Extensive/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 28628, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 27191, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/_archive/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26038, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24065, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
@@ -3730,52 +4035,52 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/_drafts/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 25997, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24110, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/adr' })
 SET m += { nombre: 'adr', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/adr/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26466, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31060, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/adapters/conductor/ConductorAdapter.spec/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 45160, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 42202, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/adapters/state-store/postgres/StateStoreAdapter/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 41200, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 39325, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/adapters/state-store/snowflake/StateStoreAdapter/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 48984, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 46746, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/adapters/temporal/EnginePolicies/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 44334, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 42720, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/adapters/temporal/TemporalAdapter.spec/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 47438, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 45403, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/CONTRACT_TEMPLATE.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 29548, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 26108, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/DECISION_AND_RISK_LOG_v2.0.0/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 33609, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 32168, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/MIGRATION_v1.1.1_to_v2.0.0/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 32209, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 30735, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
@@ -3790,7 +4095,7 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/capabilities/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 32748, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31155, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
@@ -3800,57 +4105,57 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/AgnosticEventLayerStrategy.v2.0.1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 28601, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 27205, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/ExecutionSemantics.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 81033, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 77713, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/ExecutionSemantics.v2.0/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 33278, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31811, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/GlossaryContract.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 49541, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 47850, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/GlossaryContract.v2.0/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 30737, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 29258, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/IProviderAdapter.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 33694, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 32189, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/IWorkflowEngine.reference.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 51425, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 49629, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/IWorkflowEngine.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 34877, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 33212, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/IWorkflowEngine.v2.0/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 30985, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 29502, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/PlanIntegrityAndPause.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 30441, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 29033, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/RunEventCatalog.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26801, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 25419, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
@@ -3860,17 +4165,17 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/RunEvents.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 51807, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 49916, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/RunEvents.v2.0/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 68858, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 66051, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/engine/SignalsAndAuth.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 54998, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 53024, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
@@ -3905,12 +4210,12 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/extensions/PluginSandbox.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 40434, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 38816, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 37886, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 36270, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
@@ -3930,67 +4235,67 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/security/AuditLog.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 51530, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 47769, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/security/IAuthorization.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 36832, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 34996, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/state-store/IRunStateStore.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 33217, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31703, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/state-store/IRunStateStore.v2.0/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 31127, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 29624, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/contracts/state-store/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 41097, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 39328, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/dev/CONTRACT_TOOLING_PROPOSAL.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 53503, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 51736, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/dev/determinism-tooling/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 50165, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 46901, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 73932, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 70115, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/ops/SLOs/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 35737, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31940, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/ops/observability/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 50976, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 45581, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/ops/runbooks/incident_response/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 52236, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 55140, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/ops/runbooks/severity_matrix/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 38514, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 36836, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/roadmap/engine-phases/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 68154, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 66118, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'json' }
@@ -4050,322 +4355,262 @@ MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/security/PLUGIN_PROVENANCE_POLICY.APPENDICES/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 74707, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 69835, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/security/PLUGIN_PROVENANCE_POLICY.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 50614, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 48711, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/security/SECURITY_INVARIANTS.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 131313, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 128643, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/security/TENANT_ISOLATION_TESTS.v1/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 94812, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 89464, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/engine/security/THREAT_MODEL/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 95976, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 93694, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/frontend/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26041, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24506, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26539, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24186, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/architecture' })
 SET m += { nombre: 'architecture', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/architecture/infra/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26099, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24546, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/modulos canonicos.png' })
+SET a += { nombre: 'modulos canonicos.png', tipo: 'png', bytes: 2253046, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 49463, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/docs/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 23752, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/docs/lore/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 29364, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/docs/pending.txt' })
+SET a += { nombre: 'pending.txt', tipo: 'txt', bytes: 1034, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/development/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 30258, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/modules-canonicos-minimos/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 40714, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 22294, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'yaml' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/infra/ci/adr-linkage.yml' })
+SET a += { nombre: 'adr-linkage.yml', tipo: 'yml', bytes: 2434, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'yaml' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/infra/kafka/local-compose-kafka.yaml' })
+SET a += { nombre: 'local-compose-kafka.yaml', tipo: 'yaml', bytes: 1364, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'yaml' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/infra/rds/local-compose-rds.yaml' })
+SET a += { nombre: 'local-compose-rds.yaml', tipo: 'yaml', bytes: 700, topico: 'config' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/architecture' })
+SET m += { nombre: 'architecture', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/architecture/vision/DVT_Docs_Pack_v0.6/tooling/scripts/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 22625, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/archive' })
 SET m += { nombre: 'archive', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/archive/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 25858, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 23888, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/assets' })
 SET m += { nombre: 'assets', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/assets/images/favicon.png' })
 SET a += { nombre: 'favicon.png', tipo: 'png', bytes: 1870, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/bundle.79ae519e.min.js' })
-SET a += { nombre: 'bundle.79ae519e.min.js', tipo: 'js', bytes: 114308, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.ar.min.js' })
-SET a += { nombre: 'lunr.ar.min.js', tipo: 'js', bytes: 17074, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.da.min.js' })
-SET a += { nombre: 'lunr.da.min.js', tipo: 'js', bytes: 4654, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.de.min.js' })
-SET a += { nombre: 'lunr.de.min.js', tipo: 'js', bytes: 6119, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.du.min.js' })
-SET a += { nombre: 'lunr.du.min.js', tipo: 'js', bytes: 6208, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.el.min.js' })
-SET a += { nombre: 'lunr.el.min.js', tipo: 'js', bytes: 14950, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.es.min.js' })
-SET a += { nombre: 'lunr.es.min.js', tipo: 'js', bytes: 11499, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.fi.min.js' })
-SET a += { nombre: 'lunr.fi.min.js', tipo: 'js', bytes: 9342, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.fr.min.js' })
-SET a += { nombre: 'lunr.fr.min.js', tipo: 'js', bytes: 10669, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.he.min.js' })
-SET a += { nombre: 'lunr.he.min.js', tipo: 'js', bytes: 6882, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.hi.min.js' })
-SET a += { nombre: 'lunr.hi.min.js', tipo: 'js', bytes: 3383, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.hu.min.js' })
-SET a += { nombre: 'lunr.hu.min.js', tipo: 'js', bytes: 9437, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.hy.min.js' })
-SET a += { nombre: 'lunr.hy.min.js', tipo: 'js', bytes: 1264, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.it.min.js' })
-SET a += { nombre: 'lunr.it.min.js', tipo: 'js', bytes: 11232, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.ja.min.js' })
-SET a += { nombre: 'lunr.ja.min.js', tipo: 'js', bytes: 2313, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.jp.min.js' })
-SET a += { nombre: 'lunr.jp.min.js', tipo: 'js', bytes: 36, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.kn.min.js' })
-SET a += { nombre: 'lunr.kn.min.js', tipo: 'js', bytes: 3494, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.ko.min.js' })
-SET a += { nombre: 'lunr.ko.min.js', tipo: 'js', bytes: 7972, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.multi.min.js' })
-SET a += { nombre: 'lunr.multi.min.js', tipo: 'js', bytes: 817, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.nl.min.js' })
-SET a += { nombre: 'lunr.nl.min.js', tipo: 'js', bytes: 6026, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.no.min.js' })
-SET a += { nombre: 'lunr.no.min.js', tipo: 'js', bytes: 4754, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.pt.min.js' })
-SET a += { nombre: 'lunr.pt.min.js', tipo: 'js', bytes: 10171, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.ro.min.js' })
-SET a += { nombre: 'lunr.ro.min.js', tipo: 'js', bytes: 10958, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.ru.min.js' })
-SET a += { nombre: 'lunr.ru.min.js', tipo: 'js', bytes: 10331, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.sa.min.js' })
-SET a += { nombre: 'lunr.sa.min.js', tipo: 'js', bytes: 4901, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.stemmer.support.min.js' })
-SET a += { nombre: 'lunr.stemmer.support.min.js', tipo: 'js', bytes: 3647, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.sv.min.js' })
-SET a += { nombre: 'lunr.sv.min.js', tipo: 'js', bytes: 4523, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.ta.min.js' })
-SET a += { nombre: 'lunr.ta.min.js', tipo: 'js', bytes: 2406, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.te.min.js' })
-SET a += { nombre: 'lunr.te.min.js', tipo: 'js', bytes: 2330, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.th.min.js' })
-SET a += { nombre: 'lunr.th.min.js', tipo: 'js', bytes: 1031, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.tr.min.js' })
-SET a += { nombre: 'lunr.tr.min.js', tipo: 'js', bytes: 15009, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.vi.min.js' })
-SET a += { nombre: 'lunr.vi.min.js', tipo: 'js', bytes: 784, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/min/lunr.zh.min.js' })
-SET a += { nombre: 'lunr.zh.min.js', tipo: 'js', bytes: 2158, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/tinyseg.js' })
-SET a += { nombre: 'tinyseg.js', tipo: 'js', bytes: 22878, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/lunr/wordcut.js' })
-SET a += { nombre: 'wordcut.js', tipo: 'js', bytes: 677463, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'javascript' }
-MERGE (a:Archivo { path: 'site/assets/javascripts/workers/search.2c215733.min.js' })
-SET a += { nombre: 'search.2c215733.min.js', tipo: 'js', bytes: 39481, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'site/assets/stylesheets/main.484c7ddc.min.css' })
-SET a += { nombre: 'main.484c7ddc.min.css', tipo: 'css', bytes: 139849, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'site/assets/stylesheets/main.484c7ddc.min.css.map' })
-SET a += { nombre: 'main.484c7ddc.min.css.map', tipo: 'map', bytes: 47588, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'site/assets/stylesheets/palette.ab4e12ef.min.css' })
-SET a += { nombre: 'palette.ab4e12ef.min.css', tipo: 'css', bytes: 12641, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/assets' })
-SET m += { nombre: 'assets', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'site/assets/stylesheets/palette.ab4e12ef.min.css.map' })
-SET a += { nombre: 'palette.ab4e12ef.min.css.map', tipo: 'map', bytes: 3670, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/contracts/engine/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26022, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 28098, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/contracts/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26557, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24104, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/contracts/planner/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26053, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 25287, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/contracts' })
 SET m += { nombre: 'contracts', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/contracts/shared/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26034, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 25708, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/decisions' })
+SET m += { nombre: 'decisions', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/decisions/ADR-0002-neo4j-knowledge-graph-context-repository/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 29885, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/decisions' })
+SET m += { nombre: 'decisions', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/decisions/ADR-0003-execution-model/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 28467, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/decisions' })
+SET m += { nombre: 'decisions', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/decisions/ADR-0004-event-sourcing-strategy/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 28637, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/decisions' })
+SET m += { nombre: 'decisions', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/decisions/ADR-0005-contract-formalization-tooling/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 30097, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/decisions' })
+SET m += { nombre: 'decisions', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/decisions/ADR-0006-contract-tooling-governance/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 30191, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/guides' })
+SET m += { nombre: 'guides', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 42928, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/guides' })
 SET m += { nombre: 'guides', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/guides/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 25912, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24053, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/index.html' })
-SET m += { nombre: 'index.html', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'site/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26596, topico: 'other' }
+MERGE (m:Modulo { path: 'site/knowledge' })
+SET m += { nombre: 'knowledge', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/knowledge/REPOSITORY_MAP/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 34302, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/knowledge' })
+SET m += { nombre: 'knowledge', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/knowledge/ROADMAP_AND_ISSUES_MAP/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31594, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/CI_CD_ROLLBACK_PLAN_20260228/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 32736, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/DVT_ARCH_REVIEW_GAP_TASKS_20260226/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 37759, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/DVT_REMEDIATION_PLAN/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 63711, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/DVT_engine_remediation_ai_plan/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 74922, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/ENGINE_DVT_ESPEC_CHECKLIST_ESTADO/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31533, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/HITO_0_ESTABILIZACION_INMEDIATA_PLAN/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 55463, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/planning' })
 SET m += { nombre: 'planning', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/planning/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26521, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 28154, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/planning' })
 SET m += { nombre: 'planning', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/planning/proposals/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26030, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24813, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/reviews/PR_301_RELAUNCH_BATCH_PLAN_20260228/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 31381, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/reviews/PR_313_STABILIZATION_EXECUTION_REPORT_20260228/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 39676, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/planning' })
+SET m += { nombre: 'planning', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/planning/reviews/WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 28550, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/planning' })
 SET m += { nombre: 'planning', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/planning/reviews/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26042, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24650, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/planning' })
 SET m += { nombre: 'planning', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/planning/status/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 26024, topico: 'other' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 24603, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/review' })
+SET m += { nombre: 'review', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/review/DVT+_Architectural_Review_20260225/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 89352, topico: 'other' }
+MERGE (m)-[:CONTIENE]->(a);
+MERGE (m:Modulo { path: 'site/review' })
+SET m += { nombre: 'review', lenguaje: 'text' }
+MERGE (a:Archivo { path: 'site/review/DVT+_Architectural_Review_20260226_AI/index.html' })
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 40856, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/runbooks' })
 SET m += { nombre: 'runbooks', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/runbooks/index.html' })
-SET a += { nombre: 'index.html', tipo: 'html', bytes: 25915, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/search' })
-SET m += { nombre: 'search', lenguaje: 'json' }
-MERGE (a:Archivo { path: 'site/search/search_index.json' })
-SET a += { nombre: 'search_index.json', tipo: 'json', bytes: 845372, topico: 'config' }
+SET a += { nombre: 'index.html', tipo: 'html', bytes: 23945, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'site/sitemap.xml' })
 SET m += { nombre: 'sitemap.xml', lenguaje: 'text' }
 MERGE (a:Archivo { path: 'site/sitemap.xml' })
 SET a += { nombre: 'sitemap.xml', tipo: 'xml', bytes: 111, topico: 'other' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'site/sitemap.xml.gz' })
-SET m += { nombre: 'sitemap.xml.gz', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'site/sitemap.xml.gz' })
-SET a += { nombre: 'sitemap.xml.gz', tipo: 'gz', bytes: 127, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 MERGE (m:Modulo { path: 'traceability.config.json' })
 SET m += { nombre: 'traceability.config.json', lenguaje: 'json' }
@@ -4406,11 +4651,6 @@ MERGE (m:Modulo { path: 'vitest.config.ts' })
 SET m += { nombre: 'vitest.config.ts', lenguaje: 'typescript' }
 MERGE (a:Archivo { path: 'vitest.config.ts' })
 SET a += { nombre: 'vitest.config.ts', tipo: 'ts', bytes: 602, topico: 'code' }
-MERGE (m)-[:CONTIENE]->(a);
-MERGE (m:Modulo { path: 'x[1])' })
-SET m += { nombre: 'x[1])', lenguaje: 'text' }
-MERGE (a:Archivo { path: 'x[1])' })
-SET a += { nombre: 'x[1])', tipo: 'none', bytes: 0, topico: 'other' }
 MERGE (m)-[:CONTIENE]->(a);
 
 // File dependencies
@@ -5008,24 +5248,6 @@ MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'apps/web/src/main.tsx' })
 MATCH (dst:Archivo { path: 'apps/web/src/app/App.tsx' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/canonical/src/index.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/canonical/src/jcs.js' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/canonical/src/index.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/canonical/src/sha256.js' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/canonical/src/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/canonical/src/jcs.js' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/canonical/src/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/canonical/src/sha256.js' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/canonical/src/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/canonical/src/jcs.js' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/canonical/src/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/canonical/src/sha256.js' })
-MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
@@ -5051,108 +5273,69 @@ MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/errors.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/schemas.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/planner-input.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/validation.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/artifacts.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/workflows.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/errors.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/schemas.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/planner-input.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/validation.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/artifacts.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/workflows.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/errors.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/schemas.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/planner-input.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/validation.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.d.ts' })
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/artifacts.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/workflows.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/errors.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/schemas.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/planner-input.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.js' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/validation.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.d.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.ts' })
@@ -5170,14 +5353,50 @@ MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/engine/IRunStateStore.v1.d.ts' })
-MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
-MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
-MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/validation.js' })
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/contracts.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/types/artifacts.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/workflows.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/errors.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/schemas.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/planner-input.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/contracts/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/validation.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/contracts/test/errors.test.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/contracts/src/errors.ts' })
@@ -5190,6 +5409,33 @@ MATCH (dst:Archivo { path: 'packages/@dvt/contracts/index.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/@dvt/engine/test/utils/clock.test.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/engine/src/utils/clock.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability-otel/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability-otel/src/OtelObservability.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability-otel/test/OtelObservability.test.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability-otel/src/index.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability/src/contracts/IObservability.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability/src/contracts/ObservabilityContext.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability/src/contracts/ObservabilityContext.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability/src/contracts/IObservability.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability/src/policy/cardinalityPolicy.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability/src/index.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability/src/noopObservability.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability/src/policy/cardinalityPolicy.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability/src/contracts/ObservabilityContext.ts' })
+MERGE (src)-[:DEPENDE]->(dst);
+MATCH (src:Archivo { path: 'packages/@dvt/observability/test/cardinalityPolicy.test.ts' })
+MATCH (dst:Archivo { path: 'packages/@dvt/observability/src/policy/cardinalityPolicy.ts' })
 MERGE (src)-[:DEPENDE]->(dst);
 MATCH (src:Archivo { path: 'packages/test/matrix-alignment.test.ts' })
 MATCH (dst:Archivo { path: 'packages/@dvt/adapter-temporal/src/versioning.ts' })
@@ -5224,8 +5470,13 @@ SET f += { nombre: 'RunStreamHub', linea_inicio: 3, path: 'infra/prototypes/api/
 WITH f
 MATCH (a:Archivo { path: 'infra/prototypes/api/src/runStreamHub.ts' })
 MERGE (a)-[:DEFINE]->(f);
+MERGE (f:Funcion { key: 'packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts::PostgresStartRunIntentStore' })
+SET f += { nombre: 'PostgresStartRunIntentStore', linea_inicio: 61, path: 'packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts' }
+WITH f
+MATCH (a:Archivo { path: 'packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts' })
+MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts::PostgresStateStoreAdapter' })
-SET f += { nombre: 'PostgresStateStoreAdapter', linea_inicio: 231, path: 'packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts' }
+SET f += { nombre: 'PostgresStateStoreAdapter', linea_inicio: 270, path: 'packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -5235,7 +5486,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts::TemporalAdapter' })
-SET f += { nombre: 'TemporalAdapter', linea_inicio: 67, path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts' }
+SET f += { nombre: 'TemporalAdapter', linea_inicio: 75, path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -5255,7 +5506,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/contracts/src/errors.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/contracts/src/validation.ts::ContractValidationError' })
-SET f += { nombre: 'ContractValidationError', linea_inicio: 71, path: 'packages/@dvt/contracts/src/validation.ts' }
+SET f += { nombre: 'ContractValidationError', linea_inicio: 75, path: 'packages/@dvt/contracts/src/validation.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/contracts/src/validation.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -5334,13 +5585,23 @@ SET f += { nombre: 'OutboxRateLimitExceededError', linea_inicio: 130, path: 'pac
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/src/contracts/errors.ts' })
 MERGE (a)-[:DEFINE]->(f);
+MERGE (f:Funcion { key: 'packages/@dvt/engine/src/contracts/intentErrors.ts::IntentNotFoundError' })
+SET f += { nombre: 'IntentNotFoundError', linea_inicio: 10, path: 'packages/@dvt/engine/src/contracts/intentErrors.ts' }
+WITH f
+MATCH (a:Archivo { path: 'packages/@dvt/engine/src/contracts/intentErrors.ts' })
+MERGE (a)-[:DEFINE]->(f);
+MERGE (f:Funcion { key: 'packages/@dvt/engine/src/contracts/intentErrors.ts::IntentInvalidTransitionError' })
+SET f += { nombre: 'IntentInvalidTransitionError', linea_inicio: 17, path: 'packages/@dvt/engine/src/contracts/intentErrors.ts' }
+WITH f
+MATCH (a:Archivo { path: 'packages/@dvt/engine/src/contracts/intentErrors.ts' })
+MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/engine/src/core/SnapshotProjector.ts::SnapshotProjector' })
-SET f += { nombre: 'SnapshotProjector', linea_inicio: 142, path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts' }
+SET f += { nombre: 'SnapshotProjector', linea_inicio: 159, path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/src/core/SnapshotProjector.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/engine/src/core/WorkflowEngine.ts::WorkflowEngine' })
-SET f += { nombre: 'WorkflowEngine', linea_inicio: 114, path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts' }
+SET f += { nombre: 'WorkflowEngine', linea_inicio: 97, path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/src/core/WorkflowEngine.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -5375,7 +5636,7 @@ WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/src/security/AuthorizationError.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/engine/src/security/authorizer.ts::AllowAllAuthorizer' })
-SET f += { nombre: 'AllowAllAuthorizer', linea_inicio: 11, path: 'packages/@dvt/engine/src/security/authorizer.ts' }
+SET f += { nombre: 'AllowAllAuthorizer', linea_inicio: 19, path: 'packages/@dvt/engine/src/security/authorizer.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/src/security/authorizer.ts' })
 MERGE (a)-[:DEFINE]->(f);
@@ -5389,10 +5650,20 @@ SET f += { nombre: 'PlanRefPolicy', linea_inicio: 15, path: 'packages/@dvt/engin
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/src/security/planRefPolicy.ts' })
 MERGE (a)-[:DEFINE]->(f);
+MERGE (f:Funcion { key: 'packages/@dvt/engine/src/services/RunMaintenanceService.ts::RunMaintenanceService' })
+SET f += { nombre: 'RunMaintenanceService', linea_inicio: 40, path: 'packages/@dvt/engine/src/services/RunMaintenanceService.ts' }
+WITH f
+MATCH (a:Archivo { path: 'packages/@dvt/engine/src/services/RunMaintenanceService.ts' })
+MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/engine/src/state/InMemoryRunStateStore.ts::InMemoryRunStateStore' })
 SET f += { nombre: 'InMemoryRunStateStore', linea_inicio: 18, path: 'packages/@dvt/engine/src/state/InMemoryRunStateStore.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/src/state/InMemoryRunStateStore.ts' })
+MERGE (a)-[:DEFINE]->(f);
+MERGE (f:Funcion { key: 'packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts::InMemoryStartRunIntentStore' })
+SET f += { nombre: 'InMemoryStartRunIntentStore', linea_inicio: 18, path: 'packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts' }
+WITH f
+MATCH (a:Archivo { path: 'packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/engine/src/state/InMemoryTxStore.ts::InMemoryTxStore' })
 SET f += { nombre: 'InMemoryTxStore', linea_inicio: 19, path: 'packages/@dvt/engine/src/state/InMemoryTxStore.ts' }
@@ -5408,6 +5679,11 @@ MERGE (f:Funcion { key: 'packages/@dvt/engine/test/contracts/helpers.ts::InMemor
 SET f += { nombre: 'InMemoryPlanFetcher', linea_inicio: 3, path: 'packages/@dvt/engine/test/contracts/helpers.ts' }
 WITH f
 MATCH (a:Archivo { path: 'packages/@dvt/engine/test/contracts/helpers.ts' })
+MERGE (a)-[:DEFINE]->(f);
+MERGE (f:Funcion { key: 'packages/@dvt/observability-otel/src/OtelObservability.ts::OtelObservability' })
+SET f += { nombre: 'OtelObservability', linea_inicio: 128, path: 'packages/@dvt/observability-otel/src/OtelObservability.ts' }
+WITH f
+MATCH (a:Archivo { path: 'packages/@dvt/observability-otel/src/OtelObservability.ts' })
 MERGE (a)-[:DEFINE]->(f);
 MERGE (f:Funcion { key: 'packages/@dvt/plan-interpreter/src/errors.ts::PlanValidationError' })
 SET f += { nombre: 'PlanValidationError', linea_inicio: 15, path: 'packages/@dvt/plan-interpreter/src/errors.ts' }
@@ -6211,10 +6487,30 @@ SET i += { number: 73, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/i
 WITH i
 MATCH (a:Archivo { path: 'docs/knowledge/ROADMAP_AND_ISSUES_MAP.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#301' })
+SET i += { number: 301, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/301' }
+WITH i
+MATCH (a:Archivo { path: 'docs/planning/index.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#313' })
+SET i += { number: 313, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/313' }
+WITH i
+MATCH (a:Archivo { path: 'docs/planning/index.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#301' })
+SET i += { number: 301, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/301' }
+WITH i
+MATCH (a:Archivo { path: 'docs/planning/reviews/PR_301_RELAUNCH_BATCH_PLAN_20260228.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#313' })
 SET i += { number: 313, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/313' }
 WITH i
 MATCH (a:Archivo { path: 'docs/planning/reviews/PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md' })
+MERGE (a)-[:REFERENCIA_ISSUE]->(i);
+MERGE (i:Issue { key: 'dunay2/dvt#301' })
+SET i += { number: 301, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/301' }
+WITH i
+MATCH (a:Archivo { path: 'docs/planning/reviews/index.md' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 MERGE (i:Issue { key: 'dunay2/dvt#313' })
 SET i += { number: 313, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/313' }
@@ -6310,471 +6606,6 @@ MERGE (i:Issue { key: 'dunay2/dvt#10' })
 SET i += { number: 10, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/10' }
 WITH i
 MATCH (a:Archivo { path: 'scripts/validate-contracts.cjs' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#0' })
-SET i += { number: 0, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/0' }
-WITH i
-MATCH (a:Archivo { path: 'site/assets/javascripts/bundle.79ae519e.min.js' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#39' })
-SET i += { number: 39, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/39' }
-WITH i
-MATCH (a:Archivo { path: 'site/assets/javascripts/bundle.79ae519e.min.js' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#1621' })
-SET i += { number: 1621, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/1621' }
-WITH i
-MATCH (a:Archivo { path: 'site/assets/javascripts/lunr/wordcut.js' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#1929' })
-SET i += { number: 1929, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/1929' }
-WITH i
-MATCH (a:Archivo { path: 'site/assets/javascripts/lunr/wordcut.js' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#1991' })
-SET i += { number: 1991, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/1991' }
-WITH i
-MATCH (a:Archivo { path: 'site/assets/javascripts/lunr/wordcut.js' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#2094' })
-SET i += { number: 2094, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/2094' }
-WITH i
-MATCH (a:Archivo { path: 'site/assets/javascripts/lunr/wordcut.js' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#0' })
-SET i += { number: 0, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/0' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#1' })
-SET i += { number: 1, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/1' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#2' })
-SET i += { number: 2, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/2' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#3' })
-SET i += { number: 3, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/3' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#4' })
-SET i += { number: 4, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/4' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#5' })
-SET i += { number: 5, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/5' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#6' })
-SET i += { number: 6, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/6' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#7' })
-SET i += { number: 7, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/7' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#8' })
-SET i += { number: 8, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/8' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#9' })
-SET i += { number: 9, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/9' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#10' })
-SET i += { number: 10, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/10' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#11' })
-SET i += { number: 11, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/11' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#12' })
-SET i += { number: 12, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/12' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#13' })
-SET i += { number: 13, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/13' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#14' })
-SET i += { number: 14, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/14' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#15' })
-SET i += { number: 15, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/15' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#16' })
-SET i += { number: 16, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/16' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#17' })
-SET i += { number: 17, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/17' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#18' })
-SET i += { number: 18, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/18' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#19' })
-SET i += { number: 19, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/19' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#21' })
-SET i += { number: 21, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/21' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#22' })
-SET i += { number: 22, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/22' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#23' })
-SET i += { number: 23, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/23' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#24' })
-SET i += { number: 24, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/24' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#25' })
-SET i += { number: 25, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/25' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#26' })
-SET i += { number: 26, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/26' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#27' })
-SET i += { number: 27, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/27' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#28' })
-SET i += { number: 28, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/28' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#29' })
-SET i += { number: 29, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/29' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#31' })
-SET i += { number: 31, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/31' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#32' })
-SET i += { number: 32, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/32' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#33' })
-SET i += { number: 33, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/33' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#34' })
-SET i += { number: 34, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/34' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#35' })
-SET i += { number: 35, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/35' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#36' })
-SET i += { number: 36, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/36' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#41' })
-SET i += { number: 41, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/41' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#42' })
-SET i += { number: 42, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/42' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#43' })
-SET i += { number: 43, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/43' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#44' })
-SET i += { number: 44, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/44' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#45' })
-SET i += { number: 45, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/45' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#46' })
-SET i += { number: 46, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/46' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#51' })
-SET i += { number: 51, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/51' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#52' })
-SET i += { number: 52, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/52' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#53' })
-SET i += { number: 53, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/53' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#54' })
-SET i += { number: 54, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/54' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#61' })
-SET i += { number: 61, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/61' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#62' })
-SET i += { number: 62, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/62' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#63' })
-SET i += { number: 63, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/63' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#64' })
-SET i += { number: 64, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/64' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#65' })
-SET i += { number: 65, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/65' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#71' })
-SET i += { number: 71, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/71' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#72' })
-SET i += { number: 72, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/72' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#81' })
-SET i += { number: 81, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/81' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#82' })
-SET i += { number: 82, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/82' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#84' })
-SET i += { number: 84, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/84' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#85' })
-SET i += { number: 85, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/85' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#91' })
-SET i += { number: 91, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/91' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#101' })
-SET i += { number: 101, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/101' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#111' })
-SET i += { number: 111, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/111' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#112' })
-SET i += { number: 112, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/112' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#113' })
-SET i += { number: 113, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/113' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#123' })
-SET i += { number: 123, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/123' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#131' })
-SET i += { number: 131, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/131' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#133' })
-SET i += { number: 133, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/133' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#151' })
-SET i += { number: 151, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/151' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#210' })
-SET i += { number: 210, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/210' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#211' })
-SET i += { number: 211, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/211' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#212' })
-SET i += { number: 212, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/212' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#213' })
-SET i += { number: 213, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/213' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#217' })
-SET i += { number: 217, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/217' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#218' })
-SET i += { number: 218, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/218' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#219' })
-SET i += { number: 219, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/219' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#220' })
-SET i += { number: 220, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/220' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#221' })
-SET i += { number: 221, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/221' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#222' })
-SET i += { number: 222, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/222' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#223' })
-SET i += { number: 223, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/223' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#224' })
-SET i += { number: 224, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/224' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#251' })
-SET i += { number: 251, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/251' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#252' })
-SET i += { number: 252, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/252' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#311' })
-SET i += { number: 311, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/311' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#333' })
-SET i += { number: 333, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/333' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#511' })
-SET i += { number: 511, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/511' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#512' })
-SET i += { number: 512, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/512' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#513' })
-SET i += { number: 513, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/513' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#514' })
-SET i += { number: 514, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/514' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#515' })
-SET i += { number: 515, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/515' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
-MERGE (a)-[:REFERENCIA_ISSUE]->(i);
-MERGE (i:Issue { key: 'dunay2/dvt#516' })
-SET i += { number: 516, repo: 'dunay2/dvt', url: 'https://github.com/dunay2/dvt/issues/516' }
-WITH i
-MATCH (a:Archivo { path: 'site/search/search_index.json' })
 MERGE (a)-[:REFERENCIA_ISSUE]->(i);
 
 // Roadmap root nodes
@@ -6883,7 +6714,7 @@ MERGE (p)-[:TRACKED_BY]->(i);
 
 // Roadmap phase status from progress metrics
 MATCH (p:FaseRoadmap { id: 'PHASE_1' })
-SET p += { estado: '🟡 In progress (critical path partially closed)' };
+SET p += { estado: '🟢 Critical path cerrado — hardening de gaps menor en curso' };
 MATCH (p:FaseRoadmap { id: 'PHASE_1_5' })
 SET p += { estado: '🟢 Scheduled after Phase 1' };
 MATCH (p:FaseRoadmap { id: 'PHASE_2' })

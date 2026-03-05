@@ -1,20 +1,31 @@
 ---
-title: Plan de reversión CI/CD tras estabilización (2026-02-28)
+title: CI/CD Rollback Plan After Stabilization (2026-02-28)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-05
+planning_type: status
+---
+
+---
+
+title: CI/CD Rollback Plan After Stabilization (2026-02-28)
 status: Draft
 owner: docs
 last_reviewed: 2026-03-04
 planning_type: status
+
 ---
-# Plan de reversión CI/CD tras estabilización (2026-02-28)
+
+# CI/CD Rollback Plan After Stabilization (2026-02-28)
 
 ## Objetivo
 
-Restaurar progresivamente el modo normal de CI/CD después del periodo de estabilización, minimizando riesgo de rotura y manteniendo trazabilidad de cada cambio.
+Restaurar progresivamente el modo normal de CI/CD despuÃ©s del periodo de estabilizaciÃ³n, minimizando riesgo de rotura y manteniendo trazabilidad de cada cambio.
 
-## Estado actual (modo estabilización)
+## Estado actual (modo estabilizaciÃ³n)
 
-- Triggers automáticos de `push`/`pull_request` desactivados temporalmente en workflows críticos.
-- Ejecución manual habilitada con `workflow_dispatch`.
+- Triggers automÃ¡ticos de `push`/`pull_request` desactivados temporalmente en workflows crÃ­ticos.
+- EjecuciÃ³n manual habilitada con `workflow_dispatch`.
 - Gates pesados puestos como opcionales por `inputs` para poder recuperar verde por capas.
 
 ## Cambios temporales aplicados
@@ -38,7 +49,7 @@ Restaurar progresivamente el modo normal de CI/CD después del periodo de estabi
 - En `.github/workflows/contracts.yml`
   - `run_determinism_scan`
   - `run_golden_validation`
-  - Se retiró temporalmente `Knowledge Graph Cypher Sync`.
+  - Se retirÃ³ temporalmente `Knowledge Graph Cypher Sync`.
 
 - En `.github/workflows/test.yml`
   - `run_full_test_suite`
@@ -50,37 +61,37 @@ Restaurar progresivamente el modo normal de CI/CD después del periodo de estabi
 - En `.github/workflows/pr-quality-gate.yml`
   - `run_typecheck_gate`
   - `run_temporal_integration`
-  - Checks de PR (título, tamaño, labels, descripción) condicionados a evento `pull_request`.
+  - Checks de PR (tÃ­tulo, tamaÃ±o, labels, descripciÃ³n) condicionados a evento `pull_request`.
 
 - En `.github/workflows/mkdocs-deploy.yml`
   - `run_pages_deploy`
 
-## Riesgos conocidos antes de volver a automático
+## Riesgos conocidos antes de volver a automÃ¡tico
 
 1. **Trazabilidad ADR-0000**
-   - Deuda histórica de `MISSING_BASELINE`, `MISSING_VERSION`, `ADR_NOT_ACCEPTED`.
+   - Deuda histÃ³rica de `MISSING_BASELINE`, `MISSING_VERSION`, `ADR_NOT_ACCEPTED`.
 
-2. **Markdown lint de documentación**
+2. **Markdown lint de documentaciÃ³n**
    - Errores acumulados (`MD025`, `MD029`) en docs legacy.
 
 3. **Type-check de adapter temporal**
-   - `@dvt/plan-interpreter` no resuelto y parámetros implícitos `any` en `RunPlanWorkflow.ts`.
+   - `@dvt/plan-interpreter` no resuelto y parÃ¡metros implÃ­citos `any` en `RunPlanWorkflow.ts`.
 
-4. **Validación de fixtures golden**
+4. **ValidaciÃ³n de fixtures golden**
    - Falta `tenantId` en `EngineRunRef` en varios JSON de planes.
 
 5. **Deploy de MkDocs a gh-pages**
    - El token por defecto no tiene permisos de push en ciertos contextos.
 
-## Estrategia de reversión recomendada
+## Estrategia de reversiÃ³n recomendada
 
-### Fase 1 — Rehabilitación controlada (sin bloquear merges)
+### Fase 1 â€” RehabilitaciÃ³n controlada (sin bloquear merges)
 
 1. Mantener `workflow_dispatch` y ejecutar manualmente cada workflow.
-2. Resolver deuda técnica por dominio (tests, contracts, docs, release).
+2. Resolver deuda tÃ©cnica por dominio (tests, contracts, docs, release).
 3. Activar gates opcionales uno a uno en runs manuales hasta verde estable.
 
-### Fase 2 — Reintroducción de triggers automáticos
+### Fase 2 â€” ReintroducciÃ³n de triggers automÃ¡ticos
 
 1. Reponer `pull_request` en:
    - `ci.yml`
@@ -93,25 +104,25 @@ Restaurar progresivamente el modo normal de CI/CD después del periodo de estabi
    - `contracts.yml`
    - `test.yml`
    - `release.yml`
-   - `mkdocs-deploy.yml` (cuando permisos/pages estén validados)
+   - `mkdocs-deploy.yml` (cuando permisos/pages estÃ©n validados)
 
-3. Reponer `schedule` en `golden-paths.yml` solo cuando golden fixtures estén limpios.
+3. Reponer `schedule` en `golden-paths.yml` solo cuando golden fixtures estÃ©n limpios.
 
-### Fase 3 — Endurecimiento final
+### Fase 3 â€” Endurecimiento final
 
 1. Eliminar `inputs` temporales y volver a gates obligatorios.
 2. Reintroducir (si aplica) checks retirados temporalmente (por ejemplo, KG sync).
-3. Confirmar que los checks obligatorios de merge quedan sincronizados con la política real.
+3. Confirmar que los checks obligatorios de merge quedan sincronizados con la polÃ­tica real.
 
-## Checklist de salida de estabilización
+## Checklist de salida de estabilizaciÃ³n
 
-- [ ] CI automática reactivada en PR y push.
+- [ ] CI automÃ¡tica reactivada en PR y push.
 - [ ] Gates de trazabilidad y markdown en verde sin bypass.
 - [ ] Type-check global en verde sin excepciones.
 - [ ] Golden fixtures validados con esquema completo.
 - [ ] Deploy docs y release verificados con permisos correctos.
-- [ ] Eliminados inputs temporales de estabilización.
+- [ ] Eliminados inputs temporales de estabilizaciÃ³n.
 
-## Criterio de finalización
+## Criterio de finalizaciÃ³n
 
-Se considera completada la reversión cuando todos los workflows estén en modo automático, sin toggles temporales, y con verdes consecutivos en PRs reales durante al menos una ventana de cambios normal.
+Se considera completada la reversiÃ³n cuando todos los workflows estÃ©n en modo automÃ¡tico, sin toggles temporales, y con verdes consecutivos en PRs reales durante al menos una ventana de cambios normal.

@@ -4,7 +4,7 @@
 - **Date**: 2026-02-16
 - **Owners**: Architecture, Engine, Tooling maintainers
 - **Related files**:
-  - [`docs/INDEX.md`](../INDEX.md)
+  - [`docs/index.md`](../index.md)
   - [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
   - [`scripts/neo4j/base-schema.cypher`](../../scripts/neo4j/base-schema.cypher)
   - [`scripts/neo4j/neo4j-seed.cjs`](../../scripts/neo4j/neo4j-seed.cjs)

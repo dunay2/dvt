@@ -21,7 +21,7 @@
     
     
       
-        <title>Engine DVT — Checklist de estado de implementación (contra la especificación solicitada) - DVT Documentation</title>
+        <title>Engine DVT - Implementation Status Checklist (Against Requested Spec) - DVT Documentation</title>
       
     
     
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#engine-dvt-checklist-de-estado-de-implementacion-contra-la-especificacion-solicitada" class="md-skip">
+        <a href="#engine-dvt-implementation-status-checklist-against-requested-spec" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Engine DVT — Checklist de estado de implementación (contra la especificación solicitada)
+              Engine DVT - Implementation Status Checklist (Against Requested Spec)
             
           </span>
         </div>
@@ -1179,10 +1179,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-observabilidad-seguridad-operacion" class="md-nav__link">
+  <a href="#7-observabilidad-seguridad-operacia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7) Observabilidad / seguridad / operación
+        7) Observabilidad / seguridad / operaciÃ³n
       
     </span>
   </a>
@@ -1204,7 +1204,7 @@
   <a href="#evidencias-rapidas-referencias" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evidencias rápidas (referencias)
+        Evidencias rÃ¡pidas (referencias)
       
     </span>
   </a>
@@ -1229,9 +1229,16 @@
   
 
 
-<h1 id="engine-dvt-checklist-de-estado-de-implementacion-contra-la-especificacion-solicitada">Engine DVT — Checklist de estado de implementación (contra la especificación solicitada)<a class="headerlink" href="#engine-dvt-checklist-de-estado-de-implementacion-contra-la-especificacion-solicitada" title="Permanent link">&para;</a></h1>
+<hr />
+<p>title: Engine DVT - Implementation Status Checklist (Against Requested Spec)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-04
+planning_type: status</p>
+<hr />
+<h1 id="engine-dvt-implementation-status-checklist-against-requested-spec">Engine DVT - Implementation Status Checklist (Against Requested Spec)<a class="headerlink" href="#engine-dvt-implementation-status-checklist-against-requested-spec" title="Permanent link">&para;</a></h1>
 <p>Fecha: 2026-02-26
-Alcance evaluado: especificación extensa compartida por el usuario (Portada → Fuentes, contratos, DDL, tests, operación).</p>
+Alcance evaluado: especificaciÃ³n extensa compartida por el usuario (Portada â†’ Fuentes, contratos, DDL, tests, operaciÃ³n).</p>
 <h2 id="leyenda">Leyenda<a class="headerlink" href="#leyenda" title="Permanent link">&para;</a></h2>
 <ul>
 <li>[x] Hecho en el repo actual</li>
@@ -1241,59 +1248,59 @@ Alcance evaluado: especificación extensa compartida por el usuario (Portada →
 <hr />
 <h2 id="1-principios-base-portada">1) Principios base (Portada)<a class="headerlink" href="#1-principios-base-portada" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[x] <code>getRunStatus</code> canónico leído desde Store (snapshot-first + replay fallback), no desde runtime provider en ruta por defecto.</li>
+<li>[x] <code>getRunStatus</code> canÃ³nico leÃ­do desde Store (snapshot-first + replay fallback), no desde runtime provider en ruta por defecto.</li>
 <li>Evidencia: <code>WorkflowEngine.getRunStatus</code> usa <code>stateStore.getSnapshot(...)</code> y <code>stateStore.listEvents(...)</code>.</li>
-<li>[x] Separación de enriquecimiento runtime en método aparte (<code>enrichRunStatus</code>).</li>
+<li>[x] SeparaciÃ³n de enriquecimiento runtime en mÃ©todo aparte (<code>enrichRunStatus</code>).</li>
 <li>[x] Determinismo workflow/activity aplicado en adapter Temporal.</li>
 <li>[~] Engine reemplazable Temporal/Conductor: contratos y stubs existen, Conductor no MVP funcional completo.</li>
 </ul>
 <h2 id="2-contratos-y-versionado-de-plan">2) Contratos y versionado de plan<a class="headerlink" href="#2-contratos-y-versionado-de-plan" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[x] Validación de <code>contractVersion</code> soportada en runtime del adapter Temporal.</li>
-<li>[x] Rechazo explícito de <code>inputBindings</code> en v1 runtime para evitar comportamiento silencioso.</li>
+<li>[x] ValidaciÃ³n de <code>contractVersion</code> soportada en runtime del adapter Temporal.</li>
+<li>[x] Rechazo explÃ­cito de <code>inputBindings</code> en v1 runtime para evitar comportamiento silencioso.</li>
 <li>[~] Contrato exacto pedido (<code>ExecutionPlan v1</code> con <code>stages[]</code>) <strong>no coincide 1:1</strong> con el modelo runtime actual (se trabaja con steps + DAG <code>dependsOn</code>).</li>
 <li>[~] Contrato exacto pedido para <code>IWorkflowEngine</code> (firma <code>startRun(plan: unknown, ...)</code>) <strong>no coincide</strong> con contrato actual (<code>PlanRef</code> + contexto).</li>
 </ul>
 <h2 id="3-store-y-persistencia">3) Store y persistencia<a class="headerlink" href="#3-store-y-persistencia" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[x] Event log idempotente con deduplicación y semántica append-only en runtime actual.</li>
-<li>[x] Snapshot materializado para lectura rápida de estado.</li>
+<li>[x] Event log idempotente con deduplicaciÃ³n y semÃ¡ntica append-only en runtime actual.</li>
+<li>[x] Snapshot materializado para lectura rÃ¡pida de estado.</li>
 <li>[x] Outbox implementado en adapter Postgres actual (no solo idea).</li>
-<li>[~] DDL solicitado (<code>runs</code>, <code>run_steps</code>, <code>step_attempts</code>, <code>run_events</code>) <strong>no es el esquema runtime vigente</strong>; el repo usa otro diseño operacional.</li>
+<li>[~] DDL solicitado (<code>runs</code>, <code>run_steps</code>, <code>step_attempts</code>, <code>run_events</code>) <strong>no es el esquema runtime vigente</strong>; el repo usa otro diseÃ±o operacional.</li>
 <li>[ ] Integridad exacta solicitada para <code>step_attempts -&gt; run_steps(run_id,step_id)</code> no aplica al esquema vigente (no existe ese par de tablas en runtime actual).</li>
 </ul>
 <h2 id="4-temporaladapter-mvp">4) TemporalAdapter MVP<a class="headerlink" href="#4-temporaladapter-mvp" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[x] Workflow tipado (sin <code>any</code> en los puntos críticos del workflow actual).</li>
+<li>[x] Workflow tipado (sin <code>any</code> en los puntos crÃ­ticos del workflow actual).</li>
 <li>[x] <code>proxyActivities</code> tipado correctamente.</li>
-<li>[x] Cancelación end-to-end validada en tests de integración temporal.</li>
+<li>[x] CancelaciÃ³n end-to-end validada en tests de integraciÃ³n temporal.</li>
 <li>[x] Reintentos/errores con cobertura de tests.</li>
-<li>[~] Ejecución por <code>stages[]</code> (como en la especificación) no coincide; implementación actual ejecuta por capas DAG derivadas.</li>
+<li>[~] EjecuciÃ³n por <code>stages[]</code> (como en la especificaciÃ³n) no coincide; implementaciÃ³n actual ejecuta por capas DAG derivadas.</li>
 </ul>
 <h2 id="5-api-thin-runs-cancel-signal-events">5) API thin (<code>/runs</code>, <code>/cancel</code>, <code>/signal</code>, <code>/events</code>)<a class="headerlink" href="#5-api-thin-runs-cancel-signal-events" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[ ] No hay evidencia de implementación de esos endpoints en <code>apps/api</code> actualmente.</li>
+<li>[ ] No hay evidencia de implementaciÃ³n de esos endpoints en <code>apps/api</code> actualmente.</li>
 </ul>
 <h2 id="6-testing-calidad-no-gaps">6) Testing (calidad / no gaps)<a class="headerlink" href="#6-testing-calidad-no-gaps" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[x] Tests unitarios y de integración temporal activos.</li>
-<li>[x] Se añadió aserción concreta para crash-recovery: unicidad de <code>idempotencyKey</code> tras restart de worker.</li>
-<li>[x] Cobertura de rechazo de versión contractual no soportada (<code>PLAN_CONTRACT_VERSION_UNKNOWN</code>).</li>
-<li>[~] Replay gate CI con corpus de histories versionado y política de actualización estricta: documentado parcialmente; no se confirma pipeline completo “gate” como en la especificación objetivo.</li>
+<li>[x] Tests unitarios y de integraciÃ³n temporal activos.</li>
+<li>[x] Se aÃ±adiÃ³ aserciÃ³n concreta para crash-recovery: unicidad de <code>idempotencyKey</code> tras restart de worker.</li>
+<li>[x] Cobertura de rechazo de versiÃ³n contractual no soportada (<code>PLAN_CONTRACT_VERSION_UNKNOWN</code>).</li>
+<li>[~] Replay gate CI con corpus de histories versionado y polÃ­tica de actualizaciÃ³n estricta: documentado parcialmente; no se confirma pipeline completo â€œgateâ€ como en la especificaciÃ³n objetivo.</li>
 </ul>
-<h2 id="7-observabilidad-seguridad-operacion">7) Observabilidad / seguridad / operación<a class="headerlink" href="#7-observabilidad-seguridad-operacion" title="Permanent link">&para;</a></h2>
+<h2 id="7-observabilidad-seguridad-operacia3n">7) Observabilidad / seguridad / operaciÃ³n<a class="headerlink" href="#7-observabilidad-seguridad-operacia3n" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[~] Observabilidad OTel completa (interceptores + métricas + runbooks de operación) no queda cerrada al nivel “MVP operativo completo” de la especificación.</li>
-<li>[~] SecretsProvider y cifrado de payloads Temporal: hay contratos y lineamientos, no cierre integral verificado extremo a extremo en esta revisión.</li>
+<li>[~] Observabilidad OTel completa (interceptores + mÃ©tricas + runbooks de operaciÃ³n) no queda cerrada al nivel â€œMVP operativo completoâ€ de la especificaciÃ³n.</li>
+<li>[~] SecretsProvider y cifrado de payloads Temporal: hay contratos y lineamientos, no cierre integral verificado extremo a extremo en esta revisiÃ³n.</li>
 </ul>
 <h2 id="8-resumen-ejecutivo-de-cumplimiento">8) Resumen ejecutivo de cumplimiento<a class="headerlink" href="#8-resumen-ejecutivo-de-cumplimiento" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[x] Hecho y verificable en código/tests: <strong>estado desde Store</strong>, <strong>tipado y restricciones runtime</strong>, <strong>idempotencia y crash assertion</strong>.</li>
-<li>[~] Parcial: <strong>alineación exacta con el spec “ExecutionPlan v1 con stages”</strong>, <strong>replay gate CI formal</strong>, <strong>observabilidad/ops full-stack</strong>.</li>
-<li>[ ] Pendiente: <strong>API thin de runs en <code>apps/api</code> según contrato solicitado</strong>.</li>
+<li>[x] Hecho y verificable en cÃ³digo/tests: <strong>estado desde Store</strong>, <strong>tipado y restricciones runtime</strong>, <strong>idempotencia y crash assertion</strong>.</li>
+<li>[~] Parcial: <strong>alineaciÃ³n exacta con el spec â€œExecutionPlan v1 con stagesâ€</strong>, <strong>replay gate CI formal</strong>, <strong>observabilidad/ops full-stack</strong>.</li>
+<li>[ ] Pendiente: <strong>API thin de runs en <code>apps/api</code> segÃºn contrato solicitado</strong>.</li>
 </ul>
 <hr />
-<h2 id="evidencias-rapidas-referencias">Evidencias rápidas (referencias)<a class="headerlink" href="#evidencias-rapidas-referencias" title="Permanent link">&para;</a></h2>
+<h2 id="evidencias-rapidas-referencias">Evidencias rÃ¡pidas (referencias)<a class="headerlink" href="#evidencias-rapidas-referencias" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>packages/@dvt/engine/src/core/WorkflowEngine.ts</code></li>
 <li><code>packages/@dvt/adapter-temporal/src/activities/stepActivities.ts</code></li>
@@ -1309,6 +1316,9 @@ Alcance evaluado: especificación extensa compartida por el usuario (Portada →
 
 
 
+
+  
+  
 
 
 

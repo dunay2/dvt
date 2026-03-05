@@ -21,7 +21,7 @@
     
     
       
-        <title>Plan de relanzamiento por lotes para sustitución de PR - DVT Documentation</title>
+        <title>Batch Relaunch Plan to Replace PR - DVT Documentation</title>
       
     
     
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#plan-de-relanzamiento-por-lotes-para-sustitucion-de-pr-301-2026-02-28" class="md-skip">
+        <a href="#batch-relaunch-plan-to-replace-pr-301-2026-02-28" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Plan de relanzamiento por lotes para sustitución de PR
+              Batch Relaunch Plan to Replace PR
             
           </span>
         </div>
@@ -1135,10 +1135,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lote-a-nucleo-de-contratos-y-esquemas" class="md-nav__link">
+  <a href="#lote-a-a-naocleo-de-contratos-y-esquemas" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Lote A — Núcleo de contratos y esquemas
+        Lote A â€” NÃºcleo de contratos y esquemas
       
     </span>
   </a>
@@ -1146,10 +1146,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lote-b-documentacion-de-contratos-alineacion-indiceguias" class="md-nav__link">
+  <a href="#lote-b-a-documentacia3n-de-contratos-alineacia3n-andiceguaas" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Lote B — Documentación de contratos (alineación índice/guías)
+        Lote B â€” DocumentaciÃ³n de contratos (alineaciÃ³n Ã­ndice/guÃ­as)
       
     </span>
   </a>
@@ -1157,10 +1157,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lote-c-wiring-tecnico-e-integracion-minima" class="md-nav__link">
+  <a href="#lote-c-a-wiring-tacnico-e-integracia3n-manima" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Lote C — Wiring técnico e integración mínima
+        Lote C â€” Wiring tÃ©cnico e integraciÃ³n mÃ­nima
       
     </span>
   </a>
@@ -1168,10 +1168,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#politica-transversal-de-ejecucion" class="md-nav__link">
+  <a href="#polatica-transversal-de-ejecucia3n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Política transversal de ejecución
+        PolÃ­tica transversal de ejecuciÃ³n
       
     </span>
   </a>
@@ -1201,10 +1201,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#definicion-de-hecho" class="md-nav__link">
+  <a href="#definicia3n-de-hecho" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Definición de "hecho"
+        DefiniciÃ³n de "hecho"
       
     </span>
   </a>
@@ -1229,39 +1229,46 @@
   
 
 
-<h1 id="plan-de-relanzamiento-por-lotes-para-sustitucion-de-pr-301-2026-02-28">Plan de relanzamiento por lotes para sustitución de PR #301 (2026-02-28)<a class="headerlink" href="#plan-de-relanzamiento-por-lotes-para-sustitucion-de-pr-301-2026-02-28" title="Permanent link">&para;</a></h1>
+<hr />
+<p>title: Batch Relaunch Plan to Replace PR #301 (2026-02-28)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-05
+planning_type: review</p>
+<hr />
+<h1 id="batch-relaunch-plan-to-replace-pr-301-2026-02-28">Batch Relaunch Plan to Replace PR #301 (2026-02-28)<a class="headerlink" href="#batch-relaunch-plan-to-replace-pr-301-2026-02-28" title="Permanent link">&para;</a></h1>
 <h2 id="contexto">Contexto<a class="headerlink" href="#contexto" title="Permanent link">&para;</a></h2>
-<p>La PR original <code>#301</code> (<code>feat(contracts): contracts v2</code>) se cerró por deriva estructural extrema contra <code>main</code> y alta densidad de conflictos al sincronizar.</p>
-<p>Diagnóstico de riesgo observado:</p>
+<p>La PR original <code>#301</code> (<code>feat(contracts): contracts v2</code>) se cerrÃ³ por deriva estructural extrema contra <code>main</code> y alta densidad de conflictos al sincronizar.</p>
+<p>DiagnÃ³stico de riesgo observado:</p>
 <ul>
-<li>Conflictos múltiples en contratos y documentación de motor.</li>
-<li>Churn masivo y mezcla de ámbitos (contratos, docs, workflows, estructura histórica de paquetes).</li>
+<li>Conflictos mÃºltiples en contratos y documentaciÃ³n de motor.</li>
+<li>Churn masivo y mezcla de Ã¡mbitos (contratos, docs, workflows, estructura histÃ³rica de paquetes).</li>
 <li>Coste de merge/rebase no proporcional al valor entregable inmediato.</li>
 </ul>
-<p>Decisión:</p>
+<p>DecisiÃ³n:</p>
 <ul>
-<li>Sustituir PR monolítica por relanzamientos pequeños desde <code>main</code> actual.</li>
-<li>Cada lote con objetivo único, validación mínima y merge independiente.</li>
+<li>Sustituir PR monolÃ­tica por relanzamientos pequeÃ±os desde <code>main</code> actual.</li>
+<li>Cada lote con objetivo Ãºnico, validaciÃ³n mÃ­nima y merge independiente.</li>
 </ul>
 <hr />
 <h2 id="objetivos-de-esta-estrategia">Objetivos de esta estrategia<a class="headerlink" href="#objetivos-de-esta-estrategia" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Reducir riesgo de bloqueo por conflictos acumulados.</li>
-<li>Aislar fallos por dominio para corrección rápida.</li>
-<li>Aumentar velocidad de revisión (PRs más pequeñas y comprensibles).</li>
-<li>Mantener trazabilidad explícita del reemplazo de <code>#301</code>.</li>
+<li>Aislar fallos por dominio para correcciÃ³n rÃ¡pida.</li>
+<li>Aumentar velocidad de revisiÃ³n (PRs mÃ¡s pequeÃ±as y comprensibles).</li>
+<li>Mantener trazabilidad explÃ­cita del reemplazo de <code>#301</code>.</li>
 </ol>
 <hr />
 <h2 id="lotes-propuestos">Lotes propuestos<a class="headerlink" href="#lotes-propuestos" title="Permanent link">&para;</a></h2>
-<h2 id="lote-a-nucleo-de-contratos-y-esquemas">Lote A — Núcleo de contratos y esquemas<a class="headerlink" href="#lote-a-nucleo-de-contratos-y-esquemas" title="Permanent link">&para;</a></h2>
-<p>Ámbito:</p>
+<h2 id="lote-a-a-naocleo-de-contratos-y-esquemas">Lote A â€” NÃºcleo de contratos y esquemas<a class="headerlink" href="#lote-a-a-naocleo-de-contratos-y-esquemas" title="Permanent link">&para;</a></h2>
+<p>Ãmbito:</p>
 <ul>
-<li>Esquemas/eventos canónicos estrictamente necesarios para Contracts v2.</li>
+<li>Esquemas/eventos canÃ³nicos estrictamente necesarios para Contracts v2.</li>
 <li>Sin tocar workflows de CI/CD en este lote.</li>
 </ul>
 <p>Incluye:</p>
 <ul>
-<li>Definiciones de eventos/esquemas en <code>docs/architecture/engine/contracts/engine/events/*</code> (solo delta mínimo necesario).</li>
+<li>Definiciones de eventos/esquemas en <code>docs/architecture/engine/contracts/engine/events/*</code> (solo delta mÃ­nimo necesario).</li>
 <li>Ajustes de contrato en paquetes de contratos (<code>packages/@dvt/contracts/*</code>) solo si son imprescindibles para consistencia de esquema.</li>
 </ul>
 <p>Excluye:</p>
@@ -1270,59 +1277,59 @@
 <li>Reorganizaciones masivas de docs no relacionadas.</li>
 <li>Cambios de release/deploy.</li>
 </ul>
-<p>Criterio de aceptación:</p>
+<p>Criterio de aceptaciÃ³n:</p>
 <ul>
-<li>Validación de esquemas y compile de contratos en verde para el lote.</li>
+<li>ValidaciÃ³n de esquemas y compile de contratos en verde para el lote.</li>
 <li>Diff acotado y sin arrastre lateral.</li>
 </ul>
 <hr />
-<h2 id="lote-b-documentacion-de-contratos-alineacion-indiceguias">Lote B — Documentación de contratos (alineación índice/guías)<a class="headerlink" href="#lote-b-documentacion-de-contratos-alineacion-indiceguias" title="Permanent link">&para;</a></h2>
-<p>Ámbito:</p>
+<h2 id="lote-b-a-documentacia3n-de-contratos-alineacia3n-andiceguaas">Lote B â€” DocumentaciÃ³n de contratos (alineaciÃ³n Ã­ndice/guÃ­as)<a class="headerlink" href="#lote-b-a-documentacia3n-de-contratos-alineacia3n-andiceguaas" title="Permanent link">&para;</a></h2>
+<p>Ãmbito:</p>
 <ul>
-<li>Documentación contractual y navegación asociada a Contracts v2.</li>
+<li>DocumentaciÃ³n contractual y navegaciÃ³n asociada a Contracts v2.</li>
 </ul>
 <p>Incluye:</p>
 <ul>
-<li><code>README</code>/índices de contratos.</li>
-<li>Actualización de plantillas/guías contractuales estrictamente dependientes de Lote A.</li>
+<li><code>README</code>/Ã­ndices de contratos.</li>
+<li>ActualizaciÃ³n de plantillas/guÃ­as contractuales estrictamente dependientes de Lote A.</li>
 </ul>
 <p>Regla de formato:</p>
 <ul>
-<li>Comentarios de decisión en GH en Markdown.</li>
-<li>Documentación entregada en <code>.md</code> cuando aplique.</li>
+<li>Comentarios de decisiÃ³n en GH en Markdown.</li>
+<li>DocumentaciÃ³n entregada en <code>.md</code> cuando aplique.</li>
 </ul>
-<p>Criterio de aceptación:</p>
+<p>Criterio de aceptaciÃ³n:</p>
 <ul>
 <li>Enlaces coherentes.</li>
 <li>Sin ruido de carpetas no relacionadas.</li>
 </ul>
 <hr />
-<h2 id="lote-c-wiring-tecnico-e-integracion-minima">Lote C — Wiring técnico e integración mínima<a class="headerlink" href="#lote-c-wiring-tecnico-e-integracion-minima" title="Permanent link">&para;</a></h2>
-<p>Ámbito:</p>
+<h2 id="lote-c-a-wiring-tacnico-e-integracia3n-manima">Lote C â€” Wiring tÃ©cnico e integraciÃ³n mÃ­nima<a class="headerlink" href="#lote-c-a-wiring-tacnico-e-integracia3n-manima" title="Permanent link">&para;</a></h2>
+<p>Ãmbito:</p>
 <ul>
 <li>Exports/wiring necesarios para que Contracts v2 quede utilizable sin romper consumers principales.</li>
 </ul>
 <p>Incluye:</p>
 <ul>
-<li>Ajustes de exports/imports y glue code mínimo.</li>
+<li>Ajustes de exports/imports y glue code mÃ­nimo.</li>
 </ul>
 <p>Excluye:</p>
 <ul>
 <li>Refactors de arquitectura no directamente requeridos.</li>
 </ul>
-<p>Criterio de aceptación:</p>
+<p>Criterio de aceptaciÃ³n:</p>
 <ul>
-<li>Type-check/compilación del ámbito afectado en verde.</li>
+<li>Type-check/compilaciÃ³n del Ã¡mbito afectado en verde.</li>
 <li>Sin introducir deuda adicional de rutas antiguas.</li>
 </ul>
 <hr />
-<h2 id="politica-transversal-de-ejecucion">Política transversal de ejecución<a class="headerlink" href="#politica-transversal-de-ejecucion" title="Permanent link">&para;</a></h2>
+<h2 id="polatica-transversal-de-ejecucia3n">PolÃ­tica transversal de ejecuciÃ³n<a class="headerlink" href="#polatica-transversal-de-ejecucia3n" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Branch nueva desde <code>main</code> por lote (<code>relaunch/301-batch-a</code>, <code>relaunch/301-batch-b</code>, <code>relaunch/301-batch-c</code>).</li>
 <li>Una PR por lote; no mezclar objetivos.</li>
 <li>Si un lote crece fuera de control, se divide antes de pedir merge.</li>
-<li>Comentarios de cierre/decisión siempre en Markdown en GitHub.</li>
-<li>Evitar explícitamente cambios de knowledge graph en esta secuencia (fuera de alcance actual).</li>
+<li>Comentarios de cierre/decisiÃ³n siempre en Markdown en GitHub.</li>
+<li>Evitar explÃ­citamente cambios de knowledge graph en esta secuencia (fuera de alcance actual).</li>
 </ol>
 <hr />
 <h2 id="secuencia-operativa-recomendada">Secuencia operativa recomendada<a class="headerlink" href="#secuencia-operativa-recomendada" title="Permanent link">&para;</a></h2>
@@ -1338,22 +1345,22 @@
 <h2 id="riesgos-y-mitigaciones">Riesgos y mitigaciones<a class="headerlink" href="#riesgos-y-mitigaciones" title="Permanent link">&para;</a></h2>
 <p>Riesgo 1: Reaparece deriva por cambios concurrentes en <code>main</code>.</p>
 <ul>
-<li>Mitigación: lotes cortos + refresh frecuente contra <code>main</code>.</li>
+<li>MitigaciÃ³n: lotes cortos + refresh frecuente contra <code>main</code>.</li>
 </ul>
 <p>Riesgo 2: Scope creep en docs/contratos.</p>
 <ul>
-<li>Mitigación: checklist de inclusión/exclusión por lote antes de abrir PR.</li>
+<li>MitigaciÃ³n: checklist de inclusiÃ³n/exclusiÃ³n por lote antes de abrir PR.</li>
 </ul>
 <p>Riesgo 3: Bloqueo por checks heredados no relevantes.</p>
 <ul>
-<li>Mitigación: validar solo gates del ámbito del lote y documentar excepciones temporalmente aceptadas.</li>
+<li>MitigaciÃ³n: validar solo gates del Ã¡mbito del lote y documentar excepciones temporalmente aceptadas.</li>
 </ul>
 <hr />
-<h2 id="definicion-de-hecho">Definición de "hecho"<a class="headerlink" href="#definicion-de-hecho" title="Permanent link">&para;</a></h2>
+<h2 id="definicia3n-de-hecho">DefiniciÃ³n de "hecho"<a class="headerlink" href="#definicia3n-de-hecho" title="Permanent link">&para;</a></h2>
 <p>Se considera rescatado el objetivo funcional de <code>#301</code> cuando:</p>
 <ul>
-<li>Los 3 lotes estén mergeados.</li>
-<li>No quede PR legacy abierta del intento monolítico.</li>
+<li>Los 3 lotes estÃ©n mergeados.</li>
+<li>No quede PR legacy abierta del intento monolÃ­tico.</li>
 <li>Haya trazabilidad documental del reemplazo por lotes.</li>
 </ul>
 

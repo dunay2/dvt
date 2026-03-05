@@ -494,6 +494,6 @@ Reference policy: [`ADR-0006-contract-tooling-governance.md`](./decisions/ADR-00
 ## Additional Resources
 
 - [VERSIONING.md](architecture/engine/VERSIONING.md) — Complete contract evolution policy
-- [INDEX.md](architecture/engine/INDEX.md) — Navigation hub for all engine docs
+- [index.md](architecture/engine/index.md) — Navigation hub for all engine docs
 - [GitHub CODEOWNERS docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
 - [RFC 2119 (Normative keywords)](https://www.ietf.org/rfc/rfc2119.txt)

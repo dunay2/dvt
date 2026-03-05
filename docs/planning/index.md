@@ -17,29 +17,29 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 ## Proposals
 
-- [Definir El Consumidor Del Outbox](Definir%20el%20Consumidor%20del%20Outbox.md)
+- [Define the Outbox Consumer](Definir%20el%20Consumidor%20del%20Outbox.md)
+- [DVT+ - Gap Execution Plans](GAP_EXECUTION_PLANS.md)
 - [DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)](DVT_engine_remediation_ai_plan.md)
-- [DVT+ — Planes de ejecución por Gap](GAP_EXECUTION_PLANS.md)
+- [Engine Migration Plan: Current Gap to Target Blueprint v0.6](engine-gap-to-target-migration-plan.md)
+- [Executable Remediation and Completion Plan for DVT+](DVT_REMEDIATION_PLAN.md)
 - [G4 — compiledCodeRef: Task Specification for Development Team](G4-TASK-SPECIFICATION.md)
-- [Hito 0 — Estabilización Inmediata (Sprint 1–2)](HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md)
-- [Plan de migración Engine: gap actual → target blueprint v0.6](engine-gap-to-target-migration-plan.md)
-- [Plan ejecutable de remediación y completitud para DVT+](DVT_REMEDIATION_PLAN.md)
+- [Milestone 0 - Immediate Stabilization (Sprint 1-2)](HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md)
 
 ## Reviews
 
 - ['DVT+ Architectural Review — Pass 2'](DVT+_Architectural_Review_Pass_2.md)
-- [DVT+ — Tareas de subsanación de carencias (2026-02-26)](DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
-- [Plan de relanzamiento por lotes para sustitución de PR #301 (2026-02-28)](reviews/PR_301_RELAUNCH_BATCH_PLAN_20260228.md)
-- [PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28)](reviews/PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md)
+- [Batch Relaunch Plan to Replace PR #301 (2026-02-28)](reviews/PR_301_RELAUNCH_BATCH_PLAN_20260228.md)
+- [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
+- [PR #313 - CI/CD Stabilization Execution Report (2026-02-28)](reviews/PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md)
 - [Workflow Redundancy Simplification Pass 1](reviews/WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md)
 
 ## Status
 
 - [Change Impact Report — ADR-0030 Session 2026-03-04](CHANGE_IMPACT_ADR0030_20260304.md)
-- [Engine DVT — Checklist de estado de implementación (contra la especificación solicitada)](ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md)
+- [CI/CD Rollback Plan After Stabilization (2026-02-28)](CI_CD_ROLLBACK_PLAN_20260228.md)
+- [Engine DVT - Implementation Status Checklist (Against Requested Spec)](ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md)
 - [Pending Golden Path Coverage Debt](pending-golden-path-coverage-debt.md)
 - [Pending Release Please Continuous](pending-release-please-continuous.md)
-- [Plan de reversión CI/CD tras estabilización (2026-02-28)](CI_CD_ROLLBACK_PLAN_20260228.md)
 
 ## Reference
 
