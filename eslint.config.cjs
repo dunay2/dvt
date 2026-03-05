@@ -345,9 +345,11 @@ module.exports = [
   {
     files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts', '**/*.test.tsx', '**/*.spec.tsx'],
     plugins: {
+      '@typescript-eslint': tseslint,
       vitest: vitestPlugin,
     },
     languageOptions: {
+      parser: tsparser,
       parserOptions: {},
       globals: {
         describe: 'readonly',
