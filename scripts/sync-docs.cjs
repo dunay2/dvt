@@ -28,10 +28,12 @@ function readIfExists(filePath) {
 
 function writeIfChanged(filePath, next) {
   const current = readIfExists(filePath);
-  if (current === next) {
+  const eol = current && current.includes('\r\n') ? '\r\n' : '\n';
+  const normalizedNext = next.replace(/\r?\n/g, eol);
+  if (current === normalizedNext) {
     return false;
   }
-  fs.writeFileSync(filePath, next, 'utf8');
+  fs.writeFileSync(filePath, normalizedNext, 'utf8');
   return true;
 }
 
@@ -170,9 +172,7 @@ function adrSortKey(fileName) {
 function extractAdrTitle(content, fileName) {
   const heading = content.match(/^#\s+(.+)$/m);
   if (heading) {
-    return heading[1]
-      .replace(/^ADR-\d{4}[A-Za-z]?\s*(:|-|--|â€“|â€”|Ã¢â‚¬â€œ|Ã¢â‚¬â€)\s*/i, '')
-      .trim();
+    return heading[1].trim();
   }
   const nonEmpty = content
     .split(/\r?\n/)
@@ -289,37 +289,46 @@ function normalizePlanningDocs() {
     return;
   }
 
-  const entries = fs
-    .readdirSync(planningDir, { withFileTypes: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => entry.name)
-    .filter((name) => /\.(md|txt)$/i.test(name))
-    .filter((name) => !/^index\.md$/i.test(name))
-    .filter((name) => !/^TEMPLATE_PLANNING_DOC\.md$/i.test(name));
+  const managedDirs = [
+    { dirPath: planningDir, forcedType: null },
+    { dirPath: path.join(planningDir, 'proposals'), forcedType: 'proposal' },
+    { dirPath: path.join(planningDir, 'reviews'), forcedType: 'review' },
+    { dirPath: path.join(planningDir, 'status'), forcedType: 'status' },
+  ];
 
-  for (const name of entries) {
-    if (!/\.md$/i.test(name)) {
-      continue;
-    }
-    const fullPath = path.join(planningDir, name);
-    const original = fs.readFileSync(fullPath, 'utf8');
-    const parts = splitFrontmatter(original);
-    const heading = extractFirstHeading(parts.body);
-    const inferredTitle = heading || humanizeName(name);
-    const inferredType = inferPlanningType(name.toLowerCase());
+  for (const managed of managedDirs) {
+    const { dirPath, forcedType } = managed;
+    if (!fs.existsSync(dirPath)) continue;
+    const entries = fs
+      .readdirSync(dirPath, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => /\.md$/i.test(name))
+      .filter((name) => !/^index\.md$/i.test(name))
+      .filter((name) => !/^TEMPLATE_PLANNING_DOC\.md$/i.test(name));
 
-    const meta = {
-      title: parts.frontmatter.title || inferredTitle,
-      status: parts.frontmatter.status || 'Draft',
-      owner: parts.frontmatter.owner || 'docs',
-      last_reviewed: parts.frontmatter.last_reviewed || toIsoDateUTC(),
-      planning_type: parts.frontmatter.planning_type || inferredType,
-    };
+    for (const name of entries) {
+      const fullPath = path.join(dirPath, name);
+      const original = fs.readFileSync(fullPath, 'utf8');
+      const parts = splitFrontmatter(original);
+      const heading = extractFirstHeading(parts.body);
+      const inferredTitle = heading || humanizeName(name);
+      const inferredType = forcedType || inferPlanningType(name.toLowerCase());
 
-    const body = heading ? parts.body.trimStart() : `# ${inferredTitle}\n\n${parts.body.trimStart()}`;
-    const next = `${renderFrontmatter(meta)}${body.trimEnd()}\n`;
-    if (writeIfChanged(fullPath, next)) {
-      console.log(`[docs:sync] Normalized planning doc ${name}`);
+      const meta = {
+        title: parts.frontmatter.title || inferredTitle,
+        status: parts.frontmatter.status || 'Draft',
+        owner: parts.frontmatter.owner || 'docs',
+        last_reviewed: parts.frontmatter.last_reviewed || toIsoDateUTC(),
+        planning_type: forcedType || parts.frontmatter.planning_type || inferredType,
+      };
+
+      const body = heading ? parts.body.trimStart() : `# ${inferredTitle}\n\n${parts.body.trimStart()}`;
+      const next = `${renderFrontmatter(meta)}${body.trimEnd()}\n`;
+      if (writeIfChanged(fullPath, next)) {
+        const rel = path.relative(planningDir, fullPath).replace(/\\/g, '/');
+        console.log(`[docs:sync] Normalized planning doc ${rel}`);
+      }
     }
   }
 }
@@ -366,6 +375,21 @@ function collectPlanningDocs() {
   return rows;
 }
 
+function collectPlanningReferenceDirs() {
+  if (!fs.existsSync(planningDir)) return [];
+  const skip = new Set(['proposals', 'reviews', 'status']);
+  return fs
+    .readdirSync(planningDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .filter((entry) => !entry.name.startsWith('.'))
+    .filter((entry) => !skip.has(entry.name.toLowerCase()))
+    .map((entry) => ({
+      label: humanizeName(entry.name),
+      link: `${entry.name}/`,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'en', { sensitivity: 'base' }));
+}
+
 function bulletsFor(rows, fromDir) {
   return rows.map((row) => {
     const target = row.relPath.replace(/^planning\//, '');
@@ -376,6 +400,7 @@ function bulletsFor(rows, fromDir) {
 
 function generatePlanningIndexes() {
   const docs = collectPlanningDocs();
+  const refDirs = collectPlanningReferenceDirs();
   const proposals = docs.filter((d) => d.type === 'proposal');
   const reviews = docs.filter((d) => d.type === 'review');
   const status = docs.filter((d) => d.type === 'status');
@@ -413,6 +438,8 @@ function generatePlanningIndexes() {
     '',
     '## Reference',
     '',
+    ...refDirs.map((row) => `- [${row.label}](${encodeURI(row.link)})`),
+    ...(refDirs.length > 0 && reference.length > 0 ? [''] : []),
     ...bulletsFor(reference, '.'),
     '',
     '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
@@ -619,3 +646,4 @@ try {
   console.error(`[docs:sync] ERROR: ${error.message}`);
   process.exit(1);
 }
+

@@ -43,6 +43,8 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 ## Reference
 
+- [Dvt Traceability Pack V2 Lite R6](dvt-traceability-pack-v2-lite-R6/)
+
 - [Marquezopen](marquezopen.txt)
 - [Temporal Adapter Improvve](temporal%20adapter%20improvve.txt)
 

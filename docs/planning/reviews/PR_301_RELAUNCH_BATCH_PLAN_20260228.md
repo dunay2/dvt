@@ -1,3 +1,10 @@
+---
+title: Plan de relanzamiento por lotes para sustitución de PR #301 (2026-02-28)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-05
+planning_type: review
+---
 # Plan de relanzamiento por lotes para sustitución de PR #301 (2026-02-28)
 
 ## Contexto

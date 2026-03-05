@@ -1,3 +1,10 @@
+---
+title: PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28)
+status: Draft
+owner: docs
+last_reviewed: 2026-03-05
+planning_type: review
+---
 # PR #313 — Informe de ejecución de estabilización CI/CD (2026-02-28)
 
 ## Resumen ejecutivo
