@@ -263,9 +263,10 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
       `,
       updateParams
     );
+    const row = result.rows[0];
     return {
-      outcome: (result.rows[0]?.outcome ?? 'NOT_FOUND') as TransitionOutcome,
-      current_status: (result.rows[0]?.current_status ?? null) as StartRunIntentStatus | null,
+      outcome: row?.outcome ?? 'NOT_FOUND',
+      current_status: row?.current_status ?? null,
     };
   }
 
