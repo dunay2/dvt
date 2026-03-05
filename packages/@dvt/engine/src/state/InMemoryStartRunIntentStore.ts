@@ -10,6 +10,7 @@
 import type { EngineRunRef } from '@dvt/contracts';
 
 import { IntentInvalidTransitionError, IntentNotFoundError } from '../contracts/intentErrors.js';
+import { canTransitionStartRunIntent } from '../domain/startRunIntentPolicy.js';
 import type {
   CreateIntentInput,
   IStartRunIntentStore,
@@ -44,7 +45,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void> {
     const intent = this.assertExists(intentId);
-    if (intent.status !== 'PENDING') {
+    if (!canTransitionStartRunIntent(intent.status, 'DISPATCHED')) {
       throw new IntentInvalidTransitionError(intentId, intent.status, 'DISPATCHED');
     }
     intent.status = 'DISPATCHED';
@@ -54,7 +55,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markResolved(intentId: string): Promise<void> {
     const intent = this.assertExists(intentId);
-    if (intent.status !== 'DISPATCHED' && intent.status !== 'PENDING') {
+    if (!canTransitionStartRunIntent(intent.status, 'RESOLVED')) {
       throw new IntentInvalidTransitionError(intentId, intent.status, 'RESOLVED');
     }
     intent.status = 'RESOLVED';
@@ -63,7 +64,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markExpired(intentId: string): Promise<void> {
     const intent = this.assertExists(intentId);
-    if (intent.status !== 'PENDING') {
+    if (!canTransitionStartRunIntent(intent.status, 'EXPIRED')) {
       throw new IntentInvalidTransitionError(intentId, intent.status, 'EXPIRED');
     }
     intent.status = 'EXPIRED';

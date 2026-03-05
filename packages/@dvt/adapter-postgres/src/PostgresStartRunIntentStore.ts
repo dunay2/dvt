@@ -24,6 +24,20 @@ interface IntentRow {
 }
 
 type StartRunIntentStatus = 'PENDING' | 'DISPATCHED' | 'RESOLVED' | 'EXPIRED';
+type TransitionTargetStatus = 'RESOLVED' | 'EXPIRED';
+
+interface IntentTransition {
+  toStatus: TransitionTargetStatus;
+  allowedFrom: readonly StartRunIntentStatus[];
+}
+
+const NON_DISPATCH_TRANSITIONS: Record<TransitionTargetStatus, IntentTransition> = {
+  RESOLVED: { toStatus: 'RESOLVED', allowedFrom: ['PENDING', 'DISPATCHED'] },
+  EXPIRED: { toStatus: 'EXPIRED', allowedFrom: ['PENDING'] },
+};
+
+const INTENT_SELECT_COLUMNS =
+  'intent_id, tenant_id, run_id, provider, status, engine_run_ref, created_at, updated_at';
 
 interface StartRunIntent {
   intentId: string;
@@ -93,17 +107,15 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 
   async migrate(): Promise<void> {
-    if (this.migratePromise === null) {
-      this.migratePromise = this.ensureSchema()
-        .then(() => {
-          this.migrated = true;
-        })
-        .catch((error: unknown) => {
-          this.migratePromise = null;
-          this.migrated = false;
-          throw error;
-        });
-    }
+    this.migratePromise ??= this.ensureSchema()
+      .then(() => {
+        this.migrated = true;
+      })
+      .catch((error: unknown) => {
+        this.migratePromise = null;
+        this.migrated = false;
+        throw error;
+      });
     return this.migratePromise;
   }
 
@@ -160,29 +172,29 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 
   async markResolved(intentId: string): Promise<void> {
-    await this.updateIntentStatus(intentId, 'RESOLVED', `status IN ('PENDING', 'DISPATCHED')`);
+    await this.applyTransition(intentId, NON_DISPATCH_TRANSITIONS.RESOLVED);
   }
 
   async markExpired(intentId: string): Promise<void> {
-    await this.updateIntentStatus(intentId, 'EXPIRED', `status = 'PENDING'`);
+    await this.applyTransition(intentId, NON_DISPATCH_TRANSITIONS.EXPIRED);
   }
 
-  private async updateIntentStatus(
-    intentId: string,
-    toStatus: StartRunIntentStatus,
-    fromCondition: string
-  ): Promise<void> {
+  private async applyTransition(intentId: string, transition: IntentTransition): Promise<void> {
     this.ready();
+    if (transition.allowedFrom.length === 0) {
+      throw new Error('INVALID_TRANSITION_GUARD: fromStatuses cannot be empty');
+    }
     const result = await this.pool.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
         SET status = $2,
             updated_at = $3::timestamptz
-        WHERE intent_id = $1 AND ${fromCondition}
+        WHERE intent_id = $1
+          AND status::text = ANY($4::text[])
       `,
-      [intentId, toStatus, this.now()]
+      [intentId, transition.toStatus, this.now(), transition.allowedFrom]
     );
-    await this.assertTransitionApplied(intentId, result.rowCount ?? 0, toStatus);
+    await this.assertTransitionApplied(intentId, result.rowCount ?? 0, transition.toStatus);
   }
 
   async listOrphaned(
@@ -195,7 +207,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     const cutoffIso = new Date(nowMs - thresholdMs).toISOString();
     const result = await this.pool.query<IntentRow>(
       `
-        SELECT ${this.selectIntentColumns()}
+        SELECT ${INTENT_SELECT_COLUMNS}
         FROM ${quoteIdentifier(this.schema)}.start_run_intents
         WHERE status IN ('PENDING', 'DISPATCHED')
           AND created_at < $1::timestamptz
@@ -211,7 +223,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     this.ready();
     const result = await this.pool.query<IntentRow>(
       `
-        SELECT ${this.selectIntentColumns()}
+        SELECT ${INTENT_SELECT_COLUMNS}
         FROM ${quoteIdentifier(this.schema)}.start_run_intents
         WHERE intent_id = $1
       `,
@@ -236,7 +248,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
 
   private ready(): void {
     if (!this.migrated) {
-      throw new Error('MIGRATE_NOT_CALLED: call await store.migrate() before using the store');
+      throw new Error('MIGRATE_NOT_READY: call and await store.migrate() before using the store');
     }
   }
 

@@ -26,6 +26,7 @@ export * from './adapters/IProviderAdapter.js';
 
 export * from './services/RunMaintenanceService.js';
 export * from './workers/IntentReconcilerWorker.js';
+export * from './domain/startRunIntentPolicy.js';
 
 export * from './outbox/types.js';
 export * from './outbox/IOutboxRateLimiter.js';
