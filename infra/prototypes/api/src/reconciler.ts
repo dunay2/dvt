@@ -181,11 +181,9 @@ function isInfrastructureError(error: unknown): boolean {
   if (!code) {
     return error instanceof Error && /timeout|connection|network|socket/i.test(error.message);
   }
-  
+
   const infraErrorCodes = ['ECONN', '57P01', '53300', '08006', 'ETIMEDOUT'];
-  return infraErrorCodes.some(infraCode => 
-    code === infraCode || code.startsWith(infraCode)
-  );
+  return infraErrorCodes.some((infraCode) => code === infraCode || code.startsWith(infraCode));
 }
 
 function extractErrorMessage(error: unknown): string {
