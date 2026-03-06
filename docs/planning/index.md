@@ -44,6 +44,7 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 ## Reference
 
+- [Dvt Architecture Atlas Pack](dvt_architecture_atlas_pack/)
 - [Dvt Traceability Pack V2 Lite R6](dvt-traceability-pack-v2-lite-R6/)
 - [Execution Model](execution-model/)
 - [Gaps](gaps/)
