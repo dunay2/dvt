@@ -31,6 +31,7 @@ export * from './planner-input';
 export * from './validation';
 export type {
   AppendResult,
+  CompiledCodeRef,
   EventEnvelope,
   EventIdempotencyInput,
   EventInput,
