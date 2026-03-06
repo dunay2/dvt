@@ -107,6 +107,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@dvt/adapter-postgres':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/adapter-postgres
+      '@dvt/engine':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/engine
       '@dvt/observability':
         specifier: workspace:*
         version: link:../../packages/@dvt/observability
