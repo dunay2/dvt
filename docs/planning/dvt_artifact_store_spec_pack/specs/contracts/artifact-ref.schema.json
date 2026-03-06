@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Status: In Progress — tenantId GAP unresolved in current implementation. See artifact-store-spec.md.",
+  "title": "ArtifactRef",
+  "description": "Reference to an immutable, content-addressed artifact stored in DVT+ artifact storage.",
+  "type": "object",
+  "required": ["uri", "kind", "artifactHash"],
+  "properties": {
+    "tenantId": {
+      "type": "string",
+      "description": "Tenant scope. GAP: not present in current ArtifactRef type in @dvt/contracts. Required for INV-ART-003 compliance.",
+      "$comment": "IMPLEMENTATION GAP — packages/@dvt/contracts/src/types/artifacts.ts does not include tenantId. Must be added."
+    },
+    "artifactHash": {
+      "type": "string",
+      "description": "SHA-256 hex digest of artifact content (content-addressable key). 64 lowercase hex characters.",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "uri": {
+      "type": "string",
+      "description": "Storage URI. Current adapters use scheme-specific format (s3://, file://, mem://, noop://). Target: artifact://{tenantId}/{kind}/{sha256}.",
+      "examples": [
+        "s3://dvt-artifacts/ab2399f7c3...",
+        "artifact://tenantA/compiled-sql/ab2399f7c3..."
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "description": "Artifact type discriminator.",
+      "enum": [
+        "execution-plan",
+        "compiled-sql",
+        "dbt-manifest",
+        "dbt-catalog",
+        "dbt-run-results",
+        "lineage"
+      ]
+    },
+    "sizeBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Byte size of artifact content."
+    },
+    "encoding": {
+      "type": "string",
+      "enum": ["utf-8"],
+      "description": "Character encoding. MUST be utf-8. Omit for binary artifacts."
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC expiry timestamp. GAP: field declared in type but TTL is not enforced by any storage adapter or cleanup job."
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "ArtifactRef schema version. Format: major.minor.patch.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "implementationGaps": {
+      "$comment": "Known gaps vs. current code in packages/@dvt/contracts/src/types/artifacts.ts: (1) tenantId field absent — violates INV-ART-003; (2) artifactHash is optional (sha256?) in code, required here; (3) kind uses open string in code, enum enforced here; (4) expiresAt declared but no TTL enforcement exists; (5) schemaVersion field does not exist in current ArtifactRef type."
+    }
+  }
+}
