@@ -640,3 +640,350 @@ IArtifactStore --> IArtifactReader
 | New            | Artifact Retention Strategy (TTL, archival, deletion safety)              | P2-4     |
 | Update ADR-030 | Supersede with P0 work and canonical URI                                  | P2-3     |
 | ADR-0032       | Already accepted — only needs cross-reference to new `IArtifactStore` ADR | —        |
+
+---
+
+## 8. Design Guardrails — Anti-Patterns to Prevent
+
+> These guardrails are derived from architectural findings in `@dvt/adapter-temporal`
+> (`RunPlanWorkflow.ts`, `stepActivities.ts`) and `TemporalAdapter.ts`. Each pattern found
+> in the workflow layer has a direct equivalent risk in the artifact store layer. Encoding
+> them here prevents the same drift from recurring as the artifact store grows.
+
+---
+
+### G-1 — Do not duplicate integrity validation across write and read paths
+
+**Origin finding:** Gateway dependency invariant duplicated in `RunPlanWorkflow.ts:409` and
+`stepActivities.ts:347`. One copy will drift.
+
+**Artifact store risk:** SHA-256 integrity check currently exists only in
+`CachedRetryCompiledCodeResolver.validateResolvedBlob()` (read side). There is no
+equivalent validation on upload (write side). If upload produces a corrupt blob, the write
+adapter returns silently. The corruption is only detected much later at read time — in a
+different package.
+
+**Guardrail:**
+
+```typescript
+// @dvt/contracts/src/ports/artifact-integrity.ts
+// Single source of truth for integrity validation — called by both write and read adapters.
+
+export interface ArtifactIntegrityResult {
+  valid: boolean;
+  expectedSha256: string;
+  actualSha256: string;
+  expectedSizeBytes: number;
+  actualSizeBytes: number;
+}
+
+export function validateArtifactIntegrity(
+  expected: Pick<CompiledCodeRef, 'sha256' | 'sizeBytes'>,
+  actual: { content: Buffer; sha256: string }
+): ArtifactIntegrityResult { ... }
+```
+
+**Rule:** upload adapters MUST call `validateArtifactIntegrity` before confirming success.
+`CachedRetryCompiledCodeResolver` MUST import this function from `@dvt/contracts` instead
+of reimplementing the check inline. One implementation, two callers.
+
+**Fowler pattern:** _Extract Function → Move Function to Shared Kernel_
+
+---
+
+### G-2 — Do not use stringly-typed error control flow at port boundaries
+
+**Origin finding:** `saveRunMetadata` swallows `err.message === 'RUN_ALREADY_EXISTS'`
+(`stepActivities.ts:136`). Message-based branching is brittle and breaks DIP.
+
+**Artifact store risk:** `onUploadFailure?: (stepId: string, error: unknown)` — the failure
+hook receives `unknown`. Callers cannot distinguish "artifact already exists" (benign,
+idempotent) from "S3 permission denied" (fatal) from "network timeout" (retryable). The
+current fail-open default swallows all of these silently.
+
+**Guardrail — formal artifact error hierarchy in `@dvt/contracts`:**
+
+```typescript
+// @dvt/contracts/src/errors/artifact-errors.ts
+
+export class ArtifactStoreError extends Error {
+  constructor(
+    message: string,
+    public readonly code: ArtifactErrorCode
+  ) {
+    super(message);
+    this.name = 'ArtifactStoreError';
+  }
+}
+
+export type ArtifactErrorCode =
+  | 'ARTIFACT_NOT_FOUND' // read: sha256 not in storage
+  | 'ARTIFACT_ALREADY_EXISTS' // upload: idempotent — NOT an error, but distinguishable
+  | 'ARTIFACT_INTEGRITY_ERROR' // sha256 mismatch on read
+  | 'ARTIFACT_UPLOAD_FAILED' // write: non-retryable infra failure
+  | 'ARTIFACT_TENANT_MISMATCH' // cross-tenant access attempt
+  | 'ARTIFACT_SIZE_EXCEEDED'; // content exceeds configured limit
+```
+
+All adapters throw `ArtifactStoreError` with a typed `code`. Callers branch on `error.code`,
+never on `error.message`. `onUploadFailure` signature becomes:
+
+```typescript
+onUploadFailure?: (stepId: string, error: ArtifactStoreError | Error) => void;
+```
+
+**Rule:** no `catch (e) { if (e.message === '...') }` patterns anywhere in the artifact store
+or its callers.
+
+**Fowler pattern:** _Introduce Domain Error Type → Replace Conditional with Type-based dispatch_
+
+---
+
+### G-3 — Do not let retry semantics be declared but not acted on
+
+**Origin finding:** `StepExecutionResult.retriable` is set in `buildFailedLayerResult`
+(`RunPlanWorkflow.ts:799`) but the failure path unconditionally emits `RunFailed`
+(`RunPlanWorkflow.ts:866`). Field implies policy; behavior ignores it.
+
+**Artifact store risk:** The write side (`ICompiledCodeStorage`) has no retry policy at all.
+The read side (`CachedRetryCompiledCodeResolver`) has a well-defined `ICompiledCodeRetryPolicy`.
+If a retry policy is added to the write port's options but the callers always use the fail-open
+default, the field becomes a `retriable`-style dead declaration.
+
+**Guardrail:** if upload retry is desired, define it explicitly and act on it symmetrically:
+
+```typescript
+// Applies equally to both write and read paths.
+export interface ArtifactRetryPolicy {
+  maxAttempts: number; // default: 1 (no retry) for writes; 3 for reads
+  initialDelayMs: number;
+  maxDelayMs: number;
+  retryOn: ReadonlyArray<ArtifactErrorCode>; // only retry transient codes
+}
+```
+
+`ARTIFACT_ALREADY_EXISTS` and `ARTIFACT_INTEGRITY_ERROR` MUST NOT be in `retryOn` — they are
+deterministic failures. `ARTIFACT_UPLOAD_FAILED` and network timeouts may be retryable.
+
+**Rule:** if a retry policy field exists, the executor MUST check it. No declared-but-ignored
+policies.
+
+**Fowler pattern:** _Introduce Strategy (ArtifactRetryPolicy) or Remove Dead Field_
+
+---
+
+### G-4 — Do not let `IArtifactStore` accumulate responsibilities
+
+**Origin finding:** `RunPlanWorkflow.ts` mixes lifecycle handling, layer orchestration, gateway
+propagation, event emission, payload parsing, DAG traversal in one ~1000-line file.
+
+**Artifact store risk:** `IArtifactStore` (once created) will be tempted to grow. Upload, read,
+exists, list, delete, purge, metadata, TTL, quota — all in one interface. This turns the port
+into a God Object.
+
+**Guardrail — enforce ISP from day one:**
+
+```
+IArtifactWriter  — upload()
+IArtifactReader  — read(), exists()
+IArtifactLister  — list(tenantId, kind, cursor?) → future
+IArtifactRemover — delete(), purge()            → future (separate ADR required)
+```
+
+Each interface has one reason to change. Adapters implement the ones they support.
+`InMemoryArtifactStore` implements Writer + Reader only. `NoopArtifactStore` implements Writer
+only. Production S3 adapter implements all four.
+
+**Rule:** `IArtifactStore` is a convenience composition type. It MUST NOT define new methods
+directly — only compose the segregated ports. Any new capability requires a new port interface
+and an ADR.
+
+**Fowler pattern:** _Extract Class + Interface Segregation_
+
+---
+
+### G-5 — Do not use raw `string` for typed domain identifiers at port boundaries
+
+**Origin finding:** `RunPlanWorkflowInput` redeclares `PlanRef` and `RunContext` inline
+(`RunPlanWorkflow.ts:45`) instead of importing canonical types — drift risk.
+
+**Artifact store risk:** `upload(sha256: string, content: Buffer): Promise<string>` — three
+raw `string` values, none of which are interchangeable:
+
+- `sha256` could be confused with `storageUri`, `planId`, `tenantId`
+- return value `Promise<string>` is `storageUri` but callers cannot tell from the type
+
+**Guardrail — branded types in `@dvt/contracts`:**
+
+```typescript
+// @dvt/contracts/src/types/branded.ts
+export type Sha256Hex = string & { readonly _brand: 'Sha256Hex' };
+export type TenantId = string & { readonly _brand: 'TenantId' };
+export type ArtifactStorageUri = string & { readonly _brand: 'ArtifactStorageUri' };
+
+// Port becomes self-documenting:
+export interface IArtifactWriter {
+  upload(tenantId: TenantId, sha256: Sha256Hex, content: Buffer): Promise<ArtifactStorageUri>;
+}
+```
+
+Branded types have zero runtime cost, catch category errors at compile time, and prevent
+the `uri` / `sha256` / `tenantId` confusion that currently exists in `CompiledCodeRef`.
+
+**Rule:** ALL domain identifiers crossing port boundaries MUST use branded type aliases from
+`@dvt/contracts`. No raw `string` for identity fields at interface boundaries.
+
+**Fowler pattern:** _Replace Primitive with Value Object (lightweight branded type)_
+
+---
+
+### G-6 — Do not let `CompiledCodeBlob` remain a local type
+
+**Origin finding:** Type erosion in `TemporalAdapter.ts:53,58` — `listEvents()` and
+`projector.rebuild()` use `unknown[]`, breaking contract safety at the hexagonal boundary.
+
+**Artifact store risk:** `CompiledCodeBlob` is defined locally in
+`@dvt/traceability-service/src/lineage/types.ts`. When `ICompiledCodeReader` is promoted to
+`@dvt/contracts`, its return type must also move. If it stays local, the boundary between
+the port (canonical) and its return type (local) is incoherent — the same `unknown[]` smell,
+one layer deeper.
+
+**Current local definition:**
+
+```typescript
+// @dvt/traceability-service/src/lineage/types.ts (local — wrong location)
+export interface CompiledCodeBlob {
+  content: Buffer;
+  sha256: string;
+  sizeBytes: number;
+}
+```
+
+**Guardrail:** move `CompiledCodeBlob` to `@dvt/contracts/src/types/artifacts.ts` alongside
+`CompiledCodeRef`. The blob IS the materialized form of the ref — they belong together:
+
+```typescript
+// @dvt/contracts/src/types/artifacts.ts
+export interface CompiledCodeRef {
+  sha256: Sha256Hex;
+  storageUri: ArtifactStorageUri;
+  sizeBytes: number;
+  encoding?: 'utf-8';
+}
+
+// Materialized form — returned by IArtifactReader
+export interface CompiledCodeBlob extends Omit<CompiledCodeRef, 'storageUri'> {
+  content: Buffer;
+}
+```
+
+**Rule:** every type that crosses a canonical port boundary MUST live in `@dvt/contracts`.
+Local types in feature packages are implementation details — they MUST NOT appear in port
+signatures.
+
+**Fowler pattern:** _Move Class to Shared Kernel_
+
+---
+
+### G-7 — Do not spread into untyped `stepTypeConfig`
+
+**Origin finding:** `Record<string, unknown>` for step/gateway state reduces domain
+expressiveness (`RunPlanWorkflow.ts:280`, `RunPlanWorkflow.ts:556`).
+
+**Artifact store risk:** the current `attachCompiledCodeRefs` does:
+
+```typescript
+stepTypeConfig: {
+  ...(step.stepTypeConfig ?? {}),  // spread into unknown
+  compiledCodeRef,
+}
+```
+
+This is the exact same pattern. `compiledCodeRef` is attached to an open record with no
+compile-time shape guarantee. Future code that reads `step.stepTypeConfig.compiledCodeRef`
+has no type safety.
+
+**Guardrail:** `StepTypeConfig` MUST be a discriminated union before `attachCompiledCodeRefs`
+is extended in any way:
+
+```typescript
+export type StepTypeConfig =
+  | { kind: 'DBT_MODEL'; modelPath: string; compiledCodeRef?: CompiledCodeRef }
+  | { kind: 'DBT_TEST'; testName: string; compiledCodeRef?: CompiledCodeRef }
+  | { kind: 'GATE'; condition: DslExpression };
+```
+
+Once the union exists, `attachCompiledCodeRefs` uses a type-safe update:
+
+```typescript
+function attachRef(step: ExecutionStepV2, ref: CompiledCodeRef): ExecutionStepV2 {
+  if (step.stepTypeConfig.kind !== 'DBT_MODEL' && step.stepTypeConfig.kind !== 'DBT_TEST') {
+    return step; // type system enforces this is exhaustive
+  }
+  return { ...step, stepTypeConfig: { ...step.stepTypeConfig, compiledCodeRef: ref } };
+}
+```
+
+**Rule:** no `...(x ?? {})` spread at domain boundaries. All structured domain state MUST be
+typed as discriminated unions.
+
+**Fowler pattern:** _Replace Implicit with Explicit (Discriminated Union)_
+
+---
+
+### G-8 — Use a shared compliance test suite across all adapters
+
+**Origin finding:** duplicate test coverage in `workflow-continue-as-new.test.ts:87` and
+`workflow-compiled-code-ref.test.ts:19` — same scenarios covered twice, increasing change
+cost.
+
+**Artifact store risk:** 5 write adapters (S3, MinIO, FS, InMemory, Noop) will each have
+their own test file. Without a shared contract suite, every test author reinvents the same
+scenarios: upload → returns URI, same sha256 twice → idempotent, wrong sha256 → error, etc.
+
+**Guardrail — shared compliance suite pattern:**
+
+```typescript
+// packages/@dvt/planner/test/compiledCode/adapters/compliance.ts
+// Runs for every adapter implementation.
+
+export function runICompiledCodeStorageCompliance(
+  label: string,
+  factory: () => ICompiledCodeStorage
+): void {
+  describe(`ICompiledCodeStorage compliance — ${label}`, () => {
+    it('upload returns a non-empty storageUri', async () => { ... });
+    it('upload is idempotent for the same sha256', async () => { ... });
+    it('upload enforces tenant isolation (different tenants, same sha256 = different URIs)', async () => { ... });
+    it('read returns the exact bytes uploaded', async () => { ... });
+    it('exists returns false before upload, true after', async () => { ... });
+    it('read on unknown sha256 throws ArtifactNotFoundError', async () => { ... });
+  });
+}
+
+// Per adapter:
+runICompiledCodeStorageCompliance('InMemory', () => new InMemoryCompiledCodeStorage());
+runICompiledCodeStorageCompliance('FileSystem', () => new FileSystemCompiledCodeStorage({ directory: tmpDir }));
+// S3 and MinIO run in integration suite against localstack/minio container.
+```
+
+**Rule:** every adapter test file MUST import and run the shared compliance suite. Adapter-
+specific tests MUST cover only adapter-specific concerns (e.g. S3 error codes, MinIO
+endpoint configuration).
+
+**Fowler pattern:** _Extract Fixture Object → Parameterized Test Suite_
+
+---
+
+### Summary — Guardrail Checklist
+
+| #   | Guardrail                                                            | Prevents                               | Priority |
+| --- | -------------------------------------------------------------------- | -------------------------------------- | -------- |
+| G-1 | Single `validateArtifactIntegrity` function in `@dvt/contracts`      | Invariant duplication / drift          | P0       |
+| G-2 | `ArtifactStoreError` with typed `code` enum                          | Stringly-typed error control flow      | P0       |
+| G-3 | `ArtifactRetryPolicy` with explicit `retryOn` codes                  | Declared-but-ignored retry semantics   | P1       |
+| G-4 | ISP ports (`IArtifactWriter`, `IArtifactReader`, etc.) — no God port | Port accumulating responsibilities     | P0       |
+| G-5 | Branded types (`Sha256Hex`, `TenantId`, `ArtifactStorageUri`)        | Primitive obsession / string confusion | P1       |
+| G-6 | `CompiledCodeBlob` promoted to `@dvt/contracts`                      | Local type at canonical port boundary  | P0       |
+| G-7 | `StepTypeConfig` discriminated union — no open spread                | Untyped domain state                   | P1       |
+| G-8 | Shared compliance test suite per adapter                             | Duplicate / divergent adapter tests    | P1       |
