@@ -38,6 +38,7 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 - [Change Impact Report — ADR-0030 Session 2026-03-04](CHANGE_IMPACT_ADR0030_20260304.md)
 - [CI/CD Rollback Plan After Stabilization (2026-02-28)](CI_CD_ROLLBACK_PLAN_20260228.md)
 - [Engine DVT - Implementation Status Checklist (Against Requested Spec)](ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md)
+- [Generated Capability Coverage](status/generated-capability-coverage.md)
 - [Generated Code State](status/generated-code-state.md)
 - [Pending Golden Path Coverage Debt](pending-golden-path-coverage-debt.md)
 - [Pending Release Please Continuous](pending-release-please-continuous.md)

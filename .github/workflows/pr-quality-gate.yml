@@ -71,6 +71,9 @@ jobs:
       - name: Validate generated code-state status doc
         run: pnpm docs:status:check
 
+      - name: Validate generated capability coverage doc
+        run: pnpm docs:capability:check
+
       - name: Workspace type-check (fast-fail)
         if:
           ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==

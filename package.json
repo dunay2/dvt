@@ -63,6 +63,8 @@
     "docs:canonical:fix": "node scripts/docs-canonical-fix.cjs",
     "docs:status:generate": "node scripts/generate-code-status.cjs",
     "docs:status:check": "pnpm docs:status:generate && git diff --exit-code -- docs/planning/status/generated-code-state.md",
+    "docs:capability:generate": "node scripts/generate-capability-coverage.cjs",
+    "docs:capability:check": "pnpm docs:capability:generate && git diff --exit-code -- docs/planning/status/generated-capability-coverage.md",
     "docs:sync:check": "pnpm docs:sync && git diff --exit-code -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml",
     "docs:serve": "pnpm docs:sync && zensical serve",
     "docs:build": "pnpm docs:sync && zensical build",
