@@ -18,12 +18,9 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 ## Proposals
 
 - [Define the Outbox Consumer](Definir%20el%20Consumidor%20del%20Outbox.md)
-- [DVT+ - Gap Execution Plans](GAP_EXECUTION_PLANS.md)
 - [DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)](DVT_engine_remediation_ai_plan.md)
 - [Engine Migration Plan: Current Gap to Target Blueprint v0.6](engine-gap-to-target-migration-plan.md)
 - [Executable Remediation and Completion Plan for DVT+](DVT_REMEDIATION_PLAN.md)
-- [G3 TASK SPECIFICATION](G3-TASK-SPECIFICATION.md)
-- [G4 — compiledCodeRef: Task Specification for Development Team](G4-TASK-SPECIFICATION.md)
 - [Milestone 0 - Immediate Stabilization (Sprint 1-2)](HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md)
 
 ## Reviews
@@ -45,6 +42,7 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 ## Reference
 
 - [Dvt Traceability Pack V2 Lite R6](dvt-traceability-pack-v2-lite-R6/)
+- [Gaps](gaps/)
 
 - [Marquezopen](marquezopen.txt)
 - [Temporal Adapter Improvve](temporal%20adapter%20improvve.txt)

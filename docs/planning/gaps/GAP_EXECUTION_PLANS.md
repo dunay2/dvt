@@ -1,0 +1,153 @@
+---
+title: DVT+ - Gap Execution Plans
+status: Review
+owner: docs
+last_reviewed: 2026-03-06
+planning_type: proposal
+---
+
+# DVT+ - Gap Execution Plans
+
+Source of truth for execution gaps and delivery state.
+
+- Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
+- Last sync date: 2026-03-06
+- Scope: Phase 1, Phase 1.5, Phase 2
+
+## Executive State (2026-03-06)
+
+| Gap | Title | Phase | Current state |
+| --- | --- | --- | --- |
+| G1 | Temporal Adapter real | Phase 1 | In progress (lookupRunRef done, full integration pending) |
+| G2 | PostgresStateStore complete | Phase 1 | Closed |
+| G3 | IStartRunIntentStore Postgres + scheduler | Phase 1 | Implemented in code, pending final doc closure |
+| G4 | compiledCodeRef ownership | Phase 1 | In progress (T4-2 done, T4-3/T4-4 pending) |
+| G5 | Outbox worker independiente | Phase 1.5 | Pending |
+| G6 | OpenLineage mapping tests + schema pin | Phase 1.5 | Pending |
+| G7 | Read models + standalone projector | Phase 1.5 | Pending |
+| G8 | Auth real en apps/api | Phase 1.5 | Pending |
+| G9 | StepTypeRegistry + typed stepTypeConfig | Phase 2 | Pending |
+| G10 | outbox_lineage worker + fail-open DLQ | Phase 2 | Pending |
+
+## Confirmed Progress Since Previous Draft
+
+1. `G1` lookupRunRef is implemented and tested in Temporal adapter.
+   - Code: [`packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`](../../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)
+   - Tests: [`packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`](../../../packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts)
+2. `G3` durable intent store and reconciler worker are implemented and wired in runtime.
+   - Store: [`packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts)
+   - Worker: [`packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts`](../../../packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts)
+   - Runtime wiring: [`apps/api/src/runtime/intentReconcilerRuntime.ts`](../../../apps/api/src/runtime/intentReconcilerRuntime.ts)
+3. `G4` contracts and planner side are partially implemented.
+   - Contract type: [`packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+   - Planner ports/adapters: [`packages/@dvt/planner/src/ports/ICompiledCodeStorage.ts`](../../../packages/@dvt/planner/src/ports/ICompiledCodeStorage.ts)
+   - Planner enrichment: [`packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts)
+4. CI hardening was added for workspace dependency builds before adapter-postgres tests.
+   - Workflow: [`.github/workflows/test.yml`](../../../.github/workflows/test.yml)
+
+## Gap-by-Gap Status
+
+### G1 - Temporal Adapter real
+
+- Status: In progress
+- Done:
+  - `lookupRunRef` implemented
+  - unit tests for exists/not-found/error paths
+- Pending:
+  - stronger production integration coverage (time-skipping / dev server always-on gate)
+  - operational validation of worker host defaults under load
+- Reference task spec: [`G1 section`](#g1---temporal-adapter-real)
+
+### G2 - PostgresStateStore complete
+
+- Status: Closed
+- Delivered:
+  - `listEvents(options)` with paging cursor
+  - `listRuns(status)` behavior completed in adapter
+- Evidence:
+  - [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+
+### G3 - IStartRunIntentStore Postgres + scheduler
+
+- Status: Implemented in code
+- Delivered:
+  - durable Postgres intent store
+  - transition guards and typed errors
+  - non-overlap reconciler worker with infra backoff/jitter/timeout guard
+  - runtime wiring in `apps/api`
+- Pending:
+  - close remaining doc checklist items as "done" in task spec/evidence docs
+  - keep integration/load evidence updated
+- Task spec: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
+
+### G4 - compiledCodeRef ownership
+
+- Status: In progress
+- Subtasks:
+
+| Task | Scope | Status |
+| --- | --- | --- |
+| T4-1 | contracts type + exports + fixtures | Partial (type/export done, fixtures pending) |
+| T4-2 | planner storage adapters + attachCompiledCodeRefs | Done in code |
+| T4-3 | adapter-temporal propagation to StepStarted | Pending |
+| T4-4 | traceability reader/cache/SqlJobFacet | Pending |
+
+- Task spec: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
+
+### G5 - Outbox worker independiente
+
+- Status: Pending
+- Target:
+  - dedicated polling worker + publisher port + operational lifecycle
+
+### G6 - OpenLineage mapping tests CI + schema pin
+
+- Status: Pending
+- Target:
+  - deterministic OL mapping tests in CI
+  - `_schemaURL` pinned in code
+
+### G7 - Read models + standalone projector
+
+- Status: Pending
+- Target:
+  - projector service and indexes for production read paths
+
+### G8 - Auth real en apps/api
+
+- Status: Pending
+- Target:
+  - JWT verification and tenant-scoped authz in runtime endpoints
+
+### G9 - StepTypeRegistry + typed stepTypeConfig
+
+- Status: Pending
+- Target:
+  - registry-based validation and safer step config contracts
+
+### G10 - outbox_lineage worker + fail-open DLQ
+
+- Status: Pending
+- Target:
+  - lineage delivery worker, DLQ, fail-open behavior for external lineage sinks
+
+## Execution Order (Updated)
+
+Recommended order for next cycles:
+
+1. Finish and close `G4` (T4-3 and T4-4).
+2. Close remaining `G1` integration quality gates.
+3. Start Phase 1.5 in order: `G5 -> G6 -> G7 -> G8`.
+4. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
+
+Parallel execution track detail:
+
+- [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)
+
+## Related Documents
+
+- G3 detail: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
+- G4 detail: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
+- Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)
+- G3 evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
+- G4 evidence: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
