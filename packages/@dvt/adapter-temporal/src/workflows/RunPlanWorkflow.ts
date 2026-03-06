@@ -570,10 +570,11 @@ function applyGatewayDecision(args: {
     return;
   }
 
-  args.state.gatewayDecisions = {
-    ...(args.state.gatewayDecisions ?? {}),
-    [args.stepId]: args.gatewayDecision,
-  };
+  if (args.state.gatewayDecisions) {
+    args.state.gatewayDecisions[args.stepId] = args.gatewayDecision;
+  } else {
+    args.state.gatewayDecisions = { [args.stepId]: args.gatewayDecision };
+  }
 
   if (args.gatewayDecision) {
     return;

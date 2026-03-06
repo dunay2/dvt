@@ -131,7 +131,7 @@ class TestRunStateStore implements RunStateCommandPort {
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     const metadata = this.metadataByRun.get(runId);
-    if (!metadata || metadata.tenantId !== tenantId) {
+    if (metadata?.tenantId !== tenantId) {
       return null;
     }
 
@@ -189,6 +189,14 @@ function readGatewayDecision(event: EventEnvelope): boolean | undefined {
   return typeof decision === 'boolean' ? decision : undefined;
 }
 
+function eventAt<T>(items: T[], index: number): T {
+  const item = items[index];
+  if (item === undefined) {
+    throw new Error(`missing item at index ${index}`);
+  }
+  return item;
+}
+
 async function expectExecuteStepRejects(step: unknown, expectedError: string): Promise<void> {
   const { deps } = buildDeps();
   const acts = createActivities(deps);
@@ -213,13 +221,14 @@ function expectSingleRunStartedEvent(
   const runStarted = events.filter((e) => e.eventType === 'RunStarted');
 
   expect(runStarted).toHaveLength(1);
-  expect(runStarted[0]!.logicalAttemptId).toBe(logicalAttemptId);
-  expect(runStarted[0]!.idempotencyKey).toBe(
+  const runStartedEvent = eventAt(runStarted, 0);
+  expect(runStartedEvent.logicalAttemptId).toBe(logicalAttemptId);
+  expect(runStartedEvent.idempotencyKey).toBe(
     `RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|`
   );
 
   if (typeof options.engineAttemptId === 'number') {
-    expect(runStarted[0]!.engineAttemptId).toBe(options.engineAttemptId);
+    expect(runStartedEvent.engineAttemptId).toBe(options.engineAttemptId);
   }
 }
 
@@ -279,10 +288,11 @@ describe('stepActivities', () => {
 
       const events = await loadRunEvents(store);
       expect(events).toHaveLength(1);
-      expect(events[0]!.eventType).toBe('RunStarted');
-      expect(events[0]!.runId).toBe('run-1');
-      expect(events[0]!.tenantId).toBe('tenant-1');
-      expect(events[0]!.runSeq).toBe(1);
+      const firstEvent = eventAt(events, 0);
+      expect(firstEvent.eventType).toBe('RunStarted');
+      expect(firstEvent.runId).toBe('run-1');
+      expect(firstEvent.tenantId).toBe('tenant-1');
+      expect(firstEvent.runSeq).toBe(1);
     });
 
     it('is idempotent: duplicate calls produce single event', async () => {
@@ -315,8 +325,9 @@ describe('stepActivities', () => {
 
       const events = await loadRunEvents(store);
       expect(events).toHaveLength(2);
-      expect(events[0]!.eventType).toBe('StepStarted');
-      assertStepEventHasId(events[0]!, 'step-a');
+      const firstEvent = eventAt(events, 0);
+      expect(firstEvent.eventType).toBe('StepStarted');
+      assertStepEventHasId(firstEvent, 'step-a');
     });
 
     it('persists payload when provided (gateway decision)', async () => {
@@ -333,8 +344,9 @@ describe('stepActivities', () => {
 
       const events = await loadRunEvents(store);
       expect(events).toHaveLength(1);
-      expect(events[0]!.eventType).toBe('StepCompleted');
-      expect(readGatewayDecision(events[0]!)).toBe(true);
+      const firstEvent = eventAt(events, 0);
+      expect(firstEvent.eventType).toBe('StepCompleted');
+      expect(readGatewayDecision(firstEvent)).toBe(true);
     });
 
     it('retry-safe: transient failure then retry persists one logical event', async () => {
@@ -353,18 +365,6 @@ describe('stepActivities', () => {
       expectSingleRunStartedEvent(events);
     });
 
-    it('defaults logicalAttemptId to 1 even when engineAttemptId is greater than 1', async () => {
-      const { deps, store } = buildDeps();
-      deps.getEngineAttemptId = () => 7;
-      const acts = createActivities(deps);
-
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
-
-      const events = await loadRunEvents(store);
-      expect(events).toHaveLength(1);
-      expectSingleRunStartedEvent(events, { engineAttemptId: 7 });
-    });
-
     it('dedupes retries across different engineAttemptId when logicalAttemptId is unchanged', async () => {
       const store = new TestRunStateStore();
       let attempt = 1;
@@ -380,21 +380,39 @@ describe('stepActivities', () => {
       expectSingleRunStartedEvent(events, { engineAttemptId: 1 });
     });
 
-    it('uses explicit logicalAttemptId independent of engineAttemptId', async () => {
+    it.each([
+      {
+        title: 'defaults logicalAttemptId to 1 even when engineAttemptId is greater than 1',
+        engineAttemptId: 7,
+        logicalAttemptId: undefined,
+        expectedLogicalAttemptId: 1,
+      },
+      {
+        title: 'uses explicit logicalAttemptId independent of engineAttemptId',
+        engineAttemptId: 9,
+        logicalAttemptId: 3,
+        expectedLogicalAttemptId: 3,
+      },
+    ])('$title', async (testCase) => {
       const { deps, store } = buildDeps();
-      deps.getEngineAttemptId = () => 9;
+      deps.getEngineAttemptId = () => testCase.engineAttemptId;
       const acts = createActivities(deps);
 
       await acts.emitEvent({
         ctx: CTX,
         planRef: PLAN_REF,
         eventType: 'RunStarted',
-        logicalAttemptId: 3,
+        ...(testCase.logicalAttemptId === undefined
+          ? {}
+          : { logicalAttemptId: testCase.logicalAttemptId }),
       });
 
       const events = await loadRunEvents(store);
       expect(events).toHaveLength(1);
-      expectSingleRunStartedEvent(events, { logicalAttemptId: 3, engineAttemptId: 9 });
+      expectSingleRunStartedEvent(events, {
+        logicalAttemptId: testCase.expectedLogicalAttemptId,
+        engineAttemptId: testCase.engineAttemptId,
+      });
     });
   });
 
@@ -457,57 +475,37 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
-    it('evaluates gateway step in activity boundary and returns gatewayDecision=true', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
+    it.each([
+      { gatewayStatus: 'COMPLETED', expectedDecision: true },
+      { gatewayStatus: 'FAILED', expectedDecision: false },
+    ])(
+      'evaluates gateway step in activity boundary and returns gatewayDecision=$expectedDecision',
+      async (testCase) => {
+        const { deps } = buildDeps();
+        const acts = createActivities(deps);
 
-      const result = await acts.executeStep({
-        step: {
-          stepId: 'gw-1',
-          type: 'gateway',
-          gateway: {
-            dslVersion: '1.0',
-            expression: "status='COMPLETED'",
+        const result = await acts.executeStep({
+          step: {
+            stepId: 'gw-1',
+            type: 'gateway',
+            gateway: {
+              dslVersion: '1.0',
+              expression: "status='COMPLETED'",
+            },
           },
-        },
-        ctx: CTX,
-        gatewayContext: {
+          ctx: CTX,
+          gatewayContext: {
+            status: testCase.gatewayStatus,
+          },
+        });
+
+        expect(result).toEqual({
+          stepId: 'gw-1',
           status: 'COMPLETED',
-        },
-      });
-
-      expect(result).toEqual({
-        stepId: 'gw-1',
-        status: 'COMPLETED',
-        gatewayDecision: true,
-      });
-    });
-
-    it('evaluates gateway step in activity boundary and returns gatewayDecision=false', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
-
-      const result = await acts.executeStep({
-        step: {
-          stepId: 'gw-1',
-          type: 'gateway',
-          gateway: {
-            dslVersion: '1.0',
-            expression: "status='COMPLETED'",
-          },
-        },
-        ctx: CTX,
-        gatewayContext: {
-          status: 'FAILED',
-        },
-      });
-
-      expect(result).toEqual({
-        stepId: 'gw-1',
-        status: 'COMPLETED',
-        gatewayDecision: false,
-      });
-    });
+          gatewayDecision: testCase.expectedDecision,
+        });
+      }
+    );
 
     it('rejects step when dependsOn is not an array', async () => {
       await expectExecuteStepRejects(
@@ -600,7 +598,10 @@ describe('stepActivities', () => {
 
       const meta = await store.getRunMetadataByRunId('tenant-1', 'run-1');
       expect(meta).not.toBeNull();
-      expect(meta!.provider).toBe('temporal');
+      if (!meta) {
+        throw new Error('expected run metadata');
+      }
+      expect(meta.provider).toBe('temporal');
     });
   });
 });

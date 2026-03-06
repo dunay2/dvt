@@ -229,7 +229,7 @@ function buildEventEnvelope(args: {
       planVersion: validatedPlanRef.planVersion,
       ...(input.stepId ? { stepId: input.stepId } : {}),
     }),
-    ...(input.payload !== undefined ? { payload: input.payload } : {}),
+    ...(input.payload === undefined ? {} : { payload: input.payload }),
   };
 }
 
@@ -339,7 +339,8 @@ function hasOwn(obj: object, key: PropertyKey): boolean {
     return objectWithHasOwn.hasOwn(obj, key);
   }
 
-  return Object.prototype.hasOwnProperty.call(obj, key);
+  const normalizedKey = typeof key === 'number' ? String(key) : key;
+  return Reflect.ownKeys(obj).includes(normalizedKey);
 }
 
 function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
