@@ -1,4 +1,13 @@
-﻿# G3-TASK-SPECIFICATION.md
+---
+title: G3 TASK SPECIFICATION
+status: Draft
+owner: docs
+last_reviewed: 2026-03-06
+planning_type: proposal
+---
+# G3 TASK SPECIFICATION
+
+# G3-TASK-SPECIFICATION.md
 
 **Gap**: G3 - IStartRunIntentStore Postgres + scheduler  
 **Fecha**: 2026-03-04  
