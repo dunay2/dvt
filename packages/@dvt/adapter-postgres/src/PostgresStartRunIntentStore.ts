@@ -26,26 +26,81 @@ import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
 
 interface IntentRow {
-  intent_id: string;
-  tenant_id: string;
-  run_id: string;
+  intent_id: IntentId;
+  tenant_id: TenantId;
+  run_id: RunId;
   provider: StartRunIntent['provider'];
   status: StartRunIntentStatus;
   engine_run_ref: StartRunIntent['engineRunRef'] | null;
-  created_at: string;
-  updated_at: string;
+  created_at: IntentTimestamp;
+  updated_at: IntentTimestamp;
 }
 
+type IntentId = StartRunIntent['intentId'];
+type TenantId = StartRunIntent['tenantId'];
+type RunId = StartRunIntent['runId'];
+type IntentTimestamp = StartRunIntent['createdAt'];
+type EngineRunRef = NonNullable<StartRunIntent['engineRunRef']>;
 type NonDispatchTransitionTarget = Exclude<StartRunIntentTransitionTarget, 'DISPATCHED'>;
 type TransitionOutcome = 'UPDATED' | 'INVALID' | 'NOT_FOUND';
+
+interface IntentIdentity {
+  intentId: IntentId;
+  tenantId: TenantId;
+  runId: RunId;
+}
+
+interface IntentTimestamps {
+  createdAt: IntentTimestamp;
+  updatedAt: IntentTimestamp;
+}
+
+interface PersistedIntentState {
+  identity: IntentIdentity;
+  provider: StartRunIntent['provider'];
+  status: StartRunIntentStatus;
+  engineRunRef?: StartRunIntent['engineRunRef'];
+  timestamps: IntentTimestamps;
+}
 
 interface TransitionOutcomeRow {
   outcome: TransitionOutcome;
   current_status: StartRunIntentStatus | null;
 }
 
+interface DispatchTransitionCommand {
+  kind: 'dispatch';
+  intentId: IntentId;
+  engineRunRef: EngineRunRef;
+  updatedAt: IntentTimestamp;
+}
+
+interface StatusTransitionCommand {
+  kind: 'status';
+  intentId: IntentId;
+  targetStatus: NonDispatchTransitionTarget;
+  allowedFromStatuses: readonly StartRunIntentStatus[];
+  updatedAt: IntentTimestamp;
+}
+
+type TransitionCommand = DispatchTransitionCommand | StatusTransitionCommand;
+
+interface OrphanedIntentCriteria {
+  cutoffIso: IntentTimestamp;
+  limit: number;
+}
+
+interface TransitionMutation {
+  sql: string;
+  params: unknown[];
+}
+
 const INTENT_SELECT_COLUMNS =
   'intent_id, tenant_id, run_id, provider, status, engine_run_ref, created_at, updated_at';
+const DEFAULT_ORPHAN_LIMIT = 100;
+const MIN_ORPHAN_LIMIT = 1;
+const MAX_ORPHAN_LIMIT = 1000;
+const INVALID_ORPHAN_LIMIT_MESSAGE = 'INVALID_LIMIT: listOrphaned limit must be between 1 and 1000';
 
 export interface PostgresStartRunIntentStoreConfig {
   connectionString?: string;
@@ -149,54 +204,42 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     if (!row) {
       throw new IntentNotFoundError(input.intentId);
     }
-    return toIntent(row);
+    return toIntent(toPersistedIntentState(row));
   }
 
-  async markDispatched(
-    intentId: string,
-    engineRunRef: NonNullable<StartRunIntent['engineRunRef']>
-  ): Promise<void> {
+  async markDispatched(intentId: IntentId, engineRunRef: EngineRunRef): Promise<void> {
     this.ready();
-    const outcome = await this.resolveTransitionOutcome(
-      `
-        UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
-        SET status = 'DISPATCHED',
-            engine_run_ref = $2::jsonb,
-            updated_at = $3::timestamptz
-        WHERE intent_id = $1
-          AND status = 'PENDING'
-        RETURNING status
-      `,
-      [intentId, JSON.stringify(engineRunRef), this.now()]
-    );
+    const command: DispatchTransitionCommand = {
+      kind: 'dispatch',
+      intentId,
+      engineRunRef,
+      updatedAt: this.now(),
+    };
+    const outcome = await this.resolveTransitionOutcome(command);
     this.assertTransitionOutcome(intentId, outcome, 'DISPATCHED');
   }
 
-  async markResolved(intentId: string): Promise<void> {
+  async markResolved(intentId: IntentId): Promise<void> {
     await this.applyTransition(intentId, 'RESOLVED');
   }
 
-  async markExpired(intentId: string): Promise<void> {
+  async markExpired(intentId: IntentId): Promise<void> {
     await this.applyTransition(intentId, 'EXPIRED');
   }
 
   private async applyTransition(
-    intentId: string,
+    intentId: IntentId,
     toStatus: NonDispatchTransitionTarget
   ): Promise<void> {
     this.ready();
-    const allowedFrom = getAllowedFromStatuses(toStatus);
-    const outcome = await this.resolveTransitionOutcome(
-      `
-        UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
-        SET status = $2,
-            updated_at = $3::timestamptz
-        WHERE intent_id = $1
-          AND status::text = ANY($4::text[])
-        RETURNING status
-      `,
-      [intentId, toStatus, this.now(), allowedFrom]
-    );
+    const command: StatusTransitionCommand = {
+      kind: 'status',
+      intentId,
+      targetStatus: toStatus,
+      allowedFromStatuses: getAllowedFromStatuses(toStatus),
+      updatedAt: this.now(),
+    };
+    const outcome = await this.resolveTransitionOutcome(command);
     this.assertTransitionOutcome(intentId, outcome, toStatus);
   }
 
@@ -206,11 +249,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     limit?: number
   ): Promise<StartRunIntent[]> {
     this.ready();
-    if (limit !== undefined && (limit < 1 || limit > 1000)) {
-      throw new RangeError('INVALID_LIMIT: listOrphaned limit must be between 1 and 1000');
-    }
-    const boundedLimit = limit ?? 100;
-    const cutoffIso = new Date(nowMs - thresholdMs).toISOString();
+    const criteria = this.buildOrphanedIntentCriteria(thresholdMs, nowMs, limit);
     const result = await this.pool.query<IntentRow>(
       `
         SELECT ${INTENT_SELECT_COLUMNS}
@@ -220,33 +259,19 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
         ORDER BY created_at ASC
         LIMIT $2
       `,
-      [cutoffIso, boundedLimit]
+      [criteria.cutoffIso, criteria.limit]
     );
-    return result.rows.map(toIntent);
-  }
-
-  async getIntent(intentId: string): Promise<StartRunIntent | null> {
-    this.ready();
-    const result = await this.pool.query<IntentRow>(
-      `
-        SELECT ${INTENT_SELECT_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.start_run_intents
-        WHERE intent_id = $1
-      `,
-      [intentId]
-    );
-    const row = result.rows[0];
-    return row ? toIntent(row) : null;
+    return result.rows.map((row) => toIntent(toPersistedIntentState(row)));
   }
 
   private async resolveTransitionOutcome(
-    updateSql: string,
-    updateParams: unknown[]
+    command: TransitionCommand
   ): Promise<TransitionOutcomeRow> {
+    const mutation = this.buildTransitionMutation(command);
     const result = await this.pool.query<TransitionOutcomeRow>(
       `
         WITH updated AS (
-          ${updateSql}
+          ${mutation.sql}
         ),
         existing AS (
           SELECT status::text AS current_status
@@ -261,9 +286,60 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
           END::text AS outcome,
           (SELECT current_status FROM existing LIMIT 1)::text AS current_status
       `,
-      updateParams
+      mutation.params
+    );
+    return this.normalizeTransitionOutcome(result.rows[0]);
+  }
+
+  private buildTransitionMutation(command: TransitionCommand): TransitionMutation {
+    if (command.kind === 'dispatch') {
+      return {
+        sql: `
+          UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
+          SET status = 'DISPATCHED',
+              engine_run_ref = $2::jsonb,
+              updated_at = $3::timestamptz
+          WHERE intent_id = $1
+            AND status = 'PENDING'
+          RETURNING status
+        `,
+        params: [command.intentId, JSON.stringify(command.engineRunRef), command.updatedAt],
+      };
+    }
+
+    return {
+      sql: `
+        UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
+        SET status = $2,
+            updated_at = $3::timestamptz
+        WHERE intent_id = $1
+          AND status::text = ANY($4::text[])
+        RETURNING status
+      `,
+      params: [
+        command.intentId,
+        command.targetStatus,
+        command.updatedAt,
+        command.allowedFromStatuses,
+      ],
+    };
+  }
+
+  async getIntent(intentId: IntentId): Promise<StartRunIntent | null> {
+    this.ready();
+    const result = await this.pool.query<IntentRow>(
+      `
+        SELECT ${INTENT_SELECT_COLUMNS}
+        FROM ${quoteIdentifier(this.schema)}.start_run_intents
+        WHERE intent_id = $1
+      `,
+      [intentId]
     );
     const row = result.rows[0];
+    return row ? toIntent(toPersistedIntentState(row)) : null;
+  }
+
+  private normalizeTransitionOutcome(row: TransitionOutcomeRow | undefined): TransitionOutcomeRow {
     return {
       outcome: row?.outcome ?? 'NOT_FOUND',
       current_status: row?.current_status ?? null,
@@ -271,7 +347,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 
   private assertTransitionOutcome(
-    intentId: string,
+    intentId: IntentId,
     transition: TransitionOutcomeRow,
     to: StartRunIntentStatus
   ): void {
@@ -280,6 +356,28 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
       throw new IntentNotFoundError(intentId);
     }
     throw new IntentInvalidTransitionError(intentId, transition.current_status ?? 'UNKNOWN', to);
+  }
+
+  private buildOrphanedIntentCriteria(
+    thresholdMs: number,
+    nowMs: number,
+    limit?: number
+  ): OrphanedIntentCriteria {
+    const boundedLimit = this.resolveOrphanedLimit(limit);
+    return {
+      cutoffIso: new Date(nowMs - thresholdMs).toISOString(),
+      limit: boundedLimit,
+    };
+  }
+
+  private resolveOrphanedLimit(limit?: number): number {
+    if (limit === undefined) {
+      return DEFAULT_ORPHAN_LIMIT;
+    }
+    if (limit < MIN_ORPHAN_LIMIT || limit > MAX_ORPHAN_LIMIT) {
+      throw new RangeError(INVALID_ORPHAN_LIMIT_MESSAGE);
+    }
+    return limit;
   }
 
   private ready(): void {
@@ -291,15 +389,32 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 }
 
-function toIntent(row: IntentRow): StartRunIntent {
+function toPersistedIntentState(row: IntentRow): PersistedIntentState {
   return {
-    intentId: row.intent_id,
-    tenantId: row.tenant_id,
-    runId: row.run_id,
+    identity: {
+      intentId: row.intent_id,
+      tenantId: row.tenant_id,
+      runId: row.run_id,
+    },
     provider: row.provider,
     status: row.status,
     engineRunRef: row.engine_run_ref ?? undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    timestamps: {
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    },
+  };
+}
+
+function toIntent(state: PersistedIntentState): StartRunIntent {
+  return {
+    intentId: state.identity.intentId,
+    tenantId: state.identity.tenantId,
+    runId: state.identity.runId,
+    provider: state.provider,
+    status: state.status,
+    engineRunRef: state.engineRunRef,
+    createdAt: state.timestamps.createdAt,
+    updatedAt: state.timestamps.updatedAt,
   };
 }
