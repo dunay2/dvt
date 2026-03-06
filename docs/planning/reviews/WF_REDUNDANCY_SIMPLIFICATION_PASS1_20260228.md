@@ -5,7 +5,6 @@ owner: ci-cd
 last_reviewed: 2026-02-28
 planning_type: review
 ---
-
 # WF REDUNDANCY SIMPLIFICATION PASS1 20260228
 
 ## Objetivo
