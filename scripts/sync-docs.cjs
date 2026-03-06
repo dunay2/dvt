@@ -102,6 +102,16 @@ function humanizeName(fileName) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function renderMarkdownTable(headers, rows) {
+  const widths = headers.map((header, index) =>
+    Math.max(header.length, ...rows.map((row) => row[index].length))
+  );
+  const formatRow = (cells) =>
+    `| ${cells.map((cell, index) => cell.padEnd(widths[index], ' ')).join(' | ')} |`;
+  const separator = `| ${widths.map((width) => '-'.repeat(Math.max(width, 3))).join(' | ')} |`;
+  return [formatRow(headers), separator, ...rows.map((row) => formatRow(row))];
+}
+
 function extractFirstHeading(content) {
   const heading = content.match(/^#\s+(.+)$/m);
   return heading ? heading[1].trim() : null;
@@ -244,6 +254,13 @@ function generateAdrLanding() {
 
   const current = readIfExists(adrLandingPath);
   const meta = frontmatterWithDefaults(current, { title: 'ADRs', status: 'Active', owner: 'docs' });
+  const adrTableRows = adrRows.map((row) => [
+    row.adrId.replace(/\|/g, '\\|'),
+    row.title.replace(/\|/g, '\\|'),
+    row.status.replace(/\|/g, '\\|'),
+    row.date.replace(/\|/g, '\\|'),
+    `[${row.fileName}](${encodeURI(row.fileName)})`,
+  ]);
 
   const lines = [
     renderFrontmatter(meta),
@@ -253,12 +270,7 @@ function generateAdrLanding() {
     '',
     '## ADR Catalog',
     '',
-    '| ADR | Title | Status | Date | File |',
-    '| --- | ----- | ------ | ---- | ---- |',
-    ...adrRows.map(
-      (row) =>
-        `| ${row.adrId} | ${row.title.replace(/\|/g, '\\|')} | ${row.status.replace(/\|/g, '\\|')} | ${row.date.replace(/\|/g, '\\|')} | [${row.fileName}](${encodeURI(row.fileName)}) |`
-    ),
+    ...renderMarkdownTable(['ADR', 'Title', 'Status', 'Date', 'File'], adrTableRows),
     '',
     '## Related',
     '',
