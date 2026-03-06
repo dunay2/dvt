@@ -62,6 +62,9 @@ jobs:
       - name: Validate docs quality policy (English/no duplicate indexes)
         run: pnpm docs:quality:check
 
+      - name: Run docs doctor (duplicates/legacy/staleness)
+        run: pnpm docs:doctor
+
       - name: Workspace type-check (fast-fail)
         if:
           ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
