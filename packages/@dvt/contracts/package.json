@@ -14,7 +14,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -b tsconfig.json --force",
     "test": "vitest run --passWithNoTests"
   },
   "devDependencies": {

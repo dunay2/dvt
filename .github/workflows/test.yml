@@ -84,6 +84,12 @@ jobs:
           steps.changes.outputs.root_config == 'true')
         run: pnpm test:contracts
 
+      - name: Build adapter-postgres dependency graph (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.changes.outputs.adapter_postgres == 'true'
+          || steps.changes.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
+
       - name: Run adapter-postgres tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.changes.outputs.adapter_postgres == 'true'
