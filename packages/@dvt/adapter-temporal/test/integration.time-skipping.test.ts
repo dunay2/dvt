@@ -17,8 +17,7 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
-import type { RunStateCommandPort } from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, RunContext, RunStateCommandPort } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -73,10 +72,6 @@ type EventEnvelope = TemporalEventEnvelope;
 
 type RunStatusValue = 'PENDING' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
-type RunEventWrite = EventInput;
-type RunEventRecord = EventEnvelope;
-type RunEventPersisted = RunEventRecord;
-
 interface AppendResult {
   runSeq: number;
   idempotent: boolean;
@@ -90,6 +85,24 @@ interface RunSnapshot {
   status: RunStatusValue;
   lastEventSeq: number;
   projectedAt: string;
+}
+
+class RunId {
+  private constructor(readonly value: string) {}
+
+  static of(value: string): RunId {
+    const normalized = value.trim();
+    if (normalized.length === 0) {
+      throw new TypeError('RUN_ID_REQUIRED');
+    }
+    return new RunId(normalized);
+  }
+}
+
+interface EventSliceQuery {
+  runId: RunId;
+  afterSeq?: number;
+  limit?: number;
 }
 
 // ============================================================================
@@ -149,13 +162,13 @@ class TestStateStore {
    * Map of runId -> array of persisted events
    * Maintains strict append order with monotonic runSeq
    */
-  private readonly eventsByRun = new Map<string, RunEventRecord[]>();
+  private readonly eventsByRun = new Map<string, EventEnvelope[]>();
 
   /**
-   * Map of runId -> Map<idempotencyKey, RunEventRecord>
+   * Map of runId -> Map<idempotencyKey, EventEnvelope>
    * Enforces idempotency uniqueness constraint
    */
-  private readonly idempByRun = new Map<string, Map<string, RunEventRecord>>();
+  private readonly idempByRun = new Map<string, Map<string, EventEnvelope>>();
 
   /**
    * Map of runId -> latest snapshot
@@ -174,12 +187,12 @@ class TestStateStore {
    * @invariant INV-STATE-3: (runId, idempotencyKey) uniqueness enforced
    * @invariant INV-STATE-4: Event log is immutable after persist
    */
-  async appendEvent(event: RunEventWrite): Promise<AppendResult> {
+  async appendEvent(event: EventInput): Promise<AppendResult> {
     const runId = event.runId;
 
     // Retrieve or initialize data structures for this run
     const events = this.eventsByRun.get(runId) ?? [];
-    const idx = this.idempByRun.get(runId) ?? new Map<string, RunEventRecord>();
+    const idx = this.idempByRun.get(runId) ?? new Map<string, EventEnvelope>();
 
     // Check idempotency (INV-STATE-3)
     const existing = idx.get(event.idempotencyKey);
@@ -197,7 +210,7 @@ class TestStateStore {
     const nextRunSeq = events.length + 1;
     const persistedAt = new Date().toISOString();
 
-    const record: RunEventRecord = {
+    const record: EventEnvelope = {
       ...event,
       runSeq: nextRunSeq,
       persistedAt,
@@ -222,30 +235,24 @@ class TestStateStore {
   /**
    * Fetches events for a run with optional pagination
    *
-   * @param runId - The run identifier
-   * @param options - Optional pagination parameters
+   * @param query - Run-scoped query including optional pagination
    * @returns Array of events ordered by runSeq ascending
    *
    * @invariant INV-STATE-5: Returns events ordered by ascending runSeq
    */
-  async fetchEvents(
-    runId: string,
-    options?: {
-      afterSeq?: number;
-      limit?: number;
-    }
-  ): Promise<RunEventRecord[]> {
-    const events = this.eventsByRun.get(runId) ?? [];
+  async fetchEvents(query: EventSliceQuery): Promise<EventEnvelope[]> {
+    const events = this.eventsByRun.get(query.runId.value) ?? [];
 
     // Filter by afterSeq if provided
     let filtered = events;
-    if (options?.afterSeq !== undefined) {
-      filtered = filtered.filter((e) => e.runSeq > options.afterSeq!);
+    const afterSeq = query.afterSeq;
+    if (afterSeq !== undefined) {
+      filtered = filtered.filter((e) => e.runSeq > afterSeq);
     }
 
     // Apply limit if provided
-    if (options?.limit !== undefined) {
-      filtered = filtered.slice(0, options.limit);
+    if (query.limit !== undefined) {
+      filtered = filtered.slice(0, query.limit);
     }
 
     return filtered;
@@ -257,8 +264,8 @@ class TestStateStore {
    * @param runId - The run identifier
    * @returns The latest snapshot or null if none exists
    */
-  async getSnapshot(runId: string): Promise<RunSnapshot | null> {
-    return this.snapshotsByRun.get(runId) ?? null;
+  async getSnapshot(runId: RunId): Promise<RunSnapshot | null> {
+    return this.snapshotsByRun.get(runId.value) ?? null;
   }
 
   /**
@@ -268,16 +275,16 @@ class TestStateStore {
    * @param runId - The run identifier
    * @returns A newly projected snapshot
    */
-  async projectSnapshot(runId: string): Promise<RunSnapshot> {
-    const events = await this.fetchEvents(runId);
+  async projectSnapshot(runId: RunId): Promise<RunSnapshot> {
+    const events = await this.fetchEvents({ runId });
     const status = this.calculateStatus(events);
     const snapshot: RunSnapshot = {
-      runId,
+      runId: runId.value,
       status,
-      lastEventSeq: events.length > 0 ? events[events.length - 1].runSeq : 0,
+      lastEventSeq: events.at(-1)?.runSeq ?? 0,
       projectedAt: new Date().toISOString(),
     };
-    this.snapshotsByRun.set(runId, snapshot);
+    this.snapshotsByRun.set(runId.value, snapshot);
     return snapshot;
   }
 
@@ -311,13 +318,13 @@ class TestStateStore {
   async bootstrapRunTx(input: {
     metadata: RunMetadata;
     firstEvents: EventInput[];
-  }): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[]; lastSeq: number }> {
+  }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
     this.metadataByRun.set(input.metadata.runId, input.metadata);
-    const appended: RunEventPersisted[] = [];
-    const deduped: RunEventPersisted[] = [];
+    const appended: EventEnvelope[] = [];
+    const deduped: EventEnvelope[] = [];
     for (const event of input.firstEvents) {
       const res = await this.appendEvent(event);
-      const events = await this.listEvents(input.metadata.runId);
+      const events = await this.listRunEvents(RunId.of(input.metadata.runId));
       const persisted = events.find((e) => e.runSeq === res.runSeq);
       if (!persisted) continue;
       if (res.idempotent) deduped.push(persisted);
@@ -326,28 +333,30 @@ class TestStateStore {
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? 0,
+      lastSeq: appended.at(-1)?.runSeq ?? 0,
     };
   }
 
   async appendAndEnqueueTx(
     runId: string,
     events: EventInput[]
-  ): Promise<{ appended: RunEventPersisted[]; deduped: RunEventPersisted[]; lastSeq: number }> {
-    const appended: RunEventPersisted[] = [];
-    const deduped: RunEventPersisted[] = [];
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
+    const appended: EventEnvelope[] = [];
+    const deduped: EventEnvelope[] = [];
     for (const event of events) {
       const res = await this.appendEvent({ ...event, runId });
-      const persisted = (await this.listEvents(runId)).find((e) => e.runSeq === res.runSeq);
+      const persisted = (await this.listRunEvents(RunId.of(runId))).find(
+        (e) => e.runSeq === res.runSeq
+      );
       if (!persisted) continue;
       if (res.idempotent) deduped.push(persisted);
       else appended.push(persisted);
     }
-    const all = await this.listEvents(runId);
+    const all = await this.listRunEvents(RunId.of(runId));
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? all[all.length - 1]?.runSeq ?? 0,
+      lastSeq: appended.at(-1)?.runSeq ?? all.at(-1)?.runSeq ?? 0,
     };
   }
 
@@ -371,19 +380,26 @@ class TestStateStore {
   // Test helper methods (not part of IRunStateStore)
 
   /**
+   * Adapter contract helper: list events by tenant/run
+   */
+  async listEvents(_tenantId: string, runId: string): Promise<EventEnvelope[]> {
+    return this.eventsByRun.get(runId) ?? [];
+  }
+
+  /**
    * TEST HELPER: List all events for a run
    */
-  async listEvents(runId: string): Promise<RunEventRecord[]> {
-    return this.eventsByRun.get(runId) ?? [];
+  async listRunEvents(runId: RunId): Promise<EventEnvelope[]> {
+    return this.eventsByRun.get(runId.value) ?? [];
   }
 
   /**
    * TEST HELPER: Clear all data for a run
    */
-  clearRun(runId: string): void {
-    this.eventsByRun.delete(runId);
-    this.idempByRun.delete(runId);
-    this.snapshotsByRun.delete(runId);
+  clearRun(runId: RunId): void {
+    this.eventsByRun.delete(runId.value);
+    this.idempByRun.delete(runId.value);
+    this.snapshotsByRun.delete(runId.value);
   }
 }
 
@@ -427,7 +443,7 @@ class TestOutbox {
    *   - Initial attempts = 0
    *   - No lastError
    */
-  async enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void> {
+  async enqueueTx(runId: string, events: EventEnvelope[]): Promise<void> {
     // Verify events have required runSeq (production safety)
     for (const event of events) {
       if (event.runSeq === undefined) {
@@ -625,19 +641,19 @@ function createPlanRef(planId: string, planBytes: Uint8Array): PlanRef {
   };
 }
 
-function createRunContext(runId: string): RunContext {
+function createRunContext(runId: RunId): RunContext {
   return {
     tenantId: 't-it',
     projectId: 'p-it',
     environmentId: 'test',
-    runId,
+    runId: runId.value,
     targetAdapter: 'temporal',
   };
 }
 
 function createActivityDeps(
   store: TestStateStore,
-  outbox: TestOutbox, // Now properly separated
+  _outbox: TestOutbox,
   planBytes: Uint8Array
 ): ActivityDeps {
   const runStateCommandPort: RunStateCommandPort = {
@@ -647,8 +663,6 @@ function createActivityDeps(
 
   return {
     runStateCommandPort,
-    stateStore: store, // Implements IRunStateStore
-    outbox: outbox, // Implements IOutboxStorage
     clock: new TestClock(),
     idempotency: new TestIdempotency(),
     fetcher: {
@@ -662,14 +676,16 @@ function createActivityDeps(
 // Helpers
 // ============================================================================
 
+type WaitForConditionFn = <T>(
+  fn: () => Promise<T>,
+  predicate: (v: T) => boolean,
+  opts?: { timeoutMs?: number; intervalMs?: number }
+) => Promise<T>;
+
 async function waitForTerminalStatus(
   adapter: TemporalAdapter,
   runRef: EngineRunRef,
-  waitForCondition: <T>(
-    fn: () => Promise<T>,
-    predicate: (v: T) => boolean,
-    opts?: { timeoutMs?: number; intervalMs?: number }
-  ) => Promise<T>,
+  waitForCondition: WaitForConditionFn,
   timeoutMs = 10_000
 ): Promise<RunStatusValue> {
   await waitForCondition(
@@ -681,29 +697,30 @@ async function waitForTerminalStatus(
   return status.status as RunStatusValue;
 }
 
-async function runCancelScenario(
-  mode: 'signal' | 'cancel',
-  adapter: TemporalAdapter,
-  planRef: PlanRef,
-  runId: string,
-  store: TestStateStore,
-  waitForCondition: <T>(
-    fn: () => Promise<T>,
-    predicate: (v: T) => boolean,
-    opts?: { timeoutMs?: number; intervalMs?: number }
-  ) => Promise<T>
-): Promise<{ status: RunStatusValue; cancelledCount: number }> {
-  const runCtx = createRunContext(runId);
-  const runRef = await adapter.startRun(planRef, runCtx);
+interface CancelScenarioRequest {
+  mode: 'signal' | 'cancel';
+  adapter: TemporalAdapter;
+  planRef: PlanRef;
+  runId: RunId;
+  store: TestStateStore;
+  waitForCondition: WaitForConditionFn;
+}
 
-  if (mode === 'signal') {
-    await adapter.signal(runRef, { signalId: `s-${runId}`, type: 'CANCEL' });
+async function runCancelScenario(args: CancelScenarioRequest): Promise<{
+  status: RunStatusValue;
+  cancelledCount: number;
+}> {
+  const runCtx = createRunContext(args.runId);
+  const runRef = await args.adapter.startRun(args.planRef, runCtx);
+
+  if (args.mode === 'signal') {
+    await args.adapter.signal(runRef, { signalId: `s-${args.runId.value}`, type: 'CANCEL' });
   } else {
-    await adapter.cancelRun(runRef);
+    await args.adapter.cancelRun(runRef);
   }
 
-  const status = await waitForTerminalStatus(adapter, runRef, waitForCondition);
-  const events = await store.listEvents(runRef.runId);
+  const status = await waitForTerminalStatus(args.adapter, runRef, args.waitForCondition);
+  const events = await args.store.listRunEvents(RunId.of(runRef.runId));
   const cancelledCount = events.filter((e) => e.eventType === 'RunCancelled').length;
 
   return { status, cancelledCount };
@@ -781,28 +798,28 @@ function sha256Hex(bytes: Uint8Array): string {
 // Tests
 // ============================================================================
 
-describe('temporal integration (time-skipping)', () => {
-  /**
-   * Deterministic waiting helper (does not use time-skipping internally)
-   */
-  async function waitForCondition<T>(
-    fn: () => Promise<T>,
-    predicate: (v: T) => boolean,
-    opts: { timeoutMs?: number; intervalMs?: number } = {}
-  ): Promise<T> {
-    const timeoutMs = opts.timeoutMs ?? 10_000;
-    const intervalMs = opts.intervalMs ?? 25;
-    const start = Date.now();
-    while (true) {
-      const v = await fn();
-      if (predicate(v)) return v;
-      if (Date.now() - start > timeoutMs) {
-        throw new Error('waitForCondition: timeout');
-      }
-      await new Promise((r) => setTimeout(r, intervalMs));
+/**
+ * Deterministic waiting helper (does not use time-skipping internally)
+ */
+async function waitForCondition<T>(
+  fn: () => Promise<T>,
+  predicate: (v: T) => boolean,
+  opts: { timeoutMs?: number; intervalMs?: number } = {}
+): Promise<T> {
+  const timeoutMs = opts.timeoutMs ?? 10_000;
+  const intervalMs = opts.intervalMs ?? 25;
+  const start = Date.now();
+  while (true) {
+    const v = await fn();
+    if (predicate(v)) return v;
+    if (Date.now() - start > timeoutMs) {
+      throw new Error('waitForCondition: timeout');
     }
+    await new Promise((r) => setTimeout(r, intervalMs));
   }
+}
 
+describe('temporal integration (time-skipping)', () => {
   /**
    * @verifies ADR-0001 Section 2 — Build precondition
    * @verifies ADR-0001 Section 3 — Single teardown owner
@@ -822,7 +839,7 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = createRunContext('run-it-1');
+      const ctx = createRunContext(RunId.of('run-it-1'));
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -910,25 +927,25 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const signalResult = await runCancelScenario(
-          'signal',
+        const signalResult = await runCancelScenario({
+          mode: 'signal',
           adapter,
           planRef,
-          'run-it-cancel-1',
+          runId: RunId.of('run-it-cancel-1'),
           store,
-          waitForCondition
-        );
+          waitForCondition,
+        });
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(signalResult.status);
         expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
 
-        const cancelResult = await runCancelScenario(
-          'cancel',
+        const cancelResult = await runCancelScenario({
+          mode: 'cancel',
           adapter,
           planRef,
-          'run-it-cancel-2',
+          runId: RunId.of('run-it-cancel-2'),
           store,
-          waitForCondition
-        );
+          waitForCondition,
+        });
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(cancelResult.status);
         expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
 
@@ -959,7 +976,7 @@ describe('temporal integration (time-skipping)', () => {
 
       const planRef = createPlanRef('it-plan-linear-3', planBytes);
       const ctx: RunContext = {
-        ...createRunContext('run-it-linear-3'),
+        ...createRunContext(RunId.of('run-it-linear-3')),
         tenantId: 't-it', // Explicit, non-empty
       };
 
@@ -991,12 +1008,12 @@ describe('temporal integration (time-skipping)', () => {
         await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
-          () => store.listEvents(ctx.runId),
+          () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((e) => e.eventType === 'RunCompleted'),
           { timeoutMs: 30_000 }
         );
 
-        const events = await store.listEvents(ctx.runId);
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
         expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
           'RunStarted:-',
           'StepStarted:s-1',
@@ -1034,7 +1051,7 @@ describe('temporal integration (time-skipping)', () => {
 
       const planRef = createPlanRef('it-plan-gateway-skip', planBytes);
       const ctx: RunContext = {
-        ...createRunContext('run-it-gateway-skip'),
+        ...createRunContext(RunId.of('run-it-gateway-skip')),
         tenantId: 't-it',
       };
 
@@ -1066,12 +1083,12 @@ describe('temporal integration (time-skipping)', () => {
         await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
-          () => store.listEvents(ctx.runId),
+          () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((e) => e.eventType === 'RunCompleted'),
           { timeoutMs: 30_000 }
         );
 
-        const events = await store.listEvents(ctx.runId);
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
         expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
           'RunStarted:-',
           'StepStarted:s-1',
@@ -1119,7 +1136,7 @@ describe('temporal integration (time-skipping)', () => {
 
       const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
       const ctx: RunContext = {
-        ...createRunContext('run-it-permanent-failure'),
+        ...createRunContext(RunId.of('run-it-permanent-failure')),
         tenantId: 't-it', // Explicit, non-empty
       };
 
@@ -1151,12 +1168,12 @@ describe('temporal integration (time-skipping)', () => {
         await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
-          () => store.listEvents(ctx.runId),
+          () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((e) => e.eventType === 'RunFailed'),
           { timeoutMs: 30_000 }
         );
 
-        const events = await store.listEvents(ctx.runId);
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
         expect(events.map((e) => `${e.eventType}:${e.stepId ?? '-'}`)).toEqual([
           'RunStarted:-',
           'StepStarted:s-fail',
@@ -1186,7 +1203,7 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = createRunContext('run-it-crash-recovery');
+      const ctx = createRunContext(RunId.of('run-it-crash-recovery'));
 
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_NAMESPACE: 'default',
@@ -1218,7 +1235,7 @@ describe('temporal integration (time-skipping)', () => {
         const runRef = await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
-          () => store.listEvents(ctx.runId),
+          () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((e) => e.eventType === 'StepStarted'),
           { timeoutMs: 30_000 }
         );
@@ -1232,7 +1249,7 @@ describe('temporal integration (time-skipping)', () => {
           await adapter.cancelRun(runRef);
           await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);
 
-          const events = await store.listEvents(ctx.runId);
+          const events = await store.listRunEvents(RunId.of(ctx.runId));
           const uniqueKeys = new Set(events.map((e) => e.idempotencyKey));
           expect(uniqueKeys.size).toBe(events.length);
         } finally {

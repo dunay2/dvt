@@ -1,19 +1,18 @@
-import type { PlanRef, RunContext } from '@dvt/contracts';
+import type { PlanRef, RunContext, RunStateCommandPort } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
   createActivities,
+  type Activities,
   type ActivityDeps,
   type StepInput,
 } from '../src/activities/stepActivities.js';
 import type {
-  AppendResult,
-  EventEnvelope,
   EventInput,
+  EventEnvelope,
   EventType,
   IIdempotencyKeyBuilder,
   RunMetadata,
-  RunStateCommandPort,
 } from '../src/engine-types.js';
 
 // ---------------------------------------------------------------------------
@@ -47,11 +46,33 @@ const CTX: RunContext = {
 };
 
 const DEFAULT_LOGICAL_ATTEMPT_ID = 1;
-const FIXED_TIME = '2026-01-01T00:00:00.000Z';
+const RUN_STARTED_EVENT_TYPE: EventType = 'RunStarted';
+
+const TEST_ERRORS = {
+  missingRunStartedEvent: 'MISSING_RUN_STARTED_EVENT',
+  missingFirstEvent: 'MISSING_FIRST_EVENT',
+  missingStepId: 'MISSING_STEP_ID',
+  missingRunMetadata: 'MISSING_RUN_METADATA',
+} as const;
+
+const EXPECTED_ERRORS = {
+  planRefMismatchPlanId: 'PLAN_REF_MISMATCH: planId',
+  planContractVersionUnknown: 'PLAN_CONTRACT_VERSION_UNKNOWN',
+  transientDbError: 'TRANSIENT_DB_ERROR',
+  dependsOnMustBeArray: 'INVALID_STEP_SCHEMA: dependsOn_must_be_array',
+  dependsOnValuesMustBeString: 'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string',
+  stepTypeConfigMustBeObject: 'INVALID_STEP_SCHEMA: stepTypeConfig_must_be_object',
+  fieldNotAllowedForbidden: 'INVALID_STEP_SCHEMA: field_not_allowed:forbidden',
+  inputBindingsNotSupported: 'INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1',
+  transientStepErrorS1: 'TRANSIENT_STEP_ERROR:s1',
+  permanentStepErrorS1: 'PERMANENT_STEP_ERROR:s1',
+  gatewayConfigRequired: 'INVALID_STEP_SCHEMA: gateway_config_required:gw-invalid',
+  invalidGatewayDsl: 'INVALID_GATEWAY_DSL:gw-invalid-dsl',
+} as const;
 
 class TestClock {
   nowIsoUtc(): string {
-    return FIXED_TIME;
+    return '2026-01-01T00:00:00.000Z';
   }
 }
 
@@ -68,49 +89,68 @@ class TestIdempotencyKeyBuilder implements IIdempotencyKeyBuilder {
     tenantId: string;
     runId: string;
     logicalAttemptId: number;
-    planId: string;
-    planVersion: string;
     stepId?: string;
   }): string {
     return [e.eventType, e.tenantId, e.runId, String(e.logicalAttemptId), e.stepId ?? ''].join('|');
   }
 }
 
-class TestRunStateStore implements RunStateCommandPort {
-  private readonly clock = new TestClock();
+class TestTxStore {
   private readonly eventsByRun = new Map<string, EventEnvelope[]>();
   private readonly metadataByRun = new Map<string, RunMetadata>();
 
-  async bootstrapRun(input: {
-    metadata: RunMetadata;
-    firstEvents: EventInput[];
-  }): Promise<AppendResult> {
-    this.metadataByRun.set(input.metadata.runId, input.metadata);
-    if (input.firstEvents.length === 0) {
-      return { appended: [], deduped: [], lastSeq: 0 };
-    }
-
-    return this.appendTransitions(input.metadata.runId, input.firstEvents);
+  async saveRunMetadata(meta: RunMetadata): Promise<void> {
+    this.metadataByRun.set(meta.runId, meta);
   }
 
-  async appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult> {
+  async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
+    return this.metadataByRun.get(runId) ?? null;
+  }
+
+  async saveProviderRef(
+    runId: string,
+    runRef: {
+      providerWorkflowId: string;
+      providerRunId: string;
+      providerNamespace?: string;
+      providerTaskQueue?: string;
+      providerConductorUrl?: string;
+    }
+  ): Promise<void> {
+    const current = this.metadataByRun.get(runId);
+    if (!current) return;
+
+    this.metadataByRun.set(runId, {
+      ...current,
+      providerWorkflowId: runRef.providerWorkflowId,
+      providerRunId: runRef.providerRunId,
+      ...(runRef.providerNamespace ? { providerNamespace: runRef.providerNamespace } : {}),
+      ...(runRef.providerTaskQueue ? { providerTaskQueue: runRef.providerTaskQueue } : {}),
+      ...(runRef.providerConductorUrl ? { providerConductorUrl: runRef.providerConductorUrl } : {}),
+    });
+  }
+
+  async appendEventsTx(
+    runId: string,
+    envelopes: EventInput[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
     const current = this.eventsByRun.get(runId) ?? [];
+    const baseRunSeq = current.length;
     const appended: EventEnvelope[] = [];
     const deduped: EventEnvelope[] = [];
 
-    for (const event of events) {
-      const existing = current.find(
-        (candidate) => candidate.idempotencyKey === event.idempotencyKey
-      );
-      if (existing) {
-        deduped.push(existing);
+    for (const env of envelopes) {
+      const exists = current.some((e) => e.idempotencyKey === env.idempotencyKey);
+      if (exists) {
+        const existing = current.find((e) => e.idempotencyKey === env.idempotencyKey);
+        if (existing) deduped.push(existing);
         continue;
       }
 
       const withSeq: EventEnvelope = {
-        ...event,
-        runSeq: current.length + 1,
-        persistedAt: this.clock.nowIsoUtc(),
+        ...env,
+        runSeq: current.length + appended.length + 1,
+        persistedAt: '2026-01-01T00:00:00.000Z',
       };
       current.push(withSeq);
       appended.push(withSeq);
@@ -120,100 +160,79 @@ class TestRunStateStore implements RunStateCommandPort {
     return {
       appended,
       deduped,
-      lastSeq: current.at(-1)?.runSeq ?? 0,
+      lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
     };
   }
 
-  async listEvents(query: { tenantId: string; runId: string }): Promise<EventEnvelope[]> {
-    const events = this.eventsByRun.get(query.runId) ?? [];
-    return events.filter((event) => event.tenantId === query.tenantId);
+  async listEvents(runId: string): Promise<EventEnvelope[]> {
+    return [...(this.eventsByRun.get(runId) ?? [])];
   }
 
-  async getRunMetadataByRunId(query: {
-    tenantId: string;
-    runId: string;
-  }): Promise<RunMetadata | null> {
-    const metadata = this.metadataByRun.get(query.runId);
-    if (metadata?.tenantId !== query.tenantId) {
-      return null;
-    }
+  async appendAndEnqueueTx(
+    runId: string,
+    envelopes: EventInput[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
+    return this.appendEventsTx(runId, envelopes);
+  }
 
-    return metadata;
+  async bootstrapRunTx(input: {
+    metadata: RunMetadata;
+    firstEvents: EventInput[];
+  }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
+    await this.saveRunMetadata(input.metadata);
+    if (input.firstEvents.length === 0) return { appended: [], deduped: [], lastSeq: 0 };
+    return this.appendEventsTx(input.metadata.runId, input.firstEvents);
+  }
+
+  async enqueueTx(_runId: string, _events: EventEnvelope[]): Promise<void> {
+    // no-op for tests
   }
 }
 
-class FailingFirstAppendStateStore extends TestRunStateStore {
+class FailingFirstAppendStateStore extends TestTxStore {
   private first = true;
 
-  override async appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult> {
+  override async appendEventsTx(
+    runId: string,
+    envelopes: EventInput[]
+  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
     if (this.first) {
       this.first = false;
       throw new Error('TRANSIENT_DB_ERROR');
     }
-
-    return super.appendTransitions(runId, events);
+    return super.appendEventsTx(runId, envelopes);
   }
 }
 
-type ActivityTestHarness = {
-  deps: ActivityDeps;
-  store: TestRunStateStore;
-};
+interface TestActivityDeps extends ActivityDeps {
+  testStore: TestTxStore;
+}
 
-function buildDeps(store: TestRunStateStore = new TestRunStateStore()): ActivityTestHarness {
+function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
+  const runStateCommandPort: RunStateCommandPort = {
+    bootstrapRun: (input) => store.bootstrapRunTx(input),
+    appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
+  };
+
   return {
-    store,
-    deps: {
-      runStateCommandPort: store,
-      clock: new TestClock(),
-      idempotency: new TestIdempotencyKeyBuilder(),
-      fetcher: { fetch: vi.fn(async () => PLAN_BYTES) },
-      integrity: {
-        fetchAndValidate: vi.fn(async (ref, fetcher) => fetcher.fetch(ref)),
-      },
-    },
+    runStateCommandPort,
+    testStore: store,
+    clock: new TestClock(),
+    idempotency: new TestIdempotencyKeyBuilder(),
+    fetcher: { fetch: vi.fn(async () => PLAN_BYTES) },
+    integrity: {
+      fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
+    } as unknown as ActivityDeps['integrity'],
   };
 }
 
-function assertStepEventHasId(event: EventEnvelope, stepId: string): void {
-  if (!('stepId' in event) || typeof event.stepId !== 'string') {
-    throw new Error('expected a step event envelope');
-  }
-  expect(event.stepId).toBe(stepId);
-}
-
-function readGatewayDecision(event: EventEnvelope): boolean | undefined {
-  const payload = event.payload;
-  if (!payload || typeof payload !== 'object') {
-    return undefined;
-  }
-
-  const decision = payload['gatewayDecision'];
-  return typeof decision === 'boolean' ? decision : undefined;
-}
-
-function eventAt<T>(items: T[], index: number): T {
-  const item = items[index];
-  if (item === undefined) {
-    throw new Error(`missing item at index ${index}`);
-  }
-  return item;
-}
-
-async function expectExecuteStepRejects(step: unknown, expectedError: string): Promise<void> {
-  const { deps } = buildDeps();
+function setupActivities(store: TestTxStore = new TestTxStore()): {
+  deps: TestActivityDeps;
+  acts: Activities;
+} {
+  const deps = buildDeps(store);
   const acts = createActivities(deps);
-
-  await expect(
-    acts.executeStep({
-      step: step as StepInput['step'],
-      ctx: CTX,
-    })
-  ).rejects.toThrow(expectedError);
-}
-
-async function loadRunEvents(store: TestRunStateStore): Promise<EventEnvelope[]> {
-  return store.listEvents({ tenantId: CTX.tenantId, runId: CTX.runId });
+  return { deps, acts };
 }
 
 function expectSingleRunStartedEvent(
@@ -224,15 +243,53 @@ function expectSingleRunStartedEvent(
   const runStarted = events.filter((e) => e.eventType === 'RunStarted');
 
   expect(runStarted).toHaveLength(1);
-  const runStartedEvent = eventAt(runStarted, 0);
-  expect(runStartedEvent.logicalAttemptId).toBe(logicalAttemptId);
-  expect(runStartedEvent.idempotencyKey).toBe(
-    `RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|`
-  );
+  const event = runStarted[0];
+  if (!event) throw new TypeError(TEST_ERRORS.missingRunStartedEvent);
+  expect(event.logicalAttemptId).toBe(logicalAttemptId);
+  expect(event.idempotencyKey).toBe(`RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|`);
 
   if (typeof options.engineAttemptId === 'number') {
-    expect(runStartedEvent.engineAttemptId).toBe(options.engineAttemptId);
+    expect(event.engineAttemptId).toBe(options.engineAttemptId);
   }
+}
+
+function requireFirstEvent(events: EventEnvelope[]): EventEnvelope {
+  const first = events[0];
+  if (!first) throw new TypeError(TEST_ERRORS.missingFirstEvent);
+  return first;
+}
+
+function requireStepId(event: EventEnvelope): string {
+  if (typeof event.stepId !== 'string') {
+    throw new TypeError(TEST_ERRORS.missingStepId);
+  }
+  return event.stepId;
+}
+
+async function emitRunStarted(
+  acts: Activities,
+  options: { logicalAttemptId?: number } = {}
+): Promise<void> {
+  await acts.emitEvent({
+    ctx: CTX,
+    planRef: PLAN_REF,
+    eventType: RUN_STARTED_EVENT_TYPE,
+    ...(options.logicalAttemptId === undefined
+      ? {}
+      : { logicalAttemptId: options.logicalAttemptId }),
+  });
+}
+
+function expectExecuteStepRejects(step: unknown, expectedError: string) {
+  return async () => {
+    const { acts } = setupActivities();
+    await expect(
+      acts.executeStep({
+        step: step as StepInput['step'],
+        ctx: CTX,
+      })
+    ).rejects.toThrow(expectedError);
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -242,8 +299,7 @@ function expectSingleRunStartedEvent(
 describe('stepActivities', () => {
   describe('fetchPlan', () => {
     it('validates integrity and parses plan', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
+      const { deps, acts } = setupActivities();
 
       const plan = await acts.fetchPlan(PLAN_REF);
 
@@ -253,12 +309,11 @@ describe('stepActivities', () => {
     });
 
     it('rejects plan when metadata does not match PlanRef', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
+      const { acts } = setupActivities();
 
       const badRef: PlanRef = { ...PLAN_REF, planId: 'wrong-id' };
 
-      await expect(acts.fetchPlan(badRef)).rejects.toThrow('PLAN_REF_MISMATCH: planId');
+      await expect(acts.fetchPlan(badRef)).rejects.toThrow(EXPECTED_ERRORS.planRefMismatchPlanId);
     });
 
     it('rejects unsupported plan contractVersion', async () => {
@@ -270,48 +325,45 @@ describe('stepActivities', () => {
         },
       };
       const badBytes = Buffer.from(JSON.stringify(badPlan), 'utf-8');
-      const { deps } = buildDeps();
+      const { deps, acts } = setupActivities();
       deps.fetcher = { fetch: vi.fn(async () => badBytes) };
       deps.integrity = {
-        fetchAndValidate: vi.fn(async (ref, fetcher) => fetcher.fetch(ref)),
-      };
+        fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
+      } as unknown as ActivityDeps['integrity'];
 
-      const acts = createActivities(deps);
-
-      await expect(acts.fetchPlan(PLAN_REF)).rejects.toThrow('PLAN_CONTRACT_VERSION_UNKNOWN');
+      await expect(acts.fetchPlan(PLAN_REF)).rejects.toThrow(
+        EXPECTED_ERRORS.planContractVersionUnknown
+      );
     });
   });
 
   describe('emitEvent', () => {
     it('persists event to state store', async () => {
-      const { deps, store } = buildDeps();
-      const acts = createActivities(deps);
+      const { deps, acts } = setupActivities();
 
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
+      await emitRunStarted(acts);
 
-      const events = await loadRunEvents(store);
+      const events = await deps.testStore.listEvents('run-1');
       expect(events).toHaveLength(1);
-      const firstEvent = eventAt(events, 0);
-      expect(firstEvent.eventType).toBe('RunStarted');
-      expect(firstEvent.runId).toBe('run-1');
-      expect(firstEvent.tenantId).toBe('tenant-1');
-      expect(firstEvent.runSeq).toBe(1);
+      const event = requireFirstEvent(events);
+      expect(event.eventType).toBe('RunStarted');
+      expect(event.runId).toBe('run-1');
+      expect(event.tenantId).toBe('tenant-1');
+      expect(event.runSeq).toBe(1);
     });
 
-    it('is idempotent: duplicate calls produce single event', async () => {
-      const { deps, store } = buildDeps();
-      const acts = createActivities(deps);
+    it('is idempotent — duplicate calls produce single event', async () => {
+      const { deps, acts } = setupActivities();
 
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
+      await emitRunStarted(acts);
+      await emitRunStarted(acts);
 
-      const events = await loadRunEvents(store);
+      const events = await deps.testStore.listEvents('run-1');
       expect(events.filter((e) => e.eventType === 'RunStarted')).toHaveLength(1);
     });
 
     it('emits step events with stepId', async () => {
-      const { deps, store } = buildDeps();
-      const acts = createActivities(deps);
+      const { deps, acts } = setupActivities();
 
       await acts.emitEvent({
         ctx: CTX,
@@ -326,16 +378,15 @@ describe('stepActivities', () => {
         stepId: 'step-a',
       });
 
-      const events = await loadRunEvents(store);
+      const events = await deps.testStore.listEvents('run-1');
       expect(events).toHaveLength(2);
-      const firstEvent = eventAt(events, 0);
-      expect(firstEvent.eventType).toBe('StepStarted');
-      assertStepEventHasId(firstEvent, 'step-a');
+      const event = requireFirstEvent(events);
+      expect(event.eventType).toBe('StepStarted');
+      expect(requireStepId(event)).toBe('step-a');
     });
 
     it('persists payload when provided (gateway decision)', async () => {
-      const { deps, store } = buildDeps();
-      const acts = createActivities(deps);
+      const { deps, acts } = setupActivities();
 
       await acts.emitEvent({
         ctx: CTX,
@@ -345,84 +396,66 @@ describe('stepActivities', () => {
         payload: { gatewayDecision: true },
       });
 
-      const events = await loadRunEvents(store);
+      const events = await deps.testStore.listEvents('run-1');
       expect(events).toHaveLength(1);
-      const firstEvent = eventAt(events, 0);
-      expect(firstEvent.eventType).toBe('StepCompleted');
-      expect(readGatewayDecision(firstEvent)).toBe(true);
+      const event = requireFirstEvent(events);
+      expect(event.eventType).toBe('StepCompleted');
+      expect((event.payload as { gatewayDecision?: boolean } | undefined)?.gatewayDecision).toBe(
+        true
+      );
     });
 
     it('retry-safe: transient failure then retry persists one logical event', async () => {
-      const store = new FailingFirstAppendStateStore();
-      const { deps } = buildDeps(store);
-      const acts = createActivities(deps);
+      const { deps, acts } = setupActivities(new FailingFirstAppendStateStore());
 
-      await expect(
-        acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' })
-      ).rejects.toThrow('TRANSIENT_DB_ERROR');
+      await expect(emitRunStarted(acts)).rejects.toThrow(EXPECTED_ERRORS.transientDbError);
 
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
+      await emitRunStarted(acts);
+      await emitRunStarted(acts);
 
-      const events = await loadRunEvents(store);
+      const events = await deps.testStore.listEvents(CTX.runId);
       expectSingleRunStartedEvent(events);
     });
 
+    it('defaults logicalAttemptId to 1 even when engineAttemptId is greater than 1', async () => {
+      const { deps, acts } = setupActivities();
+      deps.getEngineAttemptId = () => 7;
+
+      await emitRunStarted(acts);
+
+      const events = await deps.testStore.listEvents(CTX.runId);
+      expect(events).toHaveLength(1);
+      expectSingleRunStartedEvent(events, { engineAttemptId: 7 });
+    });
+
     it('dedupes retries across different engineAttemptId when logicalAttemptId is unchanged', async () => {
-      const store = new TestRunStateStore();
       let attempt = 1;
-      const { deps } = buildDeps(store);
+      const { deps, acts } = setupActivities(new TestTxStore());
       deps.getEngineAttemptId = () => attempt;
-      const acts = createActivities(deps);
 
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
+      await emitRunStarted(acts);
       attempt = 2;
-      await acts.emitEvent({ ctx: CTX, planRef: PLAN_REF, eventType: 'RunStarted' });
+      await emitRunStarted(acts);
 
-      const events = await loadRunEvents(store);
+      const events = await deps.testStore.listEvents(CTX.runId);
       expectSingleRunStartedEvent(events, { engineAttemptId: 1 });
     });
 
-    it.each([
-      {
-        title: 'defaults logicalAttemptId to 1 even when engineAttemptId is greater than 1',
-        engineAttemptId: 7,
-        logicalAttemptId: undefined,
-        expectedLogicalAttemptId: 1,
-      },
-      {
-        title: 'uses explicit logicalAttemptId independent of engineAttemptId',
-        engineAttemptId: 9,
-        logicalAttemptId: 3,
-        expectedLogicalAttemptId: 3,
-      },
-    ])('$title', async (testCase) => {
-      const { deps, store } = buildDeps();
-      deps.getEngineAttemptId = () => testCase.engineAttemptId;
-      const acts = createActivities(deps);
+    it('uses explicit logicalAttemptId independent of engineAttemptId', async () => {
+      const { deps, acts } = setupActivities();
+      deps.getEngineAttemptId = () => 9;
 
-      await acts.emitEvent({
-        ctx: CTX,
-        planRef: PLAN_REF,
-        eventType: 'RunStarted',
-        ...(testCase.logicalAttemptId === undefined
-          ? {}
-          : { logicalAttemptId: testCase.logicalAttemptId }),
-      });
+      await emitRunStarted(acts, { logicalAttemptId: 3 });
 
-      const events = await loadRunEvents(store);
+      const events = await deps.testStore.listEvents(CTX.runId);
       expect(events).toHaveLength(1);
-      expectSingleRunStartedEvent(events, {
-        logicalAttemptId: testCase.expectedLogicalAttemptId,
-        engineAttemptId: testCase.engineAttemptId,
-      });
+      expectSingleRunStartedEvent(events, { logicalAttemptId: 3, engineAttemptId: 9 });
     });
   });
 
   describe('executeStep', () => {
     it('returns COMPLETED for valid step', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
+      const { acts } = setupActivities();
 
       const result = await acts.executeStep({
         step: { stepId: 's1', kind: 'test' },
@@ -433,8 +466,7 @@ describe('stepActivities', () => {
     });
 
     it('accepts step with only stepId (kind is optional)', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
+      const { acts } = setupActivities();
 
       const result = await acts.executeStep({
         step: { stepId: 's1' },
@@ -445,8 +477,7 @@ describe('stepActivities', () => {
     });
 
     it('accepts step with dependsOn array', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
+      const { acts } = setupActivities();
 
       const result = await acts.executeStep({
         step: { stepId: 's2', kind: 'test', dependsOn: ['s1'] },
@@ -456,22 +487,11 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
-    it('accepts step with stepTypeConfig metadata', async () => {
-      const { deps } = buildDeps();
-      const acts = createActivities(deps);
+    it('accepts step with stepTypeConfig record', async () => {
+      const { acts } = setupActivities();
 
       const result = await acts.executeStep({
-        step: {
-          stepId: 's3',
-          kind: 'dbt_model',
-          stepTypeConfig: {
-            compiledCodeRef: {
-              sha256: 'abc123',
-              storageUri: 's3://compiled-sql/abc123.sql',
-              sizeBytes: 128,
-            },
-          },
-        },
+        step: { stepId: 's3', kind: 'test', stepTypeConfig: { compiledCodeRef: { foo: 'bar' } } },
         ctx: CTX,
       });
 
@@ -479,13 +499,12 @@ describe('stepActivities', () => {
     });
 
     it.each([
-      { gatewayStatus: 'COMPLETED', expectedDecision: true },
-      { gatewayStatus: 'FAILED', expectedDecision: false },
+      { status: 'COMPLETED', expectedDecision: true },
+      { status: 'FAILED', expectedDecision: false },
     ])(
       'evaluates gateway step in activity boundary and returns gatewayDecision=$expectedDecision',
-      async (testCase) => {
-        const { deps } = buildDeps();
-        const acts = createActivities(deps);
+      async ({ status, expectedDecision }) => {
+        const { acts } = setupActivities();
 
         const result = await acts.executeStep({
           step: {
@@ -498,76 +517,92 @@ describe('stepActivities', () => {
           },
           ctx: CTX,
           gatewayContext: {
-            status: testCase.gatewayStatus,
+            status,
           },
         });
 
         expect(result).toEqual({
           stepId: 'gw-1',
           status: 'COMPLETED',
-          gatewayDecision: testCase.expectedDecision,
+          gatewayDecision: expectedDecision,
         });
       }
     );
 
-    it('rejects step when dependsOn is not an array', async () => {
-      await expectExecuteStepRejects(
-        { stepId: 's2', dependsOn: 's1' },
-        'INVALID_STEP_SCHEMA: dependsOn_must_be_array'
-      );
-    });
+    it(
+      'rejects step when dependsOn is not an array',
+      expectExecuteStepRejects(
+        { stepId: 's2', dependsOn: 's1' as unknown as string[] },
+        EXPECTED_ERRORS.dependsOnMustBeArray
+      )
+    );
 
-    it('rejects step when dependsOn contains non-string values', async () => {
-      await expectExecuteStepRejects(
-        { stepId: 's2', dependsOn: ['s1', 2] },
-        'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string'
-      );
-    });
+    it(
+      'rejects step when dependsOn contains non-string values',
+      expectExecuteStepRejects(
+        { stepId: 's2', dependsOn: ['s1', 2] as unknown as string[] },
+        EXPECTED_ERRORS.dependsOnValuesMustBeString
+      )
+    );
 
-    it('rejects step with unknown fields', async () => {
-      await expectExecuteStepRejects(
+    it(
+      'rejects step when stepTypeConfig is not an object',
+      expectExecuteStepRejects(
+        { stepId: 's2', kind: 'test', stepTypeConfig: 'invalid' },
+        EXPECTED_ERRORS.stepTypeConfigMustBeObject
+      )
+    );
+
+    it(
+      'rejects step with unknown fields',
+      expectExecuteStepRejects(
         { stepId: 's1', kind: 'test', forbidden: 'field' },
-        'INVALID_STEP_SCHEMA: field_not_allowed:forbidden'
-      );
-    });
+        EXPECTED_ERRORS.fieldNotAllowedForbidden
+      )
+    );
 
-    it('rejects step when inputBindings appears (not supported in v1 runtime)', async () => {
-      await expectExecuteStepRejects(
+    it(
+      'rejects step when inputBindings appears (not supported in v1 runtime)',
+      expectExecuteStepRejects(
         {
           stepId: 's1',
           kind: 'test',
           inputBindings: [{ targetPath: '/x', sourceStepId: 's0', sourcePath: '/y' }],
         },
-        'INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1'
-      );
-    });
+        EXPECTED_ERRORS.inputBindingsNotSupported
+      )
+    );
 
-    it('simulates transient error when step requests transient failure', async () => {
-      await expectExecuteStepRejects(
+    it(
+      'simulates transient error when step requests transient failure',
+      expectExecuteStepRejects(
         { stepId: 's1', kind: 'test', simulateError: 'transient' },
-        'TRANSIENT_STEP_ERROR:s1'
-      );
-    });
+        EXPECTED_ERRORS.transientStepErrorS1
+      )
+    );
 
-    it('simulates permanent error when step requests permanent failure', async () => {
-      await expectExecuteStepRejects(
+    it(
+      'simulates permanent error when step requests permanent failure',
+      expectExecuteStepRejects(
         { stepId: 's1', kind: 'test', simulateError: 'permanent' },
-        'PERMANENT_STEP_ERROR:s1'
-      );
-    });
+        EXPECTED_ERRORS.permanentStepErrorS1
+      )
+    );
 
-    it('rejects gateway step without gateway config', async () => {
-      await expectExecuteStepRejects(
+    it(
+      'rejects gateway step without gateway config',
+      expectExecuteStepRejects(
         {
           stepId: 'gw-invalid',
           type: 'gateway',
         },
-        'INVALID_STEP_SCHEMA: gateway_config_required:gw-invalid'
-      );
-    });
+        EXPECTED_ERRORS.gatewayConfigRequired
+      )
+    );
 
-    it('rejects gateway step with invalid DSL expression', async () => {
-      await expectExecuteStepRejects(
+    it(
+      'rejects gateway step with invalid DSL expression',
+      expectExecuteStepRejects(
         {
           stepId: 'gw-invalid-dsl',
           type: 'gateway',
@@ -576,15 +611,14 @@ describe('stepActivities', () => {
             expression: 'status=COMPLETED',
           },
         },
-        'INVALID_GATEWAY_DSL:gw-invalid-dsl'
-      );
-    });
+        EXPECTED_ERRORS.invalidGatewayDsl
+      )
+    );
   });
 
   describe('saveRunMetadata', () => {
     it('persists metadata to state store', async () => {
-      const { deps, store } = buildDeps();
-      const acts = createActivities(deps);
+      const { deps, acts } = setupActivities();
 
       await acts.saveRunMetadata({
         tenantId: 'tenant-1',
@@ -599,14 +633,9 @@ describe('stepActivities', () => {
         providerRunId: 'run-1',
       });
 
-      const meta = await store.getRunMetadataByRunId({
-        tenantId: 'tenant-1',
-        runId: 'run-1',
-      });
+      const meta = await deps.testStore.getRunMetadataByRunId('run-1');
       expect(meta).not.toBeNull();
-      if (!meta) {
-        throw new Error('expected run metadata');
-      }
+      if (!meta) throw new TypeError(TEST_ERRORS.missingRunMetadata);
       expect(meta.provider).toBe('temporal');
     });
   });

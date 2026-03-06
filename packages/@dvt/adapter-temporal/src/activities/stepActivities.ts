@@ -10,7 +10,8 @@
  */
 import { TextDecoder } from 'node:util';
 
-import { parsePlanRef, parseRunContext, type PlanRef, type RunContext } from '@dvt/contracts';
+import { parsePlanRef, parseRunContext } from '@dvt/contracts';
+import type { PlanRef, RunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { ApplicationFailure, Context } from '@temporalio/activity';
 
@@ -20,10 +21,8 @@ import type {
   ExecutionPlan,
   IClock,
   IIdempotencyKeyBuilder,
-  IOutboxStorage,
   IPlanFetcher,
   IPlanIntegrityValidator,
-  IRunStateStore,
   RunStateCommandPort,
   RunMetadata,
 } from '../engine-types.js';
@@ -34,10 +33,6 @@ import type {
 
 export interface ActivityDeps {
   runStateCommandPort: RunStateCommandPort;
-  /** @deprecated transitional fallback while callers migrate to runStateCommandPort */
-  stateStore?: IRunStateStore;
-  /** @deprecated retained for backwards compatibility in tests */
-  outbox?: IOutboxStorage;
   clock: IClock;
   idempotency: IIdempotencyKeyBuilder;
   fetcher: IPlanFetcher;
@@ -109,12 +104,45 @@ export function createActivities(deps: ActivityDeps): {
      */
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
-      enforceSimulatedStepOutcome(input.step);
-      if (input.step.type !== 'gateway') {
-        return completedStepResult(input.step.stepId);
+
+      const simulateErrorKind =
+        typeof input.step['simulateError'] === 'string'
+          ? String(input.step['simulateError'])
+          : undefined;
+
+      if (simulateErrorKind === 'transient') {
+        throw new Error(`TRANSIENT_STEP_ERROR:${input.step.stepId}`);
       }
 
-      return executeGatewayStep(input.step, input.gatewayContext ?? {});
+      if (simulateErrorKind === 'permanent') {
+        throw ApplicationFailure.create({
+          type: 'PermanentStepError',
+          message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
+          nonRetryable: true,
+        });
+      }
+
+      if (input.step.type === 'gateway') {
+        const gateway = parseGatewayConfigOrThrow(input.step);
+        try {
+          const parsed = parseDslV1(gateway.expression);
+          const passed = evaluateDslV1(parsed, input.gatewayContext ?? {});
+          return {
+            stepId: input.step.stepId,
+            status: 'COMPLETED',
+            gatewayDecision: passed,
+          };
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          throw ApplicationFailure.create({
+            type: 'PermanentStepError',
+            message: `INVALID_GATEWAY_DSL:${input.step.stepId}:${reason}`,
+            nonRetryable: true,
+          });
+        }
+      }
+
+      return { stepId: input.step.stepId, status: 'COMPLETED' };
     },
 
     /**
@@ -124,7 +152,40 @@ export function createActivities(deps: ActivityDeps): {
     async emitEvent(input: EmitEventInput): Promise<void> {
       const ctx = parseRunContext(input.ctx);
       const validatedPlanRef = parsePlanRef(input.planRef);
-      const envelope = buildEventEnvelope({ deps, input, ctx, validatedPlanRef });
+      const { eventType, stepId, payload } = input;
+
+      const engineAttemptId =
+        typeof deps.getEngineAttemptId === 'function'
+          ? deps.getEngineAttemptId()
+          : resolveTemporalAttemptFromContext();
+
+      const logicalAttemptId = input.logicalAttemptId ?? 1;
+      const envelopeBase = {
+        eventId: deps.idempotency.eventId(),
+        eventType,
+        emittedAt: deps.clock.nowIsoUtc(),
+        tenantId: ctx.tenantId,
+        projectId: ctx.projectId,
+        environmentId: ctx.environmentId,
+        runId: ctx.runId,
+        planId: validatedPlanRef.planId,
+        planVersion: validatedPlanRef.planVersion,
+        ...(stepId === undefined ? {} : { stepId }),
+        engineAttemptId,
+        logicalAttemptId,
+        idempotencyKey: deps.idempotency.runEventKey({
+          eventType,
+          tenantId: ctx.tenantId,
+          runId: ctx.runId,
+          logicalAttemptId,
+          planId: validatedPlanRef.planId,
+          planVersion: validatedPlanRef.planVersion,
+          ...(stepId === undefined ? {} : { stepId }),
+        }),
+      };
+      const envelope: EventInput =
+        payload === undefined ? envelopeBase : { ...envelopeBase, payload };
+
       await runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
     },
 
@@ -149,89 +210,6 @@ export function createActivities(deps: ActivityDeps): {
 }
 
 export type Activities = ReturnType<typeof createActivities>;
-
-function enforceSimulatedStepOutcome(step: ExecutionPlan['steps'][number]): void {
-  const simulateErrorKind =
-    typeof step['simulateError'] === 'string' ? String(step['simulateError']) : undefined;
-
-  if (simulateErrorKind === 'transient') {
-    throw new Error(`TRANSIENT_STEP_ERROR:${step.stepId}`);
-  }
-
-  if (simulateErrorKind === 'permanent') {
-    throw ApplicationFailure.create({
-      type: 'PermanentStepError',
-      message: `PERMANENT_STEP_ERROR:${step.stepId}`,
-      nonRetryable: true,
-    });
-  }
-}
-
-function completedStepResult(stepId: string): StepResult {
-  return { stepId, status: 'COMPLETED' };
-}
-
-function executeGatewayStep(
-  step: ExecutionPlan['steps'][number],
-  gatewayContext: Record<string, unknown>
-): StepResult {
-  const gateway = parseGatewayConfigOrThrow(step);
-  try {
-    const parsed = parseDslV1(gateway.expression);
-    const passed = evaluateDslV1(parsed, gatewayContext);
-    return {
-      stepId: step.stepId,
-      status: 'COMPLETED',
-      gatewayDecision: passed,
-    };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    throw ApplicationFailure.create({
-      type: 'PermanentStepError',
-      message: `INVALID_GATEWAY_DSL:${step.stepId}:${reason}`,
-      nonRetryable: true,
-    });
-  }
-}
-
-function buildEventEnvelope(args: {
-  deps: ActivityDeps;
-  input: EmitEventInput;
-  ctx: RunContext;
-  validatedPlanRef: PlanRef;
-}): EventInput {
-  const { deps, input, ctx, validatedPlanRef } = args;
-  const logicalAttemptId = input.logicalAttemptId ?? 1;
-  const engineAttemptId =
-    typeof deps.getEngineAttemptId === 'function'
-      ? deps.getEngineAttemptId()
-      : resolveTemporalAttemptFromContext();
-
-  return {
-    eventId: deps.idempotency.eventId(),
-    eventType: input.eventType,
-    emittedAt: deps.clock.nowIsoUtc(),
-    tenantId: ctx.tenantId,
-    projectId: ctx.projectId,
-    environmentId: ctx.environmentId,
-    runId: ctx.runId,
-    planId: validatedPlanRef.planId,
-    planVersion: validatedPlanRef.planVersion,
-    ...(input.stepId ? { stepId: input.stepId } : {}),
-    engineAttemptId,
-    logicalAttemptId,
-    idempotencyKey: deps.idempotency.runEventKey({
-      eventType: input.eventType,
-      tenantId: ctx.tenantId,
-      runId: ctx.runId,
-      logicalAttemptId,
-      planId: validatedPlanRef.planId,
-      planVersion: validatedPlanRef.planVersion,
-      ...(input.stepId ? { stepId: input.stepId } : {}),
-    }),
-    ...(input.payload === undefined ? {} : { payload: input.payload }),
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Internal helpers (mirrors MockAdapter)
@@ -262,16 +240,15 @@ function resolveTemporalAttemptFromContext(): number {
 function parsePlan(bytes: Uint8Array): ExecutionPlan {
   const text = new TextDecoder().decode(bytes);
   const obj: unknown = JSON.parse(text);
-  if (isExecutionPlan(obj)) {
-    const contractVersion = obj.metadata.contractVersion;
-    if (typeof contractVersion !== 'string') {
-      throw new TypeError('PLAN_CONTRACT_VERSION_MISSING');
-    }
-    validatePlanContractVersion(contractVersion);
-    return obj;
+  if (!isExecutionPlan(obj)) {
+    throw new TypeError('INVALID_PLAN_SCHEMA');
   }
-
-  throw new TypeError('INVALID_PLAN_SCHEMA');
+  const contractVersion = obj.metadata.contractVersion;
+  if (typeof contractVersion !== 'string') {
+    throw new TypeError('PLAN_CONTRACT_VERSION_MISSING');
+  }
+  validatePlanContractVersion(contractVersion);
+  return obj;
 }
 
 function isExecutionPlan(v: unknown): v is ExecutionPlan {
@@ -311,7 +288,7 @@ function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
-  if (hasOwn(step, 'inputBindings')) {
+  if (Object.keys(step).includes('inputBindings')) {
     throw new TypeError('INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1');
   }
 
@@ -328,19 +305,17 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
   if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
     throw new TypeError('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
   }
-}
 
-function hasOwn(obj: object, key: PropertyKey): boolean {
-  const objectWithHasOwn = Object as typeof Object & {
-    hasOwn?: (target: object, property: PropertyKey) => boolean;
-  };
-
-  if (typeof objectWithHasOwn.hasOwn === 'function') {
-    return objectWithHasOwn.hasOwn(obj, key);
+  if (step['stepTypeConfig'] !== undefined) {
+    const stepTypeConfig = step['stepTypeConfig'];
+    if (
+      typeof stepTypeConfig !== 'object' ||
+      stepTypeConfig === null ||
+      Array.isArray(stepTypeConfig)
+    ) {
+      throw new TypeError('INVALID_STEP_SCHEMA: stepTypeConfig_must_be_object');
+    }
   }
-
-  const normalizedKey = typeof key === 'number' ? String(key) : key;
-  return Reflect.ownKeys(obj).includes(normalizedKey);
 }
 
 function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {

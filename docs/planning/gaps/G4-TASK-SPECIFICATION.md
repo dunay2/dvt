@@ -66,15 +66,23 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 ## T4-3 - Adapter Temporal
 
-### Delivered
+### Done
 
-1. Added `compiledCodeRef` extraction/type guard in workflow path.
+1. Added extraction/type guard for `compiledCodeRef` with fail-open behavior.
    - [`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
-2. Propagated valid `compiledCodeRef` from `stepTypeConfig` to `StepStarted.payload`.
-3. Added unit tests for valid/invalid/absent payload patterns.
-   - [`packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts)
-4. Allowed planner `stepTypeConfig` metadata in step activity schema validation.
-   - [`packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`](../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts)
+2. Propagated `compiledCodeRef` from `stepTypeConfig` to `StepStarted.payload` only when valid.
+   - [`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
+3. Added unit tests for valid/invalid/absent patterns.
+   - [`packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
+4. Added QA architecture review for static-noise reduction aligned with SOLID/DDD/Hexagonal principles.
+   - [`G4-T4-3-QA-ARCH-REVIEW.md`](G4-T4-3-QA-ARCH-REVIEW.md)
+
+### Validation Notes
+
+1. `pnpm --filter @dvt/adapter-temporal test` passes including the new T4-3 tests.
+2. Adapter step-shape validation now allows `stepTypeConfig` as object transport channel (rejects non-object values).
+3. T4-3 quality hardening is tracked with explicit refactor criteria in QA architecture review.
+4. Integration test support was hardened with Value Object/query-object patterns to reduce static-analysis noise without changing behavior.
 
 ## T4-4 - Traceability Service
 
@@ -99,4 +107,3 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 - Evidence draft: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
 - ADR detail: [`docs/adr/ADR-0032-compiledcoderef-ownership.md`](../../adr/ADR-0032-compiledcoderef-ownership.md)
-- Sonar refactor plan: [`G4-T3-SONAR-REFACTOR-PLAN.md`](G4-T3-SONAR-REFACTOR-PLAN.md)
