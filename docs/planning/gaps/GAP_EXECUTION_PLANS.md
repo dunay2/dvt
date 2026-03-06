@@ -53,6 +53,8 @@ Source of truth for execution gaps and delivery state.
 - Done:
   - `lookupRunRef` implemented
   - unit tests for exists/not-found/error paths
+  - `TemporalWorkerHost` lifecycle quality gate added (start once, no-op shutdown, deterministic Worker.create wiring)
+  - Sonar debt removed in Temporal worker lifecycle tests (unused/empty-class/scope-smell cleanup)
 - Pending:
   - stronger production integration coverage (time-skipping / dev server always-on gate)
   - operational validation of worker host defaults under load
