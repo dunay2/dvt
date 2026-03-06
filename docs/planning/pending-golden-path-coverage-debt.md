@@ -5,7 +5,6 @@ owner: docs
 last_reviewed: 2026-03-04
 planning_type: status
 ---
-
 # Pending Golden Path Coverage Debt
 
 # Deuda pendiente: cobertura de Golden Paths (Contracts & Determinism)
