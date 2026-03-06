@@ -21,12 +21,12 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 ## Work Breakdown Status
 
-| Task | Scope | Current state |
-| --- | --- | --- |
-| T4-1 | `@dvt/contracts`: type + package export + fixtures | Partial |
-| T4-2 | `@dvt/planner`: storage adapters + attachCompiledCodeRefs | Implemented |
-| T4-3 | `@dvt/adapter-temporal`: propagate ref to `StepStarted` | Pending |
-| T4-4 | `@dvt/traceability-service`: reader/cache/SqlJobFacet | Pending |
+| Task | Scope                                                     | Current state |
+| ---- | --------------------------------------------------------- | ------------- |
+| T4-1 | `@dvt/contracts`: type + package export + fixtures        | Partial       |
+| T4-2 | `@dvt/planner`: storage adapters + attachCompiledCodeRefs | Implemented   |
+| T4-3 | `@dvt/adapter-temporal`: propagate ref to `StepStarted`   | Pending       |
+| T4-4 | `@dvt/traceability-service`: reader/cache/SqlJobFacet     | Pending       |
 
 ## T4-1 - Contracts
 

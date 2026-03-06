@@ -70,18 +70,18 @@ Operational playbook for executing gaps in parallel by independent teams.
 
 ## Dependency Matrix
 
-| Gap / Task | Can start now | Blocks |
-| --- | --- | --- |
-| G4-T1 | Yes | None |
-| G4-T3 | Yes | None |
-| G4-T4 | Partial | Final merge blocked by G4-T3 |
-| G1 closure | Yes | None |
-| G3 doc closure | Yes | None |
-| G5 | After G4 | G4 |
-| G6 | After G4 | G4 |
-| G7 | After G4 | G4 |
-| G8 | After G4 | G4 |
-| G10 | After G5/G6 stable | G5 + G6 |
+| Gap / Task     | Can start now      | Blocks                       |
+| -------------- | ------------------ | ---------------------------- |
+| G4-T1          | Yes                | None                         |
+| G4-T3          | Yes                | None                         |
+| G4-T4          | Partial            | Final merge blocked by G4-T3 |
+| G1 closure     | Yes                | None                         |
+| G3 doc closure | Yes                | None                         |
+| G5             | After G4           | G4                           |
+| G6             | After G4           | G4                           |
+| G7             | After G4           | G4                           |
+| G8             | After G4           | G4                           |
+| G10            | After G5/G6 stable | G5 + G6                      |
 
 ## Team Cadence
 

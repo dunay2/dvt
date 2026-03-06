@@ -16,18 +16,18 @@ Source of truth for execution gaps and delivery state.
 
 ## Executive State (2026-03-06)
 
-| Gap | Title | Phase | Current state |
-| --- | --- | --- | --- |
-| G1 | Temporal Adapter real | Phase 1 | In progress (lookupRunRef done, full integration pending) |
-| G2 | PostgresStateStore complete | Phase 1 | Closed |
-| G3 | IStartRunIntentStore Postgres + scheduler | Phase 1 | Implemented in code, pending final doc closure |
-| G4 | compiledCodeRef ownership | Phase 1 | In progress (T4-2 done, T4-3/T4-4 pending) |
-| G5 | Outbox worker independiente | Phase 1.5 | Pending |
-| G6 | OpenLineage mapping tests + schema pin | Phase 1.5 | Pending |
-| G7 | Read models + standalone projector | Phase 1.5 | Pending |
-| G8 | Auth real en apps/api | Phase 1.5 | Pending |
-| G9 | StepTypeRegistry + typed stepTypeConfig | Phase 2 | Pending |
-| G10 | outbox_lineage worker + fail-open DLQ | Phase 2 | Pending |
+| Gap | Title                                     | Phase     | Current state                                             |
+| --- | ----------------------------------------- | --------- | --------------------------------------------------------- |
+| G1  | Temporal Adapter real                     | Phase 1   | In progress (lookupRunRef done, full integration pending) |
+| G2  | PostgresStateStore complete               | Phase 1   | Closed                                                    |
+| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Implemented in code, pending final doc closure            |
+| G4  | compiledCodeRef ownership                 | Phase 1   | In progress (T4-2 done, T4-3/T4-4 pending)                |
+| G5  | Outbox worker independiente               | Phase 1.5 | Pending                                                   |
+| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Pending                                                   |
+| G7  | Read models + standalone projector        | Phase 1.5 | Pending                                                   |
+| G8  | Auth real en apps/api                     | Phase 1.5 | Pending                                                   |
+| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                                   |
+| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                                   |
 
 ## Confirmed Progress Since Previous Draft
 
@@ -85,12 +85,12 @@ Source of truth for execution gaps and delivery state.
 - Status: In progress
 - Subtasks:
 
-| Task | Scope | Status |
-| --- | --- | --- |
-| T4-1 | contracts type + exports + fixtures | Partial (type/export done, fixtures pending) |
-| T4-2 | planner storage adapters + attachCompiledCodeRefs | Done in code |
-| T4-3 | adapter-temporal propagation to StepStarted | Pending |
-| T4-4 | traceability reader/cache/SqlJobFacet | Pending |
+| Task | Scope                                             | Status                                       |
+| ---- | ------------------------------------------------- | -------------------------------------------- |
+| T4-1 | contracts type + exports + fixtures               | Partial (type/export done, fixtures pending) |
+| T4-2 | planner storage adapters + attachCompiledCodeRefs | Done in code                                 |
+| T4-3 | adapter-temporal propagation to StepStarted       | Pending                                      |
+| T4-4 | traceability reader/cache/SqlJobFacet             | Pending                                      |
 
 - Task spec: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
 
