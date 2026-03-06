@@ -345,8 +345,8 @@ Example metrics:
 
 run*duration\
 step_duration\
-warehouse_cost *(not yet implemented — requires Snowflake query history)_\
-queue_latency _(not yet implemented)\_
+warehouse_cost _(not yet implemented - requires Snowflake query history)_\\
+queue_latency _(not yet implemented)_\\
 
 ---
 
