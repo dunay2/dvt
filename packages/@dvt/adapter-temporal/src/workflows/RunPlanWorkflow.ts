@@ -21,6 +21,7 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
+// eslint-disable-next-line import/no-unresolved -- changed-file lint runs before workspace build.
 import { planExecutionLayers } from '@dvt/plan-interpreter';
 import {
   ApplicationFailure,
