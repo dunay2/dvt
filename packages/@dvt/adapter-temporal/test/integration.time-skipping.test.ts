@@ -17,8 +17,7 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
-import type { RunStateCommandPort } from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, RunContext, RunStateCommandPort } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -274,7 +273,7 @@ class TestStateStore {
     const snapshot: RunSnapshot = {
       runId,
       status,
-      lastEventSeq: events.length > 0 ? events[events.length - 1].runSeq : 0,
+      lastEventSeq: events.at(-1)?.runSeq ?? 0,
       projectedAt: new Date().toISOString(),
     };
     this.snapshotsByRun.set(runId, snapshot);
@@ -326,7 +325,7 @@ class TestStateStore {
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? 0,
+      lastSeq: appended.at(-1)?.runSeq ?? 0,
     };
   }
 
@@ -347,7 +346,7 @@ class TestStateStore {
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? all[all.length - 1]?.runSeq ?? 0,
+      lastSeq: appended.at(-1)?.runSeq ?? all.at(-1)?.runSeq ?? 0,
     };
   }
 
@@ -779,28 +778,28 @@ function sha256Hex(bytes: Uint8Array): string {
 // Tests
 // ============================================================================
 
-describe('temporal integration (time-skipping)', () => {
-  /**
-   * Deterministic waiting helper (does not use time-skipping internally)
-   */
-  async function waitForCondition<T>(
-    fn: () => Promise<T>,
-    predicate: (v: T) => boolean,
-    opts: { timeoutMs?: number; intervalMs?: number } = {}
-  ): Promise<T> {
-    const timeoutMs = opts.timeoutMs ?? 10_000;
-    const intervalMs = opts.intervalMs ?? 25;
-    const start = Date.now();
-    while (true) {
-      const v = await fn();
-      if (predicate(v)) return v;
-      if (Date.now() - start > timeoutMs) {
-        throw new Error('waitForCondition: timeout');
-      }
-      await new Promise((r) => setTimeout(r, intervalMs));
+/**
+ * Deterministic waiting helper (does not use time-skipping internally)
+ */
+async function waitForCondition<T>(
+  fn: () => Promise<T>,
+  predicate: (v: T) => boolean,
+  opts: { timeoutMs?: number; intervalMs?: number } = {}
+): Promise<T> {
+  const timeoutMs = opts.timeoutMs ?? 10_000;
+  const intervalMs = opts.intervalMs ?? 25;
+  const start = Date.now();
+  while (true) {
+    const v = await fn();
+    if (predicate(v)) return v;
+    if (Date.now() - start > timeoutMs) {
+      throw new Error('waitForCondition: timeout');
     }
+    await new Promise((r) => setTimeout(r, intervalMs));
   }
+}
 
+describe('temporal integration (time-skipping)', () => {
   /**
    * @verifies ADR-0001 Section 2 — Build precondition
    * @verifies ADR-0001 Section 3 — Single teardown owner
