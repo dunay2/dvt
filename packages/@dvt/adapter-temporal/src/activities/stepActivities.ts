@@ -10,11 +10,9 @@
  */
 import { TextDecoder } from 'node:util';
 
-import { parsePlanRef, parseRunContext } from '@dvt/contracts';
-import type { PlanRef, RunContext, RunId } from '@dvt/contracts';
+import { parsePlanRef, parseRunContext, type PlanRef, type RunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
-import { Context } from '@temporalio/activity';
-import { ApplicationFailure } from '@temporalio/activity';
+import { ApplicationFailure, Context } from '@temporalio/activity';
 
 import type {
   EventInput,
@@ -35,7 +33,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 export interface ActivityDeps {
-  runStateCommandPort?: RunStateCommandPort;
+  runStateCommandPort: RunStateCommandPort;
   /** @deprecated transitional fallback while callers migrate to runStateCommandPort */
   stateStore?: IRunStateStore;
   /** @deprecated retained for backwards compatibility in tests */
@@ -90,7 +88,7 @@ export function createActivities(deps: ActivityDeps): {
   emitEvent(input: EmitEventInput): Promise<void>;
   saveRunMetadata(meta: RunMetadata): Promise<void>;
 } {
-  const runStateCommandPort = resolveRunStateCommandPort(deps);
+  const { runStateCommandPort } = deps;
 
   return {
     /**
@@ -111,45 +109,12 @@ export function createActivities(deps: ActivityDeps): {
      */
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
-
-      const simulateErrorKind =
-        typeof input.step['simulateError'] === 'string'
-          ? String(input.step['simulateError'])
-          : undefined;
-
-      if (simulateErrorKind === 'transient') {
-        throw new Error(`TRANSIENT_STEP_ERROR:${input.step.stepId}`);
+      enforceSimulatedStepOutcome(input.step);
+      if (input.step.type !== 'gateway') {
+        return completedStepResult(input.step.stepId);
       }
 
-      if (simulateErrorKind === 'permanent') {
-        throw ApplicationFailure.create({
-          type: 'PermanentStepError',
-          message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
-          nonRetryable: true,
-        });
-      }
-
-      if (input.step.type === 'gateway') {
-        const gateway = parseGatewayConfigOrThrow(input.step);
-        try {
-          const parsed = parseDslV1(gateway.expression);
-          const passed = evaluateDslV1(parsed, input.gatewayContext ?? {});
-          return {
-            stepId: input.step.stepId,
-            status: 'COMPLETED',
-            gatewayDecision: passed,
-          };
-        } catch (error) {
-          const reason = error instanceof Error ? error.message : String(error);
-          throw ApplicationFailure.create({
-            type: 'PermanentStepError',
-            message: `INVALID_GATEWAY_DSL:${input.step.stepId}:${reason}`,
-            nonRetryable: true,
-          });
-        }
-      }
-
-      return { stepId: input.step.stepId, status: 'COMPLETED' };
+      return executeGatewayStep(input.step, input.gatewayContext ?? {});
     },
 
     /**
@@ -159,40 +124,7 @@ export function createActivities(deps: ActivityDeps): {
     async emitEvent(input: EmitEventInput): Promise<void> {
       const ctx = parseRunContext(input.ctx);
       const validatedPlanRef = parsePlanRef(input.planRef);
-      const { eventType, stepId, payload } = input;
-
-      const engineAttemptId =
-        typeof deps.getEngineAttemptId === 'function'
-          ? deps.getEngineAttemptId()
-          : resolveTemporalAttemptFromContext();
-
-      const logicalAttemptId = input.logicalAttemptId ?? 1;
-
-      const envelope: EventInput = {
-        eventId: deps.idempotency.eventId(),
-        eventType,
-        emittedAt: deps.clock.nowIsoUtc(),
-        tenantId: ctx.tenantId,
-        projectId: ctx.projectId,
-        environmentId: ctx.environmentId,
-        runId: ctx.runId,
-        planId: validatedPlanRef.planId,
-        planVersion: validatedPlanRef.planVersion,
-        ...(stepId ? { stepId } : {}),
-        engineAttemptId,
-        logicalAttemptId,
-        idempotencyKey: deps.idempotency.runEventKey({
-          eventType,
-          tenantId: ctx.tenantId,
-          runId: ctx.runId,
-          logicalAttemptId,
-          planId: validatedPlanRef.planId,
-          planVersion: validatedPlanRef.planVersion,
-          ...(stepId ? { stepId } : {}),
-        }),
-        ...(payload !== undefined ? { payload } : {}),
-      };
-
+      const envelope = buildEventEnvelope({ deps, input, ctx, validatedPlanRef });
       await runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
     },
 
@@ -218,16 +150,86 @@ export function createActivities(deps: ActivityDeps): {
 
 export type Activities = ReturnType<typeof createActivities>;
 
-function resolveRunStateCommandPort(deps: ActivityDeps): RunStateCommandPort {
-  if (deps.runStateCommandPort) return deps.runStateCommandPort;
-  const { stateStore } = deps;
-  if (!stateStore) {
-    throw new Error('RUN_STATE_COMMAND_PORT_NOT_CONFIGURED');
+function enforceSimulatedStepOutcome(step: ExecutionPlan['steps'][number]): void {
+  const simulateErrorKind =
+    typeof step['simulateError'] === 'string' ? String(step['simulateError']) : undefined;
+
+  if (simulateErrorKind === 'transient') {
+    throw new Error(`TRANSIENT_STEP_ERROR:${step.stepId}`);
   }
 
+  if (simulateErrorKind === 'permanent') {
+    throw ApplicationFailure.create({
+      type: 'PermanentStepError',
+      message: `PERMANENT_STEP_ERROR:${step.stepId}`,
+      nonRetryable: true,
+    });
+  }
+}
+
+function completedStepResult(stepId: string): StepResult {
+  return { stepId, status: 'COMPLETED' };
+}
+
+function executeGatewayStep(
+  step: ExecutionPlan['steps'][number],
+  gatewayContext: Record<string, unknown>
+): StepResult {
+  const gateway = parseGatewayConfigOrThrow(step);
+  try {
+    const parsed = parseDslV1(gateway.expression);
+    const passed = evaluateDslV1(parsed, gatewayContext);
+    return {
+      stepId: step.stepId,
+      status: 'COMPLETED',
+      gatewayDecision: passed,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw ApplicationFailure.create({
+      type: 'PermanentStepError',
+      message: `INVALID_GATEWAY_DSL:${step.stepId}:${reason}`,
+      nonRetryable: true,
+    });
+  }
+}
+
+function buildEventEnvelope(args: {
+  deps: ActivityDeps;
+  input: EmitEventInput;
+  ctx: RunContext;
+  validatedPlanRef: PlanRef;
+}): EventInput {
+  const { deps, input, ctx, validatedPlanRef } = args;
+  const logicalAttemptId = input.logicalAttemptId ?? 1;
+  const engineAttemptId =
+    typeof deps.getEngineAttemptId === 'function'
+      ? deps.getEngineAttemptId()
+      : resolveTemporalAttemptFromContext();
+
   return {
-    bootstrapRun: (input) => stateStore.bootstrapRunTx(input),
-    appendTransitions: (runId, events) => stateStore.appendAndEnqueueTx(runId as RunId, events),
+    eventId: deps.idempotency.eventId(),
+    eventType: input.eventType,
+    emittedAt: deps.clock.nowIsoUtc(),
+    tenantId: ctx.tenantId,
+    projectId: ctx.projectId,
+    environmentId: ctx.environmentId,
+    runId: ctx.runId,
+    planId: validatedPlanRef.planId,
+    planVersion: validatedPlanRef.planVersion,
+    ...(input.stepId ? { stepId: input.stepId } : {}),
+    engineAttemptId,
+    logicalAttemptId,
+    idempotencyKey: deps.idempotency.runEventKey({
+      eventType: input.eventType,
+      tenantId: ctx.tenantId,
+      runId: ctx.runId,
+      logicalAttemptId,
+      planId: validatedPlanRef.planId,
+      planVersion: validatedPlanRef.planVersion,
+      ...(input.stepId ? { stepId: input.stepId } : {}),
+    }),
+    ...(input.payload === undefined ? {} : { payload: input.payload }),
   };
 }
 
@@ -240,6 +242,7 @@ const ALLOWED_STEP_FIELDS = new Set([
   'kind',
   'type',
   'gateway',
+  'stepTypeConfig',
   'dependsOn',
   'simulateError',
 ]);
@@ -259,15 +262,16 @@ function resolveTemporalAttemptFromContext(): number {
 function parsePlan(bytes: Uint8Array): ExecutionPlan {
   const text = new TextDecoder().decode(bytes);
   const obj: unknown = JSON.parse(text);
-  if (!isExecutionPlan(obj)) {
-    throw new Error('INVALID_PLAN_SCHEMA');
+  if (isExecutionPlan(obj)) {
+    const contractVersion = obj.metadata.contractVersion;
+    if (typeof contractVersion !== 'string') {
+      throw new TypeError('PLAN_CONTRACT_VERSION_MISSING');
+    }
+    validatePlanContractVersion(contractVersion);
+    return obj;
   }
-  const contractVersion = obj.metadata.contractVersion;
-  if (typeof contractVersion !== 'string') {
-    throw new Error('PLAN_CONTRACT_VERSION_MISSING');
-  }
-  validatePlanContractVersion(contractVersion);
-  return obj;
+
+  throw new TypeError('INVALID_PLAN_SCHEMA');
 }
 
 function isExecutionPlan(v: unknown): v is ExecutionPlan {
@@ -291,7 +295,7 @@ function validatePlanContractVersion(contractVersion: string): void {
     return;
   }
 
-  throw new Error(
+  throw new TypeError(
     `PLAN_CONTRACT_VERSION_UNKNOWN: ${contractVersion}. Supported: ${Array.from(
       SUPPORTED_PLAN_CONTRACT_VERSIONS
     ).join(', ')}`
@@ -299,31 +303,44 @@ function validatePlanContractVersion(contractVersion: string): void {
 }
 
 function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
-  if (plan.metadata.planId !== ref.planId) throw new Error('PLAN_REF_MISMATCH: planId');
+  if (plan.metadata.planId !== ref.planId) throw new TypeError('PLAN_REF_MISMATCH: planId');
   if (plan.metadata.planVersion !== ref.planVersion)
-    throw new Error('PLAN_REF_MISMATCH: planVersion');
+    throw new TypeError('PLAN_REF_MISMATCH: planVersion');
   if (plan.metadata.schemaVersion !== ref.schemaVersion)
-    throw new Error('PLAN_REF_MISMATCH: schemaVersion');
+    throw new TypeError('PLAN_REF_MISMATCH: schemaVersion');
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
-  if (Object.prototype.hasOwnProperty.call(step, 'inputBindings')) {
-    throw new Error('INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1');
+  if (hasOwn(step, 'inputBindings')) {
+    throw new TypeError('INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1');
   }
 
   for (const k of Object.keys(step)) {
     if (!ALLOWED_STEP_FIELDS.has(k)) {
-      throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);
+      throw new TypeError(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);
     }
   }
 
-  if (!Array.isArray(step.dependsOn) && typeof step.dependsOn !== 'undefined') {
-    throw new Error('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
+  if (!Array.isArray(step.dependsOn) && step.dependsOn !== undefined) {
+    throw new TypeError('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
   }
 
   if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
-    throw new Error('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
+    throw new TypeError('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
   }
+}
+
+function hasOwn(obj: object, key: PropertyKey): boolean {
+  const objectWithHasOwn = Object as typeof Object & {
+    hasOwn?: (target: object, property: PropertyKey) => boolean;
+  };
+
+  if (typeof objectWithHasOwn.hasOwn === 'function') {
+    return objectWithHasOwn.hasOwn(obj, key);
+  }
+
+  const normalizedKey = typeof key === 'number' ? String(key) : key;
+  return Reflect.ownKeys(obj).includes(normalizedKey);
 }
 
 function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {

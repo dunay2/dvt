@@ -121,14 +121,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   const resumeFromLayerIndex = normalizeNonNegativeInt(input.resumeFromLayerIndex);
   const continuedAsNewCount = normalizeNonNegativeInt(input.continuedAsNewCount);
 
-  const state: WorkflowState = {
-    status: 'RUNNING',
-    paused: false,
-    cancelled: false,
-    currentStepIndex: 0,
-    continuedAsNewCount,
-    gatewayDecisions: { ...(input.gatewayDecisions ?? {}) },
-  };
+  const state = createInitialWorkflowState(input, continuedAsNewCount);
 
   const completedStepResults: Record<string, Record<string, unknown>> = {};
   const skippedSteps = new Set<string>();
@@ -158,190 +151,34 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
   // -- main orchestration ---------------------------------------------
   try {
-    // 1. Persist run metadata + RunStarted only in first execution.
-    if (resumeFromLayerIndex === 0) {
-      await activities.saveRunMetadata({
-        tenantId: ctx.tenantId,
-        projectId: ctx.projectId,
-        environmentId: ctx.environmentId,
-        runId: ctx.runId,
-        planId: planRef.planId,
-        planVersion: planRef.planVersion,
-        // Phase 1: always 1. Phase 2: planner supplies via workflow input on retry.
-        logicalAttemptId: 1,
-        provider: 'temporal',
-        providerWorkflowId: ctx.runId,
-        providerRunId: ctx.runId,
-      });
-
-      await activities.emitEvent({ ctx, planRef, eventType: 'RunStarted' });
-    }
+    await emitRunStartedIfNeeded({ ctx, planRef, resumeFromLayerIndex });
 
     // 2. Fetch & validate plan via activity
     const plan = await activities.fetchPlan(planRef);
 
     // 3. Walk steps in deterministic layers (sequential fallback when no DAG edges).
     const executionLayers = planExecutionLayers<WorkflowStep>(plan.steps);
-    if (resumeFromLayerIndex > executionLayers.length) {
-      throw new Error('INVALID_WORKFLOW_STATE: resumeFromLayerIndex_out_of_range');
+    ensureResumeLayerIndexInRange(resumeFromLayerIndex, executionLayers.length);
+    const layerProcessing = await processExecutionLayers({
+      input,
+      plan,
+      planRef,
+      ctx,
+      state,
+      executionLayers,
+      resumeFromLayerIndex,
+      continueAsNewAfterLayerCount,
+      continuedAsNewCount,
+      completedStepResults,
+      skippedSteps,
+    });
+
+    if (layerProcessing.continueAsNewInput) {
+      return continueAsNew<typeof runPlanWorkflow>(layerProcessing.continueAsNewInput);
     }
 
-    let completedSteps = countStepsBeforeLayer(executionLayers, resumeFromLayerIndex);
-    state.currentStepIndex = completedSteps;
-
-    let processedLayersInCurrentExecution = 0;
-
-    for (
-      let layerIndex = resumeFromLayerIndex;
-      layerIndex < executionLayers.length;
-      layerIndex += 1
-    ) {
-      const layer = executionLayers[layerIndex]!;
-      const executableLayer = layer.filter((step) => {
-        if (skippedSteps.has(step.stepId)) return false;
-        const deps = normalizeDependsOn(step.dependsOn);
-        return !deps.some((dep) => skippedSteps.has(dep));
-      });
-
-      for (const step of layer) {
-        if (!executableLayer.some((candidate) => candidate.stepId === step.stepId)) {
-          skippedSteps.add(step.stepId);
-          await activities.emitEvent({
-            ctx,
-            planRef,
-            eventType: 'StepSkipped',
-            stepId: step.stepId,
-          });
-        }
-      }
-
-      if (executableLayer.length === 0) {
-        processedLayersInCurrentExecution += 1;
-        continue;
-      }
-
-      state.currentStepIndex = completedSteps;
-
-      // Check cancellation before each layer
-      if (state.cancelled) {
-        await activities.emitEvent({ ctx, planRef, eventType: 'RunCancelled' });
-        state.status = 'CANCELLED';
-        return { runId: ctx.runId, status: 'CANCELLED', continuedAsNewCount };
-      }
-
-      // Block while paused
-      if (state.paused) {
-        await activities.emitEvent({ ctx, planRef, eventType: 'RunPaused' });
-        await condition(() => !state.paused || state.cancelled);
-
-        if (state.cancelled) {
-          await activities.emitEvent({ ctx, planRef, eventType: 'RunCancelled' });
-          state.status = 'CANCELLED';
-          return { runId: ctx.runId, status: 'CANCELLED', continuedAsNewCount };
-        }
-
-        await activities.emitEvent({ ctx, planRef, eventType: 'RunResumed' });
-      }
-
-      // Emit StepStarted in stable order, then execute the whole layer.
-      for (const step of executableLayer) {
-        await activities.emitEvent({ ctx, planRef, eventType: 'StepStarted', stepId: step.stepId });
-      }
-
-      const layerResults = await Promise.all(
-        executableLayer.map(async (step) => {
-          try {
-            const gatewayContext =
-              step.type === 'gateway' ? buildGatewayContext(step, completedStepResults) : undefined;
-
-            const result = await activities.executeStep({
-              step,
-              ctx,
-              ...(gatewayContext ? { gatewayContext } : {}),
-            });
-
-            const gatewayDecision =
-              step.type === 'gateway' && typeof result.gatewayDecision === 'boolean'
-                ? result.gatewayDecision
-                : undefined;
-
-            if (typeof gatewayDecision === 'boolean') {
-              if (!state.gatewayDecisions) {
-                state.gatewayDecisions = {};
-              }
-              state.gatewayDecisions[step.stepId] = gatewayDecision;
-
-              if (!gatewayDecision) {
-                const downstream = collectDownstreamStepIds(plan.steps, step.stepId);
-                for (const downstreamStepId of downstream) {
-                  skippedSteps.add(downstreamStepId);
-                }
-              }
-            }
-
-            return { stepId: step.stepId, gatewayDecision, result };
-          } catch (error) {
-            const err = error instanceof Error ? error : new Error(String(error));
-            const retriable = !(error instanceof ApplicationFailure) || error.nonRetryable !== true;
-            const result = {
-              stepId: step.stepId,
-              status: 'FAILED' as const,
-              retriable,
-              error: err.message,
-            };
-            return { stepId: step.stepId, result };
-          }
-        })
-      );
-
-      for (const { stepId, result, gatewayDecision } of layerResults) {
-        if (result.status === 'COMPLETED') {
-          const completedPayload =
-            typeof gatewayDecision === 'boolean' ? { gatewayDecision } : undefined;
-
-          await activities.emitEvent({
-            ctx,
-            planRef,
-            eventType: 'StepCompleted',
-            stepId,
-            ...(completedPayload ? { payload: completedPayload } : {}),
-          });
-          completedStepResults[stepId] = {
-            status: 'COMPLETED',
-            stepId,
-          };
-          completedSteps += 1;
-          state.currentStepIndex = completedSteps;
-          continue;
-        }
-
-        await activities.emitEvent({ ctx, planRef, eventType: 'StepFailed', stepId });
-        await activities.emitEvent({ ctx, planRef, eventType: 'RunFailed' });
-        state.status = 'FAILED';
-        return { runId: ctx.runId, status: 'FAILED', continuedAsNewCount };
-      }
-
-      processedLayersInCurrentExecution += 1;
-      const nextLayerIndex = layerIndex + 1;
-
-      if (
-        shouldTriggerContinueAsNew({
-          continueAsNewAfterLayerCount,
-          processedLayersInCurrentExecution,
-          nextLayerIndex,
-          totalLayerCount: executionLayers.length,
-        })
-      ) {
-        return continueAsNew<typeof runPlanWorkflow>(
-          buildContinueAsNewInput({
-            input,
-            continueAsNewAfterLayerCount,
-            nextLayerIndex,
-            continuedAsNewCount,
-            gatewayDecisions: state.gatewayDecisions ?? {},
-          })
-        );
-      }
+    if (layerProcessing.terminalResult) {
+      return layerProcessing.terminalResult;
     }
 
     // 4. All steps completed
@@ -400,6 +237,398 @@ export function shouldTriggerContinueAsNew(args: {
   return true;
 }
 
+function createInitialWorkflowState(
+  input: RunPlanWorkflowInput,
+  continuedAsNewCount: number
+): WorkflowState {
+  return {
+    status: 'RUNNING',
+    paused: false,
+    cancelled: false,
+    currentStepIndex: 0,
+    continuedAsNewCount,
+    gatewayDecisions: input.gatewayDecisions ? { ...input.gatewayDecisions } : undefined,
+  };
+}
+
+async function emitRunStartedIfNeeded(args: {
+  ctx: RunPlanWorkflowInput['ctx'];
+  planRef: RunPlanWorkflowInput['planRef'];
+  resumeFromLayerIndex: number;
+}): Promise<void> {
+  if (args.resumeFromLayerIndex !== 0) {
+    return;
+  }
+
+  await activities.saveRunMetadata({
+    tenantId: args.ctx.tenantId,
+    projectId: args.ctx.projectId,
+    environmentId: args.ctx.environmentId,
+    runId: args.ctx.runId,
+    planId: args.planRef.planId,
+    planVersion: args.planRef.planVersion,
+    // Phase 1: always 1. Phase 2: planner supplies via workflow input on retry.
+    logicalAttemptId: 1,
+    provider: 'temporal',
+    providerWorkflowId: args.ctx.runId,
+    providerRunId: args.ctx.runId,
+  });
+
+  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunStarted' });
+}
+
+function ensureResumeLayerIndexInRange(
+  resumeFromLayerIndex: number,
+  totalLayerCount: number
+): void {
+  if (resumeFromLayerIndex > totalLayerCount) {
+    throw new Error('INVALID_WORKFLOW_STATE: resumeFromLayerIndex_out_of_range');
+  }
+}
+
+type LayerExecutionResult = {
+  stepId: string;
+  gatewayDecision?: boolean;
+  result: {
+    stepId: string;
+    status: 'COMPLETED' | 'FAILED';
+    retriable?: boolean;
+    error?: string;
+  };
+};
+
+type ProcessExecutionLayersArgs = {
+  input: RunPlanWorkflowInput;
+  plan: Awaited<ReturnType<Activities['fetchPlan']>>;
+  planRef: RunPlanWorkflowInput['planRef'];
+  ctx: RunPlanWorkflowInput['ctx'];
+  state: WorkflowState;
+  executionLayers: ReadonlyArray<ReadonlyArray<WorkflowStep>>;
+  resumeFromLayerIndex: number;
+  continueAsNewAfterLayerCount: number;
+  continuedAsNewCount: number;
+  completedStepResults: Record<string, Record<string, unknown>>;
+  skippedSteps: Set<string>;
+};
+
+type ProcessExecutionLayersResult = {
+  terminalResult?: RunPlanWorkflowResult;
+  continueAsNewInput?: RunPlanWorkflowInput;
+};
+
+async function processExecutionLayers(
+  args: ProcessExecutionLayersArgs
+): Promise<ProcessExecutionLayersResult> {
+  let processedLayersInCurrentExecution = 0;
+  let completedSteps = countStepsBeforeLayer(args.executionLayers, args.resumeFromLayerIndex);
+  args.state.currentStepIndex = completedSteps;
+
+  for (
+    let layerIndex = args.resumeFromLayerIndex;
+    layerIndex < args.executionLayers.length;
+    layerIndex += 1
+  ) {
+    const layer = args.executionLayers[layerIndex]!;
+    const executableLayer = buildExecutableLayer(layer, args.skippedSteps);
+    await emitSkippedSteps({
+      layer,
+      executableLayer,
+      skippedSteps: args.skippedSteps,
+      ctx: args.ctx,
+      planRef: args.planRef,
+    });
+
+    if (executableLayer.length === 0) {
+      processedLayersInCurrentExecution += 1;
+      continue;
+    }
+
+    args.state.currentStepIndex = completedSteps;
+
+    const controlOutcome = await handleLayerControlState({
+      state: args.state,
+      ctx: args.ctx,
+      planRef: args.planRef,
+      continuedAsNewCount: args.continuedAsNewCount,
+    });
+    if (controlOutcome) {
+      return { terminalResult: controlOutcome };
+    }
+
+    await emitStepStartedForLayer(executableLayer, args.ctx, args.planRef);
+
+    const layerResults = await executeLayerSteps({
+      layer: executableLayer,
+      ctx: args.ctx,
+      planSteps: args.plan.steps,
+      completedStepResults: args.completedStepResults,
+      state: args.state,
+      skippedSteps: args.skippedSteps,
+    });
+
+    const persisted = await persistLayerResults({
+      layerResults,
+      ctx: args.ctx,
+      planRef: args.planRef,
+      completedStepResults: args.completedStepResults,
+      continuedAsNewCount: args.continuedAsNewCount,
+    });
+    if (persisted.terminalResult) {
+      args.state.status = persisted.terminalResult.status;
+      return { terminalResult: persisted.terminalResult };
+    }
+
+    completedSteps += persisted.completedCount;
+    args.state.currentStepIndex = completedSteps;
+    processedLayersInCurrentExecution += 1;
+
+    const nextLayerIndex = layerIndex + 1;
+    if (
+      shouldTriggerContinueAsNew({
+        continueAsNewAfterLayerCount: args.continueAsNewAfterLayerCount,
+        processedLayersInCurrentExecution,
+        nextLayerIndex,
+        totalLayerCount: args.executionLayers.length,
+      })
+    ) {
+      return {
+        continueAsNewInput: buildContinueAsNewInput({
+          input: args.input,
+          continueAsNewAfterLayerCount: args.continueAsNewAfterLayerCount,
+          nextLayerIndex,
+          continuedAsNewCount: args.continuedAsNewCount,
+          gatewayDecisions: args.state.gatewayDecisions ?? {},
+        }),
+      };
+    }
+  }
+
+  return {};
+}
+
+function buildExecutableLayer(
+  layer: ReadonlyArray<WorkflowStep>,
+  skippedSteps: Set<string>
+): WorkflowStep[] {
+  return layer.filter((step) => {
+    if (skippedSteps.has(step.stepId)) {
+      return false;
+    }
+    const deps = normalizeDependsOn(step.dependsOn);
+    return !deps.some((dep) => skippedSteps.has(dep));
+  });
+}
+
+async function emitSkippedSteps(args: {
+  layer: ReadonlyArray<WorkflowStep>;
+  executableLayer: ReadonlyArray<WorkflowStep>;
+  skippedSteps: Set<string>;
+  ctx: RunPlanWorkflowInput['ctx'];
+  planRef: RunPlanWorkflowInput['planRef'];
+}): Promise<void> {
+  for (const step of args.layer) {
+    const isExecutable = args.executableLayer.some((candidate) => candidate.stepId === step.stepId);
+    if (isExecutable) {
+      continue;
+    }
+
+    args.skippedSteps.add(step.stepId);
+    await activities.emitEvent({
+      ctx: args.ctx,
+      planRef: args.planRef,
+      eventType: 'StepSkipped',
+      stepId: step.stepId,
+    });
+  }
+}
+
+async function handleLayerControlState(args: {
+  state: WorkflowState;
+  ctx: RunPlanWorkflowInput['ctx'];
+  planRef: RunPlanWorkflowInput['planRef'];
+  continuedAsNewCount: number;
+}): Promise<RunPlanWorkflowResult | undefined> {
+  if (args.state.cancelled) {
+    return emitCancelledResult(
+      args.ctx.runId,
+      args.ctx,
+      args.planRef,
+      args.state,
+      args.continuedAsNewCount
+    );
+  }
+
+  if (!args.state.paused) {
+    return undefined;
+  }
+
+  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunPaused' });
+  await condition(() => !args.state.paused || args.state.cancelled);
+
+  if (args.state.cancelled) {
+    return emitCancelledResult(
+      args.ctx.runId,
+      args.ctx,
+      args.planRef,
+      args.state,
+      args.continuedAsNewCount
+    );
+  }
+
+  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunResumed' });
+  return undefined;
+}
+
+async function emitCancelledResult(
+  runId: string,
+  ctx: RunPlanWorkflowInput['ctx'],
+  planRef: RunPlanWorkflowInput['planRef'],
+  state: WorkflowState,
+  continuedAsNewCount: number
+): Promise<RunPlanWorkflowResult> {
+  await activities.emitEvent({ ctx, planRef, eventType: 'RunCancelled' });
+  state.status = 'CANCELLED';
+  return { runId, status: 'CANCELLED', continuedAsNewCount };
+}
+
+async function emitStepStartedForLayer(
+  layer: ReadonlyArray<WorkflowStep>,
+  ctx: RunPlanWorkflowInput['ctx'],
+  planRef: RunPlanWorkflowInput['planRef']
+): Promise<void> {
+  for (const step of layer) {
+    const stepStartedPayload = buildStepStartedPayload(step);
+    await activities.emitEvent({
+      ctx,
+      planRef,
+      eventType: 'StepStarted',
+      stepId: step.stepId,
+      ...(stepStartedPayload ? { payload: stepStartedPayload } : {}),
+    });
+  }
+}
+
+async function executeLayerSteps(args: {
+  layer: ReadonlyArray<WorkflowStep>;
+  ctx: RunPlanWorkflowInput['ctx'];
+  planSteps: ReadonlyArray<WorkflowStep>;
+  completedStepResults: Record<string, Record<string, unknown>>;
+  state: WorkflowState;
+  skippedSteps: Set<string>;
+}): Promise<LayerExecutionResult[]> {
+  return Promise.all(
+    args.layer.map(async (step) => {
+      try {
+        const gatewayContext =
+          step.type === 'gateway'
+            ? buildGatewayContext(step, args.completedStepResults)
+            : undefined;
+        const result = await activities.executeStep({
+          step,
+          ctx: args.ctx,
+          ...(gatewayContext ? { gatewayContext } : {}),
+        });
+
+        const gatewayDecision =
+          step.type === 'gateway' && typeof result.gatewayDecision === 'boolean'
+            ? result.gatewayDecision
+            : undefined;
+
+        applyGatewayDecision({
+          gatewayDecision,
+          stepId: step.stepId,
+          state: args.state,
+          skippedSteps: args.skippedSteps,
+          planSteps: args.planSteps,
+        });
+
+        return { stepId: step.stepId, gatewayDecision, result };
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        return {
+          stepId: step.stepId,
+          result: {
+            stepId: step.stepId,
+            status: 'FAILED' as const,
+            retriable: !(error instanceof ApplicationFailure) || error.nonRetryable !== true,
+            error: err.message,
+          },
+        };
+      }
+    })
+  );
+}
+
+function applyGatewayDecision(args: {
+  gatewayDecision: boolean | undefined;
+  stepId: string;
+  state: WorkflowState;
+  skippedSteps: Set<string>;
+  planSteps: ReadonlyArray<WorkflowStep>;
+}): void {
+  if (typeof args.gatewayDecision !== 'boolean') {
+    return;
+  }
+
+  if (args.state.gatewayDecisions) {
+    args.state.gatewayDecisions[args.stepId] = args.gatewayDecision;
+  } else {
+    args.state.gatewayDecisions = { [args.stepId]: args.gatewayDecision };
+  }
+
+  if (args.gatewayDecision) {
+    return;
+  }
+
+  const downstream = collectDownstreamStepIds(args.planSteps, args.stepId);
+  for (const downstreamStepId of downstream) {
+    args.skippedSteps.add(downstreamStepId);
+  }
+}
+
+async function persistLayerResults(args: {
+  layerResults: LayerExecutionResult[];
+  ctx: RunPlanWorkflowInput['ctx'];
+  planRef: RunPlanWorkflowInput['planRef'];
+  completedStepResults: Record<string, Record<string, unknown>>;
+  continuedAsNewCount: number;
+}): Promise<{ completedCount: number; terminalResult?: RunPlanWorkflowResult }> {
+  let completedCount = 0;
+
+  for (const { stepId, result, gatewayDecision } of args.layerResults) {
+    if (result.status !== 'COMPLETED') {
+      await activities.emitEvent({
+        ctx: args.ctx,
+        planRef: args.planRef,
+        eventType: 'StepFailed',
+        stepId,
+      });
+      await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunFailed' });
+      return {
+        completedCount,
+        terminalResult: {
+          runId: args.ctx.runId,
+          status: 'FAILED',
+          continuedAsNewCount: args.continuedAsNewCount,
+        },
+      };
+    }
+
+    const completedPayload = typeof gatewayDecision === 'boolean' ? { gatewayDecision } : undefined;
+    await activities.emitEvent({
+      ctx: args.ctx,
+      planRef: args.planRef,
+      eventType: 'StepCompleted',
+      stepId,
+      ...(completedPayload ? { payload: completedPayload } : {}),
+    });
+    args.completedStepResults[stepId] = { status: 'COMPLETED', stepId };
+    completedCount += 1;
+  }
+
+  return { completedCount };
+}
+
 function countStepsBeforeLayer(
   layers: ReadonlyArray<ReadonlyArray<WorkflowStep>>,
   layerIndex: number
@@ -440,6 +669,77 @@ function normalizeDependsOn(dependsOn: unknown): string[] {
   return dependsOn.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
 }
 
+export function buildStepStartedPayload(step: WorkflowStep): Record<string, unknown> | undefined {
+  const stepTypeConfig = readRecord(step['stepTypeConfig']);
+  if (!stepTypeConfig) {
+    return undefined;
+  }
+
+  const compiledCodeRef = parseCompiledCodeRef(stepTypeConfig['compiledCodeRef']);
+  if (!compiledCodeRef) {
+    return undefined;
+  }
+
+  return { compiledCodeRef };
+}
+
+function parseCompiledCodeRef(value: unknown):
+  | {
+      sha256: string;
+      storageUri: string;
+      sizeBytes: number;
+      encoding?: 'utf-8';
+    }
+  | undefined {
+  const ref = readRecord(value);
+  if (!ref) {
+    return undefined;
+  }
+
+  const sha256 = readNonEmptyString(ref['sha256']);
+  const storageUri = readNonEmptyString(ref['storageUri']);
+  const sizeBytes = readNonNegativeInteger(ref['sizeBytes']);
+  if (!sha256 || !storageUri || sizeBytes === undefined) {
+    return undefined;
+  }
+
+  const encoding = ref['encoding'];
+  if (encoding !== undefined && encoding !== 'utf-8') {
+    return undefined;
+  }
+
+  return {
+    sha256,
+    storageUri,
+    sizeBytes,
+    ...(encoding === 'utf-8' ? { encoding } : {}),
+  };
+}
+
+function readRecord(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+
+  return value as Record<string, unknown>;
+}
+
+function readNonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readNonNegativeInteger(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    return undefined;
+  }
+  return value;
+}
+
 function buildGatewayContext(
   step: WorkflowStep,
   completedStepResults: Record<string, Record<string, unknown>>
@@ -450,7 +750,10 @@ function buildGatewayContext(
   return {};
 }
 
-function collectDownstreamStepIds(steps: WorkflowStep[], fromStepId: string): Set<string> {
+function collectDownstreamStepIds(
+  steps: ReadonlyArray<WorkflowStep>,
+  fromStepId: string
+): Set<string> {
   const childrenByParent = new Map<string, string[]>();
   for (const step of steps) {
     for (const dep of normalizeDependsOn(step.dependsOn)) {

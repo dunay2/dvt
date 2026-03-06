@@ -16,3 +16,4 @@ Gap tracking and task specifications for execution phases.
 - [DVT+ - Gap Parallel Execution Tracks](GAP_PARALLEL_EXECUTION_TRACKS.md)
 - [G3 TASK SPECIFICATION](G3-TASK-SPECIFICATION.md)
 - [G4 - compiledCodeRef Task Specification](G4-TASK-SPECIFICATION.md)
+- [G4-T3 - Sonar Refactor Plan](G4-T3-SONAR-REFACTOR-PLAN.md)
