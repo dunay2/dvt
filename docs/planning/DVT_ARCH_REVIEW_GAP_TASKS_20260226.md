@@ -5,7 +5,6 @@ owner: docs
 last_reviewed: 2026-03-05
 planning_type: review
 ---
-
 ---
 
 title: DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
