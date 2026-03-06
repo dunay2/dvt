@@ -6,6 +6,7 @@
 
 export type {
   AppendResult,
+  CompiledCodeRef,
   EventEnvelope,
   EventIdempotencyInput,
   EventInput,

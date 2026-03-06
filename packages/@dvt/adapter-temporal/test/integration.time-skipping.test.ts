@@ -637,7 +637,7 @@ function createRunContext(runId: string): RunContext {
 
 function createActivityDeps(
   store: TestStateStore,
-  outbox: TestOutbox, // Now properly separated
+  _outbox: TestOutbox,
   planBytes: Uint8Array
 ): ActivityDeps {
   const runStateCommandPort: RunStateCommandPort = {
@@ -647,8 +647,6 @@ function createActivityDeps(
 
   return {
     runStateCommandPort,
-    stateStore: store, // Implements IRunStateStore
-    outbox: outbox, // Implements IOutboxStorage
     clock: new TestClock(),
     idempotency: new TestIdempotency(),
     fetcher: {
