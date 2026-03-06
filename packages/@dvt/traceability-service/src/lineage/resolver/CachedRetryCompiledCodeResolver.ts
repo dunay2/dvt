@@ -53,7 +53,7 @@ export class CachedRetryCompiledCodeResolver implements ICompiledCodeResolver {
       }
     }
 
-    throw lastError instanceof Error ? lastError : new Error(String(lastError));
+    throw toError(lastError);
   }
 }
 
@@ -78,4 +78,15 @@ function backoffMs(attempt: number, policy: ICompiledCodeRetryPolicy): number {
 async function sleep(ms: number): Promise<void> {
   if (ms <= 0) return;
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function toError(value: unknown): Error {
+  if (value instanceof Error) return value;
+  if (typeof value === 'string') return new Error(value);
+
+  try {
+    return new Error(JSON.stringify(value));
+  } catch {
+    return new Error('UNKNOWN_COMPILED_CODE_RESOLUTION_ERROR');
+  }
 }
