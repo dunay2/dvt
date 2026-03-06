@@ -425,6 +425,28 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
+    it('accepts step with stepTypeConfig metadata', async () => {
+      const deps = buildDeps();
+      const acts = createActivities(deps);
+
+      const result = await acts.executeStep({
+        step: {
+          stepId: 's3',
+          kind: 'dbt_model',
+          stepTypeConfig: {
+            compiledCodeRef: {
+              sha256: 'abc123',
+              storageUri: 's3://compiled-sql/abc123.sql',
+              sizeBytes: 128,
+            },
+          },
+        },
+        ctx: CTX,
+      });
+
+      expect(result.status).toBe('COMPLETED');
+    });
+
     it('evaluates gateway step in activity boundary and returns gatewayDecision=true', async () => {
       const deps = buildDeps();
       const acts = createActivities(deps);

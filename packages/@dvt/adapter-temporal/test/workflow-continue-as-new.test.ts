@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildStepStartedPayload,
   buildContinueAsNewInput,
   shouldTriggerContinueAsNew,
 } from '../src/workflows/RunPlanWorkflow.js';
@@ -80,5 +81,57 @@ describe('continue-as-new policy', () => {
     expect(nextInput.resumeFromLayerIndex).toBe(2);
     expect(nextInput.continuedAsNewCount).toBe(2);
     expect(nextInput.gatewayDecisions).toEqual({ gwA: true, gwB: false });
+  });
+});
+
+describe('step started payload extraction', () => {
+  it('extracts compiledCodeRef when shape is valid', () => {
+    const payload = buildStepStartedPayload({
+      stepId: 'model.orders',
+      kind: 'dbt_model',
+      stepTypeConfig: {
+        compiledCodeRef: {
+          sha256: 'abc123',
+          storageUri: 's3://compiled-sql/abc123.sql',
+          sizeBytes: 128,
+          encoding: 'utf-8',
+        },
+      },
+    });
+
+    expect(payload).toEqual({
+      compiledCodeRef: {
+        sha256: 'abc123',
+        storageUri: 's3://compiled-sql/abc123.sql',
+        sizeBytes: 128,
+        encoding: 'utf-8',
+      },
+    });
+  });
+
+  it('returns undefined when compiledCodeRef is absent', () => {
+    const payload = buildStepStartedPayload({
+      stepId: 'model.orders',
+      kind: 'dbt_model',
+    });
+
+    expect(payload).toBeUndefined();
+  });
+
+  it('returns undefined when compiledCodeRef is invalid', () => {
+    const payload = buildStepStartedPayload({
+      stepId: 'model.orders',
+      kind: 'dbt_model',
+      stepTypeConfig: {
+        compiledCodeRef: {
+          sha256: 'abc123',
+          storageUri: 's3://compiled-sql/abc123.sql',
+          sizeBytes: -1,
+          encoding: 'utf16',
+        },
+      },
+    });
+
+    expect(payload).toBeUndefined();
   });
 });

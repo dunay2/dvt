@@ -25,7 +25,7 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 | ---- | --------------------------------------------------------- | ------------- |
 | T4-1 | `@dvt/contracts`: type + package export + fixtures        | Partial       |
 | T4-2 | `@dvt/planner`: storage adapters + attachCompiledCodeRefs | Implemented   |
-| T4-3 | `@dvt/adapter-temporal`: propagate ref to `StepStarted`   | Pending       |
+| T4-3 | `@dvt/adapter-temporal`: propagate ref to `StepStarted`   | Implemented   |
 | T4-4 | `@dvt/traceability-service`: reader/cache/SqlJobFacet     | Pending       |
 
 ## T4-1 - Contracts
@@ -66,11 +66,15 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 ## T4-3 - Adapter Temporal
 
-### Pending Scope
+### Delivered
 
-1. Add compiledCodeRef extraction/type guard in temporal adapter package.
-2. Propagate `compiledCodeRef` from `stepTypeConfig` to `StepStarted.payload`.
-3. Add unit tests for valid/invalid/absent payload patterns.
+1. Added `compiledCodeRef` extraction/type guard in workflow path.
+   - [`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
+2. Propagated valid `compiledCodeRef` from `stepTypeConfig` to `StepStarted.payload`.
+3. Added unit tests for valid/invalid/absent payload patterns.
+   - [`packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts)
+4. Allowed planner `stepTypeConfig` metadata in step activity schema validation.
+   - [`packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`](../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts)
 
 ## T4-4 - Traceability Service
 
@@ -86,7 +90,7 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 - [ ] T4-1 fixtures completed and validated.
 - [x] T4-2 planner implementation completed.
-- [ ] T4-3 adapter propagation implemented and tested.
+- [x] T4-3 adapter propagation implemented and tested.
 - [ ] T4-4 traceability implementation and tests completed.
 - [ ] End-to-end path verified in CI for involved packages.
 - [ ] Evidence doc updated to Final with real PR/test/code references.

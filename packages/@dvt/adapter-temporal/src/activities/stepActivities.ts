@@ -240,6 +240,7 @@ const ALLOWED_STEP_FIELDS = new Set([
   'kind',
   'type',
   'gateway',
+  'stepTypeConfig',
   'dependsOn',
   'simulateError',
 ]);

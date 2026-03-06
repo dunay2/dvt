@@ -245,7 +245,14 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
 
       // Emit StepStarted in stable order, then execute the whole layer.
       for (const step of executableLayer) {
-        await activities.emitEvent({ ctx, planRef, eventType: 'StepStarted', stepId: step.stepId });
+        const stepStartedPayload = buildStepStartedPayload(step);
+        await activities.emitEvent({
+          ctx,
+          planRef,
+          eventType: 'StepStarted',
+          stepId: step.stepId,
+          ...(stepStartedPayload ? { payload: stepStartedPayload } : {}),
+        });
       }
 
       const layerResults = await Promise.all(
@@ -438,6 +445,77 @@ function isNonNegativeIntegerString(val: unknown): boolean {
 function normalizeDependsOn(dependsOn: unknown): string[] {
   if (!Array.isArray(dependsOn)) return [];
   return dependsOn.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
+}
+
+export function buildStepStartedPayload(step: WorkflowStep): Record<string, unknown> | undefined {
+  const stepTypeConfig = readRecord(step['stepTypeConfig']);
+  if (!stepTypeConfig) {
+    return undefined;
+  }
+
+  const compiledCodeRef = parseCompiledCodeRef(stepTypeConfig['compiledCodeRef']);
+  if (!compiledCodeRef) {
+    return undefined;
+  }
+
+  return { compiledCodeRef };
+}
+
+function parseCompiledCodeRef(value: unknown):
+  | {
+      sha256: string;
+      storageUri: string;
+      sizeBytes: number;
+      encoding?: 'utf-8';
+    }
+  | undefined {
+  const ref = readRecord(value);
+  if (!ref) {
+    return undefined;
+  }
+
+  const sha256 = readNonEmptyString(ref['sha256']);
+  const storageUri = readNonEmptyString(ref['storageUri']);
+  const sizeBytes = readNonNegativeInteger(ref['sizeBytes']);
+  if (!sha256 || !storageUri || sizeBytes === undefined) {
+    return undefined;
+  }
+
+  const encoding = ref['encoding'];
+  if (encoding !== undefined && encoding !== 'utf-8') {
+    return undefined;
+  }
+
+  return {
+    sha256,
+    storageUri,
+    sizeBytes,
+    ...(encoding === 'utf-8' ? { encoding } : {}),
+  };
+}
+
+function readRecord(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+
+  return value as Record<string, unknown>;
+}
+
+function readNonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readNonNegativeInteger(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    return undefined;
+  }
+  return value;
 }
 
 function buildGatewayContext(
