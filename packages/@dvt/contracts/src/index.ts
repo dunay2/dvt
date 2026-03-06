@@ -7,8 +7,6 @@ export * from './adapters/IStateStoreAdapter.v1';
 export * from './adapters/IWorkflowEngineAdapter.v1';
 export * from './adapters/IProviderAdapter.v1';
 export * from './contracts/engine/IOutboxStorage.v1';
-export * from './contracts/engine/IStartRunIntentStore.v1';
-export * from './contracts/engine/StartRunIntentPolicy.v1';
 export type {
   DbtManifestLike,
   DbtManifestRef,
@@ -31,6 +29,7 @@ export * from './planner-input';
 export * from './validation';
 export type {
   AppendResult,
+  CompiledCodeRef,
   EventEnvelope,
   EventIdempotencyInput,
   EventInput,

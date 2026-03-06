@@ -39,6 +39,29 @@ export type EventEnvelope = EventInput & {
   persistedAt: IsoUtcString;
 };
 
+/**
+ * Content-addressable reference to a compiled SQL artifact stored in object storage.
+ * Attached to StepStarted.payload for DBT_MODEL and DBT_TEST step kinds.
+ *
+ * Design: ADR-0032 - Option A (reference in StepStarted.payload)
+ * Pattern: Content-Addressable Storage (CAS) with SHA-256 as key.
+ *
+ * INV-CCREF-001: sha256 MUST be the SHA-256 hex digest of the blob at storageUri.
+ * INV-CCREF-003: Field is OPTIONAL. Absent = not an error. Consumers must fail-open.
+ * INV-CCREF-006: Event log stores ONLY this reference, never the SQL text.
+ * INV-CCREF-007: file:// is ONLY valid in local dev; prohibited in NODE_ENV=production.
+ */
+export interface CompiledCodeRef {
+  /** SHA-256 hex digest of the compiled SQL bytes (content-addressable key). */
+  sha256: string;
+  /** Object storage URI: s3://<bucket>/<key> | gs://<bucket>/<key> | file://<path> (dev only). */
+  storageUri: string;
+  /** Size of the compiled SQL blob in bytes. */
+  sizeBytes: number;
+  /** Character encoding. MUST be 'utf-8'. Default: 'utf-8'. */
+  encoding?: 'utf-8';
+}
+
 export interface RunMetadata {
   tenantId: string;
   projectId: string;
