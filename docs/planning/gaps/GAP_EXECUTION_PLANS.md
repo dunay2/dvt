@@ -91,10 +91,11 @@ Source of truth for execution gaps and delivery state.
 | ---- | ------------------------------------------------- | -------------------------------------------- |
 | T4-1 | contracts type + exports + fixtures               | Partial (type/export done, fixtures pending) |
 | T4-2 | planner storage adapters + attachCompiledCodeRefs | Done in code                                 |
-| T4-3 | adapter-temporal propagation to StepStarted       | Done in code + tests                         |
+| T4-3 | adapter-temporal propagation to StepStarted       | Done in code + tests + QA hardening cleanup  |
 | T4-4 | traceability reader/cache/SqlJobFacet             | Pending                                      |
 
 - Task spec: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
+- QA architecture review: [`G4-T4-3-QA-ARCH-REVIEW.md`](G4-T4-3-QA-ARCH-REVIEW.md)
 
 ### G5 - Outbox worker independiente
 

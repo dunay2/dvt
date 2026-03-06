@@ -74,11 +74,15 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
    - [`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
 3. Added unit tests for valid/invalid/absent patterns.
    - [`packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
+4. Added QA architecture review for static-noise reduction aligned with SOLID/DDD/Hexagonal principles.
+   - [`G4-T4-3-QA-ARCH-REVIEW.md`](G4-T4-3-QA-ARCH-REVIEW.md)
 
 ### Validation Notes
 
 1. `pnpm --filter @dvt/adapter-temporal test` passes including the new T4-3 tests.
 2. Adapter step-shape validation now allows `stepTypeConfig` as object transport channel (rejects non-object values).
+3. T4-3 quality hardening is tracked with explicit refactor criteria in QA architecture review.
+4. Integration test support was hardened with Value Object/query-object patterns to reduce static-analysis noise without changing behavior.
 
 ## T4-4 - Traceability Service
 

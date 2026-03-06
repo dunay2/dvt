@@ -288,7 +288,7 @@ function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
-  if (Object.prototype.hasOwnProperty.call(step, 'inputBindings')) {
+  if (Object.keys(step).includes('inputBindings')) {
     throw new TypeError('INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1');
   }
 

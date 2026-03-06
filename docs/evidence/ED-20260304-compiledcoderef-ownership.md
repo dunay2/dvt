@@ -1,6 +1,6 @@
 ---
 title: ED-20260304 - compiledCodeRef ownership (ADR-0032)
-status: Draft
+status: Review
 date: 2026-03-06
 owners: Engine / Planner / Traceability
 arc_level: ARC-2
@@ -20,12 +20,13 @@ contracts_touched:
     version: optional field extension
     path: packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
 evidence:
-  pr: '[PENDING - PR not created yet]'
+  pr: https://github.com/dunay2/dvt/pull/374
   tests:
     - '[TEST PATHS PENDING] packages/@dvt/contracts/test/compiledCodeRef.test.ts'
     - '[TEST PATHS PENDING] packages/@dvt/planner/test/compiledCodeRef.test.ts'
     - packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts
     - packages/@dvt/adapter-temporal/test/activities.test.ts
+    - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
     - '[TEST PATHS PENDING] packages/@dvt/traceability-service/test/sqlJobFacet.test.ts'
     - '[TEST PATHS PENDING] packages/@dvt/traceability-service/test/integration/compiledCodeRef.integration.test.ts'
   code:
@@ -78,6 +79,8 @@ flowchart LR
 - Implemented in adapter-temporal.
 - Unit tests added for valid/invalid/absent reference extraction and payload propagation.
 - Adapter tests pass: `pnpm --filter @dvt/adapter-temporal test`.
+- Post-implementation QA hardening documented in
+  [`docs/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md`](../planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md).
 
 ## Remaining items for ED closure
 
