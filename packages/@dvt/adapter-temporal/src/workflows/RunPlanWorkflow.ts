@@ -393,7 +393,11 @@ async function handlePreLayerLifecycle(args: {
   if (args.state.cancelled) {
     await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
     args.state.status = 'CANCELLED';
-    return { runId: args.ctx.runId, status: 'CANCELLED', continuedAsNewCount: args.continuedAsNewCount };
+    return {
+      runId: args.ctx.runId,
+      status: 'CANCELLED',
+      continuedAsNewCount: args.continuedAsNewCount,
+    };
   }
 
   if (!args.state.paused) {
@@ -406,7 +410,11 @@ async function handlePreLayerLifecycle(args: {
   if (args.state.cancelled) {
     await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
     args.state.status = 'CANCELLED';
-    return { runId: args.ctx.runId, status: 'CANCELLED', continuedAsNewCount: args.continuedAsNewCount };
+    return {
+      runId: args.ctx.runId,
+      status: 'CANCELLED',
+      continuedAsNewCount: args.continuedAsNewCount,
+    };
   }
 
   await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunResumed' });
@@ -520,10 +528,19 @@ async function applyLayerResults(args: {
       continue;
     }
 
-    await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'StepFailed', stepId });
+    await activities.emitEvent({
+      ctx: args.ctx,
+      planRef: args.planRef,
+      eventType: 'StepFailed',
+      stepId,
+    });
     await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunFailed' });
     args.state.status = 'FAILED';
-    return { runId: args.ctx.runId, status: 'FAILED', continuedAsNewCount: args.continuedAsNewCount };
+    return {
+      runId: args.ctx.runId,
+      status: 'FAILED',
+      continuedAsNewCount: args.continuedAsNewCount,
+    };
   }
 
   return null;

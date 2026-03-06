@@ -246,9 +246,7 @@ function expectSingleRunStartedEvent(
   const event = runStarted[0];
   if (!event) throw new TypeError(TEST_ERRORS.missingRunStartedEvent);
   expect(event.logicalAttemptId).toBe(logicalAttemptId);
-  expect(event.idempotencyKey).toBe(
-    `RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|`
-  );
+  expect(event.idempotencyKey).toBe(`RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|`);
 
   if (typeof options.engineAttemptId === 'number') {
     expect(event.engineAttemptId).toBe(options.engineAttemptId);
@@ -402,9 +400,9 @@ describe('stepActivities', () => {
       expect(events).toHaveLength(1);
       const event = requireFirstEvent(events);
       expect(event.eventType).toBe('StepCompleted');
-      expect(
-        (event.payload as { gatewayDecision?: boolean } | undefined)?.gatewayDecision
-      ).toBe(true);
+      expect((event.payload as { gatewayDecision?: boolean } | undefined)?.gatewayDecision).toBe(
+        true
+      );
     });
 
     it('retry-safe: transient failure then retry persists one logical event', async () => {
