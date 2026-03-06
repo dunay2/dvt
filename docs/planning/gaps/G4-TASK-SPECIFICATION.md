@@ -99,3 +99,4 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 - Evidence draft: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
 - ADR detail: [`docs/adr/ADR-0032-compiledcoderef-ownership.md`](../../adr/ADR-0032-compiledcoderef-ownership.md)
+- Sonar refactor plan: [`G4-T3-SONAR-REFACTOR-PLAN.md`](G4-T3-SONAR-REFACTOR-PLAN.md)

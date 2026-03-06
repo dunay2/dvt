@@ -1,5 +1,4 @@
-import type { PlanRef, RunContext } from '@dvt/contracts';
-import type { RunStateCommandPort } from '@dvt/contracts';
+import type { PlanRef, RunContext, RunStateCommandPort } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createActivities, type ActivityDeps } from '../src/activities/stepActivities.js';
