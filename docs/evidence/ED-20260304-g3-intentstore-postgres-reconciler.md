@@ -24,7 +24,7 @@ evidence:
     - packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts
 ---
 
-# Evidence Doc (ED): G3 IntentStore Postgres + Reconciler Worker
+## Evidence Doc (ED): G3 IntentStore Postgres + Reconciler Worker
 
 ## What changed (planned)
 
@@ -52,7 +52,7 @@ evidence:
   - `getIntent`
 - Validación estricta de transiciones (mismas reglas que in-memory).
 
-2. Scheduler (`@dvt/engine`)
+1. Scheduler (`@dvt/engine`)
 
 - Clase `IntentReconcilerWorker`:
   - `start(intervalMs?)`
@@ -64,7 +64,7 @@ evidence:
   - `limit = 50`
 - Protección contra doble arranque y stop idempotente.
 
-3. Testing
+1. Testing
 
 - Unit tests de store (transiciones válidas/inválidas, idempotencia, orden y límite de huérfanos).
 - Smoke tests con Postgres real bajo flag de integración.
@@ -103,9 +103,9 @@ evidence:
 
 - Rollout:
   - 1. desplegar DDL idempotente,
-  - 2. activar store Postgres,
-  - 3. activar worker con `intervalMs` conservador,
-  - 4. observar métricas de reconciliación.
+  - 1. activar store Postgres,
+  - 1. activar worker con `intervalMs` conservador,
+  - 1. observar métricas de reconciliación.
 - Compatibilidad/migración:
   - no breaking change de contratos públicos existentes;
   - `InMemoryStartRunIntentStore` sigue disponible para tests/local.

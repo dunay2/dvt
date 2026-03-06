@@ -102,6 +102,16 @@ function humanizeName(fileName) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function renderMarkdownTable(headers, rows) {
+  const widths = headers.map((header, index) =>
+    Math.max(header.length, ...rows.map((row) => row[index].length))
+  );
+  const formatRow = (cells) =>
+    `| ${cells.map((cell, index) => cell.padEnd(widths[index], ' ')).join(' | ')} |`;
+  const separator = `| ${widths.map((width) => '-'.repeat(Math.max(width, 3))).join(' | ')} |`;
+  return [formatRow(headers), separator, ...rows.map((row) => formatRow(row))];
+}
+
 function extractFirstHeading(content) {
   const heading = content.match(/^#\s+(.+)$/m);
   return heading ? heading[1].trim() : null;
@@ -120,7 +130,9 @@ function ensureCanonicalDocsHome() {
 
   if (!hasLowerExact && hasUpperExact && upper !== null) {
     fs.renameSync(docsIndexUpper, docsIndex);
-    console.log('[docs:sync] Created docs/index.md from docs/INDEX.md and removed duplicate uppercase file.');
+    console.log(
+      '[docs:sync] Created docs/index.md from docs/INDEX.md and removed duplicate uppercase file.'
+    );
     return;
   }
 
@@ -242,6 +254,13 @@ function generateAdrLanding() {
 
   const current = readIfExists(adrLandingPath);
   const meta = frontmatterWithDefaults(current, { title: 'ADRs', status: 'Active', owner: 'docs' });
+  const adrTableRows = adrRows.map((row) => [
+    row.adrId.replace(/\|/g, '\\|'),
+    row.title.replace(/\|/g, '\\|'),
+    row.status.replace(/\|/g, '\\|'),
+    row.date.replace(/\|/g, '\\|'),
+    `[${row.fileName}](${encodeURI(row.fileName)})`,
+  ]);
 
   const lines = [
     renderFrontmatter(meta),
@@ -251,12 +270,7 @@ function generateAdrLanding() {
     '',
     '## ADR Catalog',
     '',
-    '| ADR | Title | Status | Date | File |',
-    '| --- | ----- | ------ | ---- | ---- |',
-    ...adrRows.map(
-      (row) =>
-        `| ${row.adrId} | ${row.title.replace(/\|/g, '\\|')} | ${row.status.replace(/\|/g, '\\|')} | ${row.date.replace(/\|/g, '\\|')} | [${row.fileName}](${encodeURI(row.fileName)}) |`
-    ),
+    ...renderMarkdownTable(['ADR', 'Title', 'Status', 'Date', 'File'], adrTableRows),
     '',
     '## Related',
     '',
@@ -284,7 +298,11 @@ function inferPlanningType(fileNameLower) {
   if (/(pending|debt|checklist|status|impact|rollback|estado)/.test(fileNameLower)) {
     return 'status';
   }
-  if (/(proposal|specification|task|gap|plan|remediation|consumidor|migration|hito)/.test(fileNameLower)) {
+  if (
+    /(proposal|specification|task|gap|plan|remediation|consumidor|migration|hito)/.test(
+      fileNameLower
+    )
+  ) {
     return 'proposal';
   }
   return 'reference';
@@ -329,8 +347,10 @@ function normalizePlanningDocs() {
         planning_type: forcedType || parts.frontmatter.planning_type || inferredType,
       };
 
-      const body = heading ? parts.body.trimStart() : `# ${inferredTitle}\n\n${parts.body.trimStart()}`;
-      const next = `${renderFrontmatter(meta)}${body.trimEnd()}\n`;
+      const body = heading
+        ? parts.body.trimStart()
+        : `# ${inferredTitle}\n\n${parts.body.trimStart()}`;
+      const next = `${renderFrontmatter(meta)}\n${body.trimEnd()}\n`;
       if (writeIfChanged(fullPath, next)) {
         const rel = path.relative(planningDir, fullPath).replace(/\\/g, '/');
         console.log(`[docs:sync] Normalized planning doc ${rel}`);
@@ -370,7 +390,11 @@ function collectPlanningDocs() {
   const rows = [];
   const roots = [
     { dir: planningDir, prefix: 'planning' },
-    { dir: path.join(planningDir, 'proposals'), prefix: 'planning/proposals', forcedType: 'proposal' },
+    {
+      dir: path.join(planningDir, 'proposals'),
+      prefix: 'planning/proposals',
+      forcedType: 'proposal',
+    },
     { dir: path.join(planningDir, 'reviews'), prefix: 'planning/reviews', forcedType: 'review' },
     { dir: path.join(planningDir, 'status'), prefix: 'planning/status', forcedType: 'status' },
   ];
@@ -389,8 +413,12 @@ function collectPlanningDocs() {
       const abs = path.join(root.dir, name);
       const content = fs.readFileSync(abs, 'utf8');
       const parsed = splitFrontmatter(content);
-      const title = parsed.frontmatter.title || extractFirstHeading(parsed.body) || humanizeName(name);
-      const type = root.forcedType || parsed.frontmatter.planning_type || inferPlanningType(name.toLowerCase());
+      const title =
+        parsed.frontmatter.title || extractFirstHeading(parsed.body) || humanizeName(name);
+      const type =
+        root.forcedType ||
+        parsed.frontmatter.planning_type ||
+        inferPlanningType(name.toLowerCase());
       rows.push({
         title,
         type,
@@ -578,18 +606,22 @@ function renderContractDocsList(absFiles, fromDirAbs) {
 
 function generateContractSubIndexes() {
   const contractsPkgSrc = path.join(repoRoot, 'packages', '@dvt', 'contracts', 'src');
-  const engineSrc = scanFilesRecursive(path.join(contractsPkgSrc, 'contracts', 'engine'), (abs, name) =>
-    /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+  const engineSrc = scanFilesRecursive(
+    path.join(contractsPkgSrc, 'contracts', 'engine'),
+    (abs, name) => /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
   );
-  const plannerSrc = scanFilesRecursive(path.join(contractsPkgSrc, 'contracts', 'planner'), (abs, name) =>
-    /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+  const plannerSrc = scanFilesRecursive(
+    path.join(contractsPkgSrc, 'contracts', 'planner'),
+    (abs, name) => /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
   );
   const sharedSrc = [
-    ...scanFilesRecursive(path.join(contractsPkgSrc, 'adapters'), (abs, name) =>
-      /\.ts$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+    ...scanFilesRecursive(
+      path.join(contractsPkgSrc, 'adapters'),
+      (abs, name) => /\.ts$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
     ),
-    ...scanFilesRecursive(path.join(contractsPkgSrc, 'types'), (abs, name) =>
-      /\.ts$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+    ...scanFilesRecursive(
+      path.join(contractsPkgSrc, 'types'),
+      (abs, name) => /\.ts$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
     ),
     ...scanFilesRecursive(contractsPkgSrc, (abs, name) =>
       /^(schemas|validation|planner-input|workflows)\.ts$/i.test(name)
@@ -724,8 +756,7 @@ const sectionConfigs = [
   {
     relPath: 'architecture',
     defaults: { title: 'Architecture', status: 'Active', owner: 'docs' },
-    intro:
-      'Technical architecture specifications (normative when marked Accepted/Active).',
+    intro: 'Technical architecture specifications (normative when marked Accepted/Active).',
   },
   {
     relPath: 'contracts',
@@ -765,6 +796,7 @@ function generateSectionIndexes() {
     const current = readIfExists(indexPath);
     const meta = frontmatterWithDefaults(current, section.defaults);
     const rows = scanSectionEntries(section.relPath);
+    const rowLines = rows.map((row) => `- [${row.label}](${encodeURI(row.link)})`);
     const lines = [
       renderFrontmatter(meta),
       `# ${meta.title}`,
@@ -773,8 +805,8 @@ function generateSectionIndexes() {
       '',
       '## Index',
       '',
-      ...rows.map((row) => `- [${row.label}](${encodeURI(row.link)})`),
-      '',
+      ...rowLines,
+      ...(rowLines.length > 0 ? [''] : []),
       '> This page is auto-generated by `pnpm docs:sync`. Do not edit manually.',
       '',
     ];
@@ -803,4 +835,3 @@ try {
   console.error(`[docs:sync] ERROR: ${error.message}`);
   process.exit(1);
 }
-

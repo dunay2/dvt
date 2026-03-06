@@ -7,16 +7,16 @@
  *
  * This is intentionally minimal and uses js-yaml.
  */
-import fs from "node:fs";
-import path from "node:path";
-import yaml from "js-yaml";
+import fs from 'node:fs';
+import path from 'node:path';
+import yaml from 'js-yaml';
 
-const root = process.env.RISK_ROOT || "docs/risk-register";
-const outPath = path.join(root, "INDEX.md");
+const root = process.env.RISK_ROOT || 'docs/risk-register';
+const outPath = path.join(root, 'INDEX.md');
 
 function parseFrontMatter(md) {
-  if (!md.startsWith("---")) return null;
-  const end = md.indexOf("\n---", 3);
+  if (!md.startsWith('---')) return null;
+  const end = md.indexOf('\n---', 3);
   if (end === -1) return null;
   const fmText = md.slice(3, end).trim();
   return yaml.load(fmText);
@@ -28,7 +28,7 @@ function walk(dir) {
   for (const e of entries) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) files.push(...walk(p));
-    else if (e.isFile() && e.name.startsWith("R-") && e.name.endsWith(".md")) files.push(p);
+    else if (e.isFile() && e.name.startsWith('R-') && e.name.endsWith('.md')) files.push(p);
   }
   return files;
 }
@@ -38,20 +38,20 @@ if (!fs.existsSync(root)) {
   process.exit(2);
 }
 
-const riskFiles = walk(root).filter(p => !p.endsWith("INDEX.md"));
+const riskFiles = walk(root).filter((p) => !p.endsWith('INDEX.md'));
 const rows = [];
 
 for (const fp of riskFiles) {
-  const md = fs.readFileSync(fp, "utf8");
+  const md = fs.readFileSync(fp, 'utf8');
   const fm = parseFrontMatter(md) || {};
-  const rel = fp.replace(/\\/g, "/");
+  const rel = fp.replaceAll('\\', '/');
   rows.push({
-    id: fm.id || path.basename(fp, ".md"),
-    domain: fm.domain || rel.split("/")[2] || "unknown",
-    severity: fm.severity || "unknown",
-    probability: fm.probability || "unknown",
-    status: fm.status || "unknown",
-    owner: fm.owner || "unknown",
+    id: fm.id || path.basename(fp, '.md'),
+    domain: fm.domain || rel.split('/')[2] || 'unknown',
+    severity: fm.severity || 'unknown',
+    probability: fm.probability || 'unknown',
+    status: fm.status || 'unknown',
+    owner: fm.owner || 'unknown',
     file: rel,
   });
 }
@@ -59,11 +59,15 @@ for (const fp of riskFiles) {
 rows.sort((a, b) => (a.domain + a.id).localeCompare(b.domain + b.id));
 
 const header = `# Risk Register Index\n\nGenerated from per-risk files under \`${root}/<domain>/R-*.md\`.\n\n`;
-const table = [
-  "| ID | Domain | Severity | Probability | Status | Owner | File |",
-  "|---|---|---|---|---|---|---|",
-  ...rows.map(r => `| ${r.id} | ${r.domain} | ${r.severity} | ${r.probability} | ${r.status} | ${r.owner} | ${r.file} |`)
-].join("\n") + "\n";
+const table =
+  [
+    '| ID | Domain | Severity | Probability | Status | Owner | File |',
+    '|---|---|---|---|---|---|---|',
+    ...rows.map(
+      (r) =>
+        `| ${r.id} | ${r.domain} | ${r.severity} | ${r.probability} | ${r.status} | ${r.owner} | ${r.file} |`
+    ),
+  ].join('\n') + '\n';
 
-fs.writeFileSync(outPath, header + table, "utf8");
+fs.writeFileSync(outPath, header + table, 'utf8');
 console.log(`Wrote ${outPath} (${rows.length} risks).`);

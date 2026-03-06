@@ -10,6 +10,7 @@
 import type { EngineRunRef } from '@dvt/contracts';
 
 import { IntentInvalidTransitionError, IntentNotFoundError } from '../contracts/intentErrors.js';
+import { canTransitionStartRunIntent } from '../domain/startRunIntentPolicy.js';
 import type {
   CreateIntentInput,
   IStartRunIntentStore,
@@ -44,7 +45,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void> {
     const intent = this.assertExists(intentId);
-    if (intent.status !== 'PENDING') {
+    if (!canTransitionStartRunIntent(intent.status, 'DISPATCHED')) {
       throw new IntentInvalidTransitionError(intentId, intent.status, 'DISPATCHED');
     }
     intent.status = 'DISPATCHED';
@@ -54,7 +55,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markResolved(intentId: string): Promise<void> {
     const intent = this.assertExists(intentId);
-    if (intent.status !== 'DISPATCHED' && intent.status !== 'PENDING') {
+    if (!canTransitionStartRunIntent(intent.status, 'RESOLVED')) {
       throw new IntentInvalidTransitionError(intentId, intent.status, 'RESOLVED');
     }
     intent.status = 'RESOLVED';
@@ -63,7 +64,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markExpired(intentId: string): Promise<void> {
     const intent = this.assertExists(intentId);
-    if (intent.status !== 'PENDING') {
+    if (!canTransitionStartRunIntent(intent.status, 'EXPIRED')) {
       throw new IntentInvalidTransitionError(intentId, intent.status, 'EXPIRED');
     }
     intent.status = 'EXPIRED';
@@ -82,7 +83,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
           (i.status === 'PENDING' || i.status === 'DISPATCHED') && Date.parse(i.createdAt) < cutoff
       )
       .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-    return limit !== undefined ? candidates.slice(0, limit) : candidates;
+    return limit === undefined ? candidates : candidates.slice(0, limit);
   }
 
   async getIntent(intentId: string): Promise<StartRunIntent | null> {
@@ -91,7 +92,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   private assertExists(intentId: string): StartRunIntent {
     const intent = this.intents.get(intentId);
-    if (!intent) throw new IntentNotFoundError(intentId);
+    if (intent === undefined) throw new IntentNotFoundError(intentId);
     return intent;
   }
 }

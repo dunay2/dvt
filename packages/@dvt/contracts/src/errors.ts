@@ -16,3 +16,33 @@ export class AuthorizationError extends Error {
     Object.setPrototypeOf(this, AuthorizationError.prototype);
   }
 }
+
+export class IntentNotFoundError extends Error {
+  readonly code = 'INTENT_NOT_FOUND' as const;
+
+  constructor(intentId: string) {
+    super(`Start-run intent not found: ${intentId}`);
+    this.name = 'IntentNotFoundError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class IntentInvalidTransitionError extends Error {
+  readonly code = 'INTENT_INVALID_TRANSITION' as const;
+
+  constructor(intentId: string, from: string, to: string) {
+    super(`Cannot transition intent ${intentId} from ${from} to ${to}`);
+    this.name = 'IntentInvalidTransitionError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class StoreNotReadyError extends Error {
+  readonly code = 'STORE_NOT_READY' as const;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'StoreNotReadyError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}

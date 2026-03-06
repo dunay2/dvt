@@ -24,6 +24,14 @@ export type {
   WorkflowSnapshot,
 } from './types.js';
 export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
+export type { PostgresStartRunIntentStoreConfig } from './PostgresStartRunIntentStore.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
+export { PostgresStartRunIntentStore } from './PostgresStartRunIntentStore.js';
+export { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
+export {
+  IntentInvalidTransitionError,
+  IntentNotFoundError,
+  StoreNotReadyError,
+} from '@dvt/contracts';
 export { PostgresRunStateCommandPortBridge } from './runStateCommandPortBridge.js';

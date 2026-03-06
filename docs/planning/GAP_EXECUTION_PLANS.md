@@ -18,6 +18,8 @@ planning_type: proposal
 
 # DVT+ - Gap Execution Plans
 
+<!-- markdownlint-disable MD051 -->
+
 **Fecha**: 2026-03-04
 **Fuente**: [`docs/architecture/system-delivery-status.md`](../docs/architecture/system-delivery-status.md)
 **Estado**: G2 cerrado. G1/G3/G4 pendientes Phase 1.

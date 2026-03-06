@@ -258,6 +258,14 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 → [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (Section 1.3)
 → [GlossaryContract.v1.md](contracts/engine/GlossaryContract.v1.md) (Sections 2-5)
 
+---
+
+## Architecture Views
+
+| Document                     | Purpose                                                            | Scope                | Updated    |
+| ---------------------------- | ------------------------------------------------------------------ | -------------------- | ---------- |
+| [c4-engine.md](c4-engine.md) | C4 context, container and component views for the engine subsystem | Logical architecture | 2026-03-05 |
+
 ### "How do I handle signals (PAUSE, CANCEL, etc.)?"
 
 → [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) (Sections 2.2-2.4)

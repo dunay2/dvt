@@ -5,6 +5,7 @@ owner: docs
 last_reviewed: 2026-03-04
 planning_type: review
 ---
+
 # DVT+ Architectural Review — Pass 2
 
 **Date:** 2026-03-02 (same session)  

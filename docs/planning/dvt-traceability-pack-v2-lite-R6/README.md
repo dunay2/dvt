@@ -41,16 +41,16 @@
 - `tools/risk/*`
 - `.vscode/*` (optional but recommended)
 
-2. Add directories:
+1. Add directories:
 
 - `docs/evidence/`
 - `docs/risk-register/<domain>/`
 
-3. Add CI workflow:
+1. Add CI workflow:
 
 - Use the example in `GUIDE-ci-implementation.md`
 
-4. Add local scripts:
+1. Add local scripts:
 
 ```json
 {
@@ -61,7 +61,7 @@
 }
 ```
 
-5. Communicate to the team:
+1. Communicate to the team:
 
 - ARC-2/3 require an Evidence Doc (ED).
 - Risks are added as per-risk files under `docs/risk-register/<domain>/R-*.md`.

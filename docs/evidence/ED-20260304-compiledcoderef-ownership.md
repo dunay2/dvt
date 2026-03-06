@@ -40,7 +40,7 @@ compatibility:
   matrix: 'Backward compatible: field is optional in EventInput.payload.'
 ---
 
-# Evidence Doc: compiledCodeRef Ownership (ADR-0032)
+## Evidence Doc: compiledCodeRef Ownership (ADR-0032)
 
 ## Qué cambia
 

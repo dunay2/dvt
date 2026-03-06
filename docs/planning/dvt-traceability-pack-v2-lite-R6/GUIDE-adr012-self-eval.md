@@ -19,7 +19,7 @@ Use it to prepare changes and to structure review discussions.
 - Operations/observability/deployability
 - Performance/scalability
 
-2. For touched areas, answer only the relevant questions below (N/A everything else).
+1. For touched areas, answer only the relevant questions below (N/A everything else).
 
 ## A) Design & Architecture
 
