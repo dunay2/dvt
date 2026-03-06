@@ -16,7 +16,7 @@ Generated automatically from repository code on 2026-03-06.
 | ---------------------------- | ----- |
 | Total workspaces             | 19    |
 | Total source files           | 265   |
-| Total test files             | 60    |
+| Total test files             | 61    |
 | Workspaces with build script | 19/19 |
 | Workspaces with test script  | 15/19 |
 
@@ -27,7 +27,7 @@ Generated automatically from repository code on 2026-03-06.
 | dvt-api                   | `apps/api`                           | 12        | 0          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 79        | 0          | yes   | no   | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 7         | 3          | yes   | yes  | yes       | 8                       |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 10        | 9          | yes   | yes  | no        | 13                      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 10        | 10         | yes   | yes  | no        | 13                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 0          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/contracts            | `packages/@dvt/contracts`            | 26        | 4          | yes   | yes  | no        | 18                      |
