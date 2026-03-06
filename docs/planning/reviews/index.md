@@ -11,9 +11,10 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 
 ## Index
 
-- ['DVT+ Architectural Review — Pass 2'](../DVT+_Architectural_Review_Pass_2.md)
+- ['DVT+ Architectural Review — Pass 2'](DVT+_Architectural_Review_Pass_2.md)
+- [20260305 Review](20260305%20review.md)
 - [Batch Relaunch Plan to Replace PR #301 (2026-02-28)](PR_301_RELAUNCH_BATCH_PLAN_20260228.md)
-- [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](../DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
+- [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
 - [PR #313 - CI/CD Stabilization Execution Report (2026-02-28)](PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md)
 - [Workflow Redundancy Simplification Pass 1](WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md)
 
