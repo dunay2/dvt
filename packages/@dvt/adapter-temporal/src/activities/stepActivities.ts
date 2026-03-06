@@ -10,8 +10,7 @@
  */
 import { TextDecoder } from 'node:util';
 
-import { parsePlanRef, parseRunContext } from '@dvt/contracts';
-import type { PlanRef, RunContext } from '@dvt/contracts';
+import { parsePlanRef, parseRunContext, type PlanRef, type RunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { ApplicationFailure, Context } from '@temporalio/activity';
 
@@ -263,15 +262,16 @@ function resolveTemporalAttemptFromContext(): number {
 function parsePlan(bytes: Uint8Array): ExecutionPlan {
   const text = new TextDecoder().decode(bytes);
   const obj: unknown = JSON.parse(text);
-  if (!isExecutionPlan(obj)) {
-    throw new TypeError('INVALID_PLAN_SCHEMA');
+  if (isExecutionPlan(obj)) {
+    const contractVersion = obj.metadata.contractVersion;
+    if (typeof contractVersion !== 'string') {
+      throw new TypeError('PLAN_CONTRACT_VERSION_MISSING');
+    }
+    validatePlanContractVersion(contractVersion);
+    return obj;
   }
-  const contractVersion = obj.metadata.contractVersion;
-  if (typeof contractVersion !== 'string') {
-    throw new TypeError('PLAN_CONTRACT_VERSION_MISSING');
-  }
-  validatePlanContractVersion(contractVersion);
-  return obj;
+
+  throw new TypeError('INVALID_PLAN_SCHEMA');
 }
 
 function isExecutionPlan(v: unknown): v is ExecutionPlan {
