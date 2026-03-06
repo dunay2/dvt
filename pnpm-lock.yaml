@@ -601,6 +601,9 @@ importers:
 
   packages/@dvt/traceability-service:
     dependencies:
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       glob:
         specifier: ^11.0.0
         version: 11.1.0

@@ -16,3 +16,4 @@ export * from './adapters/graph-publisher-neo4j.js';
 
 export * from './core/manifest.js';
 export * from './core/validator.js';
+export * from './lineage/index.js';
