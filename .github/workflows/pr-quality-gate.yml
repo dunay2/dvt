@@ -65,6 +65,9 @@ jobs:
       - name: Run docs doctor (duplicates/legacy/staleness)
         run: pnpm docs:doctor
 
+      - name: Validate generated code-state status doc
+        run: pnpm docs:status:check
+
       - name: Workspace type-check (fast-fail)
         if:
           ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
