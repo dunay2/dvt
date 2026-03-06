@@ -103,46 +103,15 @@ export function createActivities(deps: ActivityDeps): {
      * Real step dispatch (dbt-run, HTTP, etc.) comes in Phase 2+.
      */
     async executeStep(input: StepInput): Promise<StepResult> {
-      validateStepShape(input.step);
+      const { step, gatewayContext } = input;
+      validateStepShape(step);
+      throwIfSimulatedFailureRequested(step);
 
-      const simulateErrorKind =
-        typeof input.step['simulateError'] === 'string'
-          ? String(input.step['simulateError'])
-          : undefined;
-
-      if (simulateErrorKind === 'transient') {
-        throw new Error(`TRANSIENT_STEP_ERROR:${input.step.stepId}`);
+      if (step.type === 'gateway') {
+        return executeGatewayStep(step, gatewayContext);
       }
 
-      if (simulateErrorKind === 'permanent') {
-        throw ApplicationFailure.create({
-          type: 'PermanentStepError',
-          message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
-          nonRetryable: true,
-        });
-      }
-
-      if (input.step.type === 'gateway') {
-        const gateway = parseGatewayConfigOrThrow(input.step);
-        try {
-          const parsed = parseDslV1(gateway.expression);
-          const passed = evaluateDslV1(parsed, input.gatewayContext ?? {});
-          return {
-            stepId: input.step.stepId,
-            status: 'COMPLETED',
-            gatewayDecision: passed,
-          };
-        } catch (error) {
-          const reason = error instanceof Error ? error.message : String(error);
-          throw ApplicationFailure.create({
-            type: 'PermanentStepError',
-            message: `INVALID_GATEWAY_DSL:${input.step.stepId}:${reason}`,
-            nonRetryable: true,
-          });
-        }
-      }
-
-      return { stepId: input.step.stepId, status: 'COMPLETED' };
+      return completedStepResult(step.stepId);
     },
 
     /**
@@ -252,19 +221,10 @@ function parsePlan(bytes: Uint8Array): ExecutionPlan {
 }
 
 function isExecutionPlan(v: unknown): v is ExecutionPlan {
-  if (typeof v !== 'object' || v === null) return false;
-  const o = v as Record<string, unknown>;
-  const meta = o['metadata'];
-  const steps = o['steps'];
-  if (typeof meta !== 'object' || meta === null) return false;
-  if (!Array.isArray(steps)) return false;
-  const m = meta as Record<string, unknown>;
-  return (
-    typeof m['planId'] === 'string' &&
-    typeof m['planVersion'] === 'string' &&
-    typeof m['schemaVersion'] === 'string' &&
-    typeof m['contractVersion'] === 'string'
-  );
+  if (!isRecord(v)) {
+    return false;
+  }
+  return Array.isArray(v['steps']) && isExecutionPlanMetadata(v['metadata']);
 }
 
 function validatePlanContractVersion(contractVersion: string): void {
@@ -353,4 +313,70 @@ function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
     dslVersion: '1.0',
     expression,
   };
+}
+
+function throwIfSimulatedFailureRequested(step: ExecutionPlan['steps'][number]): void {
+  const simulateErrorKind = readSimulateErrorKind(step);
+  if (simulateErrorKind === 'transient') {
+    throw new Error(`TRANSIENT_STEP_ERROR:${step.stepId}`);
+  }
+  if (simulateErrorKind === 'permanent') {
+    throw ApplicationFailure.create({
+      type: 'PermanentStepError',
+      message: `PERMANENT_STEP_ERROR:${step.stepId}`,
+      nonRetryable: true,
+    });
+  }
+}
+
+function readSimulateErrorKind(step: ExecutionPlan['steps'][number]): string | undefined {
+  const simulateError = step['simulateError'];
+  return typeof simulateError === 'string' ? simulateError : undefined;
+}
+
+function executeGatewayStep(
+  step: ExecutionPlan['steps'][number],
+  gatewayContext: Record<string, unknown> | undefined
+): StepResult {
+  const gateway = parseGatewayConfigOrThrow(step);
+  try {
+    const parsed = parseDslV1(gateway.expression);
+    const passed = evaluateDslV1(parsed, gatewayContext ?? {});
+    return {
+      stepId: step.stepId,
+      status: 'COMPLETED',
+      gatewayDecision: passed,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw ApplicationFailure.create({
+      type: 'PermanentStepError',
+      message: `INVALID_GATEWAY_DSL:${step.stepId}:${reason}`,
+      nonRetryable: true,
+    });
+  }
+}
+
+function completedStepResult(stepId: string): StepResult {
+  return { stepId, status: 'COMPLETED' };
+}
+
+function isExecutionPlanMetadata(value: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return (
+    hasStringField(value, 'planId') &&
+    hasStringField(value, 'planVersion') &&
+    hasStringField(value, 'schemaVersion') &&
+    hasStringField(value, 'contractVersion')
+  );
+}
+
+function hasStringField(record: Record<string, unknown>, field: string): boolean {
+  return typeof record[field] === 'string';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
