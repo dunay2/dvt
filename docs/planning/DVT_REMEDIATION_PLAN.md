@@ -18,8 +18,6 @@ planning_type: proposal
 
 # Executable Remediation and Completion Plan for DVT+
 
-<!-- markdownlint-disable MD060 -->
-
 Fecha de referencia: 2026-02-26 (Atlantic/Canary)
 
 ## Research plan (ejecutable)

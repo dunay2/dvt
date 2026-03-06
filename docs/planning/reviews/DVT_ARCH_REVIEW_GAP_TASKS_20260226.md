@@ -2,145 +2,96 @@
 title: DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
 status: Draft
 owner: docs
-last_reviewed: 2026-03-05
+last_reviewed: 2026-03-06
 planning_type: review
----
-
----
-
-title: DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
-status: Draft
-owner: docs
-last_reviewed: 2026-03-04
-planning_type: review
-
 ---
 
 # DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
 
-<!-- markdownlint-disable MD060 -->
+Updated execution view aligned with current implementation status on 2026-03-06.
 
-Fuente principal de carencias: [DVT+\_Architectural_Review_20260226_AI.md](../review/DVT+_Architectural_Review_20260226_AI.md)
+- Primary status source: [`../../gaps/GAP_EXECUTION_PLANS.md`](../../gaps/GAP_EXECUTION_PLANS.md)
+- Parallel execution source: [`../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
 
----
+## Objective
 
-## Objetivo
+Close architectural gaps with verifiable, CI-backed delivery while minimizing merge contention through parallel tracks.
 
-Cerrar los huecos estructurales detectados en arquitectura con tareas ejecutables, verificables y priorizadas.
+## Current Status Snapshot (2026-03-06)
 
-## PolÃ­tica de ejecuciÃ³n
+| Gap | Title                                     | Phase     | Current state                                                 |
+| --- | ----------------------------------------- | --------- | ------------------------------------------------------------- |
+| G1  | Temporal adapter real                     | Phase 1   | In progress                                                   |
+| G2  | Postgres state store complete             | Phase 1   | Closed                                                        |
+| G3  | Start-run intent store + scheduler        | Phase 1   | Implemented in code, documentation closure pending            |
+| G4  | compiledCodeRef ownership                 | Phase 1   | In progress (`T4-2` done, `T4-3` pending, `T4-4` in progress) |
+| G5  | Independent outbox worker                 | Phase 1.5 | Pending                                                       |
+| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Pending                                                       |
+| G7  | Read models + standalone projector        | Phase 1.5 | Pending                                                       |
+| G8  | Real auth in `apps/api`                   | Phase 1.5 | Pending                                                       |
+| G9  | StepTypeRegistry + typed `stepTypeConfig` | Phase 2   | Pending                                                       |
+| G10 | `outbox_lineage` worker + fail-open DLQ   | Phase 2   | Pending                                                       |
 
-1. No avanzar a P1 sin cerrar P0 crÃ­tico.
-2. Cada tarea requiere DoD + evidencia en CI.
-3. NingÃºn â€œHECHOâ€ sin prueba automÃ¡tica asociada.
+## Confirmed Progress Since Initial Draft
 
----
+1. `G1` advanced:
+   - `lookupRunRef` implemented and tested.
+   - Temporal worker lifecycle quality gate added.
+2. `G2` closed:
+   - `listEvents(options)` paging/cursor behavior completed.
+   - `listRuns(status)` implemented in adapter.
+3. `G3` delivered in code:
+   - Durable Postgres intent store, reconciler worker, API runtime wiring.
+4. `G4` partially delivered:
+   - `T4-2` planner storage/enrichment completed.
+   - `T4-4` traceability core module and unit tests added (in progress, integration pending).
 
-## Backlog de subsanaciÃ³n
+## Parallelization-First Execution Plan
 
-| ID        | Prioridad | Carencia                            | Tarea                                                                                                                | Entregable                                                   | VerificaciÃ³n                                                                                                                                                         | Estado |
-| --------- | --------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| GAP-P0-01 | P0        | Drift de contrato State Store       | Unificar contrato canÃ³nico de state store en `@dvt/contracts` y eliminar variantes legacy                           | Un Ãºnico contrato exportado y consumido por engine/adapters | `pnpm -r typecheck` + bÃºsqueda sin referencias legacy                                                                                                                | HECHO  |
-| GAP-P0-02 | P0        | Planner subespecificado             | Definir contrato normativo `IPlanner` (inputs dbt manifest, selecciÃ³n, polÃ­ticas; output ExecutionPlan versionado) | EspecificaciÃ³n + tipos + schemas + fixtures mÃ­nimos        | Tests de contrato + validaciÃ³n de schemas                                                                                                                            | HECHO  |
-| GAP-P0-03 | P0        | Planner no ejecutable               | Implementar Planner MVP (`manifest.json` â†’ DAG â†’ layers â†’ ExecutionPlan) con fixtures 10/100/500               | Paquete planner funcional con golden tests deterministas     | `pnpm --filter @dvt/planner test`                                                                                                                                     | HECHO  |
-| GAP-P0-04 | P0        | Creep engine/decisiÃ³n              | Mover evaluaciÃ³n de gateway DSL a Activity boundary y dejar workflow sin decisiÃ³n de polÃ­tica                     | Refactor de runtime temporal + pruebas replay                | `pnpm --filter @dvt/adapter-temporal test:integration` + `pnpm lint:determinism`                                                                                      | HECHO  |
-| GAP-P0-05 | P0        | Riesgo IDOR multi-tenant            | Forzar `tenantId` obligatorio en read/list/cancel/signal y negar cross-tenant por defecto                            | APIs/store con tenant scope estricto                         | `pnpm --filter @dvt/engine test` + `pnpm --filter @dvt/adapter-postgres test` (+ `DVT_PG_INTEGRATION=1` si hay Postgres local)                                        | HECHO  |
-| GAP-P0-06 | P0        | Outbox incompleto                   | Implementar outbox relay polling + retry/backoff + DLQ + replay manual                                               | Worker operativo + runbook de reenvÃ­o                       | `pnpm --filter @dvt/engine test` + `pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/adapter-postgres test` (+ `DVT_PG_INTEGRATION=1` para smoke real) | HECHO  |
-| GAP-P0-07 | P0        | Concurrencia startRun               | Garantizar idempotencia de arranque con `workflowId=runId` y polÃ­tica de conflicto explÃ­cita                       | Un solo workflow por runId bajo carrera                      | Test de carrera N-paralelo, 1 ejecuciÃ³n real                                                                                                                         | TODO   |
-| GAP-P0-08 | P0        | Gaps no detectados en CI            | Activar suite no-gaps obligatoria: replay, idempotencia, tenant isolation, outbox, projector L3                      | Job CI bloqueante                                            | Pipeline falla ante cualquier gate roto                                                                                                                               | TODO   |
-| GAP-P1-01 | P1        | EvoluciÃ³n contractual frÃ¡gil      | Tooling de migraciÃ³n de contratos/eventos (dual-read + transform + compat matrix)                                   | Runner + tests de compat vNâ†’vN+1                           | Tests de migraciÃ³n automÃ¡ticos                                                                                                                                      | TODO   |
-| GAP-P1-02 | P1        | Escalabilidad de event log          | Particionar `run_events` + polÃ­tica de retenciÃ³n hot/cold + archivado                                              | DDL + jobs de mantenimiento + runbook                        | Bench de consultas + pruebas de rotaciÃ³n                                                                                                                             | TODO   |
-| GAP-P1-03 | P1        | Sin backpressure/admisiÃ³n          | Definir y aplicar control de admisiÃ³n por tenant + cuotas + rate limit + circuit breaking                           | MÃ³dulo de admisiÃ³n + mÃ©tricas                             | Test de carga con bursts multi-tenant                                                                                                                                 | TODO   |
-| GAP-P1-04 | P1        | Sandbox plugins inmaduro            | Cerrar decisiÃ³n e implementaciÃ³n de sandbox productivo (sin vm2) + capability enforcement runtime                  | Sandbox aislado + contrato de capacidades ejecutable         | Pruebas de aislamiento + security tests                                                                                                                               | TODO   |
-| GAP-P1-05 | P1        | Paridad multi-engine sobreprometida | Formalizar y testear â€œstate-equivalentâ€ Temporal/Conductor con matriz de conformidad                              | Conformance suite + documento de lÃ­mites                    | Tests de equivalencia de estado                                                                                                                                       | TODO   |
-| GAP-P2-01 | P2        | Cost attribution incompleto         | Separar coste pre-run (estimaciÃ³n) de post-run (atribuciÃ³n real) y construir pipeline fiable                       | Modelo de costes + ETL + dashboards                          | ValidaciÃ³n contra metering real                                                                                                                                      | TODO   |
-| GAP-P2-02 | P2        | SLA no vinculados a runtime         | Convertir SLO/SLA en polÃ­ticas ejecutables (degradaciÃ³n, shedding, alertas)                                        | Reglas de degradaciÃ³n + runbooks                            | Chaos/SLO tests                                                                                                                                                       | TODO   |
-| GAP-P2-03 | P2        | RetenciÃ³n/GDPR sin cierre          | Definir estrategia de borrado y retenciÃ³n compatible con event sourcing                                             | PolÃ­tica legal/tÃ©cnica + mecanismo operativo               | AuditorÃ­a de cumplimiento + tests                                                                                                                                    | TODO   |
+### Track A - compiledCodeRef lane (`G4`)
 
-### Evidencia de cierre â€” GAP-P0-02 (2026-02-26)
+- Scope: `T4-1`, `T4-3`, `T4-4`
+- Priority: Highest
+- Current focus:
+  - Finish `T4-3` (adapter-temporal propagation to `StepStarted.payload`)
+  - Complete `T4-4` integration on top of `T4-3`
 
-- Contrato normativo planner con alias de compatibilidad en `@dvt/contracts`.
-- Tipos y schemas v2.3 de planner presentes y validados con fixtures mÃ­nimos.
-- Suite de contrato aÃ±adida para input envelope, plan versionado y build result.
-- VerificaciÃ³n local ejecutada:
-  - `pnpm --filter @dvt/contracts build`
-  - `pnpm --filter @dvt/contracts test`
+### Track B - Runtime reliability lane (`G1` + `G3`)
 
-### Evidencia de cierre â€” GAP-P0-03 (2026-02-27)
+- Scope:
+  - Close remaining `G1` integration/ops quality gates
+  - Finalize `G3` evidence/status closure
+- Priority: High
+- Dependency: Independent from `G4` internals
 
-- Planner MVP operativo desde manifest con DAG/layers/ExecutionPlan en `@dvt/planner`.
-- Fixtures 10/100/500 cubiertos por suite dedicada y hash determinista validado.
-- VerificaciÃ³n local ejecutada:
-  - `pnpm --filter @dvt/planner test`
+### Track C - Phase 1.5 platform lane (`G5` to `G8`)
 
-### Evidencia de cierre â€” GAP-P0-04 (2026-02-27)
+- Scope:
+  - `G5` outbox worker
+  - `G6` OpenLineage CI tests + schema pin
+  - `G7` read models/projector
+  - `G8` auth
+- Priority: Starts immediately after `G4` closure
 
-- EvaluaciÃ³n gateway DSL movida a Activity boundary (`executeStep`) en adapter Temporal.
-- Workflow sin evaluaciÃ³n de DSL inline; consume `gatewayDecision` devuelto por Activity.
-- Cobertura aÃ±adida:
-  - unit tests de Activity para gateway true/false e invÃ¡lidos.
-  - test de literals para asegurar ausencia de evaluaciÃ³n DSL en workflow.
-  - integraciÃ³n time-skipping con camino gateway + `StepSkipped` + payload `gatewayDecision`.
-- VerificaciÃ³n local ejecutada:
-  - `pnpm --filter @dvt/adapter-temporal test`
-  - `pnpm --filter @dvt/adapter-temporal test:integration`
-  - `pnpm lint:determinism`
+## Recommended Merge Order
 
-### Evidencia de cierre â€” GAP-P0-05 (2026-02-27)
+1. `G4-T3` (adapter-temporal propagation).
+2. `G4-T4` integration completion (rebased on `T4-3`).
+3. Remaining `G1` closure PR.
+4. `G3` documentation/evidence closure PR.
+5. Phase 1.5 parallel PRs: `G5` and `G6`, then `G7` and `G8`.
 
-- Endurecimiento en engine: validaciÃ³n de tenant scope antes de lookup de metadata para operaciones de lectura/acciÃ³n sobre runRef:
-  - `cancelRun`
-  - `getRunStatus`
-  - `enrichRunStatus`
-  - `signal`
-  - `detectStuckRuns` (tenant-scoped read/list)
-- Se mantiene `tenantId` obligatorio por contrato en store (`getRunMetadataByRunId`, `listEvents`, `getSnapshot`, `listRuns`).
-- Cobertura negativa aÃ±adida:
-  - tests de `authorizer` para denegar `cancelRun/getRunStatus/signal` con `runRef.tenantId` no autorizado (sin tocar adapter).
-  - test de aislamiento en adapter Postgres para denegar lecturas cross-tenant por defecto (`null`/`[]` segÃºn operaciÃ³n).
-- VerificaciÃ³n local ejecutada:
-  - `pnpm --filter @dvt/engine test`
-  - `pnpm --filter @dvt/adapter-postgres test` (unit, smoke integration skipped sin DB)
-  - `DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres test` (requiere Postgres local; en este entorno no disponible: `ECONNREFUSED` a `localhost:5432`)
+## Exit Criteria
 
-### Evidencia de cierre â€” GAP-P0-06 (2026-02-27)
+Phase 1 is considered closed only when:
 
-- Outbox relay polling endurecido en worker con entrega por registro (no por batch ambiguo) y manejo explÃ­cito de fallo por evento en `OutboxWorker`.
-- Retry/backoff implementado en storage:
-  - campo `nextAttemptAt` para gate temporal de reintento,
-  - backoff exponencial con tope,
-  - filtrado de `listPending` por elegibilidad temporal.
-- DLQ y replay manual operativos:
-  - soporte `listDeadLetter`,
-  - `replayDeadLetters({ limit, runId, ids })` para reinsertar en pending con reseteo de intentos.
-- Cobertura aÃ±adida:
-  - tests de worker outbox (`drain`, `fail+retry`, `DLQ+replay`) en `@dvt/engine`.
-  - smoke tests Postgres ampliados para backoff y replay DLQ (se ejecutan con `DVT_PG_INTEGRATION=1`).
-- Runbook operativo aÃ±adido:
-  - `runbooks/OUTBOX_RELAY_OPERATIONS.md`.
-- VerificaciÃ³n local ejecutada:
-  - `pnpm --filter @dvt/engine build`
-  - `pnpm --filter @dvt/engine test`
-  - `pnpm --filter @dvt/adapter-postgres build`
-  - `pnpm --filter @dvt/adapter-postgres test` (unit, smoke integration skipped sin DB)
+- `G4` is fully closed (`T4-1`/`T4-3`/`T4-4` complete with CI evidence).
+- `G1` quality gates are green in CI and operationally validated.
+- `G3` status is fully synchronized across task spec, evidence, and gap plans.
 
----
+## References
 
-## Orden de ejecuciÃ³n recomendado (primer corte)
-
-1. GAP-P0-01 â†’ GAP-P0-02 â†’ GAP-P0-03
-2. GAP-P0-05 â†’ GAP-P0-07
-3. GAP-P0-06 â†’ GAP-P0-08
-4. GAP-P0-04 (tras estabilizar planner/state)
-
----
-
-## Criterio de salida de fase P0
-
-P0 se considera cerrado Ãºnicamente si:
-
-- No hay drift contractual en state store.
-- Planner genera planes vÃ¡lidos y deterministas para fixtures reales.
-- Tenant isolation estÃ¡ forzado y probado en negativo.
-- Outbox entrega de punta a punta bajo fallo/reintento.
-- CI no-gaps estÃ¡ activo como bloqueo.
+- Master gap plan: [`../../gaps/GAP_EXECUTION_PLANS.md`](../../gaps/GAP_EXECUTION_PLANS.md)
+- Parallel tracks: [`../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
+- G4 task spec: [`../../gaps/G4-TASK-SPECIFICATION.md`](../../gaps/G4-TASK-SPECIFICATION.md)
+- G3 task spec: [`../../gaps/G3-TASK-SPECIFICATION.md`](../../gaps/G3-TASK-SPECIFICATION.md)

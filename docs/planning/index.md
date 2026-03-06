@@ -29,6 +29,7 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 - [20260305 Review](reviews/20260305%20review.md)
 - [Batch Relaunch Plan to Replace PR #301 (2026-02-28)](reviews/PR_301_RELAUNCH_BATCH_PLAN_20260228.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
+- [DVT+ — Consolidated Architectural Review](reviews/DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md)
 - [PR #313 - CI/CD Stabilization Execution Report (2026-02-28)](reviews/PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md)
 - [Workflow Redundancy Simplification Pass 1](reviews/WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md)
 
@@ -42,8 +43,8 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 ## Reference
 
-- [Dvt Execution Model](dvt%20execution%20model/)
 - [Dvt Traceability Pack V2 Lite R6](dvt-traceability-pack-v2-lite-R6/)
+- [Execution Model](execution-model/)
 - [Gaps](gaps/)
 
 - [Marquezopen](marquezopen.txt)
