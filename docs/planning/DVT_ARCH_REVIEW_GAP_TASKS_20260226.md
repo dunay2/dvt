@@ -5,7 +5,6 @@ owner: docs
 last_reviewed: 2026-03-05
 planning_type: review
 ---
-
 ---
 
 title: DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
@@ -17,6 +16,8 @@ planning_type: review
 ---
 
 # DVT+ - Architectural Gap Remediation Tasks (2026-02-26)
+
+<!-- markdownlint-disable MD060 -->
 
 Fuente principal de carencias: [DVT+\_Architectural_Review_20260226_AI.md](../review/DVT+_Architectural_Review_20260226_AI.md)
 

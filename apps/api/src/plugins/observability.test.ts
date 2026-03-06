@@ -32,13 +32,13 @@ function baseEnv(overrides?: Partial<Env>): Env {
   };
 }
 
-void test('buildObservability returns no-op implementation when OBS_ENABLED=false', () => {
+await test('buildObservability returns no-op implementation when OBS_ENABLED=false', () => {
   const obs = buildObservability(baseEnv({ OBS_ENABLED: false }));
   assert.equal(typeof obs.withContext, 'function');
   assert.doesNotThrow(() => obs.metrics.counter('test.counter').add(1));
 });
 
-void test('buildObservability returns OTel implementation when OBS_ENABLED=true', () => {
+await test('buildObservability returns OTel implementation when OBS_ENABLED=true', () => {
   const obs = buildObservability(
     baseEnv({
       OBS_ENABLED: true,

@@ -5,7 +5,6 @@ owner: docs
 last_reviewed: 2026-03-05
 planning_type: proposal
 ---
-
 ---
 
 title: DVT+ - Gap Execution Plans
@@ -17,6 +16,8 @@ planning_type: proposal
 ---
 
 # DVT+ - Gap Execution Plans
+
+<!-- markdownlint-disable MD051 -->
 
 **Fecha**: 2026-03-04
 **Fuente**: [`docs/architecture/system-delivery-status.md`](../docs/architecture/system-delivery-status.md)

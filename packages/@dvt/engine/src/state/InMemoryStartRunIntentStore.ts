@@ -83,7 +83,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
           (i.status === 'PENDING' || i.status === 'DISPATCHED') && Date.parse(i.createdAt) < cutoff
       )
       .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-    return limit !== undefined ? candidates.slice(0, limit) : candidates;
+    return limit === undefined ? candidates : candidates.slice(0, limit);
   }
 
   async getIntent(intentId: string): Promise<StartRunIntent | null> {
@@ -92,7 +92,7 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   private assertExists(intentId: string): StartRunIntent {
     const intent = this.intents.get(intentId);
-    if (!intent) throw new IntentNotFoundError(intentId);
+    if (intent === undefined) throw new IntentNotFoundError(intentId);
     return intent;
   }
 }

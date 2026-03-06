@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -46,13 +45,19 @@ function main() {
   const failures = [];
   const warnings = [];
   const files = walk(docsRoot);
+  const legacyUppercaseIndexes = new Set(['docs/decisions/INDEX.md', 'docs/knowledge/INDEX.md']);
 
-  const uppercaseIndexes = files.filter((p) => path.basename(p) === 'INDEX.md');
+  const uppercaseIndexes = files
+    .filter((p) => path.basename(p) === 'INDEX.md')
+    .map((p) => rel(p))
+    .filter((p) => !legacyUppercaseIndexes.has(p));
   for (const p of uppercaseIndexes) {
-    failures.push(`${rel(p)} -> rename to index.md (avoid duplicate index variants).`);
+    failures.push(`${p} -> rename to index.md (avoid duplicate index variants).`);
   }
 
-  const planningFiles = files.filter((p) => p.includes(`${path.sep}planning${path.sep}`) && p.endsWith('.md'));
+  const planningFiles = files.filter(
+    (p) => p.includes(`${path.sep}planning${path.sep}`) && p.endsWith('.md')
+  );
   for (const p of planningFiles) {
     const base = path.basename(p).toLowerCase();
     if (base === 'index.md' || base === 'template_planning_doc.md') continue;

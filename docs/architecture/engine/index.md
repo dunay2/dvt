@@ -262,8 +262,8 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 
 ## Architecture Views
 
-| Document | Purpose | Scope | Updated |
-| --- | --- | --- | --- |
+| Document                     | Purpose                                                            | Scope                | Updated    |
+| ---------------------------- | ------------------------------------------------------------------ | -------------------- | ---------- |
 | [c4-engine.md](c4-engine.md) | C4 context, container and component views for the engine subsystem | Logical architecture | 2026-03-05 |
 
 ### "How do I handle signals (PAUSE, CANCEL, etc.)?"

@@ -8,7 +8,7 @@ async function main(): Promise<void> {
   > | null = null;
 
   app.addHook('onClose', async () => {
-    if (!reconcilerRuntimePromise) return;
+    if (reconcilerRuntimePromise === null) return;
     try {
       const reconcilerRuntime = await reconcilerRuntimePromise;
       await reconcilerRuntime?.stop();

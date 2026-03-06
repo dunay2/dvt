@@ -195,6 +195,10 @@ function isInfrastructureError(error: unknown): boolean {
   return code.startsWith('ECONN') || INFRA_ERROR_CODES.has(code);
 }
 
+function isPrimitive(error: unknown): boolean {
+  return typeof error === 'number' || typeof error === 'boolean' || typeof error === 'bigint';
+}
+
 function extractErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     return error;
@@ -202,7 +206,7 @@ function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  if (typeof error === 'number' || typeof error === 'boolean' || typeof error === 'bigint') {
+  if (isPrimitive(error)) {
     return String(error);
   }
   return 'Unknown error';

@@ -5,7 +5,6 @@ owner: docs
 last_reviewed: 2026-03-05
 planning_type: proposal
 ---
-
 ---
 
 title: Define the Outbox Consumer
@@ -38,7 +37,7 @@ Definir la integraciÃ³n con los proyectores existentes.
 
 Preparar el camino para futuras mejoras (Kafka, Debezium).
 
-2. Requisitos
+1. Requisitos
    Funcionales
    Entrega garantizada: Cada evento debe entregarse al menos una vez a todos los suscriptores registrados.
 
@@ -61,7 +60,7 @@ MonitorizaciÃ³n: MÃ©tricas en Prometheus, logs estructurados, alertas en cas
 
 Seguridad: Conexiones a base de datos con credenciales limitadas, evitar exponer informaciÃ³n sensible.
 
-3. DiseÃ±o del Consumidor
+1. DiseÃ±o del Consumidor
    3.1. Componentes
    OutboxWorker: Proceso (o conjunto de procesos) que periÃ³dicamente consulta la tabla outbox en busca de eventos pendientes (next_attempt_at <= now() y attempts < max_attempts). Implementa el patrÃ³n de polling con backoff.
 
@@ -111,7 +110,7 @@ Si un evento falla, los siguientes del mismo run no se procesarÃ¡n hasta que e
 
 Para evitar bloqueos, se puede marcar el evento como fallido y continuar con otros runs, pero nunca saltar un evento dentro del mismo run.
 
-4. PolÃ­ticas de Entrega y Reintentos
+1. PolÃ­ticas de Entrega y Reintentos
    MÃ¡ximo de intentos: 5 (configurable).
 
 Backoff exponencial: next_attempt_at = now() + (initial_delay \* 2^attempts). Ejemplo: 1s, 2s, 4s, 8s, 16s.
@@ -120,7 +119,7 @@ Tiempo de espera por proyecto: Timeout de 30 segundos por llamada a projector.ha
 
 Circuit breaker por proyector: Si un proyector falla repetidamente (ej. 3 veces en 1 minuto), se aÃ­sla temporalmente (no se le entregan eventos) y se alerta.
 
-5. Manejo de Fallos y Dead Letter
+1. Manejo de Fallos y Dead Letter
    Dead letter table: outbox_dead_letter con misma estructura que outbox mÃ¡s campos: dead_lettered_at, dead_letter_reason.
 
 Acciones sobre dead letter:
@@ -133,7 +132,7 @@ Descartar (solo para administradores).
 
 Alerta: Si la dead letter acumula mÃ¡s de X eventos en Y minutos, alerta P2.
 
-6. MÃ©tricas y Monitoreo
+1. MÃ©tricas y Monitoreo
    MÃ©tricas a exponer vÃ­a Prometheus:
 
 MÃ©trica Tipo DescripciÃ³n
@@ -156,7 +155,7 @@ OutboxHighErrorRate: Tasa de fallos > 5% en 5 minutos.
 
 Logs estructurados (JSON) con campos: event_id, run_id, projector, attempt, error, duration.
 
-7. IntegraciÃ³n con Proyectores Actuales y Futuros
+1. IntegraciÃ³n con Proyectores Actuales y Futuros
    Registro: Los proyectores se registran en EventDispatcher durante el arranque del worker. Pueden ser estÃ¡ticos (configuraciÃ³n) o dinÃ¡micos (descubrimiento).
 
 Interfaz del proyector:
@@ -170,7 +169,7 @@ Evento outbox: Debe contener toda la informaciÃ³n necesaria: event_type, paylo
 
 Futuro (Kafka/Debezium): El worker actual puede convivir con una futura pipeline basada en CDC. En ese caso, el worker podrÃ­a desactivarse o actuar como fallback. La tabla outbox seguirÃ­a siendo el origen de verdad.
 
-8. ImplementaciÃ³n por Fases
+1. ImplementaciÃ³n por Fases
    Fase 1: Worker bÃ¡sico (inmediato)
    Implementar OutboxWorker con polling simple, un solo hilo, sin concurrencia.
 
@@ -200,7 +199,7 @@ El worker actual puede desactivarse o mantenerse como respaldo.
 
 Requiere coordinaciÃ³n con el equipo de plataforma.
 
-9. Pruebas y ValidaciÃ³n
+1. Pruebas y ValidaciÃ³n
    Unitarias: Mock de base de datos y projectores para probar lÃ³gica de reintentos, dead letter, orden.
 
 IntegraciÃ³n: Con PostgreSQL real, verificar que los eventos se entregan en orden y que los fallos se manejan correctamente.
@@ -209,8 +208,8 @@ Carga: Simular alta tasa de eventos y verificar que el lag no crece, y que los r
 
 Caos: Matar el worker mientras procesa, verificar que no se pierden eventos (gracias a SKIP LOCKED y transacciones).
 
-10. DocumentaciÃ³n y Runbooks
-    Documento de diseÃ±o: Este plan, incluyendo diagramas y decisiones.
+1. DocumentaciÃ³n y Runbooks
+   Documento de diseÃ±o: Este plan, incluyendo diagramas y decisiones.
 
 Runbook:
 

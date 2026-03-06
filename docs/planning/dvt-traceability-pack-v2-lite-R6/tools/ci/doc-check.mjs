@@ -13,15 +13,15 @@
  *  - git base/head refs (GIT_BASE, GIT_HEAD)
  */
 
-import fs from "node:fs";
-import path from "node:path";
-import { execSync } from "node:child_process";
-import yaml from "js-yaml";
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
+import yaml from 'js-yaml';
 
-const arcJsonPath = process.env.ARC_JSON || "arc.json";
-const policyPath = process.env.ARC_POLICY || ".arc-policy.yaml";
-const base = process.env.GIT_BASE || "origin/main";
-const head = process.env.GIT_HEAD || "HEAD";
+const arcJsonPath = process.env.ARC_JSON || 'arc.json';
+const policyPath = process.env.ARC_POLICY || '.arc-policy.yaml';
+const base = process.env.GIT_BASE || 'origin/main';
+const head = process.env.GIT_HEAD || 'HEAD';
 
 function fail(msg) {
   console.error(`DOCS-VALIDATION-FAIL: ${msg}`);
@@ -30,17 +30,20 @@ function fail(msg) {
 
 function readJson(fp) {
   if (!fs.existsSync(fp)) fail(`Missing ${fp}`);
-  return JSON.parse(fs.readFileSync(fp, "utf8"));
+  return JSON.parse(fs.readFileSync(fp, 'utf8'));
 }
 
 function readPolicy(fp) {
   if (!fs.existsSync(fp)) fail(`Missing policy file: ${fp}`);
-  return yaml.load(fs.readFileSync(fp, "utf8"));
+  return yaml.load(fs.readFileSync(fp, 'utf8'));
 }
 
 function listChangedFiles() {
-  const out = execSync(`git diff --name-only ${base}...${head}`, { encoding: "utf8" });
-  return out.split("\n").map(s => s.trim()).filter(Boolean);
+  const out = execSync(`git diff --name-only ${base}...${head}`, { encoding: 'utf8' });
+  return out
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function listMdFiles(dir) {
@@ -49,14 +52,14 @@ function listMdFiles(dir) {
   for (const name of fs.readdirSync(dir)) {
     const fp = path.join(dir, name);
     const st = fs.statSync(fp);
-    if (st.isFile() && fp.endsWith(".md")) all.push(fp);
+    if (st.isFile() && fp.endsWith('.md')) all.push(fp);
   }
   return all;
 }
 
 function parseFrontMatter(mdText) {
-  if (!mdText.startsWith("---")) return null;
-  const end = mdText.indexOf("\n---", 3);
+  if (!mdText.startsWith('---')) return null;
+  const end = mdText.indexOf('\n---', 3);
   if (end === -1) return null;
   const fmText = mdText.slice(3, end).trim();
   return yaml.load(fmText);
@@ -67,8 +70,8 @@ const policy = readPolicy(policyPath);
 
 if (!arc.isArc) process.exit(0);
 
-const evidenceDir = policy.artifacts?.evidence_dir || "docs/evidence";
-const riskDir = policy.artifacts?.risk_dir || "docs/risk-register";
+const evidenceDir = policy.artifacts?.evidence_dir || 'docs/evidence';
+const riskDir = policy.artifacts?.risk_dir || 'docs/risk-register';
 
 const changed = listChangedFiles();
 
@@ -77,10 +80,11 @@ if (arc.requirements?.evidenceDoc) {
   if (edFiles.length === 0) fail(`Evidence Doc required but none found in ${evidenceDir}`);
 
   const requiredKeys = policy.validation?.evidence_doc?.required_front_matter_keys || [];
-  const requireEvidenceTestsFor = policy.validation?.evidence_doc?.require_evidence_tests_for_levels || [];
+  const requireEvidenceTestsFor =
+    policy.validation?.evidence_doc?.require_evidence_tests_for_levels || [];
 
   for (const fp of edFiles) {
-    const txt = fs.readFileSync(fp, "utf8");
+    const txt = fs.readFileSync(fp, 'utf8');
     const fm = parseFrontMatter(txt);
     if (!fm) fail(`ED must include YAML front-matter: ${fp}`);
 
@@ -90,8 +94,10 @@ if (arc.requirements?.evidenceDoc) {
 
     // evidence.tests required for ARC-2/3 by default policy
     if (requireEvidenceTestsFor.includes(String(arc.effectiveArcLevel).toUpperCase())) {
-      if (!fm.evidence || !fm.evidence.tests || !Array.isArray(fm.evidence.tests)) {
-        fail(`ED ${fp} must include evidence.tests as an array (policy requires for ${arc.effectiveArcLevel})`);
+      if (!Array.isArray(fm.evidence?.tests)) {
+        fail(
+          `ED ${fp} must include evidence.tests as an array (policy requires for ${arc.effectiveArcLevel})`
+        );
       }
     }
   }
@@ -100,7 +106,7 @@ if (arc.requirements?.evidenceDoc) {
 if (arc.requirements?.riskUpdate) {
   // Per-risk files default: expect a change under docs/risk-register/<domain>/R-*.md
 
-  const riskTouched = changed.some(f => f.startsWith(riskDir + "/"));
+  const riskTouched = changed.some((f) => f.startsWith(riskDir + '/'));
   if (!riskTouched) fail(`Risk update required but no changes under ${riskDir}/`);
 }
 

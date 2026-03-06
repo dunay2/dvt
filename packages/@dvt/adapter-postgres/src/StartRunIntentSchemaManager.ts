@@ -208,5 +208,5 @@ export class StartRunIntentSchemaManager {
 }
 
 function toSqlStringLiteral(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`;
+  return `'${value.replaceAll("'", "''")}'`;
 }

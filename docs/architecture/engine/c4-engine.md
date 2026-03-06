@@ -5,6 +5,7 @@
 **Nota**: este documento usa contenedores logicos C4. `@dvt/engine` es una libreria TypeScript, mientras que `apps/api`, el reconciler y el outbox worker representan procesos que la embeben en runtime.
 
 **Fuentes primarias**:
+
 - [WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
 - [SnapshotProjector.ts](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
 - [RunMaintenanceService.ts](../../../packages/@dvt/engine/src/services/RunMaintenanceService.ts)

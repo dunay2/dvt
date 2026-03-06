@@ -22,25 +22,27 @@
  *  - Declared ARC level can be provided via env DECLARED_ARC_LEVEL (optional).
  */
 
-import fs from "node:fs";
-import path from "node:path";
-import { execSync } from "node:child_process";
-import yaml from "js-yaml";
+import fs from 'node:fs';
+import { execSync } from 'node:child_process';
+import yaml from 'js-yaml';
 
-const base = process.env.GIT_BASE || "origin/main";
-const head = process.env.GIT_HEAD || "HEAD";
-const policyPath = process.env.ARC_POLICY || ".arc-policy.yaml";
-const declaredArcLevel = (process.env.DECLARED_ARC_LEVEL || "NA").toUpperCase();
+const base = process.env.GIT_BASE || 'origin/main';
+const head = process.env.GIT_HEAD || 'HEAD';
+const policyPath = process.env.ARC_POLICY || '.arc-policy.yaml';
+const declaredArcLevel = (process.env.DECLARED_ARC_LEVEL || 'NA').toUpperCase();
 
 function readPolicy(fp) {
   if (!fs.existsSync(fp)) throw new Error(`Policy file not found: ${fp}`);
-  const raw = fs.readFileSync(fp, "utf8");
+  const raw = fs.readFileSync(fp, 'utf8');
   return yaml.load(raw);
 }
 
 function listChangedFiles() {
-  const out = execSync(`git diff --name-only ${base}...${head}`, { encoding: "utf8" });
-  return out.split("\n").map(s => s.trim()).filter(Boolean);
+  const out = execSync(`git diff --name-only ${base}...${head}`, { encoding: 'utf8' });
+  return out
+    .split('\n')
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 // Minimal glob matcher using picomatch-like behavior is ideal,
@@ -48,21 +50,27 @@ function listChangedFiles() {
 // For production, consider adding `picomatch` (tiny, widely used).
 function globToRegExp(glob) {
   // Escape regex special chars, then re-introduce glob semantics.
-  const esc = glob.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  const esc = glob.replaceAll(/[.+^${}()|[\]\\]/g, String.raw`\$&`);
+  const doubleStarMarker = '__DOUBLESTAR__';
   const re = esc
-    .replace(/\*\*/g, "§§DOUBLESTAR§§")
-    .replace(/\*/g, "[^/]*")
-    .replace(/§§DOUBLESTAR§§/g, ".*");
-  return new RegExp("^" + re + "$");
+    .replaceAll('**', doubleStarMarker)
+    .replaceAll('*', '[^/]*')
+    .replaceAll(doubleStarMarker, '.*');
+  return new RegExp(`^${re}$`);
 }
 
 function levelRank(level) {
   switch (level) {
-    case "ARC-0": return 0;
-    case "ARC-1": return 1;
-    case "ARC-2": return 2;
-    case "ARC-3": return 3;
-    default: return -1;
+    case 'ARC-0':
+      return 0;
+    case 'ARC-1':
+      return 1;
+    case 'ARC-2':
+      return 2;
+    case 'ARC-3':
+      return 3;
+    default:
+      return -1;
   }
 }
 
@@ -73,21 +81,21 @@ function maxLevel(a, b) {
 const policy = readPolicy(policyPath);
 const changedFiles = listChangedFiles();
 
-let effective = "ARC-0";
+let effective = 'ARC-0';
 const triggerHits = [];
 
-for (const t of policy.triggers || []) {
-  const globs = t.globs || [];
+for (const trigger of policy.triggers || []) {
+  const globs = trigger.globs || [];
   const regexes = globs.map(globToRegExp);
 
-  const hits = changedFiles.filter(f => regexes.some(rx => rx.test(f)));
+  const hits = changedFiles.filter((file) => regexes.some((regex) => regex.test(file)));
   if (hits.length > 0) {
-    effective = maxLevel(effective, String(t.min_arc_level || "ARC-0").toUpperCase());
+    effective = maxLevel(effective, String(trigger.min_arc_level || 'ARC-0').toUpperCase());
     triggerHits.push({
-      name: t.name,
-      min_arc_level: String(t.min_arc_level || "ARC-0").toUpperCase(),
-      guides: t.guides || [],
-      require: t.require || {},
+      name: trigger.name,
+      min_arc_level: String(trigger.min_arc_level || 'ARC-0').toUpperCase(),
+      guides: trigger.guides || [],
+      require: trigger.require || {},
       hits: hits.slice(0, 200),
     });
   }
@@ -98,50 +106,71 @@ const isArc = levelRank(effective) > 0;
 // Aggregate guide hints (non-enforced)
 const guideSet = new Set();
 for (const hit of triggerHits) {
-  const g = hit.guides || [];
-  if (Array.isArray(g)) for (const x of g) guideSet.add(String(x));
+  const guides = hit.guides || [];
+  if (Array.isArray(guides)) {
+    for (const guide of guides) {
+      guideSet.add(String(guide));
+    }
+  }
 }
 const recommendedGuides = Array.from(guideSet);
 
 // Aggregate requirements from triggers that matched at the effective level or higher.
-const req = { evidenceDoc: false, riskUpdate: false, rolloutNotes: false, compatMatrix: false };
+const requirements = {
+  evidenceDoc: false,
+  riskUpdate: false,
+  rolloutNotes: false,
+  compatMatrix: false,
+};
 for (const hit of triggerHits) {
-  const r = hit.require || {};
-  if (r.evidence_doc) req.evidenceDoc = true;
-  if (r.risk_update) req.riskUpdate = true;
-  if (r.rollout_notes) req.rolloutNotes = true;
-  if (r.compat_matrix) req.compatMatrix = true;
+  const requireConfig = hit.require || {};
+  if (requireConfig.evidence_doc) requirements.evidenceDoc = true;
+  if (requireConfig.risk_update) requirements.riskUpdate = true;
+  if (requireConfig.rollout_notes) requirements.rolloutNotes = true;
+  if (requireConfig.compat_matrix) requirements.compatMatrix = true;
 }
 
 // Baseline requirements by level (ED for ARC-2/3)
-if (levelRank(effective) >= levelRank("ARC-2")) req.evidenceDoc = true;
-if (effective === "ARC-3") req.riskUpdate = true;
+if (levelRank(effective) >= levelRank('ARC-2')) requirements.evidenceDoc = true;
+if (effective === 'ARC-3') requirements.riskUpdate = true;
 
 // Determine required checks
-const checks = (policy.checks && policy.checks[effective]) ? policy.checks[effective] : ["lint", "test"];
+const checks = policy.checks?.[effective] ?? ['lint', 'test'];
 
 const result = {
   isArc,
   declaredArcLevel,
   effectiveArcLevel: effective,
   reasons: { triggerHits, changedFiles: changedFiles.slice(0, 500) },
-  requirements: req,
+  requirements,
   requiredChecks: checks,
   policyVersion: policy.version ?? 1,
   recommendedGuides,
 };
 
-console.error(`[ARC] effective=${result.effectiveArcLevel} isArc=${result.isArc} checks=${result.requiredChecks.join(',')}`);
-if (result.recommendedGuides && result.recommendedGuides.length) {
+console.error(
+  `[ARC] effective=${result.effectiveArcLevel} isArc=${result.isArc} checks=${result.requiredChecks.join(',')}`
+);
+if (result.recommendedGuides?.length) {
   console.error(`[ARC] Recommended guides: ${result.recommendedGuides.join(', ')}`);
 }
-if (result.isArc && result.effectiveArcLevel !== result.declaredArcLevel && result.declaredArcLevel !== 'NA') {
-  console.error(`[ARC] policy upgraded declared level (${result.declaredArcLevel}) -> effective (${result.effectiveArcLevel}).`);
+if (
+  result.isArc &&
+  result.effectiveArcLevel !== result.declaredArcLevel &&
+  result.declaredArcLevel !== 'NA'
+) {
+  console.error(
+    `[ARC] policy upgraded declared level (${result.declaredArcLevel}) -> effective (${result.effectiveArcLevel}).`
+  );
 }
 if (result.isArc && result.requirements.evidenceDoc) {
-  console.error(`[ARC] Evidence Doc required under ${policy.artifacts?.evidence_dir || 'docs/evidence'}`);
+  console.error(
+    `[ARC] Evidence Doc required under ${policy.artifacts?.evidence_dir || 'docs/evidence'}`
+  );
 }
 if (result.isArc && result.requirements.riskUpdate) {
-  console.error(`[ARC] Risk update required under ${policy.artifacts?.risk_dir || 'docs/risk-register'}`);
+  console.error(
+    `[ARC] Risk update required under ${policy.artifacts?.risk_dir || 'docs/risk-register'}`
+  );
 }
 process.stdout.write(JSON.stringify(result, null, 2));
