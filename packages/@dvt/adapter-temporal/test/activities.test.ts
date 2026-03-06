@@ -124,14 +124,17 @@ class TestRunStateStore implements RunStateCommandPort {
     };
   }
 
-  async listEvents(tenantId: string, runId: string): Promise<EventEnvelope[]> {
-    const events = this.eventsByRun.get(runId) ?? [];
-    return events.filter((event) => event.tenantId === tenantId);
+  async listEvents(query: { tenantId: string; runId: string }): Promise<EventEnvelope[]> {
+    const events = this.eventsByRun.get(query.runId) ?? [];
+    return events.filter((event) => event.tenantId === query.tenantId);
   }
 
-  async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
-    const metadata = this.metadataByRun.get(runId);
-    if (metadata?.tenantId !== tenantId) {
+  async getRunMetadataByRunId(query: {
+    tenantId: string;
+    runId: string;
+  }): Promise<RunMetadata | null> {
+    const metadata = this.metadataByRun.get(query.runId);
+    if (metadata?.tenantId !== query.tenantId) {
       return null;
     }
 
@@ -210,7 +213,7 @@ async function expectExecuteStepRejects(step: unknown, expectedError: string): P
 }
 
 async function loadRunEvents(store: TestRunStateStore): Promise<EventEnvelope[]> {
-  return store.listEvents(CTX.tenantId, CTX.runId);
+  return store.listEvents({ tenantId: CTX.tenantId, runId: CTX.runId });
 }
 
 function expectSingleRunStartedEvent(
@@ -596,7 +599,10 @@ describe('stepActivities', () => {
         providerRunId: 'run-1',
       });
 
-      const meta = await store.getRunMetadataByRunId('tenant-1', 'run-1');
+      const meta = await store.getRunMetadataByRunId({
+        tenantId: 'tenant-1',
+        runId: 'run-1',
+      });
       expect(meta).not.toBeNull();
       if (!meta) {
         throw new Error('expected run metadata');
