@@ -92,7 +92,7 @@ Source of truth for execution gaps and delivery state.
 | T4-1 | contracts type + exports + fixtures               | Partial (type/export done, fixtures pending) |
 | T4-2 | planner storage adapters + attachCompiledCodeRefs | Done in code                                 |
 | T4-3 | adapter-temporal propagation to StepStarted       | Pending                                      |
-| T4-4 | traceability reader/cache/SqlJobFacet             | Pending                                      |
+| T4-4 | traceability reader/cache/SqlJobFacet             | In progress (core module + unit tests added) |
 
 - Task spec: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
 
