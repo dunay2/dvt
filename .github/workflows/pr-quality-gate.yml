@@ -42,6 +42,20 @@ jobs:
       - name: Setup pnpm, cache and dependencies (fast-fail)
         uses: ./.github/actions/setup-node-pnpm
 
+      - name: ARC policy evaluate
+        if: github.event_name == 'pull_request'
+        run: node tools/ci/arc-check.mjs > arc.json
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
+      - name: ARC docs / evidence validate
+        if: github.event_name == 'pull_request'
+        run: ARC_JSON=arc.json node tools/ci/doc-check.mjs
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
       - name: Validate docs sync outputs (ADR/index coherence)
         run: pnpm docs:sync:check
 
