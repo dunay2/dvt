@@ -35,9 +35,7 @@ type RequestWithSpan = FastifyRequest & {
 
 function requireDatabaseUrlForProtectedRoutes(env: Env): string {
   if (!env.DATABASE_URL) {
-    throw new Error(
-      'DATABASE_URL is required when OIDC-protected runtime routes are enabled'
-    );
+    throw new Error('DATABASE_URL is required when OIDC-protected runtime routes are enabled');
   }
   return env.DATABASE_URL;
 }

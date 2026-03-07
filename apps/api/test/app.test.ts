@@ -22,39 +22,36 @@ await test('buildApp wires observability and health endpoint works', async () =>
   await app.close();
 });
 
-await test(
-  'buildApp migrates principal grants before serving protected runtime routes',
-  async () => {
-    const originalMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
-    let migrateCalls = 0;
+await test('buildApp migrates principal grants before serving protected runtime routes', async () => {
+  const originalMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+  let migrateCalls = 0;
 
-    PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {
-      migrateCalls += 1;
-    };
+  PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {
+    migrateCalls += 1;
+  };
 
-    process.env.OBS_ENABLED = 'false';
-    process.env.NODE_ENV = 'test';
-    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
-    process.env.OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
-    process.env.OIDC_ISSUER = 'https://issuer.example/';
-    process.env.OIDC_AUDIENCE = 'dvt-api';
+  process.env.OBS_ENABLED = 'false';
+  process.env.NODE_ENV = 'test';
+  process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
+  process.env.OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
+  process.env.OIDC_ISSUER = 'https://issuer.example/';
+  process.env.OIDC_AUDIENCE = 'dvt-api';
 
-    try {
-      const { app } = buildApp();
-      await app.ready();
+  try {
+    const { app } = buildApp();
+    await app.ready();
 
-      assert.equal(migrateCalls, 1);
+    assert.equal(migrateCalls, 1);
 
-      await app.close();
-    } finally {
-      PostgresPrincipalAccessRepository.prototype.migrate = originalMigrate;
-      delete process.env.DATABASE_URL;
-      delete process.env.OIDC_JWKS_URI;
-      delete process.env.OIDC_ISSUER;
-      delete process.env.OIDC_AUDIENCE;
-    }
+    await app.close();
+  } finally {
+    PostgresPrincipalAccessRepository.prototype.migrate = originalMigrate;
+    delete process.env.DATABASE_URL;
+    delete process.env.OIDC_JWKS_URI;
+    delete process.env.OIDC_ISSUER;
+    delete process.env.OIDC_AUDIENCE;
   }
-);
+});
 
 await test('buildApp fails fast when OIDC is enabled without DATABASE_URL', () => {
   process.env.OBS_ENABLED = 'false';
