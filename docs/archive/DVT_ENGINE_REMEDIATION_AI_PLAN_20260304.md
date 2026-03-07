@@ -1,9 +1,9 @@
 ---
 title: DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)
-status: Draft
+status: Archived
 owner: docs
 last_reviewed: 2026-03-04
-planning_type: proposal
+planning_type: archive
 ---
 
 # DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)
@@ -486,33 +486,33 @@ Remove operational batch behavior from IWorkflowEngine.
 
 ## 5) Status board (from your provided baseline; requires repo verification)
 
-> **Note:** Marking as HECHO/PARCIAL here reflects your pasted status table, not a live repo scan.
+> **Note:** Marking a row as DONE or PARTIAL here reflects your pasted status table, not a live repo scan.
 
-| ID    | Task                              | Priority | Estado    |
-| ----- | --------------------------------- | -------: | --------- |
-| P0-01 | ADRs clave actualizados           |       P0 | HECHO     |
-| P0-02 | IRunStateStore unificado          |       P0 | PARCIAL   |
-| P0-03 | Tipos únicos + validación runtime |       P0 | PARCIAL   |
-| P0-04 | Projector Layer-3 FSM             |       P0 | PARCIAL   |
-| P0-05 | tenantId obligatorio              |       P0 | PARCIAL   |
-| P0-06 | IPlanner spec + schema            |       P0 | PARCIAL   |
-| P0-07 | Planner MVP                       |       P0 | PENDIENTE |
-| P0-08 | Plan cache                        |       P0 | PENDIENTE |
-| P0-09 | Gateway CEL                       |       P0 | PARCIAL   |
-| P0-10 | continueAsNew + gatewayDecisions  |       P0 | HECHO     |
-| P0-11 | Outbox relay                      |       P0 | PARCIAL   |
-| P0-12 | startRun concurrency              |       P0 | PARCIAL   |
-| P0-13 | Maintenance service               |       P0 | PENDIENTE |
-| P0-14 | CI no-gaps suite                  |       P0 | PARCIAL   |
-| P1-01 | Contract migration tooling        |       P1 | PENDIENTE |
-| P1-02 | Postgres partitioning             |       P1 | PENDIENTE |
-| P1-03 | PgBouncer pooling                 |       P1 | PENDIENTE |
-| P1-04 | Snowflake tagging PoC             |       P1 | PENDIENTE |
-| P1-05 | Plugin sandbox                    |       P1 | PENDIENTE |
-| P1-06 | Conductor strategy                |       P1 | HECHO     |
-| P2-01 | Retención + GDPR                  |       P2 | PENDIENTE |
-| P2-02 | Señales extensibles               |       P2 | PENDIENTE |
-| P2-03 | Capacity planning Temporal        |       P2 | PENDIENTE |
+| ID    | Task                                        | Priority | Status  |
+| ----- | ------------------------------------------- | -------: | ------- |
+| P0-01 | Key ADRs updated                            |       P0 | DONE    |
+| P0-02 | Unified `IRunStateStore`                    |       P0 | PARTIAL |
+| P0-03 | Single-source types plus runtime validation |       P0 | PARTIAL |
+| P0-04 | Layer-3 FSM projector                       |       P0 | PARTIAL |
+| P0-05 | Mandatory `tenantId`                        |       P0 | PARTIAL |
+| P0-06 | `IPlanner` spec plus schema                 |       P0 | PARTIAL |
+| P0-07 | Planner MVP                                 |       P0 | PENDING |
+| P0-08 | Plan cache                                  |       P0 | PENDING |
+| P0-09 | Gateway CEL                                 |       P0 | PARTIAL |
+| P0-10 | `continueAsNew` plus gateway decisions      |       P0 | DONE    |
+| P0-11 | Outbox relay                                |       P0 | PARTIAL |
+| P0-12 | `startRun` concurrency                      |       P0 | PARTIAL |
+| P0-13 | Maintenance service                         |       P0 | PENDING |
+| P0-14 | CI no-gaps suite                            |       P0 | PARTIAL |
+| P1-01 | Contract migration tooling                  |       P1 | PENDING |
+| P1-02 | Postgres partitioning                       |       P1 | PENDING |
+| P1-03 | PgBouncer pooling                           |       P1 | PENDING |
+| P1-04 | Snowflake tagging proof of concept          |       P1 | PENDING |
+| P1-05 | Plugin sandbox                              |       P1 | PENDING |
+| P1-06 | Conductor strategy                          |       P1 | DONE    |
+| P2-01 | Retention plus GDPR                         |       P2 | PENDING |
+| P2-02 | Extensible signals                          |       P2 | PENDING |
+| P2-03 | Temporal capacity planning                  |       P2 | PENDING |
 
 ---
 

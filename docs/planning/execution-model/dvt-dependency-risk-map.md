@@ -1,3 +1,11 @@
+---
+title: DVT+ Dependency Risk Map
+status: Draft
+owner: docs
+last_reviewed: 2026-03-07
+planning_type: analysis
+---
+
 # DVT+ Dependency Risk Map
 
 Date: 2026-03-06

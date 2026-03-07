@@ -1,3 +1,11 @@
+---
+title: DVT+ System Map God Diagram
+status: Draft
+owner: docs
+last_reviewed: 2026-03-07
+planning_type: analysis
+---
+
 # DVT+ System Map ("God Diagram")
 
 Date: 2026-03-06

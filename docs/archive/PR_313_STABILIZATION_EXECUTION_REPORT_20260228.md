@@ -1,19 +1,9 @@
 ---
 title: PR #313 - CI/CD Stabilization Execution Report (2026-02-28)
-status: Draft
+status: Archived
 owner: docs
-last_reviewed: 2026-03-05
+last_reviewed: 2026-03-07
 planning_type: review
----
-
----
-
-title: PR #313 - CI/CD Stabilization Execution Report (2026-02-28)
-status: Draft
-owner: docs
-last_reviewed: 2026-03-05
-planning_type: review
-
 ---
 
 # PR #313 - CI/CD Stabilization Execution Report (2026-02-28)
@@ -43,7 +33,7 @@ La iniciativa partÃ­a de un estado de CI/CD inestable con mÃºltiples fallos 
 
 Documento marco de rollback asociado:
 
-- `docs/planning/CI_CD_ROLLBACK_PLAN_20260228.md`
+- `docs/archive/CI_CD_ROLLBACK_PLAN_20260228.md`
 
 ---
 
@@ -202,7 +192,7 @@ Estos riesgos no se â€œocultanâ€; se gestionan por gating temporal mien
 1. Resolver el thread pendiente en PR #313 (UI GitHub, â€œResolve conversationâ€).
 2. Reintentar merge de la PR una vez levantado el bloqueo de policy.
 3. Tras merge, iniciar fase de rollback gradual siguiendo:
-   - `docs/planning/CI_CD_ROLLBACK_PLAN_20260228.md`
+   - `docs/archive/CI_CD_ROLLBACK_PLAN_20260228.md`
 4. Reactivar checks opcionales por dominio hasta volver a automÃ¡tico sin toggles temporales.
 
 ---

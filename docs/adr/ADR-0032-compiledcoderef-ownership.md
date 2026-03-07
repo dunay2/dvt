@@ -5,13 +5,13 @@
 - **Owners**: Engine Domain / Planner / Traceability
 - **ARC Level**: ARC-2 (non-breaking contract extension, optional field)
 - **Related files**:
-  - [IRunStateStore.v1.ts](../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
-  - [ExecutionPlan.v1.ts](../../packages/@dvt/contracts/src/engine/ExecutionPlan.v1.ts)
+  - [IRunStateStore.v1.ts](../../packages/@dvt/contracts/src/contracts/engine/IRunStateStore.v1.ts)
+  - [ExecutionPlan.v2.ts](../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
   - [ADR-0003 — Execution Model](ADR-0003-execution-model.md)
   - [ADR-0004 — Event Sourcing Strategy](ADR-0004-event-sourcing-strategy.md)
   - [ADR-0012 — Plan Integrity Ownership](ADR-0012-plan-integrity-ownership.md)
-  - [ADR-0020 — OpenLineage Integration Strategy](ADR-0020-openlineage-integration.md) (if exists)
-  - [ADR-0021 — RunEvents → OL Mapping](ADR-0021-runevents-ol-mapping.md) (if exists)
+  - `ADR-0020 — OpenLineage Integration Strategy` (not present in the repo at this time)
+  - `ADR-0021 — RunEvents → OL Mapping` (not present in the repo at this time)
   - [GAP_EXECUTION_PLANS.md — G4](../planning/gaps/GAP_EXECUTION_PLANS.md#g4---compiledcoderef-ownership)
 
 ---

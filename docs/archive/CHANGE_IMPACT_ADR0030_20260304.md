@@ -1,8 +1,8 @@
 ---
 title: Change Impact Report — ADR-0030 Session 2026-03-04
-status: Draft
+status: Archived
 owner: docs
-last_reviewed: 2026-03-04
+last_reviewed: 2026-03-07
 planning_type: status
 ---
 

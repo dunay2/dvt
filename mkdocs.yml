@@ -38,6 +38,8 @@ nav:
   - Guides:
       - Mandatory Work System for AI: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
       - Guides Index: guides/index.md
+  - Evidence: evidence/index.md
+  - Risk Register: risk-register/index.md
   - Runbooks: runbooks/index.md
   - Planning:
       - Planning Index: planning/index.md

@@ -9,7 +9,7 @@
 ## Sources Used (Agreed)
 
 1. `dvt_workflow_engine_artifact` → `docs/architecture/engine/index.md`
-2. `dvt_v2_architecture_explanation` → `docs/review/DVT+_Architectural_Review_20260225.md`
+2. `dvt_v2_architecture_explanation` → `docs/archive/DVT+_Architectural_Review_20260225.md`
 3. Product Definition Principle validated by indirect normative references in:
    - `docs/architecture/engine/contracts/engine/RunEvents.v2.0.md`
    - `docs/architecture/engine/security/SECURITY_INVARIANTS.v1.md`

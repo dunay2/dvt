@@ -84,13 +84,13 @@ Every PR goes through **4 automated validation stages** before merge:
 ### PR metadata gate (required before rerun)
 
 Before rerunning failed PR checks, verify PR metadata first. The workflow
-[`pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) fails if these
+[`pr-quality-gate.yml`](../.github/workflows/pr-quality-gate.yml) fails if these
 rules are not met:
 
 1. **PR title must use Conventional Commits format**
    - Required shape: `<type>: <Subject>`
    - Allowed types are defined in
-     [`Check PR title follows Conventional Commits`](../../.github/workflows/pr-quality-gate.yml).
+     [`Check PR title follows Conventional Commits`](../.github/workflows/pr-quality-gate.yml).
    - Current policy requires subject to start with uppercase (pattern `^[A-Z].+$`).
    - Example: `chore: Safe integrate pr85`
 
@@ -100,9 +100,9 @@ rules are not met:
 
 1. **Operational procedure for agents (mandatory order)**
    - Read failed job logs first (do not assume cause).
-   - Fix title/body with [`gh pr edit`](../../package.json).
+   - Fix title/body with `gh pr edit`.
    - Re-run checks only after metadata is corrected.
-   - Confirm state with [`gh pr checks`](../../package.json) until all required checks are green.
+   - Confirm state with `gh pr checks` until all required checks are green.
 
 **Tool**: `markdownlint-cli2`  
 **Workflow**: `.github/workflows/markdown_lint.yml`  
@@ -137,7 +137,7 @@ markdownlint-cli2 "docs/**/*.md"
 
 ````bash
 # Extract TypeScript blocks manually
-sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.1.md | sed '1d;$d' > /tmp/test.ts
+sed -n '/```ts/,/```/p' docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md | sed '1d;$d' > /tmp/test.ts
 
 # Validate with tsc
 npx tsc --noEmit --skipLibCheck /tmp/test.ts
@@ -149,7 +149,7 @@ npx tsc --noEmit --skipLibCheck /tmp/test.ts
 **Workflow**: `.github/workflows/markdown_lint.yml` (job: `validate-internal-links`)  
 **Checks**:
 
-- All `[text](relative/path.md)` links resolve to existing files
+- All relative link targets resolve to existing files
 - Anchor links (e.g., `#section-heading`) exist in target files
 
 **Fix failures**:
@@ -157,7 +157,7 @@ npx tsc --noEmit --skipLibCheck /tmp/test.ts
 ```bash
 # Check links locally
 npm install -g markdown-link-check
-markdown-link-check docs/architecture/engine/INDEX.md
+markdown-link-check docs/architecture/engine/index.md
 ```
 
 **Common causes**:
@@ -214,8 +214,8 @@ When creating a new versioned contract (e.g., `MyContract.v1.md`):
 **Consumers**: [List who depends on this: Engine, SDK, Adapter, etc.]
 
 **References**:
-[Contract Versioning Policy](../../VERSIONING.md)  
- [Related Contract](./OtherContract.v1.md)
+Contract Versioning Policy: `../../VERSIONING.md`  
+Related Contract: `./OtherContract.v1.md`
 
 ---
 
@@ -237,7 +237,7 @@ What problem does this contract solve?
 
 ## Schema Evolution (Versioning)
 
-Changes to this contract follow **Semantic Versioning** (see [VERSIONING.md](../../VERSIONING.md)):
+Changes to this contract follow **Semantic Versioning** (see `../../VERSIONING.md`):
 
 **MINOR Bump (v1.0 → v1.1)**: Backward-compatible additions
 
@@ -434,16 +434,15 @@ Reference policy: [`ADR-0006-contract-tooling-governance.md`](./decisions/ADR-00
 3. Add entry to `## Change Log`
 4. Git tag: `engine/MyContract@v1.0.1`
 
-### Q: I want to add a new optional method to `IWorkflowEngine.v1.1.md`. Is that a patch or MINOR?
+### Q: I want to add a new optional method to `IWorkflowEngine.v1.md`. Is that a patch or MINOR?
 
-**A**: **MINOR bump** (backward-compatible addition).
+**A**: **MINOR update on the active major line** (backward-compatible addition).
 
-1. Create new file: `IWorkflowEngine.v1.1.md`
-2. Copy content from `v1.md`
-3. Add new method
-4. Update `**Version**:` to `1.1`
-5. Add changelog entry
-6. Update `INDEX.md` to reference both `v1.md` and `v1.1.md`
+1. Edit `IWorkflowEngine.v1.md` in place
+2. Add the new optional method
+3. Update `**Version**:` to `1.1`
+4. Add a changelog entry
+5. Update `index.md` and any affected reference docs
 
 ### Q: How do I deprecate an old contract version?
 
@@ -453,7 +452,7 @@ Reference policy: [`ADR-0006-contract-tooling-governance.md`](./decisions/ADR-00
 
    ```markdown
    > **⚠️ DEPRECATED**: This contract is deprecated as of 2026-02-01.
-   > Use [MyContract.v2.md](./MyContract.v2.md) instead.
+   > Use `MyContract.v2.md` instead.
    > Support ends: 2026-05-01 (90 days after release tag).
    ```
 

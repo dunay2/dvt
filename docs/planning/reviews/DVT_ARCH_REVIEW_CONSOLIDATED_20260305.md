@@ -189,78 +189,78 @@ Unchanged from Pass 1 findings, plus one new item:
 
 ## 8. Recommendations — Priority Order
 
-### P0 — Do now (production safety, high ratio impact/effort)
+### P0 - Do now (production safety, high ratio impact/effort)
 
 **P0-A: API engine routes**
 Four routes over `WorkflowEngine` (already imported in `apps/api`). Pattern established by health routes.
-Esfuerzo: **1 semana**
+Effort: **1 week**
 
 **P0-B: SnapshotRebuildService**
 Iterate `listRuns`, `listEvents`, project, save snapshot. Operational safety net.
-Esfuerzo: **3–5 días**
+Effort: **3-5 days**
 
-**P0-C: Instrumentar WorkflowEngine con métricas**
+**P0-C: Instrument WorkflowEngine with metrics**
 5 metric calls following the pattern already in `intentReconcilerRuntime.ts`.
 `dvt_run_started_total`, `dvt_run_duration_ms`, `dvt_run_failed_total`, `dvt_step_duration_ms`, `dvt_outbox_delivery_lag_ms`.
-Esfuerzo: **2–3 días**
+Effort: **2-3 days**
 
 **P0-D: OutboxWorker row-level lock (ADR-0009 Option B)**
 Multi-instance correctness. `FOR UPDATE SKIP LOCKED` per outbox entry.
-Esfuerzo: **3–4 días**
+Effort: **3-4 days**
 
-### P1 — Sprint 2 (closes critical wiring gaps)
+### P1 - Sprint 2 (closes critical wiring gaps)
 
 **P1-A: JwtAuthorizer real** — tenant-scoped JWT claims validation
-Esfuerzo: **2–3 semanas**
+Effort: **2-3 weeks**
 
 **P1-B: IArtifactStore formal port** — elevate `ICompiledCodeStorage` to domain-level hexagonal port
-Esfuerzo: **4–5 días**
+Effort: **4-5 days**
 
 **P1-C: dbt step result mapping** — `DbtExecutionResult` type + `StepFailed(reason)` structured
-Esfuerzo: **1–2 semanas**
+Effort: **1-2 weeks**
 
 **P1-D: G4-T4-3 compiledCodeRef** — propagate `compiledCodeRef` to `StepStarted.payload` via adapter-temporal
-Esfuerzo: **1 semana** (G4 T4-3)
+Effort: **1 week** (G4 T4-3)
 
 **P1-E: Async snapshot materialization** — post-`appendAndEnqueueTx` snapshot enqueue; `workflow_snapshots` table
-Esfuerzo: **1–2 semanas**
+Effort: **1-2 weeks**
 
-### P2 — Sprint 3 (productización)
+### P2 - Sprint 3 (productization)
 
 **P2-A: UI → API wiring** — replace `mockData.ts` with `@tanstack/react-query`; start with `RunsView` + `Canvas`
-Esfuerzo: **1–2 semanas** (after P0-A)
+Effort: **1-2 weeks** (after P0-A)
 
 **P2-B: StepTypeRegistry + plan validation** — close G9; validate `stepTypeConfig` at `buildPlan()` time
-Esfuerzo: **1–2 semanas**
+Effort: **1-2 weeks**
 
 **P2-C: outbox_lineage worker** — close G10; apply ADR-0009 invariants; fail-open DLQ
-Esfuerzo: **1–2 semanas**
+Effort: **1-2 weeks**
 
 **P2-D: Run retention policy** — TTL / archival job; 90-day default
-Esfuerzo: **1 semana**
+Effort: **1 week**
 
 **P2-E: OL schema pin + CI tests** — close G6
-Esfuerzo: **1 semana**
+Effort: **1 week**
 
 **P2-F: engineAttemptId pass-through** — pass actual attempt from `RunMetadata`
-Esfuerzo: **2–3 días**
+Effort: **2-3 days**
 
-### P3 — Sprint 4 (extensibilidad)
+### P3 - Sprint 4 (extensibility)
 
 **P3-A: SSE/WS streaming** — real-time status after P0-A + P2-A
-Esfuerzo: **2 semanas**
+Effort: **2 weeks**
 
 **P3-B: TraceabilityService → Neo4j wiring** — close G15
-Esfuerzo: **1–2 semanas**
+Effort: **1-2 weeks**
 
 **P3-C: catalog.json + run_results.json parsers** — close G16
-Esfuerzo: **1–2 semanas**
+Effort: **1-2 weeks**
 
-**P3-D: Frontend tests** — Vitest + Testing Library mínimo para RunsView + Canvas
-Esfuerzo: **1–2 semanas**
+**P3-D: Frontend tests** — minimal Vitest + Testing Library coverage for `RunsView` and `Canvas`
+Effort: **1-2 weeks**
 
 **P3-E: Replay/determinism certification suite**
-Esfuerzo: **1 semana**
+Effort: **1 week**
 
 ### Post-MVP (no date)
 
@@ -276,33 +276,33 @@ Esfuerzo: **1 semana**
 ## 9. Phase Roadmap — Updated
 
 ```
-Sprint actual (this week)
-├── P0-A: API engine routes                    [1 sem]
-├── P0-B: SnapshotRebuildService               [3-5 días]
-├── P0-C: WorkflowEngine instrumentation       [2-3 días]
-└── P0-D: OutboxWorker row-level lock          [3-4 días]
+Current sprint (this week)
+|- P0-A: API engine routes                    [1 week]
+|- P0-B: SnapshotRebuildService               [3-5 days]
+|- P0-C: WorkflowEngine instrumentation       [2-3 days]
+`- P0-D: OutboxWorker row-level lock          [3-4 days]
 
 Sprint 2
-├── P1-A: JwtAuthorizer real                   [2-3 sem]
-├── P1-B: IArtifactStore port formal           [4-5 días]
-├── P1-C: dbt step result mapping              [1-2 sem]
-├── P1-D: G4-T4-3 compiledCodeRef propagation  [1 sem]
-└── P1-E: Async snapshot materialization       [1-2 sem]
+|- P1-A: JwtAuthorizer real                   [2-3 weeks]
+|- P1-B: IArtifactStore port formal           [4-5 days]
+|- P1-C: dbt step result mapping              [1-2 weeks]
+|- P1-D: G4-T4-3 compiledCodeRef propagation  [1 week]
+`- P1-E: Async snapshot materialization       [1-2 weeks]
 
 Sprint 3
-├── P2-A: UI → API wiring                      [1-2 sem]
-├── P2-B: StepTypeRegistry                     [1-2 sem]
-├── P2-C: outbox_lineage worker                [1-2 sem]
-├── P2-D: Run retention policy                 [1 sem]
-├── P2-E: OL schema pin + CI tests             [1 sem]
-└── P2-F: engineAttemptId pass-through         [2-3 días]
+|- P2-A: UI -> API wiring                     [1-2 weeks]
+|- P2-B: StepTypeRegistry                     [1-2 weeks]
+|- P2-C: outbox_lineage worker                [1-2 weeks]
+|- P2-D: Run retention policy                 [1 week]
+|- P2-E: OL schema pin + CI tests             [1 week]
+`- P2-F: engineAttemptId pass-through         [2-3 days]
 
 Sprint 4
-├── P3-A: SSE/WS streaming                     [2 sem]
-├── P3-B: TraceabilityService → Neo4j          [1-2 sem]
-├── P3-C: catalog + run_results parsers        [1-2 sem]
-├── P3-D: Frontend tests                       [1-2 sem]
-└── P3-E: Replay certification suite           [1 sem]
+|- P3-A: SSE/WS streaming                     [2 weeks]
+|- P3-B: TraceabilityService -> Neo4j         [1-2 weeks]
+|- P3-C: catalog + run_results parsers        [1-2 weeks]
+|- P3-D: Frontend tests                       [1-2 weeks]
+`- P3-E: Replay certification suite           [1 week]
 
 Post-MVP
 ├── Plugin runtime sandbox                     [4-6 sem]
@@ -364,10 +364,10 @@ The following are baked into stored data and cannot change without a migration p
 
 ## 13. References
 
-- Gap tracker: [`../../gaps/GAP_EXECUTION_PLANS.md`](../../gaps/GAP_EXECUTION_PLANS.md)
-- Parallel tracks: [`../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
-- G4 task spec: [`../../gaps/G4-TASK-SPECIFICATION.md`](../../gaps/G4-TASK-SPECIFICATION.md)
-- G3 task spec: [`../../gaps/G3-TASK-SPECIFICATION.md`](../../gaps/G3-TASK-SPECIFICATION.md)
+- Gap tracker: [`../gaps/GAP_EXECUTION_PLANS.md`](../gaps/GAP_EXECUTION_PLANS.md)
+- Parallel tracks: [`../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
+- G4 task spec: [`../gaps/G4-TASK-SPECIFICATION.md`](../gaps/G4-TASK-SPECIFICATION.md)
+- G3 task spec: [`../gaps/G3-TASK-SPECIFICATION.md`](../gaps/G3-TASK-SPECIFICATION.md)
 - Execution Model Spec: [`../execution-model/dvt-execution-model.md`](../execution-model/dvt-execution-model.md)
 - Reference Architecture: [`../../architecture/reference-architecture.md`](../../architecture/reference-architecture.md)
 - God Diagram: [`../execution-model/dvt-system-map-god-diagram.md`](../execution-model/dvt-system-map-god-diagram.md)

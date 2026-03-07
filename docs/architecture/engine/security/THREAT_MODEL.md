@@ -413,7 +413,7 @@ or asymmetric) per entry or batch
 **References**:
 
 - [gVisor](https://gvisor.dev/) - Application kernel for containers (strong isolation)
-- [PluginSandbox.v1.0.md](contracts/extensions/PluginSandbox.v1.0.md) - Trust Tier specification
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Trust tier specification
 
 ---
 
@@ -561,10 +561,10 @@ The following contracts define security-critical interfaces and policies. Implem
 
 ### Interface Contracts
 
-- **[IAuthorization.v1.md](contracts/security/IAuthorization.v1.md)**: Authorization interface (RBAC evaluation)
-- **[AuditLog.v1.md](contracts/security/AuditLog.v1.md)**: Audit log schema + immutability guarantees
-- **[ISecretsProvider.v1.md](contracts/security/ISecretsProvider.v1.md)**: Secrets resolution interface (reference → value at runtime)
-- **[DecisionRecord.v1.md](contracts/operations/DecisionRecord.v1.md)**: Operator action justification schema
+- **[IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md)**: Authorization interface (RBAC evaluation)
+- **[AuditLog.v1.md](../contracts/security/AuditLog.v1.md)**: Audit log schema + immutability guarantees
+- **[ExecutionSemantics.v1.md](../contracts/engine/ExecutionSemantics.v1.md)**: Secrets resolution boundary (reference -> value at runtime)
+- **[SignalsAndAuth.v1.md](../contracts/engine/SignalsAndAuth.v1.md)**: Operator action justification schema
 
 ---
 
@@ -594,17 +594,17 @@ The following contracts define security-critical interfaces and policies. Implem
 
 ### Interface Contracts
 
-- [IAuthorization.v1.md](contracts/security/IAuthorization.v1.md) - Authorization interface (RBAC evaluation)
-- [AuditLog.v1.md](contracts/security/AuditLog.v1.md) - Audit log schema + cryptographic signature requirements
-- [ISecretsProvider.v1.md](contracts/security/ISecretsProvider.v1.md) - Secrets resolution interface (no secrets in logs/history)
-- [DecisionRecord.v1.md](contracts/operations/DecisionRecord.v1.md) - Operator action justification schema
-- [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) - Core engine interface with tenant scope requirements
+- [IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md) - Authorization interface (RBAC evaluation)
+- [AuditLog.v1.md](../contracts/security/AuditLog.v1.md) - Audit log schema + cryptographic signature requirements
+- [ExecutionSemantics.v1.md](../contracts/engine/ExecutionSemantics.v1.md) - Secrets resolution boundary (no secrets in logs/history)
+- [SignalsAndAuth.v1.md](../contracts/engine/SignalsAndAuth.v1.md) - Operator action justification schema
+- [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) - Core engine interface with tenant scope requirements
 
 ### Architecture Documentation
 
-- [Product Definition](../../../README.md#product-definition) - Multi-tenant, auditability requirements
-- [design_principles.md](../design_principles.md) - Architecture principles (security by design)
-- [PluginSandbox.v1.0.md](contracts/extensions/PluginSandbox.v1.0.md) - Plugin isolation + Trust Tier specification
+- [DVT+ Execution Model Specification](../../../planning/execution-model/dvt-execution-model.md) - Multi-tenant, auditability, and separation requirements
+- [DVT Engine Architecture Index](../index.md) - Architecture principles and boundary map
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Plugin isolation and trust tier specification
 
 ### Regulatory References
 

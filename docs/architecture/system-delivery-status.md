@@ -9,6 +9,26 @@
 
 ---
 
+## Traceability Anchors
+
+This document is the cross-system status board, not the canonical behavioral spec.
+
+Use it together with:
+
+- [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) for the curated topic -> doc -> code -> test -> command mapping
+- [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) for the active execution-gap breakdown
+
+Minimum tuple for this document:
+
+- `canonical_spec`: topic-specific. See the matrix and linked specs.
+- `status_doc`: [`docs/architecture/system-delivery-status.md`](system-delivery-status.md)
+- `code_paths`: summarized by module here; curated paths live in [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
+- `test_paths`: summarized by module here; exact tests live in [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) and linked evidence docs
+- `verification_cmd`: `pnpm test:engine`, `pnpm test:adapter-postgres`, `pnpm test:adapter-temporal`, `pnpm validate:contracts`
+- `evidence_or_risk`: use linked evidence docs for closed gaps and risk-register entries for open hardening debt
+
+---
+
 ## Leyenda
 
 | Símbolo | Significado                                                        |

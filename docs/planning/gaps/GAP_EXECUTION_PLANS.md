@@ -14,6 +14,22 @@ Source of truth for execution gaps and delivery state.
 - Last sync date: 2026-03-07
 - Scope: Phase 1, Phase 1.5, Phase 2
 
+## Traceability Anchors
+
+This file is the active status doc for execution gaps. Use it together with:
+
+- [System Delivery Status](../../architecture/system-delivery-status.md) for the cross-system implementation snapshot
+- [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md) for the curated doc -> code -> test -> command mapping
+
+Minimum tuple for this document:
+
+- `canonical_spec`: gap-specific. See each gap section below.
+- `status_doc`: [`docs/planning/gaps/GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
+- `code_paths`: listed in each active gap section
+- `test_paths`: listed in each active gap section or linked evidence doc
+- `verification_cmd`: gap-specific. See each active gap section below.
+- `evidence_or_risk`: linked evidence docs and risk records where the gap is already formalized
+
 ## Executive State (2026-03-07)
 
 | Gap | Title                                     | Phase     | Current state |
@@ -59,6 +75,13 @@ Source of truth for execution gaps and delivery state.
 ### G1 - Temporal Adapter real
 
 - Status: In progress (close-out phase)
+- Traceability tuple:
+  - `canonical_spec`: [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `code_paths`: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`, `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
+  - `test_paths`: `packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`, `packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts`, `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
+  - `verification_cmd`: `pnpm test:adapter-temporal`
+  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md)
 - Done:
   - `lookupRunRef` implemented
   - unit tests for exists/not-found/error paths
@@ -68,6 +91,9 @@ Source of truth for execution gaps and delivery state.
 - Pending:
   - keep the integration lane healthy as Temporal runtime contracts evolve
   - operational validation of worker host defaults under load
+  - align logging and tracing injection across adapters so runtime diagnostics are consistent
+  - review timeout policy alignment across Temporal, Conductor, and mock adapters
+  - treat `AbortSignal` support as a deferred follow-up when Temporal SDK support becomes practical
 
 ### G2 - PostgresStateStore complete
 
@@ -81,6 +107,13 @@ Source of truth for execution gaps and delivery state.
 ### G3 - IStartRunIntentStore Postgres + scheduler
 
 - Status: Closed
+- Traceability tuple:
+  - `canonical_spec`: [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](G3-TASK-SPECIFICATION.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `code_paths`: `packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts`, `packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts`, `apps/api/src/runtime/intentReconcilerRuntime.ts`
+  - `test_paths`: `packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts`, `packages/@dvt/engine/test/workers/IntentReconcilerWorker.test.ts`
+  - `verification_cmd`: `pnpm test:adapter-postgres`, `pnpm test:engine`
+  - `evidence_or_risk`: [ED-20260304 - G3 intent store Postgres reconciler](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
 - Delivered:
   - durable Postgres intent store
   - transition guards and typed errors
@@ -95,6 +128,13 @@ Source of truth for execution gaps and delivery state.
 ### G4 - compiledCodeRef ownership
 
 - Status: Closed
+- Traceability tuple:
+  - `canonical_spec`: [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](G4-TASK-SPECIFICATION.md)
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `code_paths`: `packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts`, `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`
+  - `test_paths`: `packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts`, `packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts`, `packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`, `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`
+  - `verification_cmd`: `pnpm --filter @dvt/contracts test`, `pnpm --filter @dvt/planner test`, `pnpm --filter @dvt/adapter-temporal test`, `pnpm --filter @dvt/traceability-service test`
+  - `evidence_or_risk`: [ED-20260304 - compiledCodeRef ownership](../../evidence/ED-20260304-compiledcoderef-ownership.md)
 - Subtasks:
 
 | Task | Scope                                             | Status                                      |
@@ -110,17 +150,34 @@ Source of truth for execution gaps and delivery state.
 ### G5 - Outbox worker independiente
 
 - Status: Partial
+- Traceability tuple:
+  - `canonical_spec`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md) until a dedicated runtime spec or runbook exists
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `code_paths`: `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+  - `test_paths`: `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+  - `verification_cmd`: `pnpm test:engine`, `pnpm test:adapter-postgres`
+  - `evidence_or_risk`: none yet; promote to evidence or risk record once a standalone runtime/process is introduced
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)
   - reusable engine `OutboxWorker` core
 - Remaining:
   - standalone polling runtime/process
+  - explicit subscriber delivery contract for projector/event-bus consumers
+  - retry, backoff, and dead-letter operational policy for worker delivery failures
   - publisher wiring and operational lifecycle outside the API process
   - shard strategy / scaling model
+  - lag, health, and error metrics aligned with runbook/ops expectations
 
 ### G6 - OpenLineage mapping tests CI + schema pin
 
 - Status: Partial
+- Traceability tuple:
+  - `canonical_spec`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md) until lineage delivery has a dedicated accepted runtime spec
+  - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
+  - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`
+  - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`
+  - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm traceability:adr0`
+  - `evidence_or_risk`: consider promotion to a dedicated risk record if `_schemaURL` drift remains open after the next hardening pass
 - Delivered:
   - compiled-code lineage resolver/cache/facet mapping package code
   - package-level tests for mapper/guard/resolver paths
@@ -155,6 +212,7 @@ Source of truth for execution gaps and delivery state.
 - Status: Pending
 - Target:
   - lineage delivery worker, DLQ, fail-open behavior for external lineage sinks
+  - explicit worker parameters: poll interval, batch size, ordering, retry, and lag metrics
 
 ## Execution Order (Updated)
 
