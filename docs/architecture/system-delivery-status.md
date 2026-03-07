@@ -177,9 +177,9 @@ TRACSVC --> OL_MAP
 
 ### Read & Projection
 
-| Módulo            | Paquete       | Estado | Notas                                                                      |
-| ----------------- | ------------- | ------ | -------------------------------------------------------------------------- |
-| SnapshotProjector | `@dvt/engine` | 🟡     | Proyector in-process ✅ · Servicio standalone ❌                           |
+| Módulo            | Paquete       | Estado | Notas                                                                                              |
+| ----------------- | ------------- | ------ | -------------------------------------------------------------------------------------------------- |
+| SnapshotProjector | `@dvt/engine` | 🟡     | Proyector in-process ✅ · Servicio standalone ❌                                                   |
 | Read Models       | —             | ❌     | Sin servicio standalone ni índices denormalizados de producción; el proyector actual es in-process |
 
 ---
@@ -195,15 +195,15 @@ TRACSVC --> OL_MAP
 
 ### Traceability / OpenLineage
 
-| Módulo                   | Paquete                     | Estado | Notas                                                                    |
-| ------------------------ | --------------------------- | ------ | ------------------------------------------------------------------------ |
+| Módulo                   | Paquete                     | Estado | Notas                                                                                                |
+| ------------------------ | --------------------------- | ------ | ---------------------------------------------------------------------------------------------------- |
 | Traceability Service     | `@dvt/traceability-service` | 🟡     | `service.ts` + lineage resolver/mapper existen · package tests ✅ · `_schemaURL`/delivery runtime ❌ |
-| RunEvents → OL mapping   | —                           | 🟡     | Mapping TypeScript ✅ + tests de paquete ✅ · CI/pin de spec ❌ |
-| OL spec pin `_schemaURL` | —                           | ❌     | Sin versión OL fijada en código — riesgo de drift silencioso             |
-| `outbox_lineage` table   | —                           | ❌     | No existe implementación en repo; solo intención de diseño              |
-| `outbox_lineage` Worker  | —                           | ❌     | No existe. fail-open DLQ policy sin definir                              |
-| `dvt_cost attributor`    | —                           | ❌     | Phase 3 (Q1 2027) · **invariante**: MUST usar `outbox_lineage`           |
-| Marquez                  | externo                     | 🟡     | Consumidor externo de OpenLineage · Deployment = riesgo externo          |
+| RunEvents → OL mapping   | —                           | 🟡     | Mapping TypeScript ✅ + tests de paquete ✅ · CI/pin de spec ❌                                      |
+| OL spec pin `_schemaURL` | —                           | ❌     | Sin versión OL fijada en código — riesgo de drift silencioso                                         |
+| `outbox_lineage` table   | —                           | ❌     | No existe implementación en repo; solo intención de diseño                                           |
+| `outbox_lineage` Worker  | —                           | ❌     | No existe. fail-open DLQ policy sin definir                                                          |
+| `dvt_cost attributor`    | —                           | ❌     | Phase 3 (Q1 2027) · **invariante**: MUST usar `outbox_lineage`                                       |
+| Marquez                  | externo                     | 🟡     | Consumidor externo de OpenLineage · Deployment = riesgo externo                                      |
 
 ---
 
@@ -214,7 +214,7 @@ TRACSVC --> OL_MAP
 | G1  | **Temporal Adapter real** (SDK, namespace, tasks, `lookupRunRef`) | `adapter-temporal`                 | 🟡 In progress — SDK/lookupRunRef/lifecycle/integration ya existen; falta cierre operativo       | Phase 1   |
 | G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | ✅ Cerrado — `listEvents(options)` con `afterSeq`/`limit` ✅ · `listRuns` con filtro `status` ✅ | Phase 1   |
 | G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliación   | `engine`                           | ✅ Cerrado — store Postgres + reconciler worker + wiring runtime                                 | Phase 1   |
-| G4  | **compiledCodeRef ownership** — decisión de arquitectura          | planner / traceability             | ✅ Cerrado — ADR-0032 implementado extremo a extremo                                              | Phase 1   |
+| G4  | **compiledCodeRef ownership** — decisión de arquitectura          | planner / traceability             | ✅ Cerrado — ADR-0032 implementado extremo a extremo                                             | Phase 1   |
 | G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | 🟡 Parcial — worker core y storage APIs existen; falta runtime standalone y shards               | Phase 1.5 |
 | G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | 🟡 Parcial — mapper/resolver/tests existen; falta pin de spec y hardening de CI                  | Phase 1.5 |
 | G7  | **Read Models** + proyector standalone                            | state-store / infra                | 🟡 Parcial — `SnapshotProjector` in-process existe; faltan servicio/read models                  | Phase 1.5 |
