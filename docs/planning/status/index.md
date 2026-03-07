@@ -17,6 +17,7 @@ Current status snapshots and implementation tracking.
 - [Engine DVT - Implementation Status Checklist (Against Requested Spec)](../ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md)
 - [Generated Capability Coverage](generated-capability-coverage.md)
 - [Generated Code State](generated-code-state.md)
+- [Generated Spec Traceability](generated-spec-traceability.md)
 - [Pending Golden Path Coverage Debt](../pending-golden-path-coverage-debt.md)
 - [Pending Release Please Continuous](../pending-release-please-continuous.md)
 

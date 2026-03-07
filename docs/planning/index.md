@@ -47,6 +47,7 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 - [Engine DVT - Implementation Status Checklist (Against Requested Spec)](ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md)
 - [Generated Capability Coverage](status/generated-capability-coverage.md)
 - [Generated Code State](status/generated-code-state.md)
+- [Generated Spec Traceability](status/generated-spec-traceability.md)
 - [Pending Golden Path Coverage Debt](pending-golden-path-coverage-debt.md)
 - [Pending Release Please Continuous](pending-release-please-continuous.md)
 

@@ -94,6 +94,7 @@ function normalizeMarkdownTarget(fromFile, target) {
   if (cleanTarget.length === 0) return null;
   const resolved = path.resolve(path.dirname(fromFile), cleanTarget);
   if (!resolved.startsWith(repoRoot)) return null;
+  if (!fs.existsSync(resolved)) return null;
   return relFromRepo(resolved);
 }
 
@@ -158,7 +159,7 @@ function collectCode() {
     const docMatches = [...raw.matchAll(/@docs?\s+([^\s*]+)/g)].map((match) => match[1]);
     return {
       relPath,
-      workspace: relPath.split('/').slice(0, 3).join('/'),
+      workspace: workspaceOf(relPath),
       hasFileTag,
       baselineAdrs: baselineMatches,
       docRefs: docMatches,
@@ -166,6 +167,20 @@ function collectCode() {
       hasDocRefs: docMatches.length > 0,
     };
   });
+}
+
+function workspaceOf(relPath) {
+  const parts = relPath.split('/');
+  if (parts[0] === 'apps' && parts.length >= 2) {
+    return parts.slice(0, 2).join('/');
+  }
+  if (parts[0] === 'packages' && parts[1] && parts[1].startsWith('@') && parts.length >= 3) {
+    return parts.slice(0, 3).join('/');
+  }
+  if (parts[0] === 'packages' && parts.length >= 2) {
+    return parts.slice(0, 2).join('/');
+  }
+  return parts.slice(0, Math.min(parts.length, 2)).join('/') || relPath;
 }
 
 function renderDoc(docs, code) {
