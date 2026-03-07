@@ -6,7 +6,6 @@ last_reviewed: 2026-03-07
 planning_type: proposal
 ---
 
-
 # Milestone 0 - Immediate Stabilization (Sprint 1-2)
 
 ## Objetivo

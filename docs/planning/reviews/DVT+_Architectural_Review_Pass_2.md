@@ -367,13 +367,13 @@ Use `StepTypeRegistry` to validate registered kinds, required fields, and `depen
 
 ## Delay Indefinitely Until A Real Need Exists
 
-| Item | Why |
-| --- | --- |
-| Snowflake ETL pipeline (CDC) | There is no write path yet; the analytics layer is still theoretical. |
-| Conductor adapter | Temporal is not production-hardened yet. |
-| CompositeLineageBackend fan-out | No real enterprise customer needs it yet. |
-| `dvt_deps` facet per step | It creates Marquez job-version churn without a proven use case. |
-| Cost dashboard UI | First validate that `dvt_cost` reaches Marquez correctly. |
+| Item                            | Why                                                                   |
+| ------------------------------- | --------------------------------------------------------------------- |
+| Snowflake ETL pipeline (CDC)    | There is no write path yet; the analytics layer is still theoretical. |
+| Conductor adapter               | Temporal is not production-hardened yet.                              |
+| CompositeLineageBackend fan-out | No real enterprise customer needs it yet.                             |
+| `dvt_deps` facet per step       | It creates Marquez job-version churn without a proven use case.       |
+| Cost dashboard UI               | First validate that `dvt_cost` reaches Marquez correctly.             |
 
 ---
 

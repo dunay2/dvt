@@ -23,21 +23,23 @@ Concrete example: When you run dbt-ol, for each output dataset an event like thi
 ```json
 {
   "eventType": "COMPLETE",
-  "outputs": [{
-    "namespace": "snowflake://my_account",
-    "name": "analytics.dim_customers",
-    "facets": {
-      "schema": {
-        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.0/integration/dbt",
-        "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
-        "fields": [
-          {"name": "customer_id", "type": "NUMBER"},
-          {"name": "customer_name", "type": "VARCHAR"},
-          {"name": "first_order_date", "type": "DATE"}
-        ]
+  "outputs": [
+    {
+      "namespace": "snowflake://my_account",
+      "name": "analytics.dim_customers",
+      "facets": {
+        "schema": {
+          "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.0/integration/dbt",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
+          "fields": [
+            { "name": "customer_id", "type": "NUMBER" },
+            { "name": "customer_name", "type": "VARCHAR" },
+            { "name": "first_order_date", "type": "DATE" }
+          ]
+        }
       }
     }
-  }]
+  ]
 }
 ```
 

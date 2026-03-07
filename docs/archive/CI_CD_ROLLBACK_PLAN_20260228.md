@@ -6,7 +6,6 @@ last_reviewed: 2026-03-07
 planning_type: status
 ---
 
-
 # CI/CD Rollback Plan After Stabilization (2026-02-28)
 
 ## Objetivo

@@ -6,7 +6,6 @@ last_reviewed: 2026-03-07
 planning_type: review
 ---
 
-
 # Batch Relaunch Plan to Replace PR #301 (2026-02-28)
 
 ## Contexto

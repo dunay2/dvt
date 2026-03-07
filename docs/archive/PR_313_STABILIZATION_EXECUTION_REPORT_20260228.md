@@ -6,7 +6,6 @@ last_reviewed: 2026-03-07
 planning_type: review
 ---
 
-
 # PR #313 - CI/CD Stabilization Execution Report (2026-02-28)
 
 ## Resumen ejecutivo
