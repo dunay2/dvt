@@ -9,14 +9,8 @@ import {
   TenantId,
   type RequestedScope,
 } from '../../domain/auth/types.js';
-import { mapStartRunFacadeResult } from './authErrorMapper.js';
 
-interface StartRunBody {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
-  readonly selection: ReadonlyArray<string>;
-}
+import { mapStartRunFacadeResult } from './authErrorMapper.js';
 
 type ParsedStartRunRequest = {
   readonly command: StartRunCommand;
