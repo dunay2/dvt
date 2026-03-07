@@ -23,6 +23,7 @@ space. The remaining content is preserved below as historical context and is no
 longer maintained.
 
 ## Original Content
+
 # DVT+ Architecture Handbook
 
 **Author:** Architecture Team\
@@ -368,10 +369,10 @@ A `createNoopObservability()` factory is provided for tests.
 
 Example metrics:
 
-run*duration\
-step_duration\
-warehouse_cost _(not yet implemented - requires Snowflake query history)_\\
-queue_latency _(not yet implemented)_\\
+- `run_duration`
+- `step_duration`
+- `warehouse_cost` (not yet implemented; requires Snowflake query history)
+- `queue_latency` (not yet implemented)
 
 ---
 

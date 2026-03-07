@@ -19,14 +19,14 @@ Canonical reference for DVT architectural principles, bounded contexts, and top-
 
 ## Bounded Contexts
 
-| Context | Responsibility | Current status |
-| --- | --- | --- |
-| Planner | DAG generation, plan assembly, deterministic hashing | Implemented in code, partial runtime integration |
-| Execution | Run orchestration, lifecycle state, provider delegation | Implemented in code |
-| State | Event persistence, outbox, snapshot reads | Implemented in code |
-| Artifacts | Plan bytes and compiled-code storage/access | Partial |
-| Observability | Metrics, traces, operational signals | Partial |
-| UX/API | Runtime endpoints and product surface | Partial |
+| Context       | Responsibility                                          | Current status                                   |
+| ------------- | ------------------------------------------------------- | ------------------------------------------------ |
+| Planner       | DAG generation, plan assembly, deterministic hashing    | Implemented in code, partial runtime integration |
+| Execution     | Run orchestration, lifecycle state, provider delegation | Implemented in code                              |
+| State         | Event persistence, outbox, snapshot reads               | Implemented in code                              |
+| Artifacts     | Plan bytes and compiled-code storage/access             | Partial                                          |
+| Observability | Metrics, traces, operational signals                    | Partial                                          |
+| UX/API        | Runtime endpoints and product surface                   | Partial                                          |
 
 ## Core Domain Model
 

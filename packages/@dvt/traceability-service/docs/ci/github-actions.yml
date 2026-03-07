@@ -19,9 +19,6 @@ jobs:
 
       - name: Validate and build traceability manifest
         run: >-
-          pnpm -C packages/@dvt/traceability-service trace validate-and-build-manifest
-          --config ./traceability.config.json
-          --repoRoot .
-          --component "@dvt/contracts"
-          --componentVersion "1.0.0"
-          --repoSha "${{ github.sha }}"
+          pnpm -C packages/@dvt/traceability-service trace validate-and-build-manifest --config
+          ./traceability.config.json --repoRoot . --component "@dvt/contracts" --componentVersion
+          "1.0.0" --repoSha "${{ github.sha }}"
