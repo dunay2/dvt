@@ -1,16 +1,15 @@
 /**
  * @file packages/@dvt/traceability-service/src/service.ts
  * @baseline ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
- * @decision Section 4.3 — Build manifest from scanned trace headers
- * @decision Section 4.4 — Enforce reverse coverage for Accepted ADR catalog
- * @decision Section 4.5 — Publish deterministic File/ADR/Module graph
+ * @decision Section 4.3 - Build a manifest from scanned trace headers
+ * @decision Section 4.4 - Enforce reverse coverage for the Accepted ADR catalog
+ * @decision Section 4.5 - Emit deterministic manifest output as the canonical automation artifact
  * @consequence A single orchestration entrypoint enforces governance deterministically in CI
  * @version 0.1.0
  * @date 2026-02-21
  */
 import type {
   IAdrCatalog,
-  IGraphPublisher,
   IManifestBuilder,
   ITraceHeaderScanner,
   ITraceabilityService,
@@ -23,23 +22,19 @@ type TraceabilityDeps = {
   scanner: ITraceHeaderScanner;
   validator: ITraceValidator;
   manifestBuilder: IManifestBuilder;
-  graphPublisher: IGraphPublisher;
 };
 
 export class TraceabilityService implements ITraceabilityService {
   constructor(private readonly deps: TraceabilityDeps) {}
 
-  async validateAndPublish(input: {
+  async validateAndBuildManifest(input: {
     repoRoot: string;
     component: string;
     componentVersion: string;
     repoSha: string;
     includeGlobs: string[];
     excludeGlobs: string[];
-    moduleName: string;
-    modulePath: string;
     generated: string;
-    publishGraph?: boolean;
     requireDecision?: boolean;
     failOnMissingVersion?: boolean;
   }): Promise<{ validation: ValidationResult; manifest?: TraceabilityManifest }> {
@@ -76,15 +71,6 @@ export class TraceabilityService implements ITraceabilityService {
       traces,
       adrCatalog: this.deps.adrCatalog,
     });
-
-    if (input.publishGraph !== false) {
-      await this.deps.graphPublisher.publish({
-        moduleName: input.moduleName,
-        modulePath: input.modulePath,
-        traces,
-        adrCatalog: this.deps.adrCatalog,
-      });
-    }
 
     return { validation: { ok: true, issues: [] }, manifest };
   }

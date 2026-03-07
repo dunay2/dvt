@@ -1,47 +1,42 @@
-# Base de Conocimiento DVT — Índice
+# DVT Knowledge Index
 
-Este índice centraliza el conocimiento operativo/técnico del repositorio para acelerar:
+This index centralizes operational and technical repository knowledge for:
 
-- onboarding
-- análisis de impacto
-- planificación de issues
-- trazabilidad entre ADR ↔ documentación ↔ código
+- onboarding,
+- impact analysis,
+- delivery planning,
+- ADR-to-code traceability.
 
 ---
 
-## 1) Visión general del sistema
+## 1) System overview
 
-- [Mapa del repositorio y capas](./REPOSITORY_MAP.md)
-- [Roadmap, estado e issues](./ROADMAP_AND_ISSUES_MAP.md)
+- [Repository map and layers](./REPOSITORY_MAP.md)
+- [Roadmap, status and issues](./ROADMAP_AND_ISSUES_MAP.md)
 
-## 2) Arquitectura y contratos
+## 2) Architecture and contracts
 
-- [Arquitectura engine (índice)](../architecture/engine/index.md)
-- [Arquitectura frontend (índice)](../architecture/frontend/index.md)
-- [Contratos automatización](../CONTRACTS_AUTOMATION_INDEX.md)
+- [Architecture index](../architecture/index.md)
+- [Engine architecture](../architecture/engine/index.md)
+- [Contracts index](../contracts/index.md)
 
-## 3) Decisiones arquitectónicas (ADR)
+## 3) Architecture decisions
 
-- [ADR-0001: Temporal integration test policy](../decisions/ADR-0001-temporal-integration-test-policy.md)
-- [ADR-0002: Neo4j knowledge graph context repository](../decisions/ADR-0002-neo4j-knowledge-graph-context-repository.md)
+- [ADR index](../adr/index.md)
+- [ADR-0001: Temporal integration test policy](../adr/ADR-0001-temporal-integration-test-policy.md)
+- [ADR-0002: Neo4j knowledge graph context repository (superseded)](../adr/ADR-0002-neo4j-knowledge-graph-context-repository.md)
 
-## 4) Knowledge graph (Neo4j)
+## 4) Repository knowledge strategy
 
-- Compose: [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
-- Cypher base: [`scripts/neo4j/base-schema.cypher`](../../scripts/neo4j/base-schema.cypher)
-- Seed: [`scripts/neo4j/neo4j-seed.cjs`](../../scripts/neo4j/neo4j-seed.cjs)
-- Query contexto: [`scripts/neo4j/neo4j-query-context.cjs`](../../scripts/neo4j/neo4j-query-context.cjs)
-- JSON → prompt: [`scripts/neo4j/neo4j-json-to-prompt.cjs`](../../scripts/neo4j/neo4j-json-to-prompt.cjs)
+- Repository maps and ADRs are the active knowledge sources.
+- Traceability is manifest-first and repository-local.
+- Neo4j graph tooling was retired on 2026-03-07 and is not part of the active toolchain.
 
-## 5) Paquetes (workspace)
+## 5) Workspace packages
 
-- [`packages/contracts`](../../packages/contracts)
-- [`packages/engine`](../../packages/engine)
-- [`packages/adapter-temporal`](../../packages/adapter-temporal)
-- [`packages/adapter-postgres`](../../packages/adapter-postgres)
-- [`packages/cli`](../../packages/cli)
-
-## 6) Estado operativo
-
-- [Implementation summary](../status/IMPLEMENTATION_SUMMARY.md)
-- [Quality pack temporal/engine](../status/DVT_PLUS_ENGINE_TEMPORAL_QUALITY_PACK_2026-02-14.md)
+- [`packages/@dvt/contracts`](../../packages/@dvt/contracts)
+- [`packages/@dvt/engine`](../../packages/@dvt/engine)
+- [`packages/@dvt/adapter-temporal`](../../packages/@dvt/adapter-temporal)
+- [`packages/@dvt/adapter-postgres`](../../packages/@dvt/adapter-postgres)
+- [`packages/@dvt/cli`](../../packages/@dvt/cli)
+- [`packages/@dvt/traceability-service`](../../packages/@dvt/traceability-service)

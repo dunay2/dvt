@@ -369,7 +369,7 @@ The following are baked into stored data and cannot change without a migration p
 - G4 task spec: [`../../gaps/G4-TASK-SPECIFICATION.md`](../../gaps/G4-TASK-SPECIFICATION.md)
 - G3 task spec: [`../../gaps/G3-TASK-SPECIFICATION.md`](../../gaps/G3-TASK-SPECIFICATION.md)
 - Execution Model Spec: [`../execution-model/dvt-execution-model.md`](../execution-model/dvt-execution-model.md)
-- Architecture Handbook: [`../execution-model/dvt-architecture-handbook.md`](../execution-model/dvt-architecture-handbook.md)
+- Reference Architecture: [`../../architecture/reference-architecture.md`](../../architecture/reference-architecture.md)
 - God Diagram: [`../execution-model/dvt-system-map-god-diagram.md`](../execution-model/dvt-system-map-god-diagram.md)
 - Dependency Risk Map: [`../execution-model/dvt-dependency-risk-map.md`](../execution-model/dvt-dependency-risk-map.md)
 - ADR corpus: [`../../adr/`](../../adr/)

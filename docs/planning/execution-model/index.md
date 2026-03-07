@@ -12,10 +12,13 @@ Working area for execution-model drafts and architecture notes.
 
 ## Documents
 
-- [DVT Architecture Handbook](dvt-architecture-handbook.md)
 - [DVT Dependency Risk Map](dvt-dependency-risk-map.md)
 - [DVT System Map - God Diagram](dvt-system-map-god-diagram.md)
-- [DVT System Map - God Status](dvt-system-map-god-status.md)
 - [DVT Execution Model](dvt-execution-model.md)
 - [Execution State](execution-state.md)
 - [Handbook State](handbook-state.md)
+
+## Consolidated References
+
+- [Reference Architecture](../../architecture/reference-architecture.md)
+- [System Delivery Status](../../architecture/system-delivery-status.md)

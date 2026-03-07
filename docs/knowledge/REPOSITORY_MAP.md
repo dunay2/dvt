@@ -1,51 +1,47 @@
-# Mapa del Repositorio y Relaciones (Base de Conocimiento)
+# Repository Map and Relationships
 
-## 1. Contexto rápido
+## 1. Quick context
 
-- Workspace monorepo con [`pnpm-workspace.yaml`](../../pnpm-workspace.yaml).
-- Paquetes canónicos en [`packages/*`](../../packages).
-- Contratos/documentación como fuente de verdad en [`docs/`](../index.md).
-
----
-
-## 2. Capas principales
-
-### 2.1 Contratos (`@dvt/contracts`)
-
-- Paquete: [`packages/contracts/package.json`](../../packages/contracts/package.json)
-- Exporta tipos, esquemas y validación en [`packages/contracts/index.ts`](../../packages/contracts/index.ts)
-- Es dependencia transversal de engine/adapters/cli.
-
-### 2.2 Núcleo engine (`@dvt/engine`)
-
-- Paquete: [`packages/engine/package.json`](../../packages/engine/package.json)
-- API pública en [`packages/engine/src/index.ts`](../../packages/engine/src/index.ts)
-- Orquestador central en [`WorkflowEngine`](../../packages/engine/src/core/WorkflowEngine.ts:93)
-- Proyección determinista en [`SnapshotProjector`](../../packages/engine/src/core/SnapshotProjector.ts:7)
-- Idempotencia en [`IdempotencyKeyBuilder`](../../packages/engine/src/core/idempotency.ts:19)
-
-### 2.3 Adaptador Temporal (`@dvt/adapter-temporal`)
-
-- Paquete: [`packages/adapter-temporal/package.json`](../../packages/adapter-temporal/package.json)
-- Implementación principal en [`TemporalAdapter`](../../packages/adapter-temporal/src/TemporalAdapter.ts:47)
-- Worker host en [`TemporalWorkerHost`](../../packages/adapter-temporal/src/TemporalWorkerHost.ts:22)
-- Actividades en [`createActivities()`](../../packages/adapter-temporal/src/activities/stepActivities.ts:67)
-- Workflow en [`RunPlanWorkflow`](../../packages/adapter-temporal/src/workflows/RunPlanWorkflow.ts:31)
-
-### 2.4 Adaptador Postgres (`@dvt/adapter-postgres`)
-
-- Paquete: [`packages/adapter-postgres/package.json`](../../packages/adapter-postgres/package.json)
-- Implementación principal en [`PostgresStateStoreAdapter`](../../packages/adapter-postgres/src/PostgresStateStoreAdapter.ts:24)
-- Estado actual: base MVP con cobertura smoke.
-
-### 2.5 CLI / tooling (`@dvt/cli`)
-
-- Paquete: [`packages/cli/package.json`](../../packages/cli/package.json)
-- Scripts operativos/validación en [`packages/cli/*.cjs`](../../packages/cli).
+- Monorepo workspace defined in [`pnpm-workspace.yaml`](../../pnpm-workspace.yaml).
+- Canonical packages live in [`packages/`](../../packages).
+- Contracts and architecture docs live in [`docs/`](../index.md).
 
 ---
 
-## 3. Relaciones entre paquetes (dependencias)
+## 2. Main layers
+
+### 2.1 Contracts (`@dvt/contracts`)
+
+- Package: [`packages/@dvt/contracts/package.json`](../../packages/@dvt/contracts/package.json)
+- Shared types, schemas and validation used by engine and adapters.
+
+### 2.2 Engine core (`@dvt/engine`)
+
+- Package: [`packages/@dvt/engine/package.json`](../../packages/@dvt/engine/package.json)
+- Public API: [`packages/@dvt/engine/src/index.ts`](../../packages/@dvt/engine/src/index.ts)
+- Central orchestrator: [`WorkflowEngine`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts:93)
+- Deterministic projection: [`SnapshotProjector`](../../packages/@dvt/engine/src/core/SnapshotProjector.ts:7)
+
+### 2.3 Temporal adapter (`@dvt/adapter-temporal`)
+
+- Package: [`packages/@dvt/adapter-temporal/package.json`](../../packages/@dvt/adapter-temporal/package.json)
+- Main adapter: [`TemporalAdapter`](../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts:47)
+- Workflow host: [`TemporalWorkerHost`](../../packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts:22)
+- Workflow entrypoint: [`RunPlanWorkflow`](../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts:118)
+
+### 2.4 Postgres adapter (`@dvt/adapter-postgres`)
+
+- Package: [`packages/@dvt/adapter-postgres/package.json`](../../packages/@dvt/adapter-postgres/package.json)
+- State store adapter: [`PostgresStateStoreAdapter`](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:24)
+
+### 2.5 CLI and tooling
+
+- Package: [`packages/@dvt/cli/package.json`](../../packages/@dvt/cli/package.json)
+- Traceability tooling: [`packages/@dvt/traceability-service`](../../packages/@dvt/traceability-service)
+
+---
+
+## 3. Package relationships
 
 ```mermaid
 graph TD
@@ -53,56 +49,35 @@ graph TD
   C --> T[@dvt/adapter-temporal]
   C --> P[@dvt/adapter-postgres]
   C --> L[@dvt/cli]
+  C --> R[@dvt/traceability-service]
   E --> T
   E --> P
   E --> L
 ```
 
-Evidencia en:
+---
 
-- [`packages/engine/package.json`](../../packages/engine/package.json)
-- [`packages/adapter-temporal/package.json`](../../packages/adapter-temporal/package.json)
-- [`packages/adapter-postgres/package.json`](../../packages/adapter-postgres/package.json)
-- [`packages/cli/package.json`](../../packages/cli/package.json)
+## 4. High-value execution flow
+
+1. [`WorkflowEngine.startRun()`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts:102)
+2. Contract parsing and validation from `@dvt/contracts`
+3. Authorization checks
+4. Plan integrity validation
+5. Delegation to provider adapter
+6. Event and state persistence through the state store and outbox
 
 ---
 
-## 4. Relaciones clase/archivo más relevantes
+## 5. ADRs connected to active code
 
-### 4.1 Flujo de inicio de ejecución
-
-1. [`WorkflowEngine.startRun()`](../../packages/engine/src/core/WorkflowEngine.ts:102)
-2. validaciones de contrato (`parse*` desde `@dvt/contracts`)
-3. autorización [`assertTenantAccess()`](../../packages/engine/src/security/authorizer.ts:2)
-4. integridad de plan [`PlanIntegrityValidator.fetchAndValidate()`](../../packages/engine/src/security/planIntegrity.ts:9)
-5. delegación a adapter (`startRun`)
-6. persistencia metadata/eventos en StateStore/Outbox
-
-### 4.2 Estado y proyección
-
-- Motor consulta eventos y reconstruye snapshot vía [`SnapshotProjector.rebuild()`](../../packages/engine/src/core/SnapshotProjector.ts:8)
-- Idempotencia para eventos/señales con [`IdempotencyKeyBuilder`](../../packages/engine/src/core/idempotency.ts:19)
-
-### 4.3 Adapter selection
-
-- Resolución de proveedor en [`resolveEngineProvider()`](../../packages/engine/src/application/providerSelection.ts:14)
-- Contrato de provider en [`IProviderAdapter`](../../packages/engine/src/adapters/IProviderAdapter.ts:10)
+- [ADR-0001](../adr/ADR-0001-temporal-integration-test-policy.md) aligns with Temporal integration tests.
+- [ADR-0014](../adr/ADR-0014-run-driven-adapter-model.md) aligns with adapter-first run execution.
+- [ADR-0030](../adr/ADR-0030-pre-dispatch-intent-log.md) aligns with crash-consistency startup flow.
+- [ADR-0002](../adr/ADR-0002-neo4j-knowledge-graph-context-repository.md) is historical and superseded.
 
 ---
 
-## 5. Documentación/ADRs conectados a código
+## 6. Canonical boundary
 
-- ADR Temporal tests: [`ADR-0001`](../decisions/ADR-0001-temporal-integration-test-policy.md)
-  - conecta con [`packages/adapter-temporal/test/integration.time-skipping.test.ts`](../../packages/adapter-temporal/test/integration.time-skipping.test.ts)
-- ADR Neo4j KG: [`ADR-0002`](../decisions/ADR-0002-neo4j-knowledge-graph-context-repository.md)
-  - conecta con [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
-  - y scripts en [`scripts/neo4j`](../../scripts/neo4j)
-
----
-
-## 6. Legacy y frontera canónica
-
-- Zona legacy explícita en [`packages/engine/legacy-top-level-engine`](../../packages/engine/legacy-top-level-engine).
-- La ruta activa/canónica está en [`packages/engine/src`](../../packages/engine/src).
-
-Referencia de consolidación: [`docs/REPO_STRUCTURE_SUMMARY.md`](../REPO_STRUCTURE_SUMMARY.md)
+- Active code path: [`packages/@dvt/engine/src`](../../packages/@dvt/engine/src)
+- Legacy area: [`packages/@dvt/engine/legacy-top-level-engine`](../../packages/@dvt/engine/legacy-top-level-engine)

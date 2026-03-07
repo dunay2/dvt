@@ -72,10 +72,10 @@ npm run setup-hooks
 **Run manually**:
 
 ```bash
-npm run lint -- plans/plan-dbt-01.json
+npm run lint -- packages/@dvt/engine/test/contracts/plans/plan-parallel.json
 
 # Output:
-# plans/plan-dbt-01.json
+# packages/@dvt/engine/test/contracts/plans/plan-parallel.json
 #   [Line 45] error: Non-deterministic Date.now() in step condition
 #   [Line 67] error: Math.random() for parallelism (must use fixed value)
 #   [Line 89] warn: External API call (may timeout non-deterministically)
@@ -216,7 +216,7 @@ describe("Plan: plan-dbt-01, determinism", () => {
 
   beforeEach(() => {
     tester = new ReplayTester({
-      planPath: "./plans/plan-dbt-01.json",
+      planPath: "./packages/@dvt/engine/test/contracts/plans/plan-parallel.json",
       adapter: "temporal",
       stateStoreUrl: "postgresql://localhost:5432/test_db"
     });
@@ -365,7 +365,7 @@ jobs:
 ```bash
 # Run plan and save full event log (for replay debugging)
 dvt-cli run-and-record \
-  --plan-path ./plans/plan-dbt-01.json \
+  --plan-path ./packages/@dvt/engine/test/contracts/plans/plan-parallel.json \
   --output-dir ./test-artifacts/run-001 \
   --include-state-snapshots
 
@@ -380,7 +380,7 @@ dvt-cli run-and-record \
 ```bash
 # Replay from recorded history (offline)
 dvt-cli replay-from-record \
-  --plan-path ./plans/plan-dbt-01.json \
+  --plan-path ./packages/@dvt/engine/test/contracts/plans/plan-parallel.json \
   --history-path ./test-artifacts/run-001/events.jsonl \
   --output-dir ./test-artifacts/run-001-replay \
   --compare-snapshots
@@ -398,7 +398,7 @@ dvt-cli replay-from-record \
 ```bash
 # Narrow down which step caused divergence
 dvt-cli trace-divergence \
-  --plan-path ./plans/plan-dbt-01.json \
+  --plan-path ./packages/@dvt/engine/test/contracts/plans/plan-parallel.json \
   --history-path ./test-artifacts/run-001/events.jsonl \
   --divergence-seq 51
 

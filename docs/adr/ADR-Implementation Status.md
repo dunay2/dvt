@@ -12,9 +12,9 @@
 
 | Area | Current Status | Evidence in code | Notes |
 | --- | --- | --- | --- |
-| ADR-0000 Code-generation traceability | 🟡 Partial | [`traceability:adr0`](../../package.json:39), [`TraceabilityService.validateAndPublish()`](../../packages/@dvt/traceability-service/src/service.ts:32) | Tooling and governance pipeline exist; repo-wide enforcement still evolving. |
+| ADR-0000 Code-generation traceability | 🟡 Partial | [`traceability:adr0`](../../package.json:39), [`TraceabilityService.validateAndBuildManifest()`](../../packages/@dvt/traceability-service/src/service.ts:27) | Tooling and governance pipeline exist; repo-wide enforcement still evolving. |
 | ADR-0001 Temporal integration test policy | 🟡 Partial | [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts:1) | Policy rules are present in tests; hardening remains iterative. |
-| ADR-0002 Neo4j knowledge graph context repository | 🟡 Partial | [`kg:generate`](../../package.json:42), [`kg:seed`](../../package.json:44), [`kg:ingest`](../../package.json:45) | Generation and ingestion exist; operational maturity still in progress. |
+| ADR-0002 Neo4j knowledge graph context repository | Superseded | [`ADR-0002-neo4j-knowledge-graph-context-repository.md`](ADR-0002-neo4j-knowledge-graph-context-repository.md) | Retired on 2026-03-07. Repository-local manifest traceability replaces the graph workflow. |
 | ADR-0003 Execution model sovereignty | ✅ Implemented | [`WorkflowEngine`](../../packages/@dvt/engine/src/core/WorkflowEngine.ts:1) | Engine remains lifecycle authority boundary. |
 | ADR-0004 Event sourcing strategy | ✅ Implemented | [`InMemoryTxStore.appendAndEnqueueTx()`](../../packages/@dvt/engine/src/state/InMemoryTxStore.ts:1), [`PostgresStateStoreAdapter.appendAndEnqueueTx()`](../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts:1) | Append-only + outbox behavior implemented in core stores. |
 | ADR-0005 Contract formalization tooling | 🟡 Partial | [`@dvt/contracts`](../../packages/@dvt/contracts/package.json), [`contracts` workflow](../../.github/workflows/contracts.yml:1) | Baseline is solid; full conformance matrix remains progressive. |
