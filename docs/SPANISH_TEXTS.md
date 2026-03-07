@@ -1,4 +1,3 @@
-
 # Spanish Content in Documentation (Updated)
 
 This file lists all Markdown files under `docs/` that still contain Spanish content or have not been fully translated. Filenames are now in English where possible, and links are checked to avoid breaking.
@@ -7,9 +6,9 @@ This file lists all Markdown files under `docs/` that still contain Spanish cont
 
 - docs/planning/Define-the-Outbox-Consumer.en.md (translated)
 - docs/planning/ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md (translated)
-- docs/planning/reviews/DVT+_Architectural_Review_Pass_2.md (already in English)
+- docs/planning/reviews/DVT+\_Architectural_Review_Pass_2.md (already in English)
 - docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.en.md (translated)
-- docs/review/DVT+_Architectural_Review_20260226_AI.en.md (translated)
+- docs/review/DVT+\_Architectural_Review_20260226_AI.en.md (translated)
 - docs/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/minimal-canonical-modules.en.md (translated)
 - docs/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/development.en.md (translated)
 - docs/guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md (translated, links reviewed)

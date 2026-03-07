@@ -1,5 +1,6 @@
 type DeploymentMode =
 type TrustTier =
+
 # SECURITY_INVARIANTS.v1.md - DVT Engine Security Invariants
 
 **Version**: 1.1  
@@ -99,6 +100,7 @@ interface SecretRef {
 ---
 
 ## Invariant Categories
+
 Invariants are organized by scope using namespace prefixes:
 
 - **INV-SCOPE-\***: Tenant scope enforcement

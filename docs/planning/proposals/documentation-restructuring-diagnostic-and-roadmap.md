@@ -336,41 +336,41 @@ Objetivo: impedir que vuelva a entrar deuda documental.
 
 ## Backlog Atomico De Trabajo
 
-| ID | Tarea | Descripcion breve | Prioridad | Paralelizable | Estado |
-| --- | --- | --- | --- | --- | --- |
-| T01 | Declarar fuentes | Escribir la lista oficial de carpetas fuente, generadas e historicas. | Alta | No | Pendiente |
-| T02 | Declarar regla de `site/` | Documentar la regla objetivo para `site/`: generado, no editable y publicado desde CI. | Alta | No | Pendiente |
-| T03 | Listar docs trackeados | Generar inventario de todos los docs versionados. | Alta | Si | Pendiente |
-| T04 | Listar docs no trackeados | Generar inventario de docs no versionados. | Alta | Si | Pendiente |
-| T05 | Clasificar docs no trackeados | Marcar cada no trackeado como incorporar, mover, archivar o descartar. | Alta | Si | Pendiente |
-| T06 | Confirmar categorias documentales | Cerrar la taxonomia oficial de tipos de documento. | Alta | No | Pendiente |
-| T07 | Definir politica de idioma | Cerrar ingles como idioma objetivo y definir excepciones permitidas. | Alta | No | Pendiente |
-| T08 | Definir metadata minima | Fijar campos obligatorios: `title`, `status`, `owner`, `last_reviewed` y trazabilidad cuando aplique. | Alta | No | Pendiente |
-| T09 | Detectar huerfanos | Localizar docs que no aparecen en nav, indices o landings. | Alta | Si | Pendiente |
-| T10 | Detectar enlaces rotos | Revisar links internos markdown y nav. | Alta | Si | Pendiente |
-| T11 | Detectar duplicados | Revisar duplicados por titulo y por contenido. | Alta | Si | Pendiente |
-| T12 | Detectar obsoletos | Marcar docs sin vigencia, reemplazados o sin revisar en plazo razonable. | Alta | Si | Pendiente |
-| T13 | Completar frontmatter | Agregar metadata obligatoria donde falte. | Alta | Si | Pendiente |
-| T14 | Corregir titulos duplicados | Resolver colisiones de titulos en una misma seccion. | Alta | Si | Pendiente |
-| T15 | Unificar docs repetidos | Elegir una copia canonica y archivar o redirigir el resto. | Alta | Si | Pendiente |
-| T16 | Normalizar nombres de archivo | Ajustar nombres inconsistentes o ambiguos. | Media | Si | Pendiente |
-| T17 | Normalizar idioma de contenido | Traducir o mover docs que violen la politica acordada. | Media | Si | Pendiente |
-| T18 | Revisar indices generados | Verificar que los `index.md` representen el contenido real. | Alta | Si | Pendiente |
-| T19 | Definir doc canonico por tema | Dejar una sola fuente de verdad por tema grande. | Alta | No | Pendiente |
-| T20 | Mapear paquetes a docs | Crear matriz paquete/app -> documentos relacionados. | Alta | Si | Pendiente |
-| T21 | Mapear docs a codigo | Anadir referencia a rutas de codigo, tests y scripts relevantes. | Alta | Si | Pendiente |
-| T22 | Definir trazabilidad minima | Fijar `code_paths`, `verification_cmd`, tablas por modulo y checklist de PR. | Alta | No | Pendiente |
-| T23 | Identificar docs generados | Marcar explicitamente que docs se generan y con que comando. | Alta | Si | Pendiente |
-| T24 | Revisar ADR de IA modular | Localizar el modelo modular de IA actual y convertirlo en ADR formal. | Alta | Si | Pendiente |
-| T25 | Integrar `docs:sync` | Usar `docs:sync` como paso obligatorio de normalizacion. | Alta | No | Pendiente |
-| T26 | Integrar `docs:doctor` | Usar `docs:doctor` para duplicados, metadata y envejecimiento. | Alta | No | Pendiente |
-| T27 | Integrar checks de calidad | Usar `docs:quality:check`, `docs:canonical:check`, `docs:status:check` y `docs:capability:check` en el flujo normal. | Alta | No | Pendiente |
-| T28 | Anadir checks faltantes | Crear checks para docs huerfanos, links rotos y docs no trackeados. | Media | Si | Pendiente |
-| T29 | Resolver el caso `site/` | Cerrar si `site/` sale de git o si se mantiene como excepcion controlada. | Alta | No | Pendiente |
-| T30 | Cerrar criterios de archivo | Definir exactamente cuando un doc pasa a `archive`. | Media | No | Pendiente |
-| T31 | Mover historicos | Archivar documentos fuera de vigencia. | Media | Si | Pendiente |
-| T32 | Definir chequeos bloqueantes | Formalizar que validaciones fallan el merge y cuales solo avisan. | Alta | No | Pendiente |
-| T33 | Crear roadmap y tablero | Llevar el avance en una sola pagina con responsables, estado y fechas objetivo. | Alta | No | Pendiente |
+| ID  | Tarea                             | Descripcion breve                                                                                                    | Prioridad | Paralelizable | Estado    |
+| --- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- | ------------- | --------- |
+| T01 | Declarar fuentes                  | Escribir la lista oficial de carpetas fuente, generadas e historicas.                                                | Alta      | No            | Pendiente |
+| T02 | Declarar regla de `site/`         | Documentar la regla objetivo para `site/`: generado, no editable y publicado desde CI.                               | Alta      | No            | Pendiente |
+| T03 | Listar docs trackeados            | Generar inventario de todos los docs versionados.                                                                    | Alta      | Si            | Pendiente |
+| T04 | Listar docs no trackeados         | Generar inventario de docs no versionados.                                                                           | Alta      | Si            | Pendiente |
+| T05 | Clasificar docs no trackeados     | Marcar cada no trackeado como incorporar, mover, archivar o descartar.                                               | Alta      | Si            | Pendiente |
+| T06 | Confirmar categorias documentales | Cerrar la taxonomia oficial de tipos de documento.                                                                   | Alta      | No            | Pendiente |
+| T07 | Definir politica de idioma        | Cerrar ingles como idioma objetivo y definir excepciones permitidas.                                                 | Alta      | No            | Pendiente |
+| T08 | Definir metadata minima           | Fijar campos obligatorios: `title`, `status`, `owner`, `last_reviewed` y trazabilidad cuando aplique.                | Alta      | No            | Pendiente |
+| T09 | Detectar huerfanos                | Localizar docs que no aparecen en nav, indices o landings.                                                           | Alta      | Si            | Pendiente |
+| T10 | Detectar enlaces rotos            | Revisar links internos markdown y nav.                                                                               | Alta      | Si            | Pendiente |
+| T11 | Detectar duplicados               | Revisar duplicados por titulo y por contenido.                                                                       | Alta      | Si            | Pendiente |
+| T12 | Detectar obsoletos                | Marcar docs sin vigencia, reemplazados o sin revisar en plazo razonable.                                             | Alta      | Si            | Pendiente |
+| T13 | Completar frontmatter             | Agregar metadata obligatoria donde falte.                                                                            | Alta      | Si            | Pendiente |
+| T14 | Corregir titulos duplicados       | Resolver colisiones de titulos en una misma seccion.                                                                 | Alta      | Si            | Pendiente |
+| T15 | Unificar docs repetidos           | Elegir una copia canonica y archivar o redirigir el resto.                                                           | Alta      | Si            | Pendiente |
+| T16 | Normalizar nombres de archivo     | Ajustar nombres inconsistentes o ambiguos.                                                                           | Media     | Si            | Pendiente |
+| T17 | Normalizar idioma de contenido    | Traducir o mover docs que violen la politica acordada.                                                               | Media     | Si            | Pendiente |
+| T18 | Revisar indices generados         | Verificar que los `index.md` representen el contenido real.                                                          | Alta      | Si            | Pendiente |
+| T19 | Definir doc canonico por tema     | Dejar una sola fuente de verdad por tema grande.                                                                     | Alta      | No            | Pendiente |
+| T20 | Mapear paquetes a docs            | Crear matriz paquete/app -> documentos relacionados.                                                                 | Alta      | Si            | Pendiente |
+| T21 | Mapear docs a codigo              | Anadir referencia a rutas de codigo, tests y scripts relevantes.                                                     | Alta      | Si            | Pendiente |
+| T22 | Definir trazabilidad minima       | Fijar `code_paths`, `verification_cmd`, tablas por modulo y checklist de PR.                                         | Alta      | No            | Pendiente |
+| T23 | Identificar docs generados        | Marcar explicitamente que docs se generan y con que comando.                                                         | Alta      | Si            | Pendiente |
+| T24 | Revisar ADR de IA modular         | Localizar el modelo modular de IA actual y convertirlo en ADR formal.                                                | Alta      | Si            | Pendiente |
+| T25 | Integrar `docs:sync`              | Usar `docs:sync` como paso obligatorio de normalizacion.                                                             | Alta      | No            | Pendiente |
+| T26 | Integrar `docs:doctor`            | Usar `docs:doctor` para duplicados, metadata y envejecimiento.                                                       | Alta      | No            | Pendiente |
+| T27 | Integrar checks de calidad        | Usar `docs:quality:check`, `docs:canonical:check`, `docs:status:check` y `docs:capability:check` en el flujo normal. | Alta      | No            | Pendiente |
+| T28 | Anadir checks faltantes           | Crear checks para docs huerfanos, links rotos y docs no trackeados.                                                  | Media     | Si            | Pendiente |
+| T29 | Resolver el caso `site/`          | Cerrar si `site/` sale de git o si se mantiene como excepcion controlada.                                            | Alta      | No            | Pendiente |
+| T30 | Cerrar criterios de archivo       | Definir exactamente cuando un doc pasa a `archive`.                                                                  | Media     | No            | Pendiente |
+| T31 | Mover historicos                  | Archivar documentos fuera de vigencia.                                                                               | Media     | Si            | Pendiente |
+| T32 | Definir chequeos bloqueantes      | Formalizar que validaciones fallan el merge y cuales solo avisan.                                                    | Alta      | No            | Pendiente |
+| T33 | Crear roadmap y tablero           | Llevar el avance en una sola pagina con responsables, estado y fechas objetivo.                                      | Alta      | No            | Pendiente |
 
 ## Tareas Que Se Pueden Hacer En Paralelo
 
@@ -415,16 +415,16 @@ Se pueden ejecutar a la vez:
 
 ## Integracion De Scripts Existentes En El Flujo
 
-| Script o comando | Uso propuesto | Momento |
-| --- | --- | --- |
-| `pnpm docs:sync` | Regenerar indices, normalizar estructura y docs derivados. | Antes de commit y en CI |
-| `pnpm docs:doctor` | Detectar duplicados, metadata faltante y docs envejecidos. | Local y CI |
-| `pnpm docs:quality:check` | Detectar placeholders y avisar sobre idioma o calidad basica. | Local y CI |
-| `pnpm docs:canonical:check` | Bloquear rutas o referencias legacy. | CI |
-| `pnpm docs:status:check` | Asegurar que el estado generado desde codigo no quede desfasado. | CI |
-| `pnpm docs:capability:check` | Asegurar que la cobertura generada desde codigo este actualizada. | CI |
-| `tools/ci/arc-check.mjs` | Detectar si un cambio exige evidencia, riesgo o controles extra. | PR y CI |
-| `tools/ci/doc-check.mjs` | Validar evidencia y riesgo cuando la politica ARC lo exige. | PR y CI |
+| Script o comando             | Uso propuesto                                                     | Momento                 |
+| ---------------------------- | ----------------------------------------------------------------- | ----------------------- |
+| `pnpm docs:sync`             | Regenerar indices, normalizar estructura y docs derivados.        | Antes de commit y en CI |
+| `pnpm docs:doctor`           | Detectar duplicados, metadata faltante y docs envejecidos.        | Local y CI              |
+| `pnpm docs:quality:check`    | Detectar placeholders y avisar sobre idioma o calidad basica.     | Local y CI              |
+| `pnpm docs:canonical:check`  | Bloquear rutas o referencias legacy.                              | CI                      |
+| `pnpm docs:status:check`     | Asegurar que el estado generado desde codigo no quede desfasado.  | CI                      |
+| `pnpm docs:capability:check` | Asegurar que la cobertura generada desde codigo este actualizada. | CI                      |
+| `tools/ci/arc-check.mjs`     | Detectar si un cambio exige evidencia, riesgo o controles extra.  | PR y CI                 |
+| `tools/ci/doc-check.mjs`     | Validar evidencia y riesgo cuando la politica ARC lo exige.       | PR y CI                 |
 
 ## Flujo Recomendado
 

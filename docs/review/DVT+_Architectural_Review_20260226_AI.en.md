@@ -42,16 +42,16 @@
 
 ## 2) Architectural Risk Map
 
-| Risk                                | Severity | Likelihood | Why                                                                           | Mitigation                                                       |
-| ----------------------------------- | -------- | ---------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| StateStore contract split           | High     | High       | Incompatible APIs between contract and runtime                                | Unify single canonical contract and remove legacy                |
-| State/event explosion               | Critical | High       | Event sourcing + outbox + snapshots without closed growth policy              | Partitioning + tiered retention + automatic archiving            |
-| Broken idempotency at edges         | High     | Medium     | Stability requirement for `eventId` depends on implementation discipline      | Durable registry `(runId,idempotencyKey)` + crash/retry tests    |
-| Planner/engine creep                | High     | High       | Engine evaluates policies (gateway DSL), planner underspecified               | Move decisions to planner and harden contract                    |
-| Plugin security                     | Critical | Medium     | Sandbox is DRAFT, no validated production enforcement                         | Block marketplace until strong, audited isolation                |
-| Incomplete multi-tenant isolation   | High     | Medium     | Documented invariant, no proven cross-cutting enforcement                     | Mandatory tenant scope + negative test in CI                     |
-| Overpromised Conductor parity       | High     | High       | Conductor declares gaps in replay/pause/cancel                                | Redefine goal as state equivalence                              |
-| Operational complexity              | High     | High       | High contractual and operational surface for current maturity                 | Reduce scope to executable and observable P0                     |
+| Risk                              | Severity | Likelihood | Why                                                                      | Mitigation                                                    |
+| --------------------------------- | -------- | ---------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| StateStore contract split         | High     | High       | Incompatible APIs between contract and runtime                           | Unify single canonical contract and remove legacy             |
+| State/event explosion             | Critical | High       | Event sourcing + outbox + snapshots without closed growth policy         | Partitioning + tiered retention + automatic archiving         |
+| Broken idempotency at edges       | High     | Medium     | Stability requirement for `eventId` depends on implementation discipline | Durable registry `(runId,idempotencyKey)` + crash/retry tests |
+| Planner/engine creep              | High     | High       | Engine evaluates policies (gateway DSL), planner underspecified          | Move decisions to planner and harden contract                 |
+| Plugin security                   | Critical | Medium     | Sandbox is DRAFT, no validated production enforcement                    | Block marketplace until strong, audited isolation             |
+| Incomplete multi-tenant isolation | High     | Medium     | Documented invariant, no proven cross-cutting enforcement                | Mandatory tenant scope + negative test in CI                  |
+| Overpromised Conductor parity     | High     | High       | Conductor declares gaps in replay/pause/cancel                           | Redefine goal as state equivalence                            |
+| Operational complexity            | High     | High       | High contractual and operational surface for current maturity            | Reduce scope to executable and observable P0                  |
 
 ---
 
@@ -135,15 +135,15 @@
 
 ## 10) Architectural Scorecard
 
-| Dimension                 | Score | Justification                                              |
-| ------------------------- | ----: | ---------------------------------------------------------- |
-| Conceptual clarity        |  7/10 | Clear principles, partial enforcement                      |
-| Separation of concerns    |  6/10 | Reasonable engine-state boundary; planner-engine erosion   |
+| Dimension                 | Score | Justification                                                     |
+| ------------------------- | ----: | ----------------------------------------------------------------- |
+| Conceptual clarity        |  7/10 | Clear principles, partial enforcement                             |
+| Separation of concerns    |  6/10 | Reasonable engine-state boundary; planner-engine erosion          |
 | Replaceability of engine  |  5/10 | Theoretical; Conductor still does not match operational semantics |
-| Determinism               |  7/10 | Strong in Temporal; fragile in extensions/DSL              |
-| Extensibility             |  6/10 | Broad contracts, but key pieces not closed                 |
-| Operational realism       |  4/10 | Missing critical operational guarantees                    |
-| Long-term maintainability |  5/10 | Contractual drift and complexity > current maturity        |
+| Determinism               |  7/10 | Strong in Temporal; fragile in extensions/DSL                     |
+| Extensibility             |  6/10 | Broad contracts, but key pieces not closed                        |
+| Operational realism       |  4/10 | Missing critical operational guarantees                           |
+| Long-term maintainability |  5/10 | Contractual drift and complexity > current maturity               |
 
 ---
 
