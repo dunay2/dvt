@@ -140,12 +140,10 @@ Structured logs (JSON) with fields: event_id, run_id, projector, attempt, error,
 
 Projector interface:
 
-```typescript
-interface IProjector {
-  handle(event: OutboxEvent): Promise<void>;
-  // Optional: idempotencyKey to avoid duplicates if projector is not idempotent
-}
-```
+    interface IProjector {
+      handle(event: OutboxEvent): Promise<void>;
+      // Optional: idempotencyKey to avoid duplicates if projector is not idempotent
+    }
 
 Outbox event: Must contain all necessary info: event_type, payload, run_id, run_seq, created_at.
 

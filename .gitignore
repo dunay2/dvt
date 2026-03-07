@@ -54,7 +54,6 @@ tmpclaude-*-cwd
 
 # Generated documentation
 docs-dist/
-.docusaurus/
 /site/
 
 # Root-local tooling artifacts
