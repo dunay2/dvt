@@ -5,6 +5,7 @@ import {
   createActivities,
   type Activities,
   type ActivityDeps,
+  type StepExecutor,
   type StepInput,
 } from '../src/activities/stepActivities.js';
 import type {
@@ -14,6 +15,12 @@ import type {
   IIdempotencyKeyBuilder,
   RunMetadata,
 } from '../src/engine-types.js';
+
+import {
+  permanentErrorExecutor,
+  transientErrorExecutor,
+  withErrorExecutors,
+} from './helpers/testExecutors.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -61,7 +68,6 @@ const EXPECTED_ERRORS = {
   transientDbError: 'TRANSIENT_DB_ERROR',
   dependsOnMustBeArray: 'INVALID_STEP_SCHEMA: dependsOn_must_be_array',
   dependsOnValuesMustBeString: 'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string',
-  stepTypeConfigMustBeObject: 'INVALID_STEP_SCHEMA: stepTypeConfig_must_be_object',
   fieldNotAllowedForbidden: 'INVALID_STEP_SCHEMA: field_not_allowed:forbidden',
   inputBindingsNotSupported: 'INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1',
   transientStepErrorS1: 'TRANSIENT_STEP_ERROR:s1',
@@ -226,12 +232,15 @@ function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
   };
 }
 
-function setupActivities(store: TestTxStore = new TestTxStore()): {
+function setupActivities(
+  store: TestTxStore = new TestTxStore(),
+  stepExecutors?: readonly StepExecutor[]
+): {
   deps: TestActivityDeps;
   acts: Activities;
 } {
   const deps = buildDeps(store);
-  const acts = createActivities(deps);
+  const acts = createActivities(deps, stepExecutors);
   return { deps, acts };
 }
 
@@ -487,11 +496,11 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
-    it('accepts step with stepTypeConfig record', async () => {
+    it('accepts step with stepTypeConfig', async () => {
       const { acts } = setupActivities();
 
       const result = await acts.executeStep({
-        step: { stepId: 's3', kind: 'test', stepTypeConfig: { compiledCodeRef: { foo: 'bar' } } },
+        step: { stepId: 's3', kind: 'test', stepTypeConfig: { stepTimeoutMs: 5000 } },
         ctx: CTX,
       });
 
@@ -546,14 +555,6 @@ describe('stepActivities', () => {
     );
 
     it(
-      'rejects step when stepTypeConfig is not an object',
-      expectExecuteStepRejects(
-        { stepId: 's2', kind: 'test', stepTypeConfig: 'invalid' },
-        EXPECTED_ERRORS.stepTypeConfigMustBeObject
-      )
-    );
-
-    it(
       'rejects step with unknown fields',
       expectExecuteStepRejects(
         { stepId: 's1', kind: 'test', forbidden: 'field' },
@@ -573,21 +574,19 @@ describe('stepActivities', () => {
       )
     );
 
-    it(
-      'simulates transient error when step requests transient failure',
-      expectExecuteStepRejects(
-        { stepId: 's1', kind: 'test', simulateError: 'transient' },
-        EXPECTED_ERRORS.transientStepErrorS1
-      )
-    );
+    it('throws transient error when executor raises retryable failure', async () => {
+      const { acts } = setupActivities(undefined, withErrorExecutors(transientErrorExecutor('s1')));
+      await expect(
+        acts.executeStep({ step: { stepId: 's1', kind: 'test' }, ctx: CTX })
+      ).rejects.toThrow(EXPECTED_ERRORS.transientStepErrorS1);
+    });
 
-    it(
-      'simulates permanent error when step requests permanent failure',
-      expectExecuteStepRejects(
-        { stepId: 's1', kind: 'test', simulateError: 'permanent' },
-        EXPECTED_ERRORS.permanentStepErrorS1
-      )
-    );
+    it('throws permanent error when executor raises non-retryable failure', async () => {
+      const { acts } = setupActivities(undefined, withErrorExecutors(permanentErrorExecutor('s1')));
+      await expect(
+        acts.executeStep({ step: { stepId: 's1', kind: 'test' }, ctx: CTX })
+      ).rejects.toThrow(EXPECTED_ERRORS.permanentStepErrorS1);
+    });
 
     it(
       'rejects gateway step without gateway config',

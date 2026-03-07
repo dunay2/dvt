@@ -35,6 +35,8 @@ import {
   toTemporalTaskQueue,
 } from '../src/index.js';
 
+import { permanentErrorExecutor, withErrorExecutors } from './helpers/testExecutors.js';
+
 // Local outbox record type for test doubles — mirrors engine's OutboxRecord shape.
 interface OutboxRecord {
   id: string;
@@ -762,7 +764,7 @@ function mkPermanentFailurePlan(): unknown {
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
     },
-    steps: [{ stepId: 's-fail', kind: 'noop', simulateError: 'permanent' }],
+    steps: [{ stepId: 's-fail', kind: 'noop' }],
   } as const;
 }
 
@@ -1153,6 +1155,7 @@ describe('temporal integration (time-skipping)', () => {
         },
         workflowsPath: WORKFLOW_PATH,
         activityDeps: createActivityDeps(store, outbox, planBytes),
+        stepExecutors: withErrorExecutors(permanentErrorExecutor('s-fail')),
       });
 
       await worker.start(env.nativeConnection);

@@ -5,8 +5,8 @@
  * @decision Section 5 — All workflow side effects are mediated through deterministic activity boundaries
  * @decision Section 2.1 — Emitted events preserve idempotency and append-only state-store semantics
  * @consequence Activity execution keeps lifecycle/event persistence deterministic and replay-compatible
- * @version 1.0.0
- * @date 2026-02-21
+ * @version 1.1.0
+ * @date 2026-03-07
  */
 import { TextDecoder } from 'node:util';
 
@@ -28,18 +28,45 @@ import type {
 } from '../engine-types.js';
 
 // ---------------------------------------------------------------------------
-// Dependency container (injected at Worker creation time)
+// Error codes (3.7 — replace magic strings with named constants)
 // ---------------------------------------------------------------------------
 
-export interface ActivityDeps {
+const ActivityErrorCode = {
+  INVALID_PLAN_SCHEMA: 'INVALID_PLAN_SCHEMA',
+  PLAN_CONTRACT_VERSION_MISSING: 'PLAN_CONTRACT_VERSION_MISSING',
+  PLAN_CONTRACT_VERSION_UNKNOWN: 'PLAN_CONTRACT_VERSION_UNKNOWN',
+  PLAN_REF_MISMATCH: 'PLAN_REF_MISMATCH',
+  INVALID_STEP_SCHEMA: 'INVALID_STEP_SCHEMA',
+  INVALID_GATEWAY_DSL: 'INVALID_GATEWAY_DSL',
+  TRANSIENT_STEP_ERROR: 'TRANSIENT_STEP_ERROR',
+  PERMANENT_STEP_ERROR: 'PERMANENT_STEP_ERROR',
+} as const;
+
+const PERMANENT_STEP_ERROR_TYPE = 'PermanentStepError';
+
+// ---------------------------------------------------------------------------
+// Role-based dependency interfaces (3.3 — ISP: each activity declares its needs)
+// ---------------------------------------------------------------------------
+
+export interface PlanFetcherDeps {
+  fetcher: IPlanFetcher;
+  integrity: IPlanIntegrityValidator;
+}
+
+export interface EventEmitterDeps {
   runStateCommandPort: RunStateCommandPort;
   clock: IClock;
   idempotency: IIdempotencyKeyBuilder;
-  fetcher: IPlanFetcher;
-  integrity: IPlanIntegrityValidator;
   /** Optional override for tests; runtime uses Temporal activity context. */
   getEngineAttemptId?: () => number;
 }
+
+export interface RunBootstrapperDeps {
+  runStateCommandPort: RunStateCommandPort;
+}
+
+/** Full dependency container (union of role interfaces). Injected at Worker creation time. */
+export interface ActivityDeps extends PlanFetcherDeps, EventEmitterDeps, RunBootstrapperDeps {}
 
 // ---------------------------------------------------------------------------
 // Activity input / output types
@@ -74,17 +101,67 @@ export interface EmitEventInput {
 }
 
 // ---------------------------------------------------------------------------
+// Step executor registry (3.4 — OCP: new step types added without modifying executeStep)
+// ---------------------------------------------------------------------------
+
+export interface StepExecutionContext {
+  gatewayContext?: Record<string, unknown>;
+}
+
+export interface StepExecutor {
+  canExecute(step: ExecutionPlan['steps'][number]): boolean;
+  execute(step: ExecutionPlan['steps'][number], context: StepExecutionContext): Promise<StepResult>;
+}
+
+const gatewayStepExecutor: StepExecutor = {
+  canExecute(step) {
+    return step.type === 'gateway';
+  },
+  async execute(step, context) {
+    const gateway = parseGatewayConfigOrThrow(step);
+    try {
+      const parsed = parseDslV1(gateway.expression);
+      const passed = evaluateDslV1(parsed, context.gatewayContext ?? {});
+      return { stepId: step.stepId, status: 'COMPLETED', gatewayDecision: passed };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw ApplicationFailure.create({
+        type: PERMANENT_STEP_ERROR_TYPE,
+        message: `${ActivityErrorCode.INVALID_GATEWAY_DSL}:${step.stepId}:${reason}`,
+        nonRetryable: true,
+      });
+    }
+  },
+};
+
+const defaultStepExecutor: StepExecutor = {
+  canExecute() {
+    return true;
+  },
+  async execute(step) {
+    return { stepId: step.stepId, status: 'COMPLETED' };
+  },
+};
+
+/** Default executor chain: gateway first, catch-all last. */
+export const DEFAULT_STEP_EXECUTORS: readonly StepExecutor[] = [
+  gatewayStepExecutor,
+  defaultStepExecutor,
+];
+
+// ---------------------------------------------------------------------------
 // Activity factory — creates closures over shared deps
 // ---------------------------------------------------------------------------
 
-export function createActivities(deps: ActivityDeps): {
+export function createActivities(
+  deps: ActivityDeps,
+  stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS
+): {
   fetchPlan(planRef: PlanRef): Promise<ExecutionPlan>;
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
   saveRunMetadata(meta: RunMetadata): Promise<void>;
 } {
-  const { runStateCommandPort } = deps;
-
   return {
     /**
      * Fetch plan from storage, validate SHA-256 integrity, parse JSON,
@@ -99,19 +176,13 @@ export function createActivities(deps: ActivityDeps): {
     },
 
     /**
-     * Execute a single step (MVP: validates step shape only).
-     * Real step dispatch (dbt-run, HTTP, etc.) comes in Phase 2+.
+     * Execute a single step.
+     * Thin dispatcher: validates shape, applies test hook, then delegates to executor registry.
      */
     async executeStep(input: StepInput): Promise<StepResult> {
-      const { step, gatewayContext } = input;
-      validateStepShape(step);
-      throwIfSimulatedFailureRequested(step);
-
-      if (step.type === 'gateway') {
-        return executeGatewayStep(step, gatewayContext);
-      }
-
-      return completedStepResult(step.stepId);
+      validateStepShape(input.step);
+      applySimulateErrorIfPresent(input.step);
+      return dispatchStep(input.step, { gatewayContext: input.gatewayContext }, stepExecutors);
     },
 
     /**
@@ -155,7 +226,7 @@ export function createActivities(deps: ActivityDeps): {
       const envelope: EventInput =
         payload === undefined ? envelopeBase : { ...envelopeBase, payload };
 
-      await runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
+      await deps.runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
     },
 
     /**
@@ -169,7 +240,7 @@ export function createActivities(deps: ActivityDeps): {
      */
     async saveRunMetadata(meta: RunMetadata): Promise<void> {
       try {
-        await runStateCommandPort.bootstrapRun({ metadata: meta, firstEvents: [] });
+        await deps.runStateCommandPort.bootstrapRun({ metadata: meta, firstEvents: [] });
       } catch (err) {
         if (err instanceof Error && err.message === 'RUN_ALREADY_EXISTS') return;
         throw err;
@@ -181,7 +252,7 @@ export function createActivities(deps: ActivityDeps): {
 export type Activities = ReturnType<typeof createActivities>;
 
 // ---------------------------------------------------------------------------
-// Internal helpers (mirrors MockAdapter)
+// Internal helpers
 // ---------------------------------------------------------------------------
 
 const ALLOWED_STEP_FIELDS = new Set([
@@ -190,6 +261,7 @@ const ALLOWED_STEP_FIELDS = new Set([
   'type',
   'gateway',
   'stepTypeConfig',
+  'compiledCodeRef',
   'dependsOn',
   'simulateError',
 ]);
@@ -210,72 +282,98 @@ function parsePlan(bytes: Uint8Array): ExecutionPlan {
   const text = new TextDecoder().decode(bytes);
   const obj: unknown = JSON.parse(text);
   if (!isExecutionPlan(obj)) {
-    throw new TypeError('INVALID_PLAN_SCHEMA');
+    throw new TypeError(ActivityErrorCode.INVALID_PLAN_SCHEMA);
   }
   const contractVersion = obj.metadata.contractVersion;
   if (typeof contractVersion !== 'string') {
-    throw new TypeError('PLAN_CONTRACT_VERSION_MISSING');
+    throw new TypeError(ActivityErrorCode.PLAN_CONTRACT_VERSION_MISSING);
   }
   validatePlanContractVersion(contractVersion);
   return obj;
 }
 
 function isExecutionPlan(v: unknown): v is ExecutionPlan {
-  if (!isRecord(v)) {
-    return false;
-  }
-  return Array.isArray(v['steps']) && isExecutionPlanMetadata(v['metadata']);
+  if (typeof v !== 'object' || v === null) return false;
+  const o = v as Record<string, unknown>;
+  const meta = o['metadata'];
+  const steps = o['steps'];
+  if (typeof meta !== 'object' || meta === null) return false;
+  if (!Array.isArray(steps)) return false;
+  const m = meta as Record<string, unknown>;
+  return (
+    typeof m['planId'] === 'string' &&
+    typeof m['planVersion'] === 'string' &&
+    typeof m['schemaVersion'] === 'string' &&
+    typeof m['contractVersion'] === 'string'
+  );
 }
 
 function validatePlanContractVersion(contractVersion: string): void {
-  if (SUPPORTED_PLAN_CONTRACT_VERSIONS.has(contractVersion)) {
-    return;
-  }
-
+  if (SUPPORTED_PLAN_CONTRACT_VERSIONS.has(contractVersion)) return;
   throw new TypeError(
-    `PLAN_CONTRACT_VERSION_UNKNOWN: ${contractVersion}. Supported: ${Array.from(
-      SUPPORTED_PLAN_CONTRACT_VERSIONS
-    ).join(', ')}`
+    `${ActivityErrorCode.PLAN_CONTRACT_VERSION_UNKNOWN}: ${contractVersion}. Supported: ${Array.from(SUPPORTED_PLAN_CONTRACT_VERSIONS).join(', ')}`
   );
 }
 
 function validatePlanAgainstRef(plan: ExecutionPlan, ref: PlanRef): void {
-  if (plan.metadata.planId !== ref.planId) throw new TypeError('PLAN_REF_MISMATCH: planId');
+  if (plan.metadata.planId !== ref.planId)
+    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: planId`);
   if (plan.metadata.planVersion !== ref.planVersion)
-    throw new TypeError('PLAN_REF_MISMATCH: planVersion');
+    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: planVersion`);
   if (plan.metadata.schemaVersion !== ref.schemaVersion)
-    throw new TypeError('PLAN_REF_MISMATCH: schemaVersion');
+    throw new TypeError(`${ActivityErrorCode.PLAN_REF_MISMATCH}: schemaVersion`);
 }
 
 function validateStepShape(step: ExecutionPlan['steps'][number]): void {
   if (Object.keys(step).includes('inputBindings')) {
-    throw new TypeError('INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1');
+    throw new TypeError(
+      `${ActivityErrorCode.INVALID_STEP_SCHEMA}: inputBindings_not_supported_in_v1`
+    );
   }
-
   for (const k of Object.keys(step)) {
     if (!ALLOWED_STEP_FIELDS.has(k)) {
-      throw new TypeError(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);
+      throw new TypeError(`${ActivityErrorCode.INVALID_STEP_SCHEMA}: field_not_allowed:${k}`);
     }
   }
-
   if (!Array.isArray(step.dependsOn) && step.dependsOn !== undefined) {
-    throw new TypeError('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
+    throw new TypeError(`${ActivityErrorCode.INVALID_STEP_SCHEMA}: dependsOn_must_be_array`);
   }
-
   if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
-    throw new TypeError('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
+    throw new TypeError(
+      `${ActivityErrorCode.INVALID_STEP_SCHEMA}: dependsOn_values_must_be_string`
+    );
   }
+}
 
-  if (step['stepTypeConfig'] !== undefined) {
-    const stepTypeConfig = step['stepTypeConfig'];
-    if (
-      typeof stepTypeConfig !== 'object' ||
-      stepTypeConfig === null ||
-      Array.isArray(stepTypeConfig)
-    ) {
-      throw new TypeError('INVALID_STEP_SCHEMA: stepTypeConfig_must_be_object');
-    }
+function applySimulateErrorIfPresent(step: ExecutionPlan['steps'][number]): void {
+  const simulateErrorKind =
+    typeof step['simulateError'] === 'string' ? String(step['simulateError']) : undefined;
+  if (simulateErrorKind === 'transient') {
+    throw new Error(`${ActivityErrorCode.TRANSIENT_STEP_ERROR}:${step.stepId}`);
   }
+  if (simulateErrorKind === 'permanent') {
+    throw ApplicationFailure.create({
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message: `${ActivityErrorCode.PERMANENT_STEP_ERROR}:${step.stepId}`,
+      nonRetryable: true,
+    });
+  }
+}
+
+async function dispatchStep(
+  step: ExecutionPlan['steps'][number],
+  context: StepExecutionContext,
+  executors: readonly StepExecutor[]
+): Promise<StepResult> {
+  const executor = executors.find((e) => e.canExecute(step));
+  if (!executor) {
+    throw ApplicationFailure.create({
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: no_executor_for_step_type:${step.type ?? 'unknown'}`,
+      nonRetryable: true,
+    });
+  }
+  return executor.execute(step, context);
 }
 
 function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
@@ -285,8 +383,8 @@ function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
   const gateway = step.gateway;
   if (typeof gateway !== 'object' || gateway === null) {
     throw ApplicationFailure.create({
-      type: 'PermanentStepError',
-      message: `INVALID_STEP_SCHEMA: gateway_config_required:${step.stepId}`,
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: gateway_config_required:${step.stepId}`,
       nonRetryable: true,
     });
   }
@@ -294,8 +392,8 @@ function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
   const value = gateway as Record<string, unknown>;
   if (value['dslVersion'] !== '1.0') {
     throw ApplicationFailure.create({
-      type: 'PermanentStepError',
-      message: `INVALID_STEP_SCHEMA: gateway_dsl_version:${step.stepId}`,
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: gateway_dsl_version:${step.stepId}`,
       nonRetryable: true,
     });
   }
@@ -303,80 +401,11 @@ function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
   const expression = value['expression'];
   if (typeof expression !== 'string' || expression.trim().length === 0) {
     throw ApplicationFailure.create({
-      type: 'PermanentStepError',
-      message: `INVALID_STEP_SCHEMA: gateway_expression:${step.stepId}`,
+      type: PERMANENT_STEP_ERROR_TYPE,
+      message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: gateway_expression:${step.stepId}`,
       nonRetryable: true,
     });
   }
 
-  return {
-    dslVersion: '1.0',
-    expression,
-  };
-}
-
-function throwIfSimulatedFailureRequested(step: ExecutionPlan['steps'][number]): void {
-  const simulateErrorKind = readSimulateErrorKind(step);
-  if (simulateErrorKind === 'transient') {
-    throw new Error(`TRANSIENT_STEP_ERROR:${step.stepId}`);
-  }
-  if (simulateErrorKind === 'permanent') {
-    throw ApplicationFailure.create({
-      type: 'PermanentStepError',
-      message: `PERMANENT_STEP_ERROR:${step.stepId}`,
-      nonRetryable: true,
-    });
-  }
-}
-
-function readSimulateErrorKind(step: ExecutionPlan['steps'][number]): string | undefined {
-  const simulateError = step['simulateError'];
-  return typeof simulateError === 'string' ? simulateError : undefined;
-}
-
-function executeGatewayStep(
-  step: ExecutionPlan['steps'][number],
-  gatewayContext: Record<string, unknown> | undefined
-): StepResult {
-  const gateway = parseGatewayConfigOrThrow(step);
-  try {
-    const parsed = parseDslV1(gateway.expression);
-    const passed = evaluateDslV1(parsed, gatewayContext ?? {});
-    return {
-      stepId: step.stepId,
-      status: 'COMPLETED',
-      gatewayDecision: passed,
-    };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    throw ApplicationFailure.create({
-      type: 'PermanentStepError',
-      message: `INVALID_GATEWAY_DSL:${step.stepId}:${reason}`,
-      nonRetryable: true,
-    });
-  }
-}
-
-function completedStepResult(stepId: string): StepResult {
-  return { stepId, status: 'COMPLETED' };
-}
-
-function isExecutionPlanMetadata(value: unknown): boolean {
-  if (!isRecord(value)) {
-    return false;
-  }
-  return (
-    hasStringField(value, 'planId') &&
-    hasStringField(value, 'planVersion') &&
-    hasStringField(value, 'schemaVersion') &&
-    hasStringField(value, 'contractVersion')
-  );
-}
-
-function hasStringField(record: Record<string, unknown>, field: string): boolean {
-  return typeof record[field] === 'string';
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return { dslVersion: '1.0', expression };
 }

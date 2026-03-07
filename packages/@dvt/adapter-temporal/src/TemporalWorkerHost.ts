@@ -11,7 +11,7 @@
 
 import { NativeConnection, Worker } from '@temporalio/worker';
 
-import type { ActivityDeps } from './activities/stepActivities.js';
+import type { ActivityDeps, StepExecutor } from './activities/stepActivities.js';
 import { createActivities } from './activities/stepActivities.js';
 import type { TemporalAdapterConfig } from './config.js';
 
@@ -25,6 +25,12 @@ export interface TemporalWorkerHostConfig {
   activityDeps: ActivityDeps;
   /** Override for testing; defaults to bundling RunPlanWorkflow. */
   workflowsPath?: string;
+  /**
+   * Override the step executor registry. Defaults to DEFAULT_STEP_EXECUTORS.
+   * Inject custom executors in integration tests to simulate step failures
+   * without using the `simulateError` plan field.
+   */
+  stepExecutors?: readonly StepExecutor[];
 }
 
 // ---------------------------------------------------------------------------
@@ -46,7 +52,7 @@ export class TemporalWorkerHost {
       throw new Error('TEMPORAL_WORKER_ALREADY_STARTED');
     }
 
-    const activities = createActivities(this.config.activityDeps);
+    const activities = createActivities(this.config.activityDeps, this.config.stepExecutors);
 
     this.worker = await Worker.create({
       connection,
