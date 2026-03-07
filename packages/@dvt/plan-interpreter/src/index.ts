@@ -7,6 +7,6 @@
  * @date 2026-02-23
  */
 
-export { planExecutionLayers, validateDag } from './dagAnalyzer.js';
+export { collectDownstreamStepIds, planExecutionLayers, validateDag } from './dagAnalyzer.js';
 export { PlanValidationError } from './errors.js';
 export type { DagValidationResult, PlanStep, PlanValidationErrorCode } from './types.js';
