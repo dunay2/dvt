@@ -1,3 +1,4 @@
+/* global URL */
 import { createRemoteJWKSet, jwtVerify, errors as joseErrors } from 'jose';
 
 import type {

@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { StartRunCommand } from '../../application/ports/auth.js';
+
 import { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 import {
   type AuthorizationAction,

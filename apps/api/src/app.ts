@@ -1,23 +1,24 @@
+import type { ISpan } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
-import type { ISpan } from '@dvt/observability';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import type { Logger } from 'pino';
 
+import { getPgPool } from './db/pool.js';
+import { JwksJwtVerifier } from './infrastructure/auth/jwksJwtVerifier.js';
+import { OidcAuthenticator } from './infrastructure/auth/oidcAuthenticator.js';
+import { StructuredAuditLogger } from './infrastructure/audit/structuredAuditLogger.js';
+import { PostgresPrincipalAccessRepository } from './infrastructure/auth/postgresPrincipalAccessRepository.js';
+
+import { TenantHierarchyAuthorizationPolicy } from './domain/auth/policy.js';
 import { AuthorizeCommandScopeService } from './application/services/authorizeCommandScopeService.js';
 import { NotImplementedStartRunUseCase } from './application/services/notImplementedStartRunUseCase.js';
 import { StartRunAuthorizedFacade } from './application/services/startRunAuthorizedFacade.js';
-import { TenantHierarchyAuthorizationPolicy } from './domain/auth/policy.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
-import { OidcAuthenticator } from './infrastructure/auth/oidcAuthenticator.js';
-import { JwksJwtVerifier } from './infrastructure/auth/jwksJwtVerifier.js';
-import { PostgresPrincipalAccessRepository } from './infrastructure/auth/postgresPrincipalAccessRepository.js';
-import { StructuredAuditLogger } from './infrastructure/audit/structuredAuditLogger.js';
 import { loadEnv, type Env } from './plugins/env.js';
 import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
-import { getPgPool } from './db/pool.js';
 import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
 import { versionRoutes } from './routes/version.js';
