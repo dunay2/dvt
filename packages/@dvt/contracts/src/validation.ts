@@ -8,7 +8,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { ZodError, type ZodType } from 'zod';
+import { z, ZodError, type ZodType } from 'zod';
 
 import {
   ArtifactRefSchema,
@@ -162,6 +162,26 @@ export function parseStepOutput(input: unknown): StepOutputSchemaT {
 /** Validate a write-side event envelope (RunEvents v2.0.1). */
 export function parseRunEventWrite(input: unknown): RunEventWriteSchemaT {
   return parseWithSchema(RunEventWriteSchema, input);
+}
+
+const LegacyCanonicalEngineEventSchema = z.object({
+  runId: z.string().min(1),
+  runSeq: z.number().int().positive().optional(),
+  eventId: z.string().min(1),
+  eventType: z.string().min(1),
+  eventData: z.record(z.string(), z.unknown()).optional(),
+  idempotencyKey: z.string().min(1),
+  emittedAt: z.string().min(1),
+});
+
+export type LegacyCanonicalEngineEvent = z.infer<typeof LegacyCanonicalEngineEventSchema>;
+
+/**
+ * Backward-compatible validator consumed by contract golden checks.
+ * New code should use parseRunEventWrite/parseRunEventRecord.
+ */
+export function parseCanonicalEngineEvent(input: unknown): LegacyCanonicalEngineEvent {
+  return parseWithSchema(LegacyCanonicalEngineEventSchema, input);
 }
 
 /** Validate a persisted event record (RunEvents v2.0.1). */
