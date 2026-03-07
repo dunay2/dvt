@@ -34,7 +34,6 @@ export const STEP_STARTED_WITHOUT_COMPILED_CODE_REF_WRITE_FIXTURE = {
   ...BASE_STEP_STARTED_WRITE_EVENT,
   eventId: 'evt-step-started-without-ref',
   idempotencyKey: 'StepStarted|tenant-a|run-compiled-code-ref-1|1|model.analytics.orders|no-ref',
-  payload: {},
 } as const;
 
 export const STEP_STARTED_WITH_COMPILED_CODE_REF_RECORD_FIXTURE = {
