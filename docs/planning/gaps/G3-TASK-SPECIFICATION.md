@@ -1,8 +1,8 @@
 ---
 title: G3 TASK SPECIFICATION
-status: Review
+status: Final
 owner: docs
-last_reviewed: 2026-03-06
+last_reviewed: 2026-03-07
 planning_type: proposal
 ---
 
@@ -11,7 +11,7 @@ planning_type: proposal
 Gap: G3 - IStartRunIntentStore Postgres + scheduler
 
 - Original date: 2026-03-04
-- Current review date: 2026-03-06
+- Current review date: 2026-03-07
 - Primary source: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
 - Process guide: [`../dvt-traceability-pack-v2-lite-R6/README.md`](../dvt-traceability-pack-v2-lite-R6/README.md)
 
@@ -24,7 +24,7 @@ Close G3 with production-ready behavior:
 3. Runtime wiring (no orphan worker implementation).
 4. Minimal observability and test coverage.
 
-## Current Implementation Status (2026-03-06)
+## Closure Snapshot (2026-03-07)
 
 ### Delivered
 
@@ -52,12 +52,6 @@ Close G3 with production-ready behavior:
 3. Worker backoff only for infrastructure errors.
 4. Query and tick timeout guards enabled.
 
-## Remaining Work To Mark G3 Fully Closed
-
-1. Update evidence doc status from Draft to Final with real PR links.
-2. Ensure load/resilience acceptance notes are recorded in evidence doc.
-3. Sync architecture/system status document with actual implementation state.
-
 ## Closure Checklist
 
 - [x] Postgres store covers required transitions.
@@ -65,8 +59,21 @@ Close G3 with production-ready behavior:
 - [x] Worker lifecycle behavior implemented.
 - [x] Runtime wiring completed.
 - [x] Unit/integration test files added.
-- [ ] Evidence docs finalized and linked to merged PRs.
-- [ ] System status docs updated to match implemented state.
+- [x] Evidence docs finalized and linked to merged PRs.
+- [x] System status docs updated to match implemented state.
+
+## Closure Decision
+
+G3 is closed.
+
+- Durable Postgres intent persistence exists.
+- Reconciler lifecycle/runtime wiring exists.
+- Evidence is final and linked to merged PRs.
+
+## Post-Closure Follow-up (Non-Blocking)
+
+1. Keep load/resilience acceptance notes updated as production telemetry grows.
+2. Revisit throughput tuning only if real tenant concurrency shows pressure.
 
 ## References
 

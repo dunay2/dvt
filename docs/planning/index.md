@@ -17,10 +17,15 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 ## Proposals
 
+- [CI Workflow Deduplication Plan](proposals/ci-workflow-deduplication-plan-20260307.md)
+- [Define the Outbox Consumer](Define-the-Outbox-Consumer.en.md)
 - [Define the Outbox Consumer](Definir%20el%20Consumidor%20del%20Outbox.md)
+- [Documentation Restructuring Diagnostic And Roadmap](proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - [DVT+ — AI-Executable Remediation Plan (Engine + Planner + State)](DVT_engine_remediation_ai_plan.md)
 - [Engine Migration Plan: Current Gap to Target Blueprint v0.6](engine-gap-to-target-migration-plan.md)
 - [Executable Remediation and Completion Plan for DVT+](DVT_REMEDIATION_PLAN.md)
+- [Incidencias abiertas (1 a 144) dunay2/dvt](proposals/github-open-issues-1-144.md)
+- [Incidencias vivas en dunay2/dvt (7 de marzo de 2026)](proposals/github-open-issues.md)
 - [Milestone 0 - Immediate Stabilization (Sprint 1-2)](HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md)
 
 ## Reviews
@@ -39,8 +44,10 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 - [Change Impact Report — ADR-0030 Session 2026-03-04](CHANGE_IMPACT_ADR0030_20260304.md)
 - [CI/CD Rollback Plan After Stabilization (2026-02-28)](CI_CD_ROLLBACK_PLAN_20260228.md)
 - [Engine DVT - Implementation Status Checklist (Against Requested Spec)](ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md)
+- [Engine DVT - Implementation Status Checklist (Against Requested Spec)](ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md)
 - [Generated Capability Coverage](status/generated-capability-coverage.md)
 - [Generated Code State](status/generated-code-state.md)
+- [Generated Spec Traceability](status/generated-spec-traceability.md)
 - [Pending Golden Path Coverage Debt](pending-golden-path-coverage-debt.md)
 - [Pending Release Please Continuous](pending-release-please-continuous.md)
 

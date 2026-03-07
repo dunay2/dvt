@@ -14,8 +14,10 @@ Current status snapshots and implementation tracking.
 - [Change Impact Report — ADR-0030 Session 2026-03-04](../CHANGE_IMPACT_ADR0030_20260304.md)
 - [CI/CD Rollback Plan After Stabilization (2026-02-28)](../CI_CD_ROLLBACK_PLAN_20260228.md)
 - [Engine DVT - Implementation Status Checklist (Against Requested Spec)](../ENGINE_DVT_ESPEC_CHECKLIST_ESTADO.md)
+- [Engine DVT - Implementation Status Checklist (Against Requested Spec)](../ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md)
 - [Generated Capability Coverage](generated-capability-coverage.md)
 - [Generated Code State](generated-code-state.md)
+- [Generated Spec Traceability](generated-spec-traceability.md)
 - [Pending Golden Path Coverage Debt](../pending-golden-path-coverage-debt.md)
 - [Pending Release Please Continuous](../pending-release-please-continuous.md)
 
