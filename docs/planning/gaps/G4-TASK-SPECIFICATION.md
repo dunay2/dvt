@@ -1,8 +1,8 @@
 ---
 title: G4 - compiledCodeRef Task Specification
-status: Review
+status: Final
 owner: docs
-last_reviewed: 2026-03-06
+last_reviewed: 2026-03-07
 planning_type: proposal
 ---
 
@@ -11,7 +11,7 @@ planning_type: proposal
 Status snapshot aligned with current repository state.
 
 - Original start: 2026-03-04
-- Current review: 2026-03-06
+- Current review: 2026-03-07
 - ADR: [`ADR-0032`](../../adr/ADR-0032-compiledcoderef-ownership.md)
 - Master plan: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
 
@@ -23,10 +23,10 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 | Task | Scope                                                     | Current state |
 | ---- | --------------------------------------------------------- | ------------- |
-| T4-1 | `@dvt/contracts`: type + package export + fixtures        | Partial       |
+| T4-1 | `@dvt/contracts`: type + package export + fixtures        | Implemented   |
 | T4-2 | `@dvt/planner`: storage adapters + attachCompiledCodeRefs | Implemented   |
 | T4-3 | `@dvt/adapter-temporal`: propagate ref to `StepStarted`   | Implemented   |
-| T4-4 | `@dvt/traceability-service`: reader/cache/SqlJobFacet     | Pending       |
+| T4-4 | `@dvt/traceability-service`: reader/cache/SqlJobFacet     | Implemented   |
 
 ## T4-1 - Contracts
 
@@ -36,11 +36,10 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
    - [`packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
 2. Type is exported from package index.
    - [`packages/@dvt/contracts/src/index.ts`](../../../packages/@dvt/contracts/src/index.ts)
-
-### Pending
-
-1. Golden fixtures for `StepStarted` with/without `compiledCodeRef`.
-2. Evidence doc update with real fixture paths.
+3. Golden fixtures for `StepStarted` with/without `compiledCodeRef` were added.
+   - [`packages/@dvt/contracts/test/fixtures/run-event-compiled-code-ref.fixtures.ts`](../../../packages/@dvt/contracts/test/fixtures/run-event-compiled-code-ref.fixtures.ts)
+4. Contract validation tests for both event variants were added.
+   - [`packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts`](../../../packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts)
 
 ## T4-2 - Planner
 
@@ -86,22 +85,35 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 
 ## T4-4 - Traceability Service
 
-### Pending Scope
+### Done
 
-1. Create `ICompiledCodeReader` port and concrete readers.
-2. Implement cache + retry wrapper for blob resolution.
-3. Build `SqlJobFacet` from resolved SQL.
-4. Integrate fail-open behavior in lineage mapping path.
-5. Add unit/integration tests and metrics assertions.
+1. Added compiled-code lineage ports and contracts.
+   - [`packages/@dvt/traceability-service/src/lineage/contracts.ts`](../../../packages/@dvt/traceability-service/src/lineage/contracts.ts)
+2. Implemented reader composition and cache+retry resolution path.
+   - [`packages/@dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts`](../../../packages/@dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts)
+   - [`packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`](../../../packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts)
+3. Implemented SQL facet builder and StepStarted lineage mapper with fail-open behavior.
+   - [`packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts`](../../../packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts)
+   - [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
+4. Added unit tests for guards, resolver, and mapper paths.
+   - [`packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts`](../../../packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts)
+   - [`packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`](../../../packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts)
+   - [`packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`](../../../packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts)
+
+### Validation Notes
+
+1. Mapper is fail-open by design: no `compiledCodeRef` means empty facets, not failure.
+2. Resolver validates SHA-256/size invariants against resolved blob content.
+3. Package-level tests cover positive and negative/error paths.
 
 ## Closure Criteria For G4
 
-- [ ] T4-1 fixtures completed and validated.
+- [x] T4-1 fixtures completed and validated.
 - [x] T4-2 planner implementation completed.
 - [x] T4-3 adapter propagation implemented and tested.
-- [ ] T4-4 traceability implementation and tests completed.
-- [ ] End-to-end path verified in CI for involved packages.
-- [ ] Evidence doc updated to Final with real PR/test/code references.
+- [x] T4-4 traceability implementation and tests completed.
+- [x] End-to-end path verified in package-level test suites for involved modules.
+- [x] Evidence doc updated to Final with real PR/test/code references.
 
 ## References
 

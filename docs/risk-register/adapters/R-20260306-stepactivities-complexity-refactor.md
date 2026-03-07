@@ -1,7 +1,7 @@
 ---
 id: R-20260306-G4-T4-02
 title: Step activity behavior drift after complexity refactor
-status: Mitigating
+status: Mitigated
 date: 2026-03-06
 owners:
   - adapter-temporal
@@ -38,3 +38,7 @@ error semantics.
 
 - `packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`
 - `packages/@dvt/adapter-temporal/test/activities.test.ts`
+
+## Closure
+
+Mitigated and closed on 2026-03-07 after regression validation in adapter-temporal test suites.
