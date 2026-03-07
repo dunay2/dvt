@@ -36,17 +36,7 @@
     "gen:ai-index": "node scripts/gen-ai-index.js",
     "rebuild:snapshots": "node scripts/rebuild-snapshots.js",
     "validate:glossary": "node scripts/validate-glossary-usage.cjs --mode error",
-    "traceability:adr0": "pnpm --filter @dvt/traceability-service build && pnpm --filter @dvt/traceability-service trace validate-and-publish --config ../../../traceability.config.json --repoRoot ../../.. --component \"@dvt/traceability-service\" --componentVersion \"0.1.0\" --repoSha \"local\" --moduleName \"@dvt/traceability-service\" --modulePath \"packages/@dvt/traceability-service\" --no-publish",
-    "kg:neo4j:up": "docker compose -f infra/docker/docker-compose.neo4j.yml up -d",
-    "kg:neo4j:down": "docker compose -f infra/docker/docker-compose.neo4j.yml down",
-    "kg:generate": "node scripts/neo4j/neo4j-generate-cypher.cjs --out scripts/neo4j/generated-repo.cypher",
-    "kg:check": "pnpm kg:generate && git diff --exit-code -- scripts/neo4j/generated-repo.cypher",
-    "kg:seed": "node scripts/neo4j/neo4j-seed.cjs",
-    "kg:ingest": "node scripts/neo4j/neo4j-ingest-repo.cjs",
-    "kg:sync": "pnpm kg:generate && pnpm kg:seed && pnpm kg:ingest",
-    "kg:query": "node scripts/neo4j/neo4j-query-context.cjs",
-    "kg:roadmap:tree": "node scripts/neo4j/neo4j-query-roadmap-tree.cjs",
-    "kg:prompt": "node scripts/neo4j/neo4j-json-to-prompt.cjs",
+    "traceability:adr0": "pnpm --filter @dvt/traceability-service build && pnpm --filter @dvt/traceability-service trace validate-and-build-manifest --config ../../../traceability.config.json --repoRoot ../../.. --component \"@dvt/traceability-service\" --componentVersion \"0.1.0\" --repoSha \"local\"",
     "db:migrate": "node scripts/db-migrate.cjs",
     "contracts:index:generate": "node scripts/generate-contract-index.cjs",
     "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- specs/contracts/README.md",
@@ -82,17 +72,9 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "scripts/neo4j/*.cjs": [
-      "pnpm kg:generate",
-      "node -e \"const fs=require('fs');const cp=require('child_process');const p='scripts/neo4j/generated-repo.cypher';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
-    ],
     "specs/contracts/**/*.{md,json}": [
       "pnpm contracts:index:generate",
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
-    ],
-    "docs/decisions/ADR-*.md": [
-      "pnpm kg:generate",
-      "node -e \"const fs=require('fs');const cp=require('child_process');const p='scripts/neo4j/generated-repo.cypher';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
     "docs/**/*.{md,txt}": [
       "pnpm docs:sync",
@@ -161,7 +143,6 @@
     }
   },
   "dependencies": {
-    "neo4j-driver": "^5.28.1",
     "pg": "^8.16.3",
     "zod": "^4.3.6"
   }

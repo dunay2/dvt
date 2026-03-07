@@ -27,6 +27,7 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 - ['DVT+ Architectural Review — Pass 2'](reviews/DVT+_Architectural_Review_Pass_2.md)
 - [20260305 Review](reviews/20260305%20review.md)
+- [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/ARCH_DOC_CONSOLIDATION_MATRIX_20260307.md)
 - [Batch Relaunch Plan to Replace PR #301 (2026-02-28)](reviews/PR_301_RELAUNCH_BATCH_PLAN_20260228.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
 - [DVT+ — Consolidated Architectural Review](reviews/DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md)
@@ -45,7 +46,6 @@ Roadmaps, proposals, reviews, and non-normative planning artifacts.
 
 ## Reference
 
-- [Dvt Architecture Atlas Pack](dvt_architecture_atlas_pack/)
 - [Dvt Artifact Store Spec Pack](dvt_artifact_store_spec_pack/)
 - [Dvt Traceability Pack V2 Lite R6](dvt-traceability-pack-v2-lite-R6/)
 - [Execution Model](execution-model/)

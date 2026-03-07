@@ -1,8 +1,8 @@
 ---
 title: G4-T3 - Sonar Refactor Plan
-status: Review
+status: In Progress
 owner: docs
-last_reviewed: 2026-03-06
+last_reviewed: 2026-03-07
 planning_type: proposal
 ---
 
@@ -60,6 +60,30 @@ Keep `G4-T3` behavior while improving code quality with:
 4. **Validation and docs**
    - Re-run adapter-temporal test suite.
    - Update `G4` docs with refactor notes/evidence.
+
+## Execution Task List (2026-03-07)
+
+1. [x] Audit branch state and establish strict fix order.
+2. [x] Fix-1: Persist `skippedSteps` across `continue-as-new` to preserve gateway skip invariants.
+3. [x] Fix-2: Provide deterministic gateway dependency context on resumed executions.
+4. [x] Fix-3: Extract workflow control-input parsing to reduce orchestration responsibility.
+5. [x] Run broader package validation (`eslint`, `tsc`, relevant tests, prepush checks).
+6. [ ] Push branch, open PR, monitor checks to green, and patch any CI failures.
+
+## Implementation Notes (Applied)
+
+- `RunPlanWorkflowInput` now carries internal `skippedStepIds` for rollover continuity.
+- `buildContinueAsNewInput` now persists `skippedStepIds` alongside `gatewayDecisions`.
+- Gateway dependency context now resolves deterministically when prior execution facts are not present in-memory.
+- Workflow input control parsing was extracted (`parseWorkflowControlInput`) to improve SRP and readability.
+- Unit coverage extended in `workflow-continue-as-new.test.ts`:
+  - rollover payload includes `skippedStepIds`
+  - deterministic gateway dependency context behavior
+
+## Residual Risk / Follow-up
+
+- `continue-as-new` regression should also be protected by an integration scenario with Temporal time-skipping (not only unit helpers).
+- If DSL evolution requires richer dependency payload than `status/stepId`, persisted step facts may need expansion to a typed value object.
 
 ## Acceptance Criteria
 

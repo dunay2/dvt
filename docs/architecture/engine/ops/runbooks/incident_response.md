@@ -260,7 +260,7 @@ WHERE planId = 'plan-dbt-01'
 GROUP BY status, error_code;"
 
 # If many TIMEOUT errors → Check step timeout config
-grep -r "timeout" plans/plan-dbt-01.json | head -5
+grep -r "timeout" packages/@dvt/engine/test/contracts/plans/plan-parallel.json | head -5
 
 # If timeout is too short, contact plan owner to increase
 ```
@@ -302,7 +302,7 @@ WHERE pluginId = 'plugin-xyz';
 kubectl scale deployment dvt-workers-control --replicas=8 -n production
 
 # Option B: Increase timeouts (if plan-owned)
-git checkout plans/plan-dbt-01.json
+git checkout packages/@dvt/engine/test/contracts/plans/plan-parallel.json
 # Edit timeouts manually
 git commit -am "Increase timeouts for plan-dbt-01 (P2 incident)"
 git push origin main

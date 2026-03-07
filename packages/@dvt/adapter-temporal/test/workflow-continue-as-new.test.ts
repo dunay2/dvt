@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildContinueAsNewInput,
+  parseOptionalNonNegativeInt,
+  resolveGatewayDependencyContext,
   shouldTriggerContinueAsNew,
+  validateGatewayDependencies,
 } from '../src/workflows/workflowHelpers.js';
 
 describe('continue-as-new policy', () => {
@@ -83,5 +86,76 @@ describe('continue-as-new policy', () => {
     expect(nextInput.gatewayDecisions).toEqual({ gwA: true, gwB: false });
     expect(nextInput.skippedStepIds).toEqual(['skipped-step']);
     expect(nextInput.planRef.planId).toBe('plan-1');
+  });
+});
+
+describe('workflow input parsing', () => {
+  it('defaults undefined to zero', () => {
+    expect(parseOptionalNonNegativeInt(undefined, 'resumeFromLayerIndex')).toBe(0);
+  });
+
+  it('accepts integer numeric string', () => {
+    expect(parseOptionalNonNegativeInt('3', 'continuedAsNewCount')).toBe(3);
+  });
+
+  it('throws for invalid value', () => {
+    expect(() => parseOptionalNonNegativeInt('abc', 'resumeFromLayerIndex')).toThrow(
+      'INVALID_WORKFLOW_INPUT: resumeFromLayerIndex_must_be_non_negative_integer'
+    );
+  });
+});
+
+describe('gateway dependency validation', () => {
+  const gatewayStep = (args: {
+    stepId: string;
+    dependsOn?: string[];
+  }): {
+    stepId: string;
+    type: 'gateway';
+    dependsOn?: string[];
+    gateway: { dslVersion: '1.0'; expression: string };
+  } => ({
+    stepId: args.stepId,
+    type: 'gateway',
+    ...(args.dependsOn === undefined ? {} : { dependsOn: args.dependsOn }),
+    gateway: { dslVersion: '1.0', expression: "status='COMPLETED'" },
+  });
+
+  it('accepts gateway with exactly one dependency', () => {
+    expect(() =>
+      validateGatewayDependencies([gatewayStep({ stepId: 'gw-1', dependsOn: ['s-1'] })])
+    ).not.toThrow();
+  });
+
+  it.each([
+    {
+      name: 'rejects gateway without dependencies',
+      step: gatewayStep({ stepId: 'gw-no-dep' }),
+      expectedError: 'INVALID_PLAN_SCHEMA: gateway_dependsOn_exactly_one_required:gw-no-dep',
+    },
+    {
+      name: 'rejects gateway with multiple dependencies',
+      step: gatewayStep({ stepId: 'gw-multi-dep', dependsOn: ['s-1', 's-2'] }),
+      expectedError: 'INVALID_PLAN_SCHEMA: gateway_dependsOn_exactly_one_required:gw-multi-dep',
+    },
+  ])('$name', ({ step, expectedError }) => {
+    expect(() => validateGatewayDependencies([step])).toThrow(expectedError);
+  });
+});
+
+describe('gateway dependency context', () => {
+  it('uses persisted dependency facts when available', () => {
+    expect(
+      resolveGatewayDependencyContext('s-1', {
+        's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true },
+      })
+    ).toEqual({ stepId: 's-1', status: 'COMPLETED', gatewayDecision: true });
+  });
+
+  it('builds deterministic completed context when dependency fact is missing', () => {
+    expect(resolveGatewayDependencyContext('s-missing', {})).toEqual({
+      stepId: 's-missing',
+      status: 'COMPLETED',
+    });
   });
 });

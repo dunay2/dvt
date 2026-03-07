@@ -15,11 +15,6 @@
     "strictMode": true,
     "failOnMissingVersion": true
   },
-  "neo4j": {
-    "uri": "${NEO4J_URI}",
-    "database": "neo4j",
-    "constraints": true
-  },
   "adrCatalog": {
     "path": "docs/adr",
     "pattern": "ADR-*.md"

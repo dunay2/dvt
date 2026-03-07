@@ -17,13 +17,8 @@ jobs:
       - name: Build traceability service
         run: pnpm -C packages/@dvt/traceability-service build
 
-      - name: Validate and publish traceability
-        run:
-          pnpm -C packages/@dvt/traceability-service trace validate-and-publish --config
+      - name: Validate and build traceability manifest
+        run: >-
+          pnpm -C packages/@dvt/traceability-service trace validate-and-build-manifest --config
           ./traceability.config.json --repoRoot . --component "@dvt/contracts" --componentVersion
-          "1.0.0" --repoSha "${{ github.sha }}" --moduleName "@dvt/contracts" --modulePath
-          "packages/@dvt/contracts"
-        env:
-          NEO4J_URI: ${{ secrets.NEO4J_URI }}
-          NEO4J_USER: ${{ secrets.NEO4J_USER }}
-          NEO4J_PASSWORD: ${{ secrets.NEO4J_PASSWORD }}
+          "1.0.0" --repoSha "${{ github.sha }}"

@@ -1,65 +1,56 @@
+```markdown
 # ADR-0002: Neo4j as Central Knowledge Graph Repository
 
-- **Status**: Accepted
+- **Status**: Superseded
 - **Date**: 2026-02-16
+- **Updated**: 2026-03-07
 - **Owners**: Architecture, Engine, Tooling maintainers
 - **Related files**:
-  - [`docs/index.md`](../index.md)
-  - [`docker-compose.neo4j.yml`](../../docker-compose.neo4j.yml)
-  - [`scripts/neo4j/base-schema.cypher`](../../scripts/neo4j/base-schema.cypher)
-  - [`scripts/neo4j/neo4j-seed.cjs`](../../scripts/neo4j/neo4j-seed.cjs)
-  - [`scripts/neo4j/neo4j-query-context.cjs`](../../scripts/neo4j/neo4j-query-context.cjs)
-  - [`scripts/neo4j/neo4j-json-to-prompt.cjs`](../../scripts/neo4j/neo4j-json-to-prompt.cjs)
+  - [`docs/decisions/ADR-0000-Code-generation-with-normative-traceability-required.en.md`](./ADR-0000-Code-generation-with-normative-traceability-required.en.md)
+  - [`packages/@dvt/traceability-service/README.md`](../../packages/@dvt/traceability-service/README.md)
+  - [`packages/@dvt/traceability-service/src/service.ts`](../../packages/@dvt/traceability-service/src/service.ts)
 
 ---
 
 ## Context
 
-The repository has many modules, contracts, and cross-cutting dependencies. Operational context is fragmented across code, ADRs, docs, and team memory.
+The repository evaluated Neo4j as a central knowledge graph to improve impact analysis,
+ADR traceability, and AI context retrieval.
 
-During day-to-day work with AI assistants, context windows are limited and continuity is lost between sessions. This causes friction in maintenance, refactoring, onboarding, and impact analysis.
-
-The project needs a queryable source of truth to extract focused subgraphs by task, file, module, or ADR.
+The implementation added repository graph scripts, Cypher snapshots, and a Neo4j-backed
+publisher in the traceability service.
 
 ---
 
 ## Decision
 
-Adopt **Neo4j** (Community 5.x locally, or AuraDB free tier) as the central architectural and code knowledge repository.
+The Neo4j knowledge graph approach is retired.
 
-### 1) Graph scope
+The repository will keep the useful part of the workflow:
 
-The graph MUST store at least:
+1. trace header scanning,
+2. ADR validation,
+3. deterministic manifest generation.
 
-- modules, files, classes, functions
-- artifact dependencies
-- architecture decisions (ADRs) linked to code
-- ownership/domain metadata
-- retrieval metadata for AI context serialization
+The repository will not maintain:
 
-### 2) Tooling baseline
+- Neo4j runtime infrastructure,
+- Cypher graph generation snapshots,
+- graph publication from the traceability service,
+- CI hooks coupled to repository graph refresh.
 
-The baseline stack includes:
+---
 
-- Neo4j database
-- Node.js driver (`neo4j-driver`)
-- VS Code extension for Cypher exploration
-- serialization scripts (subgraph JSON → prompt text)
+## Rationale
 
-### 3) Data model baseline
+Neo4j did not provide enough operational or architectural value to justify:
 
-Minimum graph model:
+- tooling maintenance cost,
+- extra CI and local workflow complexity,
+- duplicated repository metadata,
+- drift between source code and graph artifacts.
 
-- nodes: `Module`, `File`, `Function`, `Decision`, `Person`
-- relations: `CONTAINS`, `DEFINES`, `DEPENDS`, `IMPLEMENTS_DECISION`, `CONSULTED`
-
-### 4) Operating workflow
-
-1. Start Neo4j instance.
-2. Seed baseline graph.
-3. Ingest repository metadata.
-4. Query subgraph by scope.
-5. Serialize context for AI workflows.
+Manifest-first traceability keeps the governance signal while removing unused infrastructure.
 
 ---
 
@@ -67,28 +58,20 @@ Minimum graph model:
 
 ### Positive
 
-- High-precision context retrieval for engineering tasks.
-- Better continuity across AI-assisted sessions.
-- Scalable architectural traceability.
+- Less tooling and CI surface area.
+- No graph artifact drift.
+- Traceability remains deterministic and repository-local.
 
-### Trade-offs
+### Negative
 
-- Initial modeling and ingestion overhead.
-- Ongoing discipline required to keep graph up to date.
-
----
-
-## Acceptance Criteria
-
-1. A working Neo4j instance is available for the team (local or AuraDB).
-2. Seeding and query scripts exist and run from the monorepo.
-3. A structured prompt can be generated from Cypher query output.
-4. At least one real workflow demonstrates reproducible context extraction.
+- No graph-based ad hoc impact queries.
+- Historical Neo4j experiments remain only as ADR history, not as active tooling.
 
 ---
 
-## References
+## Follow-up
 
-- [`ADR-0001-temporal-integration-test-policy.md`](./ADR-0001-temporal-integration-test-policy.md)
-- Neo4j docs: <https://neo4j.com/docs/>
-- Neo4j JavaScript Driver: <https://neo4j.com/docs/javascript-manual/current/>
+- Remove `scripts/neo4j/` and related package scripts.
+- Remove Neo4j dependencies from active packages.
+- Keep ADR-0002 as a historical record of a superseded approach.
+```
