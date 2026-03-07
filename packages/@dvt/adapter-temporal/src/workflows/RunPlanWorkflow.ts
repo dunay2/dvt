@@ -5,8 +5,8 @@
  * @decision Section 5 — Workflow remains deterministic and delegates side effects to activities
  * @decision Section 3 — Lifecycle signaling/query handling follows canonical run state transitions
  * @consequence Temporal workflow execution is replay-safe and aligned with engine lifecycle contracts
- * @version 1.1.0
- * @date 2026-02-23
+ * @version 1.2.0
+ * @date 2026-03-07
  */
 /**
  * RunPlanWorkflow — Temporal interpreter workflow (deterministic).
@@ -21,7 +21,7 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
-import { planExecutionLayers } from '@dvt/plan-interpreter';
+import { collectDownstreamStepIds, planExecutionLayers } from '@dvt/plan-interpreter';
 import {
   ApplicationFailure,
   continueAsNew,
@@ -32,11 +32,52 @@ import {
   setHandler,
 } from '@temporalio/workflow';
 
-import type { Activities } from '../activities/stepActivities.js';
-import type { CompiledCodeRef } from '../engine-types.js';
+import type { EventType, ExecutionPlan, RunMetadata } from '../engine-types.js';
 
-type WorkflowStep = Awaited<ReturnType<Activities['fetchPlan']>>['steps'][number];
-type ExecutedStepResult = Awaited<ReturnType<Activities['executeStep']>>;
+import {
+  buildCompletedStepFact,
+  buildContinueAsNewInput,
+  buildGatewayContext,
+  buildStepStartedPayload,
+  formatUnknownError,
+  normalizeDependsOn,
+  parseOptionalNonNegativeInt,
+  parseOptionalStringArray,
+  shouldTriggerContinueAsNew,
+  validateGatewayDependencies,
+} from './workflowHelpers.js';
+
+type WorkflowStep = ExecutionPlan['steps'][number];
+
+type ExecutedStepResult = {
+  stepId: string;
+  status: 'COMPLETED' | 'FAILED';
+  gatewayDecision?: boolean;
+  retriable?: boolean;
+  error?: string;
+};
+
+// ---------------------------------------------------------------------------
+// Activities port — workflow declares only what it needs (ISP)
+// ---------------------------------------------------------------------------
+
+type WorkflowActivitiesPort = {
+  fetchPlan(planRef: RunPlanWorkflowInput['planRef']): Promise<ExecutionPlan>;
+  executeStep(input: {
+    step: WorkflowStep;
+    ctx: RunPlanWorkflowInput['ctx'];
+    gatewayContext?: Record<string, unknown>;
+  }): Promise<ExecutedStepResult>;
+  emitEvent(input: {
+    ctx: RunPlanWorkflowInput['ctx'];
+    planRef: RunPlanWorkflowInput['planRef'];
+    eventType: EventType;
+    stepId?: string;
+    payload?: Record<string, unknown>;
+    logicalAttemptId?: number;
+  }): Promise<void>;
+  saveRunMetadata(meta: RunMetadata): Promise<void>;
+};
 
 // ---------------------------------------------------------------------------
 // Workflow input / output
@@ -67,6 +108,8 @@ export interface RunPlanWorkflowInput {
   continuedAsNewCount?: number;
   /** Internal gateway decision map carried across continue-as-new rollovers. */
   gatewayDecisions?: Record<string, boolean>;
+  /** Internal skipped-step set carried across continue-as-new rollovers. */
+  skippedStepIds?: string[];
 }
 
 export interface RunPlanWorkflowResult {
@@ -81,7 +124,9 @@ export interface RunPlanWorkflowResult {
 
 export interface WorkflowState {
   status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  /** Dedicated pause flag: used by condition() predicate to avoid TypeScript CFA cast. */
   paused: boolean;
+  /** Dedicated cancel flag: used by condition() predicate to avoid TypeScript CFA cast. */
   cancelled: boolean;
   cancelReason?: string;
   currentStepIndex: number;
@@ -102,7 +147,7 @@ export const statusQuery = defineQuery<WorkflowState>('status');
 // Activity proxy (all side-effects delegated to activities)
 // ---------------------------------------------------------------------------
 
-const activities = proxyActivities<Activities>({
+const activities = proxyActivities<WorkflowActivitiesPort>({
   startToCloseTimeout: '30m',
   retry: {
     initialInterval: '1s',
@@ -119,30 +164,28 @@ const activities = proxyActivities<Activities>({
 
 export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunPlanWorkflowResult> {
   const { planRef, ctx } = input;
-  const continueAsNewAfterLayerCount = normalizeNonNegativeInt(input.continueAsNewAfterLayerCount);
-  const resumeFromLayerIndex = normalizeNonNegativeInt(input.resumeFromLayerIndex);
-  const continuedAsNewCount = normalizeNonNegativeInt(input.continuedAsNewCount);
+  const ctrl = parseWorkflowControlInput(input);
 
-  const state = createInitialWorkflowState(continuedAsNewCount, input.gatewayDecisions);
+  const state = createInitialWorkflowState(ctrl.continuedAsNewCount, input.gatewayDecisions);
   registerSignalHandlers(state);
 
   const completedStepResults: Record<string, Record<string, unknown>> = {};
-  const skippedSteps = new Set<string>();
+  const skippedSteps = new Set<string>(ctrl.skippedStepIds);
 
-  // -- main orchestration ---------------------------------------------
   try {
-    await bootstrapFirstExecutionIfNeeded(resumeFromLayerIndex, ctx, planRef);
+    await bootstrapFirstExecutionIfNeeded(ctrl.resumeFromLayerIndex, ctx, planRef);
 
     const plan = await activities.fetchPlan(planRef);
+    validateGatewayDependencies(plan.steps);
     const executionLayers = planExecutionLayers<WorkflowStep>(plan.steps);
-    if (resumeFromLayerIndex > executionLayers.length) {
+    if (ctrl.resumeFromLayerIndex > executionLayers.length) {
       throw new TypeError('INVALID_WORKFLOW_STATE: resumeFromLayerIndex_out_of_range');
     }
 
     const runtime: LayerRuntimeState = {
       completedStepResults,
       skippedSteps,
-      completedSteps: countStepsBeforeLayer(executionLayers, resumeFromLayerIndex),
+      completedSteps: countStepsBeforeLayer(executionLayers, ctrl.resumeFromLayerIndex),
       processedLayersInCurrentExecution: 0,
     };
     state.currentStepIndex = runtime.completedSteps;
@@ -151,9 +194,9 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       input,
       planSteps: plan.steps,
       executionLayers,
-      resumeFromLayerIndex,
-      continueAsNewAfterLayerCount,
-      continuedAsNewCount,
+      resumeFromLayerIndex: ctrl.resumeFromLayerIndex,
+      continueAsNewAfterLayerCount: ctrl.continueAsNewAfterLayerCount,
+      continuedAsNewCount: ctrl.continuedAsNewCount,
       ctx,
       planRef,
       state,
@@ -165,14 +208,46 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       ctx,
       planRef,
       state,
-      continuedAsNewCount,
+      continuedAsNewCount: ctrl.continuedAsNewCount,
     });
   } catch (err) {
-    // Unexpected error — emit RunFailed if not already terminal
     await markWorkflowFailedIfNeeded(state, ctx, planRef);
     throw err;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Input parsing
+// ---------------------------------------------------------------------------
+
+interface WorkflowControlInput {
+  continueAsNewAfterLayerCount: number;
+  resumeFromLayerIndex: number;
+  continuedAsNewCount: number;
+  skippedStepIds: string[];
+}
+
+function parseWorkflowControlInput(input: RunPlanWorkflowInput): WorkflowControlInput {
+  return {
+    continueAsNewAfterLayerCount: parseOptionalNonNegativeInt(
+      input.continueAsNewAfterLayerCount,
+      'continueAsNewAfterLayerCount'
+    ),
+    resumeFromLayerIndex: parseOptionalNonNegativeInt(
+      input.resumeFromLayerIndex,
+      'resumeFromLayerIndex'
+    ),
+    continuedAsNewCount: parseOptionalNonNegativeInt(
+      input.continuedAsNewCount,
+      'continuedAsNewCount'
+    ),
+    skippedStepIds: parseOptionalStringArray(input.skippedStepIds, 'skippedStepIds'),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Outcome resolution
+// ---------------------------------------------------------------------------
 
 async function resolveLayerLoopOutcome(args: {
   layerOutcome: LayerLoopOutcome;
@@ -202,10 +277,7 @@ async function markWorkflowFailedIfNeeded(
   ctx: RunPlanWorkflowInput['ctx'],
   planRef: RunPlanWorkflowInput['planRef']
 ): Promise<void> {
-  if (state.status === 'CANCELLED' || state.status === 'FAILED') {
-    return;
-  }
-
+  if (state.status === 'CANCELLED' || state.status === 'FAILED') return;
   try {
     await activities.emitEvent({ ctx, planRef, eventType: 'RunFailed' });
   } catch {
@@ -213,6 +285,10 @@ async function markWorkflowFailedIfNeeded(
   }
   state.status = 'FAILED';
 }
+
+// ---------------------------------------------------------------------------
+// State initialisation & signal handlers
+// ---------------------------------------------------------------------------
 
 function createInitialWorkflowState(
   continuedAsNewCount: number,
@@ -250,14 +326,16 @@ function registerSignalHandlers(state: WorkflowState): void {
   setHandler(statusQuery, () => state);
 }
 
+// ---------------------------------------------------------------------------
+// Bootstrap
+// ---------------------------------------------------------------------------
+
 async function bootstrapFirstExecutionIfNeeded(
   resumeFromLayerIndex: number,
   ctx: RunPlanWorkflowInput['ctx'],
   planRef: RunPlanWorkflowInput['planRef']
 ): Promise<void> {
-  if (resumeFromLayerIndex !== 0) {
-    return;
-  }
+  if (resumeFromLayerIndex !== 0) return;
 
   await activities.saveRunMetadata({
     tenantId: ctx.tenantId,
@@ -266,7 +344,6 @@ async function bootstrapFirstExecutionIfNeeded(
     runId: ctx.runId,
     planId: planRef.planId,
     planVersion: planRef.planVersion,
-    // Phase 1: always 1. Phase 2: planner supplies via workflow input on retry.
     logicalAttemptId: 1,
     provider: 'temporal',
     providerWorkflowId: ctx.runId,
@@ -275,6 +352,10 @@ async function bootstrapFirstExecutionIfNeeded(
 
   await activities.emitEvent({ ctx, planRef, eventType: 'RunStarted' });
 }
+
+// ---------------------------------------------------------------------------
+// Layer execution loop
+// ---------------------------------------------------------------------------
 
 interface LayerRuntimeState {
   completedStepResults: Record<string, Record<string, unknown>>;
@@ -312,16 +393,15 @@ async function executePlanLayers(args: ExecutePlanLayersArgs): Promise<LayerLoop
     layerIndex += 1
   ) {
     const layerOutcome = await processLayer({ ...args, layerIndex });
-    if (layerOutcome) {
-      return layerOutcome;
-    }
+    if (layerOutcome) return layerOutcome;
   }
-
   return { kind: 'all_layers_processed' };
 }
 
 async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | null> {
-  const layer = args.executionLayers[args.layerIndex]!;
+  const layer = args.executionLayers[args.layerIndex];
+  if (layer === undefined) return null;
+
   const executableLayer = selectExecutableLayer(layer, args.runtime.skippedSteps);
 
   await emitSkippedStepsInLayer({
@@ -345,9 +425,7 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     planRef: args.planRef,
     continuedAsNewCount: args.continuedAsNewCount,
   });
-  if (terminalBeforeLayer) {
-    return { kind: 'terminal', result: terminalBeforeLayer };
-  }
+  if (terminalBeforeLayer) return { kind: 'terminal', result: terminalBeforeLayer };
 
   await emitStepStartedForLayer(args.ctx, args.planRef, executableLayer);
 
@@ -367,9 +445,7 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     runtime: args.runtime,
     continuedAsNewCount: args.continuedAsNewCount,
   });
-  if (terminalFromResults) {
-    return { kind: 'terminal', result: terminalFromResults };
-  }
+  if (terminalFromResults) return { kind: 'terminal', result: terminalFromResults };
 
   args.runtime.processedLayersInCurrentExecution += 1;
   return maybeBuildContinueAsNewOutcome({
@@ -380,6 +456,7 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     layerIndex: args.layerIndex,
     processedLayersInCurrentExecution: args.runtime.processedLayersInCurrentExecution,
     gatewayDecisions: args.state.gatewayDecisions ?? {},
+    skippedStepIds: args.runtime.skippedSteps,
   });
 }
 
@@ -391,6 +468,7 @@ function maybeBuildContinueAsNewOutcome(args: {
   layerIndex: number;
   processedLayersInCurrentExecution: number;
   gatewayDecisions: Record<string, boolean>;
+  skippedStepIds: ReadonlySet<string>;
 }): LayerLoopOutcome | null {
   const nextLayerIndex = args.layerIndex + 1;
   if (
@@ -412,9 +490,14 @@ function maybeBuildContinueAsNewOutcome(args: {
       nextLayerIndex,
       continuedAsNewCount: args.continuedAsNewCount,
       gatewayDecisions: args.gatewayDecisions,
+      skippedStepIds: args.skippedStepIds,
     }),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Layer helpers
+// ---------------------------------------------------------------------------
 
 function selectExecutableLayer(
   layer: ReadonlyArray<WorkflowStep>,
@@ -436,9 +519,7 @@ async function emitSkippedStepsInLayer(args: {
 }): Promise<void> {
   const executableIds = new Set(args.executableLayer.map((step) => step.stepId));
   for (const step of args.layer) {
-    if (executableIds.has(step.stepId)) {
-      continue;
-    }
+    if (executableIds.has(step.stepId)) continue;
     args.skippedSteps.add(step.stepId);
     await activities.emitEvent({
       ctx: args.ctx,
@@ -465,9 +546,7 @@ async function handlePreLayerLifecycle(args: {
     };
   }
 
-  if (!args.state.paused) {
-    return null;
-  }
+  if (!args.state.paused) return null;
 
   await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunPaused' });
   await condition(() => !args.state.paused || args.state.cancelled);
@@ -502,6 +581,10 @@ async function emitStepStartedForLayer(
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Step execution
+// ---------------------------------------------------------------------------
 
 interface LayerStepExecution {
   stepId: string;
@@ -557,9 +640,7 @@ function resolveGatewayContextForStep(
   step: WorkflowStep,
   completedStepResults: Record<string, Record<string, unknown>>
 ): Record<string, unknown> | undefined {
-  if (step.type !== 'gateway') {
-    return undefined;
-  }
+  if (step.type !== 'gateway') return undefined;
   return buildGatewayContext(step, completedStepResults);
 }
 
@@ -579,16 +660,12 @@ function applyGatewayDecisionEffects(args: {
   state: WorkflowState;
   runtime: LayerRuntimeState;
 }): void {
-  if (typeof args.gatewayDecision !== 'boolean') {
-    return;
-  }
+  if (typeof args.gatewayDecision !== 'boolean') return;
 
   args.state.gatewayDecisions ??= {};
   args.state.gatewayDecisions[args.stepId] = args.gatewayDecision;
 
-  if (args.gatewayDecision) {
-    return;
-  }
+  if (args.gatewayDecision) return;
 
   const downstream = collectDownstreamStepIds(args.planSteps, args.stepId);
   for (const downstreamStepId of downstream) {
@@ -597,17 +674,21 @@ function applyGatewayDecisionEffects(args: {
 }
 
 function buildFailedLayerStepExecution(stepId: string, error: unknown): LayerStepExecution {
-  const err = error instanceof Error ? error : new Error(String(error));
-  const retriable = !(error instanceof ApplicationFailure) || error.nonRetryable !== true;
+  const message = error instanceof Error ? error.message : formatUnknownError(error);
   return {
     stepId,
     result: {
       stepId,
       status: 'FAILED',
-      retriable,
-      error: err.message,
+      retriable: isRetriableStepError(error),
+      error: message,
     },
   };
+}
+
+function isRetriableStepError(error: unknown): boolean {
+  if (!(error instanceof ApplicationFailure)) return true;
+  return error.nonRetryable !== true;
 }
 
 async function applyLayerResults(args: {
@@ -630,7 +711,7 @@ async function applyLayerResults(args: {
         ...(completedPayload ? { payload: completedPayload } : {}),
       });
 
-      args.runtime.completedStepResults[stepId] = { status: 'COMPLETED', stepId };
+      args.runtime.completedStepResults[stepId] = buildCompletedStepFact(stepId, gatewayDecision);
       args.runtime.completedSteps += 1;
       args.state.currentStepIndex = args.runtime.completedSteps;
       continue;
@@ -650,47 +731,12 @@ async function applyLayerResults(args: {
       continuedAsNewCount: args.continuedAsNewCount,
     };
   }
-
   return null;
 }
 
-export function buildContinueAsNewInput(args: {
-  input: RunPlanWorkflowInput;
-  continueAsNewAfterLayerCount: number;
-  nextLayerIndex: number;
-  continuedAsNewCount: number;
-  gatewayDecisions: Record<string, boolean>;
-}): RunPlanWorkflowInput {
-  return {
-    ...args.input,
-    continueAsNewAfterLayerCount: args.continueAsNewAfterLayerCount,
-    resumeFromLayerIndex: args.nextLayerIndex,
-    continuedAsNewCount: args.continuedAsNewCount + 1,
-    gatewayDecisions: { ...args.gatewayDecisions },
-  };
-}
-
-export function shouldTriggerContinueAsNew(args: {
-  continueAsNewAfterLayerCount: number;
-  processedLayersInCurrentExecution: number;
-  nextLayerIndex: number;
-  totalLayerCount: number;
-}): boolean {
-  if (args.continueAsNewAfterLayerCount <= 0) {
-    return false;
-  }
-
-  if (args.processedLayersInCurrentExecution < args.continueAsNewAfterLayerCount) {
-    return false;
-  }
-
-  // No rollover if there are no pending layers.
-  if (args.nextLayerIndex >= args.totalLayerCount) {
-    return false;
-  }
-
-  return true;
-}
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
 
 function countStepsBeforeLayer(
   layers: ReadonlyArray<ReadonlyArray<WorkflowStep>>,
@@ -701,129 +747,4 @@ function countStepsBeforeLayer(
     total += layers[i]?.length ?? 0;
   }
   return total;
-}
-
-function normalizeNonNegativeInt(value: unknown): number {
-  if (isNonNegativeInteger(value)) {
-    return value as number;
-  }
-
-  if (isNonNegativeIntegerString(value)) {
-    return Number(value);
-  }
-
-  return 0;
-}
-
-function isNonNegativeInteger(val: unknown): boolean {
-  return typeof val === 'number' && Number.isInteger(val) && val >= 0;
-}
-
-function isNonNegativeIntegerString(val: unknown): boolean {
-  if (typeof val !== 'string' || val.trim().length === 0) {
-    return false;
-  }
-  const n = Number(val);
-  return Number.isInteger(n) && n >= 0;
-}
-
-function normalizeDependsOn(dependsOn: unknown): string[] {
-  if (!Array.isArray(dependsOn)) return [];
-  return dependsOn.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
-}
-
-function buildGatewayContext(
-  step: WorkflowStep,
-  completedStepResults: Record<string, Record<string, unknown>>
-): Record<string, unknown> {
-  const deps = normalizeDependsOn(step.dependsOn);
-  const fromDependency = deps[0] ? completedStepResults[deps[0]] : undefined;
-  if (fromDependency) return fromDependency;
-  return {};
-}
-
-function collectDownstreamStepIds(steps: WorkflowStep[], fromStepId: string): Set<string> {
-  const childrenByParent = buildChildrenByParentMap(steps);
-  return collectReachableChildren(childrenByParent, fromStepId);
-}
-
-function buildChildrenByParentMap(steps: WorkflowStep[]): Map<string, string[]> {
-  const childrenByParent = new Map<string, string[]>();
-  for (const step of steps) {
-    for (const dep of normalizeDependsOn(step.dependsOn)) {
-      if (!childrenByParent.has(dep)) {
-        childrenByParent.set(dep, []);
-      }
-      childrenByParent.get(dep)!.push(step.stepId);
-    }
-  }
-  return childrenByParent;
-}
-
-function collectReachableChildren(
-  childrenByParent: ReadonlyMap<string, string[]>,
-  fromStepId: string
-): Set<string> {
-  const visited = new Set<string>();
-  const stack = [...(childrenByParent.get(fromStepId) ?? [])];
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current || visited.has(current)) continue;
-    visited.add(current);
-    for (const child of childrenByParent.get(current) ?? []) {
-      if (!visited.has(child)) stack.push(child);
-    }
-  }
-  return visited;
-}
-
-export function buildStepStartedPayload(step: WorkflowStep): Record<string, unknown> | undefined {
-  const compiledCodeRef = extractCompiledCodeRef(step['stepTypeConfig']);
-  if (!compiledCodeRef) {
-    return undefined;
-  }
-
-  return { compiledCodeRef };
-}
-
-export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef | undefined {
-  if (!isRecord(stepTypeConfig)) {
-    return undefined;
-  }
-
-  const candidate = stepTypeConfig['compiledCodeRef'];
-  if (!isCompiledCodeRef(candidate)) {
-    return undefined;
-  }
-
-  return candidate;
-}
-
-function isCompiledCodeRef(value: unknown): value is CompiledCodeRef {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return (
-    isNonEmptyString(value['sha256']) &&
-    isNonEmptyString(value['storageUri']) &&
-    isNonNegativeFiniteNumber(value['sizeBytes']) &&
-    isValidCompiledCodeEncoding(value['encoding'])
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
-function isNonNegativeFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
-}
-
-function isValidCompiledCodeEncoding(value: unknown): boolean {
-  return value === undefined || value === 'utf-8';
 }

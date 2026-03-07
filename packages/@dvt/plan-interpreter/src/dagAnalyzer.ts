@@ -99,9 +99,57 @@ export function validateDag<T extends PlanStep>(steps: ReadonlyArray<T>): DagVal
   };
 }
 
+/**
+ * Collects all step IDs reachable downstream from `fromStepId` in a step graph.
+ *
+ * Used by workflow adapters to mark downstream steps as skipped when a gateway
+ * evaluates to false. Pure function — no side effects.
+ *
+ * @param steps - Full plan step array.
+ * @param fromStepId - Gateway step whose downstream steps should be collected.
+ * @returns Set of step IDs that transitively depend on `fromStepId`.
+ */
+export function collectDownstreamStepIds<T extends PlanStep>(
+  steps: ReadonlyArray<T>,
+  fromStepId: string
+): ReadonlySet<string> {
+  const childrenByParent = buildChildrenByParentMap(steps);
+  return collectReachableChildren(childrenByParent, fromStepId);
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+function buildChildrenByParentMap<T extends PlanStep>(
+  steps: ReadonlyArray<T>
+): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const step of steps) {
+    for (const dep of normalizeDependsOn(step)) {
+      if (!map.has(dep)) map.set(dep, []);
+      map.get(dep)!.push(step.stepId);
+    }
+  }
+  return map;
+}
+
+function collectReachableChildren(
+  childrenByParent: ReadonlyMap<string, string[]>,
+  fromStepId: string
+): Set<string> {
+  const visited = new Set<string>();
+  const stack = [...(childrenByParent.get(fromStepId) ?? [])];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || visited.has(current)) continue;
+    visited.add(current);
+    for (const child of childrenByParent.get(current) ?? []) {
+      if (!visited.has(child)) stack.push(child);
+    }
+  }
+  return visited;
+}
 
 function validateNoDuplicateStepIds<T extends PlanStep>(steps: ReadonlyArray<T>): void {
   const seenStepIds = new Set<string>();

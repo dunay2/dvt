@@ -1,22 +1,19 @@
 import type { CompiledCodeRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import {
-  buildStepStartedPayload,
-  extractCompiledCodeRef,
-} from '../src/workflows/RunPlanWorkflow.js';
+import { buildStepStartedPayload } from '../src/workflows/workflowHelpers.js';
 
 type WorkflowStep = Parameters<typeof buildStepStartedPayload>[0];
 
-function makeStep(stepTypeConfig?: Record<string, unknown>): WorkflowStep {
+function makeStep(compiledCodeRef?: unknown): WorkflowStep {
   return {
     stepId: 'step-a',
     kind: 'DBT_MODEL',
-    ...(stepTypeConfig === undefined ? {} : { stepTypeConfig }),
+    ...(compiledCodeRef === undefined ? {} : { compiledCodeRef }),
   };
 }
 
-describe('compiledCodeRef extraction and StepStarted payload', () => {
+describe('buildStepStartedPayload', () => {
   const VALID_REF: CompiledCodeRef = {
     sha256: 'a'.repeat(64),
     storageUri: 's3://bucket/compiled/step-a.sql',
@@ -24,59 +21,25 @@ describe('compiledCodeRef extraction and StepStarted payload', () => {
     encoding: 'utf-8',
   };
 
-  it('extracts compiledCodeRef when shape is valid', () => {
-    const ref = extractCompiledCodeRef({
-      compiledCodeRef: VALID_REF,
-    });
-
-    expect(ref).toEqual(VALID_REF);
+  it('includes compiledCodeRef in payload when present', () => {
+    const payload = buildStepStartedPayload(makeStep(VALID_REF));
+    expect(payload).toEqual({ compiledCodeRef: VALID_REF });
   });
 
   it('returns undefined when compiledCodeRef is absent', () => {
-    const ref = extractCompiledCodeRef({});
-    expect(ref).toBeUndefined();
+    expect(buildStepStartedPayload(makeStep())).toBeUndefined();
   });
 
-  it('returns undefined when compiledCodeRef shape is invalid', () => {
-    const ref = extractCompiledCodeRef({
-      compiledCodeRef: {
-        sha256: 'abc',
-        storageUri: 's3://bucket/compiled/step-a.sql',
-        sizeBytes: '123',
-      },
-    });
-
-    expect(ref).toBeUndefined();
-  });
-
-  it('includes compiledCodeRef in StepStarted payload when valid', () => {
-    const payload = buildStepStartedPayload(
-      makeStep({
-        compiledCodeRef: VALID_REF,
-      })
-    );
-
-    expect(payload).toEqual({
-      compiledCodeRef: VALID_REF,
-    });
-  });
-
-  it('omits StepStarted payload when compiledCodeRef is absent', () => {
-    const payload = buildStepStartedPayload(makeStep());
-    expect(payload).toBeUndefined();
-  });
-
-  it('omits StepStarted payload when compiledCodeRef is malformed', () => {
-    const payload = buildStepStartedPayload(
-      makeStep({
-        compiledCodeRef: {
-          sha256: 'a'.repeat(64),
-          storageUri: '',
-          sizeBytes: 10,
-        },
-      })
-    );
-
-    expect(payload).toBeUndefined();
+  it('throws when compiledCodeRef does not match the canonical contract', () => {
+    expect(() =>
+      buildStepStartedPayload(
+        makeStep({
+          sha256: 'not-a-sha256',
+          storageUri: 's3://bucket/compiled/step-a.sql',
+          sizeBytes: 123,
+          encoding: 'utf-8',
+        })
+      )
+    ).toThrowError(new TypeError('INVALID_PLAN_SCHEMA: step_compiledCodeRef_invalid'));
   });
 });
