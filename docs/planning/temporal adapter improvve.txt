@@ -1,7 +1,0 @@
-Crear un ticket para inyectar logger/tracer en todos los adapters (engine-gap).
-
-Evaluar la posibilidad de usar AbortSignal cuando el SDK de Temporal lo soporte (mantener la nota como recordatorio).
-
-Revisar si otros adapters (Conductor, mock) necesitan timeouts consistentes.
-
-Ampliar la suite de integración con Temporal test server para cubrir lookupRunRef en un entorno real (tarea de calidad).

@@ -864,7 +864,7 @@ jobs:
 
 - [PLUGIN_PROVENANCE_POLICY.v1.md](PLUGIN_PROVENANCE_POLICY.v1.md) - **Parent normative document**
 - [SECURITY_INVARIANTS.v1.md](SECURITY_INVARIANTS.v1.md) - INV-PLUGIN-01 (signature verification), INV-PLUGIN-05 (catalog integrity)
-- [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md) - Trust Tier specification
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Trust tier specification
 - [THREAT_MODEL.md](THREAT_MODEL.md) - T13 (malicious plugin threat)
 - [TENANT_ISOLATION_TESTS.v1.md](TENANT_ISOLATION_TESTS.v1.md) - Multi-tenant isolation test suite
 

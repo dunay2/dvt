@@ -1,8 +1,8 @@
 ---
 title: Workflow Redundancy Simplification Pass 1
-status: Review
+status: Archived
 owner: ci-cd
-last_reviewed: 2026-02-28
+last_reviewed: 2026-03-07
 planning_type: review
 ---
 

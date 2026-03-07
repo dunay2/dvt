@@ -1,87 +1,86 @@
-# Roadmap, Estado e Issues — Mapa de Conocimiento
+# Roadmap, Status, And Issues Knowledge Map
 
-## 1. Fuentes principales
+## 1. Primary Sources
 
-- Roadmap global: [`ROADMAP.md`](../../ROADMAP.md)
-- Índice docs: [`docs/index.md`](../index.md)
-- Estado de implementación: [`docs/status/IMPLEMENTATION_SUMMARY.md`](../status/IMPLEMENTATION_SUMMARY.md)
-- Backlog V2 funcional: [`docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md`](../planning/BACKLOG_V2_EPICS_AND_STORIES.md)
-- Backlog V2 ejecución GitHub: [`docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md`](../planning/BACKLOG_V2_GITHUB_EXECUTION.md)
-- Evidencia/refresh issues (local): [`.gh-comments`](../../.gh-comments)
-
----
-
-## 2. Estado estratégico (síntesis)
-
-Según [`ROADMAP.md`](../../ROADMAP.md):
-
-- Fase 1 MVP: en progreso con varios hitos cerrados y bloqueos críticos aún abiertos.
-- Fase 1.5 Hardening: planificada.
-- Fase 2 Tooling: parcialmente planificada, con deuda en determinismo/adapters.
-- Track Frontend DVT+: backlog y estructura GitHub creados.
-
-Según [`docs/status/IMPLEMENTATION_SUMMARY.md`](../status/IMPLEMENTATION_SUMMARY.md):
-
-- Base de contratos/golden-path funcional en CI.
-- Engine core y hardening relevante ya mergeados.
-- Paridad de adapters y cobertura determinista cross-adapter siguen como brecha.
+- Global roadmap: [`ROADMAP.md`](../../ROADMAP.md)
+- Documentation index: [`docs/index.md`](../index.md)
+- Planning index: [`docs/planning/index.md`](../planning/index.md)
+- Generated code state: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
+- Generated spec traceability: [`docs/planning/status/generated-spec-traceability.md`](../planning/status/generated-spec-traceability.md)
+- Canonical doc-code matrix: [`docs/planning/status/canonical-doc-code-matrix.md`](../planning/status/canonical-doc-code-matrix.md)
+- Repository structure map: [`docs/knowledge/REPOSITORY_MAP.md`](./REPOSITORY_MAP.md)
+- Local issue-refresh evidence: [`.gh-comments`](../../.gh-comments)
 
 ---
 
-## 3. Issues y dependencias clave (lectura operativa)
+## 2. Strategic State Summary
 
-### 3.1 Cadena crítica histórica (MVP)
+According to [`ROADMAP.md`](../../ROADMAP.md):
 
-Documentada en [`ROADMAP.md`](../../ROADMAP.md): #8 → #9 → #2 → #14 → #15 → #5/#6 → #16 → #10 → #17.
+- Phase 1 MVP is in progress with several closed milestones and remaining critical gaps.
+- Phase 1.5 hardening is planned.
+- Phase 2 tooling remains partially planned, with determinism and adapter parity still carrying debt.
+- The DVT+ frontend track exists, but remains structurally separate from the engine roadmap.
 
-### 3.2 Estado resumido por evidencia interna (auditado 2026-03-04)
+According to the generated status docs:
 
-- #14: **CLOSED** ✅ — `IWorkflowEngine` + `SnapshotProjector` implementados y testeados.
-- #15: **CLOSED** ✅ — Temporal Interpreter Workflow (stub con firmas completas).
-- #68: **CLOSED** ✅ — TemporalAdapter stub. G1 pendiente: Temporal SDK real + `lookupRunRef` producción.
-- #6: **CLOSED** ✅ — PostgresStateStoreAdapter ~95% implementado. G2 pendiente: `listEvents` sin `ListEventsOptions` (cursor/paginación) y `listRuns` sin filtro `status`.
-- #69/#71: expansión Conductor aún bloqueada/no iniciada (Phase 2).
-- #72/#73: enforcement/version-binding y determinismo cross-adapter incompletos.
-- ADR-0030 (RunMaintenanceService): `lookupRunRef` + cancel-before-expire implementados en rama `ci/workflow-redundancy-pass7`. Ver `docs/planning/CHANGE_IMPACT_ADR0030_20260304.md`.
-
----
-
-## 4. Backlog V2 (producto/plataforma)
-
-### Estado de alineación funcional
-
-Fuente: [`docs/planning/BACKLOG_V2_EPICS_AND_STORIES.md`](../planning/BACKLOG_V2_EPICS_AND_STORIES.md)
-
-- Parcial/alta alineación: contratos base, parte de execution planning, seguridad base.
-- Baja alineación: ingestión dbt, runner dbt aislado, workspace UI, roundtrip controlado, performance 50k.
-
-### Estado de ejecución GitHub
-
-Fuente: [`docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md`](../planning/BACKLOG_V2_GITHUB_EXECUTION.md)
-
-- Define 10 milestones + 26 historias como plan ejecutable.
-- Tabla de evidencia aún marcada como pendiente.
+- core contract and traceability automation are active
+- major engine and hardening work has already landed
+- adapter parity and cross-adapter deterministic coverage remain open gaps
 
 ---
 
-## 5. Riesgos de gestión detectados
+## 3. Key Issues And Dependencies
 
-1. **Drift doc ↔ issue ↔ código**
-   - Hay funcionalidades implementadas con issues todavía abiertos o desalineados en aceptación.
+### 3.1 Historical MVP chain
 
-2. **Paridad adapters como cuello de botella**
-   - Riesgo de bloquear validación e2e determinista real.
+The historical critical chain is still anchored in [`ROADMAP.md`](../../ROADMAP.md): `#8 -> #9 -> #2 -> #14 -> #15 -> #5/#6 -> #16 -> #10 -> #17`.
 
-3. **Dualidad roadmap técnico vs backlog producto**
-   - Necesita puente explícito de trazabilidad para priorización y reporting.
+### 3.2 Evidence snapshot
+
+- `#14`: closed. `IWorkflowEngine` and `SnapshotProjector` are implemented and tested.
+- `#15`: closed. Temporal interpreter workflow exists as a stub with full signatures.
+- `#68`: closed. Temporal adapter stub exists; the remaining gap is real Temporal SDK behavior plus production `lookupRunRef`.
+- `#6`: closed. Postgres state-store work is largely complete, with follow-up gaps around `listEvents` pagination and `listRuns` status filtering.
+- `#69/#71`: Conductor expansion is still effectively Phase 2 work.
+- `#72/#73`: version binding and cross-adapter determinism enforcement remain incomplete.
+- ADR-0030 follow-up evidence lives in [`docs/archive/CHANGE_IMPACT_ADR0030_20260304.md`](../archive/CHANGE_IMPACT_ADR0030_20260304.md).
 
 ---
 
-## 6. Recomendación operativa inmediata
+## 4. Current Planning Entry Points
 
-1. Normalizar estados de issues críticos según evidencia actual.
-2. Convertir backlog V2 en milestones/issues reales con evidencias UTC.
-3. Mantener sincronía semanal entre:
-   - [`ROADMAP.md`](../../ROADMAP.md)
-   - [`docs/status/IMPLEMENTATION_SUMMARY.md`](../status/IMPLEMENTATION_SUMMARY.md)
-   - [`docs/planning/BACKLOG_V2_GITHUB_EXECUTION.md`](../planning/BACKLOG_V2_GITHUB_EXECUTION.md)
+The historical `BACKLOG_V2_*` documents are no longer in the active tree.
+
+Use these current entry points instead:
+
+- [`docs/planning/index.md`](../planning/index.md) for active proposals, reviews, status, gaps, and reference packs
+- [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md) for current generated implementation status
+- [`docs/planning/status/generated-spec-traceability.md`](../planning/status/generated-spec-traceability.md) for spec-to-code traceability coverage
+- [`docs/planning/status/canonical-doc-code-matrix.md`](../planning/status/canonical-doc-code-matrix.md) for the curated mapping from active topics to docs, code, tests, and verification commands
+- [`docs/planning/proposals/documentation-restructuring-diagnostic-and-roadmap.md`](../planning/proposals/documentation-restructuring-diagnostic-and-roadmap.md) for the documentation restructuring backlog
+
+---
+
+## 5. Management Risks
+
+1. **Documentation -> issue -> code drift**
+   Implemented behavior can remain misaligned with issue state or acceptance notes.
+
+2. **Adapter parity as bottleneck**
+   This still blocks full deterministic end-to-end validation.
+
+3. **Roadmap versus operational planning split**
+   Strategic roadmap and day-to-day execution need explicit traceability to stay reportable.
+
+---
+
+## 6. Recommended Operating Sync
+
+Keep these sources aligned on a regular cadence:
+
+- [`ROADMAP.md`](../../ROADMAP.md)
+- [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
+- [`docs/planning/status/generated-spec-traceability.md`](../planning/status/generated-spec-traceability.md)
+- [`docs/planning/status/canonical-doc-code-matrix.md`](../planning/status/canonical-doc-code-matrix.md)
+- [`docs/planning/index.md`](../planning/index.md)

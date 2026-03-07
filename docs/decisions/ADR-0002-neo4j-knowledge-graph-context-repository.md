@@ -6,7 +6,7 @@
 - **Updated**: 2026-03-07
 - **Owners**: Architecture, Engine, Tooling maintainers
 - **Related files**:
-  - [`docs/decisions/ADR-0000-Code-generation-with-normative-traceability-required.en.md`](./ADR-0000-Code-generation-with-normative-traceability-required.en.md)
+  - [`docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md`](../adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md)
   - [`packages/@dvt/traceability-service/README.md`](../../packages/@dvt/traceability-service/README.md)
   - [`packages/@dvt/traceability-service/src/service.ts`](../../packages/@dvt/traceability-service/src/service.ts)
 

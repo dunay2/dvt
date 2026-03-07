@@ -27,8 +27,8 @@ This page is the canonical index for architecture, contracts, operations, and pl
 
 ## Project Status and Evidence
 
-- [Evidence](evidence/)
-- [Risk Register](risk-register/)
+- [Evidence](evidence/index.md)
+- [Risk Register](risk-register/index.md)
 
 ## Planning
 

@@ -308,6 +308,14 @@ function inferPlanningType(fileNameLower) {
   return 'reference';
 }
 
+function shouldSkipPlanningDocName(name) {
+  return (
+    /^index\.md$/i.test(name) ||
+    /^TEMPLATE_PLANNING_DOC\.md$/i.test(name) ||
+    /^non-english-docs-list\.md$/i.test(name)
+  );
+}
+
 function normalizePlanningDocs() {
   if (!fs.existsSync(planningDir)) {
     return;
@@ -328,8 +336,7 @@ function normalizePlanningDocs() {
       .filter((entry) => entry.isFile())
       .map((entry) => entry.name)
       .filter((name) => /\.md$/i.test(name))
-      .filter((name) => !/^index\.md$/i.test(name))
-      .filter((name) => !/^TEMPLATE_PLANNING_DOC\.md$/i.test(name));
+      .filter((name) => !shouldSkipPlanningDocName(name));
 
     for (const name of entries) {
       const fullPath = path.join(dirPath, name);
@@ -406,8 +413,7 @@ function collectPlanningDocs() {
       .filter((e) => e.isFile())
       .map((e) => e.name)
       .filter((n) => /\.(md|txt)$/i.test(n))
-      .filter((n) => !/^index\.md$/i.test(n))
-      .filter((n) => !/^TEMPLATE_PLANNING_DOC\.md$/i.test(n));
+      .filter((n) => !shouldSkipPlanningDocName(n));
 
     for (const name of files) {
       const abs = path.join(root.dir, name);
@@ -439,6 +445,12 @@ function collectPlanningReferenceDirs() {
     .filter((entry) => entry.isDirectory())
     .filter((entry) => !entry.name.startsWith('.'))
     .filter((entry) => !skip.has(entry.name.toLowerCase()))
+    .filter((entry) => {
+      const dirAbs = path.join(planningDir, entry.name);
+      return (
+        fs.existsSync(path.join(dirAbs, 'index.md')) || fs.existsSync(path.join(dirAbs, 'INDEX.md'))
+      );
+    })
     .map((entry) => ({
       label: humanizeName(entry.name),
       link: `${entry.name}/`,
@@ -764,9 +776,29 @@ const sectionConfigs = [
     intro: 'Normative contracts (schemas, version matrices, API/event contracts).',
   },
   {
+    relPath: 'evidence',
+    defaults: { title: 'Evidence', status: 'Active', owner: 'docs' },
+    intro: 'Evidence documents that justify or validate relevant changes.',
+  },
+  {
     relPath: 'guides',
     defaults: { title: 'Guides', status: 'Active', owner: 'docs' },
     intro: 'Developer guides, contribution guides, and quality standards.',
+  },
+  {
+    relPath: 'risk-register/adapters',
+    defaults: { title: 'Adapter Risks', status: 'Active', owner: 'docs' },
+    intro: 'Risk records specific to adapters, workflow runtimes, and integration seams.',
+  },
+  {
+    relPath: 'risk-register/quality',
+    defaults: { title: 'Quality Risks', status: 'Active', owner: 'docs' },
+    intro: 'Risk records related to validation coverage, CI quality, and regression detection.',
+  },
+  {
+    relPath: 'risk-register',
+    defaults: { title: 'Risk Register', status: 'Active', owner: 'docs' },
+    intro: 'Open technical and delivery risks that still need mitigation or explicit acceptance.',
   },
   {
     relPath: 'runbooks',

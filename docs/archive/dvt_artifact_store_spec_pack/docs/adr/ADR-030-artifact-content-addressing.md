@@ -1,3 +1,11 @@
+---
+title: ADR-030 Artifact Store Content Addressing
+status: Archived
+owner: docs
+last_reviewed: 2026-03-07
+planning_type: archive
+---
+
 # ADR-030 Artifact Store Content Addressing
 
 Status: Superseded by ADR-0032
@@ -9,7 +17,7 @@ Completeness: ~35%
 
 ## Supersession Notice
 
-> **This ADR has been partially superseded by [ADR-0032 — compiledCodeRef Ownership](../../../../../adr/ADR-0032-compiled-code-ref-ownership.md).**
+> **This ADR has been partially superseded by [ADR-0032 — compiledCodeRef Ownership](../../../../adr/ADR-0032-compiledcoderef-ownership.md).**
 >
 > ADR-0032 is the accepted, implemented decision governing content-addressed storage of compiled artifacts in DVT+. ADR-030 covers the broader artifact store concept which is still pending full implementation.
 

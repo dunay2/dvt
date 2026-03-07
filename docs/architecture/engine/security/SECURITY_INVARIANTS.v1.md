@@ -42,7 +42,7 @@ interface TenantScope {
 }
 ```
 
-**Usage**: All state-accessing operations MUST include `TenantScope`. See [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) for enforcement requirements.
+**Usage**: All state-accessing operations MUST include `TenantScope`. See [State Store Contract](../contracts/state-store/README.md) for storage-boundary requirements.
 
 ### RunScope
 
@@ -54,7 +54,7 @@ interface RunScope {
 }
 ```
 
-**Usage**: Correlation identifiers for observability and audit trails. See [dvt_workflow_engine_artifact](../../engine/README.md) for scope + correlation patterns.
+**Usage**: Correlation identifiers for observability and audit trails. See [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) for scope and correlation patterns.
 
 ### DeploymentMode
 
@@ -84,7 +84,7 @@ Plugin execution sandbox levels (from strongest to weakest isolation):
   | 'TIER_3'; // Host process (unrestricted; SaaS multi-tenant MUST NOT allow)
 ```
 
-**Reference**: [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md)
+**Reference**: [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md)
 
 ### SecretRef
 
@@ -95,7 +95,7 @@ interface SecretRef {
 }
 ```
 
-**Usage**: Plans and state MUST store `SecretRef` only, never plaintext. Secrets resolved at runtime via [ISecretsProvider.v1.md](../contracts/security/ISecretsProvider.v1.md).
+**Usage**: Plans and state MUST store `SecretRef` only, never plaintext. Secrets resolved at runtime via [ExecutionSemantics.v1.md](../contracts/engine/ExecutionSemantics.v1.md).
 
 ---
 
@@ -137,9 +137,9 @@ Invariants are organized by scope using namespace prefixes:
 
 **References**:
 
-- [IWorkflowEngine.v1.1.md](../contracts/engine/IWorkflowEngine.v1.1.md) - Tenant scope requirements
-- [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - StateStore scope enforcement
-- [DVT Product Principle](../../DVT_Product_Definition_V0.md) - "State Store persists reality" with scope immutability
+- [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) - Tenant scope requirements
+- [State Store Contract](../contracts/state-store/README.md) - StateStore boundary requirements
+- [DVT+ Execution Model Specification](../../../planning/execution-model/dvt-execution-model.md) - Separation of execution, state, and planning concerns
 
 ---
 
@@ -157,7 +157,7 @@ Invariants are organized by scope using namespace prefixes:
 
 **References**:
 
-- [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - Scope parameter requirements
+- [State Store Contract](../contracts/state-store/README.md) - StateStore boundary requirements
 
 ---
 
@@ -218,7 +218,7 @@ Invariants are organized by scope using namespace prefixes:
 
 **References**:
 
-- [ISecretsProvider.v1.md](../contracts/security/ISecretsProvider.v1.md) - Secrets resolution interface
+- [ExecutionSemantics.v1.md](../contracts/engine/ExecutionSemantics.v1.md) - Secrets resolution boundary
 - [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) - Secrets logging guidance
 
 ---
@@ -244,7 +244,7 @@ Invariants are organized by scope using namespace prefixes:
 **References**:
 
 - [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) - Secrets redaction patterns
-- [ISecretsProvider.v1.md](../contracts/security/ISecretsProvider.v1.md) - Secrets resolution interface
+- [ExecutionSemantics.v1.md](../contracts/engine/ExecutionSemantics.v1.md) - Secrets resolution boundary
 
 ---
 
@@ -254,7 +254,7 @@ Invariants are organized by scope using namespace prefixes:
 
 **Invariant**: Every protected action is **denied by default** unless an explicit allow rule matches (RBAC policy + TenantScope validation).
 
-**Rationale**: Fail-safe authorization - no implicit grants. Aligns with "UI does not execute / Engine does not decide / Planner does not persist" separation principle (see [DVT Product Definition](../../DVT_Product_Definition_V0.md)).
+**Rationale**: Fail-safe authorization - no implicit grants. Aligns with "UI does not execute / Engine does not decide / Planner does not persist" separation principle (see [DVT+ Execution Model Specification](../../../planning/execution-model/dvt-execution-model.md)).
 
 **Enforcement Points**:
 
@@ -302,7 +302,7 @@ Invariants are organized by scope using namespace prefixes:
 **References**:
 
 - [IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md) - Multi-layer enforcement pattern
-- [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - RLS + scope filtering requirements
+- [State Store Contract](../contracts/state-store/README.md) - StateStore boundary requirements
 
 ---
 
@@ -326,7 +326,7 @@ Invariants are organized by scope using namespace prefixes:
 
 **References**:
 
-- [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md) - Plugin identity + permission model
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Plugin identity + permission model
 - [OWASP Confused Deputy](https://owasp.org/www-community/attacks/Confused_Deputy) - Attack pattern description
 
 ---
@@ -385,7 +385,7 @@ Invariants are organized by scope using namespace prefixes:
 **References**:
 
 - [AuditLog.v1.md](../contracts/security/AuditLog.v1.md) - Event types specification
-- [DecisionRecord.v1.md](../contracts/operations/DecisionRecord.v1.md) - Operator justification schema
+- [SignalsAndAuth.v1.md](../contracts/engine/SignalsAndAuth.v1.md) - Operator decision record schema
 - [SOC2 Trust Services Criteria](https://www.aicpa.org/topic/audit-assurance/trust-services) - CC7.2 (audit logging)
 
 ---
@@ -438,7 +438,7 @@ Invariants are organized by scope using namespace prefixes:
 
 **References**:
 
-- [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md) - Trust Tier specification
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Trust Tier specification
 
 ---
 
@@ -456,7 +456,7 @@ Invariants are organized by scope using namespace prefixes:
 
 **References**:
 
-- [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md) - Permission model
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Permission model
 
 ---
 
@@ -487,7 +487,7 @@ See [gVisor isolation context](https://gvisor.dev/) for reference isolation mode
 
 - [gVisor](https://gvisor.dev/) - Strong sandboxing alternative for untrusted code
 - [vm2 security note](https://github.com/patriksimek/vm2#security) - Historical example of sandbox escape (vm2 prohibited per INV-PLUGIN-01)
-- [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md) - Trust Tier specification
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Trust Tier specification
 
 ---
 
@@ -561,7 +561,7 @@ See [gVisor isolation context](https://gvisor.dev/) for reference isolation mode
 
 **Invariant**: Engine Core code is deterministic and has no side-effect I/O ports (network, filesystem) except via explicit Plugin or Adapter boundaries.
 
-**Rationale**: Ensures reproducibility and testability. Side effects must be isolated at boundaries for observability and control. Aligns with "Engine does not decide" principle (see [DVT Product Definition](../../DVT_Product_Definition_V0.md)).
+**Rationale**: Ensures reproducibility and testability. Side effects must be isolated at boundaries for observability and control. Aligns with "Engine does not decide" principle (see [DVT+ Execution Model Specification](../../../planning/execution-model/dvt-execution-model.md)).
 
 **Import Denylist** (MUST enforce via static analysis / build-time lint):
 
@@ -602,12 +602,12 @@ const DENIED_IMPORTS = [
 
 - Static analysis: `eslint --rule 'no-restricted-imports: [error, {patterns: DENIED_IMPORTS}]'` on `engine/src/core/**`
 - Dependency review: All I/O dependencies confined to `engine/src/adapters/**`
-- Determinism test: Same plan input → same event sequence output (see [Determinism testing](../../determinism/README.md))
+- Determinism test: Same plan input -> same event sequence output (see [Determinism tooling](../dev/determinism-tooling.md))
 
 **References**:
 
-- [dvt_workflow_engine_artifact](../../engine/README.md) - Core/Adapter boundary specification
-- [Determinism testing](../../determinism/README.md) - Determinism test suite specification
+- [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) - Core/adapter boundary contract
+- [Determinism tooling](../dev/determinism-tooling.md) - Determinism test guidance
 
 ---
 
@@ -646,7 +646,7 @@ const DENIED_IMPORTS = [
 
 **References**:
 
-- [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - Encryption requirements
+- [State Store Contract](../contracts/state-store/README.md) - StateStore boundary requirements
 
 ---
 
@@ -846,7 +846,7 @@ Day 2555 (7 years): Compliance artifacts deleted (after retention period)
 
 **References**:
 
-- [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - TTL policy requirements
+- [State Store Contract](../contracts/state-store/README.md) - StateStore boundary requirements
 
 ---
 
@@ -987,32 +987,32 @@ This document references several contracts and supporting documents. Status:
 
 ### REQUIRED (MUST exist for enforcement)
 
-- ✅ **[IWorkflowEngine.v1.1.md](../contracts/engine/IWorkflowEngine.v1.1.md)** - Tenant scope requirements (INV-SCOPE-01)
-- ✅ **[IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md)** - Scope parameter + encryption (INV-SCOPE-02, INV-CRYPTO-01)
-- ✅ **[IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md)** - Authorization interface (INV-AUTHZ-01/02)
-- ✅ **[ISecretsProvider.v1.md](../contracts/security/ISecretsProvider.v1.md)** - Secrets resolution (INV-SECRETS-01)
-- ✅ **[AuditLog.v1.md](../contracts/security/AuditLog.v1.md)** - Audit log schema (INV-AUDIT-01/02)
-- ✅ **[PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md)** - Trust Tiers + permissions (INV-PLUGIN-02/03/04, INV-AUTHZ-03)
-- ✅ **[PLUGIN_PROVENANCE_POLICY.v1.md](PLUGIN_PROVENANCE_POLICY.v1.md)** - Signature verification (INV-PLUGIN-01/05)
-- ✅ **[TENANT_ISOLATION_TESTS.v1.md](TENANT_ISOLATION_TESTS.v1.md)** - Inference tests (INV-SCOPE-03)
-- ✅ **[THREAT_MODEL.md](THREAT_MODEL.md)** - Threat scenarios + mitigations
+- OK **[IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md)** - Tenant scope requirements (INV-SCOPE-01)
+- OK **[State Store Contract](../contracts/state-store/README.md)** - StateStore boundary requirements (INV-SCOPE-02, INV-CRYPTO-01)
+- OK **[IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md)** - Authorization interface (INV-AUTHZ-01/02)
+- OK **[ExecutionSemantics.v1.md](../contracts/engine/ExecutionSemantics.v1.md)** - Secrets resolution boundary (INV-SECRETS-01)
+- OK **[AuditLog.v1.md](../contracts/security/AuditLog.v1.md)** - Audit log schema (INV-AUDIT-01/02)
+- OK **[PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md)** - Trust tiers and permissions (INV-PLUGIN-02/03/04, INV-AUTHZ-03)
+- OK **[PLUGIN_PROVENANCE_POLICY.v1.md](PLUGIN_PROVENANCE_POLICY.v1.md)** - Signature verification (INV-PLUGIN-01/05)
+- OK **[TENANT_ISOLATION_TESTS.v1.md](TENANT_ISOLATION_TESTS.v1.md)** - Inference tests (INV-SCOPE-03)
+- OK **[THREAT_MODEL.md](THREAT_MODEL.md)** - Threat scenarios and mitigations
 
 ### REQUIRED (schema/operational)
 
-- ✅ **[DecisionRecord.v1.md](../contracts/operations/DecisionRecord.v1.md)** - Operator justification schema (INV-AUDIT-02)
-- 🟡 **[dvt_workflow_engine_artifact](../../engine/README.md)** - Core/Adapter boundary (INV-ENGINE-01) _(verify path)_
-- 🟡 **[Determinism testing](../../determinism/README.md)** - Determinism test suite (INV-ENGINE-01) _(planned)_
+- OK **[SignalsAndAuth.v1.md](../contracts/engine/SignalsAndAuth.v1.md)** - Operator decision record schema (INV-AUDIT-02)
+- OK **[IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md)** - Core/adapter boundary contract (INV-ENGINE-01)
+- OK **[Determinism tooling](../dev/determinism-tooling.md)** - Determinism test guidance (INV-ENGINE-01)
 
 ### INFORMATIVE (external references)
 
-- ✅ **[DVT Product Definition](../../DVT_Product_Definition_V0.md)** - Separation principles ("UI does not execute...")
-- ✅ **External standards**: RFC 7519 (JWT), OWASP, NIST, SOC2, HIPAA, GDPR (all linked in text)
+- OK **[DVT+ Execution Model Specification](../../../planning/execution-model/dvt-execution-model.md)** - Separation principles ("UI does not execute...")
+- OK **External standards**: RFC 7519 (JWT), OWASP, NIST, SOC2, HIPAA, GDPR (all linked in text)
 
 **Legend**:
 
-- ✅ Exists and referenced
-- 🟡 Path verification needed or planned implementation
-- ❌ Missing (blocks enforcement if REQUIRED)
+- `OK`: Exists and is referenced
+- `WARN`: Planned or still needs deeper validation
+- `MISSING`: Would block enforcement if required
 
 ---
 
@@ -1145,17 +1145,17 @@ Use this checklist during code review to validate invariant implementation:
 - [ADR-0031 - Storage Adapter Tenant Isolation Strategy](../../../adr/ADR-0031-adapter-tenant-isolation.md) - Adapter-level tenant enforcement strategy
 - [IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md) - Authorization interface (INV-AUTHZ-01/02/03)
 - [AuditLog.v1.md](../contracts/security/AuditLog.v1.md) - Audit log schema (INV-AUDIT-01/02)
-- [ISecretsProvider.v1.md](../contracts/security/ISecretsProvider.v1.md) - Secrets resolution interface (INV-SECRETS-01)
-- [DecisionRecord.v1.md](../contracts/operations/DecisionRecord.v1.md) - Operator justification schema (INV-AUDIT-02)
-- [PluginSandbox.v1.0.md](../contracts/extensions/PluginSandbox.v1.0.md) - Trust Tiers + permissions (INV-PLUGIN-02/03/04, INV-AUTHZ-03)
-- [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - Scope enforcement + encryption (INV-SCOPE-02, INV-CRYPTO-01, INV-RET-02)
-- [IWorkflowEngine.v1.1.md](../contracts/engine/IWorkflowEngine.v1.1.md) - Tenant scope requirements (INV-SCOPE-01)
+- [ExecutionSemantics.v1.md](../contracts/engine/ExecutionSemantics.v1.md) - Secrets resolution boundary (INV-SECRETS-01)
+- [SignalsAndAuth.v1.md](../contracts/engine/SignalsAndAuth.v1.md) - Operator decision record schema (INV-AUDIT-02)
+- [PluginSandbox.v1.md](../contracts/extensions/PluginSandbox.v1.md) - Trust tiers and permissions (INV-PLUGIN-02/03/04, INV-AUTHZ-03)
+- [State Store Contract](../contracts/state-store/README.md) - StateStore boundary requirements (INV-SCOPE-02, INV-CRYPTO-01, INV-RET-02)
+- [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) - Tenant scope requirements (INV-SCOPE-01)
 
 ### Product & Architecture Principles
 
-- [DVT Product Definition](../../DVT_Product_Definition_V0.md) - "UI does not execute / Engine does not decide / Planner does not persist" separation
-- [dvt_workflow_engine_artifact](../../engine/README.md) - Core/Adapter boundary specification
-- [Determinism testing](../../determinism/README.md) - Determinism test suite
+- [DVT+ Execution Model Specification](../../../planning/execution-model/dvt-execution-model.md) - "UI does not execute / Engine does not decide / Planner does not persist" separation
+- [IWorkflowEngine.v1.md](../contracts/engine/IWorkflowEngine.v1.md) - Core/adapter boundary contract
+- [Determinism tooling](../dev/determinism-tooling.md) - Determinism test guidance
 
 ### Standards & Frameworks
 

@@ -4,6 +4,7 @@
 
 - **Canonical MASTER**: [DVT_Blueprint_v0.6_MASTER.md](./DVT_Blueprint_v0.6_MASTER.md)
 - **Development Standard (Annex 19)**: [standards/development.md](./standards/development.md)
+- **Standards Index**: [standards/index.md](./standards/index.md)
 - **Lore (Annex 20)**: [lore.md](./lore.md)
 
 ## Notes

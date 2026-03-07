@@ -1,20 +1,11 @@
 ---
 title: Batch Relaunch Plan to Replace PR #301 (2026-02-28)
-status: Draft
+status: Archived
 owner: docs
-last_reviewed: 2026-03-05
+last_reviewed: 2026-03-07
 planning_type: review
 ---
 
----
-
-title: Batch Relaunch Plan to Replace PR #301 (2026-02-28)
-status: Draft
-owner: docs
-last_reviewed: 2026-03-05
-planning_type: review
-
----
 
 # Batch Relaunch Plan to Replace PR #301 (2026-02-28)
 

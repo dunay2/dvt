@@ -3,7 +3,7 @@
 **Status**: Implementation Snapshot (aligned to current code)  
 **Version**: 1.1  
 **Engine**: Temporal  
-**Contract**: [ExecutionSemantics.v1.md](../../../../ExecutionSemantics.v1.md)
+**Contract**: [ExecutionSemantics.v1.md](../../contracts/engine/ExecutionSemantics.v1.md)
 
 ---
 
