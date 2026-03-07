@@ -737,7 +737,12 @@ function buildGatewayContext(
   completedStepResults: Record<string, Record<string, unknown>>
 ): Record<string, unknown> {
   const deps = normalizeDependsOn(step.dependsOn);
-  const fromDependency = deps[0] ? completedStepResults[deps[0]] : undefined;
+  const firstDependency = deps[0];
+  if (typeof firstDependency !== 'string') {
+    return {};
+  }
+
+  const fromDependency = completedStepResults[firstDependency];
   if (fromDependency) return fromDependency;
   return {};
 }
