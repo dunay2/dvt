@@ -1,4 +1,5 @@
 import type { CompiledCodeRef } from '@dvt/contracts';
+import { validateArtifactIntegrity } from '@dvt/contracts';
 
 import type {
   ICompiledCodeCache,
@@ -6,7 +7,6 @@ import type {
   ICompiledCodeResolver,
   ICompiledCodeRetryPolicy,
 } from '../contracts.js';
-import { CompiledCodeIntegrityError } from '../errors.js';
 import type { CompiledCodeBlob } from '../types.js';
 
 export interface CachedRetryCompiledCodeResolverDeps {
@@ -43,7 +43,11 @@ export class CachedRetryCompiledCodeResolver implements ICompiledCodeResolver {
       attempt += 1;
       try {
         const resolved = await this.deps.reader.read(ref);
-        validateResolvedBlob(ref, resolved);
+        // G-1: single validateArtifactIntegrity from @dvt/contracts — not duplicated inline.
+        validateArtifactIntegrity(
+          { sha256: ref.sha256, sizeBytes: ref.sizeBytes },
+          { sha256: resolved.sha256, sizeBytes: resolved.sizeBytes }
+        );
         this.deps.cache.set(cacheKey, resolved);
         return resolved;
       } catch (error) {
@@ -54,19 +58,6 @@ export class CachedRetryCompiledCodeResolver implements ICompiledCodeResolver {
     }
 
     throw toError(lastError);
-  }
-}
-
-function validateResolvedBlob(ref: CompiledCodeRef, resolved: CompiledCodeBlob): void {
-  if (resolved.sha256 !== ref.sha256) {
-    throw new CompiledCodeIntegrityError(
-      `Compiled code digest mismatch for ${ref.storageUri}: expected ${ref.sha256}, got ${resolved.sha256}`
-    );
-  }
-  if (resolved.sizeBytes !== ref.sizeBytes) {
-    throw new CompiledCodeIntegrityError(
-      `Compiled code size mismatch for ${ref.storageUri}: expected ${ref.sizeBytes}, got ${resolved.sizeBytes}`
-    );
   }
 }
 

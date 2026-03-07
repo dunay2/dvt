@@ -26,6 +26,7 @@ export type {
 } from './contracts/planner/ExecutionPlan.v2';
 export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2';
 export * from './errors';
+export * from './ports/artifact-store';
 export * from './schemas';
 export * from './planner-input';
 export * from './validation';

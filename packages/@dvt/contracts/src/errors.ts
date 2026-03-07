@@ -46,3 +46,23 @@ export class StoreNotReadyError extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
+
+// ─── Artifact store errors (G-2: typed error codes, no stringly-typed control flow) ─────
+
+export type ArtifactErrorCode =
+  | 'ARTIFACT_NOT_FOUND'
+  | 'ARTIFACT_INTEGRITY_ERROR'
+  | 'ARTIFACT_UPLOAD_FAILED'
+  | 'ARTIFACT_TENANT_MISMATCH'
+  | 'ARTIFACT_SIZE_EXCEEDED';
+
+export class ArtifactStoreError extends Error {
+  constructor(
+    message: string,
+    public readonly code: ArtifactErrorCode
+  ) {
+    super(message);
+    this.name = 'ArtifactStoreError';
+    Object.setPrototypeOf(this, ArtifactStoreError.prototype);
+  }
+}

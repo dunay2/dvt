@@ -5,6 +5,8 @@ import { attachCompiledCodeRefs } from '../../src/compiledCode/attachCompiledCod
 import { DBT_MODEL, DBT_SNAPSHOT, DBT_TEST, type ExecutionPlanV2 } from '../../src/domain/types.js';
 import type { ICompiledCodeStorage } from '../../src/ports/ICompiledCodeStorage.js';
 
+const TENANT = 'test-tenant';
+
 function buildPlan(): ExecutionPlanV2 {
   return {
     metadata: {
@@ -29,10 +31,12 @@ describe('attachCompiledCodeRefs', () => {
       ['model.analytics.orders', 'select * from raw.orders'],
     ]);
 
-    const enriched = await attachCompiledCodeRefs(plan, { compiledCodeByNodeId, storage });
-    const step = enriched.steps[0];
-
-    expect(step?.stepTypeConfig?.['compiledCodeRef']).toBeDefined();
+    const enriched = await attachCompiledCodeRefs(plan, {
+      tenantId: TENANT,
+      compiledCodeByNodeId,
+      storage,
+    });
+    expect(enriched.steps[0]?.stepTypeConfig?.['compiledCodeRef']).toBeDefined();
   });
 
   it('skips upload when no compiled_code exists for the step', async () => {
@@ -41,7 +45,11 @@ describe('attachCompiledCodeRefs', () => {
     const plan = buildPlan();
     const compiledCodeByNodeId = new Map<string, string>([['another.step', 'select 1']]);
 
-    const enriched = await attachCompiledCodeRefs(plan, { compiledCodeByNodeId, storage });
+    const enriched = await attachCompiledCodeRefs(plan, {
+      tenantId: TENANT,
+      compiledCodeByNodeId,
+      storage,
+    });
 
     expect(uploadSpy).not.toHaveBeenCalled();
     expect(enriched.steps[0]?.stepTypeConfig?.['compiledCodeRef']).toBeUndefined();
@@ -56,7 +64,11 @@ describe('attachCompiledCodeRefs', () => {
       ['test.analytics.orders_not_null', 'select * from shared.table'],
     ]);
 
-    const enriched = await attachCompiledCodeRefs(plan, { compiledCodeByNodeId, storage });
+    const enriched = await attachCompiledCodeRefs(plan, {
+      tenantId: TENANT,
+      compiledCodeByNodeId,
+      storage,
+    });
 
     expect(uploadSpy).toHaveBeenCalledTimes(1);
     expect(enriched.steps[0]?.stepTypeConfig?.['compiledCodeRef']).toBeDefined();
@@ -68,6 +80,12 @@ describe('attachCompiledCodeRefs', () => {
       async upload(): Promise<string> {
         throw new Error('upload failed');
       },
+      async read(): Promise<Buffer> {
+        return Buffer.alloc(0);
+      },
+      async exists(): Promise<boolean> {
+        return false;
+      },
     };
 
     const plan = buildPlan();
@@ -75,7 +93,24 @@ describe('attachCompiledCodeRefs', () => {
       ['model.analytics.orders', 'select * from broken.upload'],
     ]);
 
-    const enriched = await attachCompiledCodeRefs(plan, { compiledCodeByNodeId, storage });
+    const enriched = await attachCompiledCodeRefs(plan, {
+      tenantId: TENANT,
+      compiledCodeByNodeId,
+      storage,
+    });
     expect(enriched.steps[0]?.stepTypeConfig?.['compiledCodeRef']).toBeUndefined();
+  });
+
+  it('scopes storageUri to tenantId', async () => {
+    const storage = new InMemoryCompiledCodeStorage();
+    const enriched = await attachCompiledCodeRefs(buildPlan(), {
+      tenantId: 'tenant-a',
+      compiledCodeByNodeId: new Map([['model.analytics.orders', 'select 1']]),
+      storage,
+    });
+    const ref = enriched.steps[0]?.stepTypeConfig?.['compiledCodeRef'] as
+      | { storageUri: string }
+      | undefined;
+    expect(ref?.storageUri).toContain('tenant-a');
   });
 });

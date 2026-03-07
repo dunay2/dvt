@@ -2,13 +2,13 @@
 title: Generated Capability Coverage
 status: Active
 owner: docs
-last_reviewed: 2026-03-06
+last_reviewed: 2026-03-07
 planning_type: status
 ---
 
 # Generated Capability Coverage
 
-Generated automatically from repository code signals on 2026-03-06.
+Generated automatically from repository code signals on 2026-03-07.
 
 ## Summary
 
@@ -17,7 +17,7 @@ Generated automatically from repository code signals on 2026-03-06.
 | Capabilities assessed           | 6                                                                  |
 | Average implementation coverage | 95%                                                                |
 | Method                          | Code-signal weighted score (source/tests/scripts/package presence) |
-| Generated on                    | 2026-03-06                                                         |
+| Generated on                    | 2026-03-07                                                         |
 
 ## Capability Coverage
 

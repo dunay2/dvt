@@ -8,17 +8,44 @@
  * @date 2026-02-21
  */
 /**
- * Artifact Types (v1.0)
+ * Artifact Types (v1.1)
  *
- * TypeScript types for artifact references and step outputs
+ * TypeScript types for artifact references and step outputs.
+ * CompiledCodeBlob moved here from @dvt/traceability-service (G-6: canonical port types
+ * must live in @dvt/contracts, not in feature packages).
  */
+
+export type ArtifactKind =
+  | 'execution-plan'
+  | 'compiled-sql'
+  | 'dbt-manifest'
+  | 'dbt-catalog'
+  | 'dbt-run-results'
+  | 'lineage';
 
 export interface ArtifactRef {
   uri: string;
-  kind: string;
+  kind: ArtifactKind;
   sha256?: string;
   sizeBytes?: number;
   expiresAt?: string;
+  tenantId?: string; // optional for now; will become required after full migration
+}
+
+/**
+ * Materialized content of a compiled SQL artifact.
+ * Canonical form returned by ICompiledCodeReader.read().
+ * Moved from @dvt/traceability-service/src/lineage/types.ts (G-6).
+ */
+export interface CompiledCodeBlob {
+  /** Original storageUri from which the blob was resolved. */
+  sourceUri: string;
+  /** The SQL text content. */
+  sqlText: string;
+  /** SHA-256 hex digest — MUST match the CompiledCodeRef.sha256. */
+  sha256: string;
+  sizeBytes: number;
+  encoding: 'utf-8';
 }
 
 export interface StepError {
