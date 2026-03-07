@@ -30,13 +30,19 @@ type ParseStartRunRequestResult =
   | { readonly ok: false; readonly status: 400; readonly body: Readonly<Record<string, unknown>> };
 
 function parseSelection(
-  selection: ReadonlyArray<string> | undefined
+  selection: unknown
 ): { readonly ok: true; readonly value: ReadonlyArray<string> } | { readonly ok: false } {
   if (!Array.isArray(selection) || selection.length === 0) {
     return { ok: false };
   }
 
-  const normalized = selection.map((item) => item.trim()).filter((item) => item.length > 0);
+  if (!selection.every((item) => typeof item === 'string')) {
+    return { ok: false };
+  }
+
+  const normalized = (selection as ReadonlyArray<string>)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
   if (normalized.length !== selection.length) {
     return { ok: false };
   }
@@ -44,18 +50,24 @@ function parseSelection(
   return { ok: true, value: normalized };
 }
 
-function parseStartRunBody(body: StartRunBody): ParseStartRunRequestResult {
-  const tenantId = TenantId.parse(body.tenantId);
+function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: 'INVALID_BODY' } };
+  }
+
+  const record = body as Record<string, unknown>;
+
+  const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
   if (!tenantId.ok) {
     return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: tenantId.code } };
   }
 
-  const projectId = ProjectId.parse(body.projectId);
+  const projectId = ProjectId.parse(asStringOrUndefined(record.projectId));
   if (!projectId.ok) {
     return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: projectId.code } };
   }
 
-  const environmentId = EnvironmentId.parse(body.environmentId);
+  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
   if (!environmentId.ok) {
     return {
       ok: false,
@@ -64,7 +76,7 @@ function parseStartRunBody(body: StartRunBody): ParseStartRunRequestResult {
     };
   }
 
-  const selection = parseSelection(body.selection);
+  const selection = parseSelection(record.selection);
   if (!selection.ok) {
     return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: 'INVALID_SELECTION' } };
   }
@@ -89,8 +101,12 @@ function extractBearerToken(authorizationHeader: string | undefined): string | u
     : undefined;
 }
 
+function asStringOrUndefined(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
 export async function startRunRoute(
-  request: FastifyRequest<{ Body: StartRunBody }>,
+  request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,
   facade: StartRunAuthorizedFacade
 ): Promise<void> {

@@ -42,6 +42,79 @@ await test('startRunRoute returns 400 on malformed tenantId', async () => {
   assert.deepEqual(reply.payload, { error: 'BAD_REQUEST', code: 'INVALID_TENANT_ID' });
 });
 
+await test('startRunRoute returns 400 when body is missing', async () => {
+  const reply = {
+    statusCode: 200,
+    payload: undefined as unknown,
+    code(status: number) {
+      this.statusCode = status;
+      return this;
+    },
+    send(payload: unknown) {
+      this.payload = payload;
+      return this;
+    },
+  };
+
+  const facade = {
+    async execute() {
+      throw new Error('should not be called');
+    },
+  };
+
+  await startRunRoute(
+    {
+      id: 'req-0',
+      headers: {},
+      body: undefined,
+    } as never,
+    reply as never,
+    facade as never
+  );
+
+  assert.equal(reply.statusCode, 400);
+  assert.deepEqual(reply.payload, { error: 'BAD_REQUEST', code: 'INVALID_BODY' });
+});
+
+await test('startRunRoute returns 400 on non-string selection items', async () => {
+  const reply = {
+    statusCode: 200,
+    payload: undefined as unknown,
+    code(status: number) {
+      this.statusCode = status;
+      return this;
+    },
+    send(payload: unknown) {
+      this.payload = payload;
+      return this;
+    },
+  };
+
+  const facade = {
+    async execute() {
+      throw new Error('should not be called');
+    },
+  };
+
+  await startRunRoute(
+    {
+      id: 'req-3',
+      headers: {},
+      body: {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: [123],
+      },
+    } as never,
+    reply as never,
+    facade as never
+  );
+
+  assert.equal(reply.statusCode, 400);
+  assert.deepEqual(reply.payload, { error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
+});
+
 await test('startRunRoute passes normalized command and requested scope', async () => {
   const reply = {
     statusCode: 200,
