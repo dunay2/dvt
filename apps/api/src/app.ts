@@ -33,6 +33,15 @@ type RequestWithSpan = FastifyRequest & {
   [REQUEST_SPAN]?: ISpan;
 };
 
+function requireDatabaseUrlForProtectedRoutes(env: Env): string {
+  if (!env.DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL is required when OIDC-protected runtime routes are enabled'
+    );
+  }
+  return env.DATABASE_URL;
+}
+
 export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
   const env = loadEnv(process.env);
   const observability = buildObservability(env);
@@ -116,7 +125,7 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
 
   // Protected runtime routes — wired only when OIDC is fully configured
   if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) {
-    const pool = getPgPool(env.DATABASE_URL ?? '');
+    const pool = getPgPool(requireDatabaseUrlForProtectedRoutes(env));
     const accessRepo = new PostgresPrincipalAccessRepository(pool, env.DVT_PG_SCHEMA);
     const auditLogger = new StructuredAuditLogger(app.log as unknown as Logger);
     const policy = new TenantHierarchyAuthorizationPolicy();
@@ -139,6 +148,10 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
       authorizer,
       new NotImplementedStartRunUseCase()
     );
+
+    app.addHook('onReady', async () => {
+      await accessRepo.migrate();
+    });
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       '/runs/start',
