@@ -1,12 +1,12 @@
 Los ADRs de la capa UI (evaluación)
 ADR Decisión Calificación
 ADR-0001 SSE como transporte UI, seq como SSE id para catchup ✅ Correcto — RFC 6202 compliant
-ADR-0002 Postgres = autoridad, Kafka = bus de distribución ✅ Alineado con mejora discutir
+ADR-0002 Postgres = autoridad, Kafka = bus de distribución ✅ Alineado con el diseño canónico state-store/outbox
 ADR-0003 Transactional outbox (DB TX → background publisher) ✅ Patrón correcto
 ADR-0004 UPSERT en run_seq para allocación monotónica ⚠️ Correcto en concepto, diverge del diseño final
 ADR-0005 Single-process MVP: API + outbox publisher + kafka tail ✅ Pragmático para MVP
 El schema 001_init.sql — análisis
-El schema prueba el concepto pero hay 4 divergencias con mejora discutir que hay que resolver para la implementación real:
+El schema prueba el concepto pero hay 4 divergencias con el diseño canónico state-store/outbox que hay que resolver para la implementación real:
 
 Divergencia 1 — Counter de seq como tabla separada:
 
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS run_seq (
 run_id TEXT PRIMARY KEY,
 next_seq BIGINT NOT NULL
 );
-vs. mejora discutir: run_metadata.current_run_seq — el counter vive en la misma fila de metadata que se lockea con FOR UPDATE. Menos overhead de join, mismo garantía atómica.
+vs. diseño canónico: run_metadata.current_run_seq — el counter vive en la misma fila de metadata que se lockea con FOR UPDATE. Menos overhead de join, mismo garantía atómica.
 
 Divergencia 2 — outbox_pending_idx no es partial index:
 
@@ -27,7 +27,7 @@ CREATE INDEX IF NOT EXISTS outbox_pending_idx ON outbox (created_at)
 WHERE published_at IS NULL; -- partial index
 Divergencia 3 — Sin ordering_key / contiguous leasing:
 
-El publisher actual publica por created_at ASC sin garantía de ordering por run. Si el evento seq=1 de run A falla y seq=2 de run A existe, seq=2 se publica antes de seq=1. El UI ve la línea de tiempo out-of-order. mejora discutir resuelve esto con ordering_key = tenantId:runId y la constraint "no run_seq menor pendiente".
+El publisher actual publica por created_at ASC sin garantía de ordering por run. Si el evento seq=1 de run A falla y seq=2 de run A existe, seq=2 se publica antes de seq=1. El UI ve la línea de tiempo out-of-order. El diseño canónico resuelve esto con ordering_key = tenantId:runId y la constraint "no run_seq menor pendiente".
 
 Divergencia 4 — Sin tenant_id:
 
@@ -45,7 +45,7 @@ Ahora que tengo todo, el mapa real del proyecto es:
 
 packages/@dvt/engine ← WorkflowEngine + RunEvents (ciclo de vida del run)
 packages/@dvt/adapter-temporal ← Temporal.io execution
-packages/@dvt/adapter-postgres ← State store (stub → implementar con mejora 1)
+packages/@dvt/adapter-postgres ← State store (stub → implementar con el diseño canónico)
 packages/@dvt/plan-interpreter ← DAG puro
 
 infra/docker/postgres/redpanda ← Dev environment (Postgres + Redpanda)
@@ -55,7 +55,7 @@ docs/api/ ← Prototipo SSE+Kafka (prueba el loop, necesita alineación)
 apps/api/ ← Producción (skeleton, necesita lógica de dominio)
 Dos workstreams independientes convergen en apps/api:
 
-Workstream A (engine): mejora discutir → adapter-postgres → IRunStateStore real
+Workstream A (engine): diseño canónico state-store/outbox → adapter-postgres → IRunStateStore real
 appendEventsTx, bootstrapRunTx, outbox, snapshots
 
 Workstream B (UI): docs/api patterns → apps/api routes
@@ -63,6 +63,6 @@ SSE catchup, RunStreamHub, OutboxPublisher, KafkaTail
 Diagnóstico final
 El proyecto tiene una arquitectura bien pensada y completamente validada por separado en dos capas. Lo que falta es la integración:
 
-adapter-postgres debe implementar mejora discutir — es el corazón pendiente
+adapter-postgres debe implementar el diseño canónico state-store/outbox — es el corazón pendiente
 apps/api debe absorber los patrones de docs/api adaptados a @dvt/contracts
-El schema de 001_init.sql debe evolucionar hacia el DDL completo de mejora discutir
+El schema de 001_init.sql debe evolucionar hacia el DDL completo del diseño canónico
