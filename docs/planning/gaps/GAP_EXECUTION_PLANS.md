@@ -2,7 +2,7 @@
 title: DVT+ - Gap Execution Plans
 status: Review
 owner: docs
-last_reviewed: 2026-03-06
+last_reviewed: 2026-03-07
 planning_type: proposal
 ---
 
@@ -11,17 +11,17 @@ planning_type: proposal
 Source of truth for execution gaps and delivery state.
 
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
-- Last sync date: 2026-03-06
+- Last sync date: 2026-03-07
 - Scope: Phase 1, Phase 1.5, Phase 2
 
-## Executive State (2026-03-06)
+## Executive State (2026-03-07)
 
 | Gap | Title                                     | Phase     | Current state                                             |
 | --- | ----------------------------------------- | --------- | --------------------------------------------------------- |
 | G1  | Temporal Adapter real                     | Phase 1   | In progress (lookupRunRef done, full integration pending) |
 | G2  | PostgresStateStore complete               | Phase 1   | Closed                                                    |
 | G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Implemented in code, pending final doc closure            |
-| G4  | compiledCodeRef ownership                 | Phase 1   | In progress (T4-2/T4-3 done, T4-4 pending)                |
+| G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                                    |
 | G5  | Outbox worker independiente               | Phase 1.5 | Pending                                                   |
 | G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Pending                                                   |
 | G7  | Read models + standalone projector        | Phase 1.5 | Pending                                                   |
@@ -38,10 +38,11 @@ Source of truth for execution gaps and delivery state.
    - Store: [`packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts)
    - Worker: [`packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts`](../../../packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts)
    - Runtime wiring: [`apps/api/src/runtime/intentReconcilerRuntime.ts`](../../../apps/api/src/runtime/intentReconcilerRuntime.ts)
-3. `G4` contracts and planner side are partially implemented.
-   - Contract type: [`packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
-   - Planner ports/adapters: [`packages/@dvt/planner/src/ports/ICompiledCodeStorage.ts`](../../../packages/@dvt/planner/src/ports/ICompiledCodeStorage.ts)
+3. `G4` compiledCodeRef ownership is implemented end-to-end at package scope and documented as closed.
+   - Contracts fixtures and validation tests: [`packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts`](../../../packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts)
    - Planner enrichment: [`packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts)
+   - Temporal propagation: [`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
+   - Traceability resolver/mapper: [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
 4. CI hardening was added for workspace dependency builds before adapter-postgres tests.
    - Workflow: [`.github/workflows/test.yml`](../../../.github/workflows/test.yml)
 
@@ -84,15 +85,15 @@ Source of truth for execution gaps and delivery state.
 
 ### G4 - compiledCodeRef ownership
 
-- Status: In progress
+- Status: Closed
 - Subtasks:
 
-| Task | Scope                                             | Status                                       |
-| ---- | ------------------------------------------------- | -------------------------------------------- |
-| T4-1 | contracts type + exports + fixtures               | Partial (type/export done, fixtures pending) |
-| T4-2 | planner storage adapters + attachCompiledCodeRefs | Done in code                                 |
-| T4-3 | adapter-temporal propagation to StepStarted       | Done in code + tests + QA hardening cleanup  |
-| T4-4 | traceability reader/cache/SqlJobFacet             | Pending                                      |
+| Task | Scope                                             | Status                                      |
+| ---- | ------------------------------------------------- | ------------------------------------------- |
+| T4-1 | contracts type + exports + fixtures               | Done                                        |
+| T4-2 | planner storage adapters + attachCompiledCodeRefs | Done in code                                |
+| T4-3 | adapter-temporal propagation to StepStarted       | Done in code + tests + QA hardening cleanup |
+| T4-4 | traceability reader/cache/SqlJobFacet             | Done in code + tests                        |
 
 - Task spec: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
 - QA architecture review: [`G4-T4-3-QA-ARCH-REVIEW.md`](G4-T4-3-QA-ARCH-REVIEW.md)
@@ -138,10 +139,9 @@ Source of truth for execution gaps and delivery state.
 
 Recommended order for next cycles:
 
-1. Finish and close `G4` (T4-3 and T4-4).
-2. Close remaining `G1` integration quality gates.
-3. Start Phase 1.5 in order: `G5 -> G6 -> G7 -> G8`.
-4. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
+1. Close remaining `G1` integration quality gates.
+2. Start Phase 1.5 in order: `G5 -> G6 -> G7 -> G8`.
+3. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
 
 Parallel execution track detail:
 

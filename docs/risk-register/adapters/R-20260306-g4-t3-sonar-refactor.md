@@ -1,7 +1,7 @@
 ---
 id: R-20260306-G4-T3-01
 title: Temporal adapter lint gate drift on workspace aliases
-status: Mitigating
+status: Mitigated
 date: 2026-03-06
 owners:
   - adapter-temporal
@@ -33,3 +33,7 @@ to source correctness, increasing merge latency and hiding real regressions.
 - `tsconfig.json`
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
 - GitHub Actions run `22770527589` (`ESLint + Prettier (changed files)`)
+
+## Closure
+
+Mitigated and closed on 2026-03-07 after validation with adapter-temporal package tests.

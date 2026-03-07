@@ -1,7 +1,7 @@
 ---
 id: R-20260306-G4-T4-01
 title: StepStarted compiledCodeRef propagation drift
-status: Mitigating
+status: Mitigated
 date: 2026-03-06
 owners:
   - adapter-temporal
@@ -34,3 +34,7 @@ traceability joins and downstream compiled-code attribution.
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
 - `packages/@dvt/adapter-temporal/test/activities.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`
+
+## Closure
+
+Mitigated and closed on 2026-03-07 with package-level validation across contracts, planner, adapter-temporal, and traceability-service.
