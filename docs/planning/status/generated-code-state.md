@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-03-07.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 19    |
-| Total source files           | 266   |
-| Total test files             | 64    |
+| Total source files           | 276   |
+| Total test files             | 71    |
 | Workspaces with build script | 19/19 |
 | Workspaces with test script  | 15/19 |
 
@@ -24,7 +24,7 @@ Generated automatically from repository code on 2026-03-07.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 12        | 0          | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 22        | 7          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 79        | 0          | yes   | no   | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 7         | 3          | yes   | yes  | yes       | 8                       |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 11        | 11         | yes   | yes  | no        | 13                      |
