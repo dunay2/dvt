@@ -2,20 +2,20 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-03-06
+last_reviewed: 2026-03-07
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-03-06.
+Generated automatically from repository code on 2026-03-07.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 19    |
-| Total source files           | 265   |
+| Total source files           | 266   |
 | Total test files             | 61    |
 | Workspaces with build script | 19/19 |
 | Workspaces with test script  | 15/19 |
@@ -30,7 +30,7 @@ Generated automatically from repository code on 2026-03-06.
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 10        | 10         | yes   | yes  | no        | 13                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 0          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 26        | 4          | yes   | yes  | no        | 18                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 27        | 4          | yes   | yes  | no        | 19                      |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/engine               | `packages/@dvt/engine`               | 55        | 21         | yes   | yes  | no        | 32                      |
 | @dvt/engine-contracts     | `packages/@dvt/engine-contracts`     | 0         | 0          | yes   | no   | no        | -                       |
