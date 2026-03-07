@@ -1,8 +1,8 @@
-import type { DeniedReason } from '../../domain/auth/types.js';
 import type {
   AuthenticationFailureCode,
   StartRunFacadeResult,
 } from '../../application/ports/auth.js';
+import type { DeniedReason } from '../../domain/auth/types.js';
 
 export interface HttpResponseModel {
   readonly status: 400 | 401 | 403 | 202;
