@@ -120,7 +120,12 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
     const accessRepo = new PostgresPrincipalAccessRepository(pool, env.DVT_PG_SCHEMA);
     const auditLogger = new StructuredAuditLogger(app.log as unknown as Logger);
     const policy = new TenantHierarchyAuthorizationPolicy();
-    const authorizer = new AuthorizeCommandScopeService(accessRepo, policy, auditLogger, () => new Date());
+    const authorizer = new AuthorizeCommandScopeService(
+      accessRepo,
+      policy,
+      auditLogger,
+      () => new Date()
+    );
     const authenticator = new OidcAuthenticator(
       new JwksJwtVerifier({
         jwksUri: env.OIDC_JWKS_URI,
@@ -129,7 +134,11 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
         algorithms: env.OIDC_ALGORITHMS.split(',').map((a) => a.trim()),
       })
     );
-    const facade = new StartRunAuthorizedFacade(authenticator, authorizer, new NotImplementedStartRunUseCase());
+    const facade = new StartRunAuthorizedFacade(
+      authenticator,
+      authorizer,
+      new NotImplementedStartRunUseCase()
+    );
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       '/runs/start',

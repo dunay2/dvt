@@ -65,8 +65,12 @@ function mapPayloadToClaims(payload: JosePayload): JwtVerificationResult {
     ...(typeof payload.iat === 'number' ? { iat: payload.iat } : {}),
     ...(typeof payload.jti === 'string' ? { jti: payload.jti } : {}),
     ...(typeof payload['scope'] === 'string' ? { scope: payload['scope'] } : {}),
-    ...(Array.isArray(payload['tenant_ids']) ? { tenant_ids: payload['tenant_ids'] as string[] } : {}),
-    ...(Array.isArray(payload['project_ids']) ? { project_ids: payload['project_ids'] as string[] } : {}),
+    ...(Array.isArray(payload['tenant_ids'])
+      ? { tenant_ids: payload['tenant_ids'] as string[] }
+      : {}),
+    ...(Array.isArray(payload['project_ids'])
+      ? { project_ids: payload['project_ids'] as string[] }
+      : {}),
     ...(payload['principal_type'] === 'service' ? { principal_type: 'service' as const } : {}),
   };
 
@@ -75,8 +79,12 @@ function mapPayloadToClaims(payload: JosePayload): JwtVerificationResult {
 
 function mapJoseError(err: unknown): JwtVerificationResult {
   if (err instanceof joseErrors.JWTExpired) return { ok: false, code: 'TOKEN_EXPIRED' };
-  if (err instanceof joseErrors.JOSENotSupported) return { ok: false, code: 'UNSUPPORTED_ALGORITHM' };
-  if (err instanceof joseErrors.JWSInvalid || err instanceof joseErrors.JWSSignatureVerificationFailed) {
+  if (err instanceof joseErrors.JOSENotSupported)
+    return { ok: false, code: 'UNSUPPORTED_ALGORITHM' };
+  if (
+    err instanceof joseErrors.JWSInvalid ||
+    err instanceof joseErrors.JWSSignatureVerificationFailed
+  ) {
     return { ok: false, code: 'INVALID_SIGNATURE' };
   }
   if (err instanceof joseErrors.JWTClaimValidationFailed) return mapClaimError(err);

@@ -22,17 +22,17 @@ Fecha de referencia: 2026-02-26 (Atlantic/Canary)
 
 ## Research plan (ejecutable)
 
-| ID | Goal | Checks |
+| ID    | Goal                                                                                                       | Checks                                                                                                        |
 | ----- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| RP-01 | Inventariar contratos/ADRs afectados por el review y determinar invariantes a congelar | Lista de contratos/ADRs tocados; invariantes frozen (idempotency key, bootstrapRunTx, adapter-first ordering) |
-| RP-02 | Revisar documentaciÃ³n oficial de Temporal en determinismo, continueAsNew, replay tests y safe deployments | Notas de implementaciÃ³n; checklist de no-determinismo; plantilla de replay-gate en CI |
-| RP-03 | Auditar modelo outbox y escoger relay (polling vs CDC) con fuentes OSS | DecisiÃ³n ADR outbox relay; PoC mÃ­nimo polling; plan CDC Debezium |
-| RP-04 | Seleccionar DSL para gateways (CEL) y comprobar librerÃ­as OSS en TS + lÃ­mites de seguridad | Spec DSL; PoC evaluator; determinism gate en CI para plans con gateways |
-| RP-05 | Revisar docs dbt sobre manifest.json y node selection para especificar IPlanner + fixtures reales | Spec IPlanner; fixtures manifest (10/100/500); golden tests |
-| RP-06 | Revisar escalabilidad de Postgres (ON CONFLICT, partitioning) y pooling (PgBouncer) | DDL partitioned run_events; plan pg_partman; config PgBouncer en staging |
-| RP-07 | Revisar guÃ­as OWASP para multitenancy e IDOR para endurecer tenant scoping y authz mÃ­nimo viable | TenantId required; tests cross-tenant negativos; runbook de seguridad mÃ­nimo |
-| RP-08 | Investigar aislamiento de plugins: gVisor/isolated-vm y estado de vm2 | Documento de decisiÃ³n de sandbox; PoC untrusted; restricciÃ³n plugins solo en Activities |
-| RP-09 | Cost attribution: investigar recomendaciÃ³n de Snowflake sobre query tags y metering | PoC query-tagging; consulta de metering; criterio de viabilidad |
+| RP-01 | Inventariar contratos/ADRs afectados por el review y determinar invariantes a congelar                     | Lista de contratos/ADRs tocados; invariantes frozen (idempotency key, bootstrapRunTx, adapter-first ordering) |
+| RP-02 | Revisar documentaciÃ³n oficial de Temporal en determinismo, continueAsNew, replay tests y safe deployments | Notas de implementaciÃ³n; checklist de no-determinismo; plantilla de replay-gate en CI                        |
+| RP-03 | Auditar modelo outbox y escoger relay (polling vs CDC) con fuentes OSS                                     | DecisiÃ³n ADR outbox relay; PoC mÃ­nimo polling; plan CDC Debezium                                            |
+| RP-04 | Seleccionar DSL para gateways (CEL) y comprobar librerÃ­as OSS en TS + lÃ­mites de seguridad               | Spec DSL; PoC evaluator; determinism gate en CI para plans con gateways                                       |
+| RP-05 | Revisar docs dbt sobre manifest.json y node selection para especificar IPlanner + fixtures reales          | Spec IPlanner; fixtures manifest (10/100/500); golden tests                                                   |
+| RP-06 | Revisar escalabilidad de Postgres (ON CONFLICT, partitioning) y pooling (PgBouncer)                        | DDL partitioned run_events; plan pg_partman; config PgBouncer en staging                                      |
+| RP-07 | Revisar guÃ­as OWASP para multitenancy e IDOR para endurecer tenant scoping y authz mÃ­nimo viable         | TenantId required; tests cross-tenant negativos; runbook de seguridad mÃ­nimo                                 |
+| RP-08 | Investigar aislamiento de plugins: gVisor/isolated-vm y estado de vm2                                      | Documento de decisiÃ³n de sandbox; PoC untrusted; restricciÃ³n plugins solo en Activities                     |
+| RP-09 | Cost attribution: investigar recomendaciÃ³n de Snowflake sobre query tags y metering                       | PoC query-tagging; consulta de metering; criterio de viabilidad                                               |
 
 ## Fuentes priorizadas
 
@@ -53,59 +53,59 @@ Fecha de referencia: 2026-02-26 (Atlantic/Canary)
 
 ## Backlog priorizado (P0/P1/P2)
 
-| ID | Prioridad | Tarea | DoD |
+| ID    | Prioridad | Tarea                                                       | DoD                                       |
 | ----- | --------- | ----------------------------------------------------------- | ----------------------------------------- |
-| P0-01 | P0 | Consolidar ADRs clave | ADRs actualizados + aprobados |
-| P0-02 | P0 | Unificar `IRunStateStore` en contracts | Una interfaz canÃ³nica |
-| P0-03 | P0 | Eliminar drift de tipos + validaciÃ³n runtime en boundaries | Tests de payload invÃ¡lido |
-| P0-04 | P0 | Implementar SnapshotProjector Layer-3 con FSM | Matriz de secuencias vÃ¡lidas/ invÃ¡lidas |
-| P0-05 | P0 | Forzar `tenantId` en reads/lists/cancel/signal | Tests negativos cross-tenant |
-| P0-06 | P0 | Definir `IPlanner` + ownership de `ExecutionPlan` | Spec + schema + fixtures |
-| P0-07 | P0 | Planner MVP (`manifest.json` + DAG + stages) | Golden tests 10/100/500 |
-| P0-08 | P0 | Plan cache por hash | Cache hit metrics |
-| P0-09 | P0 | Gateway DSL con CEL | Determinism gate CI |
-| P0-10 | P0 | Persistir `gatewayDecisions` en continueAsNew | Estado preservado |
-| P0-11 | P0 | Outbox relay MVP (polling) + DLQ | Outbox drena en operaciÃ³n |
-| P0-12 | P0 | Concurrency fix en `startRun` (`workflowId=runId`) | Test de carrera con 1 workflow activo |
-| P0-13 | P0 | Extraer `detectStuckRuns` a maintenance service | Fuera de IWorkflowEngine |
-| P0-14 | P0 | Suite no-gaps (replay/idempotencia/chaos) | Gates activos en CI |
-| P1-01 | P1 | Tooling migraciÃ³n de contratos (dual-read) | MigraciÃ³n reversible |
-| P1-02 | P1 | Partitioning `run_events` | Plan + mantenimiento activo |
-| P1-03 | P1 | PgBouncer en staging | Pool monitorizado |
-| P1-04 | P1 | PoC Snowflake query-tagging | Viabilidad medida |
-| P1-05 | P1 | Sandbox de plugins | DecisiÃ³n formal y PoC |
-| P1-06 | P1 | Estrategia Conductor â€œstate-equivalentâ€ | TerminologÃ­a y lÃ­mites claros |
-| P2-01 | P2 | RetenciÃ³n hot/cold y GDPR delete | PolÃ­tica + runbook |
-| P2-02 | P2 | SeÃ±ales extensibles/versionables | Compatibilidad hacia atrÃ¡s |
-| P2-03 | P2 | Capacity planning workers Temporal | LÃ­mites documentados |
+| P0-01 | P0        | Consolidar ADRs clave                                       | ADRs actualizados + aprobados             |
+| P0-02 | P0        | Unificar `IRunStateStore` en contracts                      | Una interfaz canÃ³nica                    |
+| P0-03 | P0        | Eliminar drift de tipos + validaciÃ³n runtime en boundaries | Tests de payload invÃ¡lido                |
+| P0-04 | P0        | Implementar SnapshotProjector Layer-3 con FSM               | Matriz de secuencias vÃ¡lidas/ invÃ¡lidas |
+| P0-05 | P0        | Forzar `tenantId` en reads/lists/cancel/signal              | Tests negativos cross-tenant              |
+| P0-06 | P0        | Definir `IPlanner` + ownership de `ExecutionPlan`           | Spec + schema + fixtures                  |
+| P0-07 | P0        | Planner MVP (`manifest.json` + DAG + stages)                | Golden tests 10/100/500                   |
+| P0-08 | P0        | Plan cache por hash                                         | Cache hit metrics                         |
+| P0-09 | P0        | Gateway DSL con CEL                                         | Determinism gate CI                       |
+| P0-10 | P0        | Persistir `gatewayDecisions` en continueAsNew               | Estado preservado                         |
+| P0-11 | P0        | Outbox relay MVP (polling) + DLQ                            | Outbox drena en operaciÃ³n                |
+| P0-12 | P0        | Concurrency fix en `startRun` (`workflowId=runId`)          | Test de carrera con 1 workflow activo     |
+| P0-13 | P0        | Extraer `detectStuckRuns` a maintenance service             | Fuera de IWorkflowEngine                  |
+| P0-14 | P0        | Suite no-gaps (replay/idempotencia/chaos)                   | Gates activos en CI                       |
+| P1-01 | P1        | Tooling migraciÃ³n de contratos (dual-read)                 | MigraciÃ³n reversible                     |
+| P1-02 | P1        | Partitioning `run_events`                                   | Plan + mantenimiento activo               |
+| P1-03 | P1        | PgBouncer en staging                                        | Pool monitorizado                         |
+| P1-04 | P1        | PoC Snowflake query-tagging                                 | Viabilidad medida                         |
+| P1-05 | P1        | Sandbox de plugins                                          | DecisiÃ³n formal y PoC                    |
+| P1-06 | P1        | Estrategia Conductor â€œstate-equivalentâ€                  | TerminologÃ­a y lÃ­mites claros           |
+| P2-01 | P2        | RetenciÃ³n hot/cold y GDPR delete                           | PolÃ­tica + runbook                       |
+| P2-02 | P2        | SeÃ±ales extensibles/versionables                           | Compatibilidad hacia atrÃ¡s               |
+| P2-03 | P2        | Capacity planning workers Temporal                          | LÃ­mites documentados                     |
 
 ## Checklist final de ejecuciÃ³n
 
-| ID | Task | Priority | Estado |
+| ID    | Task                                | Priority | Estado    |
 | ----- | ----------------------------------- | -------- | --------- |
-| P0-01 | ADRs clave actualizados | P0 | HECHO |
-| P0-02 | IRunStateStore unificado | P0 | PARCIAL |
-| P0-03 | Tipos Ãºnicos + validaciÃ³n runtime | P0 | PARCIAL |
-| P0-04 | Projector Layer-3 FSM | P0 | PARCIAL |
-| P0-05 | tenantId obligatorio | P0 | PARCIAL |
-| P0-06 | IPlanner spec + schema | P0 | PARCIAL |
-| P0-07 | Planner MVP | P0 | PENDIENTE |
-| P0-08 | Plan cache | P0 | PENDIENTE |
-| P0-09 | Gateway CEL | P0 | PARCIAL |
-| P0-10 | continueAsNew + gatewayDecisions | P0 | HECHO |
-| P0-11 | Outbox relay | P0 | PARCIAL |
-| P0-12 | startRun concurrency | P0 | PARCIAL |
-| P0-13 | Maintenance service | P0 | PENDIENTE |
-| P0-14 | CI no-gaps suite | P0 | PARCIAL |
-| P1-01 | Contract migration tooling | P1 | PENDIENTE |
-| P1-02 | Postgres partitioning | P1 | PENDIENTE |
-| P1-03 | PgBouncer pooling | P1 | PENDIENTE |
-| P1-04 | Snowflake tagging PoC | P1 | PENDIENTE |
-| P1-05 | Plugin sandbox | P1 | PENDIENTE |
-| P1-06 | Conductor strategy | P1 | HECHO |
-| P2-01 | RetenciÃ³n + GDPR | P2 | PENDIENTE |
-| P2-02 | SeÃ±ales extensibles | P2 | PENDIENTE |
-| P2-03 | Capacity planning Temporal | P2 | PENDIENTE |
+| P0-01 | ADRs clave actualizados             | P0       | HECHO     |
+| P0-02 | IRunStateStore unificado            | P0       | PARCIAL   |
+| P0-03 | Tipos Ãºnicos + validaciÃ³n runtime | P0       | PARCIAL   |
+| P0-04 | Projector Layer-3 FSM               | P0       | PARCIAL   |
+| P0-05 | tenantId obligatorio                | P0       | PARCIAL   |
+| P0-06 | IPlanner spec + schema              | P0       | PARCIAL   |
+| P0-07 | Planner MVP                         | P0       | PENDIENTE |
+| P0-08 | Plan cache                          | P0       | PENDIENTE |
+| P0-09 | Gateway CEL                         | P0       | PARCIAL   |
+| P0-10 | continueAsNew + gatewayDecisions    | P0       | HECHO     |
+| P0-11 | Outbox relay                        | P0       | PARCIAL   |
+| P0-12 | startRun concurrency                | P0       | PARCIAL   |
+| P0-13 | Maintenance service                 | P0       | PENDIENTE |
+| P0-14 | CI no-gaps suite                    | P0       | PARCIAL   |
+| P1-01 | Contract migration tooling          | P1       | PENDIENTE |
+| P1-02 | Postgres partitioning               | P1       | PENDIENTE |
+| P1-03 | PgBouncer pooling                   | P1       | PENDIENTE |
+| P1-04 | Snowflake tagging PoC               | P1       | PENDIENTE |
+| P1-05 | Plugin sandbox                      | P1       | PENDIENTE |
+| P1-06 | Conductor strategy                  | P1       | HECHO     |
+| P2-01 | RetenciÃ³n + GDPR                   | P2       | PENDIENTE |
+| P2-02 | SeÃ±ales extensibles                | P2       | PENDIENTE |
+| P2-03 | Capacity planning Temporal          | P2       | PENDIENTE |
 
 DVT+ Architectural Review â€” Principal/Staff Engineer Assessment
 Date: 2026-02-26 | Branch: feat/ddd-cqrs-structure | Basis: Blueprint v0.6, Phase 2 Contracts, Architecture Diagram (dvt_v2_architecture.mmd), 19 ADRs, Remediation Plan
