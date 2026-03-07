@@ -1,3 +1,5 @@
+type DeploymentMode =
+type TrustTier =
 # SECURITY_INVARIANTS.v1.md - DVT Engine Security Invariants
 
 **Version**: 1.1  
@@ -75,7 +77,7 @@ type DeploymentMode =
 Plugin execution sandbox levels (from strongest to weakest isolation):
 
 ```typescript
-type TrustTier =
+
   | 'TIER_1' // gVisor/isolated-vm (zero egress, strongest isolation)
   | 'TIER_2' // Container sandbox (allowlist egress)
   | 'TIER_3'; // Host process (unrestricted; SaaS multi-tenant MUST NOT allow)
@@ -97,7 +99,6 @@ interface SecretRef {
 ---
 
 ## Invariant Categories
-
 Invariants are organized by scope using namespace prefixes:
 
 - **INV-SCOPE-\***: Tenant scope enforcement

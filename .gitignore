@@ -55,7 +55,7 @@ tmpclaude-*-cwd
 # Generated documentation
 docs-dist/
 .docusaurus/
-site/
+/site/
 
 # Root-local tooling artifacts
 /bfg.jar
