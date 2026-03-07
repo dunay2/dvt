@@ -1,74 +1,74 @@
 ext
 
-# SISTEMA DE TRABAJO OBLIGATORIO PARA IA
+# MANDATORY WORK SYSTEM FOR AI
 
-## DOCUMENTOS NORMATIVOS DE REFERENCIA
+## NORMATIVE REFERENCE DOCUMENTS
 
 ### [AI Issue Resolution Playbook v1.6.2]
 
-**Documento maestro de proceso** que define el workflow obligatorio:
+**Master process document** defining the mandatory workflow:
 
-- Think-first analysis ANTES de implementar
-- Pre-implementation brief con Suitability/Blockers/Opportunities/Risks
-- Quality gates obligatorios
-- Templates estandarizados
-- Anti-patrones a evitar
+- Think-first analysis BEFORE implementation
+- Pre-implementation brief with Suitability/Blockers/Opportunities/Risks
+- Mandatory quality gates
+- Standardized templates
+- Anti-patterns to avoid
 
-### [ADR-0000: Generación de código con trazabilidad normativa obligatoria]
+### [ADR-0000: Mandatory Code Generation with Normative Traceability]
 
-**Decisión arquitectónica** que establece:
+**Architectural decision** establishing:
 
-- Todo artefacto DEBE tener relación directa con ADR(s) aprobado(s)
-- Formato obligatorio de cabeceras con trazabilidad
-- Manifiesto de trazabilidad post-generación
-- Validación CI/CD
+- Every artifact MUST have direct relation to approved ADR(s)
+- Mandatory header format with traceability
+- Post-generation traceability manifest
+- CI/CD validation
 
-## WORKFLOW OBLIGATORIO (MANDATORY)
+## MANDATORY WORKFLOW
 
-### FASE 0: VERIFICACIÓN DE DOCUMENTACIÓN EXISTENTE
+### PHASE 0: EXISTING DOCUMENTATION VERIFICATION
 
-ANTES DE COMENZAR CUALQUIER TAREA:
+BEFORE STARTING ANY TASK:
 
-✅ ¿Existe ya documentación sobre esto en el repositorio?
+✅ Is there already documentation about this in the repository?
 
-✅ ¿Hay ADRs relacionados?
+✅ Are there related ADRs?
 
-✅ ¿Hay contratos existentes que deba respetar?
+✅ Are there existing contracts to respect?
 
-✅ ¿Hay issues previos que documenten decisiones?
+✅ Are there previous issues documenting decisions?
 
 text
 
-### FASE 1: THINK-FIRST ANALYSIS (Requisito AI Issue Resolution Playbook v1.6.2)
+### PHASE 1: THINK-FIRST ANALYSIS (AI Issue Resolution Playbook v1.6.2 Requirement)
 
-Antes de implementar, DEBES publicar en el issue:
+Before implementation, you MUST publish in the issue:
 
 Think-First Analysis
 Problem summary (facts only)
-[Descripción objetiva del problema]
+[Objective description of the problem]
 
 Constraints and invariants
-[Lista de restricciones técnicas/de negocio]
+[List of technical/business constraints]
 
-[Invariantes que deben mantenerse]
+[Invariants to be maintained]
 
 Options considered
-A) [Opción A] - [Ventajas/desventajas]
-B) [Opción B] - [Ventajas/desventajas]
-C) [Opción C] - [Ventajas/desventajas]
+A) [Option A] - [Advantages/disadvantages]
+B) [Option B] - [Advantages/disadvantages]
+C) [Option C] - [Advantages/disadvantages]
 
 Selected option + rationale
-[Opción seleccionada y justificación detallada]
+[Selected option and detailed justification]
 
 Alternatives rejected + why
-[Lista de opciones descartadas y razones]
+[List of rejected options and reasons]
 
 Expected validation evidence
-[Cómo se validará que la solución funciona]
+[How the solution will be validated]
 
 text
 
-### FASE 2: PRE-IMPLEMENTATION BRIEF (Usando Template A del Playbook)
+### PHASE 2: PRE-IMPLEMENTATION BRIEF (Using Playbook Template A)
 
 Pre-implementation brief
 Suitability

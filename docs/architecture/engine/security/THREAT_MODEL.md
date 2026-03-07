@@ -19,7 +19,7 @@ The DVT Engine is a multi-tenant workflow orchestration platform. This threat mo
 - Plugin security model
 - Execution Semantics v1.9 alignment
 
-**Key Distinction**: This document is **descriptive** (threat scenarios, risk analysis). **Normative requirements** are in **[SECURITY_INVARIANTS.v1.md](SECURITY_INVARIANTS.v1.md)** and **[TENANT_ISOLATION_TESTS.v1.md](TENANT_ISOLATION_TESTS.v1.md)** (must satisfy all invariants; violations = security incidents). Mitigations mentioned here are informative; see normative contracts for implemention requirements.
+**Key Distinction**: This document is **descriptive** (threat scenarios, risk analysis). **Normative requirements** are in **[SECURITY_INVARIANTS.v1.md](SECURITY_INVARIANTS.v1.md)** and **[TENANT_ISOLATION_TESTS.v1.md](TENANT_ISOLATION_TESTS.v1.md)** (must satisfy all invariants; violations = security incidents). Mitigations mentioned here are informative; see normative contracts for implementation requirements.
 
 **Design principle**: Security enforced at architectural boundaries (API, Engine, StateStore, Plugin), not as afterthought.
 
@@ -94,7 +94,7 @@ The security posture varies significantly depending on deployment architecture. 
 - **T7** (Insider threat): Critical in SaaS + dedicated; managed differently in single-tenant
 - **T14** (Operator justification): Mandatory in all modes; enforcement differs (regulatory in SaaS, internal in self-hosted)
 - **Audit retention**: Multi-tenant SaaS = 6-7 years (regulatory); single-tenant = policy-driven
-- **Tier 3 prohibition**: See INV-PLUGIN-04; multi-tenant SaaS Monly, TLS 1.2 rejected (INV-CRYPTO-02) | [SECURITY_INVARIANTS.v1.md](SECURITY_INVARIANTS.v1.md#encryption-invariants) |
+- **Tier 3 prohibition**: See INV-PLUGIN-04; multi-tenant SaaS only, TLS 1.2 rejected (INV-CRYPTO-02) | [SECURITY_INVARIANTS.v1.md](SECURITY_INVARIANTS.v1.md#encryption-invariants) |
 
 **Note on TLS 1.3+ Requirement**: This is a deliberate product stance: **TLS 1.2 connections MUST be rejected**. Rationale: TLS 1.2 has deprecated cipher suites, requires stronger operational discipline, and is end-of-life for most cloud providers. Organizations requiring legacy TLS 1.2 support must be declined or deployed on isolated infrastructure. See [OWASP Transport Layer Protection Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html) for technical rationale.
 
