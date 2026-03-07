@@ -4,6 +4,12 @@ import { getPgPool } from '../db/pool.js';
 import type { Env } from '../plugins/env.js';
 
 export async function dbReadyRoutes(app: FastifyInstance, opts: { env: Env }): Promise<void> {
+  // /db/ready — internal-only: never publicly exposed by default.
+  // Requires explicit opt-in via DVT_DB_READY_ENABLED.
+  if (!opts.env.DVT_DB_READY_ENABLED) {
+    return;
+  }
+
   app.get('/db/ready', async (_req, reply) => {
     const cs = opts.env.DATABASE_URL;
 

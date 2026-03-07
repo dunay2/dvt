@@ -1,5 +1,9 @@
 # dvt-api (Fastify + TypeScript) — Railway
 
+## Código de autenticación
+
+La implementación de la frontera de autenticación/autorización vive en [apps/api/src/domain/auth](apps/api/src/domain/auth), [apps/api/src/application](apps/api/src/application), [apps/api/src/entrypoints/http](apps/api/src/entrypoints/http) y [apps/api/src/infrastructure/auth](apps/api/src/infrastructure/auth). Las pruebas viven separadas en [apps/api/test](apps/api/test).
+
 ## Local run
 
 ```bash

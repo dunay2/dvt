@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { Env } from './env.js';
-import { buildObservability } from './observability.js';
+import type { Env } from '../../src/plugins/env.js';
+import { buildObservability } from '../../src/plugins/observability.js';
 
 function baseEnv(overrides?: Partial<Env>): Env {
   return {

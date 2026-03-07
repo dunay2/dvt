@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import process from 'node:process';
 import test from 'node:test';
 
-import { buildApp } from './app.js';
+import { buildApp } from '../src/app.js';
 
-test('buildApp wires observability and health endpoint works', async () => {
+await test('buildApp wires observability and health endpoint works', async () => {
   process.env.OBS_ENABLED = 'false';
   process.env.NODE_ENV = 'test';
 

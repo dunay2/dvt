@@ -25,7 +25,7 @@ Source of truth for execution gaps and delivery state.
 | G5  | Outbox worker independiente               | Phase 1.5 | Pending                                                   |
 | G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Pending                                                   |
 | G7  | Read models + standalone projector        | Phase 1.5 | Pending                                                   |
-| G8  | Auth real en apps/api                     | Phase 1.5 | Pending                                                   |
+| G8  | Auth real en apps/api                     | Phase 1.5 | Implemented in code (arch tests pending)                  |
 | G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                                   |
 | G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                                   |
 
@@ -119,9 +119,21 @@ Source of truth for execution gaps and delivery state.
 
 ### G8 - Auth real en apps/api
 
-- Status: Pending
-- Target:
-  - JWT verification and tenant-scoped authz in runtime endpoints
+- Status: Implemented in code
+- Delivered:
+  - `TenantHierarchyAuthorizationPolicy` with full tenant → project → environment grant hierarchy
+  - `OidcAuthenticator` + `JwksJwtVerifier` (jose-based JWKS) behind `IJwtVerifierGateway`
+  - `AuthorizeCommandScopeService` with `PrincipalRef`-keyed access loading and structured audit
+  - `PostgresPrincipalAccessRepository` (JSONB-backed, with migration)
+  - `StructuredAuditLogger` implementing `IAuthAuditPort`
+  - `POST /runs/start` protected end-to-end — wired in `app.ts` when `OIDC_*` vars present
+  - `StartRunFacadeResult` semantic result type — no HTTP models in application layer
+  - `authErrorMapper` in entrypoints/http — single HTTP mapping point
+  - Route exposure policy: `/readyz`, `/version`, `/db/ready` all gated by explicit flags
+- Pending:
+  - `dependency-cruiser` architectural tests (T8-6)
+  - Replace `NotImplementedStartRunUseCase` with engine-backed use case (T8-7)
+- Spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)
 
 ### G9 - StepTypeRegistry + typed stepTypeConfig
 
@@ -140,7 +152,7 @@ Source of truth for execution gaps and delivery state.
 Recommended order for next cycles:
 
 1. Close remaining `G1` integration quality gates.
-2. Start Phase 1.5 in order: `G5 -> G6 -> G7 -> G8`.
+2. Close `G8` remaining items (arch tests + engine use case wiring), then `G5 -> G6 -> G7`.
 3. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
 
 Parallel execution track detail:
@@ -154,3 +166,4 @@ Parallel execution track detail:
 - Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)
 - G3 evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
 - G4 evidence: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
+- G8 spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)
