@@ -11,34 +11,38 @@ import type { ICompiledCodeStorage } from '../ports/ICompiledCodeStorage.js';
 import { computeSha256 } from './sha256.js';
 
 export interface AttachCompiledCodeRefsOptions {
+  /** Tenant owning this upload — enforces storage isolation (VIOLATION-3 / G-5). */
+  tenantId: string;
   /** Map of stepId/nodeId to compiled SQL string (from run_results.json). */
   compiledCodeByNodeId: ReadonlyMap<string, string>;
   storage: ICompiledCodeStorage;
   /** Per-plan upload dedup cache: sha256 to storageUri. */
   uploadCache?: Map<string, string>;
-  /** Optional fail-open hook for upload failures. */
-  onUploadFailure?: (stepId: string, error: unknown) => void;
+  /**
+   * Called when an upload fails. Fail-open: the step is returned unchanged.
+   * Receives ArtifactStoreError (typed code) or generic Error — callers MUST branch
+   * on error.code, never on error.message (G-2).
+   * Defaults to no-op; wire IObservability at the call site for metrics.
+   */
+  onUploadFailure?: (stepId: string, error: Error) => void;
 }
 
 function canAttach(step: ExecutionStepV2): boolean {
   return step.kind === DBT_MODEL || step.kind === DBT_TEST;
 }
 
-function metricUploadFailure(stepId: string, error: unknown): void {
-  const message = error instanceof Error ? error.message : String(error);
-  console.warn('dvt.planner.compiled_code_upload_failed_total', { stepId, message });
-}
-
 /**
  * Enriches execution steps with compiledCodeRef after Planner.buildPlan() finishes.
- * Upload failures are fail-open: the step remains unchanged.
+ * Upload failures are fail-open: the step is returned unchanged.
+ * All uploads are tenant-scoped — no cross-tenant namespace sharing.
  */
 export async function attachCompiledCodeRefs(
   plan: ExecutionPlanV2,
   options: AttachCompiledCodeRefsOptions
 ): Promise<ExecutionPlanV2> {
+  const { tenantId } = options;
   const uploadCache = options.uploadCache ?? new Map<string, string>();
-  const onUploadFailure = options.onUploadFailure ?? metricUploadFailure;
+  const onUploadFailure = options.onUploadFailure ?? (() => undefined);
   const inFlightUploads = new Map<string, Promise<string>>();
 
   async function resolveStorageUri(sha256: string, content: Buffer): Promise<string> {
@@ -46,11 +50,9 @@ export async function attachCompiledCodeRefs(
     if (cachedUri !== undefined) return cachedUri;
 
     const existingUpload = inFlightUploads.get(sha256);
-    if (existingUpload !== undefined) {
-      return existingUpload;
-    }
+    if (existingUpload !== undefined) return existingUpload;
 
-    const nextUpload = options.storage.upload(sha256, content).then((storageUri) => {
+    const nextUpload = options.storage.upload(tenantId, sha256, content).then((storageUri) => {
       uploadCache.set(sha256, storageUri);
       return storageUri;
     });
@@ -81,20 +83,14 @@ export async function attachCompiledCodeRefs(
         };
         return {
           ...step,
-          stepTypeConfig: {
-            ...(step.stepTypeConfig ?? {}),
-            compiledCodeRef,
-          },
+          stepTypeConfig: { ...step.stepTypeConfig, compiledCodeRef },
         };
       } catch (error) {
-        onUploadFailure(step.stepId, error);
+        onUploadFailure(step.stepId, error instanceof Error ? error : new Error(String(error)));
         return step;
       }
     })
   );
 
-  return {
-    ...plan,
-    steps: updatedSteps,
-  };
+  return { ...plan, steps: updatedSteps };
 }

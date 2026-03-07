@@ -15,13 +15,9 @@ export interface LineageJobFacets {
   dvt_dbt_details?: DvtDbtDetailsFacet;
 }
 
-export interface CompiledCodeBlob {
-  sourceUri: string;
-  sqlText: string;
-  sha256: string;
-  sizeBytes: number;
-  encoding: 'utf-8';
-}
+// CompiledCodeBlob moved to @dvt/contracts (G-6: canonical types must live in shared kernel).
+// Re-export for local consumers still importing from this path.
+export type { CompiledCodeBlob } from '@dvt/contracts';
 
 export interface LineageWarning {
   code: 'COMPILED_CODE_RESOLUTION_FAILED';

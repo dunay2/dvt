@@ -121,12 +121,22 @@ export const EngineRunRefSchema = z.discriminatedUnion('provider', [
 
 // ─── Artifact schemas ────────────────────────────────────────────────────────
 
+export const ArtifactKindSchema = z.enum([
+  'execution-plan',
+  'compiled-sql',
+  'dbt-manifest',
+  'dbt-catalog',
+  'dbt-run-results',
+  'lineage',
+]);
+
 export const ArtifactRefSchema = z.object({
   uri: z.string().min(1),
-  kind: z.string().min(1),
+  kind: ArtifactKindSchema,
   sha256: z.string().optional(),
   sizeBytes: z.number().int().nonnegative().optional(),
   expiresAt: z.string().optional(),
+  tenantId: z.string().min(1).optional(),
 });
 
 export const StepErrorSchema = z.object({
@@ -167,32 +177,6 @@ export const RunEventWriteSchema = z.object({
 export const RunEventRecordSchema = RunEventWriteSchema.extend({
   runSeq: z.number().int().positive(),
   persistedAt: z.string().min(1),
-});
-
-/**
- * @deprecated Use RunEventWriteSchema / RunEventRecordSchema.
- * Kept for backward compatibility with v1 consumers.
- * The v1 CanonicalEngineEvent used `eventData` (now `payload`),
- * optional string attempt IDs (now required numbers), and extra
- * fields not in the normative v2.0 contract.
- */
-export const CanonicalEngineEventSchema = z.object({
-  runId: z.string().min(1),
-  runSeq: z.number().int().nonnegative(),
-  eventId: z.string().min(1),
-  stepId: z.string().optional(),
-  engineAttemptId: z.number().int().positive().optional(),
-  logicalAttemptId: z.number().int().positive().optional(),
-  eventType: z.string().min(1),
-  eventData: z.unknown().optional(),
-  payload: z.record(z.string(), z.unknown()).optional(),
-  idempotencyKey: z.string().min(1),
-  emittedAt: z.string().min(1),
-  persistedAt: z.string().optional(),
-  adapterVersion: z.string().optional(),
-  engineRunRef: z.unknown().optional(),
-  causedBySignalId: z.string().optional(),
-  parentEventId: z.string().optional(),
 });
 
 export const StepSnapshotSchema = z.object({
@@ -385,8 +369,6 @@ export type StepOutputSchemaT = z.infer<typeof StepOutputSchema>;
 
 export type RunEventWriteSchemaT = z.infer<typeof RunEventWriteSchema>;
 export type RunEventRecordSchemaT = z.infer<typeof RunEventRecordSchema>;
-/** @deprecated Use RunEventWriteSchemaT / RunEventRecordSchemaT */
-export type CanonicalEngineEventSchemaT = z.infer<typeof CanonicalEngineEventSchema>;
 export type StepSnapshotSchemaT = z.infer<typeof StepSnapshotSchema>;
 export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
 

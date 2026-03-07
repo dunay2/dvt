@@ -13,8 +13,6 @@ import { ZodError, type ZodType } from 'zod';
 import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
-  CanonicalEngineEventSchema,
-  type CanonicalEngineEventSchemaT,
   DbtManifestRefSchema,
   type DbtManifestRefSchemaT,
   EngineRunRefSchema,
@@ -159,11 +157,6 @@ export function parseArtifactRef(input: unknown): ArtifactRefSchemaT {
 
 export function parseStepOutput(input: unknown): StepOutputSchemaT {
   return parseWithSchema(StepOutputSchema, input);
-}
-
-/** @deprecated Use parseRunEventWrite or parseRunEventRecord. */
-export function parseCanonicalEngineEvent(input: unknown): CanonicalEngineEventSchemaT {
-  return parseWithSchema(CanonicalEngineEventSchema, input);
 }
 
 /** Validate a write-side event envelope (RunEvents v2.0.1). */
