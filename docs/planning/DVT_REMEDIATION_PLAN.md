@@ -31,6 +31,7 @@ Fecha de referencia: 2026-02-26 (Atlantic/Canary)
 - `RP-07`: Revisar guÃ­as OWASP para multitenancy e IDOR para endurecer tenant scoping y authz mÃ­nimo viable. Checks: TenantId required; tests cross-tenant negativos; runbook de seguridad mÃ­nimo.
 - `RP-08`: Investigar aislamiento de plugins: gVisor/isolated-vm y estado de vm2. Checks: Documento de decisiÃ³n de sandbox; PoC untrusted; restricciÃ³n plugins solo en Activities.
 - `RP-09`: Cost attribution: investigar recomendaciÃ³n de Snowflake sobre query tags y metering. Checks: PoC query-tagging; consulta de metering; criterio de viabilidad.
+
 ## Fuentes priorizadas
 
 - Temporal testing/replay: https://docs.temporal.io/develop/typescript/testing-suite
@@ -73,6 +74,7 @@ Fecha de referencia: 2026-02-26 (Atlantic/Canary)
 - `P2-01` (`P2`): RetenciÃ³n hot/cold y GDPR delete. DoD: PolÃ­tica + runbook.
 - `P2-02` (`P2`): SeÃ±ales extensibles/versionables. DoD: Compatibilidad hacia atrÃ¡s.
 - `P2-03` (`P2`): Capacity planning workers Temporal. DoD: LÃ­mites documentados.
+
 ## Checklist final de ejecuciÃ³n
 
 - `P0-01` (`P0`): ADRs clave actualizados. Estado: HECHO.
@@ -98,6 +100,7 @@ Fecha de referencia: 2026-02-26 (Atlantic/Canary)
 - `P2-01` (`P2`): RetenciÃ³n + GDPR. Estado: PENDIENTE.
 - `P2-02` (`P2`): SeÃ±ales extensibles. Estado: PENDIENTE.
 - `P2-03` (`P2`): Capacity planning Temporal. Estado: PENDIENTE.
+
 DVT+ Architectural Review â€” Principal/Staff Engineer Assessment
 Date: 2026-02-26 | Branch: feat/ddd-cqrs-structure | Basis: Blueprint v0.6, Phase 2 Contracts, Architecture Diagram (dvt_v2_architecture.mmd), 19 ADRs, Remediation Plan
 
