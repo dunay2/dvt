@@ -9,7 +9,7 @@
 // normalizeDependsOn
 // ---------------------------------------------------------------------------
 
-import { CompiledCodeRefSchema, type CompiledCodeRef } from '@dvt/contracts';
+import type { CompiledCodeRef } from '@dvt/contracts';
 
 export function normalizeDependsOn(dependsOn: unknown): string[] {
   if (!Array.isArray(dependsOn)) return [];
@@ -49,7 +49,14 @@ export function buildGatewayContext(
     );
   }
 
-  return resolveGatewayDependencyContext(deps[0], completedStepResults);
+  const dependencyStepId = deps[0];
+  if (dependencyStepId === undefined) {
+    throw new TypeError(
+      `INVALID_PLAN_SCHEMA: gateway_dependsOn_exactly_one_required:${step.stepId}`
+    );
+  }
+
+  return resolveGatewayDependencyContext(dependencyStepId, completedStepResults);
 }
 
 export function resolveGatewayDependencyContext(
@@ -137,18 +144,29 @@ type StepStartedPayload = {
   compiledCodeRef: CompiledCodeRef;
 };
 
-export function buildStepStartedPayload(step: {
-  compiledCodeRef?: unknown;
-}): StepStartedPayload | undefined {
-  const { compiledCodeRef } = step;
+export function buildStepStartedPayload(
+  step: Readonly<Record<string, unknown>>
+): StepStartedPayload | undefined {
+  const compiledCodeRef = extractCompiledCodeRef(step.stepTypeConfig);
   if (!compiledCodeRef) return undefined;
+  return { compiledCodeRef };
+}
 
-  const parsedCompiledCodeRef = CompiledCodeRefSchema.safeParse(compiledCodeRef);
-  if (!parsedCompiledCodeRef.success) {
+export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef | undefined {
+  if (!isRecord(stepTypeConfig)) {
+    return undefined;
+  }
+
+  const candidate = stepTypeConfig.compiledCodeRef;
+  if (candidate === undefined) {
+    return undefined;
+  }
+
+  if (!isCompiledCodeRef(candidate)) {
     throw new TypeError('INVALID_PLAN_SCHEMA: step_compiledCodeRef_invalid');
   }
 
-  return { compiledCodeRef: parsedCompiledCodeRef.data };
+  return candidate;
 }
 
 // ---------------------------------------------------------------------------
@@ -187,6 +205,35 @@ function isNonNegativeIntegerString(val: unknown): val is string {
   if (typeof val !== 'string' || val.trim().length === 0) return false;
   const n = Number(val);
   return Number.isInteger(n) && n >= 0;
+}
+
+function isCompiledCodeRef(value: unknown): value is CompiledCodeRef {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    isSha256Hex(value.sha256) &&
+    isNonEmptyString(value.storageUri) &&
+    isNonNegativeInteger(value.sizeBytes) &&
+    isUtf8Encoding(value.encoding)
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isSha256Hex(value: unknown): value is string {
+  return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value);
+}
+
+function isUtf8Encoding(value: unknown): value is 'utf-8' | undefined {
+  return value === undefined || value === 'utf-8';
 }
 
 // ---------------------------------------------------------------------------

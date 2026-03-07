@@ -1,15 +1,18 @@
 import type { CompiledCodeRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { buildStepStartedPayload } from '../src/workflows/workflowHelpers.js';
+import {
+  buildStepStartedPayload,
+  extractCompiledCodeRef,
+} from '../src/workflows/workflowHelpers.js';
 
 type WorkflowStep = Parameters<typeof buildStepStartedPayload>[0];
 
-function makeStep(compiledCodeRef?: unknown): WorkflowStep {
+function makeStep(stepTypeConfig?: Record<string, unknown>): WorkflowStep {
   return {
     stepId: 'step-a',
     kind: 'DBT_MODEL',
-    ...(compiledCodeRef === undefined ? {} : { compiledCodeRef }),
+    ...(stepTypeConfig === undefined ? {} : { stepTypeConfig }),
   };
 }
 
@@ -21,8 +24,20 @@ describe('buildStepStartedPayload', () => {
     encoding: 'utf-8',
   };
 
+  it('extracts compiledCodeRef when shape is valid', () => {
+    const ref = extractCompiledCodeRef({
+      compiledCodeRef: VALID_REF,
+    });
+
+    expect(ref).toEqual(VALID_REF);
+  });
+
   it('includes compiledCodeRef in payload when present', () => {
-    const payload = buildStepStartedPayload(makeStep(VALID_REF));
+    const payload = buildStepStartedPayload(
+      makeStep({
+        compiledCodeRef: VALID_REF,
+      })
+    );
     expect(payload).toEqual({ compiledCodeRef: VALID_REF });
   });
 
@@ -34,10 +49,12 @@ describe('buildStepStartedPayload', () => {
     expect(() =>
       buildStepStartedPayload(
         makeStep({
-          sha256: 'not-a-sha256',
-          storageUri: 's3://bucket/compiled/step-a.sql',
-          sizeBytes: 123,
-          encoding: 'utf-8',
+          compiledCodeRef: {
+            sha256: 'not-a-sha256',
+            storageUri: 's3://bucket/compiled/step-a.sql',
+            sizeBytes: 123,
+            encoding: 'utf-8',
+          },
         })
       )
     ).toThrowError(new TypeError('INVALID_PLAN_SCHEMA: step_compiledCodeRef_invalid'));
