@@ -15,7 +15,6 @@ code_refs:
   - docs/planning/gaps/g6/index.md
   - docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
   - docs/planning/gaps/GAP_EXECUTION_PLANS.md
-  - docs/planning/DVTplus_Roadmap.md
   - docs/planning/status/canonical-doc-code-matrix.md
 contracts_touched:
   - id: OpenLineage SQL Job Facet
@@ -35,7 +34,6 @@ evidence:
     - docs/contracts/traceability/facets/openlineage/index.md
     - docs/planning/gaps/g6/index.md
     - docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
-    - docs/planning/DVTplus_Roadmap.md
     - docs/planning/status/canonical-doc-code-matrix.md
   code:
     - packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts
@@ -61,9 +59,11 @@ compatibility:
   package as a repo-local artifact.
 - Added a normative schema for the custom `dvt_dbt_details` job facet under
   repo control.
-- Anchored `dvt_dbt_details.compiledCodeRef` to a shared-kernel
+- Anchored `dvt_dbt_details.compiledCodeRef` to a self-contained mirror of the
+  shared-kernel
   [CompiledCodeRef v1](../contracts/shared/CompiledCodeRef.v1.schema.json)
-  contract artifact instead of duplicating the structure inline.
+  contract artifact so the schema remains offline-compilable without losing the
+  shared contract linkage.
 - Added a provenance page for the vendored SQL facet so source URL, artifact
   identity, and update policy are reviewable from MkDocs.
 - Reconnected `G6` planning and status docs so the canonical emitted facet
@@ -111,8 +111,8 @@ Result:
 - The chosen canonical home for emitted lineage facet artifacts is under
   `docs/contracts/traceability/`, not inside planning docs.
 - Shared-kernel structure ownership stays with `@dvt/contracts`; the lineage
-  facet artifact now references that contract through a repo-local shared schema
-  mirror instead of copying the fields inline.
+  facet artifact now mirrors that contract through a repo-local shared schema
+  mirror so offline validation remains self-contained.
 - This keeps the normative contract in repo-controlled documentation while
   preserving a stable emitted `_schemaURL` in package code.
 - Later schema validation lanes can validate offline against these local

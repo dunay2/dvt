@@ -6,6 +6,36 @@
   "type": "object",
   "required": ["_producer", "_schemaURL", "compiledCodeRef"],
   "additionalProperties": false,
+  "$defs": {
+    "CompiledCodeRef": {
+      "$comment": "Self-contained mirror of docs/contracts/shared/CompiledCodeRef.v1.schema.json so offline AJV compilation does not depend on external schema resolution.",
+      "type": "object",
+      "required": ["sha256", "storageUri", "sizeBytes"],
+      "additionalProperties": false,
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hex digest of the compiled SQL bytes."
+        },
+        "storageUri": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URI pointing to the compiled SQL artifact."
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the compiled SQL blob in bytes."
+        },
+        "encoding": {
+          "type": "string",
+          "const": "utf-8",
+          "description": "Optional encoding marker for the compiled SQL blob."
+        }
+      }
+    }
+  },
   "properties": {
     "_producer": {
       "type": "string",
@@ -18,8 +48,8 @@
       "description": "Pinned schema URL for the governed custom job facet."
     },
     "compiledCodeRef": {
-      "$ref": "../../shared/CompiledCodeRef.v1.schema.json",
-      "description": "Reference to the shared-kernel CompiledCodeRef contract used by StepStarted payloads."
+      "$ref": "#/$defs/CompiledCodeRef",
+      "description": "Self-contained mirror of the shared-kernel CompiledCodeRef contract used by StepStarted payloads."
     }
   },
   "examples": [
