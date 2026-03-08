@@ -18,7 +18,7 @@ These documents define the **engine boundary, semantics, and invariants**. Viola
 | [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic)               | State machine     | 1.1     |
 | [RunEventCatalog.v1.md](contracts/engine/RunEventCatalog.v1.md)       | Canonical run event catalog alias (taxonomy + transitions + ids) | Event taxonomy    | 1.0     |
 | [GlossaryContract.v1.md](contracts/engine/GlossaryContract.v1.md)     | Canonical terminology and identifier semantics                   | Terminology       | 1.0.1   |
-| [State Store Contract](contracts/state-store/README.md)               | Storage-agnostic interface for event log + snapshots             | Persistence layer | 1.0     |
+| [State Store Docs](contracts/state-store/README.md)                   | Canonical entrypoint for overview, ADR, TS port, and adapter     | Persistence layer | live    |
 | [VERSIONING.md](./VERSIONING.md)                                      | Policy for versioning contracts (major/minor bumps, deprecation) | Governance        | 1.0     |
 
 ### 🟢 Capability Specifications (Executable, JSON)
@@ -63,10 +63,10 @@ Implementation contracts for orchestration platform adapters and storage backend
 
 **State Store Adapters**:
 
-| Document                                                                           | Backend        | Status    | Features                                           |
-| ---------------------------------------------------------------------------------- | -------------- | --------- | -------------------------------------------------- |
-| [Snowflake StateStoreAdapter](adapters/state-store/snowflake/StateStoreAdapter.md) | Snowflake      | NORMATIVE | DDL, MERGE patterns, clustering, stored procedures |
-| [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md)   | PostgreSQL 14+ | NORMATIVE | SERIAL, ON CONFLICT, JSONB, partitioning           |
+| Document                                                                           | Backend        | Status    | Features                                                        |
+| ---------------------------------------------------------------------------------- | -------------- | --------- | --------------------------------------------------------------- |
+| [Snowflake StateStoreAdapter](adapters/state-store/snowflake/StateStoreAdapter.md) | Snowflake      | NORMATIVE | DDL, MERGE patterns, clustering, stored procedures              |
+| [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md)   | PostgreSQL 14+ | NORMATIVE | Advisory-lock ordering, JSONB payloads, snapshots, outbox + DLQ |
 
 ### 🟠 Operations & Incident Response (Informative, Evolving)
 
@@ -128,7 +128,7 @@ docs/architecture/engine/
 │       ├── snowflake/
 │       │   └── StateStoreAdapter.md       # [NORMATIVE] Snowflake implementation (DDL, MERGE, clustering)
 │       └── postgres/
-│           └── StateStoreAdapter.md       # [NORMATIVE] Postgres implementation (SERIAL, ON CONFLICT)
+│           └── StateStoreAdapter.md       # [NORMATIVE] Postgres implementation (advisory lock, snapshots, outbox + DLQ)
 │
 ├── security/                              # Security (informative + normative)
 │   └── THREAT_MODEL.md                    # [INFORMATIVE] Threat actors, attack scenarios, mitigations
@@ -166,10 +166,10 @@ docs/architecture/engine/
 1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
 2. Read [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (interface)
 3. Read [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (core semantics, storage-agnostic)
-4. Read [State Store Contract](contracts/state-store/README.md) (persistence layer interface)
+4. Read [State Store Docs](contracts/state-store/README.md) (canonical entrypoint)
 5. Choose storage backend:
    - [Snowflake StateStoreAdapter](adapters/state-store/snowflake/StateStoreAdapter.md) (DDL, MERGE patterns)
-   - [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md) (SERIAL, ON CONFLICT)
+   - [Postgres StateStoreAdapter](adapters/state-store/postgres/StateStoreAdapter.md) (advisory-lock ordering, snapshots, outbox + DLQ)
 6. Read [TemporalAdapter.spec.md](adapters/temporal/TemporalAdapter.spec.md) (adapter details)
 7. Read [Temporal Engine Policies](adapters/temporal/EnginePolicies.md) (continue-as-new, limits)
 8. Implement `IWorkflowEngine` interface

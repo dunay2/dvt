@@ -13,6 +13,12 @@
 **Phase**: US-1.1 baseline  
 **Parent Contract**: [State Store Contract](./README.md)
 
+> NOTE
+> This markdown file is retained for historical reference only.
+> The live state-store baseline is:
+> `overview.md`, `ADR-0013`, `packages/@dvt/engine/src/ports/IRunStateStore.ts`,
+> and `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`.
+
 ---
 
 ## 1) Purpose
