@@ -3,7 +3,7 @@ import type { IEventBus, OutboxWorkerObserver } from '@dvt/engine';
 
 import { HttpEventBus } from '../bus/HttpEventBus.js';
 import { LoggingEventBus } from '../bus/LoggingEventBus.js';
-import { closePgPool, getPgPool } from '../db/pool.js';
+import { acquirePgPool } from '../db/pool.js';
 import type { Env } from '../plugins/env.js';
 
 import {
@@ -30,9 +30,13 @@ export async function createOutboxWorkerRuntime(
   options: CreateOutboxWorkerRuntimeOptions = {}
 ): Promise<RuntimeHandle> {
   const runMigrations = env.DVT_OUTBOX_WORKER_RUN_MIGRATIONS;
-  const pool = getPgPool(env.DATABASE_URL);
+  const poolLease = acquirePgPool({
+    connectionString: env.DATABASE_URL,
+    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
   const stateStore = new PostgresStateStoreAdapter({
-    pool,
+    pool: poolLease.pool,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -57,7 +61,7 @@ export async function createOutboxWorkerRuntime(
     stop: async () => {
       await runtime.stop();
       await stateStore.close();
-      await closePgPool();
+      await poolLease.release();
     },
   };
 }
