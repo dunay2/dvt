@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 const fs = require('node:fs');
 const path = require('node:path');
+const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const packagesRoot = path.join(repoRoot, 'packages');
@@ -107,8 +108,7 @@ function collectWorkspaceStats(dir) {
   };
 }
 
-function renderDoc(workspaces) {
-  const utcDate = process.env.DOCS_STATUS_DATE || new Date().toISOString().slice(0, 10);
+function renderDoc(workspaces, utcDate) {
   const totalSrc = workspaces.reduce((acc, w) => acc + w.src, 0);
   const totalTests = workspaces.reduce((acc, w) => acc + w.tests, 0);
   const withBuild = workspaces.filter((w) => w.hasBuild === 'yes').length;
@@ -188,7 +188,8 @@ function main() {
   ].sort((a, b) => relFromRepo(a).localeCompare(relFromRepo(b), 'en'));
 
   const stats = workspaceDirs.map(collectWorkspaceStats);
-  const content = renderDoc(stats);
+  const utcDate = resolveGeneratedDate(outputPath, (date) => renderDoc(stats, date));
+  const content = renderDoc(stats, utcDate);
   const changed = writeIfChanged(outputPath, content);
   if (changed) {
     console.log(`[docs:status:generate] Updated ${relFromRepo(outputPath)}`);

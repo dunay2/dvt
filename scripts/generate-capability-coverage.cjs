@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 const fs = require('node:fs');
 const path = require('node:path');
+const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const outputPath = path.join(repoRoot, 'docs', 'planning', 'status', 'generated-capability-coverage.md');
@@ -123,8 +124,7 @@ function evaluateCapabilities() {
   });
 }
 
-function renderDoc(capabilities) {
-  const generatedAt = new Date().toISOString().slice(0, 10);
+function renderDoc(capabilities, generatedAt) {
   const avg =
     capabilities.length === 0
       ? 0
@@ -200,7 +200,8 @@ function writeIfChanged(absPath, content) {
 
 function main() {
   const capabilities = evaluateCapabilities();
-  const content = renderDoc(capabilities);
+  const generatedAt = resolveGeneratedDate(outputPath, (date) => renderDoc(capabilities, date));
+  const content = renderDoc(capabilities, generatedAt);
   const changed = writeIfChanged(outputPath, content);
   if (changed) {
     console.log('[docs:capability:generate] Updated docs/planning/status/generated-capability-coverage.md');
