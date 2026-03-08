@@ -210,7 +210,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## Project Status
 
-Use [docs/planning/index.md](docs/planning/index.md) and
+Use [docs/planning/roadmap/index.md](docs/planning/roadmap/index.md),
+[docs/planning/index.md](docs/planning/index.md), and
 [docs/architecture/system-delivery-status.md](docs/architecture/system-delivery-status.md)
 as the current documentation entry points for active work and implementation
 state.

@@ -54,9 +54,10 @@ folder name.
 
 ## Transitional Notes
 
-- Roadmap consolidation is in progress. Use [Planning](planning/index.md) and
-  [System Delivery Status](architecture/system-delivery-status.md) as the active
-  entry points until the roadmap of record is finalized.
+- The canonical roadmap entry point now lives at
+  [Roadmap Of Record](planning/roadmap/index.md).
+- [System Delivery Status](architecture/system-delivery-status.md) remains the
+  active status surface for current implementation truth.
 - Legacy knowledge maps remain available for compatibility, but the active
   conceptual surface now starts in [Concepts](concepts/index.md).
 

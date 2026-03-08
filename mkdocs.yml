@@ -48,6 +48,7 @@ nav:
       - ADR Archive: adr/_archive/index.md
   - Planning:
       - Planning Index: planning/index.md
+      - Roadmap Of Record: planning/roadmap/index.md
       - Current Status: architecture/system-delivery-status.md
       - Proposals: planning/proposals/index.md
       - Reviews: planning/reviews/index.md
