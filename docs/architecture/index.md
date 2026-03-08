@@ -7,15 +7,38 @@ last_reviewed: 2026-02-25
 
 # Architecture
 
-Technical architecture specifications (normative when marked Accepted/Active).
+Technical architecture specifications and current system structure.
 
-## Index
+This section must not collapse the repository into engine-only reading. The engine is
+important, but it is one subsystem inside a broader planning, runtime, UI, and
+operations surface.
 
-- [Atlas](atlas/index.md)
-- [Engine](engine/index.md)
+## Start Here
+
+- [DVT System Map](../concepts/system-map.md) for the repository-wide mental model
+- [System Delivery Status](system-delivery-status.md) for what is currently true in
+  implementation
+- [Shared Package Architecture](shared/index.md) for the small cross-cutting packages
+  that shape repo-wide behavior
+- [Repository Map](../knowledge/REPOSITORY_MAP.md) for workspace-to-doc coverage
+
+## Reading Guidance
+
+- Start with [Shared](shared/index.md), [Frontend](frontend/index.md), and
+  [Infra](infra/index.md) unless the task is explicitly about workflow runtime
+  semantics.
+- Use [Engine](engine/index.md) when changing execution invariants, adapters,
+  determinism, or engine contracts.
+- Use [Atlas](atlas/index.md) and [Reference Architecture](reference-architecture.md)
+  when the question is repository-wide structure rather than one package.
+
+## Guided Index
+
+- [Shared](shared/index.md)
 - [Frontend](frontend/index.md)
 - [Infra](infra/index.md)
-- [Shared](shared/index.md)
+- [Engine](engine/index.md)
+- [Atlas](atlas/index.md)
 - [Reference Architecture](reference-architecture.md)
 - [System Delivery Status](system-delivery-status.md)
 

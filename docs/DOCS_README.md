@@ -19,6 +19,9 @@ This ZIP contains a **clean baseline documentation structure** for MkDocs + Mate
 ## Quick start
 
 ```bash
-pip install mkdocs mkdocs-material
-mkdocs serve
+pnpm docs:serve
 ```
+
+Use the repository script instead of calling `mkdocs serve` directly. The
+script runs `docs:sync` first and then serves the generated site through the
+configured documentation toolchain.

@@ -6,11 +6,16 @@ tracking DVT.
 Use this home page to find the right document by intent instead of guessing by
 folder name.
 
+Do not start with engine internals by default. Start with concepts, current
+status, and cross-cutting surfaces first; use engine docs when the task is
+specifically about execution invariants or adapters.
+
 ## Start By Intent
 
 - Understand the system and its language: [Concepts](concepts/index.md)
-- Read technical structure and invariants: [Architecture](architecture/index.md)
-  and [Contracts](contracts/index.md)
+- Read technical structure and invariants: [Architecture](architecture/index.md),
+  [Shared Package Architecture](architecture/shared/index.md), and
+  [Contracts](contracts/index.md)
 - See current implementation and delivery status:
   [System Delivery Status](architecture/system-delivery-status.md)
 - Follow active work, proposals, and gaps: [Planning](planning/index.md)
@@ -24,9 +29,10 @@ folder name.
 - [Domain Language](concepts/domain-language.md)
 - [System Map](concepts/system-map.md)
 - [Repository Map](knowledge/REPOSITORY_MAP.md)
-- [Engine Architecture](architecture/engine/index.md)
-- [Frontend Architecture](architecture/frontend/index.md)
 - [Shared Package Architecture](architecture/shared/index.md)
+- [Frontend Architecture](architecture/frontend/index.md)
+- [Infra Architecture](architecture/infra/index.md)
+- [Engine Architecture](architecture/engine/index.md)
 - [Roadmap Of Record](planning/roadmap/index.md)
 - [Gap Execution Plans](planning/gaps/GAP_EXECUTION_PLANS.md)
 - [Current Delivery Status](architecture/system-delivery-status.md)
@@ -39,16 +45,19 @@ folder name.
 
 1. [Concepts](concepts/index.md)
 2. [System Map](concepts/system-map.md)
-3. [Architecture Index](architecture/index.md)
-4. [Current Delivery Status](architecture/system-delivery-status.md)
+3. [Current Delivery Status](architecture/system-delivery-status.md)
+4. [Shared Package Architecture](architecture/shared/index.md)
+5. [Architecture Index](architecture/index.md)
 
 ### Contributor changing behavior
 
 1. [Contracts Index](contracts/index.md)
-2. [Architecture Index](architecture/index.md)
-3. [Planning Index](planning/index.md)
-4. [Risk Register](risk-register/index.md)
-5. [Evidence](evidence/index.md)
+2. [Current Delivery Status](architecture/system-delivery-status.md)
+3. [Shared Package Architecture](architecture/shared/index.md)
+4. [Architecture Index](architecture/index.md)
+5. [Planning Index](planning/index.md)
+6. [Risk Register](risk-register/index.md)
+7. [Evidence](evidence/index.md)
 
 ### Operator or reviewer
 

@@ -45,10 +45,11 @@ reader go next?
 
 1. [Glossary](glossary.md)
 2. [Domain Language](domain-language.md)
-3. [Architecture Index](../architecture/index.md)
-4. [Contracts Index](../contracts/index.md)
-5. [System Delivery Status](../architecture/system-delivery-status.md)
-6. [Planning Index](../planning/index.md)
+3. [System Delivery Status](../architecture/system-delivery-status.md)
+4. [Shared Package Architecture](../architecture/shared/index.md)
+5. [Architecture Index](../architecture/index.md)
+6. [Contracts Index](../contracts/index.md)
+7. [Planning Index](../planning/index.md)
 
 ## Where To Go By Question
 

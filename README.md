@@ -44,6 +44,7 @@ migrations), Vitest (testing).
   [System Map](docs/concepts/system-map.md)
 - **Read technical structure and invariants**:
   [Architecture](docs/architecture/index.md),
+  [Shared Package Architecture](docs/architecture/shared/index.md),
   [Contracts](docs/contracts/index.md)
 - **See current state and active work**:
   [System Delivery Status](docs/architecture/system-delivery-status.md),
@@ -54,6 +55,10 @@ migrations), Vitest (testing).
   [Runbooks](docs/runbooks/index.md),
   [Risk Register](docs/risk-register/index.md),
   [Evidence](docs/evidence/index.md)
+
+Do not start with `engine` by default. Start with concepts, current status, and
+shared package surfaces first; use engine docs when the task is specifically
+about runtime behavior, adapter semantics, or execution invariants.
 
 ### Engine Deep Dive
 
