@@ -19,6 +19,7 @@ export interface OutboxWorkerRuntimeOptions {
   stopOnError?: boolean;
   pollIntervalMs?: number;
   errorBackoffMs?: number;
+  nowMs?: () => number;
   observer?: OutboxWorkerObserver;
   hooks?: OutboxWorkerRuntimeHooks;
 }
@@ -69,6 +70,7 @@ export class OutboxWorkerRuntime {
     this.worker = new OutboxWorker(storage, bus, {
       batchSize: this.options.batchSize,
       stopOnError: this.options.stopOnError,
+      nowMs: options.nowMs ?? (() => Date.now()),
       ...(options.observer ? { observer: options.observer } : {}),
     });
   }

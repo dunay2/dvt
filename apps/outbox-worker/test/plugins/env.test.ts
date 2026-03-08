@@ -53,3 +53,28 @@ await test('loadEnv allows log mode without target url', () => {
 
   assert.equal(env.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
 });
+
+await test('loadEnv parses string booleans for stop-on-error explicitly', () => {
+  const falseEnv = loadEnv({
+    NODE_ENV: 'test',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+    DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'false',
+  });
+  const zeroEnv = loadEnv({
+    NODE_ENV: 'test',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+    DVT_OUTBOX_WORKER_STOP_ON_ERROR: '0',
+  });
+  const trueEnv = loadEnv({
+    NODE_ENV: 'test',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+    DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'true',
+  });
+
+  assert.equal(falseEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
+  assert.equal(zeroEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
+  assert.equal(trueEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, true);
+});

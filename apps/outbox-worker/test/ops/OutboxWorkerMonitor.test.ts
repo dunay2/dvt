@@ -111,3 +111,41 @@ await test('OutboxWorkerMonitor tracks runtime state, metrics, and delivery tran
   assert.ok(entries.some((entry) => entry.msg === 'outbox record delivered'));
   assert.ok(entries.some((entry) => entry.msg === 'outbox record scheduled for retry'));
 });
+
+await test('OutboxWorkerMonitor marks readiness false when a tick only retries records', () => {
+  const clock = { nowMs: 1_741_392_000_000 };
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+  });
+
+  monitor.onStarted();
+  monitor.onRecordFailed(makeRecord('1', '2026-03-08T00:00:00.000Z', 0), 'downstream unavailable', 'retry');
+  monitor.onTick({
+    claimedCount: 1,
+    deliveredCount: 0,
+    retriedCount: 1,
+    deadLetteredCount: 0,
+    oldestClaimedAgeMs: 5_000,
+  });
+
+  const snapshot = monitor.getHealthSnapshot();
+  assert.equal(snapshot.ready, false);
+  assert.equal(snapshot.state, 'failing');
+  assert.equal(snapshot.lastErrorMessage, 'downstream unavailable');
+
+  monitor.onTick({
+    claimedCount: 0,
+    deliveredCount: 0,
+    retriedCount: 0,
+    deadLetteredCount: 0,
+    oldestClaimedAgeMs: null,
+  });
+
+  const recovered = monitor.getHealthSnapshot();
+  assert.equal(recovered.ready, true);
+  assert.equal(recovered.state, 'idle');
+  assert.equal(recovered.lastErrorMessage, null);
+});

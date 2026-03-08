@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+const envBoolean = z.preprocess((value) => {
+  if (value === undefined) return undefined;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1') return true;
+    if (normalized === 'false' || normalized === '0') return false;
+  }
+  return value;
+}, z.boolean());
+
 const EnvSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -13,7 +24,7 @@ const EnvSchema = z
     DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(1000),
     DVT_OUTBOX_WORKER_BATCH_SIZE: z.coerce.number().int().positive().default(100),
     DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: z.coerce.number().int().positive().default(5000),
-    DVT_OUTBOX_WORKER_STOP_ON_ERROR: z.coerce.boolean().default(false),
+    DVT_OUTBOX_WORKER_STOP_ON_ERROR: envBoolean.default(false),
     DVT_OUTBOX_EVENT_BUS_MODE: z.enum(['http', 'log']).default('http'),
     DVT_OUTBOX_HTTP_TARGET_URL: z.string().optional(),
     DVT_OUTBOX_HTTP_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),

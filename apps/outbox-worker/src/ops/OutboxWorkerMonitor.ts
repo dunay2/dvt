@@ -63,6 +63,8 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   private lastTickAtMs: number | null = null;
   private lastErrorAtMs: number | null = null;
   private lastErrorMessage: string | null = null;
+  private pendingDeliveryFailureAtMs: number | null = null;
+  private pendingDeliveryFailureMessage: string | null = null;
   private lastClaimedLagSeconds = 0;
   private lastBatchClaimedCount = 0;
 
@@ -89,6 +91,18 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     this.lastClaimedLagSeconds =
       result.oldestClaimedAgeMs === null ? 0 : roundToMillis(result.oldestClaimedAgeMs / 1000);
     this.lastBatchClaimedCount = result.claimedCount;
+    const lastDeliveryFailureMessage = this.pendingDeliveryFailureMessage;
+    const lastDeliveryFailureAtMs = this.pendingDeliveryFailureAtMs;
+    this.pendingDeliveryFailureMessage = null;
+    this.pendingDeliveryFailureAtMs = null;
+
+    if (result.deliveredCount === 0 && (result.retriedCount > 0 || result.deadLetteredCount > 0)) {
+      this.lastErrorMessage = lastDeliveryFailureMessage ?? 'outbox delivery failed';
+      this.lastErrorAtMs = lastDeliveryFailureAtMs ?? this.lastTickAtMs;
+      this.transitionTo('failing', 'tick completed with delivery failures');
+      return;
+    }
+
     this.lastErrorMessage = null;
     this.lastErrorAtMs = null;
     this.transitionTo(result.claimedCount > 0 ? 'draining' : 'idle', 'tick completed');
@@ -127,6 +141,8 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   onRecordFailed(record: OutboxRecord, error: string, disposition: OutboxFailureDisposition): void {
+    this.pendingDeliveryFailureMessage = error;
+    this.pendingDeliveryFailureAtMs = this.nowMs();
     const data = {
       ...toRecordLog(record),
       error,

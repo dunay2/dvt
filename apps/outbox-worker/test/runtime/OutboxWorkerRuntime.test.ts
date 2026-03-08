@@ -136,3 +136,29 @@ await test('stop interrupts idle polling wait without hanging', async () => {
 
   assert.ok(elapsedMs < 1000);
 });
+
+await test('runtime passes a clock into OutboxWorker so tick lag is populated', async () => {
+  const storage = new MemoryOutboxStorage();
+  const bus = new InMemoryEventBus();
+  const { logger } = makeLogger();
+  let firstTick: { oldestClaimedAgeMs: number | null } | null = null;
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 60_000,
+    errorBackoffMs: 25,
+    nowMs: () => Date.parse('2026-03-08T00:01:00.000Z'),
+    hooks: {
+      onTick(result) {
+        firstTick ??= result;
+      },
+    },
+  });
+
+  await storage.enqueueTx('run-1', [makeEvent('1')]);
+
+  const loop = runtime.start();
+  await waitFor(() => firstTick !== null);
+  await runtime.stop();
+  await loop;
+
+  assert.equal(firstTick?.oldestClaimedAgeMs, 60_000);
+});
