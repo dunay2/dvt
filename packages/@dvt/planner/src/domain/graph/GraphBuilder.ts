@@ -123,13 +123,24 @@ class NodeRegistry {
 
 class AdjacencyIndex {
   private readonly dependents = new Map<string, string[]>();
+  private count = 0;
+
+  constructor(private readonly maxEdges: number) {}
 
   seed(id: string): void {
     this.dependents.set(id, []);
   }
 
   recordEdge(fromNodeId: string, toDepId: string): void {
+    this.count += 1;
+    if (this.count > this.maxEdges) {
+      throwLimitExceeded(`maxEdges exceeded: ${this.count} > ${this.maxEdges}`);
+    }
     this.dependents.get(toDepId)?.push(fromNodeId);
+  }
+
+  get edgeCount(): number {
+    return this.count;
   }
 
   build(): ReadonlyMap<string, readonly string[]> {
@@ -182,41 +193,28 @@ export class GraphBuilder {
     registry: NodeRegistry,
     maxEdges: number
   ): { dependentsById: ReadonlyMap<string, readonly string[]>; edgeCount: number } {
-    const index = new AdjacencyIndex();
+    const index = new AdjacencyIndex(maxEdges);
     for (const id of registry.ids()) index.seed(id);
-
-    let edgeCount = 0;
-    for (const node of registry.nodes()) {
-      edgeCount = this.registerNodeEdges(node, registry, index, edgeCount, maxEdges);
-    }
-
-    return { dependentsById: index.build(), edgeCount };
+    for (const node of registry.nodes()) this.registerNodeEdges(node, registry, index);
+    return { dependentsById: index.build(), edgeCount: index.edgeCount };
   }
 
   private registerNodeEdges(
     node: GraphNode,
     registry: NodeRegistry,
-    index: AdjacencyIndex,
-    edgeCount: number,
-    maxEdges: number
-  ): number {
-    let count = edgeCount;
+    index: AdjacencyIndex
+  ): void {
     for (const dep of node.dependsOn) {
-      this.assertDependencyExists(node.nodeId, dep, registry);
+      this.assertDependencyExists(node, dep, registry);
       index.recordEdge(node.nodeId, dep);
-      count += 1;
-      if (count > maxEdges) {
-        throwLimitExceeded(`maxEdges exceeded: ${count} > ${maxEdges}`);
-      }
     }
-    return count;
   }
 
-  private assertDependencyExists(nodeId: string, dep: string, registry: NodeRegistry): void {
+  private assertDependencyExists(node: GraphNode, dep: string, registry: NodeRegistry): void {
     if (!registry.has(dep)) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
-        `Node ${nodeId} dependsOn missing node: ${dep}`
+        `Node ${node.nodeId} dependsOn missing node: ${dep}`
       );
     }
   }
