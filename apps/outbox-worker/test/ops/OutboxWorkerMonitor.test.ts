@@ -122,7 +122,11 @@ await test('OutboxWorkerMonitor marks readiness false when a tick only retries r
   });
 
   monitor.onStarted();
-  monitor.onRecordFailed(makeRecord('1', '2026-03-08T00:00:00.000Z', 0), 'downstream unavailable', 'retry');
+  monitor.onRecordFailed(
+    makeRecord('1', '2026-03-08T00:00:00.000Z', 0),
+    'downstream unavailable',
+    'retry'
+  );
   monitor.onTick({
     claimedCount: 1,
     deliveredCount: 0,
