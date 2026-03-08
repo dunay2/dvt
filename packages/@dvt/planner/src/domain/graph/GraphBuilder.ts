@@ -1,13 +1,17 @@
 /**
  * ADR baseline: ADR-0004-security-limits
  *
- * Design:
- *  - GraphNodeValidator  → SRP: validates a single node's shape (DDD invariant guard)
- *  - NodeRegistry        → SRP: indexes nodes, enforces uniqueness (DDD Repository-lite)
- *  - AdjacencyIndex      → SRP: tracks dependent relationships, sorts on demand
- *  - GraphBuilder        → Domain Service (Fowler) that orchestrates the above
+ * Design (SOLID + DDD + CQRS):
  *
- * The public `buildGraph` function is a thin façade kept for backwards-compatibility.
+ *  CQRS segregation:
+ *   - COMMAND side → BuildGraphCommand (input VO) + GraphBuilder.execute()
+ *   - QUERY side   → BuiltGraph (read model, fully immutable)
+ *
+ *  Sub-responsibilities (SRP):
+ *   - GraphNodeValidator  → invariant guard for a single GraphNode
+ *   - NodeRegistry        → uniqueness-enforcing index (DDD Repository-lite)
+ *   - AdjacencyIndex      → accumulates + projects dependent relationships
+ *   - GraphBuilder        → Domain Service (Fowler) coordinating the above
  */
 import { PlannerError, PlannerErrorCode } from '../errors.js';
 import type { PlannerLimits } from '../limits.js';
@@ -15,7 +19,20 @@ import { throwLimitExceeded } from '../limits.js';
 import { binaryCompare } from '../sorting.js';
 import type { GraphNode } from '../types.js';
 
-// ── Value object (result) ──────────────────────────────────────────────────────
+// ── COMMAND ────────────────────────────────────────────────────────────────────
+// Immutable value object expressing the intent to build a graph.
+// Carries all inputs needed by the command handler; nothing more.
+
+export class BuildGraphCommand {
+  constructor(
+    readonly nodes: readonly GraphNode[],
+    readonly limits: PlannerLimits
+  ) {}
+}
+
+// ── READ MODEL (Query side) ────────────────────────────────────────────────────
+// Fully immutable projection produced by the command handler.
+// Callers only READ this — they never mutate it.
 
 export interface BuiltGraph {
   readonly nodesById: ReadonlyMap<string, GraphNode>;
@@ -124,18 +141,23 @@ class AdjacencyIndex {
   }
 }
 
-// ── GraphBuilder ───────────────────────────────────────────────────────────────
-// Domain Service (Fowler): orchestrates validation, indexing and adjacency.
-// Does NOT know about persistence or presentation — pure domain logic.
+// ── GraphBuilder (Command Handler) ───────────────────────────────────────────
+// Domain Service (Fowler / CQRS): handles BuildGraphCommand and returns
+// the BuiltGraph read model. No persistence, no side effects, deterministic.
 
 export class GraphBuilder {
   private readonly validator = new GraphNodeValidator();
 
-  build(nodes: readonly GraphNode[], limits: PlannerLimits): BuiltGraph {
-    this.enforceNodeLimit(nodes.length, limits.maxNodes);
+  /**
+   * COMMAND handler: receives a BuildGraphCommand, validates all domain
+   * invariants, and produces a BuiltGraph read model.
+   * QUERY concerns live only in the returned BuiltGraph.
+   */
+  execute(command: BuildGraphCommand): BuiltGraph {
+    this.enforceNodeLimit(command.nodes.length, command.limits.maxNodes);
 
-    const registry = this.buildRegistry(nodes);
-    const { dependentsById, edgeCount } = this.buildAdjacency(registry, limits.maxEdges);
+    const registry = this.buildRegistry(command.nodes);
+    const { dependentsById, edgeCount } = this.buildAdjacency(registry, command.limits.maxEdges);
     const nodeIdsSorted = [...registry.ids()].sort(binaryCompare);
 
     return { nodesById: registry.asReadonly(), dependentsById, nodeIdsSorted, edgeCount };
@@ -198,12 +220,4 @@ export class GraphBuilder {
       );
     }
   }
-}
-
-// ── Public façade ──────────────────────────────────────────────────────────────
-// Backwards-compatible entry point. Callers can also instantiate GraphBuilder
-// directly if they need to inject a custom validator or reuse the builder.
-
-export function buildGraph(nodes: readonly GraphNode[], limits: PlannerLimits): BuiltGraph {
-  return new GraphBuilder().build(nodes, limits);
 }

@@ -2,7 +2,7 @@ import { nowMs } from '../runtime/time.js';
 
 import { asPlannerError, PlannerError, PlannerErrorCode } from './errors.js';
 import { computeTopoDepth } from './graph/Depth.js';
-import { buildGraph } from './graph/GraphBuilder.js';
+import { BuildGraphCommand, GraphBuilder } from './graph/GraphBuilder.js';
 import { topoSort } from './graph/TopoSort.js';
 import { sha256CanonicalJson } from './hashing.js';
 import { resolveLimits, type PlannerLimits, throwLimitExceeded } from './limits.js';
@@ -69,7 +69,9 @@ export class Planner {
       const normalizedInput = this.normalizeInput(input);
 
       // 1) Build & validate graph
-      const graph = buildGraph(normalizedInput.nodes, this.limits);
+      const graph = new GraphBuilder().execute(
+        new BuildGraphCommand(normalizedInput.nodes, this.limits)
+      );
       this.metrics.recordNodeCount(graph.nodeIdsSorted.length);
       this.checkAbort(started);
 
@@ -214,12 +216,14 @@ export class Planner {
   }
 
   private normalizeInput(input: PlannerInputEnvelopeV2): NormalizedPlannerInput {
-    const nodes =
-      Array.isArray(input.nodes) && input.nodes.length > 0
-        ? input.nodes
-        : input.manifest !== undefined
-          ? deriveGraphNodesFromManifest(input.manifest)
-          : [];
+    let nodes: readonly GraphNode[];
+    if (Array.isArray(input.nodes) && input.nodes.length > 0) {
+      nodes = input.nodes;
+    } else if (input.manifest !== undefined) {
+      nodes = deriveGraphNodesFromManifest(input.manifest);
+    } else {
+      nodes = [];
+    }
 
     if (nodes.length === 0) {
       throw new PlannerError(
