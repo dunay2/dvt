@@ -17,8 +17,10 @@ surface governed under `G6`.
 
 The repo-governed lineage facet artifacts live here:
 
+- [OpenLineage vendored facets provenance](facets/openlineage/index.md)
 - [OpenLineage SQL Job Facet 1-0-0 vendored copy](facets/openlineage/SqlJobFacet.1-0-0.schema.json)
 - [DvtDbtDetailsJobFacet v1](facets/DvtDbtDetailsJobFacet.v1.schema.json)
+- [CompiledCodeRef v1 shared contract](../shared/CompiledCodeRef.v1.schema.json)
 
 Contract ownership split:
 
@@ -30,6 +32,8 @@ Contract ownership split:
   emitted `_schemaURL` points to the repo-governed DVT schema ID
   `https://dvt.local/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json`
   and the normative schema artifact is versioned locally in this folder.
+  Its `compiledCodeRef` property is anchored to the shared-kernel contract
+  artifact under `docs/contracts/shared/CompiledCodeRef.v1.schema.json`.
 
 ## Runtime And Code Anchors
 
@@ -53,6 +57,11 @@ The current builder and mapper surface is implemented in:
 - Any change to emitted `_schemaURL`, facet field names, or required properties
   must update the schema artifact in this folder and the corresponding evidence
   or gap closeout docs.
+- Vendored OpenLineage mirrors must keep explicit provenance and update-policy
+  notes in this folder so offline validation remains auditable during review.
+- Repo-local traceability facets that embed shared-kernel structures must
+  reference the shared contract artifact rather than duplicating those fields
+  inline.
 - Validation lanes introduced in later `G6` slices must validate mapper output
   against these local artifacts, not against the network.
 

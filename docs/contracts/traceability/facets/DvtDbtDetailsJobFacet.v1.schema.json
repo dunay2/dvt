@@ -18,31 +18,8 @@
       "description": "Pinned schema URL for the governed custom job facet."
     },
     "compiledCodeRef": {
-      "type": "object",
-      "required": ["sha256", "storageUri", "sizeBytes"],
-      "additionalProperties": false,
-      "properties": {
-        "sha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$",
-          "description": "SHA-256 hex digest of the compiled SQL bytes."
-        },
-        "storageUri": {
-          "type": "string",
-          "minLength": 1,
-          "description": "URI pointing to the compiled SQL artifact."
-        },
-        "sizeBytes": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Size of the compiled SQL blob in bytes."
-        },
-        "encoding": {
-          "type": "string",
-          "const": "utf-8",
-          "description": "Optional encoding marker for the compiled SQL blob."
-        }
-      }
+      "$ref": "../../shared/CompiledCodeRef.v1.schema.json",
+      "description": "Reference to the shared-kernel CompiledCodeRef contract used by StepStarted payloads."
     }
   },
   "examples": [
