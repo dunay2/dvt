@@ -2,23 +2,23 @@
 title: Generated Spec Traceability
 status: Active
 owner: docs
-last_reviewed: 2026-03-07
+last_reviewed: 2026-03-08
 planning_type: status
 ---
 
 # Generated Spec Traceability
 
-Generated automatically from repository documentation and source-code signals on 2026-03-07.
+Generated automatically from repository documentation and source-code signals on 2026-03-08.
 
 ## Summary
 
 | Metric                            | Value     |
 | --------------------------------- | --------- |
-| Canonical docs scanned            | 183       |
-| Canonical docs with code links    | 14 (8%)   |
-| Canonical docs with ADR links     | 20 (11%)  |
-| Code files scanned                | 343       |
-| Code files with ADR baseline tags | 103 (30%) |
+| Canonical docs scanned            | 155       |
+| Canonical docs with code links    | 15 (10%)  |
+| Canonical docs with ADR links     | 23 (15%)  |
+| Code files scanned                | 360       |
+| Code files with ADR baseline tags | 103 (29%) |
 | Code files with explicit doc refs | 0 (0%)    |
 
 ## Canonical Doc Coverage By Section
@@ -26,19 +26,19 @@ Generated automatically from repository documentation and source-code signals on
 | Section       | Docs | Docs With Code Links | Docs With ADR Links |
 | ------------- | ---- | -------------------- | ------------------- |
 | adr           | 32   | 6 (19%)              | 11 (34%)            |
-| architecture  | 64   | 1 (2%)               | 6 (9%)              |
+| architecture  | 66   | 1 (2%)               | 6 (9%)              |
 | contracts     | 4    | 0 (0%)               | 0 (0%)              |
 | evidence      | 4    | 1 (25%)              | 0 (0%)              |
-| guides        | 3    | 1 (33%)              | 1 (33%)             |
-| planning      | 66   | 5 (8%)               | 2 (3%)              |
-| risk-register | 9    | 0 (0%)               | 0 (0%)              |
+| guides        | 3    | 1 (33%)              | 2 (67%)             |
+| planning      | 34   | 6 (18%)              | 4 (12%)             |
+| risk-register | 11   | 0 (0%)               | 0 (0%)              |
 | runbooks      | 1    | 0 (0%)               | 0 (0%)              |
 
 ## Source Traceability By Workspace
 
 | Workspace                          | Files | Files With ADR Baselines | Files With Doc Refs |
 | ---------------------------------- | ----- | ------------------------ | ------------------- |
-| apps/api                           | 12    | 0 (0%)                   | 0 (0%)              |
+| apps/api                           | 29    | 0 (0%)                   | 0 (0%)              |
 | apps/web                           | 79    | 0 (0%)                   | 0 (0%)              |
 | packages/@dvt/adapter-postgres     | 10    | 7 (70%)                  | 0 (0%)              |
 | packages/@dvt/adapter-temporal     | 22    | 11 (50%)                 | 0 (0%)              |
