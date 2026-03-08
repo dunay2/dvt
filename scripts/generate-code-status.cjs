@@ -42,8 +42,7 @@ function safeReadJson(absPath) {
 
 function markdownTable(headers, rows) {
   const widths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => String(r[i]).length)));
-  const row = (cells) =>
-    `| ${cells.map((c, i) => String(c).padEnd(widths[i], ' ')).join(' | ')} |`;
+  const row = (cells) => `| ${cells.map((c, i) => String(c).padEnd(widths[i], ' ')).join(' | ')} |`;
   const sep = `| ${widths.map((w) => '-'.repeat(Math.max(3, w))).join(' | ')} |`;
   return [row(headers), sep, ...rows.map((r) => row(r))];
 }
@@ -109,7 +108,7 @@ function collectWorkspaceStats(dir) {
 }
 
 function renderDoc(workspaces) {
-  const utcDate = new Date().toISOString().slice(0, 10);
+  const utcDate = process.env.DOCS_STATUS_DATE || new Date().toISOString().slice(0, 10);
   const totalSrc = workspaces.reduce((acc, w) => acc + w.src, 0);
   const totalTests = workspaces.reduce((acc, w) => acc + w.tests, 0);
   const withBuild = workspaces.filter((w) => w.hasBuild === 'yes').length;
@@ -154,7 +153,16 @@ function renderDoc(workspaces) {
     '## Workspace Matrix',
     '',
     ...markdownTable(
-      ['Workspace', 'Path', 'Src Files', 'Test Files', 'Build', 'Test', 'Typecheck', 'Exports in src/index.ts'],
+      [
+        'Workspace',
+        'Path',
+        'Src Files',
+        'Test Files',
+        'Build',
+        'Test',
+        'Typecheck',
+        'Exports in src/index.ts',
+      ],
       workspaceRows
     ),
     '',
