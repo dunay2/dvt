@@ -17,6 +17,8 @@ export { TemporalClientManager } from './TemporalClient.js';
 
 export type { TemporalAdapterDeps } from './TemporalAdapter.js';
 export { TemporalAdapter } from './TemporalAdapter.js';
+export type { ObservedTemporalAdapterDeps } from './ObservedTemporalAdapter.js';
+export { ObservedTemporalAdapter } from './ObservedTemporalAdapter.js';
 
 export {
   mapTemporalStatusToRunStatus,

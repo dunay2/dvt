@@ -158,3 +158,45 @@ await test('startRunRoute passes normalized command and requested scope', async 
   assert.equal(received?.requestId, 'req-2');
   assert.deepEqual(received?.command, { selection: ['model_a'] });
 });
+
+await test('startRunRoute accepts lowercase bearer scheme', async () => {
+  const reply = {
+    statusCode: 200,
+    payload: undefined as unknown,
+    code(status: number) {
+      this.statusCode = status;
+      return this;
+    },
+    send(payload: unknown) {
+      this.payload = payload;
+      return this;
+    },
+  };
+
+  let received: Record<string, unknown> | undefined;
+  const facade = {
+    async execute(input: Record<string, unknown>) {
+      received = input;
+      return { kind: 'accepted' as const, result: { runId: 'r2', accepted: true } };
+    },
+  };
+
+  await startRunRoute(
+    {
+      id: 'req-4',
+      headers: { authorization: 'bearer token' },
+      body: {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: ['model_a'],
+      },
+    } as never,
+    reply as never,
+    facade as never
+  );
+
+  assert.equal(reply.statusCode, 202);
+  assert.deepEqual(reply.payload, { runId: 'r2', accepted: true });
+  assert.equal(received?.token, 'token');
+});

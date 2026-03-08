@@ -1,5 +1,5 @@
 # Workflow Isolation Testing Strategy
 
-This document has been archived. The canonical location is now:
+This document now lives in the canonical docs tree:
 
-- [docs/archive/ci/WORKFLOW_ISOLATION_TESTING.md](../docs/archive/ci/WORKFLOW_ISOLATION_TESTING.md)
+- [docs/runbooks/workflow-isolation-testing.md](../docs/runbooks/workflow-isolation-testing.md)

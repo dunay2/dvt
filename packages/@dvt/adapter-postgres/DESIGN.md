@@ -7,6 +7,8 @@ This package implements real PostgreSQL persistence for:
 - `run_metadata`
 - `run_events`
 - `outbox`
+- `run_snapshots`
+- `outbox_dead_letter`
 
 The adapter keeps contract compatibility with engine-facing interfaces while replacing all in-memory `Map` state.
 
@@ -20,7 +22,7 @@ Support modules:
 
 - [`types.ts`](src/types.ts)
 - [`sqlUtils.ts`](src/sqlUtils.ts)
-- migration SQL [`001_init.sql`](migrations/001_init.sql)
+- integration tests in [`test/smoke.test.ts`](test/smoke.test.ts)
 
 ## Data model
 
@@ -41,18 +43,31 @@ Append-only event stream per run:
 Transactional outbox records used for at-least-once dispatch semantics:
 
 - primary key: `id` (`<runId>:<runSeq>`)
-- delivery lifecycle: `attempts`, `last_error`, `delivered_at`
+- delivery lifecycle: `attempts`, `last_error`, `claimed_at`, `next_attempt_at`, `delivered_at`
+
+### `run_snapshots`
+
+Persisted hot-read snapshot updated in the same transaction as event append.
+
+### `outbox_dead_letter`
+
+Dead-letter storage for outbox records that exceed the max retry budget.
 
 ## Transaction semantics
 
 The adapter supports two paths:
 
-1. `appendEventsTx()`
+1. `bootstrapRunTx()`
 2. `appendAndEnqueueTx()`
 
-`appendAndEnqueueTx()` performs event append + outbox enqueue in a single DB transaction to preserve atomicity.
+`bootstrapRunTx()` persists metadata, first events, snapshot, and outbox rows in
+one transaction.
 
-Per-run ordering is stabilized with `pg_advisory_xact_lock(hashtext(runId))` before sequence allocation.
+`appendAndEnqueueTx()` performs event append + snapshot update + outbox enqueue
+in a single DB transaction to preserve atomicity.
+
+Per-run ordering is stabilized with a 64-bit MD5-derived advisory transaction
+lock before sequence allocation.
 
 ## Idempotency behavior
 
@@ -64,13 +79,11 @@ If conflict happens, existing payload is fetched and returned in `deduped`.
 
 ## Migrations
 
-Migration file:
+The runtime adapter requires `await adapter.migrate()` before use.
 
-- [`migrations/001_init.sql`](migrations/001_init.sql)
-
-Migration runner:
-
-- [`scripts/db-migrate.cjs`](../../scripts/db-migrate.cjs)
+Migration support exists both in the package migrations directory and in the
+adapter's idempotent `migrate()` path, which also performs compatibility
+cleanup and index creation.
 
 Env vars:
 

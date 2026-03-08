@@ -88,7 +88,7 @@ The adapter MUST NOT overwrite or create a second event. The chosen behavior MUS
 **Physical implementation**: See backend-specific adapters:
 
 - [Snowflake StateStore Adapter](../../adapters/state-store/snowflake/StateStoreAdapter.md) — DDL, MERGE patterns, clustering
-- [Postgres StateStore Adapter](../../adapters/state-store/postgres/StateStoreAdapter.md) — SERIAL, ON CONFLICT, sequences
+- [Postgres StateStore Adapter](../../adapters/state-store/postgres/StateStoreAdapter.md) — advisory-lock ordering, snapshots, outbox + DLQ
 
 **UI consumption rule** (watermark-based polling):
 

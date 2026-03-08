@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openlineage.io/spec/facets/1-0-0/SqlJobFacet.json",
+  "$comment": "Repo-local validation mirror for the emitted OpenLineage SQL job facet schema URL.",
+  "title": "OpenLineage SQL Job Facet",
+  "description": "Vendored repo-local copy of the pinned OpenLineage SQL job facet contract used by @dvt/traceability-service.",
+  "x-dvt-provenance": {
+    "sourceSchemaUrl": "https://openlineage.io/spec/facets/1-0-0/SqlJobFacet.json",
+    "vendoredAt": "2026-03-08",
+    "artifactRole": "offline-validation-mirror",
+    "updatePolicy": "Any change to the emitted schema URL or required facet surface must update this mirror, the emitting package constants and types, tests, and supporting evidence in the same PR."
+  },
+  "type": "object",
+  "required": ["_producer", "_schemaURL", "query"],
+  "additionalProperties": false,
+  "properties": {
+    "_producer": {
+      "type": "string",
+      "format": "uri",
+      "description": "Producer identifier for the emitting integration."
+    },
+    "_schemaURL": {
+      "type": "string",
+      "const": "https://openlineage.io/spec/facets/1-0-0/SqlJobFacet.json",
+      "description": "Pinned OpenLineage schema URL for the SQL job facet."
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Compiled SQL text emitted in the SQL job facet."
+    }
+  },
+  "examples": [
+    {
+      "_producer": "https://github.com/dunay2/dvt/tree/main/packages/@dvt/traceability-service",
+      "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SqlJobFacet.json",
+      "query": "select 1"
+    }
+  ]
+}

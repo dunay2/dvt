@@ -1,7 +1,7 @@
 # Temporal Engine Policies
 
 **Status**: Implementation Snapshot (aligned to current code)  
-**Version**: 1.1  
+**Version**: 1.2  
 **Engine**: Temporal  
 **Contract**: [ExecutionSemantics.v1.md](../../contracts/engine/ExecutionSemantics.v1.md)
 
@@ -179,12 +179,33 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 - Worker fields are configured from adapter config (`namespace`, `taskQueue`, optional `identity`).
 - Workflow entry defaults to `RunPlanWorkflow` bundle unless `workflowsPath` override is provided.
 - `shutdown()` drains and resets internal worker state.
+- Worker lifecycle emits structured logs, traces, counters, and duration histograms.
+- Unexpected `worker.run()` failure is recorded explicitly instead of remaining an unobserved runtime exit.
 
 ### 7.2 Client manager
 
 - Lazy-connect with connection de-dup (`connect()` memoizes in-flight promise).
 - Exposes `isConnected()`, `ensureConnected()`, and `close()` lifecycle APIs.
 - Adapter enforces client availability and throws `TEMPORAL_CLIENT_NOT_CONFIGURED` or `TEMPORAL_CLIENT_NOT_CONNECTED` in invalid states.
+- `connectTimeoutMs` actively bounds `Connection.connect()` through the SDK-native connect deadline.
+- `requestTimeoutMs` actively bounds `ensureConnected()` health checks and `lookupRunRef()` probes through abortable RPC cancellation when the SDK workflow client is in use.
+
+### 7.3 Operational diagnostics
+
+- `lookupRunRef()` emits `found`, `missing`, and `error` results through observability.
+- `ping()` emits duration and success/failure diagnostics.
+- Runtime diagnostics now use the shared `@dvt/observability` port instead of ad-hoc silent failure paths.
+
+### 7.4 Closure Evidence and Navigation
+
+- Runtime closure verification command:
+  `pnpm test:adapter-temporal` and `pnpm test:adapter-temporal:integration`
+- Evidence:
+  [ED-20260308 - Temporal adapter operational close-out](../../../../evidence/ED-20260308-temporal-operational-close-out.md)
+- Residual risk:
+  [R-20260308 - Temporal runtime hardening residuals](../../../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
+- Test capability guide:
+  [Testing and CI Capabilities](../../../../guides/testing-and-ci-capabilities.md)
 
 ---
 
@@ -220,5 +241,6 @@ These should be treated as backlog policies until corresponding code lands in `p
 
 | Version | Date       | Change                                                                                                                                                                                           |
 | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.2     | 2026-03-08 | Documented client timeout enforcement and runtime observability for Temporal client, worker host, `lookupRunRef()`, and `ping()`.                                                                |
 | 1.1     | 2026-02-14 | Rewritten to match real adapter implementation (`TemporalAdapter`, `RunPlanWorkflow`, activities, worker/client lifecycle). Removed unimplemented normative claims and fixed contract link path. |
 | 1.0     | 2026-02-11 | Initial Temporal engine policies.                                                                                                                                                                |

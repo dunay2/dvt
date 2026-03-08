@@ -2,14 +2,14 @@
  * ADR baseline: ADR-0002-plan-core-hash + ADR-0006-extensibility
  */
 
-export type StepKind = string;
-
 export type DbtManifestLike = Record<string, unknown>;
 
 // dbt defaults as string literals (backward compatible)
 export const DBT_MODEL = 'DBT_MODEL';
 export const DBT_TEST = 'DBT_TEST';
 export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
+
+export type StepKind = string;
 
 export interface GraphNode {
   /** Stable node identifier (content-addressable at graph level). */
@@ -99,3 +99,11 @@ export interface PlannerInputEnvelopeV2 {
   requestId?: string;
   requestedAtIso?: string;
 }
+
+/**
+ * Internal normalized form: nodes are always resolved (never undefined).
+ * Produced after manifest derivation / validation.
+ */
+export type NormalizedPlannerInput = Omit<PlannerInputEnvelopeV2, 'nodes'> & {
+  nodes: readonly GraphNode[];
+};

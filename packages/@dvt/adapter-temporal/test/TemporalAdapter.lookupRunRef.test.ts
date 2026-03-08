@@ -1,6 +1,6 @@
 /**
  * @file test/TemporalAdapter.lookupRunRef.test.ts
- * @baseline ADR-0030: Pre-Dispatch Intent Log — §3.3 lookupRunRef for PENDING intent reconciliation
+ * @baseline ADR-0030: Pre-Dispatch Intent Log - Section 3.3 lookupRunRef for PENDING intent reconciliation
  *
  * Unit tests for TemporalAdapter.lookupRunRef.
  *
@@ -36,15 +36,23 @@ function makeWorkflowHandleMock(describeImpl: () => Promise<unknown>): {
   };
 }
 
+type WorkflowClientMock = {
+  start: ReturnType<typeof vi.fn>;
+  getHandle: ReturnType<typeof vi.fn>;
+  withAbortSignal?: ReturnType<typeof vi.fn>;
+};
+
 function makeAdapter(
-  getHandleImpl: (workflowId: string) => ReturnType<typeof makeWorkflowHandleMock>
+  getHandleImpl: (workflowId: string) => ReturnType<typeof makeWorkflowHandleMock>,
+  overrides: Partial<WorkflowClientMock> = {}
 ): {
   adapter: TemporalAdapter;
-  workflowClient: { start: ReturnType<typeof vi.fn>; getHandle: ReturnType<typeof vi.fn> };
+  workflowClient: WorkflowClientMock;
 } {
-  const workflowClient = {
+  const workflowClient: WorkflowClientMock = {
     start: vi.fn(),
     getHandle: vi.fn((wfId: string) => getHandleImpl(wfId)),
+    ...overrides,
   };
 
   const adapter = new TemporalAdapter({
@@ -57,14 +65,12 @@ function makeAdapter(
   return { adapter, workflowClient };
 }
 
-/** Creates an Error shaped like WorkflowNotFoundError from the Temporal SDK. */
 function makeWorkflowNotFoundError(): Error {
   const err = new Error('Workflow execution not found');
   err.name = 'WorkflowNotFoundError';
   return err;
 }
 
-/** Creates an Error shaped like ServiceError with gRPC NOT_FOUND (code 5). */
 function makeServiceErrorNotFound(): Error {
   const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: number };
   err.name = 'ServiceError';
@@ -92,7 +98,6 @@ describe('TemporalAdapter.lookupRunRef', () => {
       taskQueue: 'q-main-tenant1',
     });
 
-    // workflowId is derived deterministically from runId (same as startRun)
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
     expect(handle.describe).toHaveBeenCalledOnce();
   });
@@ -130,8 +135,6 @@ describe('TemporalAdapter.lookupRunRef', () => {
   });
 
   it('derives workflowId and taskQueue consistently with startRun', async () => {
-    // workflowId = toTemporalWorkflowId(runId) = runId (identity)
-    // taskQueue  = toTemporalTaskQueue(tenantId, config) = config.taskQueue + '-' + tenantId
     const capturedArgs: { workflowId: string }[] = [];
     const handle = makeWorkflowHandleMock(async () => ({}));
     const { adapter, workflowClient } = makeAdapter((wfId) => {
@@ -157,8 +160,42 @@ describe('TemporalAdapter.lookupRunRef', () => {
     expect(handle.cancel).not.toHaveBeenCalled();
   });
 
-  it('propagates a timeout error when describe() exceeds requestTimeoutMs', async () => {
-    // describe() returns a promise that never resolves — simulates a hung Temporal server.
+  it('uses workflowClient.withAbortSignal when the Temporal SDK client exposes it', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }));
+    const withAbortSignal = vi.fn(
+      async (_signal: globalThis.AbortSignal, fn: () => Promise<unknown>) => await fn()
+    );
+    const { adapter } = makeAdapter(() => handle, { withAbortSignal });
+
+    await adapter.lookupRunRef('run-abc', 'tenant1');
+
+    expect(withAbortSignal).toHaveBeenCalledOnce();
+    expect(handle.describe).toHaveBeenCalledOnce();
+  });
+
+  it('aborts describe() through workflowClient.withAbortSignal when requestTimeoutMs elapses', async () => {
+    const handle = makeWorkflowHandleMock(() => new Promise<never>(() => undefined));
+    const withAbortSignal = vi.fn(
+      async (signal: globalThis.AbortSignal, fn: () => Promise<unknown>) =>
+        await new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('CANCELLED')), { once: true });
+          void fn().then(resolve, reject);
+        })
+    );
+    const timeoutAdapter = new TemporalAdapter({
+      workflowClient: { start: vi.fn(), getHandle: vi.fn(() => handle), withAbortSignal },
+      config: { ...BASE_CONFIG, requestTimeoutMs: 20 },
+      stateStore: { listEvents: vi.fn(async () => []) },
+      projector: { rebuild: vi.fn() },
+    });
+
+    await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
+      'lookupRunRef.describe timed out after 20ms'
+    );
+    expect(withAbortSignal).toHaveBeenCalledOnce();
+  });
+
+  it('falls back to a local timeout when workflowClient does not expose withAbortSignal', async () => {
     const handle = makeWorkflowHandleMock(() => new Promise<never>(() => undefined));
     const timeoutAdapter = new TemporalAdapter({
       workflowClient: { start: vi.fn(), getHandle: vi.fn(() => handle) },

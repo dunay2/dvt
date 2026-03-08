@@ -31,16 +31,17 @@ canonical command and source file for each one.
 
 ## Package Test Commands
 
-| Capability                         | Command                                                | Scope                                | Source                                                                                             |
-| ---------------------------------- | ------------------------------------------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Engine package tests               | `pnpm test:engine`                                     | `@dvt/engine`                        | [`package.json`](../../package.json)                                                               |
-| Contracts package tests            | `pnpm test:contracts`                                  | `@dvt/contracts`                     | [`package.json`](../../package.json)                                                               |
-| Contracts compile gate             | `pnpm test:contracts:compile`                          | `@dvt/contracts`                     | [`package.json`](../../package.json)                                                               |
-| PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                           | `@dvt/adapter-postgres`              | [`package.json`](../../package.json)                                                               |
-| Temporal adapter tests             | `pnpm test:adapter-temporal`                           | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                                               |
-| CLI package tests                  | `pnpm test:cli`                                        | `@dvt/cli`                           | [`package.json`](../../package.json)                                                               |
-| Temporal time-skipping integration | `pnpm --filter @dvt/adapter-temporal test:integration` | Temporal worker/workflow integration | [`packages/@dvt/adapter-temporal/package.json`](../../packages/@dvt/adapter-temporal/package.json) |
-| Coverage run                       | `pnpm test:coverage`                                   | Recursive workspace coverage         | [`package.json`](../../package.json)                                                               |
+| Capability                         | Command                                                                    | Scope                                | Source                               |
+| ---------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------ |
+| Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                        | [`package.json`](../../package.json) |
+| Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                     | [`package.json`](../../package.json) |
+| Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                     | [`package.json`](../../package.json) |
+| PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                                               | `@dvt/adapter-postgres`              | [`package.json`](../../package.json) |
+| Temporal adapter unit tests        | `pnpm test:adapter-temporal`                                               | `@dvt/adapter-temporal`              | [`package.json`](../../package.json) |
+| Temporal adapter runtime closure   | `pnpm test:adapter-temporal` then `pnpm test:adapter-temporal:integration` | `@dvt/adapter-temporal`              | [`package.json`](../../package.json) |
+| CLI package tests                  | `pnpm test:cli`                                                            | `@dvt/cli`                           | [`package.json`](../../package.json) |
+| Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration | [`package.json`](../../package.json) |
+| Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage         | [`package.json`](../../package.json) |
 
 ## Determinism and Replay
 

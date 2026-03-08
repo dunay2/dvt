@@ -49,6 +49,10 @@ export class PostgresPrincipalAccessRepository implements IPrincipalAccessReposi
 
   public async migrate(): Promise<void> {
     await this.pool.query(`
+      CREATE SCHEMA IF NOT EXISTS ${this.schema};
+    `);
+
+    await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${this.schema}.principal_grants (
         principal_id   TEXT    NOT NULL,
         principal_type TEXT    NOT NULL CHECK (principal_type IN ('user', 'service')),

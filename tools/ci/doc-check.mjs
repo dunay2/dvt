@@ -57,6 +57,10 @@ function listMdFiles(dir) {
   return all;
 }
 
+function isEvidenceDoc(fp) {
+  return /^ED-.*\.md$/i.test(path.basename(fp));
+}
+
 function parseFrontMatter(mdText) {
   if (!mdText.startsWith('---')) return null;
   const end = mdText.indexOf('\n---', 3);
@@ -76,7 +80,7 @@ const riskDir = policy.artifacts?.risk_dir || 'docs/risk-register';
 const changed = listChangedFiles();
 
 if (arc.requirements?.evidenceDoc) {
-  const edFiles = listMdFiles(evidenceDir);
+  const edFiles = listMdFiles(evidenceDir).filter(isEvidenceDoc);
   if (edFiles.length === 0) fail(`Evidence Doc required but none found in ${evidenceDir}`);
 
   const requiredKeys = policy.validation?.evidence_doc?.required_front_matter_keys || [];

@@ -2,23 +2,26 @@
 title: Release Please Continuous Mode Status
 status: Active
 owner: docs
-last_reviewed: 2026-03-07
+last_reviewed: 2026-03-08
 planning_type: status
 ---
 
 # Release Please Continuous Mode Status
 
-Date: 2026-03-07  
+Date: 2026-03-08  
 Status: Enabled for repository releases on `push` to `main`
 
 ## Context
 
 `release-please` is now configured in `.github/workflows/release.yml` to run automatically on `push` to `main`, while keeping `workflow_dispatch` available for manual execution.
 
+Repository Actions workflow permissions were also updated on 2026-03-08 so GitHub Actions can create and update the release PR automatically.
+
 ## Current Decision
 
 - Continuous release PR / tag automation is enabled for the repository.
 - Automatic npm publication is explicitly disabled for now.
+- The workflow no longer passes the deprecated `package-name` input to `googleapis/release-please-action@v4`.
 
 Current workflow shape:
 

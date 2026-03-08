@@ -53,7 +53,7 @@ Severity progression follows warning-first rollout, then critical validations be
 
 ### 3) ADR coupling for semantic changes
 
-Contract semantic changes MUST include an ADR in `docs/decisions/` once the ADR gate is hardened in CI.
+Contract semantic changes MUST include an ADR in `docs/adr/` once the ADR gate is hardened in CI.
 
 ---
 

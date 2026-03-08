@@ -1,8 +1,8 @@
 ---
 title: DVT+ - Gap Execution Plans
 status: Review
-owner: docs
-last_reviewed: 2026-03-07
+owner: Architecture / Delivery / Docs
+last_reviewed: 2026-03-08
 planning_type: proposal
 ---
 
@@ -11,8 +11,17 @@ planning_type: proposal
 Source of truth for execution gaps and delivery state.
 
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
-- Last sync date: 2026-03-07
+- Last sync date: 2026-03-08
 - Scope: Phase 1, Phase 1.5, Phase 2
+
+Concept anchors for this page:
+
+- [Glossary](../../concepts/glossary.md) for `gap`, `status`, `closed`,
+  `partial`, `canonical spec`, and `verification tuple`
+- [Domain Language](../../concepts/domain-language.md) for the rule that
+  planning, status, and contracts must not compete as parallel sources of truth
+- [Roadmap Of Record](../roadmap/index.md) for repository-wide sequencing and
+  priority
 
 ## Traceability Anchors
 
@@ -30,20 +39,20 @@ Minimum tuple for this document:
 - `verification_cmd`: gap-specific. See each active gap section below.
 - `evidence_or_risk`: linked evidence docs and risk records where the gap is already formalized
 
-## Executive State (2026-03-07)
+## Executive State (2026-03-08)
 
-| Gap | Title                                     | Phase     | Current state                                             |
-| --- | ----------------------------------------- | --------- | --------------------------------------------------------- |
-| G1  | Temporal Adapter real                     | Phase 1   | In progress (lookupRunRef done, full integration pending) |
-| G2  | PostgresStateStore complete               | Phase 1   | Closed                                                    |
-| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed                                                    |
-| G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                                    |
-| G5  | Outbox worker independiente               | Phase 1.5 | Partial                                                   |
-| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Partial                                                   |
-| G7  | Read models + standalone projector        | Phase 1.5 | Partial                                                   |
-| G8  | Auth real en apps/api                     | Phase 1.5 | Implemented in code (arch tests pending)                  |
-| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                                   |
-| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                                   |
+| Gap | Title                                     | Phase     | Current state                            |
+| --- | ----------------------------------------- | --------- | ---------------------------------------- |
+| G1  | Temporal Adapter real                     | Phase 1   | Closed                                   |
+| G2  | PostgresStateStore complete               | Phase 1   | Closed                                   |
+| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed                                   |
+| G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                   |
+| G5  | Outbox worker independiente               | Phase 1.5 | Partial                                  |
+| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Partial                                  |
+| G7  | Read models + standalone projector        | Phase 1.5 | Partial                                  |
+| G8  | Auth real en apps/api                     | Phase 1.5 | Implemented in code (arch tests pending) |
+| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                  |
+| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                  |
 
 ## Confirmed Progress Since Previous Draft
 
@@ -74,26 +83,28 @@ Minimum tuple for this document:
 
 ### G1 - Temporal Adapter real
 
-- Status: In progress (close-out phase)
+- Status: Closed
 - Traceability tuple:
   - `canonical_spec`: [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`, `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
-  - `test_paths`: `packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`, `packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts`, `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
-  - `verification_cmd`: `pnpm test:adapter-temporal`
-  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md)
-- Done:
+  - `code_paths`: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`, `packages/@dvt/adapter-temporal/src/TemporalClient.ts`, `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
+  - `test_paths`: `packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`, `packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts`, `packages/@dvt/adapter-temporal/test/smoke.test.ts`, `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
+  - `verification_cmd`: `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`
+  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md), [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md), [R-20260308 - Temporal runtime hardening residuals](../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
+- Delivered:
   - `lookupRunRef` implemented
   - unit tests for exists/not-found/error paths
   - `TemporalWorkerHost` lifecycle quality gate added (start once, no-op shutdown, deterministic Worker.create wiring)
   - time-skipping integration suite exists for success/failure/cancel/gateway/crash-recovery paths
   - dedicated PR quality gate runs `adapter-temporal test:integration`
-- Pending:
+  - runtime closure command now requires both unit and time-skipping integration coverage
+  - `connectTimeoutMs` now actively bounds Temporal client connection attempts
+  - worker host start/shutdown/unexpected exit now emit logs, traces, and metrics
+  - `lookupRunRef()` and `ping()` now emit provider-side operational diagnostics
+- Non-blocking follow-up:
   - keep the integration lane healthy as Temporal runtime contracts evolve
-  - operational validation of worker host defaults under load
-  - align logging and tracing injection across adapters so runtime diagnostics are consistent
-  - review timeout policy alignment across Temporal, Conductor, and mock adapters
-  - treat `AbortSignal` support as a deferred follow-up when Temporal SDK support becomes practical
+  - gather load evidence for worker-host defaults from higher-level environments
+  - review cross-adapter timeout harmonization as a separate consistency pass
 
 ### G2 - PostgresStateStore complete
 
@@ -157,6 +168,10 @@ Minimum tuple for this document:
   - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
   - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
   - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, and initial runbook now exist in code; promote to evidence after canary and downstream contract hardening
+- Working refs:
+  - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
+  - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
+  - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../proposals/g5-outbox-worker-development-proposal-20260308.md)
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)
   - reusable engine `OutboxWorker` core
@@ -174,19 +189,28 @@ Minimum tuple for this document:
 
 - Status: Partial
 - Traceability tuple:
-  - `canonical_spec`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md) until lineage delivery has a dedicated accepted runtime spec
+  - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`
   - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm traceability:adr0`
-  - `evidence_or_risk`: consider promotion to a dedicated risk record if `_schemaURL` drift remains open after the next hardening pass
+  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
+- Working refs:
+  - [G6 hub](g6/index.md)
+  - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  - [G6 Architecture and QA Review](g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+  - [Traceability Contracts](../../contracts/traceability/index.md)
 - Delivered:
   - compiled-code lineage resolver/cache/facet mapping package code
   - package-level tests for mapper/guard/resolver paths
+  - `_schemaURL` pinned in emitted `sql` and `dvt_dbt_details` facets
+  - repo-local normative artifacts for emitted lineage facets under [Traceability Contracts](../../contracts/traceability/index.md)
 - Remaining:
   - deterministic OL translation hardening in CI
-  - `_schemaURL` pinned in emitted OpenLineage payloads/contracts
-  - delivery/runtime concerns stay open outside package scope
+  - offline schema validation execution against vendored/local artifacts
+  - committed golden fixtures for mapper regression coverage
+  - explicit golden and schema verification commands for closure
+  - delivery/runtime concerns stay open outside package scope under `G10`
 
 ### G7 - Read models + standalone projector
 
@@ -232,10 +256,9 @@ Minimum tuple for this document:
 
 Recommended order for next cycles:
 
-1. Finish `G1` operational close-out.
-2. Start `G5` and `G6` in parallel.
-3. Start `G7` and `G8` after `G5/G6` direction is stable.
-4. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
+1. Start `G5` and `G6` in parallel.
+2. Start `G7` and `G8` after `G5/G6` direction is stable.
+3. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
 
 Parallel execution track detail:
 
@@ -243,6 +266,7 @@ Parallel execution track detail:
 
 ## Related Documents
 
+- Planning gaps hub: [`docs/planning/gaps/index.md`](index.md)
 - G3 detail: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
 - G4 detail: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
 - Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)

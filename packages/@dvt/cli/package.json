@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests",
+    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/cli/test/smoke.test.ts",
     "validate-contracts": "node validate-contracts.cjs",
     "run-golden-paths": "node run-golden-paths.cjs"
   },

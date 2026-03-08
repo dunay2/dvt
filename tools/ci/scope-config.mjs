@@ -53,7 +53,7 @@ export const CONTRACT_SCOPE_PATTERNS = {
     'packages/@dvt/contracts/**',
     'packages/@dvt/engine/test/contracts/**',
     'docs/architecture/engine/contracts/**',
-    'docs/decisions/**',
+    'docs/adr/**',
     '.golden/**',
     'scripts/compare-hashes.cjs',
     'scripts/db-migrate.cjs',
@@ -92,7 +92,7 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
 };
 
 function normalizePath(path) {
-  return path.replace(/\\/g, '/');
+  return path.replaceAll('\\', '/');
 }
 
 function escapeRegexCharacter(character) {

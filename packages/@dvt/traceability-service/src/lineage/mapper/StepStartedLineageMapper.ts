@@ -6,6 +6,10 @@ import type {
   ILineageStepEventMapper,
   ISqlJobFacetBuilder,
 } from '../contracts.js';
+import {
+  buildLineageFacetMetadata,
+  DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL,
+} from '../openlineageSchema.js';
 import type { LineageJobFacets, LineageWarning } from '../types.js';
 
 export interface StepStartedLineageMapperDeps {
@@ -30,6 +34,7 @@ export class StepStartedLineageMapper implements ILineageStepEventMapper {
 
     const baseFacets: LineageJobFacets = {
       dvt_dbt_details: {
+        ...buildLineageFacetMetadata(DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL),
         compiledCodeRef,
       },
     };

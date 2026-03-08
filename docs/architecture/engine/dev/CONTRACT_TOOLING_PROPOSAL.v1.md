@@ -256,7 +256,7 @@ Transition policy:
 
 ### 8.5 ADR Requirement for Contract Semantic Changes
 
-Any PR that changes contract semantics SHOULD include an ADR under `docs/decisions/`.
+Any PR that changes contract semantics SHOULD include an ADR under `docs/adr/`.
 
 PRs that:
 

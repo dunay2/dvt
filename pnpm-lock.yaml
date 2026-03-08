@@ -426,6 +426,9 @@ importers:
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine
+      '@dvt/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@dvt/plan-interpreter':
         specifier: workspace:*
         version: link:../plan-interpreter

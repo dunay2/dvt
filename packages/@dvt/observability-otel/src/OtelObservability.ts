@@ -14,7 +14,6 @@ import type {
   SpanOptions,
   SpanStatus,
 } from '@dvt/observability';
-
 import { defaultCardinalityPolicy, validateMetricLabels } from '@dvt/observability';
 
 // NOTE: This is a scaffold. Replace the placeholder implementations with OpenTelemetry SDK bindings.
@@ -22,41 +21,35 @@ import { defaultCardinalityPolicy, validateMetricLabels } from '@dvt/observabili
 
 class NoopCounter implements ICounter {
   constructor(private readonly base: MetricLabels | undefined) {}
-  add(value: number, labels?: MetricLabels): void {
-    void value;
-    validateMetricLabels({ ...(this.base ?? {}), ...(labels ?? {}) }, defaultCardinalityPolicy);
+  add(_value: number, labels?: MetricLabels): void {
+    validateMetricLabels({ ...this.base, ...labels }, defaultCardinalityPolicy);
   }
 }
 
 class NoopHistogram implements IHistogram {
   constructor(private readonly base: MetricLabels | undefined) {}
-  record(value: number, labels?: MetricLabels): void {
-    void value;
-    validateMetricLabels({ ...(this.base ?? {}), ...(labels ?? {}) }, defaultCardinalityPolicy);
+  record(_value: number, labels?: MetricLabels): void {
+    validateMetricLabels({ ...this.base, ...labels }, defaultCardinalityPolicy);
   }
 }
 
 class NoopGauge implements IGauge {
   constructor(private readonly base: MetricLabels | undefined) {}
-  set(value: number, labels?: MetricLabels): void {
-    void value;
-    validateMetricLabels({ ...(this.base ?? {}), ...(labels ?? {}) }, defaultCardinalityPolicy);
+  set(_value: number, labels?: MetricLabels): void {
+    validateMetricLabels({ ...this.base, ...labels }, defaultCardinalityPolicy);
   }
 }
 
 class NoopMetrics implements IMetrics {
-  counter(name: string, baseLabels?: MetricLabels): ICounter {
-    void name;
+  counter(_name: string, baseLabels?: MetricLabels): ICounter {
     validateMetricLabels(baseLabels, defaultCardinalityPolicy);
     return new NoopCounter(baseLabels);
   }
-  histogram(name: string, baseLabels?: MetricLabels): IHistogram {
-    void name;
+  histogram(_name: string, baseLabels?: MetricLabels): IHistogram {
     validateMetricLabels(baseLabels, defaultCardinalityPolicy);
     return new NoopHistogram(baseLabels);
   }
-  gauge(name: string, baseLabels?: MetricLabels): IGauge {
-    void name;
+  gauge(_name: string, baseLabels?: MetricLabels): IGauge {
     validateMetricLabels(baseLabels, defaultCardinalityPolicy);
     return new NoopGauge(baseLabels);
   }
@@ -64,19 +57,17 @@ class NoopMetrics implements IMetrics {
 
 class NoopSpan implements ISpan {
   private ended = false;
-  setAttribute(key: string, value: unknown): void {
-    void key;
-    void value;
+  setAttribute(_key: string, _value: unknown): void {
+    // noop — replace with OTel span.setAttribute when wired
   }
-  setAttributes(attrs: Attributes): void {
-    void attrs;
+  setAttributes(_attrs: Attributes): void {
+    // noop — replace with OTel span.setAttributes when wired
   }
-  recordException(err: unknown): void {
-    void err;
+  recordException(_err: unknown): void {
+    // noop — replace with OTel span.recordException when wired
   }
-  setStatus(status: SpanStatus, message?: string): void {
-    void status;
-    void message;
+  setStatus(_status: SpanStatus, _message?: string): void {
+    // noop — replace with OTel span.setStatus when wired
   }
   end(): void {
     if (this.ended) return;
@@ -85,9 +76,7 @@ class NoopSpan implements ISpan {
 }
 
 class NoopTraces implements ITraces {
-  startSpan(name: string, options?: SpanOptions): ISpan {
-    void name;
-    void options;
+  startSpan(_name: string, _options?: SpanOptions): ISpan {
     return new NoopSpan();
   }
   withSpan<T>(name: string, options: SpanOptions | undefined, fn: (span: ISpan) => T): T {
@@ -134,10 +123,7 @@ export class OtelObservability implements IObservability {
 
   private currentContext: ObservabilityContext | undefined;
 
-  constructor(options: OtelObservabilityOptions) {
-    void options.serviceName;
-    void options.otlpEndpoint;
-    void options.resourceAttributes;
+  constructor(_options: OtelObservabilityOptions) {
     this.metrics = new NoopMetrics();
     this.traces = new NoopTraces();
     this.logs = new JsonConsoleLogs();
