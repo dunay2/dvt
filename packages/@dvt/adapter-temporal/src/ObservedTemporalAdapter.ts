@@ -34,9 +34,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
 
   private readonly observability: IObservability;
 
-  constructor(
-    private readonly deps: ObservedTemporalAdapterDeps
-  ) {
+  constructor(private readonly deps: ObservedTemporalAdapterDeps) {
     this.provider = deps.adapter.provider;
     this.observability = resolveTemporalObservability(deps.observability);
   }

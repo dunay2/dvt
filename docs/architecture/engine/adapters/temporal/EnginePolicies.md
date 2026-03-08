@@ -228,8 +228,8 @@ These should be treated as backlog policies until corresponding code lands in `p
 
 ## Change Log
 
-| Version | Date | Change |
-| --- | --- | --- |
-| 1.2 | 2026-03-08 | Documented client timeout enforcement and runtime observability for Temporal client, worker host, `lookupRunRef()`, and `ping()`. |
-| 1.1 | 2026-02-14 | Rewritten to match real adapter implementation (`TemporalAdapter`, `RunPlanWorkflow`, activities, worker/client lifecycle). Removed unimplemented normative claims and fixed contract link path. |
-| 1.0 | 2026-02-11 | Initial Temporal engine policies. |
+| Version | Date       | Change                                                                                                                                                                                           |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.2     | 2026-03-08 | Documented client timeout enforcement and runtime observability for Temporal client, worker host, `lookupRunRef()`, and `ping()`.                                                                |
+| 1.1     | 2026-02-14 | Rewritten to match real adapter implementation (`TemporalAdapter`, `RunPlanWorkflow`, activities, worker/client lifecycle). Removed unimplemented normative claims and fixed contract link path. |
+| 1.0     | 2026-02-11 | Initial Temporal engine policies.                                                                                                                                                                |

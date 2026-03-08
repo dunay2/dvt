@@ -10,45 +10,43 @@ const {
   mockWorkerShutdown,
   getLastCreateArgs,
   resetWorkerRunPromise,
-} = vi.hoisted(
-  () => {
-    let lastCreateArgs: unknown = null;
-    let resolveRun: (() => void) | null = null;
+} = vi.hoisted(() => {
+  let lastCreateArgs: unknown = null;
+  let resolveRun: (() => void) | null = null;
 
-    const resetWorkerRunPromise = (): void => {
-      resolveRun = null;
-      mockWorkerRun.mockImplementation(
-        () =>
-          new Promise<void>((resolve) => {
-            resolveRun = resolve;
-          })
-      );
-      mockWorkerShutdown.mockImplementation(() => {
-        resolveRun?.();
-      });
-    };
-
-    const mockWorkerRun = vi.fn<() => Promise<void>>();
-    const mockWorkerShutdown = vi.fn<() => void>();
-    const mockWorkerCreate = vi.fn(async (args: unknown) => {
-      lastCreateArgs = args;
-      return {
-        run: mockWorkerRun,
-        shutdown: mockWorkerShutdown,
-      };
+  const resetWorkerRunPromise = (): void => {
+    resolveRun = null;
+    mockWorkerRun.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveRun = resolve;
+        })
+    );
+    mockWorkerShutdown.mockImplementation(() => {
+      resolveRun?.();
     });
+  };
 
-    resetWorkerRunPromise();
-
+  const mockWorkerRun = vi.fn<() => Promise<void>>();
+  const mockWorkerShutdown = vi.fn<() => void>();
+  const mockWorkerCreate = vi.fn(async (args: unknown) => {
+    lastCreateArgs = args;
     return {
-      mockWorkerCreate,
-      mockWorkerRun,
-      mockWorkerShutdown,
-      getLastCreateArgs: () => lastCreateArgs,
-      resetWorkerRunPromise,
+      run: mockWorkerRun,
+      shutdown: mockWorkerShutdown,
     };
-  }
-);
+  });
+
+  resetWorkerRunPromise();
+
+  return {
+    mockWorkerCreate,
+    mockWorkerRun,
+    mockWorkerShutdown,
+    getLastCreateArgs: () => lastCreateArgs,
+    resetWorkerRunPromise,
+  };
+});
 
 vi.mock('@temporalio/worker', () => {
   return {
