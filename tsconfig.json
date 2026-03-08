@@ -36,6 +36,8 @@
       "@dvt/dsl/*": ["packages/@dvt/dsl/src/*"],
       "@dvt/engine": ["packages/@dvt/engine/src/index.ts"],
       "@dvt/engine/*": ["packages/@dvt/engine/src/*"],
+      "@dvt/planner": ["packages/@dvt/planner/src/index.ts"],
+      "@dvt/planner/*": ["packages/@dvt/planner/src/*"],
       "@dvt/plan-interpreter": ["packages/@dvt/plan-interpreter/src/index.ts"],
       "@dvt/plan-interpreter/*": ["packages/@dvt/plan-interpreter/src/*"],
       "@dvt/contracts": ["packages/@dvt/contracts/index.ts"],
