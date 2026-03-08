@@ -1,38 +1,63 @@
 ---
 title: Canonical Doc Code Matrix
 status: Active
-owner: docs
+owner: Architecture / Docs
 last_reviewed: 2026-03-08
 planning_type: status
 ---
 
 # Canonical Doc Code Matrix
 
-First manual traceability matrix for `T19`, `T20`, and `T22`.
+Curated manual traceability matrix for the active runtime, product, and
+platform topics that need explicit doc -> code -> test -> command mapping.
 
-This file is the curated counterpart to:
+This page is the topic-level counterpart to:
 
 - [Generated Code State](generated-code-state.md)
 - [Generated Spec Traceability](generated-spec-traceability.md)
+- [Repository Map](../../concepts/repository-map.md)
+- [Glossary](../../concepts/glossary.md)
+- [Domain Language](../../concepts/domain-language.md)
 
 Use it to answer three practical questions quickly:
 
 1. Which document is the current source of truth for this topic?
 2. Which code paths implement it?
-3. Which tests and commands verify it?
+3. Which tests and commands should fail if it regresses?
+
+Package-by-package workspace coverage lives in
+[Repository Map](../../concepts/repository-map.md). This matrix stays focused
+on high-value behavioral topics.
+
+When this page says `canonical spec`, `status doc`, or `reference-only`, those
+terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
+[Domain Language](../../concepts/domain-language.md).
 
 ## Topic Summary
 
-| Topic                                         | Primary packages                                                                       | Canonical spec                                                                                                                                                                                  | Current status                                                                                                           |
-| --------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Workflow engine core                          | `@dvt/contracts`, `@dvt/engine`                                                        | [IWorkflowEngine v1](../../architecture/engine/contracts/engine/IWorkflowEngine.v1.md), [ExecutionSemantics v1](../../architecture/engine/contracts/engine/ExecutionSemantics.v1.md)            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
-| Temporal adapter runtime                      | `@dvt/adapter-temporal`                                                                | [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md) | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
-| Postgres state store                          | `@dvt/adapter-postgres`, `@dvt/state-store`                                            | [Postgres State Store Adapter](../../architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
-| Intent reconciler and pre-dispatch intent log | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../gaps/G3-TASK-SPECIFICATION.md)                                                                            | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
-| Outbox worker runtime                         | `@dvt/engine`, `@dvt/adapter-postgres`                                                 | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                                                                                           | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
-| compiledCodeRef ownership                     | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../gaps/G4-TASK-SPECIFICATION.md)                                                                          | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
-| OpenLineage mapping and delivery debt         | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
-| Documentation governance and checks           | `scripts/*`, `tools/ci/*`                                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [Mandatory AI Workflow](../../guides/SISTEMA%20DE%20TRABAJO%20OBLIGATORIO%20PARA%20IA.md)                           | [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md) |
+<!-- markdownlint-disable MD060 -->
+
+| Topic                                          | Primary packages                                                                       | Canonical spec                                                                                                                                                                                  | Current status                                                                                                           |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Workflow engine core                           | `@dvt/contracts`, `@dvt/engine`                                                        | [IWorkflowEngine v1](../../architecture/engine/contracts/engine/IWorkflowEngine.v1.md), [ExecutionSemantics v1](../../architecture/engine/contracts/engine/ExecutionSemantics.v1.md)            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Temporal adapter runtime                       | `@dvt/adapter-temporal`                                                                | [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md) | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
+| Postgres state store                           | `@dvt/adapter-postgres`, `@dvt/state-store`                                            | [Postgres State Store Adapter](../../architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../gaps/G3-TASK-SPECIFICATION.md)                                                                            | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
+| Outbox worker runtime                          | `@dvt/engine`, `@dvt/adapter-postgres`                                                 | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                                                                                           | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../gaps/G4-TASK-SPECIFICATION.md)                                                                          | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
+| OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Web frontend shell and client routing          | `apps/web`                                                                             | [Frontend Architecture](../../architecture/frontend/index.md), [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)                                                | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Plan integrity and compatibility verification  | `@dvt/plan-verifier`                                                                   | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Deterministic DAG interpretation               | `@dvt/plan-interpreter`                                                                | [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)                                                                                                                       | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
+| Gateway DSL evaluator                          | `@dvt/dsl`                                                                             | [Gateway DSL Package](../../architecture/shared/dsl.md)                                                                                                                                         | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
+| Observability contracts and cardinality policy | `@dvt/observability`                                                                   | [Observability Guide](../../architecture/engine/ops/observability.md), [Metrics Catalog](../../architecture/engine/metrics-catalog.md)                                                          | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| OpenTelemetry observability binding            | `@dvt/observability-otel`                                                              | [Observability Guide](../../architecture/engine/ops/observability.md), [@dvt/observability-otel README](../../../packages/@dvt/observability-otel/README.md)                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| CLI validation surface                         | `@dvt/cli`                                                                             | [CLI Package](../../architecture/shared/cli.md)                                                                                                                                                 | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
+| Canonicalization and hashing utilities         | `@dvt/crypto`                                                                          | [Crypto Package](../../architecture/shared/crypto.md), [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)                                                                               | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
+| Documentation governance and checks            | `scripts/*`, `tools/ci/*`                                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [Mandatory AI Workflow](../../guides/SISTEMA%20DE%20TRABAJO%20OBLIGATORIO%20PARA%20IA.md)                           | [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md) |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Topic Details
 
@@ -78,7 +103,9 @@ Use it to answer three practical questions quickly:
   and
   [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md)
 - Verification:
-  `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`
+  `pnpm test:adapter-temporal`
+  and
+  `pnpm test:adapter-temporal:integration`
 
 ### Postgres state store
 
@@ -124,7 +151,7 @@ Use it to answer three practical questions quickly:
 
 - Canonical source today:
   [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G5`)
-  until a dedicated runtime/runbook spec exists
+  until a dedicated runtime or runbook spec exists
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
@@ -173,10 +200,12 @@ Use it to answer three practical questions quickly:
 
 - Canonical source today:
   [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-  for package hardening scope
-  and
+  for package hardening scope,
   [Traceability Contracts](../../contracts/traceability/index.md)
-  for the normative emitted facet artifacts
+  for the normative emitted facet artifacts,
+  and
+  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G10`)
+  for delivery/runtime follow-up
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
@@ -195,6 +224,188 @@ Use it to answer three practical questions quickly:
   `pnpm --filter @dvt/traceability-service test`
   and
   `pnpm traceability:adr0`
+
+### API auth and runtime boundary
+
+- Canonical spec:
+  [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)
+- Current status source:
+  [System Delivery Status](../../architecture/system-delivery-status.md) (`G8`)
+- Primary code:
+  [apps/api/src/app.ts](../../../apps/api/src/app.ts),
+  [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts),
+  [apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts](../../../apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts)
+- Key tests:
+  [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
+  [apps/api/test/entrypoints/http/startRunRoute.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.test.ts),
+  [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts)
+- Risk:
+  [R-20260308 API auth runtime integration coverage](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
+- Verification:
+  `pnpm --filter dvt-api typecheck`
+  and
+  `pnpm --filter dvt-api test`
+
+### Web frontend shell and client routing
+
+- Canonical spec:
+  [Frontend Architecture](../../architecture/frontend/index.md)
+  and
+  [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)
+- Current status source:
+  [System Delivery Status](../../architecture/system-delivery-status.md) (`Entry Layer`)
+- Primary code:
+  [apps/web/src/main.tsx](../../../apps/web/src/main.tsx),
+  [apps/web/src/app/App.tsx](../../../apps/web/src/app/App.tsx),
+  [apps/web/src/app/routes.ts](../../../apps/web/src/app/routes.ts),
+  [apps/web/src/app/components/TopAppBar.tsx](../../../apps/web/src/app/components/TopAppBar.tsx)
+- Current test posture:
+  No automated tests exist yet under `apps/web`.
+- Verification:
+  `pnpm --filter @dvt/web typecheck`
+  and
+  `pnpm --filter @dvt/web build`
+- Gap:
+  Mock-data paths still dominate the client surface via
+  [apps/web/src/app/data/mockData.ts](../../../apps/web/src/app/data/mockData.ts)
+  and
+  [apps/web/src/app/data/mockDbtData.ts](../../../apps/web/src/app/data/mockDbtData.ts)
+
+### Plan integrity and compatibility verification
+
+- Canonical spec:
+  [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)
+  and
+  [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)
+- Current status source:
+  [System Delivery Status](../../architecture/system-delivery-status.md) (`Plan Verifier`)
+- Primary code:
+  [packages/@dvt/plan-verifier/src/verify.ts](../../../packages/@dvt/plan-verifier/src/verify.ts)
+  and
+  [packages/@dvt/plan-verifier/src/planVersion.ts](../../../packages/@dvt/plan-verifier/src/planVersion.ts)
+- Key tests:
+  [packages/@dvt/plan-verifier/test/verify.test.ts](../../../packages/@dvt/plan-verifier/test/verify.test.ts)
+- Verification:
+  `pnpm --filter @dvt/plan-verifier test`
+
+### Deterministic DAG interpretation
+
+- Canonical spec:
+  [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)
+- Current status source:
+  [Shared Package Architecture](../../architecture/shared/index.md)
+- Primary code:
+  [packages/@dvt/plan-interpreter/src/dagAnalyzer.ts](../../../packages/@dvt/plan-interpreter/src/dagAnalyzer.ts),
+  [packages/@dvt/plan-interpreter/src/types.ts](../../../packages/@dvt/plan-interpreter/src/types.ts),
+  [packages/@dvt/plan-interpreter/src/errors.ts](../../../packages/@dvt/plan-interpreter/src/errors.ts)
+- Key tests:
+  [packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts](../../../packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts)
+  and
+  [packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts](../../../packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts)
+- Verification:
+  `pnpm --filter @dvt/plan-interpreter test`
+
+### Gateway DSL evaluator
+
+- Canonical spec:
+  [Gateway DSL Package](../../architecture/shared/dsl.md)
+- Current status source:
+  [Shared Package Architecture](../../architecture/shared/index.md)
+- Primary code:
+  [packages/@dvt/dsl/src/index.ts](../../../packages/@dvt/dsl/src/index.ts),
+  [packages/@dvt/dsl/src/v1/ast.ts](../../../packages/@dvt/dsl/src/v1/ast.ts),
+  [packages/@dvt/dsl/src/v1/parser.ts](../../../packages/@dvt/dsl/src/v1/parser.ts),
+  [packages/@dvt/dsl/src/v1/evaluator.ts](../../../packages/@dvt/dsl/src/v1/evaluator.ts),
+  [packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
+- Key tests:
+  [packages/@dvt/dsl/test/dsl-v1.test.ts](../../../packages/@dvt/dsl/test/dsl-v1.test.ts)
+- Risk:
+  [R-20260307 workflow gateway context guard](../../risk-register/adapters/R-20260307-workflow-gateway-context-guard.md)
+- Verification:
+  `pnpm --filter @dvt/dsl test`
+- Gap:
+  publish an accepted DSL specification or explicitly replace the package with a
+  different supported policy mechanism
+
+### Observability contracts and cardinality policy
+
+- Canonical spec:
+  [Observability Guide](../../architecture/engine/ops/observability.md)
+  and
+  [Metrics Catalog](../../architecture/engine/metrics-catalog.md)
+- Current status source:
+  [System Delivery Status](../../architecture/system-delivery-status.md)
+- Primary code:
+  [packages/@dvt/observability/src/contracts/IObservability.ts](../../../packages/@dvt/observability/src/contracts/IObservability.ts),
+  [packages/@dvt/observability/src/contracts/ObservabilityContext.ts](../../../packages/@dvt/observability/src/contracts/ObservabilityContext.ts),
+  [packages/@dvt/observability/src/policy/cardinalityPolicy.ts](../../../packages/@dvt/observability/src/policy/cardinalityPolicy.ts)
+- Key tests:
+  [packages/@dvt/observability/test/cardinalityPolicy.test.ts](../../../packages/@dvt/observability/test/cardinalityPolicy.test.ts)
+- Verification:
+  `pnpm --filter @dvt/observability test`
+
+### OpenTelemetry observability binding
+
+- Canonical source today:
+  [Observability Guide](../../architecture/engine/ops/observability.md)
+  for the operational model plus
+  [@dvt/observability-otel README](../../../packages/@dvt/observability-otel/README.md)
+  for package-local wiring notes
+- Current status source:
+  [System Delivery Status](../../architecture/system-delivery-status.md)
+- Primary code:
+  [packages/@dvt/observability-otel/src/OtelObservability.ts](../../../packages/@dvt/observability-otel/src/OtelObservability.ts)
+- Key tests:
+  [packages/@dvt/observability-otel/test/OtelObservability.test.ts](../../../packages/@dvt/observability-otel/test/OtelObservability.test.ts)
+- Verification:
+  `pnpm --filter @dvt/observability-otel test`
+- Gap:
+  production wiring is still scaffold-level and not validated as an accepted
+  runtime baseline
+
+### CLI validation surface
+
+- Canonical spec:
+  [CLI Package](../../architecture/shared/cli.md)
+- Current status source:
+  [Shared Package Architecture](../../architecture/shared/index.md)
+  and
+  [Generated Code State](generated-code-state.md)
+- Primary code:
+  [packages/@dvt/cli/package.json](../../../packages/@dvt/cli/package.json),
+  [packages/@dvt/cli/validate-contracts.cjs](../../../packages/@dvt/cli/validate-contracts.cjs),
+  [packages/@dvt/cli/run-golden-paths.cjs](../../../packages/@dvt/cli/run-golden-paths.cjs),
+  [packages/@dvt/cli/src/index.ts](../../../packages/@dvt/cli/src/index.ts)
+- Key tests:
+  [packages/@dvt/cli/test/smoke.test.ts](../../../packages/@dvt/cli/test/smoke.test.ts)
+- Verification:
+  `pnpm test:cli`
+  and
+  `pnpm --filter @dvt/cli validate-contracts`
+- Gap:
+  the workspace still exposes script entrypoints more than a real exported CLI
+  command surface
+
+### Canonicalization and hashing utilities
+
+- Canonical spec:
+  [Crypto Package](../../architecture/shared/crypto.md)
+  and
+  [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)
+- Current status source:
+  [Shared Package Architecture](../../architecture/shared/index.md)
+- Primary code:
+  [packages/@dvt/canonical/src/jcs.ts](../../../packages/@dvt/canonical/src/jcs.ts),
+  [packages/@dvt/canonical/src/sha256.ts](../../../packages/@dvt/canonical/src/sha256.ts),
+  [packages/@dvt/engine/src/utils/jcs.ts](../../../packages/@dvt/engine/src/utils/jcs.ts),
+  [packages/@dvt/engine/src/utils/sha256.ts](../../../packages/@dvt/engine/src/utils/sha256.ts)
+- Key tests:
+  [packages/@dvt/canonical/test/canonical.test.ts](../../../packages/@dvt/canonical/test/canonical.test.ts)
+- Verification:
+  `pnpm --filter @dvt/crypto test`
+- Gap:
+  the workspace path (`packages/@dvt/canonical`) still does not match the
+  package name (`@dvt/crypto`), so discoverability still depends on central docs
 
 ### Documentation governance and checks
 
@@ -216,29 +427,16 @@ Use it to answer three practical questions quickly:
 
 ## Minimum Traceability Tuple
 
-For any active technical doc that governs code behavior, record at least this tuple somewhere explicit:
+For any active technical doc that governs code behavior, record at least this
+tuple somewhere explicit:
 
 - `canonical_spec`: the normative doc that defines behavior or invariants
 - `status_doc`: the file that states current implementation or gap status
 - `code_paths`: the main implementation files
 - `test_paths`: the tests that prove the behavior
 - `verification_cmd`: the command that should fail if the behavior regresses
-- `evidence_or_risk`: the evidence doc or risk record when the change is high-impact
+- `evidence_or_risk`: the evidence doc or risk record when the change is
+  high-impact
 
-This tuple is the minimum manual format until frontmatter fields are standardized repo-wide.
-
-## Scope Left For The Next Pass
-
-This first matrix intentionally does not yet cover every workspace.
-
-Still missing from explicit topic mapping:
-
-- `apps/web`
-- `@dvt/cli`
-- `@dvt/dsl`
-- `@dvt/plan-verifier`
-- `@dvt/observability`
-- `@dvt/observability-otel`
-- smaller contract-only packages with no separate active planning topic
-
-The next pass should either map those packages to an active canonical doc or explicitly mark them as `reference-only`.
+This tuple is the minimum manual format until frontmatter fields are
+standardized repo-wide.

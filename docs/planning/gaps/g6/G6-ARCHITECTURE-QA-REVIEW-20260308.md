@@ -19,6 +19,16 @@ two delivery slices:
 It answers one practical question: is the current direction still coherent and
 what remains before closure.
 
+## Canonical Anchors
+
+- [G6 hub](index.md) for the active planning surface
+- [G6 OpenLineage CI and Schema Pin Plan](G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  for the execution plan under review
+- [Traceability Contracts](../../../contracts/traceability/index.md) for the
+  normative emitted facet artifacts
+- [Canonical Doc Code Matrix](../../status/canonical-doc-code-matrix.md) for
+  the curated doc -> code -> test -> command mapping
+
 ## Current Assessment
 
 What is now true:
@@ -58,6 +68,13 @@ Reason:
 
 - the contract source is now explicit
 - but deterministic proof and executable validation are still pending
+
+Required before closure:
+
+- deterministic golden regression coverage
+- offline schema validation execution
+- explicit CI tuple recorded in docs and workflow checks
+- closeout evidence or a residual risk record
 
 ## Design Principles
 

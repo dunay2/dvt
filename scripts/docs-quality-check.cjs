@@ -22,6 +22,28 @@ const spanishHints = [
   ' para ',
   ' con ',
 ];
+const requiredConceptLinkFiles = [
+  'docs/architecture/system-delivery-status.md',
+  'docs/planning/index.md',
+  'docs/planning/roadmap/index.md',
+  'docs/planning/gaps/index.md',
+  'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
+  'docs/planning/gaps/g6/index.md',
+  'docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md',
+  'docs/concepts/repository-map.md',
+  'docs/planning/status/canonical-doc-code-matrix.md',
+];
+const explicitOwnerFiles = [
+  'docs/planning/index.md',
+  'docs/planning/gaps/index.md',
+  'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
+];
+const forbiddenMkdocsNavTargets = [
+  'planning/DVTplus_Roadmap.md',
+  'knowledge/INDEX.md',
+  'decisions/INDEX.md',
+  'knowledge/ROADMAP_AND_ISSUES_MAP.md',
+];
 
 function walk(dir) {
   const out = [];
@@ -45,14 +67,22 @@ function main() {
   const failures = [];
   const warnings = [];
   const files = walk(docsRoot);
-  const legacyUppercaseIndexes = new Set(['docs/decisions/INDEX.md', 'docs/knowledge/INDEX.md']);
+  const markdownFiles = files.filter((p) => p.endsWith('.md'));
 
   const uppercaseIndexes = files
     .filter((p) => path.basename(p) === 'INDEX.md')
-    .map((p) => rel(p))
-    .filter((p) => !legacyUppercaseIndexes.has(p));
+    .map((p) => rel(p));
   for (const p of uppercaseIndexes) {
     failures.push(`${p} -> rename to index.md (avoid duplicate index variants).`);
+  }
+
+  for (const p of markdownFiles) {
+    const raw = fs.readFileSync(p, 'utf8');
+    for (const marker of disallowedPlaceholder) {
+      if (raw.toLowerCase().includes(marker.toLowerCase())) {
+        failures.push(`${rel(p)} -> contains placeholder text.`);
+      }
+    }
   }
 
   const planningFiles = files.filter(
@@ -63,14 +93,64 @@ function main() {
     if (base === 'index.md' || base === 'template_planning_doc.md') continue;
     const raw = fs.readFileSync(p, 'utf8').toLowerCase();
 
-    for (const marker of disallowedPlaceholder) {
-      if (raw.includes(marker.toLowerCase())) {
-        failures.push(`${rel(p)} -> contains placeholder text.`);
-      }
-    }
-
     if (spanishHints.some((m) => raw.includes(m))) {
       warnings.push(`${rel(p)} -> contains likely non-English content. Translate to English.`);
+    }
+  }
+
+  const canonicalMatrixPath = path.join(
+    docsRoot,
+    'planning',
+    'status',
+    'canonical-doc-code-matrix.md'
+  );
+  if (fs.existsSync(canonicalMatrixPath)) {
+    const canonicalMatrix = fs.readFileSync(canonicalMatrixPath, 'utf8');
+    if (
+      /##\s+Scope Left For The Next Pass/i.test(canonicalMatrix) ||
+      /Still missing from explicit topic mapping:/i.test(canonicalMatrix)
+    ) {
+      failures.push(
+        'docs/planning/status/canonical-doc-code-matrix.md -> cannot carry an explicit missing-workspace backlog; classify active workspaces instead.'
+      );
+    }
+  }
+
+  for (const relativePath of requiredConceptLinkFiles) {
+    const absPath = path.join(repoRoot, ...relativePath.split('/'));
+    if (!fs.existsSync(absPath)) continue;
+    const raw = fs.readFileSync(absPath, 'utf8').toLowerCase();
+    const glossaryTargets = relativePath.startsWith('docs/concepts/')
+      ? ['glossary.md', './glossary.md', 'concepts/glossary.md']
+      : ['concepts/glossary.md'];
+    const domainLanguageTargets = relativePath.startsWith('docs/concepts/')
+      ? ['domain-language.md', './domain-language.md', 'concepts/domain-language.md']
+      : ['concepts/domain-language.md'];
+
+    if (!glossaryTargets.some((target) => raw.includes(target))) {
+      failures.push(`${relativePath} -> must link to concepts/glossary.md.`);
+    }
+    if (!domainLanguageTargets.some((target) => raw.includes(target))) {
+      failures.push(`${relativePath} -> must link to concepts/domain-language.md.`);
+    }
+  }
+
+  for (const relativePath of explicitOwnerFiles) {
+    const absPath = path.join(repoRoot, ...relativePath.split('/'));
+    if (!fs.existsSync(absPath)) continue;
+    const raw = fs.readFileSync(absPath, 'utf8');
+    if (/^owner:\s*docs\s*$/im.test(raw)) {
+      failures.push(`${relativePath} -> owner must name the responsible area, not the generic placeholder "docs".`);
+    }
+  }
+
+  const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
+  if (fs.existsSync(mkdocsPath)) {
+    const mkdocsRaw = fs.readFileSync(mkdocsPath, 'utf8');
+    for (const target of forbiddenMkdocsNavTargets) {
+      if (mkdocsRaw.includes(target)) {
+        failures.push(`mkdocs.yml -> must not expose legacy compatibility target ${target} in the main nav.`);
+      }
     }
   }
 

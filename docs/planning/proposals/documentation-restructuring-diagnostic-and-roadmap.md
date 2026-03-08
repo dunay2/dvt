@@ -423,7 +423,10 @@ This snapshot is the first measured cut for `O1-01` to `O1-03`. It is intentiona
 ### O1-01 / T09: orphan candidates
 
 - A manual inbound-link scan now finds 0 orphan candidates after indexing `docs/evidence/` and `docs/risk-register/` as first-class sections, closing the top-level `docs/review/` bucket, adding an explicit landing page for the traceability bundle, creating landing pages for the remaining documentation packs, and relocating the planning template into `docs/planning/templates/`.
-- `docs/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/` received an explicit landing page, and the artifact-store review pack has since been moved out of `planning` into `docs/archive/`.
+- `docs/architecture/vision/DVT_Docs_Pack_v0.6/` was later trimmed down to a
+  minimal historical blueprint snapshot instead of remaining as a larger active
+  imported pack, and the artifact-store review pack has since been moved out of
+  `planning` into `docs/archive/`.
 - `docs/planning/templates/` is now the canonical location for the planning template, replacing the former top-level orphan file.
 - `docs/evidence/` and `docs/risk-register/` are no longer floating sections: `docs:sync` now generates their `index.md` landing pages and the home navigation points to explicit files instead of directory placeholders.
 - `docs/review/` is no longer an active section: the February review set was resolved by archiving the two English documents and removing the duplicate Spanish variant.
@@ -433,7 +436,7 @@ This snapshot is the first measured cut for `O1-01` to `O1-03`. It is intentiona
 ### O1-02 / T10: broken-link candidates
 
 - The direct-path markdown scan is now at `0` missing targets across `docs/`.
-- This cut closed the previously dominant clusters in the AI workflow guide, `docs/CONTRIBUTING.md`, `docs/knowledge/ROADMAP_AND_ISSUES_MAP.md`, `docs/architecture/engine/index.md`, `docs/architecture/engine/VERSIONING.md`, security references, and several ADR cross-links.
+- This cut closed the previously dominant clusters in the AI workflow guide, `docs/CONTRIBUTING.md`, the removed legacy roadmap aliases, `docs/architecture/engine/index.md`, `docs/architecture/engine/VERSIONING.md`, security references, and several ADR cross-links.
 - Historical or hypothetical file references that were never meant to resolve as live docs were converted to plain text or code literals.
 - Stale links to removed backlog/status documents were replaced by current canonical sources.
 - `T10` can therefore be treated as done for the current tree, with the caveat that a future dedicated broken-link checker under `T28` may still catch new regressions.

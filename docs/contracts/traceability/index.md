@@ -32,8 +32,9 @@ Contract ownership split:
   emitted `_schemaURL` points to the repo-governed DVT schema ID
   `https://dvt.local/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json`
   and the normative schema artifact is versioned locally in this folder.
-  Its `compiledCodeRef` property is anchored to the shared-kernel contract
-  artifact under `docs/contracts/shared/CompiledCodeRef.v1.schema.json`.
+  Its `compiledCodeRef` property mirrors the shared-kernel contract artifact
+  under `docs/contracts/shared/CompiledCodeRef.v1.schema.json` so the facet
+  schema stays self-contained for offline AJV compilation.
 
 ## Runtime And Code Anchors
 
@@ -59,9 +60,10 @@ The current builder and mapper surface is implemented in:
   or gap closeout docs.
 - Vendored OpenLineage mirrors must keep explicit provenance and update-policy
   notes in this folder so offline validation remains auditable during review.
-- Repo-local traceability facets that embed shared-kernel structures must
-  reference the shared contract artifact rather than duplicating those fields
-  inline.
+- Repo-local traceability facets that embed shared-kernel structures must stay
+  aligned with the shared contract artifact and document that linkage
+  explicitly; use a self-contained mirror when offline AJV compilation cannot
+  resolve external schema references.
 - Validation lanes introduced in later `G6` slices must validate mapper output
   against these local artifacts, not against the network.
 

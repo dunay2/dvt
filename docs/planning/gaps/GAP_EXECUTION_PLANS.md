@@ -1,7 +1,7 @@
 ---
 title: DVT+ - Gap Execution Plans
 status: Review
-owner: docs
+owner: Architecture / Delivery / Docs
 last_reviewed: 2026-03-08
 planning_type: proposal
 ---
@@ -13,6 +13,15 @@ Source of truth for execution gaps and delivery state.
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
 - Last sync date: 2026-03-08
 - Scope: Phase 1, Phase 1.5, Phase 2
+
+Concept anchors for this page:
+
+- [Glossary](../../concepts/glossary.md) for `gap`, `status`, `closed`,
+  `partial`, `canonical spec`, and `verification tuple`
+- [Domain Language](../../concepts/domain-language.md) for the rule that
+  planning, status, and contracts must not compete as parallel sources of truth
+- [Roadmap Of Record](../roadmap/index.md) for repository-wide sequencing and
+  priority
 
 ## Traceability Anchors
 
@@ -161,7 +170,7 @@ Minimum tuple for this document:
   - `evidence_or_risk`: none yet; promote to evidence or risk record once a standalone runtime/process is introduced
 - Working refs:
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
-  - [`docs/architecture/working/g5-outbox-worker-guide.md`](../../architecture/working/g5-outbox-worker-guide.md)
+  - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
   - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../proposals/g5-outbox-worker-development-proposal-20260308.md)
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)
@@ -184,6 +193,11 @@ Minimum tuple for this document:
   - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm traceability:adr0`
   - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
+- Working refs:
+  - [G6 hub](g6/index.md)
+  - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  - [G6 Architecture and QA Review](g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+  - [Traceability Contracts](../../contracts/traceability/index.md)
 - Delivered:
   - compiled-code lineage resolver/cache/facet mapping package code
   - package-level tests for mapper/guard/resolver paths
@@ -192,12 +206,9 @@ Minimum tuple for this document:
 - Remaining:
   - deterministic OL translation hardening in CI
   - offline schema validation execution against vendored/local artifacts
-  - explicit golden + schema verification commands for closure
+  - committed golden fixtures for mapper regression coverage
+  - explicit golden and schema verification commands for closure
   - delivery/runtime concerns stay open outside package scope under `G10`
-- Working refs:
-  - [G6 hub](g6/index.md)
-  - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-  - [G6 Architecture and QA Review](g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
 
 ### G7 - Read models + standalone projector
 
@@ -253,6 +264,7 @@ Parallel execution track detail:
 
 ## Related Documents
 
+- Planning gaps hub: [`docs/planning/gaps/index.md`](index.md)
 - G3 detail: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
 - G4 detail: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
 - Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)

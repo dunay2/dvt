@@ -92,6 +92,6 @@ Neutral but important:
 
 This ADR should be used together with:
 
-- [`docs/architecture/working/g5-outbox-worker-guide.md`](../../architecture/working/g5-outbox-worker-guide.md)
+- [`docs/planning/gaps/g5-outbox-worker-guide.md`](../../planning/gaps/g5-outbox-worker-guide.md)
 - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../../planning/proposals/g5-outbox-worker-development-proposal-20260308.md)
 - [`docs/planning/gaps/GAP_EXECUTION_PLANS.md`](../../planning/gaps/GAP_EXECUTION_PLANS.md)

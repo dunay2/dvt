@@ -414,12 +414,12 @@ The following validator streams are approved and tracked as dedicated GitHub iss
 
 ### ADR requirement (semantic contract changes)
 
-Contract semantic changes SHOULD include an ADR in `docs/decisions/`.
+Contract semantic changes SHOULD include an ADR in `docs/adr/`.
 
 In hardened phase, semantic changes (required fields, event semantics, deprecations)
 MUST include an ADR and will be enforced by CI gate.
 
-Reference policy: [`ADR-0006-contract-tooling-governance.md`](./decisions/ADR-0006-contract-tooling-governance.md)
+Reference policy: [`ADR-0006-contract-tooling-governance.md`](./adr/ADR-0006-contract-tooling-governance.md)
 
 ---
 

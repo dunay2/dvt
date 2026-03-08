@@ -16,6 +16,10 @@ validated in CI.
 
 ## Canonical Anchors
 
+- [Glossary](../../../concepts/glossary.md) for `traceability`,
+  `schema pin`, `canonical spec`, `verification tuple`, and `golden fixture`
+- [Domain Language](../../../concepts/domain-language.md) for the distinction
+  between planning docs, status docs, and normative contract artifacts
 - [G6 hub](index.md) for planning navigation
 - [Traceability Contracts](../../../contracts/traceability/index.md) for the
   normative emitted facet artifacts
@@ -121,6 +125,13 @@ Equivalent commands are acceptable, but `G6` closure must keep:
 - one explicit package regression lane
 - one explicit golden validation lane
 - one explicit schema validation lane
+
+Closeout docs must update at least:
+
+- [Gap Execution Plans](../GAP_EXECUTION_PLANS.md)
+- [Canonical Doc Code Matrix](../../status/canonical-doc-code-matrix.md)
+- [System Delivery Status](../../../architecture/system-delivery-status.md)
+- one evidence doc or residual risk record, depending on closeout state
 
 ## Definition Of Done
 

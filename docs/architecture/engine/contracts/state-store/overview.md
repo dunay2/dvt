@@ -175,4 +175,4 @@ not canonical:
 
 Non-canonical but useful curation material:
 
-- [`docs/architecture/working/state-store-extraction.md`](../../../working/state-store-extraction.md)
+- [`docs/archive/working-notes/state-store-extraction.md`](../../../../archive/working-notes/state-store-extraction.md)

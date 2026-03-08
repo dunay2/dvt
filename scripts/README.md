@@ -24,7 +24,8 @@ pnpm validate:contracts
 
 ### `run-golden-paths.cjs`
 
-Executes the 3 required golden paths from ROADMAP.md:
+Executes the 3 required golden paths from the roadmap of record and contract
+validation policy:
 
 1. **Hello-world plan**: 3 steps linear → completes in < 30s
 2. **Pause/resume plan**: pause after step 1 → resume → same final snapshot hash
@@ -270,7 +271,7 @@ These scripts are used by the `.github/workflows/contracts.yml` GitHub Actions w
 
 ## References
 
-- [ROADMAP.md](../ROADMAP.md) - Phase 1 Success Criteria
+- [Roadmap Of Record](../docs/planning/roadmap/index.md) - canonical planning entry point
 - [Issue #17](https://github.com/dunay2/dvt/issues/17) - CI contract testing pipeline (this implementation)
 - [Issue #10](https://github.com/dunay2/dvt/issues/10) - Golden Paths examples (blocking)
 - [Issue #6](https://github.com/dunay2/dvt/issues/6) - PostgresStateStoreAdapter MVP (blocking)
