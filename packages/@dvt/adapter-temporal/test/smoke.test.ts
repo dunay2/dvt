@@ -14,8 +14,12 @@ import {
 
 import { makeTrackingObservability } from './helpers/mockObservability.js';
 
-const { mockEnsureConnected, mockClose: _mockClose, mockConnectionConnect, mockWithAbortSignal } =
-  vi.hoisted(() => {
+const {
+  mockEnsureConnected,
+  mockClose: _mockClose,
+  mockConnectionConnect,
+  mockWithAbortSignal,
+} = vi.hoisted(() => {
   const mockEnsureConnected = vi.fn(async () => undefined);
   const mockClose = vi.fn(async () => undefined);
   const mockWithAbortSignal = vi.fn(async (_signal: AbortSignal, fn: () => Promise<unknown>) => {
@@ -27,13 +31,13 @@ const { mockEnsureConnected, mockClose: _mockClose, mockConnectionConnect, mockW
     withAbortSignal: mockWithAbortSignal,
   }));
 
-    return {
-      mockEnsureConnected,
-      mockClose,
-      mockConnectionConnect,
-      mockWithAbortSignal,
-    };
-  });
+  return {
+    mockEnsureConnected,
+    mockClose,
+    mockConnectionConnect,
+    mockWithAbortSignal,
+  };
+});
 
 vi.mock('@temporalio/client', () => {
   class Client {
