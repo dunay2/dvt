@@ -19,6 +19,8 @@ Execution status on 2026-03-08:
 - Phase 3 is in progress: workspace coverage, repository mapping, frontend
   landing, shared-package surfacing, and explicit package-status
   classification are being executed.
+- Phase 4 has started: planning entry points and compatibility aliases are
+  being separated so legacy notes stop competing with canonical navigation.
 
 ## Goal
 
@@ -329,4 +331,4 @@ Usability validation:
 - [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [Repository Map](../../knowledge/REPOSITORY_MAP.md)
-- [Roadmap And Issues Map](../../knowledge/ROADMAP_AND_ISSUES_MAP.md)
+- [Roadmap Of Record](../roadmap/index.md)

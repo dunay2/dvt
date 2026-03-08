@@ -13,6 +13,8 @@ The active conceptual surface has moved to:
 Use this page only if you are following older links or repository notes that
 still refer to `docs/knowledge/`.
 
+Do not use this page as the starting point for new documentation links.
+
 ---
 
 ## Legacy Knowledge References

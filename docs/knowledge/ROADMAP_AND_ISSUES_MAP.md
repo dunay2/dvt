@@ -21,6 +21,8 @@ issue-shaped documentation relate to each other.
 
 It should help readers move to the canonical planning surface, not replace it.
 
+Do not use this page as the first planning link in new documentation.
+
 ## Supporting References
 
 - Historical top-level roadmap: [`ROADMAP.md`](../../ROADMAP.md)

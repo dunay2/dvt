@@ -1,9 +1,9 @@
 ---
 title: DVT Plus Track Summary
-status: Active
+status: Review
 owner: Product / Architecture / Docs
 last_reviewed: 2026-03-08
-planning_type: reference
+planning_type: compatibility
 ---
 
 # DVT Plus Track Summary
@@ -12,6 +12,8 @@ This file is retained as a compatibility path for earlier references to the
 former DVT+ roadmap note.
 
 It is no longer the roadmap of record.
+
+Do not link new planning material to this page as the primary entry point.
 
 ## Canonical Planning Entry Points
 

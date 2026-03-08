@@ -3,6 +3,8 @@
 This document is a legacy entry point kept only for compatibility.
 The canonical ADR catalog lives under [`docs/adr/`](../adr/index.md).
 
+Do not point new decision references to this page.
+
 ## ADR Catalog
 
 - ADR-0000: Code Generation with Enforced Normative Traceability

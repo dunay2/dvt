@@ -38,6 +38,12 @@ const explicitOwnerFiles = [
   'docs/planning/gaps/index.md',
   'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
 ];
+const forbiddenMkdocsNavTargets = [
+  'planning/DVTplus_Roadmap.md',
+  'knowledge/INDEX.md',
+  'decisions/INDEX.md',
+  'knowledge/ROADMAP_AND_ISSUES_MAP.md',
+];
 
 function walk(dir) {
   const out = [];
@@ -130,6 +136,16 @@ function main() {
     const raw = fs.readFileSync(absPath, 'utf8');
     if (/^owner:\s*docs\s*$/im.test(raw)) {
       failures.push(`${relativePath} -> owner must name the responsible area, not the generic placeholder "docs".`);
+    }
+  }
+
+  const mkdocsPath = path.join(repoRoot, 'mkdocs.yml');
+  if (fs.existsSync(mkdocsPath)) {
+    const mkdocsRaw = fs.readFileSync(mkdocsPath, 'utf8');
+    for (const target of forbiddenMkdocsNavTargets) {
+      if (mkdocsRaw.includes(target)) {
+        failures.push(`mkdocs.yml -> must not expose legacy compatibility target ${target} in the main nav.`);
+      }
     }
   }
 
