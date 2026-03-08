@@ -14,3 +14,10 @@ export function getPgPool(connectionString: string): Pool {
 
   return pool;
 }
+
+export async function closePgPool(): Promise<void> {
+  const activePool = pool;
+  pool = null;
+  if (!activePool) return;
+  await activePool.end();
+}

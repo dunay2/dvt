@@ -15,6 +15,7 @@ await test('loadEnv applies standalone worker defaults', () => {
   assert.equal(env.DVT_OUTBOX_WORKER_BATCH_SIZE, 100);
   assert.equal(env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS, 5000);
   assert.equal(env.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
+  assert.equal(env.DVT_OUTBOX_WORKER_RUN_MIGRATIONS, false);
   assert.equal(env.DVT_OUTBOX_EVENT_BUS_MODE, 'http');
   assert.equal(env.DVT_OUTBOX_HTTP_TARGET_URL, 'http://localhost:8080/outbox/events');
   assert.equal(env.DVT_OUTBOX_HTTP_TIMEOUT_MS, 10000);
@@ -73,8 +74,15 @@ await test('loadEnv parses string booleans for stop-on-error explicitly', () => 
     DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
     DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'true',
   });
+  const migrateEnv = loadEnv({
+    NODE_ENV: 'test',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+    DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+  });
 
   assert.equal(falseEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
   assert.equal(zeroEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
   assert.equal(trueEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, true);
+  assert.equal(migrateEnv.DVT_OUTBOX_WORKER_RUN_MIGRATIONS, true);
 });

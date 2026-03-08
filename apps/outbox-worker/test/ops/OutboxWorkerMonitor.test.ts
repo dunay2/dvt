@@ -83,12 +83,13 @@ await test('OutboxWorkerMonitor tracks runtime state, metrics, and delivery tran
     retriedCount: 1,
     deadLetteredCount: 0,
     oldestClaimedAgeMs: 2_500,
+    retryBacklogActive: true,
   });
 
   const ready = monitor.getHealthSnapshot();
-  assert.equal(ready.ready, true);
-  assert.equal(ready.state, 'draining');
-  assert.equal(ready.lastErrorMessage, null);
+  assert.equal(ready.ready, false);
+  assert.equal(ready.state, 'failing');
+  assert.equal(ready.lastErrorMessage, 'transient');
 
   monitor.onError(new Error('downstream broke'));
   const failing = monitor.getHealthSnapshot();
@@ -133,6 +134,7 @@ await test('OutboxWorkerMonitor marks readiness false when a tick only retries r
     retriedCount: 1,
     deadLetteredCount: 0,
     oldestClaimedAgeMs: 5_000,
+    retryBacklogActive: true,
   });
 
   const snapshot = monitor.getHealthSnapshot();
@@ -146,6 +148,21 @@ await test('OutboxWorkerMonitor marks readiness false when a tick only retries r
     retriedCount: 0,
     deadLetteredCount: 0,
     oldestClaimedAgeMs: null,
+    retryBacklogActive: true,
+  });
+
+  const stillFailing = monitor.getHealthSnapshot();
+  assert.equal(stillFailing.ready, false);
+  assert.equal(stillFailing.state, 'failing');
+  assert.equal(stillFailing.lastErrorMessage, 'downstream unavailable');
+
+  monitor.onTick({
+    claimedCount: 0,
+    deliveredCount: 0,
+    retriedCount: 0,
+    deadLetteredCount: 0,
+    oldestClaimedAgeMs: null,
+    retryBacklogActive: false,
   });
 
   const recovered = monitor.getHealthSnapshot();

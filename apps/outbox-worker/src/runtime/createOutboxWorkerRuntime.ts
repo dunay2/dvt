@@ -1,9 +1,9 @@
-import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import adapterPostgres from '@dvt/adapter-postgres';
 import type { IEventBus, OutboxWorkerObserver } from '@dvt/engine';
 
 import { HttpEventBus } from '../bus/HttpEventBus.js';
 import { LoggingEventBus } from '../bus/LoggingEventBus.js';
-import { getPgPool } from '../db/pool.js';
+import { closePgPool, getPgPool } from '../db/pool.js';
 import type { Env } from '../plugins/env.js';
 
 import {
@@ -11,6 +11,8 @@ import {
   type OutboxWorkerRuntimeHooks,
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
+
+const { PostgresStateStoreAdapter } = adapterPostgres as typeof import('@dvt/adapter-postgres');
 
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;
@@ -27,15 +29,19 @@ export async function createOutboxWorkerRuntime(
   logger: OutboxWorkerRuntimeLogger,
   options: CreateOutboxWorkerRuntimeOptions = {}
 ): Promise<RuntimeHandle> {
+  const runMigrations = env.DVT_OUTBOX_WORKER_RUN_MIGRATIONS;
   const pool = getPgPool(env.DATABASE_URL);
   const stateStore = new PostgresStateStoreAdapter({
     pool,
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+    assumeSchemaReady: !runMigrations,
   });
 
-  await stateStore.migrate();
+  if (runMigrations) {
+    await stateStore.migrate();
+  }
 
   const runtime = new OutboxWorkerRuntime(stateStore, createEventBus(env, logger), logger, {
     batchSize: env.DVT_OUTBOX_WORKER_BATCH_SIZE,
@@ -51,6 +57,7 @@ export async function createOutboxWorkerRuntime(
     stop: async () => {
       await runtime.stop();
       await stateStore.close();
+      await closePgPool();
     },
   };
 }

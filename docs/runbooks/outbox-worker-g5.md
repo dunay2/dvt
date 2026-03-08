@@ -35,6 +35,12 @@ Default bind:
 Readiness rule:
 
 - `ready=true` only for `idle` and `draining`
+- keep readiness `false` while any retry backlog is still pending, even if a later poll claims nothing because the failed record is waiting on backoff
+
+Migration rule:
+
+- keep `DVT_OUTBOX_WORKER_RUN_MIGRATIONS=false` for runtime-only DB roles
+- set `DVT_OUTBOX_WORKER_RUN_MIGRATIONS=true` only for local/bootstrap environments where the worker may execute schema DDL
 
 ## Key metrics
 

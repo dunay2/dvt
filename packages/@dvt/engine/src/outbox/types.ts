@@ -49,6 +49,7 @@ export interface OutboxTickResult {
   retriedCount: number;
   deadLetteredCount: number;
   oldestClaimedAgeMs: number | null;
+  retryBacklogActive: boolean;
 }
 
 /**
@@ -61,6 +62,7 @@ export interface IOutboxStorage {
   listPending(limit: number): Promise<OutboxRecord[]>;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
+  hasPendingRetries?(): Promise<boolean>;
   /**
    * Optional DLQ listing capability for operational tooling.
    */

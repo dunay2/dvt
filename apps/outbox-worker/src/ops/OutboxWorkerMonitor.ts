@@ -95,11 +95,18 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     const lastDeliveryFailureAtMs = this.pendingDeliveryFailureAtMs;
     this.pendingDeliveryFailureMessage = null;
     this.pendingDeliveryFailureAtMs = null;
+    const hadDeliveryFailures = result.retriedCount > 0 || result.deadLetteredCount > 0;
 
-    if (result.deliveredCount === 0 && (result.retriedCount > 0 || result.deadLetteredCount > 0)) {
-      this.lastErrorMessage = lastDeliveryFailureMessage ?? 'outbox delivery failed';
-      this.lastErrorAtMs = lastDeliveryFailureAtMs ?? this.lastTickAtMs;
+    if (hadDeliveryFailures) {
+      this.lastErrorMessage =
+        lastDeliveryFailureMessage ?? this.lastErrorMessage ?? 'outbox delivery failed';
+      this.lastErrorAtMs = lastDeliveryFailureAtMs ?? this.lastErrorAtMs ?? this.lastTickAtMs;
       this.transitionTo('failing', 'tick completed with delivery failures');
+      return;
+    }
+
+    if (result.retryBacklogActive) {
+      this.transitionTo('failing', 'retry backlog still pending');
       return;
     }
 

@@ -43,7 +43,10 @@ export class OutboxWorker {
   async tick(): Promise<OutboxTickResult> {
     const batch = await this.storage.listPending(this.cfg.batchSize);
     if (batch.length === 0) {
-      return emptyTickResult();
+      return {
+        ...emptyTickResult(),
+        retryBacklogActive: await resolveRetryBacklogActive(this.storage, false),
+      };
     }
 
     await safelyObserve(() => this.observer?.onBatchClaimed?.(batch));
@@ -54,6 +57,7 @@ export class OutboxWorker {
       retriedCount: 0,
       deadLetteredCount: 0,
       oldestClaimedAgeMs: this.nowMs ? resolveOldestClaimedAgeMs(batch, this.nowMs()) : null,
+      retryBacklogActive: false,
     };
 
     for (const rec of batch) {
@@ -80,6 +84,10 @@ export class OutboxWorker {
       }
     }
 
+    result.retryBacklogActive = await resolveRetryBacklogActive(
+      this.storage,
+      result.retriedCount > 0
+    );
     return result;
   }
 }
@@ -91,6 +99,7 @@ function emptyTickResult(): OutboxTickResult {
     retriedCount: 0,
     deadLetteredCount: 0,
     oldestClaimedAgeMs: null,
+    retryBacklogActive: false,
   };
 }
 
@@ -116,4 +125,14 @@ async function safelyObserve(fn: (() => void | Promise<void>) | undefined): Prom
   } catch {
     // Best-effort telemetry must not break delivery.
   }
+}
+
+async function resolveRetryBacklogActive(
+  storage: IOutboxStorage,
+  fallback: boolean
+): Promise<boolean> {
+  if (!storage.hasPendingRetries) {
+    return fallback;
+  }
+  return storage.hasPendingRetries();
 }

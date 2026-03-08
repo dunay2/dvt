@@ -25,6 +25,7 @@ const EnvSchema = z
     DVT_OUTBOX_WORKER_BATCH_SIZE: z.coerce.number().int().positive().default(100),
     DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: z.coerce.number().int().positive().default(5000),
     DVT_OUTBOX_WORKER_STOP_ON_ERROR: envBoolean.default(false),
+    DVT_OUTBOX_WORKER_RUN_MIGRATIONS: envBoolean.default(false),
     DVT_OUTBOX_EVENT_BUS_MODE: z.enum(['http', 'log']).default('http'),
     DVT_OUTBOX_HTTP_TARGET_URL: z.string().optional(),
     DVT_OUTBOX_HTTP_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),

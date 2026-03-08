@@ -26,17 +26,23 @@ export function createOperationalServer(
     start: async () => {
       if (server !== null) return;
 
-      server = createServer((request, response) => {
+      const candidateServer = createServer((request, response) => {
         void handleRequest(request, response, options.monitor);
       });
 
       await new Promise<void>((resolve, reject) => {
-        server!.once('error', reject);
-        server!.listen(options.port, options.host, () => {
-          server!.off('error', reject);
+        const onError = (error: Error): void => {
+          candidateServer.off('error', onError);
+          reject(error);
+        };
+
+        candidateServer.once('error', onError);
+        candidateServer.listen(options.port, options.host, () => {
+          candidateServer.off('error', onError);
           resolve();
         });
       });
+      server = candidateServer;
 
       options.logger.info(
         { host: options.host, port: options.port },

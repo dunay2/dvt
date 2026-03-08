@@ -6,11 +6,13 @@ import {
   InMemoryEventBus,
   type IOutboxStorage,
   type OutboxRecord,
+  type OutboxTickResult,
   type RunEventPersisted,
 } from '@dvt/engine';
 
 import {
   OutboxWorkerRuntime,
+  type OutboxWorkerRuntimeHooks,
   type OutboxWorkerRuntimeLogger,
 } from '../../src/runtime/OutboxWorkerRuntime.js';
 
@@ -47,6 +49,10 @@ class MemoryOutboxStorage implements IOutboxStorage {
     if (!record) return;
     record.attempts += 1;
     record.lastError = error;
+  }
+
+  async hasPendingRetries(): Promise<boolean> {
+    return this.records.some((record) => record.attempts > 0);
   }
 }
 
@@ -97,6 +103,24 @@ async function waitFor(predicate: () => boolean, timeoutMs = 1000): Promise<void
   }
 }
 
+class CountingHooks implements OutboxWorkerRuntimeHooks {
+  public started = false;
+  public tickCount = 0;
+  public stopped = false;
+
+  onStarted(): void {
+    this.started = true;
+  }
+
+  onTick(): void {
+    this.tickCount += 1;
+  }
+
+  onStopped(): void {
+    this.stopped = true;
+  }
+}
+
 await test('start drains pending records and stop exits cleanly', async () => {
   const storage = new MemoryOutboxStorage();
   const bus = new InMemoryEventBus();
@@ -141,7 +165,7 @@ await test('runtime passes a clock into OutboxWorker so tick lag is populated', 
   const storage = new MemoryOutboxStorage();
   const bus = new InMemoryEventBus();
   const { logger } = makeLogger();
-  let firstTick: { oldestClaimedAgeMs: number | null } | null = null;
+  let firstTick: OutboxTickResult | null = null;
   const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
     pollIntervalMs: 60_000,
     errorBackoffMs: 25,
@@ -161,4 +185,62 @@ await test('runtime passes a clock into OutboxWorker so tick lag is populated', 
   await loop;
 
   assert.equal(firstTick?.oldestClaimedAgeMs, 60_000);
+  assert.equal(firstTick?.retryBacklogActive, false);
+});
+
+await test('runtime preserves receiver for object-backed hooks', async () => {
+  const storage = new MemoryOutboxStorage();
+  const bus = new InMemoryEventBus();
+  const { logger } = makeLogger();
+  const hooks = new CountingHooks();
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 60_000,
+    errorBackoffMs: 25,
+    hooks,
+  });
+
+  await storage.enqueueTx('run-1', [makeEvent('1')]);
+
+  const loop = runtime.start();
+  await waitFor(() => hooks.tickCount > 0);
+  await runtime.stop();
+  await loop;
+
+  assert.equal(hooks.started, true);
+  assert.equal(hooks.tickCount, 1);
+  assert.equal(hooks.stopped, true);
+});
+
+await test('runtime stops and surfaces the first failure when stopOnError=true', async () => {
+  const storage = new MemoryOutboxStorage();
+  let publishCalls = 0;
+  const bus = {
+    async publish(): Promise<void> {
+      publishCalls += 1;
+      throw new Error('synthetic fatal publish failure');
+    },
+  };
+  const { logger, getErrorCount } = makeLogger();
+  const hooks = new CountingHooks();
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 25,
+    errorBackoffMs: 25,
+    batchSize: 10,
+    stopOnError: true,
+    hooks,
+  });
+
+  await storage.enqueueTx('run-1', [makeEvent('1')]);
+
+  await assert.rejects(
+    () => runtime.start(),
+    /synthetic fatal publish failure/
+  );
+  await runtime.stop();
+
+  assert.equal(publishCalls, 1);
+  assert.equal(getErrorCount(), 1);
+  assert.equal(hooks.started, true);
+  assert.equal(hooks.stopped, true);
+  assert.equal((await storage.listPending(10))[0]?.attempts, 1);
 });

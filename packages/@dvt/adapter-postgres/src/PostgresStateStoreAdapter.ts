@@ -239,6 +239,7 @@ export interface PostgresAdapterConfig {
   now?: () => string;
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
+  assumeSchemaReady?: boolean;
 }
 
 /**
@@ -280,6 +281,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         query_timeout: config.queryTimeoutMs ?? Number(process.env.DVT_PG_QUERY_TIMEOUT_MS ?? 0),
       });
       this.ownsPool = true;
+    }
+    if (config.assumeSchemaReady) {
+      this.migratePromise = Promise.resolve();
+      this.migrated = true;
     }
     // DDL is no longer run at construction time.
     // Callers MUST await adapter.migrate() before using any storage methods.
@@ -732,6 +737,22 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         ]);
       }
     });
+  }
+
+  async hasPendingRetries(): Promise<boolean> {
+    this.ready();
+    const result = await this.pool.query<{ has_pending_retries: boolean }>(
+      `
+        SELECT EXISTS (
+          SELECT 1
+          FROM ${quoteIdentifier(this.schema)}.outbox
+          WHERE delivered_at IS NULL
+            AND attempts > 0
+            AND attempts < ${MAX_OUTBOX_ATTEMPTS}
+        ) AS has_pending_retries
+      `
+    );
+    return result.rows[0]?.has_pending_retries ?? false;
   }
 
   async listDeadLetter(limit: number, tenantId?: string): Promise<DeadLetterRecord[]> {

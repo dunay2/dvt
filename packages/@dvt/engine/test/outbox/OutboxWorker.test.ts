@@ -61,6 +61,7 @@ describe('OutboxWorker', () => {
       deliveredCount: 2,
       retriedCount: 0,
       deadLetteredCount: 0,
+      retryBacklogActive: false,
     });
     await expect(store.listPending(10)).resolves.toHaveLength(0);
   });
@@ -73,7 +74,8 @@ describe('OutboxWorker', () => {
 
     await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1), makeEvent('2', 'run-1', 2)]);
 
-    await worker.tick();
+    const firstResult = await worker.tick();
+    expect(firstResult.retryBacklogActive).toBe(true);
 
     // First record failed and remains pending with attempts=1 + nextAttemptAt backoff.
     // Immediate poll should not surface the failed item yet due to backoff gate.
@@ -89,7 +91,8 @@ describe('OutboxWorker', () => {
 
     // Retry and drain.
     now.value = 2_000;
-    await worker.tick();
+    const secondResult = await worker.tick();
+    expect(secondResult.retryBacklogActive).toBe(false);
 
     await expect(store.listPending(10)).resolves.toHaveLength(0);
     expect(bus.published).toHaveLength(2);
@@ -110,7 +113,8 @@ describe('OutboxWorker', () => {
     // 10 failures -> DLQ
     for (let i = 0; i < 10; i += 1) {
       now.value = i * 65_000;
-      await worker.tick();
+      const result = await worker.tick();
+      expect(result.retryBacklogActive).toBe(i < 9);
     }
 
     await expect(store.listPending(10)).resolves.toHaveLength(0);

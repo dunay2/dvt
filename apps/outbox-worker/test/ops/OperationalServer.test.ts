@@ -47,6 +47,7 @@ await test('OperationalServer serves health, readiness, and metrics endpoints', 
       retriedCount: 0,
       deadLetteredCount: 0,
       oldestClaimedAgeMs: null,
+      retryBacklogActive: false,
     });
 
     response = await globalThis.fetch(`${baseUrl}/healthz`);
@@ -65,5 +66,42 @@ await test('OperationalServer serves health, readiness, and metrics endpoints', 
     assert.match(metrics, /dvt_outbox_runtime_state\{state="idle"\} 1/);
   } finally {
     await server.stop();
+  }
+});
+
+await test('OperationalServer stop does not mask listen failures', async () => {
+  const first = createOperationalServer({
+    host: '127.0.0.1',
+    port: 0,
+    logger: makeLogger(),
+    monitor: new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger: makeLogger(),
+      nowMs: () => 1_741_392_000_000,
+    }),
+  });
+
+  await first.start();
+
+  const address = first.getAddress();
+  assert.ok(address);
+
+  const second = createOperationalServer({
+    host: '127.0.0.1',
+    port: address.port,
+    logger: makeLogger(),
+    monitor: new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger: makeLogger(),
+      nowMs: () => 1_741_392_000_000,
+    }),
+  });
+
+  try {
+    await assert.rejects(() => second.start(), /EADDRINUSE/);
+    await second.stop();
+  } finally {
+    await second.stop();
+    await first.stop();
   }
 });

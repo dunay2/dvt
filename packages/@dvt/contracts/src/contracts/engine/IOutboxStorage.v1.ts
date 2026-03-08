@@ -16,4 +16,5 @@ export interface IOutboxStorage {
   >;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
+  hasPendingRetries?(): Promise<boolean>;
 }

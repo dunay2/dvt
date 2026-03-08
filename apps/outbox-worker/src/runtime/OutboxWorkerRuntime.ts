@@ -108,7 +108,11 @@ export class OutboxWorkerRuntime {
     this.running = false;
     this.waitController?.abort();
     if (loopPromise) {
-      await loopPromise;
+      try {
+        await loopPromise;
+      } catch {
+        // start() is responsible for surfacing loop failures; stop() is cleanup only.
+      }
     }
   }
 
@@ -124,27 +128,33 @@ export class OutboxWorkerRuntime {
       'outbox worker runtime started'
     );
 
-    while (this.running) {
-      try {
-        const result = await this.worker.tick();
-        this.runHook('onTick', result);
-      } catch (err) {
-        this.runHook('onError', err);
-        this.logger.error(
-          { err: toErrorLike(err), backoffMs: this.options.errorBackoffMs },
-          'outbox worker tick failed'
-        );
+    try {
+      while (this.running) {
+        try {
+          const result = await this.worker.tick();
+          this.runHook('onTick', result);
+        } catch (err) {
+          this.runHook('onError', err);
+          this.logger.error(
+            { err: toErrorLike(err), backoffMs: this.options.errorBackoffMs },
+            'outbox worker tick failed'
+          );
+          if (this.options.stopOnError) {
+            this.running = false;
+            throw err;
+          }
+          if (!this.running) break;
+          await this.wait(this.options.errorBackoffMs);
+          continue;
+        }
+
         if (!this.running) break;
-        await this.wait(this.options.errorBackoffMs);
-        continue;
+        await this.wait(this.options.pollIntervalMs);
       }
-
-      if (!this.running) break;
-      await this.wait(this.options.pollIntervalMs);
+    } finally {
+      this.runHook('onStopped');
+      this.logger.info({}, 'outbox worker runtime stopped');
     }
-
-    this.runHook('onStopped');
-    this.logger.info({}, 'outbox worker runtime stopped');
   }
 
   private async wait(delayMs: number): Promise<void> {
@@ -164,18 +174,23 @@ export class OutboxWorkerRuntime {
   }
 
   private runHook(name: keyof OutboxWorkerRuntimeHooks, value?: OutboxTickResult | unknown): void {
-    const hook = this.hooks?.[name];
+    const hooks = this.hooks;
+    if (!hooks) return;
+    const hook = hooks[name];
     if (!hook) return;
     try {
       if (name === 'onTick') {
-        (hook as (result: OutboxTickResult) => void)(value as OutboxTickResult);
+        (hook as (this: OutboxWorkerRuntimeHooks, result: OutboxTickResult) => void).call(
+          hooks,
+          value as OutboxTickResult
+        );
         return;
       }
       if (name === 'onError') {
-        (hook as (error: unknown) => void)(value);
+        (hook as (this: OutboxWorkerRuntimeHooks, error: unknown) => void).call(hooks, value);
         return;
       }
-      (hook as () => void)();
+      (hook as (this: OutboxWorkerRuntimeHooks) => void).call(hooks);
     } catch (err) {
       this.logger.warn?.({ err: toErrorLike(err), hook: name }, 'outbox runtime hook failed');
     }
