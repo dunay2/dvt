@@ -175,11 +175,11 @@ export async function withTimeoutMs<T>(promise: Promise<T>, ms: number, label: s
 }
 
 export async function withAbortSignalTimeout<T>(
-  run: (signal: AbortSignal) => Promise<T>,
+  run: (signal: globalThis.AbortSignal) => Promise<T>,
   ms: number,
   label: string
 ): Promise<T> {
-  const controller = new AbortController();
+  const controller = new globalThis.AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
   }, ms);
@@ -188,7 +188,7 @@ export async function withAbortSignalTimeout<T>(
     return await run(controller.signal);
   } catch (error) {
     if (controller.signal.aborted) {
-      throw new Error(`${label} timed out after ${ms}ms`);
+      throw Object.assign(new Error(`${label} timed out after ${ms}ms`), { cause: error });
     }
     throw error;
   } finally {

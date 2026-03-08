@@ -22,9 +22,11 @@ const {
 } = vi.hoisted(() => {
   const mockEnsureConnected = vi.fn(async () => undefined);
   const mockClose = vi.fn(async () => undefined);
-  const mockWithAbortSignal = vi.fn(async (_signal: AbortSignal, fn: () => Promise<unknown>) => {
-    return await fn();
-  });
+  const mockWithAbortSignal = vi.fn(
+    async (_signal: globalThis.AbortSignal, fn: () => Promise<unknown>) => {
+      return await fn();
+    }
+  );
   const mockConnectionConnect = vi.fn(async () => ({
     ensureConnected: mockEnsureConnected,
     close: mockClose,
@@ -236,7 +238,7 @@ describe('adapter-temporal foundation', () => {
 
     mockEnsureConnected.mockImplementationOnce(() => new Promise<never>(() => undefined));
     mockWithAbortSignal.mockImplementationOnce(
-      async (signal: AbortSignal, fn: () => Promise<unknown>) =>
+      async (signal: globalThis.AbortSignal, fn: () => Promise<unknown>) =>
         await new Promise((resolve, reject) => {
           signal.addEventListener('abort', () => reject(new Error('CANCELLED')), { once: true });
           void fn().then(resolve, reject);
