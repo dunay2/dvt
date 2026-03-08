@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/dunay2/dvt/compare/v3.0.1...v3.1.0) (2026-03-08)
+
+
+### Features
+
+* Close temporal operational observability gaps ([#400](https://github.com/dunay2/dvt/issues/400)) ([d358fd4](https://github.com/dunay2/dvt/commit/d358fd4ccdc39f1417e8e143f33fa8e0e1002742))
+
 ## [3.0.1](https://github.com/dunay2/dvt/compare/v3.0.0...v3.0.1) (2026-03-08)
 
 
