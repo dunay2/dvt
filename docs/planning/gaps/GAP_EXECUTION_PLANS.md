@@ -2,7 +2,7 @@
 title: DVT+ - Gap Execution Plans
 status: Review
 owner: docs
-last_reviewed: 2026-03-07
+last_reviewed: 2026-03-08
 planning_type: proposal
 ---
 
@@ -11,7 +11,7 @@ planning_type: proposal
 Source of truth for execution gaps and delivery state.
 
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
-- Last sync date: 2026-03-07
+- Last sync date: 2026-03-08
 - Scope: Phase 1, Phase 1.5, Phase 2
 
 ## Traceability Anchors
@@ -30,11 +30,11 @@ Minimum tuple for this document:
 - `verification_cmd`: gap-specific. See each active gap section below.
 - `evidence_or_risk`: linked evidence docs and risk records where the gap is already formalized
 
-## Executive State (2026-03-07)
+## Executive State (2026-03-08)
 
 | Gap | Title                                     | Phase     | Current state                                             |
 | --- | ----------------------------------------- | --------- | --------------------------------------------------------- |
-| G1  | Temporal Adapter real                     | Phase 1   | In progress (lookupRunRef done, full integration pending) |
+| G1  | Temporal Adapter real                     | Phase 1   | Closed                                                    |
 | G2  | PostgresStateStore complete               | Phase 1   | Closed                                                    |
 | G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed                                                    |
 | G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                                    |
@@ -74,25 +74,27 @@ Minimum tuple for this document:
 
 ### G1 - Temporal Adapter real
 
-- Status: In progress (close-out phase)
+- Status: Closed
 - Traceability tuple:
   - `canonical_spec`: [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`, `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
-  - `test_paths`: `packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`, `packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts`, `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
+  - `code_paths`: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`, `packages/@dvt/adapter-temporal/src/TemporalClient.ts`, `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
+  - `test_paths`: `packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`, `packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts`, `packages/@dvt/adapter-temporal/test/smoke.test.ts`, `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
   - `verification_cmd`: `pnpm test:adapter-temporal`
-  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md)
-- Done:
+  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md), [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md)
+- Delivered:
   - `lookupRunRef` implemented
   - unit tests for exists/not-found/error paths
   - `TemporalWorkerHost` lifecycle quality gate added (start once, no-op shutdown, deterministic Worker.create wiring)
   - time-skipping integration suite exists for success/failure/cancel/gateway/crash-recovery paths
   - dedicated PR quality gate runs `adapter-temporal test:integration`
-- Pending:
+  - `connectTimeoutMs` now actively bounds Temporal client connection attempts
+  - worker host start/shutdown/unexpected exit now emit logs, traces, and metrics
+  - `lookupRunRef()` and `ping()` now emit provider-side operational diagnostics
+- Non-blocking follow-up:
   - keep the integration lane healthy as Temporal runtime contracts evolve
-  - operational validation of worker host defaults under load
-  - align logging and tracing injection across adapters so runtime diagnostics are consistent
-  - review timeout policy alignment across Temporal, Conductor, and mock adapters
+  - gather load evidence for worker-host defaults from higher-level environments
+  - review cross-adapter timeout harmonization as a separate consistency pass
   - treat `AbortSignal` support as a deferred follow-up when Temporal SDK support becomes practical
 
 ### G2 - PostgresStateStore complete
@@ -230,10 +232,9 @@ Minimum tuple for this document:
 
 Recommended order for next cycles:
 
-1. Finish `G1` operational close-out.
-2. Start `G5` and `G6` in parallel.
-3. Start `G7` and `G8` after `G5/G6` direction is stable.
-4. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
+1. Start `G5` and `G6` in parallel.
+2. Start `G7` and `G8` after `G5/G6` direction is stable.
+3. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
 
 Parallel execution track detail:
 

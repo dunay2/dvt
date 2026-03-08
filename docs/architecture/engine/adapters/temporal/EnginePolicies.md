@@ -1,7 +1,7 @@
 # Temporal Engine Policies
 
 **Status**: Implementation Snapshot (aligned to current code)  
-**Version**: 1.1  
+**Version**: 1.2  
 **Engine**: Temporal  
 **Contract**: [ExecutionSemantics.v1.md](../../contracts/engine/ExecutionSemantics.v1.md)
 
@@ -179,12 +179,22 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 - Worker fields are configured from adapter config (`namespace`, `taskQueue`, optional `identity`).
 - Workflow entry defaults to `RunPlanWorkflow` bundle unless `workflowsPath` override is provided.
 - `shutdown()` drains and resets internal worker state.
+- Worker lifecycle emits structured logs, traces, counters, and duration histograms.
+- Unexpected `worker.run()` failure is recorded explicitly instead of remaining an unobserved runtime exit.
 
 ### 7.2 Client manager
 
 - Lazy-connect with connection de-dup (`connect()` memoizes in-flight promise).
 - Exposes `isConnected()`, `ensureConnected()`, and `close()` lifecycle APIs.
 - Adapter enforces client availability and throws `TEMPORAL_CLIENT_NOT_CONFIGURED` or `TEMPORAL_CLIENT_NOT_CONNECTED` in invalid states.
+- `connectTimeoutMs` actively bounds `Connection.connect()`.
+- `requestTimeoutMs` actively bounds `ensureConnected()` health checks.
+
+### 7.3 Operational diagnostics
+
+- `lookupRunRef()` emits `found`, `missing`, and `error` results through observability.
+- `ping()` emits duration and success/failure diagnostics.
+- Runtime diagnostics now use the shared `@dvt/observability` port instead of ad-hoc silent failure paths.
 
 ---
 
@@ -218,7 +228,8 @@ These should be treated as backlog policies until corresponding code lands in `p
 
 ## Change Log
 
-| Version | Date       | Change                                                                                                                                                                                           |
-| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1.1     | 2026-02-14 | Rewritten to match real adapter implementation (`TemporalAdapter`, `RunPlanWorkflow`, activities, worker/client lifecycle). Removed unimplemented normative claims and fixed contract link path. |
-| 1.0     | 2026-02-11 | Initial Temporal engine policies.                                                                                                                                                                |
+| Version | Date | Change |
+| --- | --- | --- |
+| 1.2 | 2026-03-08 | Documented client timeout enforcement and runtime observability for Temporal client, worker host, `lookupRunRef()`, and `ping()`. |
+| 1.1 | 2026-02-14 | Rewritten to match real adapter implementation (`TemporalAdapter`, `RunPlanWorkflow`, activities, worker/client lifecycle). Removed unimplemented normative claims and fixed contract link path. |
+| 1.0 | 2026-02-11 | Initial Temporal engine policies. |

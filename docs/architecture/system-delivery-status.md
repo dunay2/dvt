@@ -1,11 +1,11 @@
-# DVT+ - System Delivery Status
+﻿# DVT+ - System Delivery Status
 
 <!-- markdownlint-disable MD060 -->
 
-- **Fecha**: 2026-03-07 (revisado 2026-03-07 — G3/G4 cerrados, G1 re-evaluado)
-- **Versión**: 1.2.0
-- **Alcance**: Todos los módulos del monorepo (`packages/@dvt/*`, `apps/*`)
-- **Tests engine**: 151/151 ✅ (153 → 151 tras limpieza de fixtures huérfanos)
+- **Fecha**: 2026-03-08 (revisado 2026-03-08 - G1 closed after runtime hardening)
+- **VersiÃ³n**: 1.2.0
+- **Alcance**: Todos los mÃ³dulos del monorepo (`packages/@dvt/*`, `apps/*`)
+- **Tests engine**: 151/151 âœ… (153 â†’ 151 tras limpieza de fixtures huÃ©rfanos)
 
 ---
 
@@ -31,11 +31,11 @@ Minimum tuple for this document:
 
 ## Leyenda
 
-| Símbolo | Significado                                                        |
+| SÃ­mbolo | Significado                                                        |
 | ------- | ------------------------------------------------------------------ |
-| ✅      | Implementado y testeado — listo para producción                    |
-| 🟡      | Parcial — puerto/contrato existe, implementación stub o incompleta |
-| ❌      | Ausente — no existe implementación ni decisión firme               |
+| âœ…      | Implementado y testeado â€” listo para producciÃ³n                    |
+| ðŸŸ¡      | Parcial â€” puerto/contrato existe, implementaciÃ³n stub o incompleta |
+| âŒ      | Ausente â€” no existe implementaciÃ³n ni decisiÃ³n firme               |
 
 ---
 
@@ -44,74 +44,74 @@ Minimum tuple for this document:
 ```mermaid
 flowchart TB
 
-%% ─── ENTRY LAYER ──────────────────────────────────────────────────────────────
+%% â”€â”€â”€ ENTRY LAYER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph ENTRY["Entry Layer"]
   direction LR
-  API["apps/api\n🟡 Fastify + routes\nno auth real\nno prod-ready"]
-  WEB["apps/web\n🟡 UI existe\nparcialmente funcional"]
+  API["apps/api\nðŸŸ¡ Fastify + routes\nno auth real\nno prod-ready"]
+  WEB["apps/web\nðŸŸ¡ UI existe\nparcialmente funcional"]
 end
 
-%% ─── PLANNING LAYER ───────────────────────────────────────────────────────────
+%% â”€â”€â”€ PLANNING LAYER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph PLANNING["Planning Layer"]
   direction TB
-  MANIFEST["dbt manifest.json\n✅ grafo + metadata"]
-  RUNRESULTS["dbt run_results.json\n✅ compiled_code"]
-  PLANNER["@dvt/planner\n🟡 contracts + domain + runtime\ncontract tests ✅\nsin integración dbt real"]
-  PLANVERIF["@dvt/plan-verifier\n🟡 existe\ncobertura de tests ❌"]
-  COMPILED_DEC["compiledCodeRef ownership\n✅ ADR-0032 accepted\nimplemented end-to-end"]
+  MANIFEST["dbt manifest.json\nâœ… grafo + metadata"]
+  RUNRESULTS["dbt run_results.json\nâœ… compiled_code"]
+  PLANNER["@dvt/planner\nðŸŸ¡ contracts + domain + runtime\ncontract tests âœ…\nsin integraciÃ³n dbt real"]
+  PLANVERIF["@dvt/plan-verifier\nðŸŸ¡ existe\ncobertura de tests âŒ"]
+  COMPILED_DEC["compiledCodeRef ownership\nâœ… ADR-0032 accepted\nimplemented end-to-end"]
 end
 
-%% ─── EXECUTION LAYER ──────────────────────────────────────────────────────────
+%% â”€â”€â”€ EXECUTION LAYER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph EXEC["Execution Layer"]
   direction TB
-  ENGINE["@dvt/engine\n🟡 WorkflowEngine ✅\n153 tests ✅\nPostgres adapter 🟡\nscheduler ❌"]
-  INTENT["IStartRunIntentStore\n✅ InMemory + Postgres\nreconciler runtime ✅\nADR-0030"]
-  MAINT["RunMaintenanceService\n✅ reconcileOrphanedIntents\ndetectStuckRuns"]
-  CONTRACTS["@dvt/contracts\n✅ tipos compartidos\nZod schemas"]
+  ENGINE["@dvt/engine\nðŸŸ¡ WorkflowEngine âœ…\n153 tests âœ…\nPostgres adapter ðŸŸ¡\nscheduler âŒ"]
+  INTENT["IStartRunIntentStore\nâœ… InMemory + Postgres\nreconciler runtime âœ…\nADR-0030"]
+  MAINT["RunMaintenanceService\nâœ… reconcileOrphanedIntents\ndetectStuckRuns"]
+  CONTRACTS["@dvt/contracts\nâœ… tipos compartidos\nZod schemas"]
 end
 
 subgraph ADAPTERS["Provider Adapters"]
   direction LR
-  TEMPORAL["@dvt/adapter-temporal\n🟡 SDK real + lookupRunRef ✅\nintegration suite ✅\noperational close-out pending"]
-  POSTGRES_A["@dvt/adapter-postgres\n✅ IMPL 100%\nbootstrapRunTx ✅ outbox ✅\nDLQ ✅ listEvents(opts) ✅\nlistRuns status-filter ✅"]
-  MOCK["MockAdapter (test)\n✅ lookupRunRef ✅"]
+  TEMPORAL["@dvt/adapter-temporal\n? SDK real + lookupRunRef ?\nintegration suite ?\noperational hardening ?"]
+  POSTGRES_A["@dvt/adapter-postgres\nâœ… IMPL 100%\nbootstrapRunTx âœ… outbox âœ…\nDLQ âœ… listEvents(opts) âœ…\nlistRuns status-filter âœ…"]
+  MOCK["MockAdapter (test)\nâœ… lookupRunRef âœ…"]
 end
 
-%% ─── PERSISTENCE LAYER ────────────────────────────────────────────────────────
+%% â”€â”€â”€ PERSISTENCE LAYER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph PERSIST["Persistence Layer"]
   direction TB
-  STATESTORE["@dvt/state-store\n✅ IRunStateStore ✅\nInMemoryTxStore ✅\nPostgresStateStore ✅ 100%"]
-  OUTBOX["Outbox (dominio)\n🟡 patrón ✅\nlistPending + DLQ ✅\nworker polling ❌\nshards ❌"]
-  KAFKA["Event Bus (Kafka)\n❌ solo local-compose\nworker producción ❌"]
+  STATESTORE["@dvt/state-store\nâœ… IRunStateStore âœ…\nInMemoryTxStore âœ…\nPostgresStateStore âœ… 100%"]
+  OUTBOX["Outbox (dominio)\nðŸŸ¡ patrÃ³n âœ…\nlistPending + DLQ âœ…\nworker polling âŒ\nshards âŒ"]
+  KAFKA["Event Bus (Kafka)\nâŒ solo local-compose\nworker producciÃ³n âŒ"]
 end
 
-%% ─── READ / PROJECTION ────────────────────────────────────────────────────────
+%% â”€â”€â”€ READ / PROJECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph READ["Read & Projection"]
   direction TB
-  PROJECTOR["SnapshotProjector\n🟡 en engine ✅\nservicio standalone ❌"]
-  READMODELS["Read Models\n❌ MISSING\nsin índice denorm prod"]
+  PROJECTOR["SnapshotProjector\nðŸŸ¡ en engine âœ…\nservicio standalone âŒ"]
+  READMODELS["Read Models\nâŒ MISSING\nsin Ã­ndice denorm prod"]
 end
 
-%% ─── OBSERVABILITY ────────────────────────────────────────────────────────────
+%% â”€â”€â”€ OBSERVABILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph OBS["Observability"]
   direction LR
-  OBS_PORT["@dvt/observability\n✅ IObservability port\nnoop implementation ✅"]
-  OBS_OTEL["@dvt/observability-otel\n🟡 OtelObservability.ts\nintegración prod ❌"]
+  OBS_PORT["@dvt/observability\nâœ… IObservability port\nnoop implementation âœ…"]
+  OBS_OTEL["@dvt/observability-otel\nðŸŸ¡ OtelObservability.ts\nintegraciÃ³n prod âŒ"]
 end
 
-%% ─── TRACEABILITY / OPENLINEAGE ───────────────────────────────────────────────
+%% â”€â”€â”€ TRACEABILITY / OPENLINEAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph TRACE["Traceability / OpenLineage"]
   direction TB
-  TRACSVC["@dvt/traceability-service\n🟡 service + lineage mapper\ncompiledCodeRef path ✅\nschema pin/delivery pending"]
-  OL_MAP["RunEvents → OL mapping\n🟡 TypeScript impl ✅\npackage tests ✅\nCI/schema pin ❌"]
-  OLSPEC["OL spec pin _schemaURL\n❌ MISSING"]
-  OUTBOXL["outbox_lineage table\n❌ MISSING\nsolo intención de diseño"]
-  OUTBOXLW["outbox_lineage Worker\n❌ MISSING\nfail-open DLQ ❌"]
-  COST["dvt_cost attributor\n❌ Phase 3 (2027)"]
-  MARQUEZ["Marquez\n🟡 consumidor externo\ndeployment = riesgo externo"]
+  TRACSVC["@dvt/traceability-service\nðŸŸ¡ service + lineage mapper\ncompiledCodeRef path âœ…\nschema pin/delivery pending"]
+  OL_MAP["RunEvents â†’ OL mapping\nðŸŸ¡ TypeScript impl âœ…\npackage tests âœ…\nCI/schema pin âŒ"]
+  OLSPEC["OL spec pin _schemaURL\nâŒ MISSING"]
+  OUTBOXL["outbox_lineage table\nâŒ MISSING\nsolo intenciÃ³n de diseÃ±o"]
+  OUTBOXLW["outbox_lineage Worker\nâŒ MISSING\nfail-open DLQ âŒ"]
+  COST["dvt_cost attributor\nâŒ Phase 3 (2027)"]
+  MARQUEZ["Marquez\nðŸŸ¡ consumidor externo\ndeployment = riesgo externo"]
 end
 
-%% ─── FLUJOS PRINCIPALES ──────────────────────────────────────────────────────
+%% â”€â”€â”€ FLUJOS PRINCIPALES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 MANIFEST --> PLANNER
 RUNRESULTS --> COMPILED_DEC
 PLANNER --> ENGINE
@@ -147,108 +147,108 @@ TRACSVC --> OL_MAP
 
 ---
 
-## Estado por módulo
+## Estado por mÃ³dulo
 
 ### Entry Layer
 
-| Módulo     | Paquete    | Estado | Notas                                                                         |
+| MÃ³dulo     | Paquete    | Estado | Notas                                                                         |
 | ---------- | ---------- | ------ | ----------------------------------------------------------------------------- |
-| API Server | `apps/api` | 🟡     | Fastify + routes + plugins. Sin autenticación real. No production-ready       |
-| Web UI     | `apps/web` | 🟡     | Frontend existe con UI parcialmente funcional. Documentación de sprint pesada |
+| API Server | `apps/api` | ðŸŸ¡     | Fastify + routes + plugins. Sin autenticaciÃ³n real. No production-ready       |
+| Web UI     | `apps/web` | ðŸŸ¡     | Frontend existe con UI parcialmente funcional. DocumentaciÃ³n de sprint pesada |
 
 ---
 
 ### Planning Layer
 
-| Módulo           | Paquete              | Estado | Notas                                                                                                |
+| MÃ³dulo           | Paquete              | Estado | Notas                                                                                                |
 | ---------------- | -------------------- | ------ | ---------------------------------------------------------------------------------------------------- |
-| dbt manifest     | —                    | ✅     | Input canónico — grafo de nodos y metadata                                                           |
-| dbt run_results  | —                    | ✅     | Fuente de `compiled_code` por nodo                                                                   |
-| Planner          | `@dvt/planner`       | 🟡     | Contracts + domain + runtime existen. Contract tests con engine ✅. Sin integración real con dbt CLI |
-| Plan Verifier    | `@dvt/plan-verifier` | 🟡     | Estructura existe. Cobertura de tests ❌                                                             |
-| StepTypeRegistry | —                    | ❌     | No existe. `stepTypeConfig` permanece opaco (`Record<string, unknown>`)                              |
-| compiledCodeRef  | —                    | ✅     | ADR-0032 aceptado e implementado extremo a extremo; queda deuda separada por el transporte opaco     |
+| dbt manifest     | â€”                    | âœ…     | Input canÃ³nico â€” grafo de nodos y metadata                                                           |
+| dbt run_results  | â€”                    | âœ…     | Fuente de `compiled_code` por nodo                                                                   |
+| Planner          | `@dvt/planner`       | ðŸŸ¡     | Contracts + domain + runtime existen. Contract tests con engine âœ…. Sin integraciÃ³n real con dbt CLI |
+| Plan Verifier    | `@dvt/plan-verifier` | ðŸŸ¡     | Estructura existe. Cobertura de tests âŒ                                                             |
+| StepTypeRegistry | â€”                    | âŒ     | No existe. `stepTypeConfig` permanece opaco (`Record<string, unknown>`)                              |
+| compiledCodeRef  | â€”                    | âœ…     | ADR-0032 aceptado e implementado extremo a extremo; queda deuda separada por el transporte opaco     |
 
 ---
 
 ### Execution Layer
 
-| Módulo                | Paquete                 | Estado | Notas                                                                                                                                                                                                                              |
+| MÃ³dulo                | Paquete                 | Estado | Notas                                                                                                                                                                                                                              |
 | --------------------- | ----------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WorkflowEngine        | `@dvt/engine`           | 🟡     | `startRun`, `cancelRun`, `signal`, `getRunStatus`, `enrichRunStatus` ✅ · 153 tests ✅ · usa Postgres adapter vía contrato · Scheduler ❌                                                                                          |
-| IStartRunIntentStore  | `@dvt/engine`           | ✅     | Puerto ✅ · InMemory ✅ · Postgres ✅ · reconciler/runtime periódico ✅ (ADR-0030)                                                                                                                                                 |
-| RunMaintenanceService | `@dvt/engine`           | ✅     | `reconcileOrphanedIntents`, `detectStuckRuns`, `detectStuckCancellingRuns` · 151 tests ✅                                                                                                                                          |
-| Contracts             | `@dvt/contracts`        | ✅     | Tipos compartidos, Zod schemas, interfaces                                                                                                                                                                                         |
-| Temporal Adapter      | `@dvt/adapter-temporal` | 🟡     | Temporal SDK real + `lookupRunRef` ✅ + suite time-skipping ✅ · falta cierre operativo/runtime                                                                                                                                    |
-| Postgres Adapter      | `@dvt/adapter-postgres` | ✅     | **100% implementado** — `bootstrapRunTx`, `appendAndEnqueueTx`, `getSnapshot`, `listEvents(options)` con cursor/paginación ✅, `listRuns` con filtro `status` ✅, outbox completo, DLQ + `replayDeadLetters`, tenant isolation RLS |
-| MockAdapter           | `@dvt/engine` (test)    | ✅     | Test adapter completo con `lookupRunRef`                                                                                                                                                                                           |
+| WorkflowEngine        | `@dvt/engine`           | ðŸŸ¡     | `startRun`, `cancelRun`, `signal`, `getRunStatus`, `enrichRunStatus` âœ… Â· 153 tests âœ… Â· usa Postgres adapter vÃ­a contrato Â· Scheduler âŒ                                                                                          |
+| IStartRunIntentStore  | `@dvt/engine`           | âœ…     | Puerto âœ… Â· InMemory âœ… Â· Postgres âœ… Â· reconciler/runtime periÃ³dico âœ… (ADR-0030)                                                                                                                                                 |
+| RunMaintenanceService | `@dvt/engine`           | âœ…     | `reconcileOrphanedIntents`, `detectStuckRuns`, `detectStuckCancellingRuns` Â· 151 tests âœ…                                                                                                                                          |
+| Contracts             | `@dvt/contracts`        | âœ…     | Tipos compartidos, Zod schemas, interfaces                                                                                                                                                                                         |
+| Temporal Adapter      | `@dvt/adapter-temporal` | ?     | Temporal SDK real + `lookupRunRef` ? + suite time-skipping ? ? connect timeout and runtime observability hardening landed |
+| Postgres Adapter      | `@dvt/adapter-postgres` | âœ…     | **100% implementado** â€” `bootstrapRunTx`, `appendAndEnqueueTx`, `getSnapshot`, `listEvents(options)` con cursor/paginaciÃ³n âœ…, `listRuns` con filtro `status` âœ…, outbox completo, DLQ + `replayDeadLetters`, tenant isolation RLS |
+| MockAdapter           | `@dvt/engine` (test)    | âœ…     | Test adapter completo con `lookupRunRef`                                                                                                                                                                                           |
 
 ---
 
 ### Persistence Layer
 
-| Módulo            | Paquete                 | Estado | Notas                                                                                                                                                   |
+| MÃ³dulo            | Paquete                 | Estado | Notas                                                                                                                                                   |
 | ----------------- | ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IRunStateStore    | `@dvt/state-store`      | ✅     | Puerto completo ✅ · `InMemoryTxStore` ✅ · `PostgresStateStoreAdapter` ✅ 100% (G2 cerrado)                                                            |
-| Outbox (dominio)  | `@dvt/adapter-postgres` | 🟡     | `appendAndEnqueueTx` ✅ · `listPending`/`markDelivered`/`markFailed` ✅ · DLQ + `replayDeadLetters` ✅ · Worker de polling independiente ❌ · shards ❌ |
-| Event Bus (Kafka) | infra                   | ❌     | `local-compose.yaml` existe · Worker producción ❌ · Ningún publicador real                                                                             |
+| IRunStateStore    | `@dvt/state-store`      | âœ…     | Puerto completo âœ… Â· `InMemoryTxStore` âœ… Â· `PostgresStateStoreAdapter` âœ… 100% (G2 cerrado)                                                            |
+| Outbox (dominio)  | `@dvt/adapter-postgres` | ðŸŸ¡     | `appendAndEnqueueTx` âœ… Â· `listPending`/`markDelivered`/`markFailed` âœ… Â· DLQ + `replayDeadLetters` âœ… Â· Worker de polling independiente âŒ Â· shards âŒ |
+| Event Bus (Kafka) | infra                   | âŒ     | `local-compose.yaml` existe Â· Worker producciÃ³n âŒ Â· NingÃºn publicador real                                                                             |
 
 ---
 
 ### Read & Projection
 
-| Módulo            | Paquete       | Estado | Notas                                                                                              |
+| MÃ³dulo            | Paquete       | Estado | Notas                                                                                              |
 | ----------------- | ------------- | ------ | -------------------------------------------------------------------------------------------------- |
-| SnapshotProjector | `@dvt/engine` | 🟡     | Proyector in-process ✅ · Servicio standalone ❌                                                   |
-| Read Models       | —             | ❌     | Sin servicio standalone ni índices denormalizados de producción; el proyector actual es in-process |
+| SnapshotProjector | `@dvt/engine` | ðŸŸ¡     | Proyector in-process âœ… Â· Servicio standalone âŒ                                                   |
+| Read Models       | â€”             | âŒ     | Sin servicio standalone ni Ã­ndices denormalizados de producciÃ³n; el proyector actual es in-process |
 
 ---
 
 ### Observability
 
-| Módulo              | Paquete                   | Estado | Notas                                                              |
+| MÃ³dulo              | Paquete                   | Estado | Notas                                                              |
 | ------------------- | ------------------------- | ------ | ------------------------------------------------------------------ |
-| IObservability port | `@dvt/observability`      | ✅     | Counters, histograms, traces, logs — puerto + noop                 |
-| OTel implementation | `@dvt/observability-otel` | 🟡     | `OtelObservability.ts` existe · Integración producción no validada |
+| IObservability port | `@dvt/observability`      | âœ…     | Counters, histograms, traces, logs â€” puerto + noop                 |
+| OTel implementation | `@dvt/observability-otel` | ðŸŸ¡     | `OtelObservability.ts` existe Â· IntegraciÃ³n producciÃ³n no validada |
 
 ---
 
 ### Traceability / OpenLineage
 
-| Módulo                   | Paquete                     | Estado | Notas                                                                                                |
+| MÃ³dulo                   | Paquete                     | Estado | Notas                                                                                                |
 | ------------------------ | --------------------------- | ------ | ---------------------------------------------------------------------------------------------------- |
-| Traceability Service     | `@dvt/traceability-service` | 🟡     | `service.ts` + lineage resolver/mapper existen · package tests ✅ · `_schemaURL`/delivery runtime ❌ |
-| RunEvents → OL mapping   | —                           | 🟡     | Mapping TypeScript ✅ + tests de paquete ✅ · CI/pin de spec ❌                                      |
-| OL spec pin `_schemaURL` | —                           | ❌     | Sin versión OL fijada en código — riesgo de drift silencioso                                         |
-| `outbox_lineage` table   | —                           | ❌     | No existe implementación en repo; solo intención de diseño                                           |
-| `outbox_lineage` Worker  | —                           | ❌     | No existe. fail-open DLQ policy sin definir                                                          |
-| `dvt_cost attributor`    | —                           | ❌     | Phase 3 (Q1 2027) · **invariante**: MUST usar `outbox_lineage`                                       |
-| Marquez                  | externo                     | 🟡     | Consumidor externo de OpenLineage · Deployment = riesgo externo                                      |
+| Traceability Service     | `@dvt/traceability-service` | ðŸŸ¡     | `service.ts` + lineage resolver/mapper existen Â· package tests âœ… Â· `_schemaURL`/delivery runtime âŒ |
+| RunEvents â†’ OL mapping   | â€”                           | ðŸŸ¡     | Mapping TypeScript âœ… + tests de paquete âœ… Â· CI/pin de spec âŒ                                      |
+| OL spec pin `_schemaURL` | â€”                           | âŒ     | Sin versiÃ³n OL fijada en cÃ³digo â€” riesgo de drift silencioso                                         |
+| `outbox_lineage` table   | â€”                           | âŒ     | No existe implementaciÃ³n en repo; solo intenciÃ³n de diseÃ±o                                           |
+| `outbox_lineage` Worker  | â€”                           | âŒ     | No existe. fail-open DLQ policy sin definir                                                          |
+| `dvt_cost attributor`    | â€”                           | âŒ     | Phase 3 (Q1 2027) Â· **invariante**: MUST usar `outbox_lineage`                                       |
+| Marquez                  | externo                     | ðŸŸ¡     | Consumidor externo de OpenLineage Â· Deployment = riesgo externo                                      |
 
 ---
 
-## Gaps críticos por fase
+## Gaps crÃ­ticos por fase
 
-| #   | Gap                                                               | Módulo afectado                    | Estado                                                                                           | Fase      |
+| #   | Gap                                                               | MÃ³dulo afectado                    | Estado                                                                                           | Fase      |
 | --- | ----------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ | --------- |
-| G1  | **Temporal Adapter real** (SDK, namespace, tasks, `lookupRunRef`) | `adapter-temporal`                 | 🟡 In progress — SDK/lookupRunRef/lifecycle/integration ya existen; falta cierre operativo       | Phase 1   |
-| G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | ✅ Cerrado — `listEvents(options)` con `afterSeq`/`limit` ✅ · `listRuns` con filtro `status` ✅ | Phase 1   |
-| G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliación   | `engine`                           | ✅ Cerrado — store Postgres + reconciler worker + wiring runtime                                 | Phase 1   |
-| G4  | **compiledCodeRef ownership** — decisión de arquitectura          | planner / traceability             | ✅ Cerrado — ADR-0032 implementado extremo a extremo                                             | Phase 1   |
-| G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | 🟡 Parcial — worker core y storage APIs existen; falta runtime standalone y shards               | Phase 1.5 |
-| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | 🟡 Parcial — mapper/resolver/tests existen; falta pin de spec y hardening de CI                  | Phase 1.5 |
-| G7  | **Read Models** + proyector standalone                            | state-store / infra                | 🟡 Parcial — `SnapshotProjector` in-process existe; faltan servicio/read models                  | Phase 1.5 |
-| G8  | **Auth real** en `apps/api`                                       | api                                | ❌ Pendiente                                                                                     | Phase 1.5 |
-| G9  | **StepTypeRegistry** + tipado `stepTypeConfig`                    | planner / engine                   | ❌ Pendiente                                                                                     | Phase 2   |
-| G10 | **outbox_lineage Worker** + fail-open DLQ                         | traceability-service               | ❌ Pendiente                                                                                     | Phase 2   |
+| G1  | **Temporal Adapter real** (SDK, namespace, tasks, `lookupRunRef`) | `adapter-temporal`                 | ? Closed ? runtime hardening, client timeout enforcement, and operational diagnostics implemented | Phase 1   |
+| G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | âœ… Cerrado â€” `listEvents(options)` con `afterSeq`/`limit` âœ… Â· `listRuns` con filtro `status` âœ… | Phase 1   |
+| G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliaciÃ³n   | `engine`                           | âœ… Cerrado â€” store Postgres + reconciler worker + wiring runtime                                 | Phase 1   |
+| G4  | **compiledCodeRef ownership** â€” decisiÃ³n de arquitectura          | planner / traceability             | âœ… Cerrado â€” ADR-0032 implementado extremo a extremo                                             | Phase 1   |
+| G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | ðŸŸ¡ Parcial â€” worker core y storage APIs existen; falta runtime standalone y shards               | Phase 1.5 |
+| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | ðŸŸ¡ Parcial â€” mapper/resolver/tests existen; falta pin de spec y hardening de CI                  | Phase 1.5 |
+| G7  | **Read Models** + proyector standalone                            | state-store / infra                | ðŸŸ¡ Parcial â€” `SnapshotProjector` in-process existe; faltan servicio/read models                  | Phase 1.5 |
+| G8  | **Auth real** en `apps/api`                                       | api                                | âŒ Pendiente                                                                                     | Phase 1.5 |
+| G9  | **StepTypeRegistry** + tipado `stepTypeConfig`                    | planner / engine                   | âŒ Pendiente                                                                                     | Phase 2   |
+| G10 | **outbox_lineage Worker** + fail-open DLQ                         | traceability-service               | âŒ Pendiente                                                                                     | Phase 2   |
 
 ---
 
 ## Referencias
 
 - [ADR Index](../adr/ADR-Index.md)
-- [ADR-0030 — Pre-Dispatch Intent Log](../adr/ADR-0030-pre-dispatch-intent-log.md)
-- [ADR-0020/ADR-0021 — OpenLineage](../adr/)
+- [ADR-0030 â€” Pre-Dispatch Intent Log](../adr/ADR-0030-pre-dispatch-intent-log.md)
+- [ADR-0020/ADR-0021 â€” OpenLineage](../adr/)
 - [engine-phases.md (roadmap)](engine/roadmap/engine-phases.md)
 - [metrics-catalog.md](engine/metrics-catalog.md)
 - [DVT Blueprint v0.6](vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md)

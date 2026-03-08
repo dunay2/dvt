@@ -13,6 +13,7 @@
     "@dvt/contracts": "workspace:*",
     "@dvt/dsl": "workspace:*",
     "@dvt/engine": "workspace:*",
+    "@dvt/observability": "workspace:*",
     "@dvt/plan-interpreter": "workspace:*"
   },
   "scripts": {
