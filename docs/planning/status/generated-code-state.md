@@ -16,7 +16,7 @@ Generated automatically from repository code on 2026-03-08.
 | ---------------------------- | ----- |
 | Total workspaces             | 20    |
 | Total source files           | 291   |
-| Total test files             | 80    |
+| Total test files             | 82    |
 | Workspaces with build script | 20/20 |
 | Workspaces with test script  | 16/20 |
 
@@ -25,7 +25,7 @@ Generated automatically from repository code on 2026-03-08.
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
 | dvt-api                   | `apps/api`                           | 22        | 8          | yes   | yes  | yes       | -                       |
-| dvt-outbox-worker         | `apps/outbox-worker`                 | 9         | 5          | yes   | yes  | yes       | -                       |
+| dvt-outbox-worker         | `apps/outbox-worker`                 | 9         | 7          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 79        | 0          | yes   | no   | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 7         | 3          | yes   | yes  | yes       | 8                       |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 13        | 13         | yes   | yes  | no        | 15                      |
