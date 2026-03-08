@@ -28,10 +28,10 @@ It is intentionally narrower than older adapter specs:
 
 ## Canonical Implementation References
 
-- [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-- [`packages/@dvt/adapter-postgres/src/types.ts`](../../../../../packages/@dvt/adapter-postgres/src/types.ts)
-- [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
-- [`docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md`](../../../../../docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md)
+- [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+- [`packages/@dvt/adapter-postgres/src/types.ts`](../../../../../../packages/@dvt/adapter-postgres/src/types.ts)
+- [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../../../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
+- [`docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md`](../../../../../../docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md)
 
 ## Runtime Baseline
 
@@ -334,7 +334,7 @@ deprecated. New work should anchor on `bootstrapRunTx` and
 The most useful executable reference for this guide is the live integration
 suite:
 
-- [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
+- [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../../../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 
 That suite covers:
 
