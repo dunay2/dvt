@@ -28,7 +28,7 @@ specifically about execution invariants or adapters.
 - [Concept Glossary](concepts/glossary.md)
 - [Domain Language](concepts/domain-language.md)
 - [System Map](concepts/system-map.md)
-- [Repository Map](knowledge/REPOSITORY_MAP.md)
+- [Repository Map](concepts/repository-map.md)
 - [Shared Package Architecture](architecture/shared/index.md)
 - [Frontend Architecture](architecture/frontend/index.md)
 - [Infra Architecture](architecture/infra/index.md)

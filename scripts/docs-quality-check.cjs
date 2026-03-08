@@ -30,7 +30,7 @@ const requiredConceptLinkFiles = [
   'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
   'docs/planning/gaps/g6/index.md',
   'docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md',
-  'docs/knowledge/REPOSITORY_MAP.md',
+  'docs/concepts/repository-map.md',
   'docs/planning/status/canonical-doc-code-matrix.md',
 ];
 const explicitOwnerFiles = [
@@ -120,10 +120,17 @@ function main() {
     const absPath = path.join(repoRoot, ...relativePath.split('/'));
     if (!fs.existsSync(absPath)) continue;
     const raw = fs.readFileSync(absPath, 'utf8').toLowerCase();
-    if (!raw.includes('concepts/glossary.md')) {
+    const glossaryTargets = relativePath.startsWith('docs/concepts/')
+      ? ['glossary.md', './glossary.md', 'concepts/glossary.md']
+      : ['concepts/glossary.md'];
+    const domainLanguageTargets = relativePath.startsWith('docs/concepts/')
+      ? ['domain-language.md', './domain-language.md', 'concepts/domain-language.md']
+      : ['concepts/domain-language.md'];
+
+    if (!glossaryTargets.some((target) => raw.includes(target))) {
       failures.push(`${relativePath} -> must link to concepts/glossary.md.`);
     }
-    if (!raw.includes('concepts/domain-language.md')) {
+    if (!domainLanguageTargets.some((target) => raw.includes(target))) {
       failures.push(`${relativePath} -> must link to concepts/domain-language.md.`);
     }
   }

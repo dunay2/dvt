@@ -23,9 +23,9 @@ For current implementation truth, use
 
 Concept anchors for this page:
 
-- [Glossary](../concepts/glossary.md) for `workspace`, `reference-only`,
+- [Glossary](glossary.md) for `workspace`, `reference-only`,
   `canonical spec`, and `status doc`
-- [Domain Language](../concepts/domain-language.md) for repository-wide naming
+- [Domain Language](domain-language.md) for repository-wide naming
   discipline
 
 ## Coverage Classes

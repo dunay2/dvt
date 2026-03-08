@@ -52,4 +52,4 @@ different way.
 ## Related Docs
 
 - [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)
-- [Repository Map](../../knowledge/REPOSITORY_MAP.md)
+- [Repository Map](../../concepts/repository-map.md)

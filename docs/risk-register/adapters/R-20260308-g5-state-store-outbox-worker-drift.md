@@ -55,8 +55,8 @@ regressing correctness around ordering, idempotency, or ownership boundaries.
 
 ## Evidence
 
-- `docs/architecture/working/state-store-extraction.md`
-- `docs/architecture/working/g5-outbox-worker-guide.md`
+- `docs/archive/working-notes/state-store-extraction.md`
+- `docs/planning/gaps/g5-outbox-worker-guide.md`
 - `docs/architecture/engine/contracts/state-store/overview.md`
 - `packages/@dvt/adapter-postgres/DESIGN.md`
 - `docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`

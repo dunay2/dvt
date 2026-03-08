@@ -56,4 +56,4 @@ matters across engine and adapter boundaries.
 
 - [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)
 - [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)
-- [Repository Map](../../knowledge/REPOSITORY_MAP.md)
+- [Repository Map](../../concepts/repository-map.md)

@@ -330,5 +330,5 @@ Usability validation:
 
 - [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Repository Map](../../knowledge/REPOSITORY_MAP.md)
+- [Repository Map](../../concepts/repository-map.md)
 - [Roadmap Of Record](../roadmap/index.md)

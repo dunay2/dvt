@@ -10,10 +10,10 @@ source_origin: extracted from historical G5 outbox worker planning draft
 # G5 Outbox Worker Guide
 
 This document captures the architectural guidance worth keeping for G5 without
-leaving the material buried inside `docs/planning/inbox`.
+leaving the material buried inside old planning scratch space.
 
 It is a working guide, not the canonical status source. For current delivery
-state, use [`GAP_EXECUTION_PLANS.md`](../../planning/gaps/GAP_EXECUTION_PLANS.md).
+state, use [`GAP_EXECUTION_PLANS.md`](./GAP_EXECUTION_PLANS.md).
 
 ## Purpose
 

@@ -1,3 +1,10 @@
+---
+title: DVT+ Blueprint v0.6 Historical Snapshot
+status: Archived
+owner: Architecture / Delivery / Docs
+last_reviewed: 2026-03-08
+---
+
 # DVT+ Blueprint v0.6 Historical Snapshot
 
 ## Status

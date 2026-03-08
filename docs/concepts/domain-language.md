@@ -42,7 +42,7 @@ names depending on whether the reader is in planning, code, or architecture.
 
 - [Glossary](glossary.md)
 - [System Map](system-map.md)
-- [Repository Map](../knowledge/REPOSITORY_MAP.md)
+- [Repository Map](repository-map.md)
 
 ## Do Not Collapse Distinct Concepts
 

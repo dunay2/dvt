@@ -1,8 +1,8 @@
 ---
 title: State Store Extraction
-status: Curated Working Doc
+status: Archived
 canonical: false
-owner: docs
+owner: Architecture / Delivery / Docs
 last_reviewed: 2026-03-08
 doc_type: working-extraction
 source_origin: historical state-store draft material curated into this document
@@ -14,6 +14,9 @@ superseded_by:
 ---
 
 # State Store Extraction
+
+This archived working note preserves useful reasoning from an older state-store
+draft that no longer belongs in the active architecture tree.
 
 This document extracts the material worth keeping from historical state-store
 draft material and aligns it with the current repository state.
@@ -54,7 +57,7 @@ Useful active references:
 - [`packages/@dvt/engine/src/ports/IRunStateStore.ts`](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
 - [`packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
 - [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-- [`docs/architecture/system-delivery-status.md`](../system-delivery-status.md)
+- [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
 
 ## 2. What Is Worth Keeping
 

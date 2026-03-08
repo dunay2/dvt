@@ -170,7 +170,7 @@ Minimum tuple for this document:
   - `evidence_or_risk`: none yet; promote to evidence or risk record once a standalone runtime/process is introduced
 - Working refs:
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
-  - [`docs/architecture/working/g5-outbox-worker-guide.md`](../../architecture/working/g5-outbox-worker-guide.md)
+  - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
   - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../proposals/g5-outbox-worker-development-proposal-20260308.md)
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)

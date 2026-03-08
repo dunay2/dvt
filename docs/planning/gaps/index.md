@@ -27,6 +27,7 @@ Concept anchors for this section:
 
 - [DVT+ - Gap Execution Plans](GAP_EXECUTION_PLANS.md)
 - [DVT+ - Gap Parallel Execution Tracks](GAP_PARALLEL_EXECUTION_TRACKS.md)
+- [G5 Outbox Worker Guide](g5-outbox-worker-guide.md)
 - [G6 - OpenLineage CI + Schema Pin](g6/index.md)
 - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
 - [G3 TASK SPECIFICATION](G3-TASK-SPECIFICATION.md)

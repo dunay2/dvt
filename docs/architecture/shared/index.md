@@ -58,6 +58,6 @@ silently.
 
 ## Related Surfaces
 
-- [Repository Map](../../knowledge/REPOSITORY_MAP.md)
+- [Repository Map](../../concepts/repository-map.md)
 - [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)
 - [System Delivery Status](../system-delivery-status.md)

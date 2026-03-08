@@ -26,9 +26,12 @@ nav:
       - Glossary: concepts/glossary.md
       - Domain Language: concepts/domain-language.md
       - System Map: concepts/system-map.md
-      - Repository Map: knowledge/REPOSITORY_MAP.md
+      - Repository Map: concepts/repository-map.md
   - Reference:
       - Architecture Index: architecture/index.md
+      - Contracts Index: contracts/index.md
+      - Planner Contracts: contracts/planner/index.md
+      - Shared Contracts: contracts/shared/index.md
       - Shared Packages:
           - Shared Packages Index: architecture/shared/index.md
           - CLI Package: architecture/shared/cli.md
@@ -38,11 +41,9 @@ nav:
       - Frontend Architecture: architecture/frontend/index.md
       - Infra Architecture: architecture/infra/index.md
       - Engine Architecture: architecture/engine/index.md
+      - Atlas: architecture/atlas/index.md
       - Reference Architecture: architecture/reference-architecture.md
-      - Contracts Index: contracts/index.md
       - Engine Contracts: contracts/engine/index.md
-      - Planner Contracts: contracts/planner/index.md
-      - Shared Contracts: contracts/shared/index.md
   - How-To:
       - Guides Index: guides/index.md
       - Mandatory Work System for AI: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
@@ -64,6 +65,8 @@ nav:
       - Proposals: planning/proposals/index.md
       - Reviews: planning/reviews/index.md
       - Status: planning/status/index.md
+      - Execution Model: planning/execution-model/index.md
+      - Planning Templates: planning/templates/index.md
   - Archive: archive/index.md
 
 extra:

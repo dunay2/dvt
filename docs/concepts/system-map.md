@@ -56,7 +56,7 @@ reader go next?
 - "What does this term mean?" -> [Glossary](glossary.md)
 - "What belongs to which subsystem?" -> [Architecture Index](../architecture/index.md)
 - "What do the small shared packages do?" -> [Shared Package Architecture](../architecture/shared/index.md)
-- "What code area is responsible?" -> [Repository Map](../knowledge/REPOSITORY_MAP.md)
+- "What code area is responsible?" -> [Repository Map](repository-map.md)
 - "What is true in the current implementation?" -> [System Delivery Status](../architecture/system-delivery-status.md)
 - "What is planned or still open?" -> [Planning](../planning/index.md)
 - "What decision governs this?" -> [ADRs](../adr/index.md)

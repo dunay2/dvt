@@ -58,4 +58,4 @@ as if it already exposed a stable command interface.
 
 - [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)
 - [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)
-- [Repository Map](../../knowledge/REPOSITORY_MAP.md)
+- [Repository Map](../../concepts/repository-map.md)

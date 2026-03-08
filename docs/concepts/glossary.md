@@ -38,8 +38,8 @@ definition layer for readers across code, planning, operations, and review.
 | Roadmap | Planned change sequencing. It must not be confused with current implementation status. | [Planning](../planning/index.md) |
 | Canonical spec | The governing document that defines behavior, invariants, or accepted architecture for a topic. | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 | Status doc | The document that says what is currently true in implementation or delivery, even when the target design is different. | [System Delivery Status](../architecture/system-delivery-status.md) |
-| Reference-only | Documentation that is visible and useful, but not the accepted governing source of truth for behavior. | [Repository Map](../knowledge/REPOSITORY_MAP.md) |
-| Workspace | A package or app unit in the monorepo, usually resolved through the pnpm workspace configuration. | [Repository Map](../knowledge/REPOSITORY_MAP.md) |
+| Reference-only | Documentation that is visible and useful, but not the accepted governing source of truth for behavior. | [Repository Map](repository-map.md) |
+| Workspace | A package or app unit in the monorepo, usually resolved through the pnpm workspace configuration. | [Repository Map](repository-map.md) |
 
 ## Related Normative Vocabulary
 
