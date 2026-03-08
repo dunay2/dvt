@@ -2,7 +2,7 @@ import { nowMs } from '../runtime/time.js';
 
 import { asPlannerError, PlannerError, PlannerErrorCode } from './errors.js';
 import { computeTopoDepth } from './graph/Depth.js';
-import { BuildGraphCommand, GraphBuilder } from './graph/GraphBuilder.js';
+import { BuildGraphCommand, GraphBuilder, type BuiltGraph } from './graph/GraphBuilder.js';
 import { topoSort } from './graph/TopoSort.js';
 import { sha256CanonicalJson } from './hashing.js';
 import { resolveLimits, type PlannerLimits, throwLimitExceeded } from './limits.js';
@@ -104,80 +104,14 @@ export class Planner {
       }
       this.checkAbort(started);
 
-      // 6) Steps
-      const steps = topo.map((nodeId) => {
-        const node = graph.nodesById.get(nodeId);
-        if (node === undefined) {
-          throw new PlannerError(
-            PlannerErrorCode.INTERNAL_ERROR,
-            `Missing node ${nodeId} in graph`
-          );
-        }
-        return this.stepFactory(node, resolvedPolicies);
-      });
+      // 6) Build and normalize steps
+      const normalizedSteps = this.buildNormalizedSteps(graph, topo, resolvedPolicies);
 
-      // Normalize dependsOn ordering deterministically
-      const normalizedSteps = steps.map((s) => ({
-        ...s,
-        dependsOn: [...s.dependsOn].sort(binaryCompare),
-      }));
-
-      // 7) Semantic input hash (only nodes, selection, policies)
-      const inputHashSha256 = await computeInputHashSha256(normalizedInput);
-      this.checkAbort(started);
-
-      // 8) Build planCore (the hashed object; no planId / createdAt / observability)
-      const planCore: PlanCore = {
-        metadata: {
-          planVersion: '2.3',
-          inputHashSha256,
-        },
-        steps: normalizedSteps,
-      };
-
-      // 9) planId = sha256(JCS(planCore)); canonicalPlanJson MUST be JCS(planCore)
-      const {
-        canonical: canonicalPlanJson,
-        sha256: planId,
-        bytes,
-      } = await sha256CanonicalJson(planCore);
-
-      if (bytes > this.limits.maxPlanSizeBytes) {
-        throwLimitExceeded(`maxPlanSizeBytes exceeded: ${bytes} > ${this.limits.maxPlanSizeBytes}`);
-      }
-      this.metrics.recordPlanSize(bytes);
-
-      // 10) Build final plan (post-hash provenance fields)
-      const planBase: ExecutionPlanV2 = {
-        ...planCore,
-        metadata: {
-          ...planCore.metadata,
-          planId,
-          createdAtIso: new Date().toISOString(),
-        },
-      };
-
-      const plan: ExecutionPlanV2 =
-        normalizedInput.observability === undefined
-          ? planBase
-          : {
-              ...planBase,
-              observability: normalizedInput.observability,
-            };
-
-      const layerBoundaries = computeLayerBoundaries(normalizedSteps);
-      if (layerBoundaries.length > 0) {
-        plan.observability = {
-          ...(plan.observability ?? {}),
-          extra: {
-            ...(plan.observability?.extra ?? {}),
-            plannerLayers: layerBoundaries,
-          },
-        };
-      }
+      // 7-10) Hash, assemble and verify plan
+      const result = await this.hashAndFinalizePlan(normalizedInput, normalizedSteps);
 
       this.metrics.recordDuration(nowMs() - started);
-      return { plan, canonicalPlanJson };
+      return result;
     } catch (err: unknown) {
       const pe = asPlannerError(err);
       this.metrics.recordFailure(pe.code);
@@ -186,26 +120,29 @@ export class Planner {
     }
   }
 
-  private validateInputEnvelope(input: PlannerInputEnvelopeV2): void {
+  private assertEnvelopeShape(input: PlannerInputEnvelopeV2): void {
     if (typeof input !== 'object' || input === null) {
       throw new PlannerError(PlannerErrorCode.INVALID_INPUT, 'input must be an object.');
     }
-    if (!Array.isArray(input.nodes) && input.manifest === undefined) {
+    if (input.manifest === undefined && !Array.isArray(input.nodes)) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
         'input.nodes must be an array when manifest is not provided.'
       );
     }
-    if (typeof input.selection !== 'object' || input.selection === null) {
+  }
+
+  private assertSelectionShape(selection: PlannerInputEnvelopeV2['selection']): void {
+    if (typeof selection !== 'object' || selection === null) {
       throw new PlannerError(PlannerErrorCode.INVALID_INPUT, 'input.selection must be an object.');
     }
-    if (!Array.isArray(input.selection.selectedNodeIds)) {
+    if (!Array.isArray(selection.selectedNodeIds)) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
         'selection.selectedNodeIds must be an array.'
       );
     }
-    for (const id of input.selection.selectedNodeIds) {
+    for (const id of selection.selectedNodeIds) {
       if (typeof id !== 'string') {
         throw new PlannerError(
           PlannerErrorCode.INVALID_INPUT,
@@ -215,14 +152,19 @@ export class Planner {
     }
   }
 
+  private validateInputEnvelope(input: PlannerInputEnvelopeV2): void {
+    this.assertEnvelopeShape(input);
+    this.assertSelectionShape(input.selection);
+  }
+
   private normalizeInput(input: PlannerInputEnvelopeV2): NormalizedPlannerInput {
     let nodes: readonly GraphNode[];
     if (Array.isArray(input.nodes) && input.nodes.length > 0) {
       nodes = input.nodes;
-    } else if (input.manifest !== undefined) {
-      nodes = deriveGraphNodesFromManifest(input.manifest);
-    } else {
+    } else if (input.manifest === undefined) {
       nodes = [];
+    } else {
+      nodes = deriveGraphNodesFromManifest(input.manifest);
     }
 
     if (nodes.length === 0) {
@@ -236,6 +178,70 @@ export class Planner {
       ...input,
       nodes,
     };
+  }
+
+  private buildNormalizedSteps(
+    graph: BuiltGraph,
+    topo: readonly string[],
+    resolvedPolicies: ReturnType<typeof resolvePolicies>
+  ): PlanCore['steps'] {
+    const steps = topo.map((nodeId) => {
+      const node = graph.nodesById.get(nodeId);
+      if (node === undefined) {
+        throw new PlannerError(PlannerErrorCode.INTERNAL_ERROR, `Missing node ${nodeId} in graph`);
+      }
+      return this.stepFactory(node, resolvedPolicies);
+    });
+    return steps.map((s) => ({
+      ...s,
+      dependsOn: [...s.dependsOn].sort(binaryCompare),
+    }));
+  }
+
+  private async hashAndFinalizePlan(
+    normalizedInput: NormalizedPlannerInput,
+    normalizedSteps: PlanCore['steps']
+  ): Promise<{ plan: ExecutionPlanV2; canonicalPlanJson: string }> {
+    const inputHashSha256 = await computeInputHashSha256(normalizedInput);
+
+    const planCore: PlanCore = {
+      metadata: { planVersion: '2.3', inputHashSha256 },
+      steps: normalizedSteps,
+    };
+
+    const {
+      canonical: canonicalPlanJson,
+      sha256: planId,
+      bytes,
+    } = await sha256CanonicalJson(planCore);
+
+    if (bytes > this.limits.maxPlanSizeBytes) {
+      throwLimitExceeded(`maxPlanSizeBytes exceeded: ${bytes} > ${this.limits.maxPlanSizeBytes}`);
+    }
+    this.metrics.recordPlanSize(bytes);
+
+    const planBase: ExecutionPlanV2 = {
+      ...planCore,
+      metadata: { ...planCore.metadata, planId, createdAtIso: new Date().toISOString() },
+    };
+
+    const plan: ExecutionPlanV2 =
+      normalizedInput.observability === undefined
+        ? planBase
+        : { ...planBase, observability: normalizedInput.observability };
+
+    const layerBoundaries = computeLayerBoundaries(normalizedSteps);
+    if (layerBoundaries.length > 0) {
+      plan.observability = {
+        ...plan.observability,
+        extra: {
+          ...plan.observability?.extra,
+          plannerLayers: layerBoundaries,
+        },
+      };
+    }
+
+    return { plan, canonicalPlanJson };
   }
 
   private checkAbort(startedMs: number): void {
@@ -259,53 +265,68 @@ export class Planner {
  * - includeDownstream (default false): include transitive dependents.
  * - If both true: upstream expansion from seeds, then downstream expansion from expanded set.
  */
+function assertSeedsExist(
+  nodesById: ReadonlyMap<string, GraphNode>,
+  selectedNodeIds: readonly string[]
+): void {
+  for (const id of selectedNodeIds) {
+    if (!nodesById.has(id)) {
+      throw new PlannerError(PlannerErrorCode.INVALID_INPUT, `Selected node does not exist: ${id}`);
+    }
+  }
+}
+
+function visitUpstreamNode(
+  id: string,
+  nodesById: ReadonlyMap<string, GraphNode>,
+  out: Set<string>,
+  stack: string[]
+): void {
+  (nodesById.get(id)?.dependsOn ?? [])
+    .filter((dep) => !out.has(dep))
+    .forEach((dep) => {
+      out.add(dep);
+      stack.push(dep);
+    });
+}
+
+function expandUpstream(nodesById: ReadonlyMap<string, GraphNode>, out: Set<string>): void {
+  const stack = [...out];
+  while (stack.length) visitUpstreamNode(stack.pop()!, nodesById, out, stack);
+}
+
+function visitDownstreamNode(
+  id: string,
+  dependentsById: ReadonlyMap<string, readonly string[]>,
+  out: Set<string>,
+  stack: string[]
+): void {
+  (dependentsById.get(id) ?? [])
+    .filter((child) => !out.has(child))
+    .forEach((child) => {
+      out.add(child);
+      stack.push(child);
+    });
+}
+
+function expandDownstream(
+  dependentsById: ReadonlyMap<string, readonly string[]>,
+  out: Set<string>
+): void {
+  const stack = [...out];
+  while (stack.length) visitDownstreamNode(stack.pop()!, dependentsById, out, stack);
+}
+
 function selectNodes(
   nodesById: ReadonlyMap<string, GraphNode>,
   dependentsById: ReadonlyMap<string, readonly string[]>,
   selection: PlannerSelection
 ): readonly string[] {
-  const includeUpstream = selection.includeUpstream ?? true;
-  const includeDownstream = selection.includeDownstream ?? false;
-
   const out = new Set<string>(selection.selectedNodeIds);
+  assertSeedsExist(nodesById, selection.selectedNodeIds);
 
-  // validate seeds exist
-  for (const id of selection.selectedNodeIds) {
-    if (!nodesById.has(id)) {
-      throw new PlannerError(PlannerErrorCode.INVALID_INPUT, `Selected node does not exist: ${id}`);
-    }
-  }
-
-  if (includeUpstream) {
-    const stack = [...out];
-    while (stack.length > 0) {
-      const id = stack.pop();
-      if (id === undefined) break;
-      const node = nodesById.get(id);
-      if (node === undefined) continue;
-      for (const dep of node.dependsOn) {
-        if (!out.has(dep)) {
-          out.add(dep);
-          stack.push(dep);
-        }
-      }
-    }
-  }
-
-  if (includeDownstream) {
-    const stack = [...out];
-    while (stack.length > 0) {
-      const id = stack.pop();
-      if (id === undefined) break;
-      const deps = dependentsById.get(id) ?? [];
-      for (const child of deps) {
-        if (!out.has(child)) {
-          out.add(child);
-          stack.push(child);
-        }
-      }
-    }
-  }
+  if (selection.includeUpstream ?? true) expandUpstream(nodesById, out);
+  if (selection.includeDownstream ?? false) expandDownstream(dependentsById, out);
 
   return [...out].sort(binaryCompare);
 }
