@@ -6,7 +6,7 @@ import { BuildGraphCommand, GraphBuilder, type BuiltGraph } from './graph/GraphB
 import { topoSort } from './graph/TopoSort.js';
 import { sha256CanonicalJson } from './hashing.js';
 import { resolveLimits, type PlannerLimits, throwLimitExceeded } from './limits.js';
-import { deriveGraphNodesFromManifest } from './manifest.js';
+import { DeriveNodesCommand, ManifestGraphDeriver } from './manifest.js';
 import { NoopPlannerMetrics, type PlannerMetrics } from './metrics.js';
 import { resolvePolicies } from './policies.js';
 import { binaryCompare } from './sorting.js';
@@ -164,7 +164,7 @@ export class Planner {
     } else if (input.manifest === undefined) {
       nodes = [];
     } else {
-      nodes = deriveGraphNodesFromManifest(input.manifest);
+      nodes = new ManifestGraphDeriver().execute(new DeriveNodesCommand(input.manifest));
     }
 
     if (nodes.length === 0) {
