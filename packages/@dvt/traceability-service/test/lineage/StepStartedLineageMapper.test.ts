@@ -4,6 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { sha256HexUtf8 } from '../../src/lineage/compiledCodeRef.js';
 import { SqlJobFacetBuilder } from '../../src/lineage/facets/SqlJobFacetBuilder.js';
 import { StepStartedLineageMapper } from '../../src/lineage/mapper/StepStartedLineageMapper.js';
+import {
+  DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL,
+  DVT_TRACEABILITY_FACET_PRODUCER,
+  OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
+} from '../../src/lineage/openlineageSchema.js';
 
 function mkCompiledCodeRef(sqlText: string): CompiledCodeRef {
   return {
@@ -54,8 +59,18 @@ describe('StepStartedLineageMapper', () => {
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
     expect(result.warnings).toEqual([]);
-    expect(result.jobFacets.sql?.sql.query).toBe(sqlText);
-    expect(result.jobFacets.dvt_dbt_details?.compiledCodeRef.sha256).toBe(compiledCodeRef.sha256);
+    expect(result.jobFacets).toEqual({
+      dvt_dbt_details: {
+        _producer: DVT_TRACEABILITY_FACET_PRODUCER,
+        _schemaURL: DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL,
+        compiledCodeRef,
+      },
+      sql: {
+        _producer: DVT_TRACEABILITY_FACET_PRODUCER,
+        _schemaURL: OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
+        query: sqlText,
+      },
+    });
   });
 
   it('fails open when compiled code resolution throws', async () => {
@@ -70,10 +85,13 @@ describe('StepStartedLineageMapper', () => {
     });
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
-    expect(result.jobFacets.sql).toBeUndefined();
-    expect(result.jobFacets.dvt_dbt_details?.compiledCodeRef.storageUri).toBe(
-      compiledCodeRef.storageUri
-    );
+    expect(result.jobFacets).toEqual({
+      dvt_dbt_details: {
+        _producer: DVT_TRACEABILITY_FACET_PRODUCER,
+        _schemaURL: DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL,
+        compiledCodeRef,
+      },
+    });
     expect(result.warnings).toHaveLength(1);
     expect(result.warnings[0]?.code).toBe('COMPILED_CODE_RESOLUTION_FAILED');
   });

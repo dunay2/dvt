@@ -308,23 +308,127 @@ Acceptance:
 
 ## Recommended PR Slicing
 
-### PR-1 - Contract pin
+Recommended base strategy: keep one story per PR.
 
-- add pinned schema constant;
-- align facet types and builder output for both emitted facets;
-- add the first normative artifact for the emitted payload contract;
-- update mapper assertions.
+Reason:
 
-### PR-2 - Deterministic validation
+- each PR has one auditable closure target;
+- review remains narrow enough for contract-sensitive changes;
+- rollback is simpler if one slice needs redesign;
+- the epic remains easy to track from GitHub Project and the G6 hub.
 
-- add golden fixtures;
-- add offline schema validation tests;
-- add focused verification command if needed.
+### PR-1 - `US-G6.1`
 
-### PR-3 - Documentation closeout
+- issue: `#405`
+- branch suggestion: `feat/g6-facet-contract-surface`
+- content:
+  - add lineage schema/constants module;
+  - pin `_schemaURL` in one source of truth;
+  - align emitted facet types for `sql` and `dvt_dbt_details`;
+  - update mapper assertions to check full facet shape.
+- expected blast radius:
+  - `src/lineage/types.ts`
+  - `src/lineage/contracts.ts`
+  - `src/lineage/facets/SqlJobFacetBuilder.ts`
+  - `src/lineage/mapper/StepStartedLineageMapper.ts`
+  - existing mapper tests
 
-- update gap plan, status docs, and evidence/risk record;
-- confirm MkDocs navigation.
+### PR-2 - `US-G6.2`
+
+- issue: `#408`
+- branch suggestion: `feat/g6-lineage-contract-artifacts`
+- content:
+  - add the vendored SQL facet schema artifact;
+  - add the local normative artifact for `dvt_dbt_details`;
+  - document the canonical home of those artifacts.
+- expected blast radius:
+  - package-local contract/schema artifacts;
+  - G6 planning and status references only where needed
+
+### PR-3 - `US-G6.3`
+
+- issue: `#404`
+- branch suggestion: `test/g6-lineage-goldens`
+- content:
+  - add deterministic mapper fixtures;
+  - add golden outputs for success/fail-open/no-facet paths;
+  - make mapper drift visible in test review.
+- expected blast radius:
+  - `test/lineage/fixtures/*`
+  - `test/lineage/golden/*`
+  - mapper golden test files
+
+### PR-4 - `US-G6.4`
+
+- issue: `#407`
+- branch suggestion: `test/g6-lineage-schema-validation`
+- content:
+  - add offline schema validation against vendored artifacts;
+  - harden resolver validation paths;
+  - ensure tests are hermetic and non-networked.
+- expected blast radius:
+  - schema validation helpers/tests;
+  - resolver tests;
+  - possibly package test scripts
+
+### PR-5 - `US-G6.5`
+
+- issue: `#406`
+- branch suggestion: `chore/g6-ci-closeout`
+- content:
+  - wire the mandatory verification tuple into CI;
+  - update gap/status/evidence docs for final closeout posture;
+  - record final commands as the canonical closure tuple.
+- expected blast radius:
+  - package scripts
+  - CI workflows
+  - planning/status/evidence docs
+
+### Compressed Alternative
+
+If throughput pressure is high and review capacity is strong, a secondary option
+is to compress the five stories into four PRs:
+
+1. `#405` + the minimal artifact skeleton from `#408`
+2. `#404`
+3. `#407` + the executable validation wiring of `#408`
+4. `#406`
+
+This is faster, but less clean from a traceability perspective. The default
+recommendation remains one story per PR.
+
+## Recommended Execution Sequence
+
+The recommended delivery order is:
+
+1. `#405` - govern both emitted facets and centralize schema constants
+2. `#408` - add normative contract artifacts
+3. `#404` - add deterministic golden regression coverage
+4. `#407` - add offline schema validation and hermetic resolver validation
+5. `#406` - wire the mandatory CI verification tuple and docs closeout
+
+Dependency rationale:
+
+- `#405` must land first because the emitted facet surface needs to stabilize
+  before any durable contract, golden, or schema validation work is worth
+  freezing.
+- `#408` follows immediately because `#407` should validate against artifacts
+  that already exist and are canonically placed.
+- `#404` comes before `#407` because golden outputs are easier to review once
+  the payload shape is stable but before validation helpers add extra noise.
+- `#407` should land after contract artifacts and goldens so schema validation
+  proves the already-reviewed payloads rather than defining them indirectly.
+- `#406` stays last because CI and docs closeout should bind to the final
+  command set and artifact layout, not a moving target.
+
+## Story Dependencies
+
+- `#405` blocks `#408`, `#404`, `#407`, and `#406`
+- `#408` blocks `#407` and should be merged before `#406`
+- `#404` should be merged before `#406`
+- `#407` should be merged before `#406`
+- `#406` is the closure slice and should not start as a merge candidate until
+  the previous four stories are stable
 
 ## Risks To Control
 
@@ -337,7 +441,7 @@ Acceptance:
 
 ## Immediate Next Step
 
-Start with `PR-1` and keep the scope narrow:
+Start with `PR-1` / `#405` and keep the scope narrow:
 
 1. pin the SQL facet `_schemaURL`;
 2. formalize both emitted facet contracts;

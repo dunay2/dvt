@@ -2,6 +2,7 @@ export * from './types.js';
 export * from './contracts.js';
 export * from './errors.js';
 export * from './compiledCodeRef.js';
+export * from './openlineageSchema.js';
 export * from './cache/InMemoryCompiledCodeCache.js';
 export * from './readers/InMemoryCompiledCodeReader.js';
 export * from './readers/FileUriCompiledCodeReader.js';

@@ -524,6 +524,32 @@ The recommended direction for architect and CTO approval is:
 5. treat `_schemaURL` literal-enforcement linting as a secondary guardrail, not
    as the primary closure mechanism.
 
+## Recommended Delivery Sequence
+
+For execution control, the recommended story order is:
+
+1. `#405` - Govern both emitted facets and centralize schema constants
+2. `#408` - Add normative contract artifacts for emitted lineage facets
+3. `#404` - Add deterministic golden regression tests for StepStarted lineage mapping
+4. `#407` - Add offline schema validation and hermetic resolver validation
+5. `#406` - Wire mandatory CI verification tuple and G6 closeout docs
+
+Recommended default PR slicing:
+
+- one story per PR
+
+Reason:
+
+- clean traceability from epic to story to PR;
+- smaller review surface for contract-sensitive changes;
+- simpler rollback if one slice reopens an architectural question.
+
+Special note:
+
+- `#406` should be treated as the closeout PR and should not drive the shape of
+  earlier slices. It should bind to the final command set and artifact layout
+  after the contract and validation stories are already stable.
+
 ## Final Verdict
 
 Architectural verdict:
