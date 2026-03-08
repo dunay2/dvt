@@ -47,7 +47,9 @@ migrations), Vitest (testing).
   [Contracts](docs/contracts/index.md)
 - **See current state and active work**:
   [System Delivery Status](docs/architecture/system-delivery-status.md),
-  [Planning](docs/planning/index.md)
+  [Planning](docs/planning/index.md),
+  [Roadmap Of Record](docs/planning/roadmap/index.md),
+  [Gap Execution Plans](docs/planning/gaps/GAP_EXECUTION_PLANS.md)
 - **Operate and review risk**:
   [Runbooks](docs/runbooks/index.md),
   [Risk Register](docs/risk-register/index.md),

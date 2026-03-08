@@ -24,9 +24,19 @@ const spanishHints = [
 ];
 const requiredConceptLinkFiles = [
   'docs/architecture/system-delivery-status.md',
+  'docs/planning/index.md',
   'docs/planning/roadmap/index.md',
+  'docs/planning/gaps/index.md',
+  'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
+  'docs/planning/gaps/g6/index.md',
+  'docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md',
   'docs/knowledge/REPOSITORY_MAP.md',
   'docs/planning/status/canonical-doc-code-matrix.md',
+];
+const explicitOwnerFiles = [
+  'docs/planning/index.md',
+  'docs/planning/gaps/index.md',
+  'docs/planning/gaps/GAP_EXECUTION_PLANS.md',
 ];
 
 function walk(dir) {
@@ -111,6 +121,15 @@ function main() {
     }
     if (!raw.includes('concepts/domain-language.md')) {
       failures.push(`${relativePath} -> must link to concepts/domain-language.md.`);
+    }
+  }
+
+  for (const relativePath of explicitOwnerFiles) {
+    const absPath = path.join(repoRoot, ...relativePath.split('/'));
+    if (!fs.existsSync(absPath)) continue;
+    const raw = fs.readFileSync(absPath, 'utf8');
+    if (/^owner:\s*docs\s*$/im.test(raw)) {
+      failures.push(`${relativePath} -> owner must name the responsible area, not the generic placeholder "docs".`);
     }
   }
 

@@ -1,7 +1,7 @@
 ---
 title: DVT+ - Gap Execution Plans
 status: Review
-owner: docs
+owner: Architecture / Delivery / Docs
 last_reviewed: 2026-03-08
 planning_type: proposal
 ---
@@ -13,6 +13,15 @@ Source of truth for execution gaps and delivery state.
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
 - Last sync date: 2026-03-08
 - Scope: Phase 1, Phase 1.5, Phase 2
+
+Concept anchors for this page:
+
+- [Glossary](../../concepts/glossary.md) for `gap`, `status`, `closed`,
+  `partial`, `canonical spec`, and `verification tuple`
+- [Domain Language](../../concepts/domain-language.md) for the rule that
+  planning, status, and contracts must not compete as parallel sources of truth
+- [Roadmap Of Record](../roadmap/index.md) for repository-wide sequencing and
+  priority
 
 ## Traceability Anchors
 
@@ -178,18 +187,26 @@ Minimum tuple for this document:
 
 - Status: Partial
 - Traceability tuple:
-  - `canonical_spec`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md) until lineage delivery has a dedicated accepted runtime spec
+  - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`
   - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm traceability:adr0`
   - `evidence_or_risk`: consider promotion to a dedicated risk record if `_schemaURL` drift remains open after the next hardening pass
+- Working refs:
+  - [G6 hub](g6/index.md)
+  - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
 - Delivered:
   - compiled-code lineage resolver/cache/facet mapping package code
   - package-level tests for mapper/guard/resolver paths
 - Remaining:
   - deterministic OL translation hardening in CI
   - `_schemaURL` pinned in emitted OpenLineage payloads/contracts
+  - contract governance for both emitted facets (`sql`, `dvt_dbt_details`)
+  - offline validation against the pinned schema version
+  - committed golden fixtures for mapper regression coverage
+  - explicit mandatory closure verification tuple for schema and golden checks
+  - normative contract artifact beyond planning prose
   - delivery/runtime concerns stay open outside package scope
 
 ### G7 - Read models + standalone projector
@@ -246,6 +263,7 @@ Parallel execution track detail:
 
 ## Related Documents
 
+- Planning gaps hub: [`docs/planning/gaps/index.md`](index.md)
 - G3 detail: [`G3-TASK-SPECIFICATION.md`](G3-TASK-SPECIFICATION.md)
 - G4 detail: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
 - Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)

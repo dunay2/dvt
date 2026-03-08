@@ -1,19 +1,44 @@
 ---
 title: Planning
 status: Review
-owner: docs
-last_reviewed: 2026-02-25
+owner: Product / Architecture / Docs
+last_reviewed: 2026-03-08
 ---
 
 # Planning
 
-Roadmaps, proposals, reviews, and non-normative planning artifacts.
+Canonical planning surfaces, active gap tracking, proposals, reviews, and
+generated status artifacts.
+
+Use this section to distinguish roadmap, current status, execution gaps,
+and proposal work. Do not treat them as interchangeable surfaces.
+
+Concept anchors for this page:
+
+- [Glossary](../concepts/glossary.md) for `roadmap`, `status`, `gap`,
+  `canonical spec`, and `verification tuple`
+- [Domain Language](../concepts/domain-language.md) for the naming rules
+  shared across planning, architecture, and code
 
 ## Navigation
 
+- [Roadmap Of Record](roadmap/index.md)
+- [Current Status](../architecture/system-delivery-status.md)
+- [Gaps](gaps/index.md)
 - [Proposals](proposals/index.md)
 - [Reviews](reviews/index.md)
 - [Status](status/index.md)
+
+## Canonical Planning Surfaces
+
+- [Roadmap Of Record](roadmap/index.md) for repository-wide sequencing and
+  planning order
+- [System Delivery Status](../architecture/system-delivery-status.md) for
+  what is currently true in implementation
+- [Gap Execution Plans](gaps/GAP_EXECUTION_PLANS.md) for active execution
+  gaps and closure posture
+- [Planning Status](status/index.md) for generated or curated status
+  artifacts
 
 ## Proposals
 

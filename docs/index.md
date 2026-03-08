@@ -27,6 +27,8 @@ folder name.
 - [Engine Architecture](architecture/engine/index.md)
 - [Frontend Architecture](architecture/frontend/index.md)
 - [Shared Package Architecture](architecture/shared/index.md)
+- [Roadmap Of Record](planning/roadmap/index.md)
+- [Gap Execution Plans](planning/gaps/GAP_EXECUTION_PLANS.md)
 - [Current Delivery Status](architecture/system-delivery-status.md)
 - [Planning Status](planning/status/index.md)
 - [Evidence](evidence/index.md)
@@ -53,7 +55,8 @@ folder name.
 1. [Runbooks](runbooks/index.md)
 2. [Current Delivery Status](architecture/system-delivery-status.md)
 3. [Risk Register](risk-register/index.md)
-4. [Planning Status](planning/status/index.md)
+4. [Gap Execution Plans](planning/gaps/GAP_EXECUTION_PLANS.md)
+5. [Planning Status](planning/status/index.md)
 
 ## Transitional Notes
 

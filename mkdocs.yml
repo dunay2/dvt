@@ -57,6 +57,9 @@ nav:
       - Planning Index: planning/index.md
       - Roadmap Of Record: planning/roadmap/index.md
       - Current Status: architecture/system-delivery-status.md
+      - Gap Tracking: planning/gaps/index.md
+      - Gap Execution Plans: planning/gaps/GAP_EXECUTION_PLANS.md
+      - G6 OpenLineage Gap: planning/gaps/g6/index.md
       - Proposals: planning/proposals/index.md
       - Reviews: planning/reviews/index.md
       - Status: planning/status/index.md
