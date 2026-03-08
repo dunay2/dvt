@@ -14,9 +14,9 @@ Generated automatically from repository documentation and source-code signals on
 
 | Metric                            | Value     |
 | --------------------------------- | --------- |
-| Canonical docs scanned            | 190       |
-| Canonical docs with code links    | 13 (7%)   |
-| Canonical docs with ADR links     | 19 (10%)  |
+| Canonical docs scanned            | 183       |
+| Canonical docs with code links    | 14 (8%)   |
+| Canonical docs with ADR links     | 20 (11%)  |
 | Code files scanned                | 343       |
 | Code files with ADR baseline tags | 103 (30%) |
 | Code files with explicit doc refs | 0 (0%)    |
@@ -28,10 +28,10 @@ Generated automatically from repository documentation and source-code signals on
 | adr           | 32   | 6 (19%)              | 11 (34%)            |
 | architecture  | 64   | 1 (2%)               | 6 (9%)              |
 | contracts     | 4    | 0 (0%)               | 0 (0%)              |
-| evidence      | 3    | 1 (33%)              | 0 (0%)              |
+| evidence      | 4    | 1 (25%)              | 0 (0%)              |
 | guides        | 3    | 1 (33%)              | 1 (33%)             |
-| planning      | 76   | 4 (5%)               | 1 (1%)              |
-| risk-register | 7    | 0 (0%)               | 0 (0%)              |
+| planning      | 66   | 5 (8%)               | 2 (3%)              |
+| risk-register | 9    | 0 (0%)               | 0 (0%)              |
 | runbooks      | 1    | 0 (0%)               | 0 (0%)              |
 
 ## Source Traceability By Workspace
@@ -110,7 +110,6 @@ Generated automatically from repository documentation and source-code signals on
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.en.md         | docs/adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md         |
 | docs/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/development.en.md | docs/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/development.md |
-| docs/review/DVT+\_Architectural_Review_20260226_AI.en.md                     | docs/review/DVT+\_Architectural_Review_20260226_AI.md                     |
 
 ## Recommended Convention
 

@@ -1184,7 +1184,7 @@ npm test -- --grep="ISOL-ORACLE"   # Existence oracles (API, GraphQL, cache/ETag
 
 - [SECURITY_INVARIANTS.v1.md](SECURITY_INVARIANTS.v1.md) - INV-SCOPE-03 (no cross-tenant inference)
 - [IAuthorization.v1.md](../contracts/security/IAuthorization.v1.md) - Authorization interface
-- [IStateStoreAdapter.v1.md](../contracts/state-store/IStateStoreAdapter.v1.md) - Tenant-scoped query requirements
+- [State Store Contract](../contracts/state-store/README.md) - Tenant-scoped query requirements
 - [THREAT_MODEL.md](THREAT_MODEL.md) - T1 (cross-tenant data access), T10 (timing attacks)
 
 ### Standards & Security Best Practices

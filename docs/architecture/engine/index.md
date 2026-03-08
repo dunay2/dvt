@@ -14,7 +14,7 @@ These documents define the **engine boundary, semantics, and invariants**. Viola
 
 | Document                                                              | Purpose                                                          | Scope             | Version |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------- | ------- |
-| [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md)   | Engine interface + signal catalog                                | Boundary contract | 1.0     |
+| [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md)       | Engine interface + signal catalog                                | Boundary contract | 1.0     |
 | [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) | Core execution semantics (storage/engine-agnostic)               | State machine     | 1.1     |
 | [RunEventCatalog.v1.md](contracts/engine/RunEventCatalog.v1.md)       | Canonical run event catalog alias (taxonomy + transitions + ids) | Event taxonomy    | 1.0     |
 | [GlossaryContract.v1.md](contracts/engine/GlossaryContract.v1.md)     | Canonical terminology and identifier semantics                   | Terminology       | 1.0.1   |
@@ -164,7 +164,7 @@ docs/architecture/engine/
 **For SDK implementers**:
 
 1. Read [VERSIONING.md](./VERSIONING.md) (versioning policy for contracts)
-2. Read [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) (interface)
+2. Read [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (interface)
 3. Read [ExecutionSemantics.v1.md](contracts/engine/ExecutionSemantics.v1.md) (core semantics, storage-agnostic)
 4. Read [State Store Contract](contracts/state-store/README.md) (persistence layer interface)
 5. Choose storage backend:
@@ -177,10 +177,10 @@ docs/architecture/engine/
 
 **For plan authors**:
 
-1. **Explore [Golden Paths Examples](../../../examples/)** (executable plan examples - start here!)
-   - [plan-minimal](../../../examples/plan-minimal/) - "Hello World" for the engine
-   - [plan-parallel](../../../examples/plan-parallel/) - Parallel execution and fan-in pattern
-   - [plan-cancel-and-resume](../../../examples/plan-cancel-and-resume/) - Pause/resume signal handling
+1. **Explore Golden Paths examples** (example pack pending publication in this repo)
+   - `plan-minimal` - "Hello World" for the engine
+   - `plan-parallel` - Parallel execution and fan-in pattern
+   - `plan-cancel-and-resume` - Pause/resume signal handling
 2. Read [dev/determinism-tooling.md](dev/determinism-tooling.md) (writing deterministic plans)
 3. Read [contracts/capabilities/README.md](contracts/capabilities/README.md) (capability validation)
 4. Author plan in plan schema v1.1
@@ -217,7 +217,7 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 
 ### "How do I implement the engine interface?"
 
-→ [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) (Section 2)
+-> [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Section 2)
 
 ### "What is the StateStore model?"
 
@@ -225,7 +225,7 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 
 ### "What capabilities does Temporal support?"
 
-→ [contracts/capabilities/adapters.capabilities.json](contracts/capabilities/adapters.capabilities.json)
+→ [adapters.capabilities.json](contracts/capabilities/adapters.capabilities.json)
 
 ### "How do I write a deterministic plan?"
 
@@ -268,7 +268,7 @@ See [roadmap/engine-phases.md](roadmap/engine-phases.md) for Phase 3+ roadmap.
 
 ### "How do I handle signals (PAUSE, CANCEL, etc.)?"
 
-→ [IWorkflowEngine.v1.1.md](contracts/engine/IWorkflowEngine.v1.1.md) (Sections 2.2-2.4)
+-> [IWorkflowEngine.v1.md](contracts/engine/IWorkflowEngine.v1.md) (Sections 2.2-2.4)
 
 ---
 
@@ -368,11 +368,11 @@ All internal references use **relative markdown links** (portable, versionable).
 ```markdown
 # Example: Linking from ConductorAdapter.spec.md to capability matrix
 
-→ See [parity matrix](../contracts/capabilities/adapters.capabilities.json)
+→ See [parity matrix](contracts/capabilities/adapters.capabilities.json)
 
 # Example: Linking from incident_response.md to observability
 
-→ Check [alert rules](../observability.md#section-4)
+→ Check [alert rules](ops/observability.md#2-key-metrics-phase-1)
 ```
 
 ---

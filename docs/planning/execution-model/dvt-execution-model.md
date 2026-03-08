@@ -1,3 +1,11 @@
+---
+title: DVT+ Execution Model Specification
+status: Draft
+owner: docs
+last_reviewed: 2026-03-07
+planning_type: proposal
+---
+
 # DVT+ Execution Model Specification
 
 **Status:** Working normative draft  

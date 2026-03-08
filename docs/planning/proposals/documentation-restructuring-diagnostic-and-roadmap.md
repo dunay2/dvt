@@ -6,284 +6,313 @@ last_reviewed: 2026-03-07
 planning_type: proposal
 ---
 
-# Reestructuracion De Documentacion: Diagnostico Y Hoja De Ruta
+# Documentation Restructuring: Diagnostic And Roadmap
 
-> Documento consolidado a partir de tus respuestas. La primera parte deja cerradas las decisiones. La segunda parte baja esas decisiones a un plan operativo.
+> Consolidated from the answers gathered during this planning cycle. The first part closes the operating decisions. The second part turns those decisions into an executable roadmap.
 
-## Preguntas Contestadas Y Respuestas Consolidadas
+## Answered Questions And Consolidated Responses
 
-### 1. Objetivo final
+### 1. Final goal
 
-Pregunta: Si este proyecto documental sale bien, que deberia ser cierto dentro de 30 dias?
+Question: If this documentation effort succeeds, what should be true in 30 days?
 
-Respuesta consolidada:
+Consolidated response:
 
-- La documentacion deja de generar deuda.
-- La estructura es clara, navegable y sin duplicados.
-- Existe trazabilidad en ambos sentidos entre codigo y documentacion.
-- Hay mantenimiento continuo y control en PR para no volver al desorden.
-- El equipo usa la documentacion como referencia principal y confia en ella.
-- Existe un roadmap visible y un tablero para seguir el avance.
+- Documentation no longer creates recurring debt.
+- The structure is clear, navigable, and free of duplicates.
+- There is bidirectional traceability between code and documentation.
+- Ongoing maintenance and PR controls prevent the repo from falling back into disorder.
+- The team treats documentation as the main reference and trusts it.
+- There is a visible roadmap and a board to track progress.
 
-### 2. Fuente de verdad
+### 2. Source of truth
 
-Pregunta: Que carpetas y archivos consideras hoy fuente canonica de documentacion?
+Question: Which folders and files do you consider the canonical documentation source today?
 
-Respuesta consolidada:
+Consolidated response:
 
-- `docs/` es la fuente principal y canonica.
-- Cada carpeta importante dentro de `docs/` debe tener `index.md`.
-- Todo documento relevante debe vivir en `docs/` y estar trackeado en git.
-- El resto de material relacionado puede vivir fuera de `docs/`, pero debe quedar enlazado desde la documentacion principal.
+- `docs/` is the main canonical source.
+- Every important folder inside `docs/` should have an `index.md`.
+- Every relevant document should live in `docs/` and be tracked in git.
+- Related material may live outside `docs/`, but it must be linked from the main documentation system.
 
-### 3. Carpeta generada
+### 3. Generated folder
 
-Pregunta: Cual es la regla exacta para `site/`?
+Question: What is the exact rule for `site/`?
 
-Respuesta consolidada:
+Consolidated response:
 
-- `site/` es salida generada por MkDocs.
-- No debe editarse manualmente.
-- Debe regenerarse desde la fuente documental.
-- La publicacion ideal sale desde CI, no desde trabajo manual sobre `site/`.
+- `site/` is generated output from MkDocs.
+- It must not be edited manually.
+- It must be regenerated from the documentation sources.
+- Publication should come from CI, not from manual work on `site/`.
 
-### 4. Material fuera de git
+### 4. Material outside git
 
-Pregunta: Que tipo de archivos no trackeados quieres incorporar?
+Question: What kind of untracked files do you want to incorporate?
 
-Respuesta consolidada:
+Consolidated response:
 
-- Notas tecnicas.
-- Borradores.
+- Technical notes.
+- Drafts.
 - Runbooks.
-- Decisiones arquitecturales.
-- Traducciones.
-- Exportaciones de IA con valor real.
-- Cualquier artefacto documental relevante para el equipo.
+- Architectural decisions.
+- Translations.
+- AI exports with real value.
+- Any documentation artifact that matters to the team.
 
-### 5. Politica de idioma
+### 5. Language policy
 
-Pregunta: La documentacion objetivo debe quedar solo en ingles, bilingue, o con excepciones controladas?
+Question: Should the target documentation be English-only, bilingual, or English with controlled exceptions?
 
-Respuesta consolidada:
+Consolidated response:
 
-- El idioma objetivo debe ser ingles.
-- Puede haber excepciones temporales o muy justificadas.
-- Las excepciones deben estar claramente marcadas y enlazadas desde la documentacion principal.
+- The target language is English.
+- Temporary or strongly justified exceptions are allowed.
+- Exceptions must be clearly marked and linked from the main documentation system.
 
-### 6. Publico principal
+### 6. Primary audience
 
-Pregunta: Para quien estamos ordenando esta documentacion primero?
+Question: Who are we organizing this documentation for first?
 
-Respuesta consolidada:
+Consolidated response:
 
-- El publico principal son los desarrolladores.
-- La estructura tambien debe servir a reviewers, operadores, arquitectura, IA y nuevos miembros.
+- Developers are the primary audience.
+- The structure should also work for reviewers, operators, architects, AI workflows, and new contributors.
 
-### 7. Nivel de rigor
+### 7. Required rigor
 
-Pregunta: Que tipos de cambios de codigo deben obligar actualizacion documental?
+Question: Which kinds of code changes must force documentation updates?
 
-Respuesta consolidada:
+Consolidated response:
 
-- Cambios de arquitectura.
-- Cambios de contratos.
-- Cambios de diseno.
-- Cambios operativos.
-- Cambios funcionales relevantes.
-- Correcciones que alteren comportamiento o entendimiento del sistema.
-- El trabajo ideal sigue un enfoque de diseno primero.
+- Architecture changes.
+- Contract changes.
+- Design changes.
+- Operational changes.
+- Relevant functional changes.
+- Fixes that change behavior or system understanding.
+- The ideal working mode is design-first.
 
-Nota adicional:
+Additional note:
 
-- Hay que localizar el modelo modular de IA ya existente y formalizarlo como ADR.
+- The existing modular AI model should be located and formalized as an ADR.
 
-### 8. Tipos documentales
+### 8. Document types
 
-Pregunta: Que categorias quieres mantener explicitamente?
+Question: Which categories do you want to keep explicitly?
 
-Respuesta consolidada:
+Consolidated response:
 
-- ADR.
-- Guias.
-- Runbooks.
-- Planning.
-- Evidencia.
-- Risk register.
-- Contratos.
-- Arquitectura.
+- ADR
+- Guides
+- Runbooks
+- Planning
+- Evidence
+- Risk register
+- Contracts
+- Architecture
 
-### 9. Archivo historico
+### 9. Historical archive
 
-Pregunta: Cuando pasa un documento a archivo?
+Question: When does a document move to archive?
 
-Respuesta consolidada:
+Consolidated response:
 
-- Cuando ya no es relevante para el estado actual del proyecto.
-- Cuando fue reemplazado por otro documento mejor o mas actual.
-- Cuando es historico y se conserva solo como referencia.
-- Cuando su mantenimiento activo ya no aporta valor.
+- When it is no longer relevant to the current project state.
+- When it has been replaced by a better or more current document.
+- When it is historical and only kept for reference.
+- When actively maintaining it no longer provides value.
 
-### 10. Propiedad
+### 10. Ownership
 
-Pregunta: Cada documento o seccion debe tener `owner` explicito?
+Question: Should every document or section have an explicit `owner`?
 
-Respuesta consolidada:
+Consolidated response:
 
-- Si.
-- El owner actual es demasiado generico.
-- Hay que decidir si el owner sera persona, equipo, modulo o una combinacion util de estos.
+- Yes.
+- The current owner field is too generic.
+- We need to decide whether ownership is person, team, module, or a useful combination of those.
 
-### 11. Caducidad
+### 11. Expiration and review cadence
 
-Pregunta: Quieres fecha de revision obligatoria para todos los docs o solo para planning, runbooks y normativa?
+Question: Do you want a required review date for all docs or only for planning, runbooks, and normative docs?
 
-Respuesta consolidada:
+Consolidated response:
 
-- La revision deberia ser obligatoria para todos los docs.
-- La cadencia puede variar por tipo documental.
-- Planning, runbooks y normativa deberian tener una frecuencia mas alta.
+- Review should be required for all docs.
+- The cadence can vary by document type.
+- Planning, runbooks, and normative docs should be reviewed more frequently.
 
-### 12. Relacion codigo-documentacion
+### 12. Code-documentation relationship
 
-Pregunta: Como quieres representar la trazabilidad?
+Question: How should traceability be represented?
 
-Respuesta consolidada:
+Consolidated response:
 
-- Enlaces a rutas de codigo.
-- Frontmatter con `code_paths`.
-- Tablas por modulo.
-- Checklist en PR.
-- Diagramas o mapas si ayudan a entender la relacion.
+- Links to code paths.
+- Frontmatter with `code_paths`.
+- Tables by module.
+- PR checklist items.
+- Diagrams or maps when they help explain the relationship.
 
-### 13. Umbral de calidad
+### 13. Quality threshold
 
-Pregunta: Que cosas deben bloquear merge si fallan?
+Question: Which failures should block merge?
 
-Respuesta consolidada:
+Consolidated response:
 
-- Links rotos.
-- Documentos huerfanos.
-- Frontmatter incompleto.
-- Drift de docs generados.
-- Falta de evidencia en cambios relevantes.
-- Falta de trazabilidad minima entre codigo y docs.
+- Broken links.
+- Orphan documents.
+- Incomplete frontmatter.
+- Drift in generated docs.
+- Missing evidence for relevant changes.
+- Missing minimum traceability between code and docs.
 
-### 14. Estado actual mas doloroso
+### 14. Most painful current problem
 
-Pregunta: Que te molesta mas hoy?
+Question: What bothers you most today?
 
-Respuesta consolidada:
+Consolidated response:
 
-- El desorden estructural es el problema principal.
-- Le siguen los documentos obsoletos.
-- Tambien pesa mucho la falta de trazabilidad con el codigo.
-- El material sin clasificar agrava el problema.
+- Structural disorder is the main problem.
+- Obsolete documents come next.
+- Missing traceability with code is also heavy debt.
+- Unclassified material makes the problem worse.
 
-### 15. Restricciones practicas
+### 15. Practical constraints
 
-Pregunta: Hay algo que no podamos tocar por ahora?
+Question: Is there anything we cannot touch for now?
 
-Respuesta consolidada:
+Consolidated response:
 
-- No hay restricciones duras.
-- Si se cambian nombres o rutas, hay que actualizar referencias y scripts con cuidado.
+- There are no hard restrictions.
+- If names or paths change, references and scripts must be updated carefully.
 
-### 16. Prioridad de salida
+### 16. Preferred output order
 
-Pregunta: Que prefieres obtener primero?
+Question: What do you want first?
 
-Respuesta consolidada:
+Consolidated response:
 
-- Primero orden estructural.
-- Luego limpieza de contenido.
-- Luego trazabilidad con el codigo.
-- Por ultimo automatizacion en CI.
+- First structural order.
+- Then content cleanup.
+- Then traceability with code.
+- Finally automation in CI.
 
-## Decisiones Operativas Cerradas
+## Closed Operating Decisions
 
-- La fuente canonica es `docs/`.
-- `site/` debe tratarse como artefacto generado.
-- Todo material documental relevante debe acabar dentro del sistema documental versionado.
-- El idioma objetivo es ingles.
-- El publico principal son los desarrolladores.
-- Los cambios de arquitectura, contratos, diseno y operativa obligan actualizacion documental.
-- Las categorias activas quedan limitadas a ADR, guias, runbooks, planning, evidencia, risk register, contratos y arquitectura.
-- Todo documento activo debe tener metadata minima y fecha de revision.
-- La trazabilidad codigo-documentacion no es opcional en cambios relevantes.
-- Los checks documentales importantes deben bloquear merge.
+- The canonical source is `docs/`.
+- `site/` must be treated as a generated artifact.
+- Every relevant documentation artifact must end up inside the versioned documentation system.
+- English is the target language.
+- Developers are the primary audience.
+- Architecture, contract, design, and operational changes require documentation updates.
+- Active categories are limited to ADRs, guides, runbooks, planning, evidence, risk register, contracts, and architecture.
+- Every active document must have minimum metadata and a review date.
+- Code-documentation traceability is not optional for relevant changes.
+- Important documentation checks must block merge.
 
-## Tensiones Que El Plan Tiene Que Resolver
+## Tensions The Plan Must Resolve
 
-- El objetivo dice que `site/` no debe tratarse como fuente, pero el repo hoy contiene `site/` trackeado. Eso requiere una decision tecnica explicita.
-- El idioma objetivo es ingles, pero hoy hay bastante planning en espanol. Hay que separar borrador temporal de documentacion estable.
-- El `owner` existe, pero hoy es demasiado generico. Hay que hacerlo util sin volverlo burocratico.
+- The `site/` case is already resolved at repo level: it is not tracked and it is ignored. What remains is preventing it from coming back and ensuring publication always comes from CI.
+- English is the target language, but planning used to contain significant Spanish content. The plan must separate temporary working drafts from stable documentation.
+- The `owner` field exists, but it is still too generic. It needs to become useful without becoming bureaucratic.
 
-## Diagnostico Inicial: Que Hay Que Auditar
+## Initial Diagnostic: What Must Be Audited
 
-### A. Alcance y estructura
+### A. Scope and structure
 
-- Que rutas son fuente.
-- Que rutas son generadas.
-- Que rutas son historicas.
-- Que carpetas carecen de `index.md`.
-- Que secciones se pisan entre si.
+- Which paths are sources.
+- Which paths are generated.
+- Which paths are historical.
+- Which folders are missing `index.md`.
+- Which sections overlap with each other.
 
-### B. Inventario y control de versiones
+### B. Inventory and version control
 
-- Todos los `.md`, `.txt` y artefactos documentales relevantes.
-- Material trackeado vs no trackeado.
-- Documentos nuevos sin destino claro.
-- Duplicados por nombre, titulo o contenido.
+- All relevant `.md`, `.txt`, and documentation artifacts.
+- Tracked versus untracked material.
+- New documents without a clear destination.
+- Duplicates by name, title, or content.
 
-### C. Calidad estructural
+### C. Structural quality
 
-- Archivos huerfanos.
-- Links rotos.
-- Referencias legacy.
-- Frontmatter faltante.
-- Titulos duplicados.
-- Indices que no reflejan el contenido real.
+- Orphan files.
+- Broken links.
+- Non-canonical or removed references.
+- Missing frontmatter.
+- Duplicate titles.
+- Index pages that do not reflect real content.
 
-### D. Calidad de contenido
+### D. Content quality
 
-- Obsolescencia.
-- Ownership insuficiente.
-- Status inexistente o ambiguo.
-- Revision vencida.
-- Mezcla de idiomas sin politica.
-- Falta de ejemplos o comandos de validacion.
-- Borradores confundidos con normativa.
+- Obsolescence.
+- Weak ownership.
+- Missing or ambiguous status.
+- Expired review dates.
+- Mixed-language content without a policy.
+- Missing examples or validation commands.
+- Drafts mistaken for normative docs.
 
-### E. Trazabilidad con el codigo
+### E. Traceability with code
 
-- Paquetes sin docs asociadas.
-- Docs normativos sin rutas de codigo, tests o comandos de verificacion.
-- Docs generados sin comando declarado.
-- Cambios de codigo que hoy no disparan trabajo documental.
+- Packages without related docs.
+- Normative docs without code paths, tests, or verification commands.
+- Generated docs without a declared generation command.
+- Code changes that currently do not trigger documentation work.
 
-### F. Flujo de mantenimiento
+### F. Maintenance flow
 
-- Que valida cada script.
-- Que se ejecuta en local.
-- Que se ejecuta en pre-commit.
-- Que se ejecuta en PR.
-- Que se ejecuta en CI.
-- Que condiciones bloquean merge.
+- What each script validates.
+- What runs locally.
+- What runs in pre-commit.
+- What runs in PRs.
+- What runs in CI.
+- Which conditions block merge.
 
-## Hallazgos Iniciales Del Repo
+## Verified Repo Baseline (2026-03-07)
 
-- `docs:doctor` falla hoy por titulos duplicados y por `last_reviewed` ausente en varios docs de `planning`.
-- `docs:quality:check` ya esta detectando mezcla de idioma en planning.
-- Hay material no trackeado dentro de `docs/`.
-- `site/` se mueve mucho, lo que confirma que es output y no la unidad correcta de trabajo.
-- Ya existe una base util de scripts para sincronizacion, calidad, estado y capacidad.
+Commands used for this baseline:
 
-## Orden Recomendado De Ejecucion
+- `git ls-files docs`
+- `git ls-files site`
+- `git status --short --untracked-files=all docs`
+- `pnpm docs:doctor`
+- `pnpm docs:quality:check`
 
-### Ola 1: Orden estructural
+Verified state:
 
-Objetivo: dejar claro que es fuente, que es generado, que tipos documentales existen y donde vive cada cosa.
+- `docs/` has 249 tracked files.
+- `site/` has 0 tracked files and `/site/` is ignored in `.gitignore`.
+- There are no untracked files inside `docs/` at this point.
+- The initial baseline on this branch found 7 `planning` docs missing `last_reviewed`; that debt is now resolved and `pnpm docs:doctor` is clean.
+- `pnpm docs:quality:check` now returns `OK` and the active `planning` language queue is fully closed.
+- `docs:sync`, `docs:doctor`, `docs:quality:check`, `docs:canonical:check`, `docs:status:check`, and `docs:capability:check` already exist and form a real base for hardening the workflow.
+
+Summary inventory of `docs/` by area:
+
+| Area            | Tracked files |
+| --------------- | ------------: |
+| `(root)`        |             4 |
+| `adr`           |            33 |
+| `architecture`  |            94 |
+| `archive`       |             3 |
+| `contracts`     |             4 |
+| `decisions`     |             6 |
+| `evidence`      |             3 |
+| `guides`        |             3 |
+| `knowledge`     |             3 |
+| `planning`      |            85 |
+| `review`        |             3 |
+| `risk-register` |             7 |
+| `runbooks`      |             1 |
+
+## Recommended Execution Order
+
+### Wave 1: Structural order
+
+Goal: make it explicit what is source, what is generated, which document types exist, and where each thing belongs.
 
 - T01
 - T02
@@ -297,9 +326,9 @@ Objetivo: dejar claro que es fuente, que es generado, que tipos documentales exi
 - T18
 - T29
 
-### Ola 2: Limpieza y consolidacion
+### Wave 2: Cleanup and consolidation
 
-Objetivo: reducir ruido, cerrar duplicados y dejar una sola fuente de verdad por tema.
+Goal: reduce noise, close duplicates, and leave one source of truth per topic.
 
 - T07
 - T08
@@ -313,9 +342,9 @@ Objetivo: reducir ruido, cerrar duplicados y dejar una sola fuente de verdad por
 - T30
 - T31
 
-### Ola 3: Trazabilidad con el codigo
+### Wave 3: Traceability with code
 
-Objetivo: hacer visible y mantenible la relacion bidireccional entre codigo y documentacion.
+Goal: make the bidirectional relationship between code and documentation visible and maintainable.
 
 - T20
 - T21
@@ -324,9 +353,9 @@ Objetivo: hacer visible y mantenible la relacion bidireccional entre codigo y do
 - T24
 - T33
 
-### Ola 4: Automatizacion y mantenimiento continuo
+### Wave 4: Automation and continuous maintenance
 
-Objetivo: impedir que vuelva a entrar deuda documental.
+Goal: prevent documentation debt from returning.
 
 - T25
 - T26
@@ -334,49 +363,136 @@ Objetivo: impedir que vuelva a entrar deuda documental.
 - T28
 - T32
 
-## Backlog Atomico De Trabajo
+## Current Backlog State
 
-| ID  | Tarea                             | Descripcion breve                                                                                                    | Prioridad | Paralelizable | Estado    |
-| --- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- | ------------- | --------- |
-| T01 | Declarar fuentes                  | Escribir la lista oficial de carpetas fuente, generadas e historicas.                                                | Alta      | No            | Pendiente |
-| T02 | Declarar regla de `site/`         | Documentar la regla objetivo para `site/`: generado, no editable y publicado desde CI.                               | Alta      | No            | Pendiente |
-| T03 | Listar docs trackeados            | Generar inventario de todos los docs versionados.                                                                    | Alta      | Si            | Pendiente |
-| T04 | Listar docs no trackeados         | Generar inventario de docs no versionados.                                                                           | Alta      | Si            | Pendiente |
-| T05 | Clasificar docs no trackeados     | Marcar cada no trackeado como incorporar, mover, archivar o descartar.                                               | Alta      | Si            | Pendiente |
-| T06 | Confirmar categorias documentales | Cerrar la taxonomia oficial de tipos de documento.                                                                   | Alta      | No            | Pendiente |
-| T07 | Definir politica de idioma        | Cerrar ingles como idioma objetivo y definir excepciones permitidas.                                                 | Alta      | No            | Pendiente |
-| T08 | Definir metadata minima           | Fijar campos obligatorios: `title`, `status`, `owner`, `last_reviewed` y trazabilidad cuando aplique.                | Alta      | No            | Pendiente |
-| T09 | Detectar huerfanos                | Localizar docs que no aparecen en nav, indices o landings.                                                           | Alta      | Si            | Pendiente |
-| T10 | Detectar enlaces rotos            | Revisar links internos markdown y nav.                                                                               | Alta      | Si            | Pendiente |
-| T11 | Detectar duplicados               | Revisar duplicados por titulo y por contenido.                                                                       | Alta      | Si            | Pendiente |
-| T12 | Detectar obsoletos                | Marcar docs sin vigencia, reemplazados o sin revisar en plazo razonable.                                             | Alta      | Si            | Pendiente |
-| T13 | Completar frontmatter             | Agregar metadata obligatoria donde falte.                                                                            | Alta      | Si            | Pendiente |
-| T14 | Corregir titulos duplicados       | Resolver colisiones de titulos en una misma seccion.                                                                 | Alta      | Si            | Pendiente |
-| T15 | Unificar docs repetidos           | Elegir una copia canonica y archivar o redirigir el resto.                                                           | Alta      | Si            | Pendiente |
-| T16 | Normalizar nombres de archivo     | Ajustar nombres inconsistentes o ambiguos.                                                                           | Media     | Si            | Pendiente |
-| T17 | Normalizar idioma de contenido    | Traducir o mover docs que violen la politica acordada.                                                               | Media     | Si            | Pendiente |
-| T18 | Revisar indices generados         | Verificar que los `index.md` representen el contenido real.                                                          | Alta      | Si            | Pendiente |
-| T19 | Definir doc canonico por tema     | Dejar una sola fuente de verdad por tema grande.                                                                     | Alta      | No            | Pendiente |
-| T20 | Mapear paquetes a docs            | Crear matriz paquete/app -> documentos relacionados.                                                                 | Alta      | Si            | Pendiente |
-| T21 | Mapear docs a codigo              | Anadir referencia a rutas de codigo, tests y scripts relevantes.                                                     | Alta      | Si            | Pendiente |
-| T22 | Definir trazabilidad minima       | Fijar `code_paths`, `verification_cmd`, tablas por modulo y checklist de PR.                                         | Alta      | No            | Pendiente |
-| T23 | Identificar docs generados        | Marcar explicitamente que docs se generan y con que comando.                                                         | Alta      | Si            | Pendiente |
-| T24 | Revisar ADR de IA modular         | Localizar el modelo modular de IA actual y convertirlo en ADR formal.                                                | Alta      | Si            | Pendiente |
-| T25 | Integrar `docs:sync`              | Usar `docs:sync` como paso obligatorio de normalizacion.                                                             | Alta      | No            | Pendiente |
-| T26 | Integrar `docs:doctor`            | Usar `docs:doctor` para duplicados, metadata y envejecimiento.                                                       | Alta      | No            | Pendiente |
-| T27 | Integrar checks de calidad        | Usar `docs:quality:check`, `docs:canonical:check`, `docs:status:check` y `docs:capability:check` en el flujo normal. | Alta      | No            | Pendiente |
-| T28 | Anadir checks faltantes           | Crear checks para docs huerfanos, links rotos y docs no trackeados.                                                  | Media     | Si            | Pendiente |
-| T29 | Resolver el caso `site/`          | Cerrar si `site/` sale de git o si se mantiene como excepcion controlada.                                            | Alta      | No            | Pendiente |
-| T30 | Cerrar criterios de archivo       | Definir exactamente cuando un doc pasa a `archive`.                                                                  | Media     | No            | Pendiente |
-| T31 | Mover historicos                  | Archivar documentos fuera de vigencia.                                                                               | Media     | Si            | Pendiente |
-| T32 | Definir chequeos bloqueantes      | Formalizar que validaciones fallan el merge y cuales solo avisan.                                                    | Alta      | No            | Pendiente |
-| T33 | Crear roadmap y tablero           | Llevar el avance en una sola pagina con responsables, estado y fechas objetivo.                                      | Alta      | No            | Pendiente |
+Status legend used in this table:
 
-## Tareas Que Se Pueden Hacer En Paralelo
+- `Done`: resolved and verified in the repo or workflow.
+- `In progress`: there is partial evidence and the next step is clear.
+- `Pending`: there is not yet enough evidence to close it.
 
-### Bloque 1: Inventario rapido
+Summary state after syncing with `main`:
 
-Se pueden ejecutar a la vez:
+- `Done`: T01, T02, T03, T04, T05, T06, T07, T08, T09, T10, T11, T13, T18, T25, T26, T27, T29, T32.
+- `In progress`: T12, T19, T20, T22, T31, T33.
+- `Pending`: everything else.
+
+The real debt still open today is concentrated in three areas:
+
+- obsolete-document detection
+- historical-document relocation and archive discipline
+- fine-grained traceability between docs and code
+
+Recent `T12` / `T31` progress:
+
+- one scratch planning note about Temporal adapter improvements was absorbed into the canonical `G1` execution-gap doc and removed from active `planning`
+- one standalone OpenLineage/Marquez comparison note was moved to `archive` as historical analysis instead of remaining as an active planning document
+- the `release-please` pending note was relocated into `docs/planning/status/` because it is an active operational status item, not a loose planning note
+- the golden-path debt note was converted into a risk-register entry and its mixed assessment note was moved to `archive`
+- the AI remediation snapshot and the strategic assessment snapshot were moved to `archive` because they are stale, time-bound, and no longer act as canonical sources for current execution decisions
+- the standalone outbox-consumer proposal was moved to `archive` after its actionable points were absorbed into the current gap tracker
+- the artifact-store review pack was moved from `docs/planning/` to `docs/archive/` because its core gap assumptions are now historical and it no longer acts as active planning
+- the traceability pack bundle was also moved from `docs/planning/` to `docs/archive/`; active planning docs now link to it as historical reference instead of treating it as a planning section
+- a first manual doc-to-code matrix now exists in `docs/planning/status/canonical-doc-code-matrix.md`, covering engine core, adapters, G3/G4, traceability, and docs tooling with explicit code paths, tests, and verification commands
+
+Current language-queue state (`T17`):
+
+- 21 docs left the queue: 4 were removed because they were non-canonical or not useful, 2 were rewritten in English, 8 were cleaned or translated in place, and 7 were moved to `archive`.
+- 0 docs require consolidation before translation.
+- 0 docs still need translation in place.
+- 0 temporary exceptions remain after translating this working document.
+
+## Wave 1: Immediate Executable Checklist
+
+This is the next sensible working set for the backlog. Each row should produce a concrete and verifiable output.
+
+| Step  | Task | What to do literally                                                                                                      | Base command                                           | Exit criterion                                                                       | Status      |
+| ----- | ---- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------ | ----------- |
+| O1-01 | T09  | Walk `docs/`, `mkdocs.yml`, and `index.md` files to list docs that are not linked or navigated.                           | `pnpm docs:sync` plus assisted manual review           | No orphan docs remain in the current tree.                                           | Done        |
+| O1-02 | T10  | Review internal markdown links and navigation references that still point to broken or removed aliases.                   | `pnpm docs:canonical:check` plus manual review         | Direct-path scan reports `0` missing markdown targets in `docs/`.                    | Done        |
+| O1-03 | T11  | Review repeated titles and repeated content, starting with `docs/planning/`.                                              | `pnpm docs:doctor` plus manual reading                 | A table `repeated doc -> canonical doc` exists.                                      | Done        |
+| O1-04 | T18  | Compare auto-generated `index.md` files with real folders to detect missing or extra entries.                             | `pnpm docs:sync`                                       | Relevant generated indexes are in sync with the current tree.                        | Done        |
+| O1-05 | T13  | Add `last_reviewed` to the 7 docs that `docs:doctor` was still flagging.                                                  | `pnpm docs:doctor`                                     | `pnpm docs:doctor` is clean.                                                         | Done        |
+| O1-06 | T17  | Keep the language queue closed by translating any future mixed-language planning doc or removing it from active planning. | `pnpm docs:quality:check` plus `docs/SPANISH_TEXTS.md` | The planning queue stays at zero active warnings.                                    | Done        |
+| O1-07 | T33  | Keep this page as the minimum tracking board until an external board exists.                                              | Edit this document                                     | The backlog reflects the real state and next step instead of becoming a frozen list. | In progress |
+
+## Wave 1 Audit Snapshot (2026-03-07)
+
+This snapshot is the first measured cut for `O1-01` to `O1-03`. It is intentionally pragmatic: it gives the backlog enough evidence to sequence work before a dedicated validator exists.
+
+### O1-01 / T09: orphan candidates
+
+- A manual inbound-link scan now finds 0 orphan candidates after indexing `docs/evidence/` and `docs/risk-register/` as first-class sections, closing the top-level `docs/review/` bucket, adding an explicit landing page for the traceability bundle, creating landing pages for the remaining documentation packs, and relocating the planning template into `docs/planning/templates/`.
+- `docs/architecture/vision/DVT_Docs_Pack_v0.6/docs/standards/` received an explicit landing page, and the artifact-store review pack has since been moved out of `planning` into `docs/archive/`.
+- `docs/planning/templates/` is now the canonical location for the planning template, replacing the former top-level orphan file.
+- `docs/evidence/` and `docs/risk-register/` are no longer floating sections: `docs:sync` now generates their `index.md` landing pages and the home navigation points to explicit files instead of directory placeholders.
+- `docs/review/` is no longer an active section: the February review set was resolved by archiving the two English documents and removing the duplicate Spanish variant.
+- `docs/archive/dvt-traceability-pack-v2-lite-R6/` is now explicitly classified as a bundled reference snapshot with a landing page that links its internal docs instead of leaving them orphaned.
+- This means `T09` is done for the current tree: orphan discovery and structural resolution are closed.
+
+### O1-02 / T10: broken-link candidates
+
+- The direct-path markdown scan is now at `0` missing targets across `docs/`.
+- This cut closed the previously dominant clusters in the AI workflow guide, `docs/CONTRIBUTING.md`, `docs/knowledge/ROADMAP_AND_ISSUES_MAP.md`, `docs/architecture/engine/index.md`, `docs/architecture/engine/VERSIONING.md`, security references, and several ADR cross-links.
+- Historical or hypothetical file references that were never meant to resolve as live docs were converted to plain text or code literals.
+- Stale links to removed backlog/status documents were replaced by current canonical sources.
+- `T10` can therefore be treated as done for the current tree, with the caveat that a future dedicated broken-link checker under `T28` may still catch new regressions.
+
+### O1-03 / T11: duplicate detection
+
+- `pnpm docs:doctor` is clean as of 2026-03-07.
+- No duplicate-title or duplicate-content failure is currently being reported by the existing checker.
+- `T11` can therefore be treated as done for the current tool coverage, with the caveat that future stronger duplicate detection may reopen it.
+
+### Immediate next cut after this snapshot
+
+- Move from link cleanup into `T12` and `T31`: identify active docs that are obsolete, superseded, or historical but still live outside `archive`.
+- Convert the current manual path scan into an automated repo check under `T28` so `T10` stays closed.
+- Extend the first manual traceability matrix in `docs/planning/status/canonical-doc-code-matrix.md` to the remaining active workspaces and start pushing the minimum tuple into active docs.
+
+## Atomic Work Backlog
+
+| ID  | Task                              | Short description                                                                                                      | Priority | Parallelizable | Status      |
+| --- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------- | -------------- | ----------- |
+| T01 | Declare sources                   | Write the official list of source, generated, and historical folders.                                                  | High     | No             | Done        |
+| T02 | Declare the `site/` rule          | Document the target rule for `site/`: generated, not editable, published from CI.                                      | High     | No             | Done        |
+| T03 | List tracked docs                 | Generate the inventory of all versioned docs.                                                                          | High     | Yes            | Done        |
+| T04 | List untracked docs               | Generate the inventory of non-versioned docs.                                                                          | High     | Yes            | Done        |
+| T05 | Classify untracked docs           | Mark each untracked file as incorporate, move, archive, or discard.                                                    | High     | Yes            | Done        |
+| T06 | Confirm document categories       | Close the official taxonomy of document types.                                                                         | High     | No             | Done        |
+| T07 | Define language policy            | Close English as the target language and define allowed exceptions.                                                    | High     | No             | Done        |
+| T08 | Define minimum metadata           | Set required fields: `title`, `status`, `owner`, `last_reviewed`, and traceability where applicable.                   | High     | No             | Done        |
+| T09 | Detect orphans                    | Find docs that do not appear in navigation, indexes, or landing pages.                                                 | High     | Yes            | Done        |
+| T10 | Detect broken links               | Review internal markdown links and nav links.                                                                          | High     | Yes            | Done        |
+| T11 | Detect duplicates                 | Review duplicates by title and content.                                                                                | High     | Yes            | Done        |
+| T12 | Detect obsolete docs              | Mark docs with no current value, replaced docs, or docs overdue for review.                                            | High     | Yes            | In progress |
+| T13 | Complete frontmatter              | Add required metadata where it is missing.                                                                             | High     | Yes            | Done        |
+| T14 | Fix duplicate titles              | Resolve title collisions inside the same section.                                                                      | High     | Yes            | Pending     |
+| T15 | Unify repeated docs               | Choose a canonical copy and archive or remove the rest.                                                                | High     | Yes            | Pending     |
+| T16 | Normalize filenames               | Fix inconsistent or ambiguous filenames.                                                                               | Medium   | Yes            | Pending     |
+| T17 | Normalize content language        | Translate or move docs that violate the agreed language policy.                                                        | Medium   | Yes            | Done        |
+| T18 | Review generated indexes          | Verify that `index.md` files represent real content.                                                                   | High     | Yes            | Done        |
+| T19 | Define the canonical doc by topic | Leave one source of truth for each major topic.                                                                        | High     | No             | In progress |
+| T20 | Map packages to docs              | Create a matrix package/app -> related docs.                                                                           | High     | Yes            | In progress |
+| T21 | Map docs to code                  | Add references to code paths, tests, and relevant scripts.                                                             | High     | Yes            | Pending     |
+| T22 | Define minimum traceability       | Set `code_paths`, `verification_cmd`, module tables, and PR checklist requirements.                                    | High     | No             | In progress |
+| T23 | Identify generated docs           | Mark which docs are generated and by which command.                                                                    | High     | Yes            | Pending     |
+| T24 | Review the modular AI ADR         | Locate the current modular AI model and convert it into a formal ADR.                                                  | High     | Yes            | Pending     |
+| T25 | Integrate `docs:sync`             | Use `docs:sync` as a mandatory normalization step.                                                                     | High     | No             | Done        |
+| T26 | Integrate `docs:doctor`           | Use `docs:doctor` for duplicates, metadata, and aging docs.                                                            | High     | No             | Done        |
+| T27 | Integrate quality checks          | Use `docs:quality:check`, `docs:canonical:check`, `docs:status:check`, and `docs:capability:check` in the normal flow. | High     | No             | Done        |
+| T28 | Add missing checks                | Create checks for orphan docs, broken links, and untracked docs.                                                       | Medium   | Yes            | Pending     |
+| T29 | Resolve the `site/` case          | Close whether `site/` leaves git or remains as a controlled exception.                                                 | High     | No             | Done        |
+| T30 | Close archive criteria            | Define exactly when a doc moves to `archive`.                                                                          | Medium   | No             | Pending     |
+| T31 | Move historical docs              | Archive docs that are no longer current.                                                                               | Medium   | Yes            | In progress |
+| T32 | Define blocking checks            | Formalize which validations fail merge and which only warn.                                                            | High     | No             | Done        |
+| T33 | Create roadmap and board          | Track progress in one page with owners, status, and target dates.                                                      | High     | No             | In progress |
+
+## Tasks That Can Run In Parallel
+
+### Block 1: Fast inventory
+
+These can run at the same time:
 
 - T03
 - T04
@@ -385,9 +501,9 @@ Se pueden ejecutar a la vez:
 - T11
 - T12
 
-### Bloque 2: Normalizacion basica
+### Block 2: Basic normalization
 
-Se pueden ejecutar a la vez, una vez cerradas las reglas:
+These can run at the same time once the rules are closed:
 
 - T13
 - T14
@@ -396,66 +512,88 @@ Se pueden ejecutar a la vez, una vez cerradas las reglas:
 - T18
 - T23
 
-### Bloque 3: Trazabilidad
+### Block 3: Traceability
 
-Se pueden ejecutar a la vez:
+These can run at the same time:
 
 - T20
 - T21
 - T24
 
-### Bloque 4: Nuevos validadores
+### Block 4: New validators
 
-Se pueden ejecutar a la vez:
+These can run at the same time:
 
 - T25
 - T26
 - T27
 - T28
 
-## Integracion De Scripts Existentes En El Flujo
+## Integrating Existing Scripts Into The Flow
 
-| Script o comando             | Uso propuesto                                                     | Momento                 |
-| ---------------------------- | ----------------------------------------------------------------- | ----------------------- |
-| `pnpm docs:sync`             | Regenerar indices, normalizar estructura y docs derivados.        | Antes de commit y en CI |
-| `pnpm docs:doctor`           | Detectar duplicados, metadata faltante y docs envejecidos.        | Local y CI              |
-| `pnpm docs:quality:check`    | Detectar placeholders y avisar sobre idioma o calidad basica.     | Local y CI              |
-| `pnpm docs:canonical:check`  | Bloquear rutas o referencias legacy.                              | CI                      |
-| `pnpm docs:status:check`     | Asegurar que el estado generado desde codigo no quede desfasado.  | CI                      |
-| `pnpm docs:capability:check` | Asegurar que la cobertura generada desde codigo este actualizada. | CI                      |
-| `tools/ci/arc-check.mjs`     | Detectar si un cambio exige evidencia, riesgo o controles extra.  | PR y CI                 |
-| `tools/ci/doc-check.mjs`     | Validar evidencia y riesgo cuando la politica ARC lo exige.       | PR y CI                 |
+| Script or command            | Proposed use                                                        | When                    |
+| ---------------------------- | ------------------------------------------------------------------- | ----------------------- |
+| `pnpm docs:sync`             | Regenerate indexes, normalize structure, and refresh derived docs.  | Before commit and in CI |
+| `pnpm docs:doctor`           | Detect duplicates, missing metadata, and aging docs.                | Local and CI            |
+| `pnpm docs:quality:check`    | Detect placeholders and basic language or quality issues.           | Local and CI            |
+| `pnpm docs:canonical:check`  | Block non-canonical paths or removed references.                    | CI                      |
+| `pnpm docs:status:check`     | Ensure code-generated status docs are not stale.                    | CI                      |
+| `pnpm docs:capability:check` | Ensure capability coverage generated from code is current.          | CI                      |
+| `tools/ci/arc-check.mjs`     | Detect whether a change requires extra evidence, risk, or controls. | PR and CI               |
+| `tools/ci/doc-check.mjs`     | Validate evidence and risk docs when ARC policy requires them.      | PR and CI               |
 
-## Flujo Recomendado
+## Language Queue
 
-1. Editar solo fuentes documentales.
-2. Ejecutar `pnpm docs:sync`.
-3. Ejecutar `pnpm docs:doctor`.
-4. Ejecutar `pnpm docs:quality:check`.
-5. Ejecutar `pnpm docs:canonical:check`.
-6. Si el cambio toca arquitectura, contratos o riesgos, ejecutar `arc-check` y `doc-check`.
-7. Si el cambio toca codigo estructural, ejecutar `pnpm docs:status:check` y `pnpm docs:capability:check`.
+The operational matrix for `T17` lives in [`docs/SPANISH_TEXTS.md`](../../SPANISH_TEXTS.md).
 
-## Criterios De Hecho
+That file no longer exists as a generic translation note. It now acts as a work queue with four valid outcomes per document:
 
-La reestructuracion se considera cerrada cuando se cumpla todo esto:
+- translate in place
+- archive or remove alias
+- consolidate before translating
+- temporary exception
 
-- Toda la documentacion fuente esta clasificada.
-- No quedan docs relevantes fuera de git.
-- No quedan docs huerfanos.
-- No quedan duplicados sin resolver.
-- Cada doc activo tiene metadata minima.
-- La politica de idioma esta cerrada y aplicada.
-- Existe trazabilidad minima entre codigo y documentacion.
-- Los checks documentales corren en local y en CI.
-- `site/` se trata como salida generada y no como fuente.
-- Existe un roadmap visible y un tablero de seguimiento con responsables y estado.
-- El material del modelo modular de IA ya no esta disperso y ha quedado formalizado como ADR.
+At the end of this translation pass, the queue is fully closed for active `planning` docs.
 
-## Siguiente Iteracion Recomendada
+## Current Blocking Policy
 
-La siguiente iteracion de este documento deberia hacer estas tres cosas:
+This is now formalized according to current repo behavior:
 
-1. Convertir la Ola 1 en issues o checklist de ejecucion inmediata.
-2. Crear el tablero de seguimiento con responsables y fechas objetivo.
-3. Bajar la trazabilidad a un formato tecnico concreto para empezar a aplicarla.
+- Merge is blocked when these fail: `pnpm docs:sync:check`, `pnpm docs:canonical:check`, `pnpm docs:status:check`, `pnpm docs:capability:check`.
+- `pnpm docs:quality:check` and `pnpm docs:doctor` run in PR and CI as visible checks.
+- Today `docs:quality:check` and `docs:doctor` can still warn without failing the PR when the problem is known debt and not a hard violation.
+- The next reasonable hardening step is converting part of those warnings into failures only after the base debt is gone.
+
+## Recommended Flow
+
+1. Edit source docs only.
+2. Run `pnpm docs:sync`.
+3. Run `pnpm docs:doctor`.
+4. Run `pnpm docs:quality:check`.
+5. Run `pnpm docs:canonical:check`.
+6. If the change touches architecture, contracts, or risks, run `arc-check` and `doc-check`.
+7. If the change touches structural code, run `pnpm docs:status:check` and `pnpm docs:capability:check`.
+
+## Definition Of Done
+
+The restructuring is considered complete when all of the following are true:
+
+- All source documentation is classified.
+- No relevant docs remain outside git.
+- No orphan docs remain.
+- No unresolved duplicates remain.
+- Every active doc has minimum metadata.
+- The language policy is closed and applied.
+- Minimum traceability exists between code and documentation.
+- Documentation checks run locally and in CI.
+- `site/` is treated as generated output and not as a source.
+- There is a visible roadmap and a tracking board with owners and status.
+- The modular AI model is no longer scattered and has been formalized as an ADR.
+
+## Recommended Next Iteration
+
+The next iteration of this document should do these three things:
+
+1. Convert the current snapshot into concrete fix batches for obsolete-document detection and archive moves.
+2. Add owners and target dates to every task that is still `In progress` or `Pending`.
+3. Extend `docs/planning/status/canonical-doc-code-matrix.md` and begin rolling its minimum tuple into active docs.

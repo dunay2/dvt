@@ -584,7 +584,7 @@ Q4 2026 / Early 2027 (Phase 3)
 
 ## References
 
-- [IWorkflowEngine Contract](../contracts/engine/IWorkflowEngine.v1.1.md)
+- [IWorkflowEngine Contract](../contracts/engine/IWorkflowEngine.v1.md)
 - [ExecutionSemantics Contract](../contracts/engine/ExecutionSemantics.v1.md)
 - [TemporalAdapter Spec](../adapters/temporal/TemporalAdapter.spec.md)
 - [Observability Guide](../ops/observability.md)

@@ -1,3 +1,11 @@
+---
+title: DVT+ Artifact Store Architectural Review and Implementation Spec
+status: Archived
+owner: docs
+last_reviewed: 2026-03-07
+planning_type: archive
+---
+
 # DVT+ Artifact Store — Architectural Review & Implementation Spec
 
 ```
@@ -987,3 +995,13 @@ endpoint configuration).
 | G-6 | `CompiledCodeBlob` promoted to `@dvt/contracts`                      | Local type at canonical port boundary  | P0       |
 | G-7 | `StepTypeConfig` discriminated union — no open spread                | Untyped domain state                   | P1       |
 | G-8 | Shared compliance test suite per adapter                             | Duplicate / divergent adapter tests    | P1       |
+
+---
+
+title: DVT+ Artifact Store Architectural Review and Implementation Spec
+status: In Progress
+owner: docs
+last_reviewed: 2026-03-07
+planning_type: proposal
+
+---

@@ -56,7 +56,7 @@
     "docs:capability:generate": "node scripts/generate-capability-coverage.cjs",
     "docs:capability:check": "pnpm docs:capability:generate && git diff --exit-code -- docs/planning/status/generated-capability-coverage.md",
     "docs:ci": "pnpm docs:sync:check && pnpm docs:quality:check && pnpm docs:doctor && pnpm docs:canonical:check && pnpm docs:status:check && pnpm docs:capability:check",
-    "docs:sync:check": "pnpm docs:sync && git diff --exit-code -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml",
+    "docs:sync:check": "pnpm docs:sync && git diff --exit-code -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/evidence/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/risk-register/index.md docs/risk-register/adapters/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml",
     "docs:serve": "pnpm docs:sync && zensical serve",
     "docs:build": "pnpm docs:sync && zensical build",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
@@ -79,7 +79,7 @@
     ],
     "docs/**/*.{md,txt}": [
       "pnpm docs:sync",
-      "node -e \"const cp=require('child_process');cp.execSync('git add -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml',{stdio:'inherit'})\""
+      "node -e \"const cp=require('child_process');cp.execSync('git add -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/evidence/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/risk-register/index.md docs/risk-register/adapters/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml',{stdio:'inherit'})\""
     ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"

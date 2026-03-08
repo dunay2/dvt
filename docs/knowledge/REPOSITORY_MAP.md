@@ -80,4 +80,4 @@ graph TD
 ## 6. Canonical boundary
 
 - Active code path: [`packages/@dvt/engine/src`](../../packages/@dvt/engine/src)
-- Legacy area: [`packages/@dvt/engine/legacy-top-level-engine`](../../packages/@dvt/engine/legacy-top-level-engine)
+- Legacy area: `packages/@dvt/engine/legacy-top-level-engine` (historical path, not present in the current tree)

@@ -13,7 +13,7 @@ Gap: G3 - IStartRunIntentStore Postgres + scheduler
 - Original date: 2026-03-04
 - Current review date: 2026-03-07
 - Primary source: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
-- Process guide: [`../dvt-traceability-pack-v2-lite-R6/README.md`](../dvt-traceability-pack-v2-lite-R6/README.md)
+- Process guide: [`../../archive/dvt-traceability-pack-v2-lite-R6/index.md`](../../archive/dvt-traceability-pack-v2-lite-R6/index.md)
 
 ## Objective
 
@@ -73,7 +73,7 @@ G3 is closed.
 ## Post-Closure Follow-up (Non-Blocking)
 
 1. Keep load/resilience acceptance notes updated as production telemetry grows.
-2. Revisit throughput tuning only if real tenant concurrency shows pressure.
+2. Return to throughput tuning only if real tenant concurrency shows pressure.
 
 ## References
 

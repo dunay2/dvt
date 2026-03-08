@@ -1,19 +1,9 @@
 ---
 title: Milestone 0 - Immediate Stabilization (Sprint 1-2)
-status: Draft
+status: Archived
 owner: docs
-last_reviewed: 2026-03-05
+last_reviewed: 2026-03-07
 planning_type: proposal
----
-
----
-
-title: Milestone 0 - Immediate Stabilization (Sprint 1-2)
-status: Draft
-owner: docs
-last_reviewed: 2026-03-04
-planning_type: proposal
-
 ---
 
 # Milestone 0 - Immediate Stabilization (Sprint 1-2)

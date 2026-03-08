@@ -10,8 +10,8 @@ planning_type: review
 
 Updated execution view aligned with current implementation status on 2026-03-06.
 
-- Primary status source: [`../../gaps/GAP_EXECUTION_PLANS.md`](../../gaps/GAP_EXECUTION_PLANS.md)
-- Parallel execution source: [`../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
+- Primary status source: [`../gaps/GAP_EXECUTION_PLANS.md`](../gaps/GAP_EXECUTION_PLANS.md)
+- Parallel execution source: [`../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
 
 ## Objective
 
@@ -91,7 +91,7 @@ Phase 1 is considered closed only when:
 
 ## References
 
-- Master gap plan: [`../../gaps/GAP_EXECUTION_PLANS.md`](../../gaps/GAP_EXECUTION_PLANS.md)
-- Parallel tracks: [`../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
-- G4 task spec: [`../../gaps/G4-TASK-SPECIFICATION.md`](../../gaps/G4-TASK-SPECIFICATION.md)
-- G3 task spec: [`../../gaps/G3-TASK-SPECIFICATION.md`](../../gaps/G3-TASK-SPECIFICATION.md)
+- Master gap plan: [`../gaps/GAP_EXECUTION_PLANS.md`](../gaps/GAP_EXECUTION_PLANS.md)
+- Parallel tracks: [`../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md`](../gaps/GAP_PARALLEL_EXECUTION_TRACKS.md)
+- G4 task spec: [`../gaps/G4-TASK-SPECIFICATION.md`](../gaps/G4-TASK-SPECIFICATION.md)
+- G3 task spec: [`../gaps/G3-TASK-SPECIFICATION.md`](../gaps/G3-TASK-SPECIFICATION.md)

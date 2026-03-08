@@ -1,9 +1,9 @@
 ---
 title: Define the Outbox Consumer
-status: Draft
+status: Archived
 owner: docs
 last_reviewed: 2026-03-05
-planning_type: proposal
+planning_type: archive
 ---
 
 # Define the Outbox Consumer

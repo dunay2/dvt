@@ -2,92 +2,84 @@
 title: Engine Migration Plan: Current Gap to Target Blueprint v0.6
 status: Draft
 owner: docs
-last_reviewed: 2026-03-05
+last_reviewed: 2026-03-07
 planning_type: proposal
 ---
 
----
+# Engine Migration Plan: Current Gap To Target Blueprint v0.6
 
-title: Engine Migration Plan: Current Gap to Target Blueprint v0.6
-status: Draft
-owner: docs
-last_reviewed: 2026-03-04
-planning_type: proposal
+## 1. Context
 
----
+The current state of [`@dvt/engine`](../../packages/@dvt/engine/package.json) does not fully match the target module blueprint defined in [`DVT_Blueprint_v0.6_MASTER.md`](../architecture/vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md).
 
-# Engine Migration Plan: Current Gap to Target Blueprint v0.6
+The goal of this plan is to migrate in phases without moving files too early and without breaking the public surface, CI, or tests.
 
-## 1. Contexto
+## 2. Gap Analysis
 
-El estado actual de [`@dvt/engine`](packages/@dvt/engine/package.json:1) no sigue al 100% la plantilla objetivo definida en [`DVT_Blueprint_v0.6_MASTER.md`](docs/vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md:100), especialmente en la estructura interna de [`src/`](packages/@dvt/engine/src/index.ts:1).
+### 2.1 Expected target structure
 
-Objetivo de este plan: migrar por fases **sin mover archivos todavÃ­a** y sin romper surface pÃºblica, CI ni tests.
-
----
-
-## 2. Gap analysis (actual vs target)
-
-### 2.1 Estructura objetivo esperada
-
-SegÃºn blueprint, un mÃ³dulo estÃ¡ndar debe tender a:
+According to the blueprint, a standard module should move toward this layout:
 
 - `docs/`
-- `schemas/` (envelope/commands/events)
+- `schemas/` for envelopes, commands, and events
 - `src/{generated,domain,application,ports,adapters,composition}`
 - `test/{unit,contract,integration}`
 - `cli/src/{smoke,validate-schemas,codegen}`
 
-Referencia: [`DVT_Blueprint_v0.6_MASTER.md`](docs/vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md:100)
+### 2.2 Current structure observed in engine
 
-### 2.2 Estado actual observado en engine
+[`packages/@dvt/engine/src`](../../packages/@dvt/engine/src/index.ts) currently contains a mixed layout:
 
-En [`packages/@dvt/engine/src`](packages/@dvt/engine/src/index.ts:1) hoy existen carpetas mixtas:
+- `core/`
+- `state/`
+- `security/`
+- `outbox/`
+- `utils/`
+- `metrics/`
+- `workers/`
+- `contracts/`
+- `application/`
+- `adapters/`
+- `ports/`
 
-- `core/`, `state/`, `security/`, `outbox/`, `utils/`, `metrics/`, `workers/`, `contracts/`, `application/`, `adapters/`, `ports/`
+Main misalignments:
 
-Principales desalineaciones:
+1. `domain/` and `composition/` do not exist as explicit top-level areas.
+2. Runtime code and contracts are mixed inside the engine package while [`@dvt/contracts`](../../packages/@dvt/contracts/index.ts) already exists.
+3. The root barrel in [`src/index.ts`](../../packages/@dvt/engine/src/index.ts) is too wide and exports internals together with stable APIs.
+4. Engine-specific `schemas/` and `cli/` areas do not exist yet.
+5. Tests are not normalized to `unit`, `contract`, and `integration`.
 
-1. Falta `domain/` y `composition/` explÃ­citos.
-2. Existe mezcla de runtime + contratos dentro del paquete engine (`src/contracts/*`) en paralelo a [`@dvt/contracts`](packages/@dvt/contracts/index.ts:1).
-3. Barrel root muy ancho en [`src/index.ts`](packages/@dvt/engine/src/index.ts:1), exportando internals y stubs juntos.
-4. No hay `schemas/` y `cli/` propios de engine segÃºn plantilla objetivo.
-5. Estructura de tests no estÃ¡ normalizada a `unit/contract/integration` al 100%.
+## 3. Migration Principles
 
----
+1. No breaking changes during the first phases.
+2. Use a strangler pattern: create the target layout first, then redirect gradually.
+3. Preserve import compatibility through transition barrels and deprecation wrappers.
+4. Keep CI green after each phase with a simple rollback path.
+5. Keep PRs small and single-purpose.
 
-## 3. Principios de migraciÃ³n
-
-1. **No breaking changes** en surface pÃºblica durante fases iniciales.
-2. **Strangler pattern**: crear target layout y redirigir gradualmente.
-3. **Compatibilidad de imports** vÃ­a barrels de transiciÃ³n/deprecaciÃ³n.
-4. **CI verde por fase** con rollback fÃ¡cil.
-5. **Cambios pequeÃ±os por PR**, foco Ãºnico.
-
----
-
-## 4. Estrategia por fases
+## 4. Phase Strategy
 
 ```mermaid
 flowchart LR
-  A[Fase 0 Baseline] --> B[Fase 1 Target skeleton]
-  B --> C[Fase 2 Realineacion interna]
-  C --> D[Fase 3 Surface publica]
-  D --> E[Fase 4 Contratos y schemas]
-  E --> F[Fase 5 Tests y endurecimiento]
+  A[Phase 0 Baseline] --> B[Phase 1 Target skeleton]
+  B --> C[Phase 2 Incremental internal realignment]
+  C --> D[Phase 3 Controlled public surface]
+  D --> E[Phase 4 Contracts and schemas]
+  E --> F[Phase 5 Tests and hardening]
 ```
 
-### Fase 0: Baseline y contratos de no-rotura
+### Phase 0: Baseline and non-break guarantees
 
-- Congelar surface actual en [`src/index.ts`](packages/@dvt/engine/src/index.ts:1).
-- Inventariar exports consumidos por otros paquetes.
-- Definir matriz de compatibilidad por rutas de import.
+- Freeze the current public surface in [`src/index.ts`](../../packages/@dvt/engine/src/index.ts).
+- Inventory exports consumed by other packages.
+- Define a compatibility matrix for import paths.
 
-**Salida**: snapshot de API pÃºblica + criterios de aceptaciÃ³n por fase.
+Output: a public API snapshot plus acceptance criteria per phase.
 
-### Fase 1: Crear skeleton target (sin mover lÃ³gica)
+### Phase 1: Create the target skeleton
 
-Crear carpetas vacÃ­as/documentadas:
+Create documented directories without moving logic yet:
 
 - `src/domain/`
 - `src/composition/`
@@ -95,68 +87,62 @@ Crear carpetas vacÃ­as/documentadas:
 - `schemas/{envelope,commands,events}`
 - `cli/src/`
 
-**Nota**: no se mueve cÃ³digo aÃºn; solo estructura objetivo y README por carpeta.
+Only the structure and folder-level docs are created in this phase.
 
-### Fase 2: RealineaciÃ³n interna incremental
+### Phase 2: Incremental internal realignment
 
-- Mapear `core/*` y semÃ¡ntica de negocio a `domain/*`.
-- Mantener wrappers en ubicaciÃ³n antigua (`core/*`) que re-exporten desde `domain/*`.
-- Llevar wiring/orquestaciÃ³n tÃ©cnica a `composition/*`.
-- Delimitar `application/*` para casos de uso (sin lÃ³gica infra).
+- Map `core/*` and domain semantics into `domain/*`.
+- Keep compatibility wrappers in the old locations, with re-exports from the new paths.
+- Move technical wiring into `composition/*`.
+- Keep `application/*` focused on use cases instead of infrastructure details.
 
-**Regla**: cada movimiento con re-export de compatibilidad + tests.
+Rule: every move ships with a compatibility re-export and tests.
 
-### Fase 3: Surface pÃºblica controlada
+### Phase 3: Controlled public surface
 
-- Definir `public API` mÃ­nima en [`src/index.ts`](packages/@dvt/engine/src/index.ts:1).
-- Marcar exports legacy como deprecated en comentarios JSDoc.
-- Evitar exportar stubs/adapters internos desde root cuando no sean API estable.
+- Define the minimum stable public API in [`src/index.ts`](../../packages/@dvt/engine/src/index.ts).
+- Mark legacy exports as deprecated in JSDoc.
+- Stop exporting internal stubs and adapters from the root when they are not stable API.
 
-### Fase 4: Contratos y schemas
+### Phase 4: Contracts and schemas
 
-- Decidir frontera definitiva entre [`@dvt/contracts`](packages/@dvt/contracts/index.ts:1) y contratos locales engine.
-- Migrar contratos runtime a package canÃ³nico de contratos cuando aplique.
-- AÃ±adir/normalizar `schemas/` + validaciÃ³n.
+- Decide the permanent boundary between [`@dvt/contracts`](../../packages/@dvt/contracts/index.ts) and engine-local contracts.
+- Migrate runtime contracts into the canonical contracts package when appropriate.
+- Add or normalize `schemas/` plus validation tooling.
 
-### Fase 5: Tests y endurecimiento
+### Phase 5: Tests and hardening
 
-- Normalizar pruebas en `test/unit`, `test/contract`, `test/integration`.
-- AÃ±adir checks de boundaries/layering.
-- Cerrar deprecaciones legacy en una Ãºltima fase controlada.
+- Normalize tests into `test/unit`, `test/contract`, and `test/integration`.
+- Add boundary and layering checks.
+- Remove legacy deprecations in a final controlled phase.
 
----
+## 5. Risks And Mitigations
 
-## 5. Riesgos y mitigaciÃ³n
+1. Internal import breakage  
+   Mitigation: add transition re-exports and run a global search before each move.
 
-1. **Ruptura de imports internos**
-   - MitigaciÃ³n: re-exports de transiciÃ³n + bÃºsqueda global previa.
+2. Ambiguous ownership of contracts  
+   Mitigation: write a dedicated ADR before Phase 4.
 
-2. **AmbigÃ¼edad de ownership de contratos**
-   - MitigaciÃ³n: ADR especÃ­fica de ownership antes de Fase 4.
+3. PRs becoming too large  
+   Mitigation: split by submodule and by layer.
 
-3. **PRs demasiado grandes**
-   - MitigaciÃ³n: cortar por submÃ³dulo y por capa.
+4. Determinism regressions  
+   Mitigation: run the current suites plus determinism checks on every phase.
 
-4. **RegresiÃ³n en determinismo**
-   - MitigaciÃ³n: ejecutar suites actuales + determinism tests por fase.
+## 6. Immediate Executable Backlog
 
----
+- [ ] Create the target skeleton in engine: `domain`, `composition`, `generated`, `schemas`, and `cli`.
+- [ ] Add short ownership and purpose docs for each new directory.
+- [ ] Define the allowed public exports in the root barrel.
+- [ ] Implement the first pilot migration: `core/WorkflowEngine` -> `domain/workflow` with a legacy wrapper.
+- [ ] Run tests, type-check, and lint after the pilot move.
+- [ ] Repeat the pattern with `core/SnapshotProjector`.
+- [ ] Propose the ADR that settles ownership between engine-local contracts and `@dvt/contracts`.
 
-## 6. Backlog ejecutable (siguiente modo code)
+## 7. Acceptance Criteria
 
-- [ ] Crear skeleton target en engine (`domain`, `composition`, `generated`, `schemas`, `cli`).
-- [ ] AÃ±adir docs cortas de propÃ³sito/ownership por carpeta.
-- [ ] Definir lista de exports pÃºblicos permitidos en root.
-- [ ] Implementar primera migraciÃ³n piloto: `core/WorkflowEngine` â†’ `domain/workflow` con wrapper legacy.
-- [ ] Validar tests + type-check + lint.
-- [ ] Repetir patrÃ³n con `core/SnapshotProjector`.
-- [ ] Proponer ADR de ownership de contratos engine vs `@dvt/contracts`.
-
----
-
-## 7. Criterios de aceptaciÃ³n del plan
-
-1. Existe roadmap por fases con zero-downtime de imports.
-2. Cada fase puede ejecutarse en PR independiente.
-3. No se requiere big-bang refactor.
-4. Se preserva compatibilidad con consumidores actuales.
+1. A phased roadmap exists with zero-downtime import compatibility.
+2. Each phase can ship in an independent PR.
+3. No big-bang refactor is required.
+4. Compatibility with current consumers is preserved.

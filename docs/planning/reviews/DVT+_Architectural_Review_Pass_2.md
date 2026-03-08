@@ -243,155 +243,155 @@ Planner “unchanged” (ADR-0020 §3) conflicts with the implied need for Plann
 
 ---
 
-# Ruta priorizada DVT+ (propuesta de ejecución)
+# Prioritized DVT+ Path
 
-> Nota: esto traduce los hallazgos de Pass 1 + Pass 2 en un orden de construcción.
+> This section translates the findings from Pass 1 and Pass 2 into a build order.
 
-## Criterio de priorización
+## Prioritization Criteria
 
-Cada ítem se prioriza por:
+Each item is ranked by three questions:
 
-1. ¿Bloquea producción?
-2. ¿Bloquea features posteriores?
-3. ¿Acumula deuda técnica si se pospone?
+1. Does it block production?
+2. Does it block downstream features?
+3. Does delaying it increase technical debt?
 
 ---
 
-## FASE 0 — Seguridad de producción
+## Phase 0 - Production Safety
 
-**Nada entra en prod sin esto.**
+**Nothing should ship to production without this phase.**
 
 ### P0-A: Ghost-run consistency (ADR-0030)
 
-Problema: gap entre `adapter.startRun()` y `bootstrapRunTx()` → runs fantasma en Temporal sin registro en PostgreSQL si el proceso muere.
+Problem: there is a gap between `adapter.startRun()` and `bootstrapRunTx()`, which can leave Temporal workflows running without a PostgreSQL record if the process dies.
 
-Mitigación: persistir un `RunDispatchIntent` antes de llamar al adapter. Reconciliador cancela workflows con intent sin bootstrap.
+Mitigation: persist a `RunDispatchIntent` before calling the adapter. The reconciler then cancels workflows that have an intent record but no bootstrap.
 
 ### P0-B: Snapshot policy
 
-Sin snapshots, cada `getRunStatus` re-procesa todo el log: O(N).  
-Definir `snapshotAfterNEvents = 50` (default) e implementar escritura del snapshot en `appendAndEnqueueTx`.
+Without snapshots, each `getRunStatus` call replays the full log in O(N).  
+Set `snapshotAfterNEvents = 50` by default and implement snapshot writes inside `appendAndEnqueueTx`.
 
 ### P0-C: Run retention policy
 
-Definir TTL / archival / delete. Default 90 días (según THREAT_MODEL). Implementar job de archival/soft-delete.
+Define TTL, archival, and delete behavior. Default to 90 days, aligned with `THREAT_MODEL`, and implement an archival or soft-delete job.
 
-### P0-D: Outbox consumer operacional
+### P0-D: Operational outbox consumer
 
-ADR-0009 define el patrón, pero falta la configuración real: poll interval, shard count, DLQ policy, alertas de lag.
-
----
-
-## FASE 1 — Estabilidad de contratos
-
-Antes de integrar OL, congelar contratos del engine.
-
-### P1-A: `enrichRunStatus` en `IWorkflowEngine`
-
-Hoy existe en implementación pero no en interface. Elegir: método en interface o sub-interface.
-
-### P1-B: `CONTINUE_AS_NEW` fuera de `RunSubstatus`
-
-Mover a `AdapterScopedSubstatus` con prefix: `temporal:CONTINUE_AS_NEW`. `RunSubstatus` queda solo con valores de dominio.
-
-### P1-C: StepTypeRegistry mínimo
-
-Cerrar el agujero: `stepTypeConfig: Record<string, unknown>`.
-
-Implementar un `StepTypeRegistry` con dos tipos iniciales: `dbt_model` y `dbt_source`. Desbloquea OL y permite validación semántica.
-
-### P1-D: `logicalAttemptId` en `RunContext`
-
-Agregar `logicalAttemptId?: number` a `RunContext`. Si no existe, engine usa 1. Desbloquea Phase 2 sin nueva interface.
+ADR-0009 defines the pattern, but the real worker configuration is still missing: poll interval, shard count, DLQ policy, and lag alerts.
 
 ---
 
-## FASE 2 — Puente OpenLineage
+## Phase 1 - Contract Stability
 
-Depende de Fase 1 completa.
+Freeze the engine contracts before integrating OpenLineage.
 
-### P2-A: `compiledCodeRef` — definir ownership
+### P1-A: Add `enrichRunStatus` to `IWorkflowEngine`
 
-Decisión binaria:
+The method exists in the implementation but not in the interface. Decide whether it belongs in the main interface or in a sub-interface.
 
-- **Opción A:** Planner escribe compiled SQL al blob store durante compilación del plan y lo referencia en `ExecutionPlan.steps[].stepTypeConfig`.
-- **Opción B:** `compiledCodeRef` solo aparece en StepCompleted; adapter escribe blob post-ejecución.
+### P1-B: Move `CONTINUE_AS_NEW` out of `RunSubstatus`
 
-### P2-B: `IPlanContextResolver` con cache
+Move it into `AdapterScopedSubstatus` with the prefix `temporal:CONTINUE_AS_NEW`. `RunSubstatus` should keep domain-only values.
 
-Cache por `(planRef.sha256, stepId)`. Plan inmutable → TTL indefinido en memoria.
+### P1-C: Minimal `StepTypeRegistry`
 
-### P2-C: `OpenLineageEventBus` + `outbox_lineage`
+Close the `stepTypeConfig: Record<string, unknown>` gap.
 
-Implementar `IEventBus → OpenLineageEventBus`. Crear tabla `outbox_lineage` con worker independiente. DLQ **fail-open**.
+Implement a `StepTypeRegistry` with two initial types, `dbt_model` and `dbt_source`, so OpenLineage and semantic validation share one source of truth.
 
-### P2-D: Tests mandatorios de traducción
+### P1-D: Add `logicalAttemptId` to `RunContext`
 
-Mínimo (CI):
-
-1. RunStarted → OL START con namespace correcto
-2. StepCompleted → OL COMPLETE con inputs/outputs
-3. StepFailed → OL FAIL con errorMessage
-4. StepSkipped → OL OTHER con `dvt_skip_reason`
-5. Validación del evento contra OL JSON Schema (spec pinado)
+Add `logicalAttemptId?: number` to `RunContext`. If it is absent, the engine uses `1`. This unlocks Phase 2 without another interface change.
 
 ---
 
-## FASE 3 — Planner (capa crítica y menos especificada)
+## Phase 2 - OpenLineage Bridge
 
-Puede empezar en paralelo con Fase 2 si hay capacidad.
+This phase depends on Phase 1.
 
-### P3-A: Contrato del planner
+### P2-A: Define `compiledCodeRef` ownership
 
-Definir `IPlanner` / `IExecutionPlanner` y `PlannerInput` (manifest path, selectors, env config, target adapter).
+Two valid options exist:
+
+- **Option A:** the planner writes compiled SQL to a blob store during plan compilation and references it in `ExecutionPlan.steps[].stepTypeConfig`.
+- **Option B:** `compiledCodeRef` appears only on `StepCompleted`, and the adapter writes the blob after execution.
+
+### P2-B: Add caching to `IPlanContextResolver`
+
+Cache by `(planRef.sha256, stepId)`. The plan is immutable, so the in-memory TTL can stay unbounded.
+
+### P2-C: Build `OpenLineageEventBus` plus `outbox_lineage`
+
+Implement `IEventBus -> OpenLineageEventBus`. Add an `outbox_lineage` table and an independent worker. The DLQ policy should be fail-open.
+
+### P2-D: Require translation tests
+
+Minimum CI coverage:
+
+1. `RunStarted -> OL START` with the correct namespace
+2. `StepCompleted -> OL COMPLETE` with inputs and outputs
+3. `StepFailed -> OL FAIL` with `errorMessage`
+4. `StepSkipped -> OL OTHER` with `dvt_skip_reason`
+5. Event validation against the pinned OpenLineage JSON Schema
+
+---
+
+## Phase 3 - Planner Layer
+
+This phase can start in parallel with Phase 2 if there is enough capacity.
+
+### P3-A: Planner contract
+
+Define `IPlanner` or `IExecutionPlanner` plus `PlannerInput` with manifest path, selectors, environment config, and target adapter.
 
 ### P3-B: DAG analyzer
 
-Interface del analyzer: entrada `manifest.json`, salida grafo ordenado + detección de ciclos. Invariante: plan acíclico.
+Define an analyzer interface that takes `manifest.json` and returns an ordered graph plus cycle detection. The invariant is simple: the generated plan must stay acyclic.
 
-### P3-C: Plan validator semántico
+### P3-C: Semantic plan validator
 
-Con StepTypeRegistry: validar tipos registrados, campos requeridos, `dependsOn` referenciando stepIds existentes, etc.
-
----
-
-## FASE 4 — Operacional (cuando haya carga real)
-
-- PostgreSQL partitioning por `(tenantId, created_at)`
-- `outbox_lineage` retention + archival (misma política 90 días)
-- Marquez deployment con proxy para tenant isolation
-- `dvt_cost` attributor post-hoc (Snowflake QUERY_HISTORY → outbox_lineage)
-- Alertas de consumer lag para ambos outboxes
+Use `StepTypeRegistry` to validate registered kinds, required fields, and `dependsOn` references to existing `stepId` values.
 
 ---
 
-## Postponer indefinidamente (hasta necesidad real)
+## Phase 4 - Operations At Real Load
 
-| Item                            | Por qué                                              |
-| ------------------------------- | ---------------------------------------------------- |
-| Snowflake ETL pipeline (CDC)    | No existe el write path; analytics layer es teórico. |
-| Conductor adapter               | Temporal no está production-hardened todavía.        |
-| CompositeLineageBackend fan-out | Sin cliente enterprise real que lo requiera.         |
-| `dvt_deps` facet por step       | Prolifera job versions en Marquez sin caso probado.  |
-| Cost dashboard UI               | Primero validar que `dvt_cost` llega bien a Marquez. |
+- PostgreSQL partitioning by `(tenantId, created_at)`
+- `outbox_lineage` retention and archival under the same 90-day policy
+- Marquez deployment behind a proxy for tenant isolation
+- `dvt_cost` post-hoc attribution from Snowflake `QUERY_HISTORY` into `outbox_lineage`
+- Consumer-lag alerts for both outboxes
 
 ---
 
-## Orden resumido
+## Delay Indefinitely Until A Real Need Exists
 
+| Item                            | Why                                                                   |
+| ------------------------------- | --------------------------------------------------------------------- |
+| Snowflake ETL pipeline (CDC)    | There is no write path yet; the analytics layer is still theoretical. |
+| Conductor adapter               | Temporal is not production-hardened yet.                              |
+| CompositeLineageBackend fan-out | No real enterprise customer needs it yet.                             |
+| `dvt_deps` facet per step       | It creates Marquez job-version churn without a proven use case.       |
+| Cost dashboard UI               | First validate that `dvt_cost` reaches Marquez correctly.             |
+
+---
+
+## Summary Order
+
+```text
+PHASE 0: Ghost-run | Snapshots | Retention | Outbox worker
+  ->
+PHASE 1: enrichRunStatus | CONTINUE_AS_NEW | StepTypeRegistry | logicalAttemptId
+  ->
+PHASE 2: compiledCodeRef ownership | IPlanContextResolver cache | outbox_lineage | OL tests
+  ->
+PHASE 3: IPlanner contract | DAG analyzer | Semantic plan validator
+  ->
+PHASE 4: PG partitioning | Marquez deploy | dvt_cost attributor
 ```
-FASE 0: Ghost-run | Snapshots | Retention | Outbox worker
-   ↓
-FASE 1: enrichRunStatus | CONTINUE_AS_NEW | StepTypeRegistry | logicalAttemptId
-   ↓
-FASE 2: compiledCodeRef ownership | IPlanContextResolver+cache | outbox_lineage | OL tests
-   ↓
-FASE 3: IPlanner contract | DAG analyzer | Plan validator semántico
-   ↓
-FASE 4: PG partitioning | Marquez deploy | dvt_cost attributor
-```
 
-**Nota operativa:** Fase 0 y 1 pueden correr en paralelo entre personas distintas. Fase 2 depende de Fase 1 completa. Fase 3 puede empezar en paralelo con Fase 2 si hay capacidad.
+Operational note: Phases 0 and 1 can run in parallel across different people. Phase 2 depends on Phase 1. Phase 3 can begin in parallel with Phase 2 if there is enough capacity.
 
 ---
 
