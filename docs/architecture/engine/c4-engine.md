@@ -160,7 +160,7 @@ flowchart LR
   E["Engine lifecycle (95%)"] --> P["Postgres state + outbox storage (95%)"]
   E --> I["Intent durability (85%)"]
   E --> T["Temporal runtime adapter (80%)"]
-  E --> O["Independent outbox delivery process (55%)"]
+  E --> O["Independent outbox delivery process (65%)"]
   E --> R["Standalone projection/read models (40%)"]
   E --> C["Conductor adapter (15%)"]
 ```
@@ -168,7 +168,7 @@ flowchart LR
 | Area                              | Implemented | Code evidence                                                               | Main gap                                                     |
 | --------------------------------- | ----------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | Engine lifecycle core             | 95%         | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests | Operational hardening and integration debt                   |
-| Postgres state + outbox storage   | 95%         | `PostgresStateStoreAdapter` with snapshots/event log/outbox + DLQ           | Dedicated outbox delivery deployment                         |
+| Postgres state + outbox storage   | 95%         | `PostgresStateStoreAdapter` with snapshots/event log/outbox + DLQ           | Real downstream publisher wiring and operational hardening   |
 | Intent durability                 | 85%         | `PostgresStartRunIntentStore` + `IntentReconcilerWorker`                    | End-to-end wiring and production telemetry tuning            |
 | Temporal runtime adapter          | 80%         | `TemporalAdapter`, `TemporalWorkerHost`, workflow/activities                | Remaining phase capabilities + CI integration lane stability |
 | Standalone projection/read models | 40%         | In-process `SnapshotProjector` only                                         | Dedicated projector service and denormalized read models     |
@@ -178,7 +178,7 @@ flowchart LR
 
 | Gap                                      | Why it matters                                                                | Proposed implementation                                                                                                  | Estimated effort    |
 | ---------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| Independent outbox delivery process      | Production reliability for async publication and isolation from API lifecycle | Create `apps/outbox-worker` around `OutboxWorker`, add deploy profile, metrics, health checks, retry/DLQ dashboards      | 4-6 engineer-days   |
+| Independent outbox delivery process      | Production reliability for async publication and isolation from API lifecycle | Harden `apps/outbox-worker`, add real publisher wiring, deploy profile, metrics, health checks, and retry/DLQ dashboards | 4-6 engineer-days   |
 | Standalone projection/read model service | Scalable status queries and dashboard-friendly reads                          | Extract projector worker, add rebuild/replay tooling, introduce denormalized read models and indexes                     | 8-12 engineer-days  |
 | Temporal integration hardening           | Reduce runtime risk and CI blind spots                                        | Stabilize Temporal integration lane (time-skipping/dev server), strengthen failure injection tests and shutdown behavior | 3-5 engineer-days   |
 | Conductor real adapter                   | Multi-provider portability roadmap                                            | Replace `ConductorAdapterStub`, map signals/status/events, add capability parity tests                                   | 10-15 engineer-days |

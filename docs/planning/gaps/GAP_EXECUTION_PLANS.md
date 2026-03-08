@@ -151,20 +151,20 @@ Minimum tuple for this document:
 
 - Status: Partial
 - Traceability tuple:
-  - `canonical_spec`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md) until a dedicated runtime spec or runbook exists
+  - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-  - `test_paths`: `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
-  - `verification_cmd`: `pnpm test:engine`, `pnpm test:adapter-postgres`
-  - `evidence_or_risk`: none yet; promote to evidence or risk record once a standalone runtime/process is introduced
+  - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+  - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
+  - `evidence_or_risk`: standalone host scaffold now exists in code; promote to evidence after canary and real downstream publisher wiring
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)
   - reusable engine `OutboxWorker` core
+  - standalone `apps/outbox-worker` host scaffold with runtime loop, env parsing, and shutdown wiring
 - Remaining:
-  - standalone polling runtime/process
   - explicit subscriber delivery contract for projector/event-bus consumers
+  - real downstream publisher wiring beyond the current controlled `log` bus mode
   - retry, backoff, and dead-letter operational policy for worker delivery failures
-  - publisher wiring and operational lifecycle outside the API process
   - shard strategy / scaling model
   - lag, health, and error metrics aligned with runbook/ops expectations
 

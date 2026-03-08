@@ -120,20 +120,33 @@ Use it to answer three practical questions quickly:
 
 ### Outbox worker runtime
 
-- Canonical source today:
-  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G5`)
-  until a dedicated runtime/runbook spec exists
+- Canonical spec:
+  [G5 - Outbox Worker Consolidated Plan](../gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
+  [apps/outbox-worker/src/server.ts](../../../apps/outbox-worker/src/server.ts)
+  and
+  [apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts](../../../apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts)
+  and
   [packages/@dvt/engine/src/outbox/OutboxWorker.ts](../../../packages/@dvt/engine/src/outbox/OutboxWorker.ts)
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
 - Key tests:
+  [apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts](../../../apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts)
+  and
+  [apps/outbox-worker/test/plugins/env.test.ts](../../../apps/outbox-worker/test/plugins/env.test.ts)
+  and
   [packages/@dvt/engine/test/outbox/OutboxWorker.test.ts](../../../packages/@dvt/engine/test/outbox/OutboxWorker.test.ts)
   and
   [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Verification:
+  `pnpm --filter dvt-outbox-worker typecheck`
+  and
+  `pnpm --filter dvt-outbox-worker build`
+  and
+  `pnpm --filter dvt-outbox-worker test`
+  and
   `pnpm test:engine`
   and
   `pnpm test:adapter-postgres`

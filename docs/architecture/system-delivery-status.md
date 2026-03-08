@@ -190,7 +190,7 @@ TRACSVC --> OL_MAP
 | Módulo            | Paquete                 | Estado | Notas                                                                                                                                                   |
 | ----------------- | ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | IRunStateStore    | `@dvt/state-store`      | ✅     | Puerto completo ✅ · `InMemoryTxStore` ✅ · `PostgresStateStoreAdapter` ✅ 100% (G2 cerrado)                                                            |
-| Outbox (dominio)  | `@dvt/adapter-postgres` | 🟡     | `appendAndEnqueueTx` ✅ · `listPending`/`markDelivered`/`markFailed` ✅ · DLQ + `replayDeadLetters` ✅ · Worker de polling independiente ❌ · shards ❌ |
+| Outbox (dominio)  | `@dvt/adapter-postgres` | 🟡     | `appendAndEnqueueTx` ✅ · `listPending`/`markDelivered`/`markFailed` ✅ · DLQ + `replayDeadLetters` ✅ · Host standalone inicial en `apps/outbox-worker` ✅ · publicador real/ops hardening ❌ · shards ❌ |
 | Event Bus (Kafka) | infra                   | ❌     | `local-compose.yaml` existe · Worker producción ❌ · Ningún publicador real                                                                             |
 
 ---
@@ -235,7 +235,7 @@ TRACSVC --> OL_MAP
 | G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | ✅ Cerrado — `listEvents(options)` con `afterSeq`/`limit` ✅ · `listRuns` con filtro `status` ✅ | Phase 1   |
 | G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliación   | `engine`                           | ✅ Cerrado — store Postgres + reconciler worker + wiring runtime                                 | Phase 1   |
 | G4  | **compiledCodeRef ownership** — decisión de arquitectura          | planner / traceability             | ✅ Cerrado — ADR-0032 implementado extremo a extremo                                             | Phase 1   |
-| G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | 🟡 Parcial — worker core y storage APIs existen; falta runtime standalone y shards               | Phase 1.5 |
+| G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | 🟡 Parcial — worker core, storage APIs y host inicial existen; faltan publicador real, observabilidad operativa y shards | Phase 1.5 |
 | G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | 🟡 Parcial — mapper/resolver/tests existen; falta pin de spec y hardening de CI                  | Phase 1.5 |
 | G7  | **Read Models** + proyector standalone                            | state-store / infra                | 🟡 Parcial — `SnapshotProjector` in-process existe; faltan servicio/read models                  | Phase 1.5 |
 | G8  | **Auth real** en `apps/api`                                       | api                                | ❌ Pendiente                                                                                     | Phase 1.5 |
