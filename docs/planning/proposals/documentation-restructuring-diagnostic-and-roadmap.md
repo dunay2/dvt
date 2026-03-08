@@ -433,7 +433,7 @@ This snapshot is the first measured cut for `O1-01` to `O1-03`. It is intentiona
 ### O1-02 / T10: broken-link candidates
 
 - The direct-path markdown scan is now at `0` missing targets across `docs/`.
-- This cut closed the previously dominant clusters in the AI workflow guide, `docs/CONTRIBUTING.md`, `docs/knowledge/ROADMAP_AND_ISSUES_MAP.md`, `docs/architecture/engine/index.md`, `docs/architecture/engine/VERSIONING.md`, security references, and several ADR cross-links.
+- This cut closed the previously dominant clusters in the AI workflow guide, `docs/CONTRIBUTING.md`, the removed legacy roadmap aliases, `docs/architecture/engine/index.md`, `docs/architecture/engine/VERSIONING.md`, security references, and several ADR cross-links.
 - Historical or hypothetical file references that were never meant to resolve as live docs were converted to plain text or code literals.
 - Stale links to removed backlog/status documents were replaced by current canonical sources.
 - `T10` can therefore be treated as done for the current tree, with the caveat that a future dedicated broken-link checker under `T28` may still catch new regressions.

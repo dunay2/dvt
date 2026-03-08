@@ -64,7 +64,7 @@ folder name.
   [Roadmap Of Record](planning/roadmap/index.md).
 - [System Delivery Status](architecture/system-delivery-status.md) remains the
   active status surface for current implementation truth.
-- Compatibility aliases are retained only for inbound links. Start from
+- Legacy aliases were removed from the active tree. Start from
   [Concepts](concepts/index.md), [Planning](planning/index.md), and
   [ADRs](adr/index.md) for the active surface.
 

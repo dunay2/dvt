@@ -67,13 +67,11 @@ function main() {
   const failures = [];
   const warnings = [];
   const files = walk(docsRoot);
-  const legacyUppercaseIndexes = new Set(['docs/decisions/INDEX.md', 'docs/knowledge/INDEX.md']);
   const markdownFiles = files.filter((p) => p.endsWith('.md'));
 
   const uppercaseIndexes = files
     .filter((p) => path.basename(p) === 'INDEX.md')
-    .map((p) => rel(p))
-    .filter((p) => !legacyUppercaseIndexes.has(p));
+    .map((p) => rel(p));
   for (const p of uppercaseIndexes) {
     failures.push(`${p} -> rename to index.md (avoid duplicate index variants).`);
   }

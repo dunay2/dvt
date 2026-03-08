@@ -40,8 +40,6 @@ Concept anchors for this page:
 | `docs/planning/status/*` | Generated or curated status | Measured status and traceability artifacts |
 | `docs/planning/gaps/*` | Execution-gap tracking | Concrete delivery gaps and work breakdown |
 | `docs/architecture/engine/roadmap/engine-phases.md` | Subsystem roadmap | Engine-specific phase planning |
-| `docs/planning/DVTplus_Roadmap.md` | Legacy compatibility note | Former DVT+ roadmap entry path |
-| `docs/knowledge/ROADMAP_AND_ISSUES_MAP.md` | Supporting knowledge map | Context and cross-links, not authority |
 | `ROADMAP.md` | Historical top-level roadmap artifact | Legacy references and historical planning context |
 
 ## Operating Rules
@@ -68,5 +66,4 @@ If a new roadmap-like file is created, it must be classified here as one of:
 - canonical roadmap;
 - subsystem roadmap;
 - status artifact;
-- compatibility note;
 - archived historical plan.

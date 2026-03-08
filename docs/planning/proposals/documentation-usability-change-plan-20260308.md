@@ -19,8 +19,8 @@ Execution status on 2026-03-08:
 - Phase 3 is in progress: workspace coverage, repository mapping, frontend
   landing, shared-package surfacing, and explicit package-status
   classification are being executed.
-- Phase 4 has started: planning entry points and compatibility aliases are
-  being separated so legacy notes stop competing with canonical navigation.
+- Phase 4 is in progress: compatibility aliases and duplicate legacy entry
+  points are being deleted from the active tree.
 
 ## Goal
 
