@@ -19,36 +19,42 @@ function serialize(value: unknown): string {
     return 'null';
   }
 
-  switch (typeof value) {
-    case 'boolean':
-      return value ? 'true' : 'false';
-    case 'string':
-      return JSON.stringify(value);
-    case 'number':
-      return serializeNumber(value);
-    case 'bigint':
-      // JSON does not support bigint; callers must convert.
-      throw new Error('JCS: bigint is not supported by JSON');
-    case 'undefined':
-      throw new Error('JCS: undefined is not valid in JSON');
-    case 'function':
-      throw new Error('JCS: function is not valid in JSON');
-    case 'symbol':
-      throw new Error('JCS: symbol is not valid in JSON');
-    case 'object':
-      if (Array.isArray(value)) {
-        return '[' + value.map((v) => serialize(v)).join(',') + ']';
-      }
-      return serializeObject(value as Record<string, unknown>);
-    default:
-      // Exhaustive, but keep for safety.
-      throw new Error('JCS: unsupported type');
+  const type = typeof value;
+
+  if (type === 'boolean') {
+    return (value as boolean) ? 'true' : 'false';
   }
+  if (type === 'string') {
+    return JSON.stringify(value);
+  }
+  if (type === 'number') {
+    return serializeNumber(value as number);
+  }
+  if (type === 'bigint') {
+    throw new Error('JCS: bigint is not supported by JSON');
+  }
+  if (type === 'undefined') {
+    throw new Error('JCS: undefined is not valid in JSON');
+  }
+  if (type === 'function') {
+    throw new Error('JCS: function is not valid in JSON');
+  }
+  if (type === 'symbol') {
+    throw new Error('JCS: symbol is not valid in JSON');
+  }
+  if (type === 'object') {
+    if (Array.isArray(value)) {
+      return '[' + (value as unknown[]).map((v) => serialize(v)).join(',') + ']';
+    }
+    return serializeObject(value as Record<string, unknown>);
+  }
+
+  throw new Error('JCS: unsupported type');
 }
 
 function serializeNumber(n: number): string {
   if (!Number.isFinite(n)) {
-    throw new Error('JCS: non-finite numbers are not permitted');
+    throw new TypeError('JCS: non-finite numbers are not permitted');
   }
   if (Object.is(n, -0)) {
     return '0';
@@ -58,7 +64,7 @@ function serializeNumber(n: number): string {
 }
 
 function serializeObject(obj: Record<string, unknown>): string {
-  const keys = Object.keys(obj).sort();
+  const keys = Object.keys(obj).sort((a, b) => a.localeCompare(b));
   const parts: string[] = [];
 
   for (const k of keys) {

@@ -90,9 +90,8 @@ function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
 }
 
 function extractBearerToken(authorizationHeader: string | undefined): string | undefined {
-  return authorizationHeader?.startsWith('Bearer ')
-    ? authorizationHeader.slice('Bearer '.length)
-    : undefined;
+  const match = authorizationHeader?.match(/^Bearer\s+(.+)$/i);
+  return match?.[1];
 }
 
 function asStringOrUndefined(value: unknown): string | undefined {

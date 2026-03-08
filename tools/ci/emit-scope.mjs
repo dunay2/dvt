@@ -15,7 +15,7 @@ const MODES = {
 };
 
 function parseMode(argv) {
-  const modeFlagIndex = argv.findIndex((argument) => argument === '--mode');
+  const modeFlagIndex = argv.indexOf('--mode');
   if (modeFlagIndex === -1) {
     throw new TypeError('MODE_REQUIRED');
   }

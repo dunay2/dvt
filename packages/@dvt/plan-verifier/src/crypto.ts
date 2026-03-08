@@ -1,18 +1,21 @@
 import { PlanVerifierError } from './errors.js';
 
 type SubtleLike = {
-  digest: (algorithm: string, data: Uint8Array) => Promise<ArrayBuffer>;
+  digest: (
+    algorithm: string | { name: string },
+    data: ArrayBuffer | ArrayBufferView
+  ) => Promise<ArrayBuffer>;
 };
 
 function requireWebCrypto(): SubtleLike {
   const c = globalThis.crypto;
-  if (!c || !c.subtle) {
+  if (!c?.subtle) {
     throw new PlanVerifierError(
       'MISSING_WEBCRYPTO',
       'WebCrypto is not available on globalThis.crypto.subtle. Provide a WebCrypto polyfill/runtime.'
     );
   }
-  return c.subtle;
+  return c.subtle as unknown as SubtleLike;
 }
 
 export function utf8Encode(s: string): Uint8Array {
