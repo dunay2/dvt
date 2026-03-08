@@ -41,9 +41,11 @@ await test('getPgPool reuses identical config and preserves timeout settings', a
   try {
     const first = getPgPool(config);
     const second = getPgPool({ ...config });
-    const options = (first as Pool & {
-      options: { statement_timeout?: number; query_timeout?: number };
-    }).options;
+    const options = (
+      first as Pool & {
+        options: { statement_timeout?: number; query_timeout?: number };
+      }
+    ).options;
 
     assert.equal(first, second);
     assert.equal(options.statement_timeout, 4_000);

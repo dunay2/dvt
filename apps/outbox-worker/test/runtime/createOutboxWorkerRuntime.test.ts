@@ -127,9 +127,11 @@ await test('createOutboxWorkerRuntime configures the shared pool with env timeou
       statementTimeoutMs: 7_000,
       queryTimeoutMs: 3_000,
     });
-    const options = (pool as Pool & {
-      options: { statement_timeout?: number; query_timeout?: number };
-    }).options;
+    const options = (
+      pool as Pool & {
+        options: { statement_timeout?: number; query_timeout?: number };
+      }
+    ).options;
 
     assert.equal(options.statement_timeout, 7_000);
     assert.equal(options.query_timeout, 3_000);
