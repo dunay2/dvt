@@ -6,13 +6,16 @@ import {
   OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
 } from './openlineageSchema.js';
 
-export interface SqlJobFacet
-  extends LineageFacetMetadata<typeof OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL> {
+<<<<<<< HEAD
+export interface SqlJobFacet extends LineageFacetMetadata<
+  typeof OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL
+> {
   query: string;
 }
 
-export interface DvtDbtDetailsFacet
-  extends LineageFacetMetadata<typeof DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL> {
+export interface DvtDbtDetailsFacet extends LineageFacetMetadata<
+  typeof DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL
+> {
   compiledCodeRef: CompiledCodeRef;
 }
 
