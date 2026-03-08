@@ -45,7 +45,9 @@ function parseSelection(
 }
 
 function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
-  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+  const isNotObject = body === null || typeof body !== 'object';
+  const isArray = Array.isArray(body);
+  if (isNotObject || isArray) {
     return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: 'INVALID_BODY' } };
   }
 

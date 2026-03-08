@@ -92,7 +92,7 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
 };
 
 function normalizePath(path) {
-  return path.replace(/\\/g, '/');
+  return path.replaceAll('\\', '/');
 }
 
 function escapeRegexCharacter(character) {
