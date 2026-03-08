@@ -232,10 +232,7 @@ await test('runtime stops and surfaces the first failure when stopOnError=true',
 
   await storage.enqueueTx('run-1', [makeEvent('1')]);
 
-  await assert.rejects(
-    () => runtime.start(),
-    /synthetic fatal publish failure/
-  );
+  await assert.rejects(() => runtime.start(), /synthetic fatal publish failure/);
   await runtime.stop();
 
   assert.equal(publishCalls, 1);
