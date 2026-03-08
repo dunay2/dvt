@@ -41,12 +41,12 @@ silently.
 
 ## Current Posture
 
-| Package | Role | Current posture |
-| --- | --- | --- |
-| `@dvt/plan-interpreter` | Deterministic DAG analysis | Useful and tested, but previously under-documented |
-| `@dvt/dsl` | Gateway condition parsing and evaluation | Implemented as a very small deterministic DSL, not a rich policy language |
-| `@dvt/crypto` | Canonicalization and hashing helpers | Cross-cutting and important, but easy to miss because of path/name mismatch |
-| `@dvt/cli` | Validation and golden-path script surface | Script-driven and still not a real exported CLI surface |
+| Package                 | Role                                      | Current posture                                                             |
+| ----------------------- | ----------------------------------------- | --------------------------------------------------------------------------- |
+| `@dvt/plan-interpreter` | Deterministic DAG analysis                | Useful and tested, but previously under-documented                          |
+| `@dvt/dsl`              | Gateway condition parsing and evaluation  | Implemented as a very small deterministic DSL, not a rich policy language   |
+| `@dvt/crypto`           | Canonicalization and hashing helpers      | Cross-cutting and important, but easy to miss because of path/name mismatch |
+| `@dvt/cli`              | Validation and golden-path script surface | Script-driven and still not a real exported CLI surface                     |
 
 ## Rules
 

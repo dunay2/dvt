@@ -54,73 +54,73 @@ Minimum tuple for this document:
 
 ## Executive Summary
 
-| Area | Current posture | What is true now | Primary status source |
-| --- | --- | --- | --- |
-| Entry layer | Partial | `apps/api` and `apps/web` exist; API auth is implemented in code but still carries architecture-test debt; web has no automated tests | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Planning layer | Partial | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Execution layer | Partial | engine, Postgres adapter, and Temporal adapter are implemented; standalone worker, scheduler, and some runtime hardening themes remain gap-driven | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) |
-| Persistence layer | Partial | Postgres state store and outbox persistence primitives are implemented; independent outbox runtime and shard model remain open | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) |
-| Observability | Partial | observability contracts and the OTel binding exist; production validation remains incomplete | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Traceability / OpenLineage | Partial | mapper and package tests exist; schema pinning, golden validation, and delivery-runtime concerns remain open | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) |
+| Area                       | Current posture | What is true now                                                                                                                                          | Primary status source                                                                                                                        |
+| -------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entry layer                | Partial         | `apps/api` and `apps/web` exist; API auth is implemented in code but still carries architecture-test debt; web has no automated tests                     | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Planning layer             | Partial         | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
+| Execution layer            | Partial         | engine, Postgres adapter, and Temporal adapter are implemented; standalone worker, scheduler, and some runtime hardening themes remain gap-driven         | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Persistence layer          | Partial         | Postgres state store and outbox persistence primitives are implemented; independent outbox runtime and shard model remain open                            | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Observability              | Partial         | observability contracts and the OTel binding exist; production validation remains incomplete                                                              | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
+| Traceability / OpenLineage | Partial         | mapper and package tests exist; schema pinning, golden validation, and delivery-runtime concerns remain open                                              | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
 
 ## Area Status
 
 ### Entry Layer
 
-| Area | Packages | Status | Notes |
-| --- | --- | --- | --- |
+| Area       | Packages   | Status  | Notes                                                                                                          |
+| ---------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------- |
 | API server | `apps/api` | Partial | Real auth and command authorization are implemented in code; architecture-test closure remains open under `G8` |
-| Web UI | `apps/web` | Partial | Client shell and routing exist; automated test coverage is still absent |
+| Web UI     | `apps/web` | Partial | Client shell and routing exist; automated test coverage is still absent                                        |
 
 ### Planning And Interpretation
 
-| Area | Packages | Status | Notes |
-| --- | --- | --- | --- |
-| Planning core | `@dvt/planner` | Partial | Planner code and contract coupling exist; repo docs still treat it as an active planning subsystem rather than a fully closed product surface |
-| Plan verification | `@dvt/plan-verifier` | Partial | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer |
-| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page |
-| DSL evaluation | `@dvt/dsl` | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs |
+| Area                | Packages                | Status      | Notes                                                                                                                                         |
+| ------------------- | ----------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planning core       | `@dvt/planner`          | Partial     | Planner code and contract coupling exist; repo docs still treat it as an active planning subsystem rather than a fully closed product surface |
+| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer                                        |
+| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page                                                     |
+| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                                                            |
 
 ### Execution And Adapters
 
-| Area | Packages | Status | Notes |
-| --- | --- | --- | --- |
-| Workflow engine | `@dvt/engine` | Partial | Core engine exists and remains the largest architecture surface; standalone projector and some runtime separations remain open |
-| Temporal adapter | `@dvt/adapter-temporal` | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately |
-| Postgres adapter | `@dvt/adapter-postgres` | Closed for Phase 1 | State-store and outbox persistence implementation are present and treated as closed in current gap tracking |
-| Mock/test adapter | `@dvt/engine` test surface | Implemented | Exists as test-only support surface, not as a product runtime |
+| Area              | Packages                   | Status             | Notes                                                                                                                                |
+| ----------------- | -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Workflow engine   | `@dvt/engine`              | Partial            | Core engine exists and remains the largest architecture surface; standalone projector and some runtime separations remain open       |
+| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately |
+| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and treated as closed in current gap tracking                          |
+| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                        |
 
 ### Persistence, Read Models, And Delivery
 
-| Area | Packages | Status | Notes |
-| --- | --- | --- | --- |
-| State store | `@dvt/state-store`, `@dvt/adapter-postgres` | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs |
-| Outbox runtime | `@dvt/engine`, `@dvt/adapter-postgres` | Partial | Persistence APIs and reusable worker core exist; independent runtime, operational model, and shards remain open under `G5` |
-| Read models | engine and infra follow-up | Partial | In-process projection exists; standalone read-model service remains open under `G7` |
+| Area           | Packages                                    | Status             | Notes                                                                                                                      |
+| -------------- | ------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| State store    | `@dvt/state-store`, `@dvt/adapter-postgres` | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                              |
+| Outbox runtime | `@dvt/engine`, `@dvt/adapter-postgres`      | Partial            | Persistence APIs and reusable worker core exist; independent runtime, operational model, and shards remain open under `G5` |
+| Read models    | engine and infra follow-up                  | Partial            | In-process projection exists; standalone read-model service remains open under `G7`                                        |
 
 ### Observability And Traceability
 
-| Area | Packages | Status | Notes |
-| --- | --- | --- | --- |
-| Observability contracts | `@dvt/observability` | Implemented | Port surface exists and is documented |
-| OTel binding | `@dvt/observability-otel` | Partial | Binding exists, but production validation is still incomplete |
-| Traceability service | `@dvt/traceability-service` | Partial | Mapper/resolver package exists with tests; schema pinning and runtime delivery hardening remain open |
-| OpenLineage delivery runtime | future `outbox_lineage` flow | Pending | Delivery worker and fail-open DLQ policy are still Phase 2 work |
+| Area                         | Packages                     | Status      | Notes                                                                                                |
+| ---------------------------- | ---------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
+| Observability contracts      | `@dvt/observability`         | Implemented | Port surface exists and is documented                                                                |
+| OTel binding                 | `@dvt/observability-otel`    | Partial     | Binding exists, but production validation is still incomplete                                        |
+| Traceability service         | `@dvt/traceability-service`  | Partial     | Mapper/resolver package exists with tests; schema pinning and runtime delivery hardening remain open |
+| OpenLineage delivery runtime | future `outbox_lineage` flow | Pending     | Delivery worker and fail-open DLQ policy are still Phase 2 work                                      |
 
 ## Gap Summary
 
-| Gap | Title | Current state |
-| --- | --- | --- |
-| G1 | Temporal adapter runtime | Closed |
-| G2 | Postgres state store complete | Closed |
-| G3 | Intent store plus reconciler runtime | Closed |
-| G4 | compiledCodeRef ownership | Closed |
-| G5 | Independent outbox worker runtime | Partial |
-| G6 | OpenLineage mapping tests plus schema pin | Partial |
-| G7 | Standalone projector and read models | Partial |
-| G8 | API auth hardening | Implemented in code, review debt remains |
-| G9 | StepTypeRegistry plus typed `stepTypeConfig` | Pending |
-| G10 | `outbox_lineage` worker plus fail-open DLQ | Pending |
+| Gap | Title                                        | Current state                            |
+| --- | -------------------------------------------- | ---------------------------------------- |
+| G1  | Temporal adapter runtime                     | Closed                                   |
+| G2  | Postgres state store complete                | Closed                                   |
+| G3  | Intent store plus reconciler runtime         | Closed                                   |
+| G4  | compiledCodeRef ownership                    | Closed                                   |
+| G5  | Independent outbox worker runtime            | Partial                                  |
+| G6  | OpenLineage mapping tests plus schema pin    | Partial                                  |
+| G7  | Standalone projector and read models         | Partial                                  |
+| G8  | API auth hardening                           | Implemented in code, review debt remains |
+| G9  | StepTypeRegistry plus typed `stepTypeConfig` | Pending                                  |
+| G10 | `outbox_lineage` worker plus fail-open DLQ   | Pending                                  |
 
 For closure criteria, evidence, and exact verification commands, use
 [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md).
