@@ -22,9 +22,10 @@ export class HttpEventBus implements IEventBus {
   async publish(events: RunEventPersisted[]): Promise<void> {
     const controller = new globalThis.AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    let response: Response | null = null;
 
     try {
-      const response = await this.fetchImpl(this.options.targetUrl, {
+      response = await this.fetchImpl(this.options.targetUrl, {
         method: 'POST',
         headers: buildHeaders(this.options),
         body: JSON.stringify({ events }),
@@ -43,6 +44,7 @@ export class HttpEventBus implements IEventBus {
       throw error;
     } finally {
       clearTimeout(timeout);
+      await safelyDisposeResponse(response);
     }
   }
 }
@@ -65,4 +67,13 @@ function buildHeaders(options: HttpEventBusOptions): Record<string, string> {
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
+}
+
+async function safelyDisposeResponse(response: Response | null): Promise<void> {
+  if (!response?.body) return;
+  try {
+    await response.body.cancel();
+  } catch {
+    // Cleanup must not mask publish success/failure.
+  }
 }

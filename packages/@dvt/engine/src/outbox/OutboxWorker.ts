@@ -111,7 +111,15 @@ function resolveOldestClaimedAgeMs(
   records: readonly { createdAt: string }[],
   nowMs: number
 ): number | null {
-  const oldestCreatedAtMs = Date.parse(records[0]?.createdAt ?? '');
+  let oldestCreatedAtMs = Number.POSITIVE_INFINITY;
+
+  for (const record of records) {
+    const createdAtMs = Date.parse(record.createdAt);
+    if (Number.isFinite(createdAtMs) && createdAtMs < oldestCreatedAtMs) {
+      oldestCreatedAtMs = createdAtMs;
+    }
+  }
+
   if (!Number.isFinite(oldestCreatedAtMs)) {
     return null;
   }

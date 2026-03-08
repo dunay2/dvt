@@ -64,6 +64,28 @@ await test('HttpEventBus posts events to the configured downstream endpoint', as
   }
 });
 
+await test('HttpEventBus cancels successful response bodies after publish', async () => {
+  let cancelCalls = 0;
+
+  const bus = new HttpEventBus({
+    targetUrl: 'http://example.test/outbox/events',
+    fetchImpl: (async () =>
+      ({
+        ok: true,
+        status: 202,
+        body: {
+          cancel: async (): Promise<void> => {
+            cancelCalls += 1;
+          },
+        },
+      }) as Response) as typeof globalThis.fetch,
+  });
+
+  await bus.publish([makeEvent('1')]);
+
+  assert.equal(cancelCalls, 1);
+});
+
 await test('HttpEventBus rejects non-success downstream responses', async () => {
   const server = createServer((_request, response) => {
     response.writeHead(503, { 'content-type': 'application/json' });

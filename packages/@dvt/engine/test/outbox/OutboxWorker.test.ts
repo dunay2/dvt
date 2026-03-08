@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { RunEventPersisted } from '../../src/contracts/runEvents.js';
 import { InMemoryOutboxStorage } from '../../src/outbox/InMemoryOutboxStorage.js';
 import { OutboxWorker } from '../../src/outbox/OutboxWorker.js';
-import type { IEventBus, OutboxFailureDisposition, OutboxRecord } from '../../src/outbox/types.js';
+import type {
+  IEventBus,
+  IOutboxStorage,
+  OutboxFailureDisposition,
+  OutboxRecord,
+} from '../../src/outbox/types.js';
 
 function makeEvent(id: string, runId = 'run-1', runSeq = 1): RunEventPersisted {
   return {
@@ -96,6 +101,41 @@ describe('OutboxWorker', () => {
 
     await expect(store.listPending(10)).resolves.toHaveLength(0);
     expect(bus.published).toHaveLength(2);
+  });
+
+  it('computes claimed lag from the oldest record in the claimed batch', async () => {
+    const storage: IOutboxStorage = {
+      async enqueueTx(): Promise<void> {},
+      async listPending(): Promise<OutboxRecord[]> {
+        return [
+          {
+            id: 'outbox_newer',
+            createdAt: '2026-02-27T00:00:30.000Z',
+            idempotencyKey: 'k-newer',
+            payload: makeEvent('newer'),
+            attempts: 0,
+          },
+          {
+            id: 'outbox_older_retry',
+            createdAt: '2026-02-27T00:00:00.000Z',
+            idempotencyKey: 'k-older',
+            payload: makeEvent('older'),
+            attempts: 1,
+            nextAttemptAt: '2026-02-27T00:00:20.000Z',
+          },
+        ];
+      },
+      async markDelivered(): Promise<void> {},
+      async markFailed(): Promise<void> {},
+    };
+    const worker = new OutboxWorker(storage, new CapturingBus(), {
+      batchSize: 10,
+      nowMs: () => Date.parse('2026-02-27T00:01:00.000Z'),
+    });
+
+    const result = await worker.tick();
+
+    expect(result.oldestClaimedAgeMs).toBe(60_000);
   });
 
   it('moves event to DLQ after MAX_OUTBOX_ATTEMPTS and supports manual replay', async () => {
