@@ -29,6 +29,10 @@ contracts_touched:
 evidence:
   issue:
     - https://github.com/dunay2/dvt/issues/408
+  tests:
+    - packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts
+    - packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts
+    - packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts
   docs:
     - docs/contracts/traceability/index.md
     - docs/contracts/traceability/facets/openlineage/index.md
