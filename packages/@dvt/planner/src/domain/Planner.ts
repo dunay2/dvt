@@ -276,45 +276,16 @@ function assertSeedsExist(
   }
 }
 
-function visitUpstreamNode(
-  id: string,
-  nodesById: ReadonlyMap<string, GraphNode>,
-  out: Set<string>,
-  stack: string[]
-): void {
-  (nodesById.get(id)?.dependsOn ?? [])
-    .filter((dep) => !out.has(dep))
-    .forEach((dep) => {
-      out.add(dep);
-      stack.push(dep);
-    });
-}
-
-function expandUpstream(nodesById: ReadonlyMap<string, GraphNode>, out: Set<string>): void {
+function expandReachable(getNeighbors: (id: string) => readonly string[], out: Set<string>): void {
   const stack = [...out];
-  while (stack.length) visitUpstreamNode(stack.pop()!, nodesById, out, stack);
-}
-
-function visitDownstreamNode(
-  id: string,
-  dependentsById: ReadonlyMap<string, readonly string[]>,
-  out: Set<string>,
-  stack: string[]
-): void {
-  (dependentsById.get(id) ?? [])
-    .filter((child) => !out.has(child))
-    .forEach((child) => {
-      out.add(child);
-      stack.push(child);
-    });
-}
-
-function expandDownstream(
-  dependentsById: ReadonlyMap<string, readonly string[]>,
-  out: Set<string>
-): void {
-  const stack = [...out];
-  while (stack.length) visitDownstreamNode(stack.pop()!, dependentsById, out, stack);
+  while (stack.length) {
+    getNeighbors(stack.pop()!)
+      .filter((n) => !out.has(n))
+      .forEach((n) => {
+        out.add(n);
+        stack.push(n);
+      });
+  }
 }
 
 function selectNodes(
@@ -325,8 +296,10 @@ function selectNodes(
   const out = new Set<string>(selection.selectedNodeIds);
   assertSeedsExist(nodesById, selection.selectedNodeIds);
 
-  if (selection.includeUpstream ?? true) expandUpstream(nodesById, out);
-  if (selection.includeDownstream ?? false) expandDownstream(dependentsById, out);
+  if (selection.includeUpstream ?? true)
+    expandReachable((id) => nodesById.get(id)?.dependsOn ?? [], out);
+  if (selection.includeDownstream ?? false)
+    expandReachable((id) => dependentsById.get(id) ?? [], out);
 
   return [...out].sort(binaryCompare);
 }
