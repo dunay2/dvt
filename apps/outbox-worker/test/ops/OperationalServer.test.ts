@@ -1,14 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
+
 import { createOperationalServer } from '../../src/ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
 
-function makeLogger(): {
-  info(data: Record<string, unknown>, msg?: string): void;
-  warn(data: Record<string, unknown>, msg?: string): void;
-  error(data: Record<string, unknown>, msg?: string): void;
-} {
+function makeLogger(): OutboxWorkerRuntimeLogger {
   return {
     info: () => {},
     warn: () => {},
@@ -37,7 +35,7 @@ await test('OperationalServer serves health, readiness, and metrics endpoints', 
     assert.ok(address);
     const baseUrl = `http://127.0.0.1:${address.port}`;
 
-    let response = await fetch(`${baseUrl}/readyz`);
+    let response = await globalThis.fetch(`${baseUrl}/readyz`);
     assert.equal(response.status, 503);
     let body = (await response.json()) as { state: string; ready: boolean };
     assert.equal(body.state, 'starting');
@@ -51,16 +49,16 @@ await test('OperationalServer serves health, readiness, and metrics endpoints', 
       oldestClaimedAgeMs: null,
     });
 
-    response = await fetch(`${baseUrl}/healthz`);
+    response = await globalThis.fetch(`${baseUrl}/healthz`);
     assert.equal(response.status, 200);
     body = (await response.json()) as { state: string; ok: boolean };
     assert.equal(body.state, 'idle');
     assert.equal(body.ok, true);
 
-    response = await fetch(`${baseUrl}/readyz`);
+    response = await globalThis.fetch(`${baseUrl}/readyz`);
     assert.equal(response.status, 200);
 
-    const metricsResponse = await fetch(`${baseUrl}/metrics`);
+    const metricsResponse = await globalThis.fetch(`${baseUrl}/metrics`);
     assert.equal(metricsResponse.status, 200);
     const metrics = await metricsResponse.text();
     assert.match(metrics, /dvt_outbox_runtime_ready 1/);

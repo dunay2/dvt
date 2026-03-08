@@ -4,16 +4,17 @@ import test from 'node:test';
 import type { OutboxRecord, RunEventPersisted } from '@dvt/engine';
 
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
+import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
 
 function makeLogger(): {
-  logger: {
-    info(data: Record<string, unknown>, msg?: string): void;
-    warn(data: Record<string, unknown>, msg?: string): void;
-    error(data: Record<string, unknown>, msg?: string): void;
-  };
+  logger: OutboxWorkerRuntimeLogger;
   entries: Array<{ level: 'info' | 'warn' | 'error'; msg?: string; data: Record<string, unknown> }>;
 } {
-  const entries: Array<{ level: 'info' | 'warn' | 'error'; msg?: string; data: Record<string, unknown> }> = [];
+  const entries: Array<{
+    level: 'info' | 'warn' | 'error';
+    msg?: string;
+    data: Record<string, unknown>;
+  }> = [];
   return {
     logger: {
       info(data, msg) {
@@ -49,7 +50,11 @@ function makeEvent(id: string): RunEventPersisted {
   };
 }
 
-function makeRecord(id: string, createdAt = '2026-03-08T00:00:00.000Z', attempts = 0): OutboxRecord {
+function makeRecord(
+  id: string,
+  createdAt = '2026-03-08T00:00:00.000Z',
+  attempts = 0
+): OutboxRecord {
   return {
     id,
     createdAt,
@@ -106,4 +111,3 @@ await test('OutboxWorkerMonitor tracks runtime state, metrics, and delivery tran
   assert.ok(entries.some((entry) => entry.msg === 'outbox record delivered'));
   assert.ok(entries.some((entry) => entry.msg === 'outbox record scheduled for retry'));
 });
-

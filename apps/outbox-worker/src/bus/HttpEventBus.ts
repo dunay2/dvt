@@ -5,22 +5,22 @@ export interface HttpEventBusOptions {
   timeoutMs?: number;
   bearerToken?: string;
   serviceName?: string;
-  fetchImpl?: typeof fetch;
+  fetchImpl?: typeof globalThis.fetch;
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 export class HttpEventBus implements IEventBus {
-  private readonly fetchImpl: typeof fetch;
+  private readonly fetchImpl: typeof globalThis.fetch;
   private readonly timeoutMs: number;
 
   constructor(private readonly options: HttpEventBusOptions) {
-    this.fetchImpl = options.fetchImpl ?? fetch;
+    this.fetchImpl = options.fetchImpl ?? globalThis.fetch;
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
   async publish(events: RunEventPersisted[]): Promise<void> {
-    const controller = new AbortController();
+    const controller = new globalThis.AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
@@ -36,7 +36,9 @@ export class HttpEventBus implements IEventBus {
       }
     } catch (error: unknown) {
       if (isAbortError(error)) {
-        throw new Error(`HTTP_EVENT_BUS_TIMEOUT: ${this.timeoutMs}`);
+        throw new Error(`HTTP_EVENT_BUS_TIMEOUT: ${this.timeoutMs}`, {
+          cause: error,
+        });
       }
       throw error;
     } finally {

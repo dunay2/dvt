@@ -136,11 +136,7 @@ describe('OutboxWorker', () => {
       onRecordDelivered(record: OutboxRecord) {
         transitions.push(`delivered:${record.id}`);
       },
-      onRecordFailed(
-        record: OutboxRecord,
-        _error: string,
-        disposition: OutboxFailureDisposition
-      ) {
+      onRecordFailed(record: OutboxRecord, _error: string, disposition: OutboxFailureDisposition) {
         failures.push({ disposition, outboxId: record.id });
       },
     };

@@ -17,7 +17,9 @@ export interface OperationalServerHandle {
   getAddress(): { host: string; port: number } | null;
 }
 
-export function createOperationalServer(options: OperationalServerOptions): OperationalServerHandle {
+export function createOperationalServer(
+  options: OperationalServerOptions
+): OperationalServerHandle {
   let server: Server | null = null;
 
   return {
@@ -67,7 +69,7 @@ async function handleRequest(
   response: ServerResponse<IncomingMessage>,
   monitor: OutboxWorkerMonitor
 ): Promise<void> {
-  const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+  const url = new globalThis.URL(request.url ?? '/', 'http://127.0.0.1');
   const health = monitor.getHealthSnapshot();
 
   switch (url.pathname) {

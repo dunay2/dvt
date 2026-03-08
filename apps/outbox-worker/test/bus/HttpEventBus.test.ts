@@ -89,7 +89,7 @@ await test('HttpEventBus rejects non-success downstream responses', async () => 
 });
 
 await test('HttpEventBus times out when downstream does not respond', async () => {
-  const server = createServer((_request, _response) => {
+  const server = createServer(() => {
     // Intentionally never respond to exercise bounded publish timeout.
   });
 

@@ -5,7 +5,10 @@ import type {
   OutboxWorkerObserver,
 } from '@dvt/engine';
 
-import type { OutboxWorkerRuntimeHooks, OutboxWorkerRuntimeLogger } from '../runtime/OutboxWorkerRuntime.js';
+import type {
+  OutboxWorkerRuntimeHooks,
+  OutboxWorkerRuntimeLogger,
+} from '../runtime/OutboxWorkerRuntime.js';
 
 export type OutboxRuntimeState = 'starting' | 'idle' | 'draining' | 'failing' | 'stopped';
 
@@ -105,7 +108,9 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   onBatchClaimed(records: readonly OutboxRecord[]): void {
     const oldestRecord = records[0] ?? null;
     const oldestLagSeconds =
-      oldestRecord === null ? 0 : roundToMillis(resolveLagSeconds(oldestRecord.createdAt, this.nowMs()));
+      oldestRecord === null
+        ? 0
+        : roundToMillis(resolveLagSeconds(oldestRecord.createdAt, this.nowMs()));
 
     this.logger.info(
       {
@@ -121,11 +126,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     this.logger.info(toRecordLog(record), 'outbox record delivered');
   }
 
-  onRecordFailed(
-    record: OutboxRecord,
-    error: string,
-    disposition: OutboxFailureDisposition
-  ): void {
+  onRecordFailed(record: OutboxRecord, error: string, disposition: OutboxFailureDisposition): void {
     const data = {
       ...toRecordLog(record),
       error,
@@ -206,7 +207,10 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     if (this.state === nextState) return;
     const previousState = this.state;
     this.state = nextState;
-    this.logger.info({ from: previousState, to: nextState, reason }, 'outbox runtime state changed');
+    this.logger.info(
+      { from: previousState, to: nextState, reason },
+      'outbox runtime state changed'
+    );
   }
 }
 

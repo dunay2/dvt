@@ -26,7 +26,7 @@ export interface OutboxWorkerConfig {
 
 export class OutboxWorker {
   private readonly observer: OutboxWorkerObserver | undefined;
-  private readonly nowMs: () => number;
+  private readonly nowMs: (() => number) | undefined;
 
   constructor(
     private readonly storage: IOutboxStorage,
@@ -34,7 +34,7 @@ export class OutboxWorker {
     private readonly cfg: OutboxWorkerConfig = { batchSize: 100, stopOnError: false }
   ) {
     this.observer = cfg.observer;
-    this.nowMs = cfg.nowMs ?? (() => Date.now());
+    this.nowMs = cfg.nowMs;
   }
 
   /**
@@ -53,7 +53,7 @@ export class OutboxWorker {
       deliveredCount: 0,
       retriedCount: 0,
       deadLetteredCount: 0,
-      oldestClaimedAgeMs: resolveOldestClaimedAgeMs(batch, this.nowMs()),
+      oldestClaimedAgeMs: this.nowMs ? resolveOldestClaimedAgeMs(batch, this.nowMs()) : null,
     };
 
     for (const rec of batch) {
