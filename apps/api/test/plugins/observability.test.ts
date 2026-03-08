@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { Env } from './env.js';
-import { buildObservability } from './observability.js';
+import type { Env } from '../../src/plugins/env.js';
+import { buildObservability } from '../../src/plugins/observability.js';
 
 function baseEnv(overrides?: Partial<Env>): Env {
   return {
@@ -23,11 +23,15 @@ function baseEnv(overrides?: Partial<Env>): Env {
     DVT_INTENT_RECONCILER_BACKOFF_MAX_MS: 60000,
     DVT_INTENT_RECONCILER_TICK_TIMEOUT_MS: 20000,
     DVT_INTENT_RECONCILER_PROVIDERS: 'mock',
+    DVT_READYZ_ENABLED: false,
+    DVT_VERSION_ENABLED: false,
+    DVT_DB_READY_ENABLED: false,
     SERVICE_NAME: 'dvt-api-test',
     OBS_ENABLED: false,
     OTEL_EXPORTER_OTLP_ENDPOINT: undefined,
     OTEL_SERVICE_NAME: undefined,
     OTEL_RESOURCE_ATTRIBUTES: undefined,
+    OIDC_ALGORITHMS: 'RS256',
     ...overrides,
   };
 }

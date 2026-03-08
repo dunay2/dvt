@@ -27,6 +27,15 @@ const EnvSchema = z.object({
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   OTEL_SERVICE_NAME: z.string().optional(),
   OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
+  // OIDC / auth — all three required together when auth is enabled
+  OIDC_JWKS_URI: z.string().optional(),
+  OIDC_ISSUER: z.string().optional(),
+  OIDC_AUDIENCE: z.string().optional(),
+  OIDC_ALGORITHMS: z.string().default('RS256'),
+  // Route exposure policy — off by default; enable explicitly per deployment
+  DVT_READYZ_ENABLED: z.coerce.boolean().default(false),
+  DVT_VERSION_ENABLED: z.coerce.boolean().default(false),
+  DVT_DB_READY_ENABLED: z.coerce.boolean().default(false),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

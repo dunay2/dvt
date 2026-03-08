@@ -1,4 +1,4 @@
-﻿{
+{
   "permissions": {
     "allow": [
       "Bash(node_modules/.bin/tsc:*)",
@@ -12,7 +12,10 @@
       "Bash(gh issue list --state open)",
       "Bash(pnpm --filter @dvt/adapter-postgres exec tsc --noEmit)",
       "Bash(pnpm --filter @dvt/adapter-postgres test)",
-      "Bash(pnpm --filter @dvt/engine test)"
+      "Bash(pnpm --filter @dvt/engine test)",
+      "Bash(pnpm --filter dvt-api add jose)",
+      "Bash(pnpm --filter dvt-api typecheck)",
+      "Bash(pnpm --filter dvt-api test)"
     ]
   }
 }

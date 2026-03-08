@@ -32,18 +32,18 @@ Minimum tuple for this document:
 
 ## Executive State (2026-03-07)
 
-| Gap | Title                                     | Phase     | Current state |
-| --- | ----------------------------------------- | --------- | ------------- |
-| G1  | Temporal Adapter real                     | Phase 1   | In progress   |
-| G2  | PostgresStateStore complete               | Phase 1   | Closed        |
-| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed        |
-| G4  | compiledCodeRef ownership                 | Phase 1   | Closed        |
-| G5  | Outbox worker independiente               | Phase 1.5 | Partial       |
-| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Partial       |
-| G7  | Read models + standalone projector        | Phase 1.5 | Partial       |
-| G8  | Auth real en apps/api                     | Phase 1.5 | Pending       |
-| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending       |
-| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending       |
+| Gap | Title                                     | Phase     | Current state                                             |
+| --- | ----------------------------------------- | --------- | --------------------------------------------------------- |
+| G1  | Temporal Adapter real                     | Phase 1   | In progress (lookupRunRef done, full integration pending) |
+| G2  | PostgresStateStore complete               | Phase 1   | Closed                                                    |
+| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed                                                    |
+| G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                                    |
+| G5  | Outbox worker independiente               | Phase 1.5 | Partial                                                   |
+| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Partial                                                   |
+| G7  | Read models + standalone projector        | Phase 1.5 | Partial                                                   |
+| G8  | Auth real en apps/api                     | Phase 1.5 | Implemented in code (arch tests pending)                  |
+| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                                   |
+| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                                   |
 
 ## Confirmed Progress Since Previous Draft
 
@@ -197,9 +197,21 @@ Minimum tuple for this document:
 
 ### G8 - Auth real en apps/api
 
-- Status: Pending
-- Target:
-  - JWT verification and tenant-scoped authz in runtime endpoints
+- Status: Implemented in code
+- Delivered:
+  - `TenantHierarchyAuthorizationPolicy` with full tenant → project → environment grant hierarchy
+  - `OidcAuthenticator` + `JwksJwtVerifier` (jose-based JWKS) behind `IJwtVerifierGateway`
+  - `AuthorizeCommandScopeService` with `PrincipalRef`-keyed access loading and structured audit
+  - `PostgresPrincipalAccessRepository` (JSONB-backed, with migration)
+  - `StructuredAuditLogger` implementing `IAuthAuditPort`
+  - `POST /runs/start` protected end-to-end — wired in `app.ts` when `OIDC_*` vars present
+  - `StartRunFacadeResult` semantic result type — no HTTP models in application layer
+  - `authErrorMapper` in entrypoints/http — single HTTP mapping point
+  - Route exposure policy: `/readyz`, `/version`, `/db/ready` all gated by explicit flags
+- Pending:
+  - `dependency-cruiser` architectural tests (T8-6)
+  - Replace `NotImplementedStartRunUseCase` with engine-backed use case (T8-7)
+- Spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)
 
 ### G9 - StepTypeRegistry + typed stepTypeConfig
 
@@ -234,3 +246,4 @@ Parallel execution track detail:
 - Parallel tracks: [`GAP_PARALLEL_EXECUTION_TRACKS.md`](GAP_PARALLEL_EXECUTION_TRACKS.md)
 - G3 evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
 - G4 evidence: [`docs/evidence/ED-20260304-compiledcoderef-ownership.md`](../../evidence/ED-20260304-compiledcoderef-ownership.md)
+- G8 spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)

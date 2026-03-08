@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 const fs = require('node:fs');
 const path = require('node:path');
+const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const docsRoot = path.join(repoRoot, 'docs');
@@ -183,8 +184,7 @@ function workspaceOf(relPath) {
   return parts.slice(0, Math.min(parts.length, 2)).join('/') || relPath;
 }
 
-function renderDoc(docs, code) {
-  const generatedAt = new Date().toISOString().slice(0, 10);
+function renderDoc(docs, code, generatedAt) {
   const canonicalDocs = docs.filter((doc) => doc.canonical);
   const docsWithCodeLinks = canonicalDocs.filter((doc) => doc.hasCodeLinks);
   const docsWithAdrLinks = canonicalDocs.filter((doc) => doc.hasAdrLinks);
@@ -310,7 +310,8 @@ function writeIfChanged(absPath, content) {
 function main() {
   const docs = collectDocs();
   const code = collectCode();
-  const content = renderDoc(docs, code);
+  const generatedAt = resolveGeneratedDate(outputPath, (date) => renderDoc(docs, code, date));
+  const content = renderDoc(docs, code, generatedAt);
   const changed = writeIfChanged(outputPath, content);
   if (changed) {
     console.log('[docs:traceability:generate] Updated docs/planning/status/generated-spec-traceability.md');
