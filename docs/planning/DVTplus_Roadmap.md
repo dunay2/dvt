@@ -17,7 +17,8 @@ planning_type: reference
 ## 2. Entrega Fase 1.5 (Track B)
 
 - Implementar worker de outbox (G5).
-- Desarrollar y validar OL mapping tests + schema pin (G6).
+- Desarrollar y validar OL mapping tests + schema pin + contract artifacts (G6).
+- Fijar hogar normativo y trazabilidad auditable para facets y schemas vendorizados de G6.
 - Integrar y probar ambos en paralelo.
 - Documentar decisiones de runtime/delivery.
 
