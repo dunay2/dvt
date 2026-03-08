@@ -102,9 +102,9 @@ end
 %% â”€â”€â”€ TRACEABILITY / OPENLINEAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 subgraph TRACE["Traceability / OpenLineage"]
   direction TB
-  TRACSVC["@dvt/traceability-service\nðŸŸ¡ service + lineage mapper\ncompiledCodeRef path âœ…\nschema pin/delivery pending"]
-  OL_MAP["RunEvents â†’ OL mapping\nðŸŸ¡ TypeScript impl âœ…\npackage tests âœ…\nCI/schema pin âŒ"]
-  OLSPEC["OL spec pin _schemaURL\nâŒ MISSING"]
+  TRACSVC["@dvt/traceability-service\nðŸŸ¡ service + lineage mapper\ncompiledCodeRef path âœ…\nschema pin âœ… / delivery pending"]
+  OL_MAP["RunEvents â†’ OL mapping\nðŸŸ¡ TypeScript impl âœ…\npackage tests âœ…\nCI hardening pending"]
+  OLSPEC["OL spec pin _schemaURL\nðŸŸ¡ PINNED + local artifacts"]
   OUTBOXL["outbox_lineage table\nâŒ MISSING\nsolo intenciÃ³n de diseÃ±o"]
   OUTBOXLW["outbox_lineage Worker\nâŒ MISSING\nfail-open DLQ âŒ"]
   COST["dvt_cost attributor\nâŒ Phase 3 (2027)"]
@@ -217,9 +217,9 @@ TRACSVC --> OL_MAP
 
 | MÃ³dulo                  | Paquete                     | Estado | Notas                                                                                                   |
 | ------------------------ | --------------------------- | ------ | ------------------------------------------------------------------------------------------------------- |
-| Traceability Service     | `@dvt/traceability-service` | ðŸŸ¡   | `service.ts` + lineage resolver/mapper existen Â· package tests âœ… Â· `_schemaURL`/delivery runtime âŒ |
-| RunEvents â†’ OL mapping | â€”                         | ðŸŸ¡   | Mapping TypeScript âœ… + tests de paquete âœ… Â· CI/pin de spec âŒ                                      |
-| OL spec pin `_schemaURL` | â€”                         | âŒ     | Sin versiÃ³n OL fijada en cÃ³digo â€” riesgo de drift silencioso                                        |
+| Traceability Service     | `@dvt/traceability-service` | ðŸŸ¡   | `service.ts` + lineage resolver/mapper existen Â· package tests âœ… Â· `_schemaURL` pin + local contract artifacts âœ… Â· delivery runtime âŒ |
+| RunEvents â†’ OL mapping | â€”                         | ðŸŸ¡   | Mapping TypeScript âœ… + tests de paquete âœ… Â· golden/schema CI lanes pendientes                      |
+| OL spec pin `_schemaURL` | â€”                         | ðŸŸ¡   | VersiÃ³n fijada en cÃ³digo y respaldada por artifacts locales en `docs/contracts/traceability/`        |
 | `outbox_lineage` table   | â€”                         | âŒ     | No existe implementaciÃ³n en repo; solo intenciÃ³n de diseÃ±o                                           |
 | `outbox_lineage` Worker  | â€”                         | âŒ     | No existe. fail-open DLQ policy sin definir                                                             |
 | `dvt_cost attributor`    | â€”                         | âŒ     | Phase 3 (Q1 2027) Â· **invariante**: MUST usar `outbox_lineage`                                         |
@@ -236,7 +236,7 @@ TRACSVC --> OL_MAP
 | G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliaciÃ³n  | `engine`                           | âœ… Cerrado â€” store Postgres + reconciler worker + wiring runtime                                                                  | Phase 1   |
 | G4  | **compiledCodeRef ownership** â€” decisiÃ³n de arquitectura       | planner / traceability             | âœ… Cerrado â€” ADR-0032 implementado extremo a extremo                                                                              | Phase 1   |
 | G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | ðŸŸ¡ Parcial â€” worker core y storage APIs existen; falta runtime standalone y shards                                               | Phase 1.5 |
-| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | ðŸŸ¡ Parcial â€” mapper/resolver/tests existen; falta pin de spec y hardening de CI                                                  | Phase 1.5 |
+| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | ðŸŸ¡ Parcial â€” mapper/resolver/tests y normative artifacts existen; faltan goldens, schema validation executable y hardening de CI | Phase 1.5 |
 | G7  | **Read Models** + proyector standalone                            | state-store / infra                | ðŸŸ¡ Parcial â€” `SnapshotProjector` in-process existe; faltan servicio/read models                                                  | Phase 1.5 |
 | G8  | **Auth real** en `apps/api`                                       | api                                | âŒ Pendiente                                                                                                                         | Phase 1.5 |
 | G9  | **StepTypeRegistry** + tipado `stepTypeConfig`                    | planner / engine                   | âŒ Pendiente                                                                                                                         | Phase 2   |

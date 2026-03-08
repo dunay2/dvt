@@ -35,6 +35,7 @@ nav:
       - Engine Contracts: contracts/engine/index.md
       - Planner Contracts: contracts/planner/index.md
       - Shared Contracts: contracts/shared/index.md
+      - Traceability Contracts: contracts/traceability/index.md
   - Guides:
       - Mandatory Work System for AI: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
       - Guides Index: guides/index.md
@@ -43,6 +44,7 @@ nav:
   - Runbooks: runbooks/index.md
   - Planning:
       - Planning Index: planning/index.md
+      - Gaps: planning/gaps/index.md
       - Proposals: planning/proposals/index.md
       - Reviews: planning/reviews/index.md
       - Status: planning/status/index.md

@@ -31,7 +31,7 @@ Use it to answer three practical questions quickly:
 | Intent reconciler and pre-dispatch intent log | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../gaps/G3-TASK-SPECIFICATION.md)                                                                            | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
 | Outbox worker runtime                         | `@dvt/engine`, `@dvt/adapter-postgres`                                                 | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                                                                                           | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | compiledCodeRef ownership                     | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../gaps/G4-TASK-SPECIFICATION.md)                                                                          | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
-| OpenLineage mapping and delivery debt         | `@dvt/traceability-service`                                                            | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                                                                                           | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| OpenLineage mapping and delivery debt         | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | Documentation governance and checks           | `scripts/*`, `tools/ci/*`                                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [Mandatory AI Workflow](../../guides/SISTEMA%20DE%20TRABAJO%20OBLIGATORIO%20PARA%20IA.md)                           | [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md) |
 
 ## Topic Details
@@ -172,8 +172,11 @@ Use it to answer three practical questions quickly:
 ### OpenLineage mapping and delivery debt
 
 - Canonical source today:
-  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G6`, `G10`)
-  until there is a dedicated accepted runtime spec for lineage delivery
+  [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  for package hardening scope
+  and
+  [Traceability Contracts](../../contracts/traceability/index.md)
+  for the normative emitted facet artifacts
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
@@ -184,6 +187,10 @@ Use it to answer three practical questions quickly:
   [packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts](../../../packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts)
   and
   [packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts](../../../packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts)
+- Evidence:
+  [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md)
+  and
+  [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
 - Verification:
   `pnpm --filter @dvt/traceability-service test`
   and
