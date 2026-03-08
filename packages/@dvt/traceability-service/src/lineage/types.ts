@@ -1,12 +1,20 @@
 import type { CompiledCodeRef } from '@dvt/contracts';
 
-export interface SqlJobFacet {
-  sql: {
-    query: string;
-  };
+import type { LineageFacetMetadata } from './openlineageSchema.js';
+import {
+  DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL,
+  OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
+} from './openlineageSchema.js';
+
+export interface SqlJobFacet extends LineageFacetMetadata<
+  typeof OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL
+> {
+  query: string;
 }
 
-export interface DvtDbtDetailsFacet {
+export interface DvtDbtDetailsFacet extends LineageFacetMetadata<
+  typeof DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL
+> {
   compiledCodeRef: CompiledCodeRef;
 }
 
