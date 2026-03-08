@@ -120,10 +120,7 @@ Responsibility: topic-to-subscriber resolution only.
 
 ```ts
 export interface ISubscriberInvoker {
-  invoke(
-    subscriber: IOutboxSubscriber,
-    input: DeliverOutboxEventInput,
-  ): Promise<DeliveryResult>;
+  invoke(subscriber: IOutboxSubscriber, input: DeliverOutboxEventInput): Promise<DeliveryResult>;
 }
 ```
 
@@ -137,7 +134,7 @@ export interface IDeliveryOutcomeDecider {
     record: OutboxRecord,
     result: DeliveryResult,
     policy: DeliveryPolicy,
-    nowIso: string,
+    nowIso: string
   ): DeliveryStoreCommand;
 }
 ```
@@ -187,7 +184,7 @@ export class DeliveryCoordinator implements IDeliveryCoordinator {
     private readonly decider: IDeliveryOutcomeDecider,
     private readonly writer: IDeliveryOutcomeWriter,
     private readonly telemetry: IDeliveryTelemetry,
-    private readonly clock: IClock,
+    private readonly clock: IClock
   ) {}
 
   async processRecord(record: OutboxRecord, signal: AbortSignal): Promise<DeliveryRecordReport> {
@@ -226,9 +223,7 @@ import pLimit from 'p-limit';
 
 const limit = pLimit(subscriber.maxConcurrency);
 
-const tasks = records.map((record) =>
-  limit(() => coordinator.processRecord(record, signal)),
-);
+const tasks = records.map((record) => limit(() => coordinator.processRecord(record, signal)));
 
 const settled = await Promise.allSettled(tasks);
 ```

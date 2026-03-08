@@ -62,8 +62,18 @@ export interface IBackoffCalculator {
 export type DeliveryStoreCommand =
   | { readonly kind: 'MARK_DELIVERED'; readonly deliveredAt: Date; readonly receipt?: string }
   | { readonly kind: 'MARK_IGNORED'; readonly ignoredAt: Date; readonly reasonCode: string }
-  | { readonly kind: 'MARK_TERMINAL_FAILURE'; readonly failedAt: Date; readonly reasonCode: string; readonly detail?: string }
-  | { readonly kind: 'SCHEDULE_RETRY'; readonly nextAttemptAt: Date; readonly reasonCode: string; readonly detail?: string };
+  | {
+      readonly kind: 'MARK_TERMINAL_FAILURE';
+      readonly failedAt: Date;
+      readonly reasonCode: string;
+      readonly detail?: string;
+    }
+  | {
+      readonly kind: 'SCHEDULE_RETRY';
+      readonly nextAttemptAt: Date;
+      readonly reasonCode: string;
+      readonly detail?: string;
+    };
 
 export interface IDeliveryOutcomeDecider {
   decide(input: {

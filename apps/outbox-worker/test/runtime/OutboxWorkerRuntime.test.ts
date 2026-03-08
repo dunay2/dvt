@@ -2,9 +2,17 @@ import assert from 'node:assert/strict';
 import { setTimeout as sleep } from 'node:timers/promises';
 import test from 'node:test';
 
-import { InMemoryEventBus, type IOutboxStorage, type OutboxRecord, type RunEventPersisted } from '@dvt/engine';
+import {
+  InMemoryEventBus,
+  type IOutboxStorage,
+  type OutboxRecord,
+  type RunEventPersisted,
+} from '@dvt/engine';
 
-import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
+import {
+  OutboxWorkerRuntime,
+  type OutboxWorkerRuntimeLogger,
+} from '../../src/runtime/OutboxWorkerRuntime.js';
 
 class MemoryOutboxStorage implements IOutboxStorage {
   private readonly records: OutboxRecord[] = [];
@@ -43,17 +51,17 @@ class MemoryOutboxStorage implements IOutboxStorage {
 }
 
 function makeLogger(): {
-  logger: { info(data: Record<string, unknown>, msg?: string): void; error(data: Record<string, unknown>, msg?: string): void };
+  logger: OutboxWorkerRuntimeLogger;
   getErrorCount(): number;
 } {
   let errorCount = 0;
   return {
     logger: {
-      info: () => {},
-      error: () => {
+      info: (): void => {},
+      error: (): void => {
         errorCount += 1;
       },
-    },
+    } satisfies OutboxWorkerRuntimeLogger,
     getErrorCount() {
       return errorCount;
     },

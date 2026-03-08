@@ -117,8 +117,11 @@ export class InMemoryOutboxStore implements IOutboxStore {
 
   private isClaimable(record: MutableRecord, input: ClaimNextBatchInput): boolean {
     const topicAllowed = input.topics === undefined || input.topics.includes(record.topic);
-    const channelAllowed = input.deliveryChannels === undefined || input.deliveryChannels.includes(record.deliveryChannel);
-    const sideEffectAllowed = input.sideEffectKinds === undefined || input.sideEffectKinds.includes(record.sideEffectKind);
+    const channelAllowed =
+      input.deliveryChannels === undefined ||
+      input.deliveryChannels.includes(record.deliveryChannel);
+    const sideEffectAllowed =
+      input.sideEffectKinds === undefined || input.sideEffectKinds.includes(record.sideEffectKind);
 
     if (!topicAllowed || !channelAllowed || !sideEffectAllowed) {
       return false;
@@ -129,7 +132,10 @@ export class InMemoryOutboxStore implements IOutboxStore {
     }
 
     if (record.status === 'leased') {
-      return record.leaseExpiresAt !== undefined && record.leaseExpiresAt.getTime() <= input.now.getTime();
+      return (
+        record.leaseExpiresAt !== undefined &&
+        record.leaseExpiresAt.getTime() <= input.now.getTime()
+      );
     }
 
     return false;

@@ -1,4 +1,7 @@
-import type { BackoffCalculationInput, IBackoffCalculator } from '../contracts/IBackoffCalculator.js';
+import type {
+  BackoffCalculationInput,
+  IBackoffCalculator,
+} from '../contracts/IBackoffCalculator.js';
 
 export interface ExponentialBackoffConfig {
   readonly baseDelayMs: number;

@@ -11,7 +11,7 @@ const subscriber = new TestSubscriber(
     sideEffectKind: 'snapshot_projection',
     maxConcurrency: 4,
   },
-  new SetBasedIdempotentSink(),
+  new SetBasedIdempotentSink()
 );
 
 describe('SubscriberResolver', () => {

@@ -44,19 +44,19 @@ packages/@dvt/outbox-worker/
 
 ## 2. Class responsibilities
 
-| Class | Responsibility | Must not own |
-|---|---|---|
-| `OutboxWorkerRuntime` | loop, backoff, wake-up, shutdown | record delivery rules |
-| `OutboxWorkerEngine` | claim unordered, claim lanes, claim lane records, aggregate batch report | sleep or process bootstrap |
-| `BatchProcessor` | dispatch records with correct concurrency model | store claiming |
-| `DeliveryCoordinator` | one-record orchestration | direct SQL or host lifecycle |
-| `SubscriberResolver` | topic lookup | invocation logic |
-| `SubscriberInvoker` | call subscriber, normalize throw | policy decision |
-| `DeliveryPolicyResolver` | resolve policy by topic | persistence |
-| `DeliveryOutcomeDecider` | result → store command | subscriber lookup |
-| `DeliveryOutcomeWriter` | apply store command | business outcome selection |
-| `DeliveryTelemetry` | metrics/logging/tracing for delivery | writeback policy |
-| `startWorkerHost` | wiring/startup | claim logic |
+| Class                    | Responsibility                                                           | Must not own                 |
+| ------------------------ | ------------------------------------------------------------------------ | ---------------------------- |
+| `OutboxWorkerRuntime`    | loop, backoff, wake-up, shutdown                                         | record delivery rules        |
+| `OutboxWorkerEngine`     | claim unordered, claim lanes, claim lane records, aggregate batch report | sleep or process bootstrap   |
+| `BatchProcessor`         | dispatch records with correct concurrency model                          | store claiming               |
+| `DeliveryCoordinator`    | one-record orchestration                                                 | direct SQL or host lifecycle |
+| `SubscriberResolver`     | topic lookup                                                             | invocation logic             |
+| `SubscriberInvoker`      | call subscriber, normalize throw                                         | policy decision              |
+| `DeliveryPolicyResolver` | resolve policy by topic                                                  | persistence                  |
+| `DeliveryOutcomeDecider` | result → store command                                                   | subscriber lookup            |
+| `DeliveryOutcomeWriter`  | apply store command                                                      | business outcome selection   |
+| `DeliveryTelemetry`      | metrics/logging/tracing for delivery                                     | writeback policy             |
+| `startWorkerHost`        | wiring/startup                                                           | claim logic                  |
 
 ## 3. Collaboration flow
 
@@ -106,7 +106,11 @@ export class DeliveryOutcomeWriter implements IDeliveryOutcomeWriter {
       case 'MARK_DELIVERED':
         return this.store.markDelivered(command.messageId, { ...audit, receipt: command.receipt });
       case 'MARK_IGNORED':
-        return this.store.markIgnored(command.messageId, { ...audit, reasonCode: command.reasonCode, detail: command.detail });
+        return this.store.markIgnored(command.messageId, {
+          ...audit,
+          reasonCode: command.reasonCode,
+          detail: command.detail,
+        });
       case 'MARK_RETRY_SCHEDULED':
         return this.store.markRetryScheduled(command.messageId, command.nextAttemptAtIso, {
           ...audit,
@@ -132,7 +136,7 @@ export class DeliveryOutcomeDecider implements IDeliveryOutcomeDecider {
     record: OutboxRecord,
     result: DeliveryResult,
     policy: DeliveryPolicy,
-    nowIso: string,
+    nowIso: string
   ): DeliveryStoreCommand {
     switch (result.kind) {
       case 'DELIVERED':
@@ -155,7 +159,8 @@ export class DeliveryOutcomeDecider implements IDeliveryOutcomeDecider {
         };
 
       case 'RETRYABLE_FAILURE': {
-        const remainingBudget = record.attemptCount < Math.min(record.maxAttempts, policy.maxAttempts);
+        const remainingBudget =
+          record.attemptCount < Math.min(record.maxAttempts, policy.maxAttempts);
         if (!remainingBudget) {
           return {
             kind: 'MARK_DEAD_LETTERED',

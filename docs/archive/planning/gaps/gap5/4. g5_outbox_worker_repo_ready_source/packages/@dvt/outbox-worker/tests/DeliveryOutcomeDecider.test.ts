@@ -44,7 +44,7 @@ describe('DeliveryOutcomeDecider', () => {
       {
         kind: 'RETRYABLE_FAILURE',
         reasonCode: 'HTTP_503',
-      },
+      }
     );
 
     expect(command.kind).toBe('MOVE_TO_DLQ');

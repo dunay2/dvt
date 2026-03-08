@@ -27,7 +27,7 @@ it('rejects non-noop crash hook in production host', () => {
   expect(() =>
     createHost({
       crashWindowTestHook: new ThrowingCrashHook(),
-    }),
+    })
   ).toThrow(/crash hook is not allowed in production/i);
 });
 ```

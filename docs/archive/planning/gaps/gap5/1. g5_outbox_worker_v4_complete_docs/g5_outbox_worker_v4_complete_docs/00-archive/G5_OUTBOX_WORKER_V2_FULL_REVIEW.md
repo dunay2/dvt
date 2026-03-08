@@ -23,7 +23,7 @@ Se mantiene la decisión central:
 Pero se corrigen cuatro defectos:
 
 1. **modelo de errores mezclado**,
-2. **runtime incompleto**, 
+2. **runtime incompleto**,
 3. **ADR con planificación mezclada**,
 4. **evolución a CDC demasiado abstracta**.
 
@@ -106,7 +106,7 @@ export interface IOutboxSubscriber {
 ```ts
 export async function invokeSubscriber(
   subscriber: IOutboxSubscriber,
-  input: DeliverOutboxEventInput,
+  input: DeliverOutboxEventInput
 ): Promise<DeliveryResult> {
   try {
     return await subscriber.deliver(input);
@@ -236,13 +236,13 @@ Referencia: https://www.postgresql.org/docs/current/sql-listen.html
 
 ## 9. Política de outcomes
 
-| Outcome | Acción |
-|---|---|
-| `DELIVERED` | `markDelivered` |
-| `IGNORED` | `markIgnored` |
+| Outcome                                      | Acción               |
+| -------------------------------------------- | -------------------- |
+| `DELIVERED`                                  | `markDelivered`      |
+| `IGNORED`                                    | `markIgnored`        |
 | `RETRYABLE_FAILURE` con presupuesto restante | `markRetryScheduled` |
-| `RETRYABLE_FAILURE` sin presupuesto | `markDeadLettered` |
-| `TERMINAL_FAILURE` | `markDeadLettered` |
+| `RETRYABLE_FAILURE` sin presupuesto          | `markDeadLettered`   |
+| `TERMINAL_FAILURE`                           | `markDeadLettered`   |
 
 ## 10. CDC evolution sin romper contratos
 

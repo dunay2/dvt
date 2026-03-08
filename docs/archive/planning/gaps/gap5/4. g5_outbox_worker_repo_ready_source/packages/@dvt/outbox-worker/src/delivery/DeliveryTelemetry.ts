@@ -6,7 +6,7 @@ import type { DeliveryCommand } from './DeliveryCommand.js';
 export class DeliveryTelemetry {
   constructor(
     private readonly logger: ILogger,
-    private readonly metrics: IOutboxWorkerMetrics,
+    private readonly metrics: IOutboxWorkerMetrics
   ) {}
 
   onClaimBatch(claimedCount: number): void {

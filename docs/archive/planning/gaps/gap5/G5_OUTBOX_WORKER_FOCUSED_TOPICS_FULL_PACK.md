@@ -1,13 +1,13 @@
-
-
 <!-- FILE: README.md -->
 
 ---
+
 title: G5 Outbox Worker Focused Review Pack
 status: Draft
 owner: docs
 last_reviewed: 2026-03-08
 scope: focused-topics-only
+
 ---
 
 # G5 Outbox Worker Focused Review Pack
@@ -58,15 +58,16 @@ or broad package decomposition. Those topics belong to other review threads.
 - OpenTelemetry JS
 - Prometheus client library guidance
 
-
 <!-- FILE: G5_OUTBOX_WORKER_FOCUSED_TOPICS_FULL_REVIEW.md -->
 
 ---
+
 title: G5 Outbox Worker Focused Topics Review
 status: Draft
 owner: docs
 last_reviewed: 2026-03-08
 scope: focused-topics-only
+
 ---
 
 # G5 Outbox Worker Focused Topics Review
@@ -522,14 +523,15 @@ Most importantly:
 
 This is now a document set a team can actually implement from.
 
-
 <!-- FILE: docs/adr/ADR-G5-002-focused-topics-addendum.md -->
 
 ---
+
 title: ADR-G5-002 Focused Topics Addendum
 status: Proposed
 owners: Core Architecture
 date: 2026-03-08
+
 ---
 
 # ADR-G5-002 — Focused Topics Addendum
@@ -603,14 +605,15 @@ This ADR does not decide:
 
 Those topics belong to separate decisions.
 
-
 <!-- FILE: docs/specs/SPEC-G5-COEXISTENCE-SECRETS-AND-TYPES.md -->
 
 ---
+
 title: Spec — G5 Coexistence, Secrets, and Naming
 status: Draft
 owner: docs
 last_reviewed: 2026-03-08
+
 ---
 
 # Spec — G5 Coexistence, Secrets, and Naming
@@ -668,17 +671,17 @@ Exactly one production-active owner may exist for the same
 
 #### Allowed
 
-| Topic | Mechanism | Delivery channel | Side effect |
-|---|---|---|---|
-| workflow.run.events | polling | internal_projection | state_projection |
-| workflow.run.events | CDC | external_publication | event_bus_publish |
+| Topic               | Mechanism | Delivery channel     | Side effect       |
+| ------------------- | --------- | -------------------- | ----------------- |
+| workflow.run.events | polling   | internal_projection  | state_projection  |
+| workflow.run.events | CDC       | external_publication | event_bus_publish |
 
 #### Not allowed
 
-| Topic | Mechanism | Delivery channel | Side effect |
-|---|---|---|---|
-| workflow.run.events | polling | external_publication | event_bus_publish |
-| workflow.run.events | CDC | external_publication | event_bus_publish |
+| Topic               | Mechanism | Delivery channel     | Side effect       |
+| ------------------- | --------- | -------------------- | ----------------- |
+| workflow.run.events | polling   | external_publication | event_bus_publish |
+| workflow.run.events | CDC       | external_publication | event_bus_publish |
 
 ### 2.5 Shadow mode
 
@@ -780,14 +783,15 @@ Avoid:
 This package is about delivery of persisted outbox records.
 Using one vocabulary reduces design drift and review noise.
 
-
 <!-- FILE: docs/specs/SPEC-G5-DELIVERY-OUTCOME-BACKOFF.md -->
 
 ---
+
 title: Spec — G5 Delivery Outcome and Backoff
 status: Draft
 owner: docs
 last_reviewed: 2026-03-08
+
 ---
 
 # Spec — G5 Delivery Outcome and Backoff
@@ -847,8 +851,18 @@ export interface IBackoffCalculator {
 export type DeliveryStoreCommand =
   | { readonly kind: 'MARK_DELIVERED'; readonly deliveredAt: Date; readonly receipt?: string }
   | { readonly kind: 'MARK_IGNORED'; readonly ignoredAt: Date; readonly reasonCode: string }
-  | { readonly kind: 'MARK_TERMINAL_FAILURE'; readonly failedAt: Date; readonly reasonCode: string; readonly detail?: string }
-  | { readonly kind: 'SCHEDULE_RETRY'; readonly nextAttemptAt: Date; readonly reasonCode: string; readonly detail?: string };
+  | {
+      readonly kind: 'MARK_TERMINAL_FAILURE';
+      readonly failedAt: Date;
+      readonly reasonCode: string;
+      readonly detail?: string;
+    }
+  | {
+      readonly kind: 'SCHEDULE_RETRY';
+      readonly nextAttemptAt: Date;
+      readonly reasonCode: string;
+      readonly detail?: string;
+    };
 
 export interface IDeliveryOutcomeDecider {
   decide(input: {
@@ -936,14 +950,15 @@ export final class DeliveryCoordinator {
 }
 ```
 
-
 <!-- FILE: docs/architecture/ARCH-G5-ORDERING-LANES-AND-RUNTIME.md -->
 
 ---
+
 title: Architecture — G5 Ordering Lanes and Runtime
 status: Draft
 owner: docs
 last_reviewed: 2026-03-08
+
 ---
 
 # Architecture — G5 Ordering Lanes and Runtime
@@ -1148,14 +1163,15 @@ export interface IOutboxRecordClaimer {
 
 The engine orchestrates claimers and the delivery coordinator.
 
-
 <!-- FILE: docs/quality/QUALITY-G5-CRASH-WINDOW-AND-TESTING.md -->
 
 ---
+
 title: Quality — G5 Crash Window and Testing
 status: Draft
 owner: docs
 last_reviewed: 2026-03-08
+
 ---
 
 # Quality — G5 Crash Window and Testing
@@ -1286,14 +1302,15 @@ The CI test report should make the delivery model obvious:
 
 That is the correct proof for at-least-once + idempotent subscriber design.
 
-
 <!-- FILE: docs/operations/OPS-G5-OUTBOX-WORKER.md -->
 
 ---
+
 title: Operations — G5 Outbox Worker
 status: Draft
 owner: ops
 last_reviewed: 2026-03-08
+
 ---
 
 # Operations — G5 Outbox Worker

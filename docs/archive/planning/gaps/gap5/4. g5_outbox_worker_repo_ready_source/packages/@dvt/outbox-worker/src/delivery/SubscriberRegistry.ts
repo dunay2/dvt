@@ -1,7 +1,11 @@
 import type { DeliveryChannel, SideEffectKind, TopicName } from '../types.js';
 import type { IOutboxSubscriber } from '../contracts/IOutboxSubscriber.js';
 
-function makeKey(topic: TopicName, deliveryChannel: DeliveryChannel, sideEffectKind: SideEffectKind): string {
+function makeKey(
+  topic: TopicName,
+  deliveryChannel: DeliveryChannel,
+  sideEffectKind: SideEffectKind
+): string {
   return `${topic}::${deliveryChannel}::${sideEffectKind}`;
 }
 
@@ -13,7 +17,7 @@ export class SubscriberRegistry {
       const key = makeKey(
         subscriber.registration.topic,
         subscriber.registration.deliveryChannel,
-        subscriber.registration.sideEffectKind,
+        subscriber.registration.sideEffectKind
       );
 
       if (this.subscribers.has(key)) {
@@ -24,7 +28,11 @@ export class SubscriberRegistry {
     }
   }
 
-  get(topic: TopicName, deliveryChannel: DeliveryChannel, sideEffectKind: SideEffectKind): IOutboxSubscriber | null {
+  get(
+    topic: TopicName,
+    deliveryChannel: DeliveryChannel,
+    sideEffectKind: SideEffectKind
+  ): IOutboxSubscriber | null {
     return this.subscribers.get(makeKey(topic, deliveryChannel, sideEffectKind)) ?? null;
   }
 }

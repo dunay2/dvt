@@ -23,10 +23,10 @@ what the current repository can realistically absorb.
 
 - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - `status_doc`: [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
-- `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+- `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
 - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
-- `evidence_or_risk`: promote to evidence after standalone runtime canary; keep scale-out risk explicit until ADR-0009 enforcement lands
+- `evidence_or_risk`: standalone host, bounded HTTP publisher, health/readiness endpoints, metrics, and runbook now exist in code; keep canary and scale-out risk explicit until PR-4/PR-5 land
 
 ## 1. Executive decision
 
@@ -82,7 +82,7 @@ The current repository already has the following real baseline:
 - reusable worker logic in [`packages/@dvt/engine/src/outbox/OutboxWorker.ts`](../../../packages/@dvt/engine/src/outbox/OutboxWorker.ts),
 - PostgreSQL claiming, retries, and DLQ support in [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts),
 - outbox payloads shaped as current run event envelopes, not generic side-effect records,
-- operational status that still marks the independent polling runtime as missing in [System Delivery Status](../../architecture/system-delivery-status.md).
+- operational status that now marks the standalone host and initial operational boundary as partial in [System Delivery Status](../../architecture/system-delivery-status.md).
 
 The broad `gap5` package changes all of these at once:
 
@@ -174,6 +174,7 @@ Acceptance:
 - worker drains pending outbox records in a controlled local environment,
 - worker exits cleanly on shutdown signal,
 - initial package-level typecheck/build/tests pass,
+- worker supports at least one real downstream publisher mode with bounded timeout,
 - no production configuration suggests multi-instance safety yet.
 
 ### PR-2 - Operational boundary

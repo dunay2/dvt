@@ -35,7 +35,7 @@ It is intentionally concrete enough to implement.
 ```ts
 export type OutboxMessageId = string;
 export type TenantId = string;
-export type OutboxTopic = 
+export type OutboxTopic =
   | 'workflow.snapshot.project'
   | 'run.event.publish'
   | 'lineage.export.requested';
@@ -207,13 +207,15 @@ export interface DeliveryMutationAudit {
 export interface IOutboxStorePolling {
   claimUnorderedBatch(request: ClaimBatchRequest): Promise<readonly OutboxRecord[]>;
   claimLanes(request: ClaimLanesRequest): Promise<readonly string[]>;
-  claimLaneBatch(request: ClaimBatchRequest & { readonly laneKeys: readonly string[] }): Promise<readonly OutboxRecord[]>;
+  claimLaneBatch(
+    request: ClaimBatchRequest & { readonly laneKeys: readonly string[] }
+  ): Promise<readonly OutboxRecord[]>;
   markDelivered(messageId: OutboxMessageId, audit: DeliveryMutationAudit): Promise<void>;
   markIgnored(messageId: OutboxMessageId, audit: DeliveryMutationAudit): Promise<void>;
   markRetryScheduled(
     messageId: OutboxMessageId,
     nextAttemptAtIso: string,
-    audit: DeliveryMutationAudit,
+    audit: DeliveryMutationAudit
   ): Promise<void>;
   markDeadLettered(messageId: OutboxMessageId, audit: DeliveryMutationAudit): Promise<void>;
   releaseExpiredLaneLeases(nowIso: string, workerId?: string): Promise<number>;
@@ -261,10 +263,7 @@ export interface IOutboxWakeupSource {
 
 ```ts
 export interface ISubscriberInvoker {
-  invoke(
-    subscriber: IOutboxSubscriber,
-    input: DeliverOutboxEventInput,
-  ): Promise<DeliveryResult>;
+  invoke(subscriber: IOutboxSubscriber, input: DeliverOutboxEventInput): Promise<DeliveryResult>;
 }
 ```
 
@@ -274,7 +273,7 @@ Reference behavior:
 export class SubscriberInvoker implements ISubscriberInvoker {
   async invoke(
     subscriber: IOutboxSubscriber,
-    input: DeliverOutboxEventInput,
+    input: DeliverOutboxEventInput
   ): Promise<DeliveryResult> {
     try {
       return await subscriber.deliver(input);
@@ -295,7 +294,13 @@ export class SubscriberInvoker implements ISubscriberInvoker {
 export type DeliveryStoreCommand =
   | { kind: 'MARK_DELIVERED'; messageId: OutboxMessageId; receipt?: string }
   | { kind: 'MARK_IGNORED'; messageId: OutboxMessageId; reasonCode: string; detail?: string }
-  | { kind: 'MARK_RETRY_SCHEDULED'; messageId: OutboxMessageId; nextAttemptAtIso: string; reasonCode: string; detail?: string }
+  | {
+      kind: 'MARK_RETRY_SCHEDULED';
+      messageId: OutboxMessageId;
+      nextAttemptAtIso: string;
+      reasonCode: string;
+      detail?: string;
+    }
   | { kind: 'MARK_DEAD_LETTERED'; messageId: OutboxMessageId; reasonCode: string; detail?: string };
 
 export interface IDeliveryOutcomeDecider {
@@ -303,7 +308,7 @@ export interface IDeliveryOutcomeDecider {
     record: OutboxRecord,
     result: DeliveryResult,
     policy: DeliveryPolicy,
-    nowIso: string,
+    nowIso: string
   ): DeliveryStoreCommand;
 }
 ```

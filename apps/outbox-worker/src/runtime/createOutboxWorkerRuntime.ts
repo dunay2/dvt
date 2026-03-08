@@ -1,22 +1,31 @@
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import type { IEventBus, OutboxWorkerObserver } from '@dvt/engine';
 
+import { HttpEventBus } from '../bus/HttpEventBus.js';
 import { LoggingEventBus } from '../bus/LoggingEventBus.js';
 import { getPgPool } from '../db/pool.js';
 import type { Env } from '../plugins/env.js';
 
 import {
   OutboxWorkerRuntime,
+  type OutboxWorkerRuntimeHooks,
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
 
 export interface RuntimeHandle {
-  start(signal?: AbortSignal): Promise<void>;
+  start(signal?: globalThis.AbortSignal): Promise<void>;
   stop(): Promise<void>;
+}
+
+export interface CreateOutboxWorkerRuntimeOptions {
+  observer?: OutboxWorkerObserver;
+  hooks?: OutboxWorkerRuntimeHooks;
 }
 
 export async function createOutboxWorkerRuntime(
   env: Env,
-  logger: OutboxWorkerRuntimeLogger
+  logger: OutboxWorkerRuntimeLogger,
+  options: CreateOutboxWorkerRuntimeOptions = {}
 ): Promise<RuntimeHandle> {
   const pool = getPgPool(env.DATABASE_URL);
   const stateStore = new PostgresStateStoreAdapter({
@@ -28,20 +37,17 @@ export async function createOutboxWorkerRuntime(
 
   await stateStore.migrate();
 
-  const runtime = new OutboxWorkerRuntime(
-    stateStore,
-    createEventBus(env, logger),
-    logger,
-    {
-      batchSize: env.DVT_OUTBOX_WORKER_BATCH_SIZE,
-      stopOnError: env.DVT_OUTBOX_WORKER_STOP_ON_ERROR,
-      pollIntervalMs: env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
-      errorBackoffMs: env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS,
-    }
-  );
+  const runtime = new OutboxWorkerRuntime(stateStore, createEventBus(env, logger), logger, {
+    batchSize: env.DVT_OUTBOX_WORKER_BATCH_SIZE,
+    stopOnError: env.DVT_OUTBOX_WORKER_STOP_ON_ERROR,
+    pollIntervalMs: env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
+    errorBackoffMs: env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS,
+    ...(options.observer ? { observer: options.observer } : {}),
+    ...(options.hooks ? { hooks: options.hooks } : {}),
+  });
 
   return {
-    start: (signal?: AbortSignal) => runtime.start(signal),
+    start: (signal?: globalThis.AbortSignal) => runtime.start(signal),
     stop: async () => {
       await runtime.stop();
       await stateStore.close();
@@ -49,8 +55,17 @@ export async function createOutboxWorkerRuntime(
   };
 }
 
-function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): LoggingEventBus {
+function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): IEventBus {
   switch (env.DVT_OUTBOX_EVENT_BUS_MODE) {
+    case 'http':
+      return new HttpEventBus({
+        targetUrl: env.DVT_OUTBOX_HTTP_TARGET_URL!,
+        timeoutMs: env.DVT_OUTBOX_HTTP_TIMEOUT_MS,
+        serviceName: env.SERVICE_NAME,
+        ...(env.DVT_OUTBOX_HTTP_BEARER_TOKEN
+          ? { bearerToken: env.DVT_OUTBOX_HTTP_BEARER_TOKEN }
+          : {}),
+      });
     case 'log':
       return new LoggingEventBus(logger);
   }

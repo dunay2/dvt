@@ -10,8 +10,16 @@ export interface ILogger {
 }
 
 export class NoopLogger implements ILogger {
-  debug(_message: string, _fields?: LogFields): void { return; }
-  info(_message: string, _fields?: LogFields): void { return; }
-  warn(_message: string, _fields?: LogFields): void { return; }
-  error(_message: string, _fields?: LogFields): void { return; }
+  debug(_message: string, _fields?: LogFields): void {
+    return;
+  }
+  info(_message: string, _fields?: LogFields): void {
+    return;
+  }
+  warn(_message: string, _fields?: LogFields): void {
+    return;
+  }
+  error(_message: string, _fields?: LogFields): void {
+    return;
+  }
 }

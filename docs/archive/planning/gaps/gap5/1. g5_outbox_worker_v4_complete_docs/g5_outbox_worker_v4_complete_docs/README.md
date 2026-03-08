@@ -16,13 +16,16 @@ This pack supersedes the previous draft sets by doing three things at once:
 ## Included documents
 
 ### Archive
+
 - `00-archive/G5_OUTBOX_WORKER_V2_FULL_REVIEW.md`
 - `00-archive/G5_OUTBOX_WORKER_V3_FULL_REVIEW.md`
 
 ### ADR
+
 - `01-adr/ADR-G5-001-independent-outbox-worker-v4.md`
 
 ### Specifications
+
 - `02-spec/SPEC-OUTBOX-DELIVERY-CONTRACTS.v4.md`
 - `02-spec/SPEC-OUTBOX-RUNTIME-CONTRACTS.v1.md`
 - `02-spec/SPEC-OUTBOX-ORDERING-LANES.v1.md`
@@ -30,23 +33,29 @@ This pack supersedes the previous draft sets by doing three things at once:
 - `02-spec/SPEC-OUTBOX-TYPES-POLICY.v1.md`
 
 ### Architecture
+
 - `03-architecture/ARCH-OUTBOX-RUNTIME.v4.md`
 - `03-architecture/ARCH-OUTBOX-CDC-COEXISTENCE.v1.md`
 - `03-architecture/ARCH-OUTBOX-POLLING-SQL.v1.md`
 
 ### Class design
+
 - `04-class-design/CLASS-DESIGN-OUTBOX-WORKER.v2.md`
 
 ### Quality
+
 - `05-quality/QUALITY-OUTBOX-WORKER.v2.md`
 
 ### Security
+
 - `06-security/SECURITY-OUTBOX-WORKER.v2.md`
 
 ### Migration
+
 - `07-migration/MIGRATION-PLAN-EXISTING-OUTBOX-WORKER.v1.md`
 
 ### Roadmap
+
 - `08-roadmap/ROADMAP-G5_OUTBOX_WORKER.v4.md`
 
 ## Baseline alignment with DVT+

@@ -129,6 +129,12 @@ Use it to answer three practical questions quickly:
   and
   [apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts](../../../apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts)
   and
+  [apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts](../../../apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts)
+  and
+  [apps/outbox-worker/src/ops/OperationalServer.ts](../../../apps/outbox-worker/src/ops/OperationalServer.ts)
+  and
+  [apps/outbox-worker/src/bus/HttpEventBus.ts](../../../apps/outbox-worker/src/bus/HttpEventBus.ts)
+  and
   [packages/@dvt/engine/src/outbox/OutboxWorker.ts](../../../packages/@dvt/engine/src/outbox/OutboxWorker.ts)
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
@@ -137,9 +143,17 @@ Use it to answer three practical questions quickly:
   and
   [apps/outbox-worker/test/plugins/env.test.ts](../../../apps/outbox-worker/test/plugins/env.test.ts)
   and
+  [apps/outbox-worker/test/bus/HttpEventBus.test.ts](../../../apps/outbox-worker/test/bus/HttpEventBus.test.ts)
+  and
+  [apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts](../../../apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts)
+  and
+  [apps/outbox-worker/test/ops/OperationalServer.test.ts](../../../apps/outbox-worker/test/ops/OperationalServer.test.ts)
+  and
   [packages/@dvt/engine/test/outbox/OutboxWorker.test.ts](../../../packages/@dvt/engine/test/outbox/OutboxWorker.test.ts)
   and
   [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
+- Runbook:
+  [docs/runbooks/outbox-worker-g5.md](../../runbooks/outbox-worker-g5.md)
 - Verification:
   `pnpm --filter dvt-outbox-worker typecheck`
   and

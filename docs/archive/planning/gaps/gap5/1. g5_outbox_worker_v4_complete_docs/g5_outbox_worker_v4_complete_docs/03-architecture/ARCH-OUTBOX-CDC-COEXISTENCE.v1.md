@@ -71,6 +71,7 @@ Recommended pattern:
 ### 5.2 Polling shadow while CDC is live
 
 Less likely for G5, but symmetrical:
+
 - CDC is live,
 - polling may read only canary topics or a shadow topic subset,
 - polling does not invoke production subscribers for live-owned topics.

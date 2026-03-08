@@ -3,7 +3,10 @@ import type { IOutboxSubscriber } from '../contracts/IOutboxSubscriber.js';
 import type { ClaimedOutboxRecord } from '../types.js';
 
 export class SubscriberInvoker {
-  async invoke(subscriber: IOutboxSubscriber, record: ClaimedOutboxRecord): Promise<DeliveryResult> {
+  async invoke(
+    subscriber: IOutboxSubscriber,
+    record: ClaimedOutboxRecord
+  ): Promise<DeliveryResult> {
     try {
       return await subscriber.deliver({ record });
     } catch (error) {

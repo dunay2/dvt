@@ -14,7 +14,7 @@ export class OutboxWorkerRuntime {
     private readonly engine: OutboxWorkerEngine,
     private readonly wakeupSignal: IWakeupSignal,
     private readonly logger: ILogger,
-    private readonly config: OutboxWorkerRuntimeConfig,
+    private readonly config: OutboxWorkerRuntimeConfig
   ) {}
 
   stopAcceptingNewWork(): void {

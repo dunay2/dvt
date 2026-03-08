@@ -32,18 +32,18 @@ A topic may still have multiple owners overall if each owner controls a differen
 
 ### Allowed
 
-| environment | topic | deliveryChannel | sideEffectKind | owner |
-|---|---|---|---|---|
-| prod | workflow.run.events | internal_projection | snapshot_projection | polling worker |
-| prod | workflow.run.events | internal_projection | cache_refresh | polling worker |
-| prod | workflow.run.events | external_publication | kafka_publish | CDC relay |
+| environment | topic               | deliveryChannel      | sideEffectKind      | owner          |
+| ----------- | ------------------- | -------------------- | ------------------- | -------------- |
+| prod        | workflow.run.events | internal_projection  | snapshot_projection | polling worker |
+| prod        | workflow.run.events | internal_projection  | cache_refresh       | polling worker |
+| prod        | workflow.run.events | external_publication | kafka_publish       | CDC relay      |
 
 ### Forbidden
 
-| environment | topic | deliveryChannel | sideEffectKind | owner |
-|---|---|---|---|---|
-| prod | workflow.run.events | internal_projection | snapshot_projection | polling worker A |
-| prod | workflow.run.events | internal_projection | snapshot_projection | polling worker B |
+| environment | topic               | deliveryChannel     | sideEffectKind      | owner            |
+| ----------- | ------------------- | ------------------- | ------------------- | ---------------- |
+| prod        | workflow.run.events | internal_projection | snapshot_projection | polling worker A |
+| prod        | workflow.run.events | internal_projection | snapshot_projection | polling worker B |
 
 ## 5. Naming policy
 

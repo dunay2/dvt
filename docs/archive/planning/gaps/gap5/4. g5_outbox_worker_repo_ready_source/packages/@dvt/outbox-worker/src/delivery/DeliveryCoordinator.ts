@@ -13,7 +13,7 @@ export class DeliveryCoordinator {
     private readonly decider: DeliveryOutcomeDecider,
     private readonly writer: DeliveryOutcomeWriter,
     private readonly telemetry: DeliveryTelemetry,
-    private readonly crashWindowTestHook: ICrashWindowTestHook,
+    private readonly crashWindowTestHook: ICrashWindowTestHook
   ) {}
 
   async execute(record: ClaimedOutboxRecord): Promise<void> {

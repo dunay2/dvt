@@ -18,7 +18,12 @@ import { InMemoryOutboxStore } from '../src/testing/InMemoryOutboxStore.js';
 import { SetBasedIdempotentSink, TestSubscriber } from '../src/testing/TestSubscriber.js';
 import { NoopCrashWindowTestHook } from '../src/contracts/ICrashWindowTestHook.js';
 
-function buildEngine(store: InMemoryOutboxStore, crashHook: CrashAfterSuccessHook | NoopCrashWindowTestHook, clock: FakeClock, sink: SetBasedIdempotentSink): OutboxWorkerEngine {
+function buildEngine(
+  store: InMemoryOutboxStore,
+  crashHook: CrashAfterSuccessHook | NoopCrashWindowTestHook,
+  clock: FakeClock,
+  sink: SetBasedIdempotentSink
+): OutboxWorkerEngine {
   const subscriber = new TestSubscriber(
     {
       subscriberKey: 'snapshot-projector',
@@ -27,7 +32,7 @@ function buildEngine(store: InMemoryOutboxStore, crashHook: CrashAfterSuccessHoo
       sideEffectKind: 'snapshot_projection',
       maxConcurrency: 1,
     },
-    sink,
+    sink
   );
 
   const metrics = new CollectingMetrics();
@@ -35,7 +40,7 @@ function buildEngine(store: InMemoryOutboxStore, crashHook: CrashAfterSuccessHoo
   const writer = new DeliveryOutcomeWriter(
     store,
     clock,
-    new ExponentialBackoffCalculator({ baseDelayMs: 1000, maxDelayMs: 10000 }),
+    new ExponentialBackoffCalculator({ baseDelayMs: 1000, maxDelayMs: 10000 })
   );
   const coordinator = new DeliveryCoordinator(
     new SubscriberResolver(new SubscriberRegistry([subscriber])),
@@ -43,20 +48,14 @@ function buildEngine(store: InMemoryOutboxStore, crashHook: CrashAfterSuccessHoo
     new DeliveryOutcomeDecider(),
     writer,
     telemetry,
-    crashHook,
+    crashHook
   );
 
-  return new OutboxWorkerEngine(
-    store,
-    new BatchProcessor(coordinator, 1),
-    telemetry,
-    clock,
-    {
-      leaseOwnerId: 'worker-a',
-      batchSize: 10,
-      leaseDurationMs: 1000,
-    },
-  );
+  return new OutboxWorkerEngine(store, new BatchProcessor(coordinator, 1), telemetry, clock, {
+    leaseOwnerId: 'worker-a',
+    batchSize: 10,
+    leaseDurationMs: 1000,
+  });
 }
 
 describe('Crash window integration', () => {

@@ -1,4 +1,8 @@
-import type { DeliverOutboxRecordInput, IOutboxSubscriber, OutboxSubscriberRegistration } from '../contracts/IOutboxSubscriber.js';
+import type {
+  DeliverOutboxRecordInput,
+  IOutboxSubscriber,
+  OutboxSubscriberRegistration,
+} from '../contracts/IOutboxSubscriber.js';
 import type { DeliveryResult } from '../contracts/DeliveryResult.js';
 
 export interface IdempotentSink {
@@ -25,7 +29,7 @@ export class SetBasedIdempotentSink implements IdempotentSink {
 export class TestSubscriber implements IOutboxSubscriber {
   constructor(
     public readonly registration: OutboxSubscriberRegistration,
-    private readonly sink: IdempotentSink,
+    private readonly sink: IdempotentSink
   ) {}
 
   async deliver(input: DeliverOutboxRecordInput): Promise<DeliveryResult> {

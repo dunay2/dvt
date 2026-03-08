@@ -8,7 +8,7 @@ export class DeliveryOutcomeWriter {
   constructor(
     private readonly store: IOutboxStore,
     private readonly clock: IClock,
-    private readonly backoffCalculator: IBackoffCalculator,
+    private readonly backoffCalculator: IBackoffCalculator
   ) {}
 
   async write(record: ClaimedOutboxRecord, command: DeliveryCommand): Promise<void> {

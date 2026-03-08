@@ -19,7 +19,7 @@ export class OutboxWorkerEngine {
     private readonly batchProcessor: BatchProcessor,
     private readonly telemetry: DeliveryTelemetry,
     private readonly clock: IClock,
-    private readonly config: OutboxWorkerEngineConfig,
+    private readonly config: OutboxWorkerEngineConfig
   ) {}
 
   async processBatch(): Promise<BatchProcessingReport> {

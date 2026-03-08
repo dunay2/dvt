@@ -46,7 +46,9 @@ export interface WorkerHostDependencies {
   crashWindowTestHook: ICrashWindowTestHook;
 }
 
-export function createProductionHost(deps: Omit<WorkerHostDependencies, 'crashWindowTestHook'>): WorkerHostDependencies {
+export function createProductionHost(
+  deps: Omit<WorkerHostDependencies, 'crashWindowTestHook'>
+): WorkerHostDependencies {
   return {
     ...deps,
     crashWindowTestHook: new NoopCrashWindowTestHook(),
@@ -148,11 +150,7 @@ It must not calculate timestamps.
 
 ```ts
 export interface IBackoffCalculator {
-  computeNextAttempt(input: {
-    attemptNumber: number;
-    firstAttemptAt: Date;
-    now: Date;
-  }): Date;
+  computeNextAttempt(input: { attemptNumber: number; firstAttemptAt: Date; now: Date }): Date;
 }
 ```
 

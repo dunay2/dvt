@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { RunEventPersisted } from '../../src/contracts/runEvents.js';
 import { InMemoryOutboxStorage } from '../../src/outbox/InMemoryOutboxStorage.js';
 import { OutboxWorker } from '../../src/outbox/OutboxWorker.js';
-import type { IEventBus } from '../../src/outbox/types.js';
+import type { IEventBus, OutboxFailureDisposition, OutboxRecord } from '../../src/outbox/types.js';
 
 function makeEvent(id: string, runId = 'run-1', runSeq = 1): RunEventPersisted {
   return {
@@ -53,9 +53,15 @@ describe('OutboxWorker', () => {
 
     await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1), makeEvent('2', 'run-1', 2)]);
 
-    await worker.tick();
+    const result = await worker.tick();
 
     expect(bus.published).toHaveLength(2);
+    expect(result).toMatchObject({
+      claimedCount: 2,
+      deliveredCount: 2,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+    });
     await expect(store.listPending(10)).resolves.toHaveLength(0);
   });
 
@@ -116,5 +122,61 @@ describe('OutboxWorker', () => {
     expect(moved).toBe(1);
     await expect(store.listDeadLetter(10)).resolves.toHaveLength(0);
     await expect(store.listPending(10)).resolves.toHaveLength(1);
+  });
+
+  it('emits observer transitions for claim, delivery, retry, and dead-letter', async () => {
+    const now = { value: 0 };
+    const store = new InMemoryOutboxStorage({ nowMs: () => now.value });
+    const transitions: string[] = [];
+    const failures: Array<{ disposition: OutboxFailureDisposition; outboxId: string }> = [];
+    const observer = {
+      onBatchClaimed(records: readonly OutboxRecord[]) {
+        transitions.push(`claim:${records.length}`);
+      },
+      onRecordDelivered(record: OutboxRecord) {
+        transitions.push(`delivered:${record.id}`);
+      },
+      onRecordFailed(
+        record: OutboxRecord,
+        _error: string,
+        disposition: OutboxFailureDisposition
+      ) {
+        failures.push({ disposition, outboxId: record.id });
+      },
+    };
+
+    const retryThenSuccessBus = new FailFirstBus();
+    const retryWorker = new OutboxWorker(store, retryThenSuccessBus, {
+      batchSize: 10,
+      observer,
+      nowMs: () => now.value,
+    });
+
+    await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1), makeEvent('2', 'run-1', 2)]);
+    await retryWorker.tick();
+
+    expect(transitions).toContain('claim:2');
+    expect(transitions).toContain('delivered:outbox_2');
+    expect(failures).toContainEqual({ disposition: 'retry', outboxId: 'outbox_1' });
+
+    const dlqStore = new InMemoryOutboxStorage({ nowMs: () => now.value });
+    const alwaysFailBus: IEventBus = {
+      publish: async () => {
+        throw new Error('always fail');
+      },
+    };
+    const dlqWorker = new OutboxWorker(dlqStore, alwaysFailBus, {
+      batchSize: 10,
+      observer,
+      nowMs: () => now.value,
+    });
+    await dlqStore.enqueueTx('run-dlq', [makeEvent('3', 'run-dlq', 1)]);
+
+    for (let i = 0; i < 10; i += 1) {
+      now.value = 100_000 + i * 65_000;
+      await dlqWorker.tick();
+    }
+
+    expect(failures).toContainEqual({ disposition: 'dead_letter', outboxId: 'outbox_1' });
   });
 });

@@ -31,6 +31,26 @@ export interface DeadLetterRecord {
   deadLetteredAt: string;
 }
 
+export type OutboxFailureDisposition = 'retry' | 'dead_letter';
+
+export interface OutboxWorkerObserver {
+  onBatchClaimed?(records: readonly OutboxRecord[]): void | Promise<void>;
+  onRecordDelivered?(record: OutboxRecord): void | Promise<void>;
+  onRecordFailed?(
+    record: OutboxRecord,
+    error: string,
+    disposition: OutboxFailureDisposition
+  ): void | Promise<void>;
+}
+
+export interface OutboxTickResult {
+  claimedCount: number;
+  deliveredCount: number;
+  retriedCount: number;
+  deadLetteredCount: number;
+  oldestClaimedAgeMs: number | null;
+}
+
 /**
  * Maximum delivery attempts before an outbox record is dead-lettered.
  */

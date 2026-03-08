@@ -3,7 +3,10 @@ export interface IWakeupSignal {
 }
 
 export class TimerWakeupSignal implements IWakeupSignal {
-  async waitForWakeupOrTimeout(timeoutMs: number, signal: AbortSignal): Promise<'wakeup' | 'timeout'> {
+  async waitForWakeupOrTimeout(
+    timeoutMs: number,
+    signal: AbortSignal
+  ): Promise<'wakeup' | 'timeout'> {
     return new Promise<'timeout'>((resolve, reject) => {
       const timer = setTimeout(() => {
         cleanup();

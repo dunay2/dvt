@@ -94,7 +94,7 @@ The engine does **not**:
 export interface IBatchProcessor {
   processRecords(
     records: readonly OutboxRecord[],
-    signal: AbortSignal,
+    signal: AbortSignal
   ): Promise<BatchProcessingReport>;
 }
 ```
@@ -116,10 +116,7 @@ export interface DeliveryRecordReport {
 }
 
 export interface IDeliveryCoordinator {
-  processRecord(
-    record: OutboxRecord,
-    signal: AbortSignal,
-  ): Promise<DeliveryRecordReport>;
+  processRecord(record: OutboxRecord, signal: AbortSignal): Promise<DeliveryRecordReport>;
 }
 ```
 

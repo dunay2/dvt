@@ -6,10 +6,14 @@ export class SubscriberResolver {
   constructor(private readonly registry: SubscriberRegistry) {}
 
   resolve(record: ClaimedOutboxRecord): IOutboxSubscriber {
-    const subscriber = this.registry.get(record.topic, record.deliveryChannel, record.sideEffectKind);
+    const subscriber = this.registry.get(
+      record.topic,
+      record.deliveryChannel,
+      record.sideEffectKind
+    );
     if (subscriber === null) {
       throw new Error(
-        `no subscriber for tuple ${record.topic}/${record.deliveryChannel}/${record.sideEffectKind}`,
+        `no subscriber for tuple ${record.topic}/${record.deliveryChannel}/${record.sideEffectKind}`
       );
     }
 

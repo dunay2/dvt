@@ -1,9 +1,16 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import { OutboxWorker, type IEventBus, type IOutboxStorage } from '@dvt/engine';
+import {
+  OutboxWorker,
+  type IEventBus,
+  type IOutboxStorage,
+  type OutboxTickResult,
+  type OutboxWorkerObserver,
+} from '@dvt/engine';
 
 export interface OutboxWorkerRuntimeLogger {
   info(data: Record<string, unknown>, msg?: string): void;
+  warn?(data: Record<string, unknown>, msg?: string): void;
   error(data: Record<string, unknown>, msg?: string): void;
 }
 
@@ -12,9 +19,25 @@ export interface OutboxWorkerRuntimeOptions {
   stopOnError?: boolean;
   pollIntervalMs?: number;
   errorBackoffMs?: number;
+  observer?: OutboxWorkerObserver;
+  hooks?: OutboxWorkerRuntimeHooks;
 }
 
-const DEFAULT_OPTIONS: Required<OutboxWorkerRuntimeOptions> = {
+export interface OutboxWorkerRuntimeHooks {
+  onStarted?(): void;
+  onTick?(result: OutboxTickResult): void;
+  onError?(error: unknown): void;
+  onStopped?(): void;
+}
+
+type RuntimeTimingOptions = Required<
+  Pick<
+    OutboxWorkerRuntimeOptions,
+    'batchSize' | 'stopOnError' | 'pollIntervalMs' | 'errorBackoffMs'
+  >
+>;
+
+const DEFAULT_OPTIONS: RuntimeTimingOptions = {
   batchSize: 100,
   stopOnError: false,
   pollIntervalMs: 1000,
@@ -22,10 +45,11 @@ const DEFAULT_OPTIONS: Required<OutboxWorkerRuntimeOptions> = {
 };
 
 export class OutboxWorkerRuntime {
-  private readonly options: Required<OutboxWorkerRuntimeOptions>;
+  private readonly options: RuntimeTimingOptions;
   private readonly worker: OutboxWorker;
+  private readonly hooks: OutboxWorkerRuntimeHooks | undefined;
   private loopPromise: Promise<void> | null = null;
-  private waitController: AbortController | null = null;
+  private waitController: globalThis.AbortController | null = null;
   private running = false;
   private detachAbortListener: (() => void) | null = null;
 
@@ -35,14 +59,21 @@ export class OutboxWorkerRuntime {
     private readonly logger: OutboxWorkerRuntimeLogger,
     options: OutboxWorkerRuntimeOptions = {}
   ) {
-    this.options = { ...DEFAULT_OPTIONS, ...options };
+    this.options = {
+      batchSize: options.batchSize ?? DEFAULT_OPTIONS.batchSize,
+      stopOnError: options.stopOnError ?? DEFAULT_OPTIONS.stopOnError,
+      pollIntervalMs: options.pollIntervalMs ?? DEFAULT_OPTIONS.pollIntervalMs,
+      errorBackoffMs: options.errorBackoffMs ?? DEFAULT_OPTIONS.errorBackoffMs,
+    };
+    this.hooks = options.hooks;
     this.worker = new OutboxWorker(storage, bus, {
       batchSize: this.options.batchSize,
       stopOnError: this.options.stopOnError,
+      ...(options.observer ? { observer: options.observer } : {}),
     });
   }
 
-  start(signal?: AbortSignal): Promise<void> {
+  start(signal?: globalThis.AbortSignal): Promise<void> {
     if (this.loopPromise) return this.loopPromise;
     this.running = true;
 
@@ -51,7 +82,7 @@ export class OutboxWorkerRuntime {
         this.running = false;
         return Promise.resolve();
       }
-      const onAbort = () => {
+      const onAbort = (): void => {
         void this.stop();
       };
       signal.addEventListener('abort', onAbort, { once: true });
@@ -80,6 +111,7 @@ export class OutboxWorkerRuntime {
   }
 
   private async runLoop(): Promise<void> {
+    this.runHook('onStarted');
     this.logger.info(
       {
         batchSize: this.options.batchSize,
@@ -92,8 +124,10 @@ export class OutboxWorkerRuntime {
 
     while (this.running) {
       try {
-        await this.worker.tick();
+        const result = await this.worker.tick();
+        this.runHook('onTick', result);
       } catch (err) {
+        this.runHook('onError', err);
         this.logger.error(
           { err: toErrorLike(err), backoffMs: this.options.errorBackoffMs },
           'outbox worker tick failed'
@@ -107,11 +141,12 @@ export class OutboxWorkerRuntime {
       await this.wait(this.options.pollIntervalMs);
     }
 
+    this.runHook('onStopped');
     this.logger.info({}, 'outbox worker runtime stopped');
   }
 
   private async wait(delayMs: number): Promise<void> {
-    const controller = new AbortController();
+    const controller = new globalThis.AbortController();
     this.waitController = controller;
     try {
       await sleep(delayMs, undefined, { signal: controller.signal });
@@ -123,6 +158,24 @@ export class OutboxWorkerRuntime {
       if (this.waitController === controller) {
         this.waitController = null;
       }
+    }
+  }
+
+  private runHook(name: keyof OutboxWorkerRuntimeHooks, value?: OutboxTickResult | unknown): void {
+    const hook = this.hooks?.[name];
+    if (!hook) return;
+    try {
+      if (name === 'onTick') {
+        (hook as (result: OutboxTickResult) => void)(value as OutboxTickResult);
+        return;
+      }
+      if (name === 'onError') {
+        (hook as (error: unknown) => void)(value);
+        return;
+      }
+      (hook as () => void)();
+    } catch (err) {
+      this.logger.warn?.({ err: toErrorLike(err), hook: name }, 'outbox runtime hook failed');
     }
   }
 }

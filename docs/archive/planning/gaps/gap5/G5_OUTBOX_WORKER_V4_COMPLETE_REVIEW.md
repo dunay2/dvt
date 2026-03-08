@@ -15,17 +15,17 @@ This consolidated file contains:
 - the full **implementation-facing specifications** that were missing,
 - architecture, class design, security, quality, migration and roadmap sections.
 
-
-
 ---
 
 # README
 
 ---
+
 title: G5 Outbox Worker Independent — Complete Documentation Pack v4
 status: Draft for review
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # G5 Outbox Worker Independent — Complete Documentation Pack v4
@@ -39,13 +39,16 @@ This pack supersedes the previous draft sets by doing three things at once:
 ## Included documents
 
 ### Archive
+
 - `00-archive/G5_OUTBOX_WORKER_V2_FULL_REVIEW.md`
 - `00-archive/G5_OUTBOX_WORKER_V3_FULL_REVIEW.md`
 
 ### ADR
+
 - `01-adr/ADR-G5-001-independent-outbox-worker-v4.md`
 
 ### Specifications
+
 - `02-spec/SPEC-OUTBOX-DELIVERY-CONTRACTS.v4.md`
 - `02-spec/SPEC-OUTBOX-RUNTIME-CONTRACTS.v1.md`
 - `02-spec/SPEC-OUTBOX-ORDERING-LANES.v1.md`
@@ -53,23 +56,29 @@ This pack supersedes the previous draft sets by doing three things at once:
 - `02-spec/SPEC-OUTBOX-TYPES-POLICY.v1.md`
 
 ### Architecture
+
 - `03-architecture/ARCH-OUTBOX-RUNTIME.v4.md`
 - `03-architecture/ARCH-OUTBOX-CDC-COEXISTENCE.v1.md`
 - `03-architecture/ARCH-OUTBOX-POLLING-SQL.v1.md`
 
 ### Class design
+
 - `04-class-design/CLASS-DESIGN-OUTBOX-WORKER.v2.md`
 
 ### Quality
+
 - `05-quality/QUALITY-OUTBOX-WORKER.v2.md`
 
 ### Security
+
 - `06-security/SECURITY-OUTBOX-WORKER.v2.md`
 
 ### Migration
+
 - `07-migration/MIGRATION-PLAN-EXISTING-OUTBOX-WORKER.v1.md`
 
 ### Roadmap
+
 - `08-roadmap/ROADMAP-G5_OUTBOX_WORKER.v4.md`
 
 ## Baseline alignment with DVT+
@@ -121,16 +130,17 @@ Start with:
 
 The archive copies are kept only so that review history is not lost.
 
-
 ---
 
 # ARCHIVE — V2
 
 ---
+
 title: G5 Outbox Worker Independent — v2 Full Review
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # G5 Outbox Worker Independent — v2 Full Review
@@ -151,7 +161,7 @@ Se mantiene la decisión central:
 Pero se corrigen cuatro defectos:
 
 1. **modelo de errores mezclado**,
-2. **runtime incompleto**, 
+2. **runtime incompleto**,
 3. **ADR con planificación mezclada**,
 4. **evolución a CDC demasiado abstracta**.
 
@@ -234,7 +244,7 @@ export interface IOutboxSubscriber {
 ```ts
 export async function invokeSubscriber(
   subscriber: IOutboxSubscriber,
-  input: DeliverOutboxEventInput,
+  input: DeliverOutboxEventInput
 ): Promise<DeliveryResult> {
   try {
     return await subscriber.deliver(input);
@@ -364,13 +374,13 @@ Referencia: https://www.postgresql.org/docs/current/sql-listen.html
 
 ## 9. Política de outcomes
 
-| Outcome | Acción |
-|---|---|
-| `DELIVERED` | `markDelivered` |
-| `IGNORED` | `markIgnored` |
+| Outcome                                      | Acción               |
+| -------------------------------------------- | -------------------- |
+| `DELIVERED`                                  | `markDelivered`      |
+| `IGNORED`                                    | `markIgnored`        |
 | `RETRYABLE_FAILURE` con presupuesto restante | `markRetryScheduled` |
-| `RETRYABLE_FAILURE` sin presupuesto | `markDeadLettered` |
-| `TERMINAL_FAILURE` | `markDeadLettered` |
+| `RETRYABLE_FAILURE` sin presupuesto          | `markDeadLettered`   |
+| `TERMINAL_FAILURE`                           | `markDeadLettered`   |
 
 ## 10. CDC evolution sin romper contratos
 
@@ -492,16 +502,17 @@ La propuesta que sí sostengo es esta:
 
 Eso está por encima del estándar habitual no por ser más barroco, sino por ser más explícito en boundaries, operación y evolución.
 
-
 ---
 
 # ARCHIVE — V3
 
 ---
+
 title: G5 Outbox Worker V3 Full Review
 status: Draft for review
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # G5 Outbox Worker V3 Full Review
@@ -678,16 +689,17 @@ packages/@dvt/outbox-worker/
 - `p-limit`
   https://github.com/sindresorhus/p-limit
 
-
 ---
 
 # ADR
 
 ---
+
 title: ADR-G5-001 Independent Outbox Worker v4
 status: Proposed
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # ADR-G5-001 — Independent Outbox Worker
@@ -844,16 +856,17 @@ distributed protocol outside the current product need.
 - `ARCH-OUTBOX-RUNTIME.v4.md`
 - `MIGRATION-PLAN-EXISTING-OUTBOX-WORKER.v1.md`
 
-
 ---
 
 # SPEC — DELIVERY CONTRACTS
 
 ---
+
 title: SPEC-OUTBOX-DELIVERY-CONTRACTS v4
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # SPEC-OUTBOX-DELIVERY-CONTRACTS v4
@@ -886,7 +899,7 @@ It is intentionally concrete enough to implement.
 ```ts
 export type OutboxMessageId = string;
 export type TenantId = string;
-export type OutboxTopic = 
+export type OutboxTopic =
   | 'workflow.snapshot.project'
   | 'run.event.publish'
   | 'lineage.export.requested';
@@ -1058,13 +1071,15 @@ export interface DeliveryMutationAudit {
 export interface IOutboxStorePolling {
   claimUnorderedBatch(request: ClaimBatchRequest): Promise<readonly OutboxRecord[]>;
   claimLanes(request: ClaimLanesRequest): Promise<readonly string[]>;
-  claimLaneBatch(request: ClaimBatchRequest & { readonly laneKeys: readonly string[] }): Promise<readonly OutboxRecord[]>;
+  claimLaneBatch(
+    request: ClaimBatchRequest & { readonly laneKeys: readonly string[] }
+  ): Promise<readonly OutboxRecord[]>;
   markDelivered(messageId: OutboxMessageId, audit: DeliveryMutationAudit): Promise<void>;
   markIgnored(messageId: OutboxMessageId, audit: DeliveryMutationAudit): Promise<void>;
   markRetryScheduled(
     messageId: OutboxMessageId,
     nextAttemptAtIso: string,
-    audit: DeliveryMutationAudit,
+    audit: DeliveryMutationAudit
   ): Promise<void>;
   markDeadLettered(messageId: OutboxMessageId, audit: DeliveryMutationAudit): Promise<void>;
   releaseExpiredLaneLeases(nowIso: string, workerId?: string): Promise<number>;
@@ -1112,10 +1127,7 @@ export interface IOutboxWakeupSource {
 
 ```ts
 export interface ISubscriberInvoker {
-  invoke(
-    subscriber: IOutboxSubscriber,
-    input: DeliverOutboxEventInput,
-  ): Promise<DeliveryResult>;
+  invoke(subscriber: IOutboxSubscriber, input: DeliverOutboxEventInput): Promise<DeliveryResult>;
 }
 ```
 
@@ -1125,7 +1137,7 @@ Reference behavior:
 export class SubscriberInvoker implements ISubscriberInvoker {
   async invoke(
     subscriber: IOutboxSubscriber,
-    input: DeliverOutboxEventInput,
+    input: DeliverOutboxEventInput
   ): Promise<DeliveryResult> {
     try {
       return await subscriber.deliver(input);
@@ -1146,7 +1158,13 @@ export class SubscriberInvoker implements ISubscriberInvoker {
 export type DeliveryStoreCommand =
   | { kind: 'MARK_DELIVERED'; messageId: OutboxMessageId; receipt?: string }
   | { kind: 'MARK_IGNORED'; messageId: OutboxMessageId; reasonCode: string; detail?: string }
-  | { kind: 'MARK_RETRY_SCHEDULED'; messageId: OutboxMessageId; nextAttemptAtIso: string; reasonCode: string; detail?: string }
+  | {
+      kind: 'MARK_RETRY_SCHEDULED';
+      messageId: OutboxMessageId;
+      nextAttemptAtIso: string;
+      reasonCode: string;
+      detail?: string;
+    }
   | { kind: 'MARK_DEAD_LETTERED'; messageId: OutboxMessageId; reasonCode: string; detail?: string };
 
 export interface IDeliveryOutcomeDecider {
@@ -1154,7 +1172,7 @@ export interface IDeliveryOutcomeDecider {
     record: OutboxRecord,
     result: DeliveryResult,
     policy: DeliveryPolicy,
-    nowIso: string,
+    nowIso: string
   ): DeliveryStoreCommand;
 }
 ```
@@ -1175,16 +1193,17 @@ This specification does not define:
 - exactly-once semantics,
 - multi-subscriber fan-out.
 
-
 ---
 
 # SPEC — RUNTIME CONTRACTS
 
 ---
+
 title: SPEC-OUTBOX-RUNTIME-CONTRACTS v1
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # SPEC-OUTBOX-RUNTIME-CONTRACTS v1
@@ -1276,7 +1295,7 @@ The engine does **not**:
 export interface IBatchProcessor {
   processRecords(
     records: readonly OutboxRecord[],
-    signal: AbortSignal,
+    signal: AbortSignal
   ): Promise<BatchProcessingReport>;
 }
 ```
@@ -1298,10 +1317,7 @@ export interface DeliveryRecordReport {
 }
 
 export interface IDeliveryCoordinator {
-  processRecord(
-    record: OutboxRecord,
-    signal: AbortSignal,
-  ): Promise<DeliveryRecordReport>;
+  processRecord(record: OutboxRecord, signal: AbortSignal): Promise<DeliveryRecordReport>;
 }
 ```
 
@@ -1412,16 +1428,17 @@ for (;;) {
 `waitForWork` is a latency optimization. The next cycle must still poll the
 store rather than assuming the notification is authoritative.
 
-
 ---
 
 # SPEC — ORDERING LANES
 
 ---
+
 title: SPEC-OUTBOX-ORDERING-LANES v1
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # SPEC-OUTBOX-ORDERING-LANES v1
@@ -1607,16 +1624,17 @@ A topic must document one of these modes:
 
 That topic-level declaration is configuration, not runtime guesswork.
 
-
 ---
 
 # SPEC — IDEMPOTENCY
 
 ---
+
 title: SPEC-OUTBOX-IDEMPOTENCY v1
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # SPEC-OUTBOX-IDEMPOTENCY v1
@@ -1708,16 +1726,17 @@ Every subscriber package must include at least one integration test that proves:
 - duplicate delivery with the same `idempotencyKey` does not produce a second
   external side effect.
 
-
 ---
 
 # SPEC — TYPES POLICY
 
 ---
+
 title: SPEC-OUTBOX-TYPES-POLICY v1
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # SPEC-OUTBOX-TYPES-POLICY v1
@@ -1775,16 +1794,17 @@ not from nominal branding of strings.
 The worker package must not rely on `as any` to bridge identifier mismatches.
 Boundary mappers must be explicit.
 
-
 ---
 
 # ARCH — RUNTIME
 
 ---
+
 title: ARCH-OUTBOX-RUNTIME v4
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # ARCH-OUTBOX-RUNTIME v4
@@ -1902,10 +1922,7 @@ Responsibility: topic-to-subscriber resolution only.
 
 ```ts
 export interface ISubscriberInvoker {
-  invoke(
-    subscriber: IOutboxSubscriber,
-    input: DeliverOutboxEventInput,
-  ): Promise<DeliveryResult>;
+  invoke(subscriber: IOutboxSubscriber, input: DeliverOutboxEventInput): Promise<DeliveryResult>;
 }
 ```
 
@@ -1919,7 +1936,7 @@ export interface IDeliveryOutcomeDecider {
     record: OutboxRecord,
     result: DeliveryResult,
     policy: DeliveryPolicy,
-    nowIso: string,
+    nowIso: string
   ): DeliveryStoreCommand;
 }
 ```
@@ -1969,7 +1986,7 @@ export class DeliveryCoordinator implements IDeliveryCoordinator {
     private readonly decider: IDeliveryOutcomeDecider,
     private readonly writer: IDeliveryOutcomeWriter,
     private readonly telemetry: IDeliveryTelemetry,
-    private readonly clock: IClock,
+    private readonly clock: IClock
   ) {}
 
   async processRecord(record: OutboxRecord, signal: AbortSignal): Promise<DeliveryRecordReport> {
@@ -2008,9 +2025,7 @@ import pLimit from 'p-limit';
 
 const limit = pLimit(subscriber.maxConcurrency);
 
-const tasks = records.map((record) =>
-  limit(() => coordinator.processRecord(record, signal)),
-);
+const tasks = records.map((record) => limit(() => coordinator.processRecord(record, signal)));
 
 const settled = await Promise.allSettled(tasks);
 ```
@@ -2026,16 +2041,17 @@ This runtime does not:
 - guarantee monotonic processing across all topics,
 - hide CDC behind the polling store abstraction.
 
-
 ---
 
 # ARCH — CDC COEXISTENCE
 
 ---
+
 title: ARCH-OUTBOX-CDC-COEXISTENCE v1
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # ARCH-OUTBOX-CDC-COEXISTENCE v1
@@ -2104,6 +2120,7 @@ Recommended pattern:
 ### 5.2 Polling shadow while CDC is live
 
 Less likely for G5, but symmetrical:
+
 - CDC is live,
 - polling may read only canary topics or a shadow topic subset,
 - polling does not invoke production subscribers for live-owned topics.
@@ -2152,16 +2169,17 @@ This configuration is environment-scoped and must be visible to operators.
 Internal subscribers that depend on direct in-process invocation may remain on
 polling permanently. CDC is not mandatory for all topics.
 
-
 ---
 
 # ARCH — POLLING SQL
 
 ---
+
 title: ARCH-OUTBOX-POLLING-SQL v1
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # ARCH-OUTBOX-POLLING-SQL v1
@@ -2361,16 +2379,17 @@ where id = $1;
 - Claim lease expiry is required for crash recovery.
 - `LISTEN/NOTIFY` may reduce latency but does not replace these queries.
 
-
 ---
 
 # CLASS DESIGN
 
 ---
+
 title: CLASS-DESIGN-OUTBOX-WORKER v2
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # CLASS-DESIGN-OUTBOX-WORKER v2
@@ -2412,19 +2431,19 @@ packages/@dvt/outbox-worker/
 
 ## 2. Class responsibilities
 
-| Class | Responsibility | Must not own |
-|---|---|---|
-| `OutboxWorkerRuntime` | loop, backoff, wake-up, shutdown | record delivery rules |
-| `OutboxWorkerEngine` | claim unordered, claim lanes, claim lane records, aggregate batch report | sleep or process bootstrap |
-| `BatchProcessor` | dispatch records with correct concurrency model | store claiming |
-| `DeliveryCoordinator` | one-record orchestration | direct SQL or host lifecycle |
-| `SubscriberResolver` | topic lookup | invocation logic |
-| `SubscriberInvoker` | call subscriber, normalize throw | policy decision |
-| `DeliveryPolicyResolver` | resolve policy by topic | persistence |
-| `DeliveryOutcomeDecider` | result → store command | subscriber lookup |
-| `DeliveryOutcomeWriter` | apply store command | business outcome selection |
-| `DeliveryTelemetry` | metrics/logging/tracing for delivery | writeback policy |
-| `startWorkerHost` | wiring/startup | claim logic |
+| Class                    | Responsibility                                                           | Must not own                 |
+| ------------------------ | ------------------------------------------------------------------------ | ---------------------------- |
+| `OutboxWorkerRuntime`    | loop, backoff, wake-up, shutdown                                         | record delivery rules        |
+| `OutboxWorkerEngine`     | claim unordered, claim lanes, claim lane records, aggregate batch report | sleep or process bootstrap   |
+| `BatchProcessor`         | dispatch records with correct concurrency model                          | store claiming               |
+| `DeliveryCoordinator`    | one-record orchestration                                                 | direct SQL or host lifecycle |
+| `SubscriberResolver`     | topic lookup                                                             | invocation logic             |
+| `SubscriberInvoker`      | call subscriber, normalize throw                                         | policy decision              |
+| `DeliveryPolicyResolver` | resolve policy by topic                                                  | persistence                  |
+| `DeliveryOutcomeDecider` | result → store command                                                   | subscriber lookup            |
+| `DeliveryOutcomeWriter`  | apply store command                                                      | business outcome selection   |
+| `DeliveryTelemetry`      | metrics/logging/tracing for delivery                                     | writeback policy             |
+| `startWorkerHost`        | wiring/startup                                                           | claim logic                  |
 
 ## 3. Collaboration flow
 
@@ -2474,7 +2493,11 @@ export class DeliveryOutcomeWriter implements IDeliveryOutcomeWriter {
       case 'MARK_DELIVERED':
         return this.store.markDelivered(command.messageId, { ...audit, receipt: command.receipt });
       case 'MARK_IGNORED':
-        return this.store.markIgnored(command.messageId, { ...audit, reasonCode: command.reasonCode, detail: command.detail });
+        return this.store.markIgnored(command.messageId, {
+          ...audit,
+          reasonCode: command.reasonCode,
+          detail: command.detail,
+        });
       case 'MARK_RETRY_SCHEDULED':
         return this.store.markRetryScheduled(command.messageId, command.nextAttemptAtIso, {
           ...audit,
@@ -2500,7 +2523,7 @@ export class DeliveryOutcomeDecider implements IDeliveryOutcomeDecider {
     record: OutboxRecord,
     result: DeliveryResult,
     policy: DeliveryPolicy,
-    nowIso: string,
+    nowIso: string
   ): DeliveryStoreCommand {
     switch (result.kind) {
       case 'DELIVERED':
@@ -2523,7 +2546,8 @@ export class DeliveryOutcomeDecider implements IDeliveryOutcomeDecider {
         };
 
       case 'RETRYABLE_FAILURE': {
-        const remainingBudget = record.attemptCount < Math.min(record.maxAttempts, policy.maxAttempts);
+        const remainingBudget =
+          record.attemptCount < Math.min(record.maxAttempts, policy.maxAttempts);
         if (!remainingBudget) {
           return {
             kind: 'MARK_DEAD_LETTERED',
@@ -2567,16 +2591,17 @@ That is a practical SRP boundary, not dogmatic fragmentation.
 - host bootstrap hidden inside engine constructors,
 - store adapters deciding delivery policy.
 
-
 ---
 
 # QUALITY
 
 ---
+
 title: QUALITY-OUTBOX-WORKER v2
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # QUALITY-OUTBOX-WORKER v2
@@ -2680,16 +2705,17 @@ The package should not be considered ready until:
 4. metrics and health endpoints exist,
 5. migration canary test passes.
 
-
 ---
 
 # SECURITY
 
 ---
+
 title: SECURITY-OUTBOX-WORKER v2
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # SECURITY-OUTBOX-WORKER v2
@@ -2775,16 +2801,17 @@ At minimum verify:
 - sensitive configuration is not exposed in logs,
 - topic registration cannot be widened by untrusted runtime input.
 
-
 ---
 
 # MIGRATION
 
 ---
+
 title: MIGRATION-PLAN-EXISTING-OUTBOX-WORKER v1
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # MIGRATION-PLAN-EXISTING-OUTBOX-WORKER v1
@@ -2896,16 +2923,17 @@ Migration is complete only when:
 - observability dashboards point to the standalone worker,
 - old runtime code has either been removed or frozen outside normal execution.
 
-
 ---
 
 # ROADMAP
 
 ---
+
 title: ROADMAP-G5_OUTBOX_WORKER v4
 status: Draft
 owner: architecture
 last_reviewed: 2026-03-08
+
 ---
 
 # ROADMAP-G5_OUTBOX_WORKER v4

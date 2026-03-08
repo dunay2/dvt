@@ -11,7 +11,7 @@ export interface BatchProcessingReport {
 export class BatchProcessor {
   constructor(
     private readonly coordinator: DeliveryCoordinator,
-    private readonly maxConcurrency: number,
+    private readonly maxConcurrency: number
   ) {}
 
   async process(records: readonly ClaimedOutboxRecord[]): Promise<BatchProcessingReport> {

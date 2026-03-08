@@ -60,17 +60,17 @@ Exactly one production-active owner may exist for the same
 
 #### Allowed
 
-| Topic | Mechanism | Delivery channel | Side effect |
-|---|---|---|---|
-| workflow.run.events | polling | internal_projection | state_projection |
-| workflow.run.events | CDC | external_publication | event_bus_publish |
+| Topic               | Mechanism | Delivery channel     | Side effect       |
+| ------------------- | --------- | -------------------- | ----------------- |
+| workflow.run.events | polling   | internal_projection  | state_projection  |
+| workflow.run.events | CDC       | external_publication | event_bus_publish |
 
 #### Not allowed
 
-| Topic | Mechanism | Delivery channel | Side effect |
-|---|---|---|---|
-| workflow.run.events | polling | external_publication | event_bus_publish |
-| workflow.run.events | CDC | external_publication | event_bus_publish |
+| Topic               | Mechanism | Delivery channel     | Side effect       |
+| ------------------- | --------- | -------------------- | ----------------- |
+| workflow.run.events | polling   | external_publication | event_bus_publish |
+| workflow.run.events | CDC       | external_publication | event_bus_publish |
 
 ### 2.5 Shadow mode
 

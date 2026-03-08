@@ -9,7 +9,13 @@ export interface IOutboxWorkerMetrics {
 }
 
 export class NoopOutboxWorkerMetrics implements IOutboxWorkerMetrics {
-  incrementCounter(_name: string, _labels?: MetricLabels): void { return; }
-  observeDuration(_name: string, _durationMs: number, _labels?: MetricLabels): void { return; }
-  setGauge(_name: string, _value: number, _labels?: MetricLabels): void { return; }
+  incrementCounter(_name: string, _labels?: MetricLabels): void {
+    return;
+  }
+  observeDuration(_name: string, _durationMs: number, _labels?: MetricLabels): void {
+    return;
+  }
+  setGauge(_name: string, _value: number, _labels?: MetricLabels): void {
+    return;
+  }
 }

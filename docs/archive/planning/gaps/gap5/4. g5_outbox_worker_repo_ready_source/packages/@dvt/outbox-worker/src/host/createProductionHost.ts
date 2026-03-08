@@ -1,5 +1,8 @@
 import type { ILogger } from '../contracts/ILogger.js';
-import { NoopCrashWindowTestHook, type ICrashWindowTestHook } from '../contracts/ICrashWindowTestHook.js';
+import {
+  NoopCrashWindowTestHook,
+  type ICrashWindowTestHook,
+} from '../contracts/ICrashWindowTestHook.js';
 import type { OutboxWorkerRuntime } from '../runtime/OutboxWorkerRuntime.js';
 
 export interface ProductionWorkerHostDependencies {
