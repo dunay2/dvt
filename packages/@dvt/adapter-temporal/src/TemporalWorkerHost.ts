@@ -37,9 +37,14 @@ export interface TemporalWorkerHostConfig {
   stepExecutors?: readonly StepExecutor[];
 }
 
+interface WorkerRunState {
+  promise: Promise<void>;
+  exitResult: 'pending' | 'ok' | 'error';
+}
+
 export class TemporalWorkerHost {
   private worker: Worker | null = null;
-  private running: Promise<void> | null = null;
+  private runningState: WorkerRunState | null = null;
   private readonly observability: IObservability;
 
   constructor(private readonly config: TemporalWorkerHostConfig) {
@@ -86,10 +91,17 @@ export class TemporalWorkerHost {
           identity: this.config.temporalConfig.identity,
         });
 
-        let runPromise: Promise<void>;
-        runPromise = this.worker
+        const runState: WorkerRunState = {
+          promise: Promise.resolve(),
+          exitResult: 'pending',
+        };
+        runState.promise = this.worker
           .run()
+          .then(() => {
+            runState.exitResult = 'ok';
+          })
           .catch((error) => {
+            runState.exitResult = 'error';
             this.observability.metrics
               .counter(
                 'dvt.temporal.worker.run_exit_total',
@@ -107,9 +119,9 @@ export class TemporalWorkerHost {
             });
           })
           .finally(() => {
-            this.clearRunningState(runPromise);
+            this.clearRunningState(runState);
           });
-        this.running = runPromise;
+        this.runningState = runState;
       },
       onSuccess: () => ({
         result: 'ok',
@@ -135,8 +147,8 @@ export class TemporalWorkerHost {
   /** Gracefully drain in-flight work and stop polling. */
   async shutdown(): Promise<void> {
     const currentWorker = this.worker;
-    const currentRunning = this.running;
-    if (!currentWorker || !currentRunning) return;
+    const currentRun = this.runningState;
+    if (!currentWorker || !currentRun) return;
 
     const context = buildTemporalContext(this.config.temporalConfig);
     const attributes = {
@@ -155,12 +167,17 @@ export class TemporalWorkerHost {
       run: async () => {
         currentWorker.shutdown();
         try {
-          await currentRunning;
-          this.observability.metrics
-            .counter('dvt.temporal.worker.run_exit_total', buildTemporalMetricTags('runExit', 'ok'))
-            .add(1);
+          await currentRun.promise;
+          if (currentRun.exitResult === 'ok') {
+            this.observability.metrics
+              .counter(
+                'dvt.temporal.worker.run_exit_total',
+                buildTemporalMetricTags('runExit', 'ok')
+              )
+              .add(1);
+          }
         } finally {
-          this.clearRunningState(currentRunning);
+          this.clearRunningState(currentRun);
         }
       },
       onSuccess: () => ({
@@ -185,11 +202,11 @@ export class TemporalWorkerHost {
     return this.worker !== null;
   }
 
-  private clearRunningState(expectedPromise?: Promise<void>): void {
-    if (expectedPromise !== undefined && this.running !== expectedPromise) {
+  private clearRunningState(expectedRun?: WorkerRunState): void {
+    if (expectedRun !== undefined && this.runningState !== expectedRun) {
       return;
     }
     this.worker = null;
-    this.running = null;
+    this.runningState = null;
   }
 }

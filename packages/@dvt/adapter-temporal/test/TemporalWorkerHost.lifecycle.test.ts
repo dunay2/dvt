@@ -9,17 +9,21 @@ const {
   mockWorkerRun,
   mockWorkerShutdown,
   getLastCreateArgs,
+  rejectWorkerRun,
   resetWorkerRunPromise,
 } = vi.hoisted(() => {
   let lastCreateArgs: unknown = null;
   let resolveRun: (() => void) | null = null;
+  let rejectRun: ((error?: unknown) => void) | null = null;
 
   const resetWorkerRunPromise = (): void => {
     resolveRun = null;
+    rejectRun = null;
     mockWorkerRun.mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
+        new Promise<void>((resolve, reject) => {
           resolveRun = resolve;
+          rejectRun = reject;
         })
     );
     mockWorkerShutdown.mockImplementation(() => {
@@ -44,6 +48,7 @@ const {
     mockWorkerRun,
     mockWorkerShutdown,
     getLastCreateArgs: () => lastCreateArgs,
+    rejectWorkerRun: (error?: unknown) => rejectRun?.(error),
     resetWorkerRunPromise,
   };
 });
@@ -148,6 +153,11 @@ describe('TemporalWorkerHost lifecycle', () => {
       operation: 'shutdown',
       result: 'ok',
     });
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.worker.run_exit_total', {
+      adapter: 'temporal',
+      operation: 'runExit',
+      result: 'ok',
+    });
   });
 
   it('rejects double start', async () => {
@@ -198,6 +208,40 @@ describe('TemporalWorkerHost lifecycle', () => {
       result: 'error',
     });
     await host.shutdown();
+  });
+
+  it('does not emit run_exit ok when shutdown races with a worker run failure', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+    const { observability, metrics } = makeTrackingObservability();
+
+    mockWorkerShutdown.mockImplementation(() => {
+      rejectWorkerRun(new Error('WORKER_RUN_FAILED_DURING_SHUTDOWN'));
+    });
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: mkActivityDeps(),
+      observability,
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await host.start({} as never);
+    await host.shutdown();
+
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.worker.run_exit_total', {
+      adapter: 'temporal',
+      operation: 'runExit',
+      result: 'error',
+    });
+    expect(metrics.counter).not.toHaveBeenCalledWith('dvt.temporal.worker.run_exit_total', {
+      adapter: 'temporal',
+      operation: 'runExit',
+      result: 'ok',
+    });
   });
 
   it('is no-op on shutdown when never started', async () => {
