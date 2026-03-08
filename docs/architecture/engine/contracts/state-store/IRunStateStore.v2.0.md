@@ -6,6 +6,12 @@
 **Consumers**: Engine, adapters, projector pipelines  
 **Related Contracts**: [RunEvents.v2.0.md](../engine/RunEvents.v2.0.md), [ExecutionSemantics.v2.0.md](../engine/ExecutionSemantics.v2.0.md)
 
+> NOTE
+> This markdown file is retained as a historical contract snapshot.
+> The live state-store baseline is:
+> `overview.md`, `ADR-0013`, `packages/@dvt/engine/src/ports/IRunStateStore.ts`,
+> and `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`.
+
 ---
 
 ## 1) Scope

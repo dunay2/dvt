@@ -1,339 +1,348 @@
 # Postgres State Store Adapter
 
-**Status**: Implementation Guide  
-**Version**: 1.0  
-**Backend**: PostgreSQL 14+  
-**Contract**: [State Store Contract](../../../contracts/state-store/README.md)
+**Status**: Implementation Guide
+**Backend**: PostgreSQL 14+
+**Type**: Code-aligned documentation
+**Contract Entry Point**: [State Store Docs](../../../contracts/state-store/README.md)
+
+> WARNING
+> This guide documents the current adapter implementation.
+> The authoritative sources are:
+> `packages/@dvt/engine/src/ports/IRunStateStore.ts`,
+> `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`,
+> and accepted ADRs such as `ADR-0013`.
+> If this guide diverges from code or ADRs, code and ADRs win.
 
 ---
 
 ## Purpose
 
-This document specifies how to implement the [State Store Contract](../../../contracts/state-store/README.md) using **PostgreSQL** as the persistence backend.
+This document describes the current PostgreSQL implementation of the DVT+
+state-store boundary.
 
-**Key design decisions**:
+It is intentionally narrower than older adapter specs:
 
-- ✅ Use `SERIAL` or `SEQUENCE` for runSeq assignment (native atomic increment)
-- ✅ Enforce `UNIQUE` constraints at database level (vs Snowflake logical-only)
-- ✅ Use `JSONB` for flexible event schema evolution
-- ✅ Leverage `ON CONFLICT` for idempotent upserts
-- ✅ Use `GENERATED ALWAYS AS IDENTITY` for modern Postgres (v10+)
+- it documents the adapter that exists today;
+- it does not propose alternative physical designs;
+- it does not act as a generic Postgres event-sourcing cookbook.
 
----
+## Canonical Implementation References
 
-## 1) Physical Schema (DDL)
+- [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+- [`packages/@dvt/adapter-postgres/src/types.ts`](../../../../../packages/@dvt/adapter-postgres/src/types.ts)
+- [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
+- [`docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md`](../../../../../docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md)
 
-### 1.1 RUN_EVENTS Table
+## Runtime Baseline
 
-```sql
--- Core event log (append-only, source of truth)
-CREATE TABLE IF NOT EXISTS run_events (
-  -- Identity
-  run_id             TEXT          NOT NULL,
-  run_seq            BIGINT        NOT NULL,  -- Assigned by sequence or app logic
-  event_id           UUID          NOT NULL DEFAULT gen_random_uuid(),
+The adapter currently implements:
 
-  -- Step context
-  step_id            TEXT,
-  engine_attempt_id  TEXT,
-  logical_attempt_id TEXT,
+- `bootstrapRunTx`
+- `appendAndEnqueueTx`
+- `getRunMetadataByRunId`
+- `listRuns`
+- `listEvents`
+- `getSnapshot`
+- outbox worker storage methods:
+  `listPending`, `markDelivered`, `markFailed`, `listDeadLetter`,
+  `replayDeadLetters`
 
-  -- Event payload
-  event_type         TEXT          NOT NULL,
-  event_data         JSONB,
+The adapter must be explicitly migrated before use:
 
-  -- Idempotency & causality
-  idempotency_key    TEXT          NOT NULL,
-  caused_by_signal_id UUID,
-  parent_event_id    UUID,
-
-  -- Timestamps
-  emitted_at         TIMESTAMPTZ   NOT NULL,
-  persisted_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-
-  -- Metadata
-  adapter_version    TEXT,
-  engine_run_ref     JSONB,
-
-  -- Constraints
-  PRIMARY KEY (run_id, run_seq),
-  UNIQUE (run_id, idempotency_key)
-);
-
--- Indexes for common queries
-CREATE INDEX idx_run_events_runid_runseq ON run_events(run_id, run_seq);
-CREATE INDEX idx_run_events_idempotency ON run_events(run_id, idempotency_key);
-CREATE INDEX idx_run_events_eventtype ON run_events(event_type) WHERE event_type IN ('RunCompleted', 'RunFailed');
-
--- Comments
-COMMENT ON TABLE run_events IS 'Append-only event log (source of truth for all execution state)';
-COMMENT ON COLUMN run_events.run_seq IS 'Monotonic sequence per run_id (gaps allowed, assigned by append authority)';
-COMMENT ON COLUMN run_events.idempotency_key IS 'SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)';
+```ts
+const adapter = new PostgresStateStoreAdapter({ schema: 'dvt' });
+await adapter.migrate();
 ```
 
----
+Constructor-time DDL is intentionally disabled. Migration is a separate,
+idempotent step.
 
-## 2) Append Authority Implementation
+## Current Physical Objects
 
-### 2.1 Strategy A: Application-Managed Sequence
+The adapter manages five primary tables.
 
-**Use case**: Full control, easier to add business logic
+### `run_metadata`
 
-```typescript
-async function appendEvent(event: CanonicalEngineEvent): Promise<AppendResult> {
-  return await db.transaction(async (tx) => {
-    // Check idempotency
-    const existing = await tx.oneOrNone<{ run_seq: number }>(
-      `SELECT run_seq FROM run_events
-       WHERE run_id = $1 AND idempotency_key = $2`,
-      [event.runId, event.idempotencyKey]
-    );
+Purpose:
 
-    if (existing) {
-      return { runSeq: existing.run_seq, idempotent: true, persisted: false };
-    }
+- durable per-run metadata and provider references
 
-    // Get next runSeq
-    const { max_seq } = await tx.one<{ max_seq: number }>(
-      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq
-       FROM run_events
-       WHERE run_id = $1
-       FOR UPDATE`,  -- Lock to prevent race conditions
-      [event.runId]
-    );
+Key fields:
 
-    const newSeq = max_seq + 1;
+- `run_id` primary key
+- `tenant_id`
+- `project_id`
+- `environment_id`
+- `plan_id`
+- `plan_version`
+- provider reference fields
+- `created_at`
 
-    // Insert
-    await tx.none(
-      `INSERT INTO run_events (
-        run_id, run_seq, event_id, step_id, engine_attempt_id, logical_attempt_id,
-        event_type, event_data, idempotency_key, caused_by_signal_id, parent_event_id,
-        emitted_at, adapter_version, engine_run_ref
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
-      [event.runId, newSeq, event.eventId, ...]
-    );
+### `run_events`
 
-    return { runSeq: newSeq, idempotent: false, persisted: true };
-  });
-}
-```
+Purpose:
 
-### 2.2 Strategy B: Database Sequence (Advanced)
+- append-only persisted event log
 
-**Challenge**: Postgres sequences are global, not per-group (no "sequence per runId").
+Key fields:
 
-**Workaround**: Use a **sequence registry table**:
+- `run_id`
+- `run_seq`
+- `event_type`
+- `emitted_at`
+- `tenant_id`
+- `project_id`
+- `environment_id`
+- `engine_attempt_id`
+- `logical_attempt_id`
+- `plan_id`
+- `plan_version`
+- `persisted_at`
+- `step_id`
+- `idempotency_key`
+- `payload JSONB`
 
-```sql
--- Registry: one sequence per runId
-CREATE TABLE run_sequence_registry (
-  run_id TEXT PRIMARY KEY,
-  seq_name TEXT UNIQUE NOT NULL
-);
+Constraints:
 
--- Function: get or create sequence for runId
-CREATE OR REPLACE FUNCTION get_run_sequence(p_run_id TEXT)
-RETURNS TEXT AS $$
-DECLARE
-  v_seq_name TEXT;
-BEGIN
-  -- Check if sequence exists
-  SELECT seq_name INTO v_seq_name
-  FROM run_sequence_registry
-  WHERE run_id = p_run_id;
+- primary key `(run_id, run_seq)`
+- unique `(run_id, idempotency_key)`
 
-  IF v_seq_name IS NULL THEN
-    -- Create new sequence
-    v_seq_name := 'run_seq_' || REPLACE(p_run_id, '-', '_');
-    EXECUTE format('CREATE SEQUENCE IF NOT EXISTS %I', v_seq_name);
+### `outbox`
 
-    INSERT INTO run_sequence_registry (run_id, seq_name)
-    VALUES (p_run_id, v_seq_name);
-  END IF;
+Purpose:
 
-  RETURN v_seq_name;
-END;
-$$ LANGUAGE plpgsql;
+- transactional delivery queue for newly appended events
 
--- Usage: get next runSeq
-SELECT nextval(get_run_sequence('run-12345'));  -- Returns: 1, 2, 3, ...
-```
+Key fields:
 
-**Trade-off**:
+- `id` primary key, currently `<runId>:<runSeq>`
+- `run_id`
+- `run_seq`
+- `created_at`
+- `idempotency_key`
+- `payload JSONB`
+- `attempts`
+- `last_error`
+- `claimed_at`
+- `next_attempt_at`
+- `delivered_at`
 
-- ✅ True atomic increment (no locks needed)
-- ❌ Sequence proliferation (1 sequence per run, could be millions)
-- ⚠️ Cleanup required (drop sequences for archived runs)
+### `run_snapshots`
 
----
+Purpose:
 
-## 3) Idempotent Append (ON CONFLICT)
+- persisted hot-read snapshot materialized by the adapter itself
 
-```sql
--- Insert with idempotency (ON CONFLICT DO NOTHING)
-WITH new_event AS (
-  SELECT
-    $1::TEXT AS run_id,
-    COALESCE((SELECT MAX(run_seq) FROM run_events WHERE run_id = $1), 0) + 1 AS run_seq,
-    $2::UUID AS event_id,
-    $3::TEXT AS idempotency_key,
-    -- ... other fields
-)
-INSERT INTO run_events (run_id, run_seq, event_id, idempotency_key, ...)
-SELECT * FROM new_event
-ON CONFLICT (run_id, idempotency_key) DO NOTHING;
+Key fields:
 
--- Return result (existing or new runSeq)
-SELECT run_seq, (persisted_at < NOW() - INTERVAL '1 second') AS idempotent
-FROM run_events
-WHERE run_id = $1 AND idempotency_key = $2;
-```
+- `run_id` primary key
+- `snapshot JSONB`
+- `last_run_seq`
+- `updated_at`
 
-**Important**: Wrap in transaction with `FOR UPDATE` lock to prevent race conditions on `MAX(run_seq)`.
+### `outbox_dead_letter`
 
----
+Purpose:
 
-## 4) Fetch Events (Watermark Pattern)
+- exhausted outbox records retained for operator recovery flows
 
-```sql
--- Fetch events for projection (paginated, watermark-based)
-SELECT
-  run_id,
-  run_seq,
-  event_id,
-  step_id,
-  engine_attempt_id,
-  logical_attempt_id,
-  event_type,
-  event_data,
-  idempotency_key,
-  emitted_at,
-  persisted_at,
-  adapter_version,
-  engine_run_ref,
-  caused_by_signal_id,
-  parent_event_id
-FROM run_events
-WHERE run_id = $1
-  AND run_seq > $2  -- Watermark filter
-ORDER BY run_seq ASC
-LIMIT $3;
-```
+Key fields:
 
-**Index usage**: `idx_run_events_runid_runseq` (Index-only scan for most queries).
+- `id`
+- `original_id`
+- `run_id`
+- `payload JSONB`
+- `last_error`
+- `dead_lettered_at`
 
----
+## Migration Behavior
 
-## 5) Snapshot Projection
+`migrate()` currently:
 
-### 5.1 Materialized View (Auto-Refresh)
+- ensures the schema exists;
+- creates the five primary tables if missing;
+- adds compatibility columns such as `claimed_at`, `next_attempt_at`,
+  `plan_id`, `plan_version`, and `persisted_at` if they are absent;
+- removes obsolete compatibility artifacts such as an old redundant outbox
+  uniqueness constraint and stale indexes;
+- creates the active indexes used by the adapter.
 
-```sql
-CREATE MATERIALIZED VIEW run_snapshots AS
-SELECT
-  run_id,
-  MAX(run_seq) AS last_event_seq,
-  jsonb_build_object(
-    'runId', run_id,
-    'status', (
-      SELECT event_data->>'status'
-      FROM run_events e2
-      WHERE e2.run_id = e1.run_id
-        AND event_type IN ('RunStarted', 'RunCompleted', 'RunFailed')
-      ORDER BY run_seq DESC
-      LIMIT 1
-    ),
-    'steps', (
-      SELECT jsonb_object_agg(step_id, event_data)
-      FROM run_events e3
-      WHERE e3.run_id = e1.run_id AND event_type LIKE 'Step%'
-    )
-  ) AS snapshot_data
-FROM run_events e1
-GROUP BY run_id;
+Important active indexes:
 
--- Refresh (manual or via cron)
-REFRESH MATERIALIZED VIEW CONCURRENTLY run_snapshots;
-```
+- `outbox_pending_idx`
+- `outbox_dead_letter_run_id_idx`
+- `run_metadata_tenant_created_idx`
 
-### 5.2 Incremental Update (Trigger-Based)
+This guide does not duplicate the full DDL. The authoritative DDL lives in
+`PostgresStateStoreAdapter.ts`.
 
-```sql
--- Projector table
-CREATE TABLE run_snapshots (
-  run_id TEXT PRIMARY KEY,
-  status TEXT NOT NULL,
-  last_event_seq BIGINT NOT NULL,
-  snapshot_data JSONB NOT NULL,
-  projected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  version BIGINT DEFAULT 0
-);
+## Transaction Model
 
--- Trigger: update snapshot on new event
-CREATE OR REPLACE FUNCTION update_snapshot_trigger()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO run_snapshots (run_id, last_event_seq, snapshot_data, status)
-  VALUES (NEW.run_id, NEW.run_seq, project_snapshot(NEW.run_id), 'RUNNING')
-  ON CONFLICT (run_id) DO UPDATE SET
-    last_event_seq = GREATEST(run_snapshots.last_event_seq, NEW.run_seq),
-    snapshot_data = project_snapshot(NEW.run_id),
-    projected_at = NOW(),
-    version = run_snapshots.version + 1;
+The adapter has two canonical write paths.
 
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+### `bootstrapRunTx`
 
-CREATE TRIGGER trg_update_snapshot
-AFTER INSERT ON run_events
-FOR EACH ROW
-EXECUTE FUNCTION update_snapshot_trigger();
-```
+Single transaction that:
 
----
+1. sets tenant context,
+2. inserts `run_metadata`,
+3. appends the first events,
+4. updates `run_snapshots`,
+5. enqueues outbox rows for appended events.
 
-## 6) Performance Tuning
+Duplicate `run_id` fails deterministically as `RUN_ALREADY_EXISTS`.
 
-### 6.1 Partitioning (Large Workloads)
+### `appendAndEnqueueTx`
 
-```sql
--- Partition by run_id hash (distribute load)
-CREATE TABLE run_events (
-  -- ... columns
-) PARTITION BY HASH (run_id);
+Single transaction that:
 
-CREATE TABLE run_events_p0 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 0);
-CREATE TABLE run_events_p1 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 1);
-CREATE TABLE run_events_p2 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 2);
-CREATE TABLE run_events_p3 PARTITION OF run_events FOR VALUES WITH (MODULUS 4, REMAINDER 3);
-```
+1. resolves tenant from `run_metadata`,
+2. sets tenant context,
+3. appends events with idempotency handling,
+4. updates `run_snapshots`,
+5. enqueues outbox rows for newly appended events only.
 
-### 6.2 JSONB Indexing
+This is the main steady-state append path.
 
-```sql
--- Index on event_type (frequent filter)
-CREATE INDEX idx_run_events_event_type ON run_events USING BTREE(event_type);
+## Ordering And Idempotency
 
--- GIN index on event_data (full-text search)
-CREATE INDEX idx_run_events_event_data_gin ON run_events USING GIN(event_data);
-```
+Per-run ordering is implemented with a transaction-scoped advisory lock:
 
----
+- `pg_advisory_xact_lock(('x' || left(md5(runId), 16))::bit(64)::bigint)`
 
-## 7) Limitations & Trade-offs
+Within that lock, the adapter:
 
-| Aspect                         | Limitation                           | Mitigation                                          |
-| ------------------------------ | ------------------------------------ | --------------------------------------------------- |
-| **Sequence per run**           | Not natively supported               | Use application-side `MAX + 1` OR sequence registry |
-| **Contention on MAX(run_seq)** | High-frequency writers may conflict  | Use `FOR UPDATE` lock + retry logic                 |
-| **JSONB vs VARIANT**           | Less flexible than Snowflake VARIANT | Use jsonb_set() for schema evolution                |
+1. reads `MAX(run_seq)` for the run,
+2. assigns the next sequence values in memory,
+3. inserts each event with `ON CONFLICT (run_id, idempotency_key) DO NOTHING`.
 
----
+If an insert is skipped because the idempotency key already exists, the adapter
+reads the existing persisted payload and returns it in `deduped`.
 
-## Change Log
+The current adapter does not use:
 
-| Version | Date       | Change                                                   |
-| ------- | ---------- | -------------------------------------------------------- |
-| 1.0     | 2026-02-11 | Initial Postgres adapter (parallel to Snowflake adapter) |
+- one Postgres sequence per run;
+- trigger-based sequencing;
+- materialized-view refresh for snapshots.
+
+Older docs that describe those patterns should be treated as historical.
+
+## Snapshot Semantics
+
+The adapter performs snapshot write-through inside the same transaction as event
+append.
+
+Current behavior:
+
+- bootstrap creates or seeds a `PENDING` snapshot;
+- appended events are applied in memory through adapter-local event handlers;
+- the snapshot is upserted into `run_snapshots`;
+- `getSnapshot()` reads the persisted JSON snapshot;
+- when a snapshot is missing, callers are still expected to support replay
+  fallback via the higher-level state-store contract.
+
+This means the adapter currently uses a persisted table, not:
+
+- a materialized view;
+- a database trigger projector;
+- a standalone snapshot service.
+
+## Tenant Isolation
+
+Tenant isolation is enforced in two layers.
+
+### Query-layer scoping
+
+User-facing read methods use tenant predicates directly:
+
+- `getRunMetadataByRunId(tenantId, runId)`
+- `listRuns({ tenantId, ... })`
+- `listEvents(tenantId, runId, ...)`
+- `getSnapshot(tenantId, runId)`
+- dead-letter admin methods require `tenantId`
+
+Cross-tenant reads return empty or null results rather than leaking data.
+
+### Transaction-local tenant context
+
+Write transactions set `dvt.tenant_id` with `set_config(..., true)`:
+
+- `bootstrapRunTx`
+- `appendAndEnqueueTx`
+- `replayDeadLetters`
+
+This is the hook used when RLS policies are active. The setting is transaction
+local and does not leak across pooled connections.
+
+## Outbox Lifecycle
+
+The outbox implementation is part of the adapter, not a separate service.
+
+### Claiming pending work
+
+`listPending(limit)`:
+
+- selects undelivered rows whose retry time is due;
+- ignores rows still under claim lease;
+- orders by `created_at ASC`;
+- uses `FOR UPDATE SKIP LOCKED`;
+- sets `claimed_at` in the same transaction.
+
+Stale claims are considered expired after five minutes.
+
+### Success path
+
+`markDelivered(ids)`:
+
+- sets `delivered_at`;
+- clears `claimed_at`.
+
+### Failure path
+
+`markFailed(id, error)`:
+
+- increments `attempts`;
+- stores `last_error`;
+- computes exponential backoff via `next_attempt_at`;
+- clears `claimed_at`.
+
+When attempts reach `MAX_OUTBOX_ATTEMPTS` (currently `10`), the record is moved
+to `outbox_dead_letter` and deleted from `outbox`.
+
+### Recovery path
+
+`replayDeadLetters({ tenantId, runId?, ids?, limit? })`:
+
+- requires tenant scope;
+- re-inserts selected dead letters into `outbox`;
+- resets delivery state;
+- deletes replayed rows from `outbox_dead_letter`.
+
+## Deprecated Paths
+
+These methods still exist but are explicitly not the preferred baseline:
+
+- `saveRunMetadata`
+- `appendEventsTx`
+
+They bypass parts of the canonical atomic path and are documented in code as
+deprecated. New work should anchor on `bootstrapRunTx` and
+`appendAndEnqueueTx`.
+
+## Verification
+
+The most useful executable reference for this guide is the live integration
+suite:
+
+- [`packages/@dvt/adapter-postgres/test/smoke.test.ts`](../../../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
+
+That suite covers:
+
+- bootstrap atomicity;
+- idempotent append behavior;
+- snapshot write-through;
+- cancellation snapshot semantics;
+- outbox claim and delivery flow;
+- backoff and dead-letter behavior;
+- dead-letter replay;
+- tenant-scoped reads and admin operations.
