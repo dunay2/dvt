@@ -72,7 +72,7 @@ In time-skipping environment, prefer `execute()/result()` style where tests rely
 1. [`test:integration`](../../packages/@dvt/adapter-temporal/package.json) includes explicit build before test execution.
 2. [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) has a single teardown owner (`afterAll`) with no duplicate shutdown in test body.
 3. [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) fails fast with a targeted message if the workflow artifact is missing.
-4. `pnpm --filter @dvt/adapter-temporal test:integration` passes in CI/local with compiled workflow resolution.
+4. `pnpm test:adapter-temporal:integration` passes in CI/local with compiled workflow resolution.
 
 ---
 

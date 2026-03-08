@@ -5,24 +5,28 @@
  * @decision Section 2 — Worker lifecycle ownership is centralized in a single host
  * @decision Section 3 — Worker startup binds deterministic workflow + activities wiring
  * @consequence Temporal worker start/shutdown behavior remains predictable across integration and runtime paths
- * @version 1.0.0
- * @date 2026-02-21
+ * @version 1.1.0
+ * @date 2026-03-08
  */
 
+import type { IObservability } from '@dvt/observability';
 import { NativeConnection, Worker } from '@temporalio/worker';
 
 import type { ActivityDeps, StepExecutor } from './activities/stepActivities.js';
 import { createActivities } from './activities/stepActivities.js';
 import type { TemporalAdapterConfig } from './config.js';
-
-// ---------------------------------------------------------------------------
-
-// Configuration
-// ---------------------------------------------------------------------------
+import {
+  buildTemporalContext,
+  buildTemporalMetricTags,
+  resolveTemporalObservability,
+  runObservedTemporalOperation,
+  toErrorMessage,
+} from './temporalObservability.js';
 
 export interface TemporalWorkerHostConfig {
   temporalConfig: TemporalAdapterConfig;
   activityDeps: ActivityDeps;
+  observability?: IObservability;
   /** Override for testing; defaults to bundling RunPlanWorkflow. */
   workflowsPath?: string;
   /**
@@ -33,15 +37,19 @@ export interface TemporalWorkerHostConfig {
   stepExecutors?: readonly StepExecutor[];
 }
 
-// ---------------------------------------------------------------------------
-// WorkerHost — manages Temporal Worker lifecycle
-// ---------------------------------------------------------------------------
+interface WorkerRunState {
+  promise: Promise<void>;
+  exitResult: 'pending' | 'ok' | 'error';
+}
 
 export class TemporalWorkerHost {
   private worker: Worker | null = null;
-  private running: Promise<void> | null = null;
+  private runningState: WorkerRunState | null = null;
+  private readonly observability: IObservability;
 
-  constructor(private readonly config: TemporalWorkerHostConfig) {}
+  constructor(private readonly config: TemporalWorkerHostConfig) {
+    this.observability = resolveTemporalObservability(config.observability);
+  }
 
   /**
    * Create the Temporal Worker and start polling.
@@ -52,32 +60,153 @@ export class TemporalWorkerHost {
       throw new Error('TEMPORAL_WORKER_ALREADY_STARTED');
     }
 
+    const context = buildTemporalContext(this.config.temporalConfig);
     const activities = createActivities(this.config.activityDeps, this.config.stepExecutors);
-
-    this.worker = await Worker.create({
-      connection,
+    const attributes = {
       namespace: this.config.temporalConfig.namespace,
-      taskQueue: this.config.temporalConfig.taskQueue,
-      workflowsPath: this.config.workflowsPath ?? require.resolve('./workflows/RunPlanWorkflow'),
-      activities,
-      identity: this.config.temporalConfig.identity,
-    });
+      identity: this.config.temporalConfig.identity ?? '',
+    };
 
-    // worker.run() blocks until shutdown; store the promise
-    this.running = this.worker.run();
+    await runObservedTemporalOperation({
+      observability: this.observability,
+      context,
+      spanName: 'temporal.worker.start',
+      spanAttributes: attributes,
+      counterName: 'dvt.temporal.worker.started_total',
+      durationName: 'dvt.temporal.worker.start.duration_ms',
+      metricOperation: 'start',
+      run: async () => {
+        this.observability.logs.info({
+          msg: 'Starting Temporal worker host',
+          context,
+          attributes,
+        });
+        this.worker = await Worker.create({
+          connection,
+          namespace: this.config.temporalConfig.namespace,
+          taskQueue: this.config.temporalConfig.taskQueue,
+          workflowsPath:
+            this.config.workflowsPath ?? require.resolve('./workflows/RunPlanWorkflow'),
+          activities,
+          identity: this.config.temporalConfig.identity,
+        });
+
+        const runState: WorkerRunState = {
+          promise: Promise.resolve(),
+          exitResult: 'pending',
+        };
+        runState.promise = this.worker
+          .run()
+          .then(() => {
+            runState.exitResult = 'ok';
+          })
+          .catch((error) => {
+            runState.exitResult = 'error';
+            this.observability.metrics
+              .counter(
+                'dvt.temporal.worker.run_exit_total',
+                buildTemporalMetricTags('runExit', 'error')
+              )
+              .add(1);
+            this.observability.logs.error({
+              msg: 'Temporal worker exited with error',
+              context,
+              err: error,
+              attributes: {
+                namespace: this.config.temporalConfig.namespace,
+                error: toErrorMessage(error),
+              },
+            });
+          })
+          .finally(() => {
+            this.clearRunningState(runState);
+          });
+        this.runningState = runState;
+      },
+      onSuccess: () => ({
+        result: 'ok',
+        logMessage: 'Temporal worker host started',
+        logLevel: 'info',
+        logAttributes: attributes,
+      }),
+      onError: (error) => {
+        this.clearRunningState();
+        return {
+          result: 'error',
+          logMessage: 'Temporal worker host failed to start',
+          logLevel: 'error',
+          logAttributes: {
+            namespace: this.config.temporalConfig.namespace,
+            error: toErrorMessage(error),
+          },
+        };
+      },
+    });
   }
 
   /** Gracefully drain in-flight work and stop polling. */
   async shutdown(): Promise<void> {
-    if (!this.worker) return;
+    const currentWorker = this.worker;
+    const currentRun = this.runningState;
+    if (!currentWorker || !currentRun) return;
 
-    this.worker.shutdown();
-    await this.running;
-    this.worker = null;
-    this.running = null;
+    const context = buildTemporalContext(this.config.temporalConfig);
+    const attributes = {
+      namespace: this.config.temporalConfig.namespace,
+      identity: this.config.temporalConfig.identity ?? '',
+    };
+
+    await runObservedTemporalOperation({
+      observability: this.observability,
+      context,
+      spanName: 'temporal.worker.shutdown',
+      spanAttributes: attributes,
+      counterName: 'dvt.temporal.worker.shutdown_total',
+      durationName: 'dvt.temporal.worker.shutdown.duration_ms',
+      metricOperation: 'shutdown',
+      run: async () => {
+        currentWorker.shutdown();
+        try {
+          await currentRun.promise;
+          if (currentRun.exitResult === 'ok') {
+            this.observability.metrics
+              .counter(
+                'dvt.temporal.worker.run_exit_total',
+                buildTemporalMetricTags('runExit', 'ok')
+              )
+              .add(1);
+          }
+        } finally {
+          this.clearRunningState(currentRun);
+        }
+      },
+      onSuccess: () => ({
+        result: 'ok',
+        logMessage: 'Temporal worker host shut down',
+        logLevel: 'info',
+        logAttributes: attributes,
+      }),
+      onError: (error) => ({
+        result: 'error',
+        logMessage: 'Temporal worker host shutdown failed',
+        logLevel: 'error',
+        logAttributes: {
+          namespace: this.config.temporalConfig.namespace,
+          error: toErrorMessage(error),
+        },
+      }),
+    });
   }
 
   isRunning(): boolean {
     return this.worker !== null;
+  }
+
+  private clearRunningState(expectedRun?: WorkerRunState): void {
+    if (expectedRun !== undefined && this.runningState !== expectedRun) {
+      return;
+    }
+    this.worker = null;
+    this.runningState = null;
   }
 }

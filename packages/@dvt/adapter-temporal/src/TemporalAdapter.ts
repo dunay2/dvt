@@ -2,13 +2,13 @@
  * @file packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0003: Execution Model
- * @baseline ADR-0030: Pre-Dispatch Intent Log — lookupRunRef for PENDING intent reconciliation
- * @decision Section 3 — Provider adapter delegates run lifecycle to Temporal workflow primitives
- * @decision Section 5 — Status reconstruction uses persisted events + projector for deterministic snapshots
- * @decision ADR-0030 §3.3 — lookupRunRef derives workflowId from runId and probes Temporal to detect orphans
+ * @baseline ADR-0030: Pre-Dispatch Intent Log - lookupRunRef for PENDING intent reconciliation
+ * @decision Section 3 - Provider adapter delegates run lifecycle to Temporal workflow primitives
+ * @decision Section 5 - Status reconstruction uses persisted events + projector for deterministic snapshots
+ * @decision ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans
  * @consequence Temporal provider operations remain deterministic and aligned with engine lifecycle semantics
- * @version 1.1.0
- * @date 2026-03-04
+ * @version 1.2.0
+ * @date 2026-03-08
  */
 import {
   type EngineRunRef,
@@ -26,6 +26,7 @@ import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
+import { withAbortSignalTimeout, withTimeoutMs } from './temporalObservability.js';
 import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
 
 interface WorkflowHandleLike {
@@ -47,6 +48,7 @@ interface WorkflowClientLike {
     workflowId: string;
     firstExecutionRunId?: string;
   }>;
+  withAbortSignal?<R>(abortSignal: globalThis.AbortSignal, fn: () => Promise<R>): Promise<R>;
   getHandle(workflowId: string): WorkflowHandleLike;
 }
 
@@ -121,7 +123,7 @@ export class TemporalAdapter implements IProviderAdapter {
 
   async getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot> {
     const validatedRunRef = parseEngineRunRef(runRef);
-    // Operational authority is persisted projection, not Workflow query state.
+    // Operational authority is persisted projection, not workflow query state.
     const events = await this.deps.stateStore.listEvents(
       validatedRunRef.tenantId,
       validatedRunRef.runId
@@ -144,7 +146,7 @@ export class TemporalAdapter implements IProviderAdapter {
         return;
       case 'CANCEL':
         // Canonicalize cancellation on the provider-native cancel path so both
-        // `cancelRun()` and `signal(CANCEL)` follow the same execution semantics.
+        // cancelRun() and signal(CANCEL) follow the same execution semantics.
         await workflow.cancel();
         return;
       case 'RETRY_STEP':
@@ -162,32 +164,23 @@ export class TemporalAdapter implements IProviderAdapter {
   }
 
   /**
-   * ADR-0030 §3.3 — Probes the Temporal server to determine whether a workflow
+   * ADR-0030 section 3.3 - Probes the Temporal server to determine whether a workflow
    * for the given runId exists, without requiring a stored EngineRunRef.
    *
    * Used by RunMaintenanceService.reconcileOrphanedIntents() to detect the crash
    * scenario where adapter.startRun() returned successfully but markDispatched()
-   * was never called (process died between steps 5 and 6 in ADR-0030 §3.2).
-   *
-   * workflowId derivation mirrors startRun() exactly (toTemporalWorkflowId(runId)),
-   * so the same deterministic mapping used to create the workflow is used to find it.
+   * was never called.
    *
    * Returns null when the workflow does not exist on the Temporal server.
-   * Propagates any non-"not found" error (network failure, auth error, etc.).
+   * Propagates any non-not-found error (network failure, auth error, etc.).
    */
   async lookupRunRef(runId: string, tenantId: string): Promise<EngineRunRef | null> {
     const workflowId = toTemporalWorkflowId(runId);
     const taskQueue = toTemporalTaskQueue(tenantId, this.deps.config);
     const client = await this.getClient();
-
+    const handle = client.getHandle(workflowId);
     try {
-      // Apply requestTimeoutMs so a slow/unresponsive Temporal server does not
-      // block the reconciliation sweep indefinitely (ADR-0030 §3.4 threshold note).
-      await withTimeoutMs(
-        client.getHandle(workflowId).describe(),
-        this.deps.config.requestTimeoutMs,
-        'lookupRunRef.describe'
-      );
+      await this.describeWithTimeout(client, handle);
       return toTemporalRunRef({
         tenantId,
         workflowId,
@@ -195,11 +188,11 @@ export class TemporalAdapter implements IProviderAdapter {
         config: this.deps.config,
         taskQueue,
       });
-    } catch (err) {
-      if (isWorkflowNotFound(err)) {
+    } catch (error) {
+      if (isWorkflowNotFound(error)) {
         return null;
       }
-      throw err;
+      throw error;
     }
   }
 
@@ -208,14 +201,17 @@ export class TemporalAdapter implements IProviderAdapter {
    * Called by WorkflowEngine.healthCheck() to report adapter liveness.
    */
   async ping(): Promise<void> {
-    if (!this.deps.clientManager) {
-      // workflowClient injected directly (test mode) — treat as up.
+    const clientManager = this.deps.clientManager;
+
+    if (!clientManager) {
+      // workflowClient injected directly (test mode) - treat as up.
       return;
     }
-    if (!this.deps.clientManager.isConnected()) {
+
+    if (!clientManager.isConnected()) {
       throw new Error('TEMPORAL_CLIENT_NOT_CONNECTED');
     }
-    await this.deps.clientManager.ensureConnected();
+    await clientManager.ensureConnected();
   }
 
   private async getClient(): Promise<WorkflowClientLike> {
@@ -230,44 +226,42 @@ export class TemporalAdapter implements IProviderAdapter {
     }
     return this.deps.clientManager.getClient().client.workflow;
   }
+
+  private async describeWithTimeout(
+    client: WorkflowClientLike,
+    handle: WorkflowHandleLike
+  ): Promise<void> {
+    // Real Temporal workflow clients expose BaseClient.withAbortSignal().
+    // Prefer that path so lookup probes stop the underlying RPC on timeout.
+    if (typeof client.withAbortSignal === 'function') {
+      await withAbortSignalTimeout(
+        (signal) => client.withAbortSignal!(signal, () => handle.describe()),
+        this.deps.config.requestTimeoutMs,
+        'lookupRunRef.describe'
+      );
+      return;
+    }
+
+    // Test doubles and minimal injected clients may not implement SDK helpers.
+    await withTimeoutMs(
+      handle.describe(),
+      this.deps.config.requestTimeoutMs,
+      'lookupRunRef.describe'
+    );
+  }
 }
 
 /**
  * Detects "workflow not found" responses from the Temporal server.
  *
- * The Temporal TypeScript SDK (≥1.x) throws WorkflowNotFoundError (name ===
- * 'WorkflowNotFoundError') when describe() is called on a non-existent workflow.
- * Older SDK versions may surface a ServiceError with gRPC status NOT_FOUND (code 5).
- * Both are treated as "not found" so the adapter is robust across SDK patch versions.
+ * The Temporal TypeScript SDK throws WorkflowNotFoundError when describe() is
+ * called on a non-existent workflow. Older SDK versions may surface a
+ * ServiceError with gRPC status NOT_FOUND (code 5). Both are treated as "not
+ * found" so the adapter stays robust across SDK patch versions.
  */
-function isWorkflowNotFound(err: unknown): boolean {
-  if (!(err instanceof Error)) return false;
-  if (err.name === 'WorkflowNotFoundError') return true;
-  // gRPC NOT_FOUND = 5; ServiceError from older @temporalio/client versions
-  const asRecord = err as unknown as Record<string, unknown>;
-  return err.name === 'ServiceError' && asRecord['code'] === 5;
-}
-
-/**
- * Races a promise against a timeout.
- * Rejects with a descriptive error when the timeout fires first.
- * The timer is always cleared on settlement to avoid keeping the event loop alive.
- *
- * Limitation: the underlying operation (e.g. describe()) is not cancelled when
- * the timeout fires — @temporalio/client 1.14.x does not expose AbortSignal on
- * handle.describe(). The in-flight gRPC call will eventually complete or time out
- * at the SDK/network level. Track cancellation support for a future SDK upgrade.
- */
-async function withTimeoutMs<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error(`${label} timed out after ${ms}ms`));
-    }, ms);
-  });
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutId !== undefined) clearTimeout(timeoutId);
-  }
+function isWorkflowNotFound(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === 'WorkflowNotFoundError') return true;
+  const asRecord = error as unknown as Record<string, unknown>;
+  return error.name === 'ServiceError' && asRecord['code'] === 5;
 }

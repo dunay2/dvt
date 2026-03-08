@@ -26,7 +26,7 @@ import { describe, expect, it } from 'vitest';
 
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
-import type { EngineRunRef, PlanRef, RunContext } from '../../src/contracts/types.js';
+import type { PlanRef, RunContext } from '../../src/contracts/types.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -101,11 +101,18 @@ function makeRunContext(runId: string): RunContext {
 // ---------------------------------------------------------------------------
 
 describe('Planner → Engine cross-package contract test', () => {
+  interface EngineTestStack {
+    engine: WorkflowEngine;
+    store: InMemoryTxStore;
+    clock: SequenceClock;
+    idempotency: IdempotencyKeyBuilder;
+  }
+
   /**
    * Creates the full infrastructure stack: store, projector, clock,
    * idempotency, MockAdapter, WorkflowEngine.
    */
-  function createStack(enginePlan: ExecutionPlan) {
+  function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const idempotency = new IdempotencyKeyBuilder();
@@ -142,7 +149,20 @@ describe('Planner → Engine cross-package contract test', () => {
     clock: SequenceClock,
     meta: { runId: string; planId: string; planVersion: string },
     eventType: 'RunStarted' | 'RunCompleted' | 'RunFailed'
-  ) {
+  ): {
+    eventId: string;
+    eventType: 'RunStarted' | 'RunCompleted' | 'RunFailed';
+    emittedAt: string;
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    runId: string;
+    planId: string;
+    planVersion: string;
+    engineAttemptId: number;
+    logicalAttemptId: number;
+    idempotencyKey: string;
+  } {
     return {
       eventId: idempotency.eventId(),
       eventType,
@@ -174,7 +194,21 @@ describe('Planner → Engine cross-package contract test', () => {
     meta: { runId: string; planId: string; planVersion: string },
     stepId: string,
     eventType: 'StepStarted' | 'StepCompleted' | 'StepFailed'
-  ) {
+  ): {
+    eventId: string;
+    eventType: 'StepStarted' | 'StepCompleted' | 'StepFailed';
+    emittedAt: string;
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    runId: string;
+    planId: string;
+    planVersion: string;
+    engineAttemptId: number;
+    logicalAttemptId: number;
+    stepId: string;
+    idempotencyKey: string;
+  } {
     return {
       eventId: idempotency.eventId(),
       eventType,
@@ -223,7 +257,7 @@ describe('Planner → Engine cross-package contract test', () => {
 
     // Verify topological ordering: dependencies come before dependents
     const stepIds = plannerPlan.steps.map((s) => s.stepId);
-    const indexOf = (id: string) => stepIds.indexOf(id);
+    const indexOf = (id: string): number => stepIds.indexOf(id);
     expect(indexOf('staging.orders')).toBeLessThan(indexOf('mart.revenue'));
     expect(indexOf('mart.revenue')).toBeLessThan(indexOf('test.revenue_not_null'));
 

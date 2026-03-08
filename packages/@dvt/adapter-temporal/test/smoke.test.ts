@@ -1,21 +1,43 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  ObservedTemporalAdapter,
+  TemporalAdapter,
+  TemporalClientManager,
+  loadTemporalAdapterConfig,
+  mapTemporalStatusToRunStatus,
+  toRunStatusSnapshot,
+  toTemporalRunRef,
+  toTemporalTaskQueue,
+  toTemporalWorkflowId,
+} from '../src/index.js';
+
+import { makeTrackingObservability } from './helpers/mockObservability.js';
+
 const {
-  mockEnsureConnected: _mockEnsureConnected,
+  mockEnsureConnected,
   mockClose: _mockClose,
   mockConnectionConnect,
+  mockWithAbortSignal,
 } = vi.hoisted(() => {
   const mockEnsureConnected = vi.fn(async () => undefined);
   const mockClose = vi.fn(async () => undefined);
+  const mockWithAbortSignal = vi.fn(
+    async (_signal: globalThis.AbortSignal, fn: () => Promise<unknown>) => {
+      return await fn();
+    }
+  );
   const mockConnectionConnect = vi.fn(async () => ({
     ensureConnected: mockEnsureConnected,
     close: mockClose,
+    withAbortSignal: mockWithAbortSignal,
   }));
 
   return {
     mockEnsureConnected,
     mockClose,
     mockConnectionConnect,
+    mockWithAbortSignal,
   };
 });
 
@@ -32,16 +54,6 @@ vi.mock('@temporalio/client', () => {
     Client,
   };
 });
-
-import {
-  TemporalClientManager,
-  loadTemporalAdapterConfig,
-  mapTemporalStatusToRunStatus,
-  toRunStatusSnapshot,
-  toTemporalRunRef,
-  toTemporalTaskQueue,
-  toTemporalWorkflowId,
-} from '../src/index.js';
 
 describe('adapter-temporal foundation', () => {
   it('does not read ambient process.env when explicit env is provided', () => {
@@ -120,11 +132,13 @@ describe('adapter-temporal foundation', () => {
       TEMPORAL_NAMESPACE: 'ns-a',
       TEMPORAL_TASK_QUEUE: 'q-main',
     });
+    const tenantId = 'tenant1';
 
-    const taskQueue = toTemporalTaskQueue('tenant1', cfg);
+    const taskQueue = toTemporalTaskQueue(tenantId, cfg);
     expect(taskQueue).toBe('q-main-tenant1');
 
     const runRef = toTemporalRunRef({
+      tenantId,
       workflowId: 'wf-1',
       runId: 'trun-1',
       config: cfg,
@@ -133,6 +147,7 @@ describe('adapter-temporal foundation', () => {
 
     expect(runRef).toEqual({
       provider: 'temporal',
+      tenantId: 'tenant1',
       namespace: 'ns-a',
       workflowId: 'wf-1',
       runId: 'trun-1',
@@ -163,6 +178,86 @@ describe('adapter-temporal foundation', () => {
     expect(manager.isConnected()).toBe(false);
   });
 
+  it('passes connectTimeoutMs to the SDK connect call and emits connect failure observability', async () => {
+    mockConnectionConnect.mockRejectedValueOnce(new Error('CONNECT_DEADLINE_EXCEEDED'));
+
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_CONNECT_TIMEOUT_MS: '20',
+    });
+
+    const { observability, logs, metrics } = makeTrackingObservability();
+    const manager = new TemporalClientManager(cfg, observability);
+
+    await expect(manager.connect()).rejects.toThrow('CONNECT_DEADLINE_EXCEEDED');
+    expect(mockConnectionConnect).toHaveBeenCalledWith({
+      address: 'temporal:7233',
+      connectTimeout: 20,
+    });
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.client.connect_total', {
+      adapter: 'temporal',
+      operation: 'connect',
+      result: 'error',
+    });
+    expect(logs.error).toHaveBeenCalled();
+  });
+
+  it('emits health-check metrics for ensureConnected', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+    });
+
+    const { observability, metrics } = makeTrackingObservability();
+    const manager = new TemporalClientManager(cfg, observability);
+
+    await manager.connect();
+    await manager.ensureConnected();
+
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.client.ensure_connected_total', {
+      adapter: 'temporal',
+      operation: 'ensureConnected',
+      result: 'ok',
+    });
+
+    await manager.close();
+  });
+
+  it('aborts ensureConnected with requestTimeoutMs instead of leaving the RPC hanging', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_REQUEST_TIMEOUT_MS: '20',
+    });
+
+    const { observability, logs, metrics } = makeTrackingObservability();
+    const manager = new TemporalClientManager(cfg, observability);
+
+    await manager.connect();
+
+    mockEnsureConnected.mockImplementationOnce(() => new Promise<never>(() => undefined));
+    mockWithAbortSignal.mockImplementationOnce(
+      async (signal: globalThis.AbortSignal, fn: () => Promise<unknown>) =>
+        await new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('CANCELLED')), { once: true });
+          void fn().then(resolve, reject);
+        })
+    );
+
+    await expect(manager.ensureConnected()).rejects.toThrow(
+      'temporal.ensureConnected timed out after 20ms'
+    );
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.client.ensure_connected_total', {
+      adapter: 'temporal',
+      operation: 'ensureConnected',
+      result: 'error',
+    });
+    expect(logs.error).toHaveBeenCalled();
+
+    await manager.close();
+  });
+
   it('returns same promise/handle for concurrent connect calls', async () => {
     const cfg = loadTemporalAdapterConfig({
       TEMPORAL_ADDRESS: 'temporal:7233',
@@ -176,5 +271,35 @@ describe('adapter-temporal foundation', () => {
     expect(h1.client).toBe(h2.client);
 
     await manager.close();
+  });
+
+  it('exports the observed adapter wrapper for ping observability', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+    });
+
+    const { observability, logs, metrics } = makeTrackingObservability();
+    const adapter = new ObservedTemporalAdapter({
+      adapter: new TemporalAdapter({
+        clientManager: {
+          isConnected: () => false,
+          ensureConnected: vi.fn(async () => undefined),
+        } as never,
+        config: cfg,
+        stateStore: { listEvents: vi.fn(async () => []) },
+        projector: { rebuild: vi.fn() },
+      }),
+      config: cfg,
+      observability,
+    });
+
+    await expect(adapter.ping()).rejects.toThrow('TEMPORAL_CLIENT_NOT_CONNECTED');
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.ping_total', {
+      adapter: 'temporal',
+      operation: 'ping',
+      result: 'error',
+    });
+    expect(logs.error).toHaveBeenCalled();
   });
 });

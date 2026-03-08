@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { defaultCardinalityPolicy, validateMetricLabels } from '../src/policy/cardinalityPolicy';
 
 describe('validateMetricLabels', () => {

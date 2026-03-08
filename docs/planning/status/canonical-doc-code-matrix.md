@@ -2,7 +2,7 @@
 title: Canonical Doc Code Matrix
 status: Active
 owner: docs
-last_reviewed: 2026-03-07
+last_reviewed: 2026-03-08
 planning_type: status
 ---
 
@@ -75,8 +75,10 @@ Use it to answer three practical questions quickly:
   [packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts](../../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts)
 - Evidence:
   [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md)
+  and
+  [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md)
 - Verification:
-  `pnpm test:adapter-temporal`
+  `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`
 
 ### Postgres state store
 
