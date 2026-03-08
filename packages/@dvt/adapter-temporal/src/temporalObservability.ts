@@ -173,3 +173,25 @@ export async function withTimeoutMs<T>(promise: Promise<T>, ms: number, label: s
     if (timeoutId !== undefined) clearTimeout(timeoutId);
   }
 }
+
+export async function withAbortSignalTimeout<T>(
+  run: (signal: AbortSignal) => Promise<T>,
+  ms: number,
+  label: string
+): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, ms);
+
+  try {
+    return await run(controller.signal);
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`${label} timed out after ${ms}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}

@@ -14,24 +14,26 @@ import {
 
 import { makeTrackingObservability } from './helpers/mockObservability.js';
 
-const {
-  mockEnsureConnected: _mockEnsureConnected,
-  mockClose: _mockClose,
-  mockConnectionConnect,
-} = vi.hoisted(() => {
+const { mockEnsureConnected, mockClose: _mockClose, mockConnectionConnect, mockWithAbortSignal } =
+  vi.hoisted(() => {
   const mockEnsureConnected = vi.fn(async () => undefined);
   const mockClose = vi.fn(async () => undefined);
+  const mockWithAbortSignal = vi.fn(async (_signal: AbortSignal, fn: () => Promise<unknown>) => {
+    return await fn();
+  });
   const mockConnectionConnect = vi.fn(async () => ({
     ensureConnected: mockEnsureConnected,
     close: mockClose,
+    withAbortSignal: mockWithAbortSignal,
   }));
 
-  return {
-    mockEnsureConnected,
-    mockClose,
-    mockConnectionConnect,
-  };
-});
+    return {
+      mockEnsureConnected,
+      mockClose,
+      mockConnectionConnect,
+      mockWithAbortSignal,
+    };
+  });
 
 vi.mock('@temporalio/client', () => {
   class Client {
@@ -170,8 +172,8 @@ describe('adapter-temporal foundation', () => {
     expect(manager.isConnected()).toBe(false);
   });
 
-  it('enforces connectTimeoutMs and emits connect failure observability', async () => {
-    mockConnectionConnect.mockImplementationOnce(() => new Promise<never>(() => undefined));
+  it('passes connectTimeoutMs to the SDK connect call and emits connect failure observability', async () => {
+    mockConnectionConnect.mockRejectedValueOnce(new Error('CONNECT_DEADLINE_EXCEEDED'));
 
     const cfg = loadTemporalAdapterConfig({
       TEMPORAL_ADDRESS: 'temporal:7233',
@@ -182,7 +184,11 @@ describe('adapter-temporal foundation', () => {
     const { observability, logs, metrics } = makeTrackingObservability();
     const manager = new TemporalClientManager(cfg, observability);
 
-    await expect(manager.connect()).rejects.toThrow('temporal.connect timed out after 20ms');
+    await expect(manager.connect()).rejects.toThrow('CONNECT_DEADLINE_EXCEEDED');
+    expect(mockConnectionConnect).toHaveBeenCalledWith({
+      address: 'temporal:7233',
+      connectTimeout: 20,
+    });
     expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.client.connect_total', {
       adapter: 'temporal',
       operation: 'connect',
@@ -208,6 +214,40 @@ describe('adapter-temporal foundation', () => {
       operation: 'ensureConnected',
       result: 'ok',
     });
+
+    await manager.close();
+  });
+
+  it('aborts ensureConnected with requestTimeoutMs instead of leaving the RPC hanging', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_REQUEST_TIMEOUT_MS: '20',
+    });
+
+    const { observability, logs, metrics } = makeTrackingObservability();
+    const manager = new TemporalClientManager(cfg, observability);
+
+    await manager.connect();
+
+    mockEnsureConnected.mockImplementationOnce(() => new Promise<never>(() => undefined));
+    mockWithAbortSignal.mockImplementationOnce(
+      async (signal: AbortSignal, fn: () => Promise<unknown>) =>
+        await new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('CANCELLED')), { once: true });
+          void fn().then(resolve, reject);
+        })
+    );
+
+    await expect(manager.ensureConnected()).rejects.toThrow(
+      'temporal.ensureConnected timed out after 20ms'
+    );
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.client.ensure_connected_total', {
+      adapter: 'temporal',
+      operation: 'ensureConnected',
+      result: 'error',
+    });
+    expect(logs.error).toHaveBeenCalled();
 
     await manager.close();
   });

@@ -24,7 +24,7 @@ Minimum tuple for this document:
 - `status_doc`: [`docs/architecture/system-delivery-status.md`](system-delivery-status.md)
 - `code_paths`: summarized by module here; curated paths live in [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
 - `test_paths`: summarized by module here; exact tests live in [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) and linked evidence docs
-- `verification_cmd`: `pnpm test:engine`, `pnpm test:adapter-postgres`, `pnpm test:adapter-temporal`, `pnpm validate:contracts`
+- `verification_cmd`: `pnpm test:engine`, `pnpm test:adapter-postgres`, `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`, `pnpm validate:contracts`
 - `evidence_or_risk`: use linked evidence docs for closed gaps and risk-register entries for open hardening debt
 
 ---
@@ -229,18 +229,18 @@ TRACSVC --> OL_MAP
 
 ## Gaps crÃ­ticos por fase
 
-| #   | Gap                                                               | MÃ³dulo afectado                   | Estado                                                                                                 | Fase      |
-| --- | ----------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- |
-| G1  | **Temporal Adapter real** (SDK, namespace, tasks, `lookupRunRef`) | `adapter-temporal`                 | ? Closed ? runtime hardening, client timeout enforcement, and operational diagnostics implemented      | Phase 1   |
-| G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | âœ… Cerrado â€” `listEvents(options)` con `afterSeq`/`limit` âœ… Â· `listRuns` con filtro `status` âœ… | Phase 1   |
-| G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliaciÃ³n  | `engine`                           | âœ… Cerrado â€” store Postgres + reconciler worker + wiring runtime                                    | Phase 1   |
-| G4  | **compiledCodeRef ownership** â€” decisiÃ³n de arquitectura       | planner / traceability             | âœ… Cerrado â€” ADR-0032 implementado extremo a extremo                                                | Phase 1   |
-| G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | ðŸŸ¡ Parcial â€” worker core y storage APIs existen; falta runtime standalone y shards                 | Phase 1.5 |
-| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | ðŸŸ¡ Parcial â€” mapper/resolver/tests existen; falta pin de spec y hardening de CI                    | Phase 1.5 |
-| G7  | **Read Models** + proyector standalone                            | state-store / infra                | ðŸŸ¡ Parcial â€” `SnapshotProjector` in-process existe; faltan servicio/read models                    | Phase 1.5 |
-| G8  | **Auth real** en `apps/api`                                       | api                                | âŒ Pendiente                                                                                           | Phase 1.5 |
-| G9  | **StepTypeRegistry** + tipado `stepTypeConfig`                    | planner / engine                   | âŒ Pendiente                                                                                           | Phase 2   |
-| G10 | **outbox_lineage Worker** + fail-open DLQ                         | traceability-service               | âŒ Pendiente                                                                                           | Phase 2   |
+| #   | Gap                                                               | MÃ³dulo afectado                   | Estado                                                                                                                               | Fase      |
+| --- | ----------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| G1  | **Temporal Adapter real** (SDK, namespace, tasks, `lookupRunRef`) | `adapter-temporal`                 | ? Closed ? runtime hardening implemented and verified by unit + time-skipping integration; residual load evidence tracked separately | Phase 1   |
+| G2  | **PostgresStateStoreAdapter** completo                            | `state-store` / `adapter-postgres` | âœ… Cerrado â€” `listEvents(options)` con `afterSeq`/`limit` âœ… Â· `listRuns` con filtro `status` âœ…                               | Phase 1   |
+| G3  | **IStartRunIntentStore Postgres** + scheduler de reconciliaciÃ³n  | `engine`                           | âœ… Cerrado â€” store Postgres + reconciler worker + wiring runtime                                                                  | Phase 1   |
+| G4  | **compiledCodeRef ownership** â€” decisiÃ³n de arquitectura       | planner / traceability             | âœ… Cerrado â€” ADR-0032 implementado extremo a extremo                                                                              | Phase 1   |
+| G5  | **Outbox Worker** (polling independiente, shards)                 | infra + engine                     | ðŸŸ¡ Parcial â€” worker core y storage APIs existen; falta runtime standalone y shards                                               | Phase 1.5 |
+| G6  | **OL translation tests CI** + `_schemaURL` spec pin               | traceability-service               | ðŸŸ¡ Parcial â€” mapper/resolver/tests existen; falta pin de spec y hardening de CI                                                  | Phase 1.5 |
+| G7  | **Read Models** + proyector standalone                            | state-store / infra                | ðŸŸ¡ Parcial â€” `SnapshotProjector` in-process existe; faltan servicio/read models                                                  | Phase 1.5 |
+| G8  | **Auth real** en `apps/api`                                       | api                                | âŒ Pendiente                                                                                                                         | Phase 1.5 |
+| G9  | **StepTypeRegistry** + tipado `stepTypeConfig`                    | planner / engine                   | âŒ Pendiente                                                                                                                         | Phase 2   |
+| G10 | **outbox_lineage Worker** + fail-open DLQ                         | traceability-service               | âŒ Pendiente                                                                                                                         | Phase 2   |
 
 ---
 

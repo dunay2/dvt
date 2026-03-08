@@ -80,14 +80,15 @@ Minimum tuple for this document:
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`, `packages/@dvt/adapter-temporal/src/TemporalClient.ts`, `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
   - `test_paths`: `packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts`, `packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts`, `packages/@dvt/adapter-temporal/test/smoke.test.ts`, `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
-  - `verification_cmd`: `pnpm test:adapter-temporal`
-  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md), [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md)
+  - `verification_cmd`: `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`
+  - `evidence_or_risk`: [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/ED-20260304-temporal-lookup-run-ref.md), [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md), [R-20260308 - Temporal runtime hardening residuals](../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
 - Delivered:
   - `lookupRunRef` implemented
   - unit tests for exists/not-found/error paths
   - `TemporalWorkerHost` lifecycle quality gate added (start once, no-op shutdown, deterministic Worker.create wiring)
   - time-skipping integration suite exists for success/failure/cancel/gateway/crash-recovery paths
   - dedicated PR quality gate runs `adapter-temporal test:integration`
+  - runtime closure command now requires both unit and time-skipping integration coverage
   - `connectTimeoutMs` now actively bounds Temporal client connection attempts
   - worker host start/shutdown/unexpected exit now emit logs, traces, and metrics
   - `lookupRunRef()` and `ping()` now emit provider-side operational diagnostics

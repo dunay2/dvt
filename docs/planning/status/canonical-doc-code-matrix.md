@@ -78,7 +78,7 @@ Use it to answer three practical questions quickly:
   and
   [ED-20260308 - Temporal adapter operational close-out](../../evidence/ED-20260308-temporal-operational-close-out.md)
 - Verification:
-  `pnpm test:adapter-temporal`
+  `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`
 
 ### Postgres state store
 

@@ -13,11 +13,11 @@ import { Client, Connection } from '@temporalio/client';
 import type { TemporalAdapterConfig } from './config.js';
 import {
   buildTemporalContext,
+  withAbortSignalTimeout,
   buildTemporalMetricTags,
   resolveTemporalObservability,
   runObservedTemporalOperation,
   toErrorMessage,
-  withTimeoutMs,
 } from './temporalObservability.js';
 
 export interface TemporalClientHandle {
@@ -66,11 +66,10 @@ export class TemporalClientManager {
           attributes,
         });
 
-        const connection = await withTimeoutMs(
-          Connection.connect({ address: this.config.address }),
-          this.config.connectTimeoutMs,
-          'temporal.connect'
-        );
+        const connection = await Connection.connect({
+          address: this.config.address,
+          connectTimeout: this.config.connectTimeoutMs,
+        });
         const client = new Client({
           connection,
           namespace: this.config.namespace,
@@ -124,7 +123,8 @@ export class TemporalClientManager {
   }
 
   async ensureConnected(): Promise<void> {
-    if (!this.handle) {
+    const current = this.handle;
+    if (!current) {
       throw new Error('TEMPORAL_CLIENT_NOT_CONNECTED');
     }
 
@@ -141,8 +141,9 @@ export class TemporalClientManager {
       durationName: 'dvt.temporal.client.ensure_connected.duration_ms',
       metricOperation: 'ensureConnected',
       run: async () => {
-        await withTimeoutMs(
-          this.handle!.connection.ensureConnected(),
+        await withAbortSignalTimeout(
+          (signal) =>
+            current.connection.withAbortSignal(signal, () => current.connection.ensureConnected()),
           this.config.requestTimeoutMs,
           'temporal.ensureConnected'
         );

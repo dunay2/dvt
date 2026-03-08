@@ -18,6 +18,7 @@ evidence:
     - packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts
     - packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
     - packages/@dvt/adapter-temporal/test/smoke.test.ts
+    - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
   code:
     - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
     - packages/@dvt/adapter-temporal/src/TemporalClient.ts
@@ -37,8 +38,8 @@ This evidence closes the remaining Phase 1 hardening work for the Temporal adapt
 ## Delivered Changes
 
 1. Client timeout policy is active, not declarative only.
-   - `connectTimeoutMs` now bounds `Connection.connect()`.
-   - `requestTimeoutMs` now bounds client liveness checks through `ensureConnected()`.
+   - `connectTimeoutMs` now configures the Temporal SDK native connect deadline.
+   - `requestTimeoutMs` now bounds client liveness checks through abortable `ensureConnected()` calls.
 2. Worker host operational diagnostics are implemented.
    - structured logs on start, success, failure, and shutdown
    - counters and duration histograms
@@ -51,18 +52,20 @@ This evidence closes the remaining Phase 1 hardening work for the Temporal adapt
    - client timeout and health-check tests
    - worker observability and failure-path tests
    - `lookupRunRef()` observability assertions
+   - time-skipping integration coverage remains part of runtime closure verification
 
 ## Acceptance Notes
 
 - Build: `pnpm --filter @dvt/adapter-temporal build`
-- Tests: `pnpm --filter @dvt/adapter-temporal test`
-- Package result: build green, unit suite green, no remaining Phase 1 implementation gaps in `@dvt/adapter-temporal`
+- Runtime closure verification: `pnpm test:adapter-temporal` and `pnpm test:adapter-temporal:integration`
+- Package result: build green, unit suite green, integration suite green, no remaining Phase 1 implementation gaps in `@dvt/adapter-temporal`
 
 ## Residual Follow-up
 
 - Sustained load evidence for Temporal worker defaults should be gathered from integration or production-like telemetry, not from unit tests.
 - `AbortSignal` support for `describe()` remains dependent on Temporal SDK capabilities and is not a blocker for Phase 1 closure.
 - Cross-adapter timeout harmonization can proceed as a separate consistency pass; it no longer blocks the Temporal adapter itself.
+- Residual operational risk is tracked in `docs/risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md`.
 
 ## Closure Decision
 
