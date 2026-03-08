@@ -199,11 +199,7 @@ export class GraphBuilder {
     return { dependentsById: index.build(), edgeCount: index.edgeCount };
   }
 
-  private registerNodeEdges(
-    node: GraphNode,
-    registry: NodeRegistry,
-    index: AdjacencyIndex
-  ): void {
+  private registerNodeEdges(node: GraphNode, registry: NodeRegistry, index: AdjacencyIndex): void {
     for (const dep of node.dependsOn) {
       this.assertDependencyExists(node, dep, registry);
       index.recordEdge(node.nodeId, dep);

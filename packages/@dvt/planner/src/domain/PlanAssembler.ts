@@ -39,8 +39,11 @@ export class PlanAssembler {
     const inputHashSha256 = await this.computeInputHash(command.normalizedInput);
     const planCore = this.buildPlanCore(command.normalizedSteps, inputHashSha256);
 
-    const { canonical: canonicalPlanJson, sha256: planId, bytes } =
-      await sha256CanonicalJson(planCore);
+    const {
+      canonical: canonicalPlanJson,
+      sha256: planId,
+      bytes,
+    } = await sha256CanonicalJson(planCore);
 
     if (bytes > command.maxPlanSizeBytes) {
       throwLimitExceeded(`maxPlanSizeBytes exceeded: ${bytes} > ${command.maxPlanSizeBytes}`);

@@ -111,9 +111,7 @@ app.get<{
   Reply: NodeStateResponse;
 }>(
   '/runs/:runId/node-state',
-  async (
-    req: FastifyRequest<{ Params: RunIdParams }>
-  ): Promise<NodeStateResponse> => {
+  async (req: FastifyRequest<{ Params: RunIdParams }>): Promise<NodeStateResponse> => {
     const { runId } = req.params;
     const res = await wiring.pg
       .getPool()
@@ -131,61 +129,59 @@ app.get<{
 
 app.get<{ Params: RunIdParams }>(
   '/runs/:runId/stream',
-  async (
-    req: FastifyRequest<{ Params: RunIdParams }>,
-    reply: FastifyReply
-  ) => {
-  const { runId } = req.params;
-  sseHeaders(reply);
+  async (req: FastifyRequest<{ Params: RunIdParams }>, reply: FastifyReply) => {
+    const { runId } = req.params;
+    sseHeaders(reply);
 
-  // Parse last event ID for catchup
-  const lastId = req.headers['last-event-id'];
-  const afterSeq = typeof lastId === 'string' ? Number(lastId) : 0;
-  const safeAfterSeq = Number.isFinite(afterSeq) && afterSeq >= 0 ? afterSeq : 0;
+    // Parse last event ID for catchup
+    const lastId = req.headers['last-event-id'];
+    const afterSeq = typeof lastId === 'string' ? Number(lastId) : 0;
+    const safeAfterSeq = Number.isFinite(afterSeq) && afterSeq >= 0 ? afterSeq : 0;
 
-  // Send catchup events
-  const catchup = await fetchRunEventsAfter(
-    wiring.pg.getPool(),
-    runId,
-    safeAfterSeq,
-    config.sse.catchupLimit
-  );
+    // Send catchup events
+    const catchup = await fetchRunEventsAfter(
+      wiring.pg.getPool(),
+      runId,
+      safeAfterSeq,
+      config.sse.catchupLimit
+    );
 
-  for (const event of catchup) {
-    sseSend(reply, {
-      id: String(event.seq),
-      event: event.type,
-      data: { runId, seq: event.seq, ts: event.ts, payload: event.payload },
+    for (const event of catchup) {
+      sseSend(reply, {
+        id: String(event.seq),
+        event: event.type,
+        data: { runId, seq: event.seq, ts: event.ts, payload: event.payload },
+      });
+    }
+
+    // Track last sent sequence
+    const lastCatchupEvent = catchup.at(-1);
+    let lastSentSeq = lastCatchupEvent ? lastCatchupEvent.seq : safeAfterSeq;
+
+    // Subscribe to live updates
+    const unsub = wiring.hub.subscribe(runId, (evt) => {
+      if (evt.seq <= lastSentSeq) return;
+      lastSentSeq = evt.seq;
+      sseSend(reply, { id: String(evt.seq), event: evt.type, data: evt });
     });
+
+    // Heartbeat to keep connection alive
+    const heartbeat = setInterval(() => {
+      sseSend(reply, {
+        event: 'heartbeat',
+        data: { runId, ts: new Date().toISOString() },
+      });
+    }, config.sse.heartbeatMs);
+
+    // Cleanup on disconnect
+    req.raw.on('close', () => {
+      clearInterval(heartbeat);
+      unsub();
+    });
+
+    return reply;
   }
-
-  // Track last sent sequence
-  const lastCatchupEvent = catchup.at(-1);
-  let lastSentSeq = lastCatchupEvent ? lastCatchupEvent.seq : safeAfterSeq;
-
-  // Subscribe to live updates
-  const unsub = wiring.hub.subscribe(runId, (evt) => {
-    if (evt.seq <= lastSentSeq) return;
-    lastSentSeq = evt.seq;
-    sseSend(reply, { id: String(evt.seq), event: evt.type, data: evt });
-  });
-
-  // Heartbeat to keep connection alive
-  const heartbeat = setInterval(() => {
-    sseSend(reply, {
-      event: 'heartbeat',
-      data: { runId, ts: new Date().toISOString() },
-    });
-  }, config.sse.heartbeatMs);
-
-  // Cleanup on disconnect
-  req.raw.on('close', () => {
-    clearInterval(heartbeat);
-    unsub();
-  });
-
-  return reply;
-});
+);
 
 // ========================================
 // Graceful Shutdown

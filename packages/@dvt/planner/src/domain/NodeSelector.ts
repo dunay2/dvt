@@ -56,10 +56,7 @@ export class NodeSelector {
     }
   }
 
-  private expandReachable(
-    getNeighbors: (id: string) => readonly string[],
-    out: Set<string>
-  ): void {
+  private expandReachable(getNeighbors: (id: string) => readonly string[], out: Set<string>): void {
     const stack = [...out];
     let id: string | undefined;
     while ((id = stack.pop()) !== undefined) {
