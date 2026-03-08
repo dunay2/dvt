@@ -255,4 +255,4 @@ TRACSVC --> OL_MAP
 - [ADR-0020/ADR-0021 â€” OpenLineage](../adr/)
 - [engine-phases.md (roadmap)](engine/roadmap/engine-phases.md)
 - [metrics-catalog.md](engine/metrics-catalog.md)
-- [DVT Blueprint v0.6](vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md)
+- [Historical DVT Blueprint v0.6](vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md)

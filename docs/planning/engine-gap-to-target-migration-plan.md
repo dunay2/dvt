@@ -10,7 +10,10 @@ planning_type: proposal
 
 ## 1. Context
 
-The current state of [`@dvt/engine`](../../packages/@dvt/engine/package.json) does not fully match the target module blueprint defined in [`DVT_Blueprint_v0.6_MASTER.md`](../architecture/vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md).
+The current state of [`@dvt/engine`](../../packages/@dvt/engine/package.json)
+does not fully match the target module shape described in the historical
+blueprint snapshot
+[`DVT_Blueprint_v0.6_MASTER.md`](../architecture/vision/DVT_Docs_Pack_v0.6/docs/DVT_Blueprint_v0.6_MASTER.md).
 
 The goal of this plan is to migrate in phases without moving files too early and without breaking the public surface, CI, or tests.
 
