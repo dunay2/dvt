@@ -20,11 +20,15 @@ describe('jcsCanonicalize', () => {
 
 describe('sha256Hex', () => {
   it('produces a stable digest for strings', () => {
-    expect(sha256Hex('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    expect(sha256Hex('abc')).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
+    );
   });
 
   it('produces the same digest for equivalent byte content', () => {
     const bytes = new Uint8Array([97, 98, 99]);
-    expect(sha256Hex(bytes)).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    expect(sha256Hex(bytes)).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
+    );
   });
 });

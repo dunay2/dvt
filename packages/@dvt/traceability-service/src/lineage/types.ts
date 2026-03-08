@@ -6,7 +6,6 @@ import {
   OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
 } from './openlineageSchema.js';
 
-<<<<<<< HEAD
 export interface SqlJobFacet extends LineageFacetMetadata<
   typeof OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL
 > {

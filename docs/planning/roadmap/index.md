@@ -33,13 +33,13 @@ Concept anchors for this page:
 
 ## Document Classification
 
-| Document | Classification | Use it for |
-| --- | --- | --- |
-| `docs/planning/roadmap/index.md` | Canonical roadmap of record | Repository-wide planning entry point |
-| `docs/architecture/system-delivery-status.md` | Status board | What is true now in implementation |
-| `docs/planning/status/*` | Generated or curated status | Measured status and traceability artifacts |
-| `docs/planning/gaps/*` | Execution-gap tracking | Concrete delivery gaps and work breakdown |
-| `docs/architecture/engine/roadmap/engine-phases.md` | Subsystem roadmap | Engine-specific phase planning |
+| Document                                            | Classification              | Use it for                                 |
+| --------------------------------------------------- | --------------------------- | ------------------------------------------ |
+| `docs/planning/roadmap/index.md`                    | Canonical roadmap of record | Repository-wide planning entry point       |
+| `docs/architecture/system-delivery-status.md`       | Status board                | What is true now in implementation         |
+| `docs/planning/status/*`                            | Generated or curated status | Measured status and traceability artifacts |
+| `docs/planning/gaps/*`                              | Execution-gap tracking      | Concrete delivery gaps and work breakdown  |
+| `docs/architecture/engine/roadmap/engine-phases.md` | Subsystem roadmap           | Engine-specific phase planning             |
 
 ## Operating Rules
 
