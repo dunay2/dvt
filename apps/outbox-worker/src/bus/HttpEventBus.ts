@@ -22,7 +22,7 @@ export class HttpEventBus implements IEventBus {
   async publish(events: RunEventPersisted[]): Promise<void> {
     const controller = new globalThis.AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
-    let response: Response | null = null;
+    let response: Awaited<ReturnType<typeof globalThis.fetch>> | null = null;
 
     try {
       response = await this.fetchImpl(this.options.targetUrl, {
@@ -69,7 +69,9 @@ function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
 }
 
-async function safelyDisposeResponse(response: Response | null): Promise<void> {
+async function safelyDisposeResponse(
+  response: Awaited<ReturnType<typeof globalThis.fetch>> | null
+): Promise<void> {
   if (!response?.body) return;
   try {
     await response.body.cancel();

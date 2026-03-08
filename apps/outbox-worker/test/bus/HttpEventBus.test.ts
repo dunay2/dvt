@@ -78,7 +78,7 @@ await test('HttpEventBus cancels successful response bodies after publish', asyn
             cancelCalls += 1;
           },
         },
-      }) as Response) as typeof globalThis.fetch,
+      }) as globalThis.Response) as typeof globalThis.fetch,
   });
 
   await bus.publish([makeEvent('1')]);
