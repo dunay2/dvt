@@ -8,16 +8,22 @@ breaking: false
 policy_version: 1
 code_refs:
   - docs/contracts/traceability/index.md
+  - docs/contracts/traceability/facets/openlineage/index.md
   - docs/contracts/traceability/facets/openlineage/SqlJobFacet.1-0-0.schema.json
   - docs/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json
+  - docs/contracts/shared/CompiledCodeRef.v1.schema.json
   - docs/planning/gaps/g6/index.md
   - docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
   - docs/planning/gaps/GAP_EXECUTION_PLANS.md
+  - docs/planning/DVTplus_Roadmap.md
   - docs/planning/status/canonical-doc-code-matrix.md
 contracts_touched:
   - id: OpenLineage SQL Job Facet
     version: 1-0-0 vendored copy
     path: docs/contracts/traceability/facets/openlineage/SqlJobFacet.1-0-0.schema.json
+  - id: CompiledCodeRef
+    version: v1 shared normative schema
+    path: docs/contracts/shared/CompiledCodeRef.v1.schema.json
   - id: dvt_dbt_details job facet
     version: v1 normative schema
     path: docs/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json
@@ -26,8 +32,10 @@ evidence:
     - https://github.com/dunay2/dvt/issues/408
   docs:
     - docs/contracts/traceability/index.md
+    - docs/contracts/traceability/facets/openlineage/index.md
     - docs/planning/gaps/g6/index.md
     - docs/planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+    - docs/planning/DVTplus_Roadmap.md
     - docs/planning/status/canonical-doc-code-matrix.md
   code:
     - packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts
@@ -53,16 +61,25 @@ compatibility:
   package as a repo-local artifact.
 - Added a normative schema for the custom `dvt_dbt_details` job facet under
   repo control.
+- Anchored `dvt_dbt_details.compiledCodeRef` to a shared-kernel
+  [CompiledCodeRef v1](../contracts/shared/CompiledCodeRef.v1.schema.json)
+  contract artifact instead of duplicating the structure inline.
+- Added a provenance page for the vendored SQL facet so source URL, artifact
+  identity, and update policy are reviewable from MkDocs.
 - Reconnected `G6` planning and status docs so the canonical emitted facet
   source is no longer only the planning gap text.
+- Updated the roadmap wording so `G6` now traces to contract-artifact work, not
+  only mapper tests and schema pinning.
 
 ## Scope closed by this evidence
 
 `US-G6.2` closes the normative artifact slice only:
 
 - repo-local versioned contract artifacts exist for both emitted facets
+- shared-kernel `CompiledCodeRef` anchoring is now explicit and reusable
 - the canonical home of those artifacts is documented and navigable from MkDocs
 - planning and status docs now point back to that canonical contract home
+- vendored OpenLineage provenance is documented for offline audit and review
 
 This evidence does not close:
 
@@ -79,10 +96,13 @@ Executed on 2026-03-08:
 - `pnpm docs:sync`
 - `pnpm docs:quality:check`
 - `pnpm docs:build`
+- `pnpm exec markdownlint-cli2 "C:/dvt/.worktrees/g6-408/docs/**/*.md" "C:/dvt/.worktrees/g6-408/README.md" --ignore-path C:/dvt/.worktrees/g6-408/.markdownlintignore --config C:/dvt/.worktrees/g6-408/.markdownlint-cli2.jsonc`
 
 Result:
 
 - all commands passed locally
+- `docs:quality:check` emitted the existing non-blocking language warning for
+  `docs/planning/DVTplus_Roadmap.md`
 - MkDocs navigation now exposes the new traceability contract page and `G6`
   planning hub through the docs index structure
 
@@ -90,10 +110,16 @@ Result:
 
 - The chosen canonical home for emitted lineage facet artifacts is under
   `docs/contracts/traceability/`, not inside planning docs.
+- Shared-kernel structure ownership stays with `@dvt/contracts`; the lineage
+  facet artifact now references that contract through a repo-local shared schema
+  mirror instead of copying the fields inline.
 - This keeps the normative contract in repo-controlled documentation while
   preserving a stable emitted `_schemaURL` in package code.
 - Later schema validation lanes can validate offline against these local
   artifacts without reopening the emitted payload shape.
+- Vendored external schemas remain reviewable because provenance and update
+  rules now live next to the local artifact and do not depend on network fetches
+  during CI.
 
 ## Closure statement
 
