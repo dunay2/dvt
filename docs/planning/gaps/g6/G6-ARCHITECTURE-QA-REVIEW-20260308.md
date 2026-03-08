@@ -422,7 +422,7 @@ The current plan does not do that.
 ### Risk 1 - Partial contract governance
 
 If only the SQL facet is formally pinned and validated, while the custom facet
- remains ad hoc, the package still emits an incompletely governed payload.
+remains ad hoc, the package still emits an incompletely governed payload.
 
 Impact:
 
