@@ -26,7 +26,7 @@ import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
-import { withTimeoutMs } from './temporalObservability.js';
+import { withAbortSignalTimeout, withTimeoutMs } from './temporalObservability.js';
 import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
 
 interface WorkflowHandleLike {
@@ -48,6 +48,7 @@ interface WorkflowClientLike {
     workflowId: string;
     firstExecutionRunId?: string;
   }>;
+  withAbortSignal?<R>(abortSignal: globalThis.AbortSignal, fn: () => Promise<R>): Promise<R>;
   getHandle(workflowId: string): WorkflowHandleLike;
 }
 
@@ -177,14 +178,9 @@ export class TemporalAdapter implements IProviderAdapter {
     const workflowId = toTemporalWorkflowId(runId);
     const taskQueue = toTemporalTaskQueue(tenantId, this.deps.config);
     const client = await this.getClient();
+    const handle = client.getHandle(workflowId);
     try {
-      // Apply requestTimeoutMs so a slow or unresponsive Temporal server does not
-      // block the reconciliation sweep indefinitely.
-      await withTimeoutMs(
-        client.getHandle(workflowId).describe(),
-        this.deps.config.requestTimeoutMs,
-        'lookupRunRef.describe'
-      );
+      await this.describeWithTimeout(client, handle);
       return toTemporalRunRef({
         tenantId,
         workflowId,
@@ -229,6 +225,29 @@ export class TemporalAdapter implements IProviderAdapter {
       await this.deps.clientManager.connect();
     }
     return this.deps.clientManager.getClient().client.workflow;
+  }
+
+  private async describeWithTimeout(
+    client: WorkflowClientLike,
+    handle: WorkflowHandleLike
+  ): Promise<void> {
+    // Real Temporal workflow clients expose BaseClient.withAbortSignal().
+    // Prefer that path so lookup probes stop the underlying RPC on timeout.
+    if (typeof client.withAbortSignal === 'function') {
+      await withAbortSignalTimeout(
+        (signal) => client.withAbortSignal!(signal, () => handle.describe()),
+        this.deps.config.requestTimeoutMs,
+        'lookupRunRef.describe'
+      );
+      return;
+    }
+
+    // Test doubles and minimal injected clients may not implement SDK helpers.
+    await withTimeoutMs(
+      handle.describe(),
+      this.deps.config.requestTimeoutMs,
+      'lookupRunRef.describe'
+    );
   }
 }
 

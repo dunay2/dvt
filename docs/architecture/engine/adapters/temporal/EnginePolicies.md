@@ -188,7 +188,7 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 - Exposes `isConnected()`, `ensureConnected()`, and `close()` lifecycle APIs.
 - Adapter enforces client availability and throws `TEMPORAL_CLIENT_NOT_CONFIGURED` or `TEMPORAL_CLIENT_NOT_CONNECTED` in invalid states.
 - `connectTimeoutMs` actively bounds `Connection.connect()` through the SDK-native connect deadline.
-- `requestTimeoutMs` actively bounds `ensureConnected()` health checks through abortable RPC cancellation.
+- `requestTimeoutMs` actively bounds `ensureConnected()` health checks and `lookupRunRef()` probes through abortable RPC cancellation when the SDK workflow client is in use.
 
 ### 7.3 Operational diagnostics
 

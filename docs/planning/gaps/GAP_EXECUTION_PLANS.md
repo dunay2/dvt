@@ -96,7 +96,6 @@ Minimum tuple for this document:
   - keep the integration lane healthy as Temporal runtime contracts evolve
   - gather load evidence for worker-host defaults from higher-level environments
   - review cross-adapter timeout harmonization as a separate consistency pass
-  - treat `AbortSignal` support as a deferred follow-up when Temporal SDK support becomes practical
 
 ### G2 - PostgresStateStore complete
 

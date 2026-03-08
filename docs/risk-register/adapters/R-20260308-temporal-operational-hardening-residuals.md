@@ -19,8 +19,8 @@ structured worker lifecycle diagnostics, and records observability signals for
 `lookupRunRef()` and `ping()`.
 
 Connection hardening now uses the Temporal SDK native `connectTimeout` path,
-and health checks are cancelled with `AbortSignal` instead of relying on a
-caller-only promise race.
+and health checks plus runtime `lookupRunRef()` probes are cancelled with
+`AbortSignal` instead of relying on a caller-only promise race.
 
 The package also has expanded unit coverage plus a time-skipping integration
 lane that exercises start, cancel, retry, failure, gateway, and restart
@@ -40,8 +40,8 @@ operational telemetry during incidents.
 ## Mitigation
 
 - Enforce `connectTimeoutMs` through the Temporal SDK native connect deadline.
-- Enforce `requestTimeoutMs` through abortable health checks so timed-out
-  liveness probes do not continue as orphaned client RPCs.
+- Enforce `requestTimeoutMs` through abortable health checks and runtime
+  lookup probes so timed-out client RPCs do not continue orphaned.
 - Emit structured logs, counters, and duration histograms for worker start,
   stop, ping, and `lookupRunRef()` paths.
 - Keep the time-skipping integration suite green for cancellation, failure,

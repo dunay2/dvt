@@ -40,6 +40,7 @@ This evidence closes the remaining Phase 1 hardening work for the Temporal adapt
 1. Client timeout policy is active, not declarative only.
    - `connectTimeoutMs` now configures the Temporal SDK native connect deadline.
    - `requestTimeoutMs` now bounds client liveness checks through abortable `ensureConnected()` calls.
+   - `lookupRunRef()` now uses abortable `describe()` probes when running against the Temporal SDK workflow client.
 2. Worker host operational diagnostics are implemented.
    - structured logs on start, success, failure, and shutdown
    - counters and duration histograms
@@ -63,7 +64,6 @@ This evidence closes the remaining Phase 1 hardening work for the Temporal adapt
 ## Residual Follow-up
 
 - Sustained load evidence for Temporal worker defaults should be gathered from integration or production-like telemetry, not from unit tests.
-- `AbortSignal` support for `describe()` remains dependent on Temporal SDK capabilities and is not a blocker for Phase 1 closure.
 - Cross-adapter timeout harmonization can proceed as a separate consistency pass; it no longer blocks the Temporal adapter itself.
 - Residual operational risk is tracked in `docs/risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md`.
 
