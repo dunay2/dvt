@@ -10,8 +10,8 @@ last_reviewed: 2026-03-08
 This page is the canonical roadmap entry point for repository-wide planning.
 
 Use this page to understand which planning surface is authoritative, which
-documents are status boards, and which older roadmap-shaped files are retained
-only for compatibility or subsystem detail.
+documents are status boards, and how roadmap-shaped material must be classified
+or removed instead of competing with the active planning surface.
 
 Concept anchors for this page:
 
@@ -40,13 +40,14 @@ Concept anchors for this page:
 | `docs/planning/status/*` | Generated or curated status | Measured status and traceability artifacts |
 | `docs/planning/gaps/*` | Execution-gap tracking | Concrete delivery gaps and work breakdown |
 | `docs/architecture/engine/roadmap/engine-phases.md` | Subsystem roadmap | Engine-specific phase planning |
-| `ROADMAP.md` | Historical top-level roadmap artifact | Legacy references and historical planning context |
 
 ## Operating Rules
 
 - Do not create a new roadmap document when a status update is enough.
 - Do not use a subsystem roadmap as the repository-wide roadmap of record.
 - Do not use status snapshots as future-planning artifacts.
+- Delete obsolete roadmap aliases instead of preserving them as parallel entry
+  points.
 - When in doubt, update this page and link outward instead of creating another
   parallel planning surface.
 
