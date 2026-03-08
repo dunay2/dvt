@@ -187,27 +187,28 @@ Minimum tuple for this document:
 
 - Status: Partial
 - Traceability tuple:
-  - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
   - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`
   - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm traceability:adr0`
-  - `evidence_or_risk`: consider promotion to a dedicated risk record if `_schemaURL` drift remains open after the next hardening pass
+  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
 - Working refs:
   - [G6 hub](g6/index.md)
   - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  - [G6 Architecture and QA Review](g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+  - [Traceability Contracts](../../contracts/traceability/index.md)
 - Delivered:
   - compiled-code lineage resolver/cache/facet mapping package code
   - package-level tests for mapper/guard/resolver paths
+  - `_schemaURL` pinned in emitted `sql` and `dvt_dbt_details` facets
+  - repo-local normative artifacts for emitted lineage facets under [Traceability Contracts](../../contracts/traceability/index.md)
 - Remaining:
   - deterministic OL translation hardening in CI
-  - `_schemaURL` pinned in emitted OpenLineage payloads/contracts
-  - contract governance for both emitted facets (`sql`, `dvt_dbt_details`)
-  - offline validation against the pinned schema version
+  - offline schema validation execution against vendored/local artifacts
   - committed golden fixtures for mapper regression coverage
-  - explicit mandatory closure verification tuple for schema and golden checks
-  - normative contract artifact beyond planning prose
-  - delivery/runtime concerns stay open outside package scope
+  - explicit golden and schema verification commands for closure
+  - delivery/runtime concerns stay open outside package scope under `G10`
 
 ### G7 - Read models + standalone projector
 

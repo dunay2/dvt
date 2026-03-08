@@ -61,7 +61,7 @@ Minimum tuple for this document:
 | Execution layer            | Partial         | engine, Postgres adapter, and Temporal adapter are implemented; standalone worker, scheduler, and some runtime hardening themes remain gap-driven         | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
 | Persistence layer          | Partial         | Postgres state store and outbox persistence primitives are implemented; independent outbox runtime and shard model remain open                            | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
 | Observability              | Partial         | observability contracts and the OTel binding exist; production validation remains incomplete                                                              | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Traceability / OpenLineage | Partial         | mapper and package tests exist; schema pinning, golden validation, and delivery-runtime concerns remain open                                              | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Traceability / OpenLineage | Partial         | mapper, package tests, `_schemaURL` pinning, and repo-local facet artifacts exist; golden validation and delivery-runtime concerns remain open            | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 
 ## Area Status
 
@@ -100,12 +100,16 @@ Minimum tuple for this document:
 
 ### Observability And Traceability
 
-| Area                         | Packages                     | Status      | Notes                                                                                                |
-| ---------------------------- | ---------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
-| Observability contracts      | `@dvt/observability`         | Implemented | Port surface exists and is documented                                                                |
-| OTel binding                 | `@dvt/observability-otel`    | Partial     | Binding exists, but production validation is still incomplete                                        |
-| Traceability service         | `@dvt/traceability-service`  | Partial     | Mapper/resolver package exists with tests; schema pinning and runtime delivery hardening remain open |
-| OpenLineage delivery runtime | future `outbox_lineage` flow | Pending     | Delivery worker and fail-open DLQ policy are still Phase 2 work                                      |
+- `@dvt/observability` (`Implemented`):
+  port surface exists and is documented.
+- `@dvt/observability-otel` (`Partial`):
+  binding exists, but production validation is still incomplete.
+- `@dvt/traceability-service` (`Partial`):
+  mapper/resolver package exists with tests; `_schemaURL` and repo-local
+  contract artifacts exist; golden validation and runtime delivery hardening
+  remain open.
+- future `outbox_lineage` flow (`Pending`):
+  delivery worker and fail-open DLQ policy are still Phase 2 work.
 
 ## Gap Summary
 

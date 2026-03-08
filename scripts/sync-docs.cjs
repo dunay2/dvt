@@ -920,6 +920,7 @@ function renderContractsIndex(meta, rows) {
   const orderedRows = orderRowsByPreferredLinks(rows, [
     'planner/index.md',
     'shared/index.md',
+    'traceability/index.md',
     'engine/index.md',
   ]);
 
@@ -938,6 +939,8 @@ function renderContractsIndex(meta, rows) {
     '  and compatibility-oriented plan schemas',
     '- [Shared Contracts](shared/index.md) for cross-cutting adapter, workflow, and',
     '  validation contracts',
+    '- [Traceability Contracts](traceability/index.md) for emitted lineage facet',
+    '  artifacts, schema copies, and transport-adjacent contract governance',
     '- [Engine Contracts](engine/index.md) for execution lifecycle, run-event, and',
     '  engine boundary contracts',
     '',
@@ -947,6 +950,8 @@ function renderContractsIndex(meta, rows) {
     '  compatibility, schema validation, or planner inputs.',
     '- Start with [Shared](shared/index.md) when the change affects adapter-facing',
     '  contracts, shared types, or validation helpers.',
+    '- Use [Traceability](traceability/index.md) when the change affects emitted',
+    '  OpenLineage facets, schema copies, or lineage contract artifacts.',
     '- Use [Engine](engine/index.md) when the change affects run lifecycle, event',
     '  envelopes, append authority, or execution semantics.',
     '',

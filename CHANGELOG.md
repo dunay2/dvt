@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/dunay2/dvt/compare/v3.1.0...v3.2.0) (2026-03-08)
+
+
+### Features
+
+* **traceability:** Govern OpenLineage facet contracts ([#415](https://github.com/dunay2/dvt/issues/415)) ([3e738e0](https://github.com/dunay2/dvt/commit/3e738e0d350b3b0318e299052824e15574930566))
+
 ## [3.1.0](https://github.com/dunay2/dvt/compare/v3.0.1...v3.1.0) (2026-03-08)
 
 

@@ -26,14 +26,17 @@ Concept anchors for this folder:
 - [Canonical Doc Code Matrix](../../status/canonical-doc-code-matrix.md) for
   the curated doc -> code -> test -> command mapping
 
-It is explicitly about:
+## Scope Boundary
+
+`G6` is explicitly about:
 
 - deterministic translation tests in CI;
 - `_schemaURL` pinning for emitted OpenLineage facet payloads;
+- repo-governed normative artifacts for emitted lineage facets;
 - hermetic validation of the pinned schema contract;
-- closure planning and documentation for the mapper/resolver package scope.
+- mapper/resolver package hardening and closeout docs.
 
-It is explicitly not about:
+`G6` is explicitly not about:
 
 - `outbox_lineage` delivery runtime;
 - Marquez transport or delivery retries;
@@ -46,6 +49,7 @@ Those runtime concerns stay under `G10`.
 
 - [G6 OpenLineage CI and Schema Pin Plan](G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
 - [G6 Architecture and QA Review](G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+- [Traceability Contracts](../../../contracts/traceability/index.md)
 - [Gap Execution Plans](../GAP_EXECUTION_PLANS.md)
 - [Gap Parallel Execution Tracks](../GAP_PARALLEL_EXECUTION_TRACKS.md)
 - [System Delivery Status](../../../architecture/system-delivery-status.md)
@@ -57,12 +61,16 @@ Those runtime concerns stay under `G10`.
 - [DVT+ Consolidated Architectural Review](../../reviews/DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md)
 - [DVT+ Architectural Review Pass 2](../../reviews/DVT+_Architectural_Review_Pass_2.md)
 - [Gap Execution Plans - G6 section](../GAP_EXECUTION_PLANS.md#g6---openlineage-mapping-tests-ci--schema-pin)
-- [System Delivery Status - Traceability / OpenLineage](../../../architecture/system-delivery-status.md#traceability--openlineage)
+- [System Delivery Status - Observability and Traceability](../../../architecture/system-delivery-status.md#observability-and-traceability)
 
 ## Current Baseline
 
 - mapper and resolver package code exist;
 - package-level tests exist;
-- `_schemaURL` is still not pinned in the emitted SQL facet shape;
-- deterministic golden validation in CI does not exist yet;
+- `_schemaURL` is already pinned in the emitted `sql` and `dvt_dbt_details`
+  facets;
+- the normative facet artifacts now live in
+  [Traceability Contracts](../../../contracts/traceability/index.md);
+- deterministic golden validation, offline schema validation execution, and the
+  mandatory CI tuple remain open follow-up slices;
 - lineage delivery runtime remains out of scope for this gap.

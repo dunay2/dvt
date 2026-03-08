@@ -32,6 +32,8 @@ nav:
       - Contracts Index: contracts/index.md
       - Planner Contracts: contracts/planner/index.md
       - Shared Contracts: contracts/shared/index.md
+      - Traceability Contracts: contracts/traceability/index.md
+      - Engine Contracts: contracts/engine/index.md
       - Shared Packages:
           - Shared Packages Index: architecture/shared/index.md
           - CLI Package: architecture/shared/cli.md
@@ -43,10 +45,9 @@ nav:
       - Engine Architecture: architecture/engine/index.md
       - Atlas: architecture/atlas/index.md
       - Reference Architecture: architecture/reference-architecture.md
-      - Engine Contracts: contracts/engine/index.md
   - How-To:
       - Guides Index: guides/index.md
-      - Mandatory Work System for AI: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
+      - Mandatory AI Workflow: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
   - Operations:
       - Runbooks: runbooks/index.md
       - Risk Register: risk-register/index.md

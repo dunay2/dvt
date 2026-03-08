@@ -35,6 +35,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 
 ## Topic Summary
 
+<!-- markdownlint-disable MD060 -->
 | Topic                                          | Primary packages                                                                       | Canonical spec                                                                                                                                                                                  | Current status                                                                                                           |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Workflow engine core                           | `@dvt/contracts`, `@dvt/engine`                                                        | [IWorkflowEngine v1](../../architecture/engine/contracts/engine/IWorkflowEngine.v1.md), [ExecutionSemantics v1](../../architecture/engine/contracts/engine/ExecutionSemantics.v1.md)            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
@@ -43,7 +44,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../gaps/G3-TASK-SPECIFICATION.md)                                                                            | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
 | Outbox worker runtime                          | `@dvt/engine`, `@dvt/adapter-postgres`                                                 | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                                                                                           | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../gaps/G4-TASK-SPECIFICATION.md)                                                                          | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
-| OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                 | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                         | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | Web frontend shell and client routing          | `apps/web`                                                                             | [Frontend Architecture](../../architecture/frontend/index.md), [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)                                                | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | Plan integrity and compatibility verification  | `@dvt/plan-verifier`                                                                   | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
@@ -54,6 +55,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | CLI validation surface                         | `@dvt/cli`                                                                             | [CLI Package](../../architecture/shared/cli.md)                                                                                                                                                 | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
 | Canonicalization and hashing utilities         | `@dvt/crypto`                                                                          | [Crypto Package](../../architecture/shared/crypto.md), [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)                                                                               | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
 | Documentation governance and checks            | `scripts/*`, `tools/ci/*`                                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [Mandatory AI Workflow](../../guides/SISTEMA%20DE%20TRABAJO%20OBLIGATORIO%20PARA%20IA.md)                           | [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md) |
+<!-- markdownlint-enable MD060 -->
 
 ## Topic Details
 
@@ -196,9 +198,12 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 
 - Canonical source today:
   [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
-  for `G6`, plus
+  for package hardening scope,
+  [Traceability Contracts](../../contracts/traceability/index.md)
+  for the normative emitted facet artifacts,
+  and
   [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G10`)
-  until there is a dedicated accepted runtime spec for lineage delivery
+  for delivery/runtime follow-up
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
@@ -209,6 +214,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts](../../../packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts)
   and
   [packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts](../../../packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts)
+- Evidence:
+  [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md)
+  and
+  [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
 - Verification:
   `pnpm --filter @dvt/traceability-service test`
   and
