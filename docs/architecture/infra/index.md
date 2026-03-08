@@ -14,6 +14,13 @@ It exists to stop infrastructure notes from being scattered across `infra/`,
 package-local design files, API runtime specs, and CI workflow files with no
 clear entry point.
 
+Concept anchors for this page:
+
+- [Glossary](../../concepts/glossary.md) for `runtime`, `artifact`, and
+  `status`
+- [Domain Language](../../concepts/domain-language.md) for the naming rules
+  used across infra, planning, and runtime docs
+
 ## Scope
 
 - local platform dependencies used for development and verification;

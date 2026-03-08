@@ -22,6 +22,12 @@ const spanishHints = [
   ' para ',
   ' con ',
 ];
+const requiredConceptLinkFiles = [
+  'docs/architecture/system-delivery-status.md',
+  'docs/planning/roadmap/index.md',
+  'docs/knowledge/REPOSITORY_MAP.md',
+  'docs/planning/status/canonical-doc-code-matrix.md',
+];
 
 function walk(dir) {
   const out = [];
@@ -93,6 +99,18 @@ function main() {
       failures.push(
         'docs/planning/status/canonical-doc-code-matrix.md -> cannot carry an explicit missing-workspace backlog; classify active workspaces instead.'
       );
+    }
+  }
+
+  for (const relativePath of requiredConceptLinkFiles) {
+    const absPath = path.join(repoRoot, ...relativePath.split('/'));
+    if (!fs.existsSync(absPath)) continue;
+    const raw = fs.readFileSync(absPath, 'utf8').toLowerCase();
+    if (!raw.includes('concepts/glossary.md')) {
+      failures.push(`${relativePath} -> must link to concepts/glossary.md.`);
+    }
+    if (!raw.includes('concepts/domain-language.md')) {
+      failures.push(`${relativePath} -> must link to concepts/domain-language.md.`);
     }
   }
 

@@ -16,6 +16,8 @@ This page is the topic-level counterpart to:
 - [Generated Code State](generated-code-state.md)
 - [Generated Spec Traceability](generated-spec-traceability.md)
 - [Repository Map](../../knowledge/REPOSITORY_MAP.md)
+- [Glossary](../../concepts/glossary.md)
+- [Domain Language](../../concepts/domain-language.md)
 
 Use it to answer three practical questions quickly:
 
@@ -26,6 +28,10 @@ Use it to answer three practical questions quickly:
 Package-by-package workspace coverage lives in
 [Repository Map](../../knowledge/REPOSITORY_MAP.md). This matrix stays focused
 on high-value behavioral topics.
+
+When this page says `canonical spec`, `status doc`, or `reference-only`, those
+terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
+[Domain Language](../../concepts/domain-language.md).
 
 ## Topic Summary
 

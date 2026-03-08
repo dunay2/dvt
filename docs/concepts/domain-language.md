@@ -19,10 +19,30 @@ names depending on whether the reader is in planning, code, or architecture.
 - Use `planner` only for plan construction concerns.
 - Use `adapter` for runtime- or backend-specific integration boundaries.
 - Use `run` for one execution instance.
-- Use `status` for current state.
+- Use `status` for current state, never for target design.
+- Use `roadmap of record` for the single repository-wide planning entry point.
+- Use `canonical spec` for the governing behavior document of a topic.
+- Use `status doc` for the document that states current implementation truth.
+- Use `reference-only` when a doc or package surface is visible but not
+  accepted as normative.
+- Use `workspace` for a monorepo unit such as an app or package.
 - Use `roadmap` for future sequencing.
 - Use `evidence` for proof of validation.
 - Use `risk` for unresolved or partially accepted debt.
+
+## Discipline Rules
+
+- Do not call the whole repository `engine`.
+- Do not call a roadmap a status board.
+- Do not call a status snapshot a design spec.
+- Do not treat a local package README as canonical if the accepted surface lives
+  in `docs/`.
+
+## Related Surfaces
+
+- [Glossary](glossary.md)
+- [System Map](system-map.md)
+- [Repository Map](../knowledge/REPOSITORY_MAP.md)
 
 ## Do Not Collapse Distinct Concepts
 

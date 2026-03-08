@@ -21,6 +21,13 @@ This page is not a behavioral specification. For topic-level traceability, use
 For current implementation truth, use
 [System Delivery Status](../architecture/system-delivery-status.md).
 
+Concept anchors for this page:
+
+- [Glossary](../concepts/glossary.md) for `workspace`, `reference-only`,
+  `canonical spec`, and `status doc`
+- [Domain Language](../concepts/domain-language.md) for repository-wide naming
+  discipline
+
 ## Coverage Classes
 
 - `canonical`: the workspace has an active documentation landing page or

@@ -14,6 +14,13 @@ The detailed product and implementation notes still live under `apps/web/`, but
 they are not allowed to behave like a parallel documentation root. Start here,
 then go to the linked local frontend docs.
 
+Concept anchors for this page:
+
+- [Glossary](../../concepts/glossary.md) for `run`, `artifact`, `status`, and
+  `runtime`
+- [Domain Language](../../concepts/domain-language.md) for the distinction
+  between DVT, engine, planner, adapter, and status
+
 ## Current Reality
 
 - `apps/web` is a real UI codebase, not just a mock folder.

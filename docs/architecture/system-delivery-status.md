@@ -15,6 +15,10 @@ This document is the cross-system status board, not the canonical behavioral spe
 
 Use it together with:
 
+- [Glossary](../concepts/glossary.md) for shared meanings of terms like `run`,
+  `plan`, `adapter`, `status`, and `roadmap`
+- [Domain Language](../concepts/domain-language.md) for the naming discipline
+  used across planning, code, and architecture
 - [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) for the curated topic -> doc -> code -> test -> command mapping
 - [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) for the active execution-gap breakdown
 

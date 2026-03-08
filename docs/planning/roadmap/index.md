@@ -13,6 +13,13 @@ Use this page to understand which planning surface is authoritative, which
 documents are status boards, and which older roadmap-shaped files are retained
 only for compatibility or subsystem detail.
 
+Concept anchors for this page:
+
+- [Glossary](../../concepts/glossary.md) for `roadmap`, `status`, and
+  `canonical spec`
+- [Domain Language](../../concepts/domain-language.md) for the rule that one
+  roadmap of record must not compete with status docs or subsystem plans
+
 ## Canonical Planning Surfaces
 
 - Roadmap of record: this page
