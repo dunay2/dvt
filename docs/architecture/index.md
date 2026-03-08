@@ -15,6 +15,7 @@ Technical architecture specifications (normative when marked Accepted/Active).
 - [Engine](engine/index.md)
 - [Frontend](frontend/index.md)
 - [Infra](infra/index.md)
+- [Shared](shared/index.md)
 - [Reference Architecture](reference-architecture.md)
 - [System Delivery Status](system-delivery-status.md)
 

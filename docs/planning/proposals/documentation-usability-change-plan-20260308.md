@@ -1,12 +1,24 @@
 ---
 title: Documentation Usability Change Plan
-status: Proposed
+status: Active
 owner: Docs / Architecture / Platform
 last_reviewed: 2026-03-08
 planning_type: proposal
 ---
 
 # Documentation Usability Change Plan
+
+## Execution Status
+
+Execution status on 2026-03-08:
+
+- Phase 1 completed: navigation, home, concepts, and non-empty operational
+  entry points were published.
+- Phase 2 completed: the roadmap of record was consolidated and duplicate
+  roadmap entry points were downgraded.
+- Phase 3 is in progress: workspace coverage, repository mapping, frontend
+  landing, shared-package surfacing, and explicit package-status
+  classification are being executed.
 
 ## Goal
 

@@ -46,6 +46,7 @@ function main() {
   const warnings = [];
   const files = walk(docsRoot);
   const legacyUppercaseIndexes = new Set(['docs/decisions/INDEX.md', 'docs/knowledge/INDEX.md']);
+  const markdownFiles = files.filter((p) => p.endsWith('.md'));
 
   const uppercaseIndexes = files
     .filter((p) => path.basename(p) === 'INDEX.md')
@@ -53,6 +54,15 @@ function main() {
     .filter((p) => !legacyUppercaseIndexes.has(p));
   for (const p of uppercaseIndexes) {
     failures.push(`${p} -> rename to index.md (avoid duplicate index variants).`);
+  }
+
+  for (const p of markdownFiles) {
+    const raw = fs.readFileSync(p, 'utf8');
+    for (const marker of disallowedPlaceholder) {
+      if (raw.toLowerCase().includes(marker.toLowerCase())) {
+        failures.push(`${rel(p)} -> contains placeholder text.`);
+      }
+    }
   }
 
   const planningFiles = files.filter(
@@ -63,14 +73,26 @@ function main() {
     if (base === 'index.md' || base === 'template_planning_doc.md') continue;
     const raw = fs.readFileSync(p, 'utf8').toLowerCase();
 
-    for (const marker of disallowedPlaceholder) {
-      if (raw.includes(marker.toLowerCase())) {
-        failures.push(`${rel(p)} -> contains placeholder text.`);
-      }
-    }
-
     if (spanishHints.some((m) => raw.includes(m))) {
       warnings.push(`${rel(p)} -> contains likely non-English content. Translate to English.`);
+    }
+  }
+
+  const canonicalMatrixPath = path.join(
+    docsRoot,
+    'planning',
+    'status',
+    'canonical-doc-code-matrix.md'
+  );
+  if (fs.existsSync(canonicalMatrixPath)) {
+    const canonicalMatrix = fs.readFileSync(canonicalMatrixPath, 'utf8');
+    if (
+      /##\s+Scope Left For The Next Pass/i.test(canonicalMatrix) ||
+      /Still missing from explicit topic mapping:/i.test(canonicalMatrix)
+    ) {
+      failures.push(
+        'docs/planning/status/canonical-doc-code-matrix.md -> cannot carry an explicit missing-workspace backlog; classify active workspaces instead.'
+      );
     }
   }
 

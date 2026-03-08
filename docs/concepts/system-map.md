@@ -23,6 +23,8 @@ reader go next?
 
 - `@dvt/planner`: plan construction and compilation concerns
 - `@dvt/plan-verifier`: plan integrity and verification utilities
+- `@dvt/plan-interpreter`: deterministic DAG analysis shared by runtimes
+- `@dvt/dsl`: gateway expression parsing and evaluation
 
 ### Execution layer
 
@@ -33,8 +35,10 @@ reader go next?
 ### Shared boundary layer
 
 - `@dvt/contracts`: shared contracts and types
+- `@dvt/crypto`: canonicalization and hashing helpers
 - `@dvt/observability`: observability abstractions
 - `@dvt/observability-otel`: OpenTelemetry implementation path
+- `@dvt/cli`: script-driven validation and golden-path tooling
 - `@dvt/traceability-service`: traceability and lineage-adjacent service code
 
 ## Canonical Reading Order
@@ -50,6 +54,7 @@ reader go next?
 
 - "What does this term mean?" -> [Glossary](glossary.md)
 - "What belongs to which subsystem?" -> [Architecture Index](../architecture/index.md)
+- "What do the small shared packages do?" -> [Shared Package Architecture](../architecture/shared/index.md)
 - "What code area is responsible?" -> [Repository Map](../knowledge/REPOSITORY_MAP.md)
 - "What is true in the current implementation?" -> [System Delivery Status](../architecture/system-delivery-status.md)
 - "What is planned or still open?" -> [Planning](../planning/index.md)
