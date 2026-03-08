@@ -5,7 +5,8 @@
 [![Contracts](https://github.com/dunay2/dvt/actions/workflows/contracts.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/contracts.yml)
 [![PR Quality Gate](https://github.com/dunay2/dvt/actions/workflows/pr-quality-gate.yml/badge.svg)](https://github.com/dunay2/dvt/actions/workflows/pr-quality-gate.yml)
 
-Data Value Transform — Multi-adapter orchestration engine.
+Data Value Transform - multi-adapter orchestration engine and surrounding
+planning, execution, observability, and traceability tooling.
 
 ---
 
@@ -24,7 +25,8 @@ pnpm build
 pnpm test
 ```
 
-**Installed tools**: Zod (contract validation), PostgreSQL (`pg`, SQL migrations), Vitest (testing).
+**Installed tools**: Zod (contract validation), PostgreSQL (`pg`, SQL
+migrations), Vitest (testing).
 
 > See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development setup guide.
 
@@ -34,29 +36,54 @@ pnpm test
 
 > **[Documentation Index](docs/index.md)**
 
-### Architecture & Contracts
+### Start Here
 
-> **[Engine Architecture Index](docs/architecture/engine/index.md)** — Start here
+- **Understand the system**:
+  [Concepts](docs/concepts/index.md),
+  [Glossary](docs/concepts/glossary.md),
+  [System Map](docs/concepts/system-map.md)
+- **Read technical structure and invariants**:
+  [Architecture](docs/architecture/index.md),
+  [Contracts](docs/contracts/index.md)
+- **See current state and active work**:
+  [System Delivery Status](docs/architecture/system-delivery-status.md),
+  [Planning](docs/planning/index.md)
+- **Operate and review risk**:
+  [Runbooks](docs/runbooks/index.md),
+  [Risk Register](docs/risk-register/index.md),
+  [Evidence](docs/evidence/index.md)
 
-The engine is documented as **modular, versioned contracts** (not a monolith):
+### Engine Deep Dive
 
-- **Normative contracts** (small, stable, MUST):
+The engine remains documented as modular, versioned contracts:
+
+- **Normative contracts**:
   [IWorkflowEngine](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md),
   [ExecutionSemantics](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)
-- **Adapter specs**: [Temporal](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Conductor](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md)
-- **Capability specs** (executable JSON): [capabilities](docs/architecture/engine/contracts/capabilities/)
-- **Operations**: [observability](docs/architecture/engine/ops/observability.md), [incident runbooks](docs/architecture/engine/ops/runbooks/)
-- **Developer**: [determinism tooling](docs/architecture/engine/dev/determinism-tooling.md)
-- **Roadmap**: [Phases 1-4](docs/architecture/engine/roadmap/engine-phases.md)
+- **Adapter specs**:
+  [Temporal](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md),
+  [Conductor](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md)
+- **Capability specs**:
+  [capabilities](docs/architecture/engine/contracts/capabilities/)
+- **Operations**:
+  [observability](docs/architecture/engine/ops/observability.md),
+  [incident runbooks](docs/architecture/engine/ops/runbooks/)
+- **Developer**:
+  [determinism tooling](docs/architecture/engine/dev/determinism-tooling.md)
 
 ### Quick Links
 
-| Role            | Start Here                                                                               | Next Steps                                                                                    |
-| --------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| SDK implementer | [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) | [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md) |
-| Plan author     | [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)            | [capabilities](docs/architecture/engine/contracts/capabilities/)                              |
-| SRE / On-call   | [observability.md](docs/architecture/engine/ops/observability.md)                        | [incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md)            |
-| Executive / PM  | [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md)                    | [observability.md](docs/architecture/engine/ops/observability.md) (success metrics)           |
+- New contributor: [docs/index.md](docs/index.md) ->
+  [docs/concepts/index.md](docs/concepts/index.md)
+- SDK implementer:
+  [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md) ->
+  [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md)
+- Plan author: [docs/concepts/glossary.md](docs/concepts/glossary.md) ->
+  [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)
+- SRE / On-call: [docs/runbooks/index.md](docs/runbooks/index.md) ->
+  [incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md)
+- Executive / PM: [docs/planning/index.md](docs/planning/index.md) ->
+  [System Delivery Status](docs/architecture/system-delivery-status.md)
 
 ---
 
@@ -86,7 +113,7 @@ pnpm test:coverage        # Coverage report
 1. **Follow conventional commits** for all commit messages
 2. **Add tests** for new features (maintain 80%+ coverage)
 3. **Update documentation** if changing behavior
-4. **Keep PRs focused** - one feature/fix per PR (< 500 lines preferred)
+4. **Keep PRs focused** - one feature or fix per PR (< 500 lines preferred)
 5. **All CI checks must pass** before merge
 
 ### Code Changes - Determinism Requirements
@@ -102,13 +129,14 @@ For engine implementation contributions, ensure:
 
 ## Monorepo Structure (pnpm workspaces)
 
-The project is organized as a monorepo using pnpm workspaces. The primary packages are located under the `packages/` directory:
+The project is organized as a monorepo using pnpm workspaces. The primary
+packages are located under the `packages/` directory:
 
-- `packages/@dvt/contracts` — Shared contracts and interfaces (`@dvt/contracts`)
-- `packages/@dvt/engine` — Orchestration engine core (`@dvt/engine`)
-- `packages/@dvt/adapter-postgres` — PostgreSQL adapter (`@dvt/adapter-postgres`)
-- `packages/@dvt/adapter-temporal` — Temporal adapter (`@dvt/adapter-temporal`)
-- `packages/@dvt/cli` — CLI tools and scripts (`@dvt/cli`)
+- `packages/@dvt/contracts` - shared contracts and interfaces (`@dvt/contracts`)
+- `packages/@dvt/engine` - orchestration engine core (`@dvt/engine`)
+- `packages/@dvt/adapter-postgres` - PostgreSQL adapter (`@dvt/adapter-postgres`)
+- `packages/@dvt/adapter-temporal` - Temporal adapter (`@dvt/adapter-temporal`)
+- `packages/@dvt/cli` - CLI tools and scripts (`@dvt/cli`)
 
 ### Key Commands
 
@@ -145,8 +173,10 @@ This project enforces high code quality through:
 - **Prettier** - Consistent code formatting
 - **Vitest** - Standard unit and integration testing (80%+ coverage required)
 - **Conventional Commits** - Semantic versioning automation
-- **release-please** - Automated release PRs, changelogs, and tags for the repository ([workflow](.github/workflows/release.yml))
-- **Pre-commit hooks** - Automatic linting and formatting via Husky + lint-staged
+- **release-please** - Automated release PRs, changelogs, and tags for the
+  repository ([workflow](.github/workflows/release.yml))
+- **Pre-commit hooks** - Automatic linting and formatting via Husky +
+  lint-staged
 - **GitHub Actions** - Comprehensive CI/CD pipelines
 
 ---
@@ -155,7 +185,8 @@ This project enforces high code quality through:
 
 ### Commit Convention
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) for semantic versioning:
+We use [Conventional Commits](https://www.conventionalcommits.org/) for semantic
+versioning:
 
 ```bash
 feat(engine): add new feature
@@ -163,21 +194,26 @@ fix(temporal): correct bug
 docs(architecture): update documentation
 ```
 
-See [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for full guidelines.
+See [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for full
+guidelines.
 
 ### Documentation Changes
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
-- Code Owners review process (normative contracts require architecture team approval)
+- Code Owners review process (normative contracts require architecture team
+  approval)
 - CI/CD quality gates (Markdown linting, TypeScript validation, link checking)
-- Versioning policy (MAJOR/MINOR/PATCH bumps, deprecation process)
+- Versioning policy (MAJOR, MINOR, and PATCH bumps; deprecation process)
 
 ---
 
 ## Project Status
 
-See [ROADMAP.md](./ROADMAP.md) and [engine-phases.md](./docs/architecture/engine/roadmap/engine-phases.md) for implementation roadmap.
+Use [docs/planning/index.md](docs/planning/index.md) and
+[docs/architecture/system-delivery-status.md](docs/architecture/system-delivery-status.md)
+as the current documentation entry points for active work and implementation
+state.
 
 ## License
 
@@ -185,4 +221,5 @@ ISC
 
 ## Acknowledgments
 
-Built with best practices from Temporal, Conductor, and event-sourced systems.
+Built with practices learned from Temporal, Conductor, and event-sourced
+systems.

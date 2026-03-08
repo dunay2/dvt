@@ -21,28 +21,34 @@ plugins:
 
 nav:
   - Home: /
-  - ADRs:
-      - ADR Index: adr/index.md
-      - Draft ADRs: adr/_drafts/index.md
-      - ADR Archive: adr/_archive/index.md
-  - Architecture:
+  - Concepts:
+      - Concepts Index: concepts/index.md
+      - Glossary: concepts/glossary.md
+      - Domain Language: concepts/domain-language.md
+      - System Map: concepts/system-map.md
+  - Reference:
       - Architecture Index: architecture/index.md
-      - Engine: architecture/engine/index.md
-      - Frontend: architecture/frontend/index.md
-      - Infra: architecture/infra/index.md
-  - Contracts:
       - Contracts Index: contracts/index.md
+      - Engine Architecture: architecture/engine/index.md
+      - Frontend Architecture: architecture/frontend/index.md
+      - Infra Architecture: architecture/infra/index.md
       - Engine Contracts: contracts/engine/index.md
       - Planner Contracts: contracts/planner/index.md
       - Shared Contracts: contracts/shared/index.md
-  - Guides:
-      - Mandatory Work System for AI: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
+  - How-To:
       - Guides Index: guides/index.md
-  - Evidence: evidence/index.md
-  - Risk Register: risk-register/index.md
-  - Runbooks: runbooks/index.md
+      - Mandatory Work System for AI: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
+  - Operations:
+      - Runbooks: runbooks/index.md
+      - Risk Register: risk-register/index.md
+      - Evidence: evidence/index.md
+  - Decisions:
+      - ADR Index: adr/index.md
+      - Draft ADRs: adr/_drafts/index.md
+      - ADR Archive: adr/_archive/index.md
   - Planning:
       - Planning Index: planning/index.md
+      - Current Status: architecture/system-delivery-status.md
       - Proposals: planning/proposals/index.md
       - Reviews: planning/reviews/index.md
       - Status: planning/status/index.md

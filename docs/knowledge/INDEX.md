@@ -1,42 +1,29 @@
 # DVT Knowledge Index
 
-This index centralizes operational and technical repository knowledge for:
+This is now a legacy compatibility entry point.
 
-- onboarding,
-- impact analysis,
-- delivery planning,
-- ADR-to-code traceability.
+The active conceptual surface has moved to:
+
+- [Concepts](../concepts/index.md)
+- [Glossary](../concepts/glossary.md)
+- [Domain Language](../concepts/domain-language.md)
+- [System Map](../concepts/system-map.md)
+- [Planning](../planning/index.md)
+
+Use this page only if you are following older links or repository notes that
+still refer to `docs/knowledge/`.
 
 ---
 
-## 1) System overview
+## Legacy Knowledge References
 
 - [Repository map and layers](./REPOSITORY_MAP.md)
 - [Roadmap, status and issues](./ROADMAP_AND_ISSUES_MAP.md)
 
-## 2) Architecture and contracts
+## Current Canonical References
 
-- [Architecture index](../architecture/index.md)
-- [Engine architecture](../architecture/engine/index.md)
-- [Contracts index](../contracts/index.md)
-
-## 3) Architecture decisions
-
-- [ADR index](../adr/index.md)
-- [ADR-0001: Temporal integration test policy](../adr/ADR-0001-temporal-integration-test-policy.md)
-- [ADR-0002: Neo4j knowledge graph context repository (superseded)](../adr/ADR-0002-neo4j-knowledge-graph-context-repository.md)
-
-## 4) Repository knowledge strategy
-
-- Repository maps and ADRs are the active knowledge sources.
-- Traceability is manifest-first and repository-local.
-- Neo4j graph tooling was retired on 2026-03-07 and is not part of the active toolchain.
-
-## 5) Workspace packages
-
-- [`packages/@dvt/contracts`](../../packages/@dvt/contracts)
-- [`packages/@dvt/engine`](../../packages/@dvt/engine)
-- [`packages/@dvt/adapter-temporal`](../../packages/@dvt/adapter-temporal)
-- [`packages/@dvt/adapter-postgres`](../../packages/@dvt/adapter-postgres)
-- [`packages/@dvt/cli`](../../packages/@dvt/cli)
-- [`packages/@dvt/traceability-service`](../../packages/@dvt/traceability-service)
+- [Documentation Home](../index.md)
+- [Architecture Index](../architecture/index.md)
+- [Contracts Index](../contracts/index.md)
+- [ADR Index](../adr/index.md)
+- [System Delivery Status](../architecture/system-delivery-status.md)

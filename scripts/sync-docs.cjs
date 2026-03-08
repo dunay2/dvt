@@ -766,6 +766,11 @@ function scanSectionEntries(sectionRelativePath) {
 
 const sectionConfigs = [
   {
+    relPath: 'concepts',
+    defaults: { title: 'Concepts', status: 'Active', owner: 'docs' },
+    intro: 'Canonical domain concepts, shared vocabulary, and system orientation.',
+  },
+  {
     relPath: 'architecture',
     defaults: { title: 'Architecture', status: 'Active', owner: 'docs' },
     intro: 'Technical architecture specifications (normative when marked Accepted/Active).',
