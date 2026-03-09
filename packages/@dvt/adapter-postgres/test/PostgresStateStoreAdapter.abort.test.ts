@@ -50,6 +50,33 @@ describe('PostgresStateStoreAdapter shutdown interruption', () => {
     expect(client.releaseCalls).toContain(true);
   });
 
+  it('aborts an in-flight read query that uses a tracked client during shutdown', async () => {
+    const client = new BlockingPoolClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+        query: async () => new Promise(() => {}),
+      } as never,
+      assumeSchemaReady: true,
+    });
+
+    const pendingSnapshot = adapter.getSnapshot('tenant-1', 'run-1' as never);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    await adapter.abortPendingOperations();
+
+    const outcome = await Promise.race([
+      pendingSnapshot.then(
+        () => 'resolved',
+        (error) => (error instanceof Error ? error.message : String(error))
+      ),
+      new Promise<string>((resolve) => setTimeout(() => resolve('timeout'), 25)),
+    ]);
+
+    expect(outcome).toMatch(/synthetic connection terminated/);
+    expect(client.releaseCalls).toContain(true);
+  });
+
   it('rejects new outbox writes after shutdown interruption begins', async () => {
     let connectCalls = 0;
     const adapter = new PostgresStateStoreAdapter({

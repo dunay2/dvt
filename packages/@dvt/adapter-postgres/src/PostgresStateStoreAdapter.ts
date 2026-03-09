@@ -433,25 +433,27 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   ): Promise<void> {
     this.ready();
-    const result = await this.pool.query(
-      `
-        UPDATE ${quoteIdentifier(this.schema)}.run_metadata
-        SET provider_workflow_id = $2,
-            provider_run_id = $3,
-            provider_namespace = $4,
-            provider_task_queue = $5,
-            provider_conductor_url = $6
-        WHERE run_id = $1 AND tenant_id = $7
-      `,
-      [
-        runId,
-        runRef.providerWorkflowId,
-        runRef.providerRunId,
-        runRef.providerNamespace ?? null,
-        runRef.providerTaskQueue ?? null,
-        runRef.providerConductorUrl ?? null,
-        tenantId,
-      ]
+    const result = await this.withClient((client) =>
+      client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+          SET provider_workflow_id = $2,
+              provider_run_id = $3,
+              provider_namespace = $4,
+              provider_task_queue = $5,
+              provider_conductor_url = $6
+          WHERE run_id = $1 AND tenant_id = $7
+        `,
+        [
+          runId,
+          runRef.providerWorkflowId,
+          runRef.providerRunId,
+          runRef.providerNamespace ?? null,
+          runRef.providerTaskQueue ?? null,
+          runRef.providerConductorUrl ?? null,
+          tenantId,
+        ]
+      )
     );
     if (!result.rowCount) {
       throw new Error(`RUN_NOT_FOUND_OR_FORBIDDEN: ${runId}`);
@@ -534,13 +536,15 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
-    const result = await this.pool.query<RunMetadataRow>(
-      `
-        SELECT ${RUN_METADATA_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.run_metadata
-        WHERE tenant_id = $1 AND run_id = $2
-      `,
-      [tenantId, runId]
+    const result = await this.withClient((client) =>
+      client.query<RunMetadataRow>(
+        `
+          SELECT ${RUN_METADATA_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE tenant_id = $1 AND run_id = $2
+        `,
+        [tenantId, runId]
+      )
     );
 
     const row = result.rows[0];
@@ -554,47 +558,49 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const limit = Math.min(options.limit ?? 50, 500);
     const params: unknown[] = [limit, options.tenantId];
 
-    if (options.status === undefined) {
-      const result = await this.pool.query<RunMetadataRow>(
+    return this.withClient(async (client) => {
+      if (options.status === undefined) {
+        const result = await client.query<RunMetadataRow>(
+          `
+            SELECT ${RUN_METADATA_COLUMNS}
+            FROM ${quoteIdentifier(this.schema)}.run_metadata
+            WHERE tenant_id = $2
+            ORDER BY created_at DESC
+            LIMIT $1
+          `,
+          params
+        );
+        return result.rows.map(toRunMetadata);
+      }
+
+      params.push(options.status);
+      const statusParam = `$${params.length}`;
+      const result = await client.query<RunMetadataRow>(
         `
-          SELECT ${RUN_METADATA_COLUMNS}
-          FROM ${quoteIdentifier(this.schema)}.run_metadata
-          WHERE tenant_id = $2
-          ORDER BY created_at DESC
+          SELECT
+            m.tenant_id,
+            m.project_id,
+            m.environment_id,
+            m.run_id,
+            m.plan_id,
+            m.plan_version,
+            m.provider,
+            m.provider_workflow_id,
+            m.provider_run_id,
+            m.provider_namespace,
+            m.provider_task_queue,
+            m.provider_conductor_url
+          FROM ${quoteIdentifier(this.schema)}.run_metadata m
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+          WHERE m.tenant_id = $2
+            AND s.snapshot->>'status' = ${statusParam}
+          ORDER BY m.created_at DESC
           LIMIT $1
         `,
         params
       );
       return result.rows.map(toRunMetadata);
-    }
-
-    params.push(options.status);
-    const statusParam = `$${params.length}`;
-    const result = await this.pool.query<RunMetadataRow>(
-      `
-        SELECT
-          m.tenant_id,
-          m.project_id,
-          m.environment_id,
-          m.run_id,
-          m.plan_id,
-          m.plan_version,
-          m.provider,
-          m.provider_workflow_id,
-          m.provider_run_id,
-          m.provider_namespace,
-          m.provider_task_queue,
-          m.provider_conductor_url
-        FROM ${quoteIdentifier(this.schema)}.run_metadata m
-        INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
-        WHERE m.tenant_id = $2
-          AND s.snapshot->>'status' = ${statusParam}
-        ORDER BY m.created_at DESC
-        LIMIT $1
-      `,
-      params
-    );
-    return result.rows.map(toRunMetadata);
+    });
   }
 
   /**
@@ -629,16 +635,18 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       limitClause = `LIMIT $${params.length}`;
     }
 
-    const result = await this.pool.query<EventPayloadRow>(
-      `
-        SELECT payload
-        FROM ${quoteIdentifier(this.schema)}.run_events
-        WHERE tenant_id = $1 AND run_id = $2
-        ${afterSeqClause}
-        ORDER BY run_seq ASC
-        ${limitClause}
-      `,
-      params
+    const result = await this.withClient((client) =>
+      client.query<EventPayloadRow>(
+        `
+          SELECT payload
+          FROM ${quoteIdentifier(this.schema)}.run_events
+          WHERE tenant_id = $1 AND run_id = $2
+          ${afterSeqClause}
+          ORDER BY run_seq ASC
+          ${limitClause}
+        `,
+        params
+      )
     );
 
     return result.rows.map((row: EventPayloadRow) => row.payload);
@@ -646,14 +654,16 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     this.ready();
-    const result = await this.pool.query<SnapshotRow>(
-      `
-        SELECT s.snapshot
-        FROM ${quoteIdentifier(this.schema)}.run_snapshots s
-        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
-        WHERE m.tenant_id = $1 AND s.run_id = $2
-      `,
-      [tenantId, runId]
+    const result = await this.withClient((client) =>
+      client.query<SnapshotRow>(
+        `
+          SELECT s.snapshot
+          FROM ${quoteIdentifier(this.schema)}.run_snapshots s
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
+          WHERE m.tenant_id = $1 AND s.run_id = $2
+        `,
+        [tenantId, runId]
+      )
     );
     return result.rows[0]?.snapshot ?? null;
   }
@@ -791,16 +801,18 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) return [];
 
-    const result = await this.pool.query<DeadLetterRow>(
-      `
-        SELECT dl.id, dl.original_id, dl.run_id, dl.payload, dl.last_error, dl.dead_lettered_at
-        FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
-        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
-        WHERE m.tenant_id = $2
-        ORDER BY dead_lettered_at DESC
-        LIMIT $1
-      `,
-      [boundedLimit, tenantId]
+    const result = await this.withClient((client) =>
+      client.query<DeadLetterRow>(
+        `
+          SELECT dl.id, dl.original_id, dl.run_id, dl.payload, dl.last_error, dl.dead_lettered_at
+          FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
+          WHERE m.tenant_id = $2
+          ORDER BY dead_lettered_at DESC
+          LIMIT $1
+        `,
+        [boundedLimit, tenantId]
+      )
     );
 
     return result.rows.map((row) => ({
