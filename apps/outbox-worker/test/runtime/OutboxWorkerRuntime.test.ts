@@ -250,6 +250,52 @@ await test('runtime stops and surfaces the first failure when stopOnError=true',
   assert.equal((await storage.listPending(10))[0]?.attempts, 1);
 });
 
+await test('runtime preserves partial tick telemetry before surfacing a stop-on-error failure', async () => {
+  const storage = new MemoryOutboxStorage();
+  let publishCalls = 0;
+  let firstTick: OutboxTickResult | null = null;
+  let observedError: unknown = null;
+  const bus = {
+    async publish(): Promise<void> {
+      publishCalls += 1;
+      if (publishCalls === 2) {
+        throw new Error('synthetic fatal publish failure');
+      }
+    },
+  };
+  const { logger, getErrorCount } = makeLogger();
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 25,
+    errorBackoffMs: 25,
+    batchSize: 10,
+    stopOnError: true,
+    hooks: {
+      onTick(result) {
+        firstTick = result;
+      },
+      onError(error) {
+        observedError = error;
+      },
+    },
+  });
+
+  await storage.enqueueTx('run-1', [makeEvent('1'), makeEvent('2')]);
+
+  await assert.rejects(() => runtime.start(), /synthetic fatal publish failure/);
+  await runtime.stop();
+
+  assert.equal(publishCalls, 2);
+  assert.ok(firstTick);
+  assert.equal(firstTick.claimedCount, 2);
+  assert.equal(firstTick.deliveredCount, 1);
+  assert.equal(firstTick.retriedCount, 1);
+  assert.equal(firstTick.deadLetteredCount, 0);
+  assert.equal(firstTick.retryBacklogActive, true);
+  assert.equal(getErrorCount(), 1);
+  assert.ok(observedError instanceof Error);
+  assert.equal(observedError.message, 'synthetic fatal publish failure');
+});
+
 await test('runtime treats hook failures as best-effort and keeps draining', async () => {
   const storage = new MemoryOutboxStorage();
   const bus = new InMemoryEventBus();

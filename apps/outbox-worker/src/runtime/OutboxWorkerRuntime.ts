@@ -134,14 +134,19 @@ export class OutboxWorkerRuntime {
           const result = await this.worker.tick();
           this.runHook('onTick', result);
         } catch (err) {
-          this.runHook('onError', err);
+          const tickResult = extractTickResult(err);
+          const runtimeError = unwrapTickError(err);
+          if (tickResult) {
+            this.runHook('onTick', tickResult);
+          }
+          this.runHook('onError', runtimeError);
           this.logger.error(
-            { err: toErrorLike(err), backoffMs: this.options.errorBackoffMs },
+            { err: toErrorLike(runtimeError), backoffMs: this.options.errorBackoffMs },
             'outbox worker tick failed'
           );
           if (this.options.stopOnError) {
             this.running = false;
-            throw err;
+            throw runtimeError;
           }
           if (!this.running) break;
           await this.wait(this.options.errorBackoffMs);
@@ -206,4 +211,42 @@ function toErrorLike(error: unknown): { message: string; name: string } {
     return { message: error.message, name: error.name };
   }
   return { message: String(error), name: 'UnknownError' };
+}
+
+function extractTickResult(error: unknown): OutboxTickResult | null {
+  if (!isTickErrorWithResult(error)) {
+    return null;
+  }
+  return error.tickResult;
+}
+
+function unwrapTickError(error: unknown): unknown {
+  if (!isTickErrorWithResult(error)) {
+    return error;
+  }
+  return error.cause;
+}
+
+function isTickErrorWithResult(
+  error: unknown
+): error is Error & { cause: unknown; tickResult: OutboxTickResult } {
+  if (!(error instanceof Error) || !('tickResult' in error)) {
+    return false;
+  }
+  return isOutboxTickResult((error as { tickResult?: unknown }).tickResult);
+}
+
+function isOutboxTickResult(value: unknown): value is OutboxTickResult {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const candidate = value as Partial<OutboxTickResult>;
+  return (
+    typeof candidate.claimedCount === 'number' &&
+    typeof candidate.deliveredCount === 'number' &&
+    typeof candidate.retriedCount === 'number' &&
+    typeof candidate.deadLetteredCount === 'number' &&
+    (candidate.oldestClaimedAgeMs === null || typeof candidate.oldestClaimedAgeMs === 'number') &&
+    typeof candidate.retryBacklogActive === 'boolean'
+  );
 }

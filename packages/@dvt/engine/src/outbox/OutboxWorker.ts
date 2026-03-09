@@ -79,7 +79,11 @@ export class OutboxWorker {
         }
         await safelyObserve(() => this.observer?.onRecordFailed?.(rec, msg, disposition));
         if (this.cfg.stopOnError) {
-          throw err;
+          result.retryBacklogActive = await resolveRetryBacklogActive(
+            this.storage,
+            result.retriedCount > 0
+          );
+          throw new OutboxWorkerTickError(err, result);
         }
       }
     }
@@ -89,6 +93,16 @@ export class OutboxWorker {
       result.retriedCount > 0
     );
     return result;
+  }
+}
+
+class OutboxWorkerTickError extends Error {
+  readonly tickResult: OutboxTickResult;
+
+  constructor(cause: unknown, tickResult: OutboxTickResult) {
+    super(cause instanceof Error ? cause.message : String(cause), { cause });
+    this.name = 'OutboxWorkerTickError';
+    this.tickResult = tickResult;
   }
 }
 
