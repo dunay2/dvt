@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.0](https://github.com/dunay2/dvt/compare/v3.2.0...v3.3.0) (2026-03-09)
+
+
+### Features
+
+* **g5:** Harden standalone outbox worker service ([#421](https://github.com/dunay2/dvt/issues/421)) ([edd4c92](https://github.com/dunay2/dvt/commit/edd4c92e03b6087dbea57f8f55b725169338d7c0))
+
 ## [3.2.0](https://github.com/dunay2/dvt/compare/v3.1.0...v3.2.0) (2026-03-08)
 
 
