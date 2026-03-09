@@ -282,6 +282,10 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     }
   }
 
+  async hasPendingRetries(): Promise<boolean> {
+    return this.pending.some((record) => record.attempts > 0);
+  }
+
   async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
     return this.deadLetters.slice(0, limit);
   }

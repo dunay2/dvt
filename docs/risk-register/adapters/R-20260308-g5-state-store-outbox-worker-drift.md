@@ -18,6 +18,10 @@ probability: Medium
 This branch curates historical material into a current working description of
 the state-store boundary and a G5 guide for an independent outbox worker.
 
+It now also ships the first standalone worker slice in `apps/outbox-worker`
+with a bounded HTTP publisher, explicit runtime states, `/healthz`,
+`/readyz`, `/metrics`, and a baseline operator runbook.
+
 The new documents intentionally remain non-canonical. They consolidate useful
 invariants, delivery semantics, and runtime separation guidance, but they do
 not by themselves establish implemented contracts.
@@ -26,6 +30,11 @@ That split is correct, but it introduces a residual delivery risk: future
 implementation work can selectively follow the narrative docs while missing the
 hard requirements already enforced by current state-store contracts and
 Postgres-backed behavior.
+
+The risk is no longer theoretical design drift only. The repository now has an
+implemented worker baseline, so drift can show up as operational mismatch
+between the shipped runtime, the runbook, and the eventual concurrent-worker or
+downstream-delivery hardening slices.
 
 ## Risk
 
@@ -52,11 +61,17 @@ regressing correctness around ordering, idempotency, or ownership boundaries.
   behavior, retry classification, and replay semantics through contract tests.
 - Review worker rollout changes against the state-store overview and current
   Postgres adapter design, not against narrative docs alone.
+- Keep canary, downstream contract hardening, and ADR-0009 multi-worker work
+  tracked explicitly as residual risk until they land in code and evidence.
 
 ## Evidence
 
 - `docs/archive/working-notes/state-store-extraction.md`
 - `docs/planning/gaps/g5-outbox-worker-guide.md`
+- `docs/planning/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`
+- `docs/runbooks/outbox-worker-g5.md`
 - `docs/architecture/engine/contracts/state-store/overview.md`
 - `packages/@dvt/adapter-postgres/DESIGN.md`
+- `apps/outbox-worker/src/server.ts`
+- `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`
 - `docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`

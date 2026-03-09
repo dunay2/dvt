@@ -1,4 +1,4 @@
----
+﻿---
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
@@ -54,14 +54,14 @@ Minimum tuple for this document:
 
 ## Executive Summary
 
-| Area                       | Current posture | What is true now                                                                                                                                          | Primary status source                                                                                                                        |
-| -------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Entry layer                | Partial         | `apps/api` and `apps/web` exist; API auth is implemented in code but still carries architecture-test debt; web has no automated tests                     | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Planning layer             | Partial         | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Execution layer            | Partial         | engine, Postgres adapter, and Temporal adapter are implemented; standalone worker, scheduler, and some runtime hardening themes remain gap-driven         | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
-| Persistence layer          | Partial         | Postgres state store and outbox persistence primitives are implemented; independent outbox runtime and shard model remain open                            | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
-| Observability              | Partial         | observability contracts and the OTel binding exist; production validation remains incomplete                                                              | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Traceability / OpenLineage | Partial         | mapper, package tests, `_schemaURL` pinning, and repo-local facet artifacts exist; golden validation and delivery-runtime concerns remain open            | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Area                       | Current posture | What is true now                                                                                                                                                                             | Primary status source                                                                                                                        |
+| -------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entry layer                | Partial         | `apps/api` and `apps/web` exist; API auth is implemented in code but still carries architecture-test debt; web has no automated tests                                                        | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Planning layer             | Partial         | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened                                    | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
+| Execution layer            | Partial         | engine, Postgres adapter, and Temporal adapter are implemented; the first standalone outbox worker slice now exists, while scheduler and further hardening remain gap-driven                 | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Persistence layer          | Partial         | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Observability              | Partial         | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                 | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
+| Traceability / OpenLineage | Partial         | mapper, package tests, `_schemaURL` pinning, and repo-local facet artifacts exist; golden validation and delivery-runtime concerns remain open                                               | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 
 ## Area Status
 
@@ -92,11 +92,11 @@ Minimum tuple for this document:
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                    | Status             | Notes                                                                                                                      |
-| -------------- | ------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres` | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                              |
-| Outbox runtime | `@dvt/engine`, `@dvt/adapter-postgres`      | Partial            | Persistence APIs and reusable worker core exist; independent runtime, operational model, and shards remain open under `G5` |
-| Read models    | engine and infra follow-up                  | Partial            | In-process projection exists; standalone read-model service remains open under `G7`                                        |
+| Area           | Packages                                    | Status             | Notes                                                                                                                                                                                                                                 |
+| -------------- | ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store    | `@dvt/state-store`, `@dvt/adapter-postgres` | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                         |
+| Outbox runtime | `@dvt/engine`, `@dvt/adapter-postgres`      | Partial            | Persistence APIs, reusable worker core, the first `apps/outbox-worker` host, bounded HTTP publishing, and `/healthz`/`/readyz`/`/metrics` now exist; canary rollout, downstream contract hardening, and shards remain open under `G5` |
+| Read models    | engine and infra follow-up                  | Partial            | In-process projection exists; standalone read-model service remains open under `G7`                                                                                                                                                   |
 
 ### Observability And Traceability
 

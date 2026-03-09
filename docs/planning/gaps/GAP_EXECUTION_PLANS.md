@@ -162,12 +162,12 @@ Minimum tuple for this document:
 
 - Status: Partial
 - Traceability tuple:
-  - `canonical_spec`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md) until a dedicated runtime spec or runbook exists
+  - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-  - `test_paths`: `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
-  - `verification_cmd`: `pnpm test:engine`, `pnpm test:adapter-postgres`
-  - `evidence_or_risk`: none yet; promote to evidence or risk record once a standalone runtime/process is introduced
+  - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+  - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
+  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, and initial runbook now exist in code; promote to evidence after canary and downstream contract hardening
 - Working refs:
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
   - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
@@ -175,13 +175,15 @@ Minimum tuple for this document:
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)
   - reusable engine `OutboxWorker` core
+  - standalone `apps/outbox-worker` host scaffold with runtime loop, env parsing, shutdown wiring, and bounded HTTP publisher mode
+  - operational endpoints (`/healthz`, `/readyz`, `/metrics`) with explicit runtime states (`starting`, `idle`, `draining`, `failing`, `stopped`)
+  - structured logs and counters for claim, delivery, retry, DLQ, lag, and runtime errors
+  - initial operator runbook for canary expectations and rollback boundaries
 - Remaining:
-  - standalone polling runtime/process
   - explicit subscriber delivery contract for projector/event-bus consumers
-  - retry, backoff, and dead-letter operational policy for worker delivery failures
-  - publisher wiring and operational lifecycle outside the API process
+  - deployment-grade downstream target contract beyond the current minimal HTTP publisher mode
   - shard strategy / scaling model
-  - lag, health, and error metrics aligned with runbook/ops expectations
+  - environment-scoped canary execution and rollback wiring
 
 ### G6 - OpenLineage mapping tests CI + schema pin
 

@@ -43,7 +43,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | Temporal adapter runtime                       | `@dvt/adapter-temporal`                                                                | [TemporalAdapter Specification](../../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/engine/adapters/temporal/EnginePolicies.md) | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
 | Postgres state store                           | `@dvt/adapter-postgres`, `@dvt/state-store`                                            | [Postgres State Store Adapter](../../architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../gaps/G3-TASK-SPECIFICATION.md)                                                                            | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
-| Outbox worker runtime                          | `@dvt/engine`, `@dvt/adapter-postgres`                                                 | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                                                                                           | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Outbox worker runtime                          | `@dvt/engine`, `@dvt/adapter-postgres`                                                 | [G5 - Outbox Worker Consolidated Plan](../gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md), [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../gaps/G4-TASK-SPECIFICATION.md)                                                                          | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
 | OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
@@ -149,20 +149,49 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 
 ### Outbox worker runtime
 
-- Canonical source today:
+- Canonical spec:
+  [G5 - Outbox Worker Consolidated Plan](../gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- Current planning source:
   [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G5`)
-  until a dedicated runtime or runbook spec exists
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
+  [apps/outbox-worker/src/server.ts](../../../apps/outbox-worker/src/server.ts)
+  and
+  [apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts](../../../apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts)
+  and
+  [apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts](../../../apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts)
+  and
+  [apps/outbox-worker/src/ops/OperationalServer.ts](../../../apps/outbox-worker/src/ops/OperationalServer.ts)
+  and
+  [apps/outbox-worker/src/bus/HttpEventBus.ts](../../../apps/outbox-worker/src/bus/HttpEventBus.ts)
+  and
   [packages/@dvt/engine/src/outbox/OutboxWorker.ts](../../../packages/@dvt/engine/src/outbox/OutboxWorker.ts)
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
 - Key tests:
+  [apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts](../../../apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts)
+  and
+  [apps/outbox-worker/test/plugins/env.test.ts](../../../apps/outbox-worker/test/plugins/env.test.ts)
+  and
+  [apps/outbox-worker/test/bus/HttpEventBus.test.ts](../../../apps/outbox-worker/test/bus/HttpEventBus.test.ts)
+  and
+  [apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts](../../../apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts)
+  and
+  [apps/outbox-worker/test/ops/OperationalServer.test.ts](../../../apps/outbox-worker/test/ops/OperationalServer.test.ts)
+  and
   [packages/@dvt/engine/test/outbox/OutboxWorker.test.ts](../../../packages/@dvt/engine/test/outbox/OutboxWorker.test.ts)
   and
   [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
+- Runbook:
+  [docs/runbooks/outbox-worker-g5.md](../../runbooks/outbox-worker-g5.md)
 - Verification:
+  `pnpm --filter dvt-outbox-worker typecheck`
+  and
+  `pnpm --filter dvt-outbox-worker build`
+  and
+  `pnpm --filter dvt-outbox-worker test`
+  and
   `pnpm test:engine`
   and
   `pnpm test:adapter-postgres`

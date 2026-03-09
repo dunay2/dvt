@@ -31,6 +31,27 @@ export interface DeadLetterRecord {
   deadLetteredAt: string;
 }
 
+export type OutboxFailureDisposition = 'retry' | 'dead_letter';
+
+export interface OutboxWorkerObserver {
+  onBatchClaimed?(records: readonly OutboxRecord[]): void | Promise<void>;
+  onRecordDelivered?(record: OutboxRecord): void | Promise<void>;
+  onRecordFailed?(
+    record: OutboxRecord,
+    error: string,
+    disposition: OutboxFailureDisposition
+  ): void | Promise<void>;
+}
+
+export interface OutboxTickResult {
+  claimedCount: number;
+  deliveredCount: number;
+  retriedCount: number;
+  deadLetteredCount: number;
+  oldestClaimedAgeMs: number | null;
+  retryBacklogActive: boolean;
+}
+
 /**
  * Maximum delivery attempts before an outbox record is dead-lettered.
  */
@@ -41,6 +62,7 @@ export interface IOutboxStorage {
   listPending(limit: number): Promise<OutboxRecord[]>;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
+  hasPendingRetries?(): Promise<boolean>;
   /**
    * Optional DLQ listing capability for operational tooling.
    */

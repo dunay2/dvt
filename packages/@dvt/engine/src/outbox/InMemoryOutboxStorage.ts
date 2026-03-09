@@ -97,6 +97,10 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     rec.nextAttemptAt = this.computeNextAttemptAtIso(rec.attempts);
   }
 
+  async hasPendingRetries(): Promise<boolean> {
+    return this.pending.some((record) => record.attempts > 0);
+  }
+
   async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
     return this.deadLetters.slice(0, limit);
   }

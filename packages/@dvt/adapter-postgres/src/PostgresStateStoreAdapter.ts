@@ -239,6 +239,7 @@ export interface PostgresAdapterConfig {
   now?: () => string;
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
+  assumeSchemaReady?: boolean;
 }
 
 /**
@@ -256,6 +257,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private readonly schema: SchemaName;
   private readonly now: () => string;
   private readonly statementTimeoutMs: number;
+  private readonly activeClients = new Set<PoolClient>();
+  private abortPendingOperationsRequested = false;
   /** Deduplicated promise for concurrent migrate() callers. */
   private migratePromise: Promise<void> | null = null;
   private migrated = false;
@@ -280,6 +283,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         query_timeout: config.queryTimeoutMs ?? Number(process.env.DVT_PG_QUERY_TIMEOUT_MS ?? 0),
       });
       this.ownsPool = true;
+    }
+    if (config.assumeSchemaReady) {
+      this.migratePromise = Promise.resolve();
+      this.migrated = true;
     }
     // DDL is no longer run at construction time.
     // Callers MUST await adapter.migrate() before using any storage methods.
@@ -329,13 +336,22 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   async close(): Promise<void> {
+    await this.abortPendingOperations();
     if (this.ownsPool) {
       await this.pool.end();
     }
   }
 
+  async abortPendingOperations(): Promise<void> {
+    this.abortPendingOperationsRequested = true;
+    const clients = [...this.activeClients];
+    for (const client of clients) {
+      this.releaseClient(client, true);
+    }
+  }
+
   private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect();
+    const client = await this.connect();
     try {
       await client.query('BEGIN');
       if (this.statementTimeoutMs > 0) {
@@ -345,10 +361,23 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       await client.query('COMMIT');
       return result;
     } catch (error) {
-      await client.query('ROLLBACK');
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        // Connection may already be torn down during shutdown interruption.
+      }
       throw error;
     } finally {
-      client.release();
+      this.releaseClient(client);
+    }
+  }
+
+  private async withClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.connect();
+    try {
+      return await fn(client);
+    } finally {
+      this.releaseClient(client);
     }
   }
 
@@ -404,25 +433,27 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     }
   ): Promise<void> {
     this.ready();
-    const result = await this.pool.query(
-      `
-        UPDATE ${quoteIdentifier(this.schema)}.run_metadata
-        SET provider_workflow_id = $2,
-            provider_run_id = $3,
-            provider_namespace = $4,
-            provider_task_queue = $5,
-            provider_conductor_url = $6
-        WHERE run_id = $1 AND tenant_id = $7
-      `,
-      [
-        runId,
-        runRef.providerWorkflowId,
-        runRef.providerRunId,
-        runRef.providerNamespace ?? null,
-        runRef.providerTaskQueue ?? null,
-        runRef.providerConductorUrl ?? null,
-        tenantId,
-      ]
+    const result = await this.withClient((client) =>
+      client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+          SET provider_workflow_id = $2,
+              provider_run_id = $3,
+              provider_namespace = $4,
+              provider_task_queue = $5,
+              provider_conductor_url = $6
+          WHERE run_id = $1 AND tenant_id = $7
+        `,
+        [
+          runId,
+          runRef.providerWorkflowId,
+          runRef.providerRunId,
+          runRef.providerNamespace ?? null,
+          runRef.providerTaskQueue ?? null,
+          runRef.providerConductorUrl ?? null,
+          tenantId,
+        ]
+      )
     );
     if (!result.rowCount) {
       throw new Error(`RUN_NOT_FOUND_OR_FORBIDDEN: ${runId}`);
@@ -505,13 +536,15 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
-    const result = await this.pool.query<RunMetadataRow>(
-      `
-        SELECT ${RUN_METADATA_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.run_metadata
-        WHERE tenant_id = $1 AND run_id = $2
-      `,
-      [tenantId, runId]
+    const result = await this.withClient((client) =>
+      client.query<RunMetadataRow>(
+        `
+          SELECT ${RUN_METADATA_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE tenant_id = $1 AND run_id = $2
+        `,
+        [tenantId, runId]
+      )
     );
 
     const row = result.rows[0];
@@ -525,47 +558,49 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const limit = Math.min(options.limit ?? 50, 500);
     const params: unknown[] = [limit, options.tenantId];
 
-    if (options.status === undefined) {
-      const result = await this.pool.query<RunMetadataRow>(
+    return this.withClient(async (client) => {
+      if (options.status === undefined) {
+        const result = await client.query<RunMetadataRow>(
+          `
+            SELECT ${RUN_METADATA_COLUMNS}
+            FROM ${quoteIdentifier(this.schema)}.run_metadata
+            WHERE tenant_id = $2
+            ORDER BY created_at DESC
+            LIMIT $1
+          `,
+          params
+        );
+        return result.rows.map(toRunMetadata);
+      }
+
+      params.push(options.status);
+      const statusParam = `$${params.length}`;
+      const result = await client.query<RunMetadataRow>(
         `
-          SELECT ${RUN_METADATA_COLUMNS}
-          FROM ${quoteIdentifier(this.schema)}.run_metadata
-          WHERE tenant_id = $2
-          ORDER BY created_at DESC
+          SELECT
+            m.tenant_id,
+            m.project_id,
+            m.environment_id,
+            m.run_id,
+            m.plan_id,
+            m.plan_version,
+            m.provider,
+            m.provider_workflow_id,
+            m.provider_run_id,
+            m.provider_namespace,
+            m.provider_task_queue,
+            m.provider_conductor_url
+          FROM ${quoteIdentifier(this.schema)}.run_metadata m
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+          WHERE m.tenant_id = $2
+            AND s.snapshot->>'status' = ${statusParam}
+          ORDER BY m.created_at DESC
           LIMIT $1
         `,
         params
       );
       return result.rows.map(toRunMetadata);
-    }
-
-    params.push(options.status);
-    const statusParam = `$${params.length}`;
-    const result = await this.pool.query<RunMetadataRow>(
-      `
-        SELECT
-          m.tenant_id,
-          m.project_id,
-          m.environment_id,
-          m.run_id,
-          m.plan_id,
-          m.plan_version,
-          m.provider,
-          m.provider_workflow_id,
-          m.provider_run_id,
-          m.provider_namespace,
-          m.provider_task_queue,
-          m.provider_conductor_url
-        FROM ${quoteIdentifier(this.schema)}.run_metadata m
-        INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
-        WHERE m.tenant_id = $2
-          AND s.snapshot->>'status' = ${statusParam}
-        ORDER BY m.created_at DESC
-        LIMIT $1
-      `,
-      params
-    );
-    return result.rows.map(toRunMetadata);
+    });
   }
 
   /**
@@ -600,16 +635,18 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       limitClause = `LIMIT $${params.length}`;
     }
 
-    const result = await this.pool.query<EventPayloadRow>(
-      `
-        SELECT payload
-        FROM ${quoteIdentifier(this.schema)}.run_events
-        WHERE tenant_id = $1 AND run_id = $2
-        ${afterSeqClause}
-        ORDER BY run_seq ASC
-        ${limitClause}
-      `,
-      params
+    const result = await this.withClient((client) =>
+      client.query<EventPayloadRow>(
+        `
+          SELECT payload
+          FROM ${quoteIdentifier(this.schema)}.run_events
+          WHERE tenant_id = $1 AND run_id = $2
+          ${afterSeqClause}
+          ORDER BY run_seq ASC
+          ${limitClause}
+        `,
+        params
+      )
     );
 
     return result.rows.map((row: EventPayloadRow) => row.payload);
@@ -617,14 +654,16 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     this.ready();
-    const result = await this.pool.query<SnapshotRow>(
-      `
-        SELECT s.snapshot
-        FROM ${quoteIdentifier(this.schema)}.run_snapshots s
-        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
-        WHERE m.tenant_id = $1 AND s.run_id = $2
-      `,
-      [tenantId, runId]
+    const result = await this.withClient((client) =>
+      client.query<SnapshotRow>(
+        `
+          SELECT s.snapshot
+          FROM ${quoteIdentifier(this.schema)}.run_snapshots s
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
+          WHERE m.tenant_id = $1 AND s.run_id = $2
+        `,
+        [tenantId, runId]
+      )
     );
     return result.rows[0]?.snapshot ?? null;
   }
@@ -686,15 +725,17 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     this.ready();
     if (ids.length === 0) return;
 
-    await this.pool.query(
-      `
-        UPDATE ${quoteIdentifier(this.schema)}.outbox
-        SET delivered_at = $2,
-            claimed_at = NULL
-        WHERE id = ANY($1::text[])
-      `,
-      [ids, this.now()]
-    );
+    await this.withClient(async (client) => {
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.outbox
+          SET delivered_at = $2,
+              claimed_at = NULL
+          WHERE id = ANY($1::text[])
+        `,
+        [ids, this.now()]
+      );
+    });
   }
 
   async markFailed(id: OutboxId, error: ErrorMessage): Promise<void> {
@@ -734,6 +775,24 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     });
   }
 
+  async hasPendingRetries(): Promise<boolean> {
+    this.ready();
+    return this.withClient(async (client) => {
+      const result = await client.query<{ has_pending_retries: boolean }>(
+        `
+          SELECT EXISTS (
+            SELECT 1
+            FROM ${quoteIdentifier(this.schema)}.outbox
+            WHERE delivered_at IS NULL
+              AND attempts > 0
+              AND attempts < ${MAX_OUTBOX_ATTEMPTS}
+          ) AS has_pending_retries
+        `
+      );
+      return result.rows[0]?.has_pending_retries ?? false;
+    });
+  }
+
   async listDeadLetter(limit: number, tenantId?: string): Promise<DeadLetterRecord[]> {
     this.ready();
     if (!tenantId) {
@@ -742,16 +801,18 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) return [];
 
-    const result = await this.pool.query<DeadLetterRow>(
-      `
-        SELECT dl.id, dl.original_id, dl.run_id, dl.payload, dl.last_error, dl.dead_lettered_at
-        FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
-        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
-        WHERE m.tenant_id = $2
-        ORDER BY dead_lettered_at DESC
-        LIMIT $1
-      `,
-      [boundedLimit, tenantId]
+    const result = await this.withClient((client) =>
+      client.query<DeadLetterRow>(
+        `
+          SELECT dl.id, dl.original_id, dl.run_id, dl.payload, dl.last_error, dl.dead_lettered_at
+          FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
+          WHERE m.tenant_id = $2
+          ORDER BY dead_lettered_at DESC
+          LIMIT $1
+        `,
+        [boundedLimit, tenantId]
+      )
     );
 
     return result.rows.map((row) => ({
@@ -888,6 +949,30 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     if (!this.migrated) {
       throw new Error('MIGRATE_IN_PROGRESS: await adapter.migrate() before using the adapter');
     }
+  }
+
+  private async connect(): Promise<PoolClient> {
+    this.throwIfPendingOperationsAborted();
+    const client = await this.pool.connect();
+    if (this.abortPendingOperationsRequested) {
+      client.release(true);
+      throw createPendingOperationsAbortedError();
+    }
+    this.activeClients.add(client);
+    return client;
+  }
+
+  private throwIfPendingOperationsAborted(): void {
+    if (this.abortPendingOperationsRequested) {
+      throw createPendingOperationsAbortedError();
+    }
+  }
+
+  private releaseClient(client: PoolClient, destroy = false): void {
+    if (!this.activeClients.delete(client)) {
+      return;
+    }
+    client.release(destroy);
   }
 
   private async resolveRunTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
@@ -1376,4 +1461,10 @@ function isUniqueViolation(error: unknown): error is { code: string } {
     'code' in error &&
     (error as { code?: unknown }).code === '23505'
   );
+}
+
+function createPendingOperationsAbortedError(): Error {
+  const error = new Error('PENDING_OPERATIONS_ABORTED');
+  error.name = 'AbortError';
+  return error;
 }
