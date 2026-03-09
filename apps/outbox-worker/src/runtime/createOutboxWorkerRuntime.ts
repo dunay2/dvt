@@ -57,6 +57,7 @@ export async function createOutboxWorkerRuntime(
       stopOnError: env.DVT_OUTBOX_WORKER_STOP_ON_ERROR,
       pollIntervalMs: env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
       errorBackoffMs: env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS,
+      interruptPendingTick: () => stateStore.abortPendingOperations(),
       ...(options.observer ? { observer: options.observer } : {}),
       ...(options.hooks ? { hooks: options.hooks } : {}),
     });

@@ -22,6 +22,7 @@ export interface OutboxWorkerRuntimeOptions {
   nowMs?: () => number;
   observer?: OutboxWorkerObserver;
   hooks?: OutboxWorkerRuntimeHooks;
+  interruptPendingTick?: () => void | Promise<void>;
 }
 
 export interface OutboxWorkerRuntimeHooks {
@@ -49,6 +50,7 @@ export class OutboxWorkerRuntime {
   private readonly options: RuntimeTimingOptions;
   private readonly worker: OutboxWorker;
   private readonly hooks: OutboxWorkerRuntimeHooks | undefined;
+  private readonly interruptPendingTick: (() => void | Promise<void>) | undefined;
   private loopPromise: Promise<void> | null = null;
   private waitController: globalThis.AbortController | null = null;
   private running = false;
@@ -67,6 +69,7 @@ export class OutboxWorkerRuntime {
       errorBackoffMs: options.errorBackoffMs ?? DEFAULT_OPTIONS.errorBackoffMs,
     };
     this.hooks = options.hooks;
+    this.interruptPendingTick = options.interruptPendingTick;
     this.worker = new OutboxWorker(storage, bus, {
       batchSize: this.options.batchSize,
       stopOnError: this.options.stopOnError,
@@ -107,6 +110,7 @@ export class OutboxWorkerRuntime {
     if (!this.running && loopPromise === null) return;
     this.running = false;
     this.waitController?.abort();
+    await this.interruptTick();
     if (loopPromise) {
       try {
         await loopPromise;
@@ -134,6 +138,9 @@ export class OutboxWorkerRuntime {
           const result = await this.worker.tick();
           this.runHook('onTick', result);
         } catch (err) {
+          if (!this.running) {
+            break;
+          }
           const tickResult = extractTickResult(err);
           const runtimeError = unwrapTickError(err);
           if (tickResult) {
@@ -198,6 +205,18 @@ export class OutboxWorkerRuntime {
       (hook as (this: OutboxWorkerRuntimeHooks) => void).call(hooks);
     } catch (err) {
       this.logger.warn?.({ err: toErrorLike(err), hook: name }, 'outbox runtime hook failed');
+    }
+  }
+
+  private async interruptTick(): Promise<void> {
+    if (!this.interruptPendingTick) return;
+    try {
+      await this.interruptPendingTick();
+    } catch (err) {
+      this.logger.warn?.(
+        { err: toErrorLike(err) },
+        'outbox runtime failed to interrupt an in-flight tick'
+      );
     }
   }
 }

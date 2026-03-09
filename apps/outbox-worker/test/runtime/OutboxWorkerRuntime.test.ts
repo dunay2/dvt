@@ -169,6 +169,45 @@ await test('stop interrupts idle polling wait without hanging', async () => {
   assert.ok(elapsedMs < 1000);
 });
 
+await test('stop interrupts an in-flight tick when an interrupter is configured', async () => {
+  let tickStarted = false;
+  let rejectBlockedTick: ((error: Error) => void) | null = null;
+  const storage: IOutboxStorage = {
+    async enqueueTx(): Promise<void> {},
+    async listPending(): Promise<OutboxRecord[]> {
+      tickStarted = true;
+      return new Promise<OutboxRecord[]>((_resolve, reject) => {
+        rejectBlockedTick = reject;
+      });
+    },
+    async markDelivered(): Promise<void> {},
+    async markFailed(): Promise<void> {},
+  };
+  const bus = new InMemoryEventBus();
+  let interruptCalls = 0;
+  const { logger, getErrorCount } = makeLogger();
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 60_000,
+    errorBackoffMs: 25,
+    interruptPendingTick: async () => {
+      interruptCalls += 1;
+      rejectBlockedTick?.(new Error('synthetic tick interruption'));
+    },
+  });
+
+  const loop = runtime.start();
+  await waitFor(() => tickStarted && rejectBlockedTick !== null);
+
+  const startedAt = Date.now();
+  await runtime.stop();
+  await loop;
+  const elapsedMs = Date.now() - startedAt;
+
+  assert.equal(interruptCalls, 1);
+  assert.equal(getErrorCount(), 0);
+  assert.ok(elapsedMs < 1000);
+});
+
 await test('runtime passes a clock into OutboxWorker so tick lag is populated', async () => {
   const storage = new MemoryOutboxStorage();
   const bus = new InMemoryEventBus();

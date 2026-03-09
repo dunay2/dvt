@@ -21,7 +21,7 @@ Use this worker as the single active owner of outbox polling and downstream even
 
 Default bind:
 
-- `DVT_OUTBOX_ADMIN_HOST=127.0.0.1`
+- `DVT_OUTBOX_ADMIN_HOST=0.0.0.0`
 - `DVT_OUTBOX_ADMIN_PORT=9464`
 
 ## Runtime states

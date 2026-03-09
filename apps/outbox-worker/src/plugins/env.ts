@@ -30,7 +30,7 @@ const EnvSchema = z
     DVT_OUTBOX_HTTP_TARGET_URL: z.string().optional(),
     DVT_OUTBOX_HTTP_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
     DVT_OUTBOX_HTTP_BEARER_TOKEN: z.string().optional(),
-    DVT_OUTBOX_ADMIN_HOST: z.string().default('127.0.0.1'),
+    DVT_OUTBOX_ADMIN_HOST: z.string().default('0.0.0.0'),
     DVT_OUTBOX_ADMIN_PORT: z.coerce.number().int().min(1).max(65535).default(9464),
     SERVICE_NAME: z.string().default('dvt-outbox-worker'),
   })

@@ -19,7 +19,7 @@ await test('loadEnv applies standalone worker defaults', () => {
   assert.equal(env.DVT_OUTBOX_EVENT_BUS_MODE, 'http');
   assert.equal(env.DVT_OUTBOX_HTTP_TARGET_URL, 'http://localhost:8080/outbox/events');
   assert.equal(env.DVT_OUTBOX_HTTP_TIMEOUT_MS, 10000);
-  assert.equal(env.DVT_OUTBOX_ADMIN_HOST, '127.0.0.1');
+  assert.equal(env.DVT_OUTBOX_ADMIN_HOST, '0.0.0.0');
   assert.equal(env.DVT_OUTBOX_ADMIN_PORT, 9464);
   assert.equal(env.SERVICE_NAME, 'dvt-outbox-worker');
 });

@@ -257,6 +257,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private readonly schema: SchemaName;
   private readonly now: () => string;
   private readonly statementTimeoutMs: number;
+  private readonly activeClients = new Set<PoolClient>();
   /** Deduplicated promise for concurrent migrate() callers. */
   private migratePromise: Promise<void> | null = null;
   private migrated = false;
@@ -334,13 +335,21 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   async close(): Promise<void> {
+    await this.abortPendingOperations();
     if (this.ownsPool) {
       await this.pool.end();
     }
   }
 
+  async abortPendingOperations(): Promise<void> {
+    const clients = [...this.activeClients];
+    for (const client of clients) {
+      this.releaseClient(client, true);
+    }
+  }
+
   private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect();
+    const client = await this.connect();
     try {
       await client.query('BEGIN');
       if (this.statementTimeoutMs > 0) {
@@ -350,10 +359,23 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       await client.query('COMMIT');
       return result;
     } catch (error) {
-      await client.query('ROLLBACK');
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        // Connection may already be torn down during shutdown interruption.
+      }
       throw error;
     } finally {
-      client.release();
+      this.releaseClient(client);
+    }
+  }
+
+  private async withClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.connect();
+    try {
+      return await fn(client);
+    } finally {
+      this.releaseClient(client);
     }
   }
 
@@ -691,15 +713,17 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     this.ready();
     if (ids.length === 0) return;
 
-    await this.pool.query(
-      `
-        UPDATE ${quoteIdentifier(this.schema)}.outbox
-        SET delivered_at = $2,
-            claimed_at = NULL
-        WHERE id = ANY($1::text[])
-      `,
-      [ids, this.now()]
-    );
+    await this.withClient(async (client) => {
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.outbox
+          SET delivered_at = $2,
+              claimed_at = NULL
+          WHERE id = ANY($1::text[])
+        `,
+        [ids, this.now()]
+      );
+    });
   }
 
   async markFailed(id: OutboxId, error: ErrorMessage): Promise<void> {
@@ -741,18 +765,20 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
   async hasPendingRetries(): Promise<boolean> {
     this.ready();
-    const result = await this.pool.query<{ has_pending_retries: boolean }>(
-      `
-        SELECT EXISTS (
-          SELECT 1
-          FROM ${quoteIdentifier(this.schema)}.outbox
-          WHERE delivered_at IS NULL
-            AND attempts > 0
-            AND attempts < ${MAX_OUTBOX_ATTEMPTS}
-        ) AS has_pending_retries
-      `
-    );
-    return result.rows[0]?.has_pending_retries ?? false;
+    return this.withClient(async (client) => {
+      const result = await client.query<{ has_pending_retries: boolean }>(
+        `
+          SELECT EXISTS (
+            SELECT 1
+            FROM ${quoteIdentifier(this.schema)}.outbox
+            WHERE delivered_at IS NULL
+              AND attempts > 0
+              AND attempts < ${MAX_OUTBOX_ATTEMPTS}
+          ) AS has_pending_retries
+        `
+      );
+      return result.rows[0]?.has_pending_retries ?? false;
+    });
   }
 
   async listDeadLetter(limit: number, tenantId?: string): Promise<DeadLetterRecord[]> {
@@ -909,6 +935,19 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     if (!this.migrated) {
       throw new Error('MIGRATE_IN_PROGRESS: await adapter.migrate() before using the adapter');
     }
+  }
+
+  private async connect(): Promise<PoolClient> {
+    const client = await this.pool.connect();
+    this.activeClients.add(client);
+    return client;
+  }
+
+  private releaseClient(client: PoolClient, destroy = false): void {
+    if (!this.activeClients.delete(client)) {
+      return;
+    }
+    client.release(destroy);
   }
 
   private async resolveRunTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
