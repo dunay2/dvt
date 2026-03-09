@@ -24,6 +24,10 @@ export interface CreateOutboxWorkerRuntimeOptions {
   hooks?: OutboxWorkerRuntimeHooks;
 }
 
+interface ClosableStateStore {
+  close(): Promise<void>;
+}
+
 export async function createOutboxWorkerRuntime(
   env: Env,
   logger: OutboxWorkerRuntimeLogger,
@@ -90,7 +94,7 @@ function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): IEventBus 
 }
 
 async function safelyReleaseStartupResources(
-  stateStore: PostgresStateStoreAdapter,
+  stateStore: ClosableStateStore,
   poolLease: { release(): Promise<void> }
 ): Promise<void> {
   try {
@@ -108,7 +112,7 @@ async function safelyReleaseStartupResources(
 
 async function stopRuntimeResources(deps: {
   runtime: Pick<RuntimeHandle, 'stop'>;
-  stateStore: PostgresStateStoreAdapter;
+  stateStore: ClosableStateStore;
   poolLease: { release(): Promise<void> };
 }): Promise<void> {
   let firstError: unknown = null;
