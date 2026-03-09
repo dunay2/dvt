@@ -1,6 +1,6 @@
 import type { OperationalServerHandle } from '../ops/OperationalServer.js';
-import type { OutboxWorkerRuntimeLogger } from '../runtime/OutboxWorkerRuntime.js';
 import type { RuntimeHandle } from '../runtime/createOutboxWorkerRuntime.js';
+import type { OutboxWorkerRuntimeLogger } from '../runtime/OutboxWorkerRuntime.js';
 
 interface StopRuntimeAndOperationalServerOptions {
   runtime: Pick<RuntimeHandle, 'stop'>;
