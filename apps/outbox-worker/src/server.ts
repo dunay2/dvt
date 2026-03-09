@@ -2,6 +2,7 @@ import process from 'node:process';
 
 import pino from 'pino';
 
+import { stopRuntimeAndOperationalServer } from './lifecycle/stopRuntimeAndOperationalServer.js';
 import { createOperationalServer } from './ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from './ops/OutboxWorkerMonitor.js';
 import { loadEnv } from './plugins/env.js';
@@ -38,6 +39,7 @@ async function main(): Promise<void> {
   process.once('SIGINT', () => handleSignal('SIGINT'));
   process.once('SIGTERM', () => handleSignal('SIGTERM'));
 
+  let primaryError: unknown = null;
   try {
     await operationalServer.start();
     logger.info(
@@ -49,9 +51,16 @@ async function main(): Promise<void> {
       'outbox worker bootstrapped'
     );
     await runtime.start(shutdown.signal);
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    await runtime.stop();
-    await operationalServer.stop();
+    await stopRuntimeAndOperationalServer({
+      runtime,
+      operationalServer,
+      logger,
+      primaryError,
+    });
   }
 }
 
