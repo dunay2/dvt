@@ -182,6 +182,6 @@ async function waitFor(predicate: () => boolean, timeoutMs = 1_000): Promise<voi
     if (Date.now() - startedAt > timeoutMs) {
       throw new Error('Condition not met before timeout');
     }
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 10));
   }
 }

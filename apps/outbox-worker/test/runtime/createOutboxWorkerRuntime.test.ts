@@ -4,6 +4,7 @@ import test from 'node:test';
 import type { Pool } from 'pg';
 
 import adapterPostgres from '@dvt/adapter-postgres';
+import type { RunEventPersisted } from '@dvt/engine';
 
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
 import { loadEnv } from '../../src/plugins/env.js';
@@ -21,7 +22,7 @@ function makeLogger(): OutboxWorkerRuntimeLogger {
   };
 }
 
-function makePendingEvent() {
+function makePendingEvent(): RunEventPersisted {
   return {
     eventId: 'evt-1',
     eventType: 'RunQueued' as const,
@@ -420,9 +421,10 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
     ];
   };
   PostgresStateStoreAdapter.prototype.abortPendingOperations =
-    async function abortPendingOperations(this: PostgresStateStoreAdapter): Promise<void> {
+    // eslint-disable-next-line no-unused-vars -- TypeScript this parameter is required for prototype patching.
+    async function abortPendingOperations(this: object): Promise<void> {
       abortPendingOperationsCalls += 1;
-      await originalAbortPendingOperations.call(this);
+      await Reflect.apply(originalAbortPendingOperations, this, []);
     };
 
   try {

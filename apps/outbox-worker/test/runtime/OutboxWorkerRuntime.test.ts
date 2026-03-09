@@ -136,11 +136,11 @@ class AbortDuringListenerRegistrationSignal {
     return this.abortedState;
   }
 
-  addEventListener(_type: string, _listener: EventListenerOrEventListenerObject): void {
+  addEventListener(): void {
     this.abortedState = true;
   }
 
-  removeEventListener(_type: string, _listener: EventListenerOrEventListenerObject): void {}
+  removeEventListener(): void {}
 }
 
 await test('start drains pending records and stop exits cleanly', async () => {
@@ -442,7 +442,7 @@ await test('runtime does not miss an abort that lands during listener registrati
 
   await storage.enqueueTx('run-1', [makeEvent('1')]);
 
-  await runtime.start(signal as unknown as AbortSignal);
+  await runtime.start(signal as unknown as globalThis.AbortSignal);
 
   assert.equal(hooks.started, false);
   assert.equal(hooks.tickCount, 0);

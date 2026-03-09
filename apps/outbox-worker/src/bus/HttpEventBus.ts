@@ -13,7 +13,7 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 export class HttpEventBus implements IEventBus {
   private readonly fetchImpl: typeof globalThis.fetch;
   private readonly timeoutMs: number;
-  private readonly pendingControllers = new Set<AbortController>();
+  private readonly pendingControllers = new Set<globalThis.AbortController>();
 
   constructor(private readonly options: HttpEventBusOptions) {
     this.fetchImpl = options.fetchImpl ?? globalThis.fetch;
