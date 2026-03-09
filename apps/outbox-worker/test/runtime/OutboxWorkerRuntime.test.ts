@@ -59,17 +59,25 @@ class MemoryOutboxStorage implements IOutboxStorage {
 function makeLogger(): {
   logger: OutboxWorkerRuntimeLogger;
   getErrorCount(): number;
+  getWarnCount(): number;
 } {
   let errorCount = 0;
+  let warnCount = 0;
   return {
     logger: {
       info: (): void => {},
+      warn: (): void => {
+        warnCount += 1;
+      },
       error: (): void => {
         errorCount += 1;
       },
     } satisfies OutboxWorkerRuntimeLogger,
     getErrorCount() {
       return errorCount;
+    },
+    getWarnCount() {
+      return warnCount;
     },
   };
 }
@@ -240,4 +248,83 @@ await test('runtime stops and surfaces the first failure when stopOnError=true',
   assert.equal(hooks.started, true);
   assert.equal(hooks.stopped, true);
   assert.equal((await storage.listPending(10))[0]?.attempts, 1);
+});
+
+await test('runtime treats hook failures as best-effort and keeps draining', async () => {
+  const storage = new MemoryOutboxStorage();
+  const bus = new InMemoryEventBus();
+  const { logger, getWarnCount } = makeLogger();
+  const hooks: OutboxWorkerRuntimeHooks = {
+    onStarted() {
+      throw new Error('onStarted failed');
+    },
+    onTick() {
+      throw new Error('onTick failed');
+    },
+    onStopped() {
+      throw new Error('onStopped failed');
+    },
+  };
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 60_000,
+    errorBackoffMs: 25,
+    hooks,
+  });
+
+  await storage.enqueueTx('run-1', [makeEvent('1')]);
+
+  const loop = runtime.start();
+  await waitFor(() => bus.published.length === 1);
+  await runtime.stop();
+  await loop;
+
+  assert.equal((await storage.listPending(10)).length, 0);
+  assert.equal(getWarnCount(), 3);
+});
+
+await test('runtime start is idempotent and reuses the same loop promise', async () => {
+  const storage = new MemoryOutboxStorage();
+  const bus = new InMemoryEventBus();
+  const { logger } = makeLogger();
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 60_000,
+    errorBackoffMs: 25,
+  });
+
+  await storage.enqueueTx('run-1', [makeEvent('1')]);
+
+  const firstStart = runtime.start();
+  const secondStart = runtime.start();
+
+  assert.equal(firstStart, secondStart);
+
+  await waitFor(() => bus.published.length === 1);
+  await runtime.stop();
+  await firstStart;
+
+  assert.equal((await storage.listPending(10)).length, 0);
+});
+
+await test('runtime does not start the loop when the provided signal is already aborted', async () => {
+  const storage = new MemoryOutboxStorage();
+  const bus = new InMemoryEventBus();
+  const { logger } = makeLogger();
+  const hooks = new CountingHooks();
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 60_000,
+    errorBackoffMs: 25,
+    hooks,
+  });
+  const controller = new globalThis.AbortController();
+
+  await storage.enqueueTx('run-1', [makeEvent('1')]);
+  controller.abort();
+
+  await runtime.start(controller.signal);
+
+  assert.equal(hooks.started, false);
+  assert.equal(hooks.tickCount, 0);
+  assert.equal(hooks.stopped, false);
+  assert.equal(bus.published.length, 0);
+  assert.equal((await storage.listPending(10)).length, 1);
 });

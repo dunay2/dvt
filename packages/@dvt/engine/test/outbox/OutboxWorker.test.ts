@@ -138,6 +138,120 @@ describe('OutboxWorker', () => {
     expect(result.oldestClaimedAgeMs).toBe(60_000);
   });
 
+  it('falls back to local retry state when probing pending retries fails', async () => {
+    const storage: IOutboxStorage = {
+      async enqueueTx(): Promise<void> {},
+      async listPending(): Promise<OutboxRecord[]> {
+        return [
+          {
+            id: 'outbox_1',
+            createdAt: '2026-02-27T00:00:00.000Z',
+            idempotencyKey: 'k-1',
+            payload: makeEvent('1'),
+            attempts: 0,
+          },
+        ];
+      },
+      async markDelivered(): Promise<void> {},
+      async markFailed(): Promise<void> {},
+      async hasPendingRetries(): Promise<boolean> {
+        throw new Error('synthetic retry probe failure');
+      },
+    };
+    const alwaysFailBus: IEventBus = {
+      publish: async () => {
+        throw new Error('publish failed');
+      },
+    };
+    const worker = new OutboxWorker(storage, alwaysFailBus, {
+      batchSize: 10,
+      stopOnError: false,
+    });
+
+    const result = await worker.tick();
+
+    expect(result).toMatchObject({
+      claimedCount: 1,
+      deliveredCount: 0,
+      retriedCount: 1,
+      deadLetteredCount: 0,
+      retryBacklogActive: true,
+    });
+  });
+
+  it('treats observer callbacks as best-effort and preserves delivery semantics', async () => {
+    const now = { value: 0 };
+    const store = new InMemoryOutboxStorage({ nowMs: () => now.value });
+    const bus = new FailFirstBus();
+    const worker = new OutboxWorker(store, bus, {
+      batchSize: 10,
+      stopOnError: false,
+      observer: {
+        onBatchClaimed() {
+          throw new Error('claim observer failed');
+        },
+        onRecordDelivered() {
+          throw new Error('delivery observer failed');
+        },
+        onRecordFailed() {
+          throw new Error('failure observer failed');
+        },
+      },
+    });
+
+    await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1), makeEvent('2', 'run-1', 2)]);
+
+    const firstResult = await worker.tick();
+    expect(firstResult).toMatchObject({
+      claimedCount: 2,
+      deliveredCount: 1,
+      retriedCount: 1,
+      deadLetteredCount: 0,
+      retryBacklogActive: true,
+    });
+
+    now.value = 2_000;
+    const secondResult = await worker.tick();
+    expect(secondResult).toMatchObject({
+      claimedCount: 1,
+      deliveredCount: 1,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      retryBacklogActive: false,
+    });
+
+    expect(bus.published).toHaveLength(2);
+    await expect(store.listPending(10)).resolves.toHaveLength(0);
+  });
+
+  it('treats retry backlog probing as best-effort when the batch is empty', async () => {
+    const storage: IOutboxStorage = {
+      async enqueueTx(): Promise<void> {},
+      async listPending(): Promise<OutboxRecord[]> {
+        return [];
+      },
+      async markDelivered(): Promise<void> {},
+      async markFailed(): Promise<void> {},
+      async hasPendingRetries(): Promise<boolean> {
+        throw new Error('empty-batch retry probe failed');
+      },
+    };
+    const worker = new OutboxWorker(storage, new CapturingBus(), {
+      batchSize: 10,
+      stopOnError: false,
+    });
+
+    const result = await worker.tick();
+
+    expect(result).toMatchObject({
+      claimedCount: 0,
+      deliveredCount: 0,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      retryBacklogActive: false,
+    });
+  });
+
   it('moves event to DLQ after MAX_OUTBOX_ATTEMPTS and supports manual replay', async () => {
     const now = { value: 0 };
     const store = new InMemoryOutboxStorage({ nowMs: () => now.value });

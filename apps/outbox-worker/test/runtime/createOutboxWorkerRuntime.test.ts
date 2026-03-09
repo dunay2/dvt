@@ -6,6 +6,7 @@ import adapterPostgres from '@dvt/adapter-postgres';
 
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
 import { loadEnv } from '../../src/plugins/env.js';
+import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
 import { createOutboxWorkerRuntime } from '../../src/runtime/createOutboxWorkerRuntime.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
 
@@ -67,6 +68,48 @@ await test('createOutboxWorkerRuntime closes the shared pg pool on stop', async 
   }
 });
 
+await test('createOutboxWorkerRuntime stop is idempotent at the handle boundary', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let adapterCloseCalls = 0;
+
+  const originalEnd = pool.end;
+  const originalClose = PostgresStateStoreAdapter.prototype.close;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {
+    adapterCloseCalls += 1;
+  };
+
+  try {
+    const runtime = await createOutboxWorkerRuntime(
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      }),
+      makeLogger()
+    );
+
+    await runtime.stop();
+    await runtime.stop();
+
+    assert.equal(adapterCloseCalls, 1);
+    assert.equal(endCalls, 1);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.close = originalClose;
+    await closePgPool();
+  }
+});
+
 await test('createOutboxWorkerRuntime runs migrations when explicitly enabled', async () => {
   await closePgPool();
 
@@ -104,6 +147,136 @@ await test('createOutboxWorkerRuntime runs migrations when explicitly enabled', 
     pool.end = originalEnd;
     PostgresStateStoreAdapter.prototype.migrate = originalMigrate;
     PostgresStateStoreAdapter.prototype.close = originalClose;
+    await closePgPool();
+  }
+});
+
+await test('createOutboxWorkerRuntime releases the shared pool lease even when stop cleanup fails', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+
+  const originalEnd = pool.end;
+  const originalClose = PostgresStateStoreAdapter.prototype.close;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {
+    throw new Error('synthetic adapter close failure');
+  };
+
+  try {
+    const runtime = await createOutboxWorkerRuntime(
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      }),
+      makeLogger()
+    );
+
+    await assert.rejects(() => runtime.stop(), /synthetic adapter close failure/);
+
+    assert.equal(endCalls, 1);
+    assert.notEqual(getPgPool(poolConfig), pool);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.close = originalClose;
+    await closePgPool();
+  }
+});
+
+await test('createOutboxWorkerRuntime continues cleanup when runtime stop fails', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let adapterCloseCalls = 0;
+
+  const originalEnd = pool.end;
+  const originalClose = PostgresStateStoreAdapter.prototype.close;
+  const originalRuntimeStop = OutboxWorkerRuntime.prototype.stop;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {
+    adapterCloseCalls += 1;
+  };
+  OutboxWorkerRuntime.prototype.stop = async function stop(): Promise<void> {
+    throw new Error('synthetic runtime stop failure');
+  };
+
+  try {
+    const runtime = await createOutboxWorkerRuntime(
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      }),
+      makeLogger()
+    );
+
+    await assert.rejects(() => runtime.stop(), /synthetic runtime stop failure/);
+
+    assert.equal(adapterCloseCalls, 1);
+    assert.equal(endCalls, 1);
+    assert.notEqual(getPgPool(poolConfig), pool);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.close = originalClose;
+    OutboxWorkerRuntime.prototype.stop = originalRuntimeStop;
+    await closePgPool();
+  }
+});
+
+await test('createOutboxWorkerRuntime releases the shared pool lease when startup fails', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+
+  const originalEnd = pool.end;
+  const originalMigrate = PostgresStateStoreAdapter.prototype.migrate;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.migrate = async function migrate(): Promise<void> {
+    throw new Error('synthetic migration failure');
+  };
+
+  try {
+    await assert.rejects(
+      () =>
+        createOutboxWorkerRuntime(
+          loadEnv({
+            NODE_ENV: 'test',
+            DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+            DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+            DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+          }),
+          makeLogger()
+        ),
+      /synthetic migration failure/
+    );
+
+    assert.equal(endCalls, 1);
+    assert.notEqual(getPgPool(poolConfig), pool);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.migrate = originalMigrate;
     await closePgPool();
   }
 });

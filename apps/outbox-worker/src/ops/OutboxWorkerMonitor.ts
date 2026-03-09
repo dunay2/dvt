@@ -127,7 +127,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   onBatchClaimed(records: readonly OutboxRecord[]): void {
-    const oldestRecord = records[0] ?? null;
+    const oldestRecord = resolveOldestRecord(records);
     const oldestLagSeconds =
       oldestRecord === null
         ? 0
@@ -256,6 +256,21 @@ function resolveLagSeconds(createdAt: string, nowMs: number): number {
   const createdAtMs = Date.parse(createdAt);
   if (!Number.isFinite(createdAtMs)) return 0;
   return Math.max(0, (nowMs - createdAtMs) / 1000);
+}
+
+function resolveOldestRecord(records: readonly OutboxRecord[]): OutboxRecord | null {
+  let oldestRecord: OutboxRecord | null = null;
+  let oldestCreatedAtMs = Number.POSITIVE_INFINITY;
+
+  for (const record of records) {
+    const createdAtMs = Date.parse(record.createdAt);
+    if (Number.isFinite(createdAtMs) && createdAtMs < oldestCreatedAtMs) {
+      oldestCreatedAtMs = createdAtMs;
+      oldestRecord = record;
+    }
+  }
+
+  return oldestRecord ?? records[0] ?? null;
 }
 
 function roundToMillis(value: number): number {

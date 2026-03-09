@@ -105,3 +105,90 @@ await test('OperationalServer stop does not mask listen failures', async () => {
     await first.stop();
   }
 });
+
+await test('OperationalServer reflects failing and stopped states in probes', async () => {
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger: makeLogger(),
+    nowMs: () => 1_741_392_000_000,
+  });
+  const server = createOperationalServer({
+    host: '127.0.0.1',
+    port: 0,
+    logger: makeLogger(),
+    monitor,
+  });
+
+  await server.start();
+
+  try {
+    const address = server.getAddress();
+    assert.ok(address);
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+
+    monitor.onError(new Error('synthetic runtime failure'));
+
+    let response = await globalThis.fetch(`${baseUrl}/healthz`);
+    assert.equal(response.status, 200);
+    let body = (await response.json()) as { state: string; ok: boolean };
+    assert.equal(body.state, 'failing');
+    assert.equal(body.ok, true);
+
+    response = await globalThis.fetch(`${baseUrl}/readyz`);
+    assert.equal(response.status, 503);
+    const readyBody = (await response.json()) as {
+      state: string;
+      ready: boolean;
+      lastErrorMessage: string | null;
+    };
+    assert.equal(readyBody.state, 'failing');
+    assert.equal(readyBody.ready, false);
+    assert.equal(readyBody.lastErrorMessage, 'synthetic runtime failure');
+
+    monitor.onStopped();
+
+    response = await globalThis.fetch(`${baseUrl}/healthz`);
+    assert.equal(response.status, 503);
+    body = (await response.json()) as { state: string; ok: boolean };
+    assert.equal(body.state, 'stopped');
+    assert.equal(body.ok, false);
+
+    response = await globalThis.fetch(`${baseUrl}/readyz`);
+    assert.equal(response.status, 503);
+    const stoppedBody = (await response.json()) as { state: string; ready: boolean; ok: boolean };
+    assert.equal(stoppedBody.state, 'stopped');
+    assert.equal(stoppedBody.ready, false);
+    assert.equal(stoppedBody.ok, false);
+  } finally {
+    await server.stop();
+  }
+});
+
+await test('OperationalServer start and stop are idempotent and reset the bound address', async () => {
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger: makeLogger(),
+    nowMs: () => 1_741_392_000_000,
+  });
+  const server = createOperationalServer({
+    host: '127.0.0.1',
+    port: 0,
+    logger: makeLogger(),
+    monitor,
+  });
+
+  assert.equal(server.getAddress(), null);
+
+  await server.start();
+  const firstAddress = server.getAddress();
+  assert.ok(firstAddress);
+
+  await server.start();
+  assert.deepEqual(server.getAddress(), firstAddress);
+
+  await server.stop();
+  assert.equal(server.getAddress(), null);
+
+  await server.stop();
+  assert.equal(server.getAddress(), null);
+});

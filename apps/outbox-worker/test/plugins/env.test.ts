@@ -86,3 +86,73 @@ await test('loadEnv parses string booleans for stop-on-error explicitly', () => 
   assert.equal(trueEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, true);
   assert.equal(migrateEnv.DVT_OUTBOX_WORKER_RUN_MIGRATIONS, true);
 });
+
+await test('loadEnv rejects ambiguous boolean strings for worker flags', () => {
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'yes',
+      }),
+    /DVT_OUTBOX_WORKER_STOP_ON_ERROR/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'enabled',
+      }),
+    /DVT_OUTBOX_WORKER_RUN_MIGRATIONS/
+  );
+});
+
+await test('loadEnv rejects invalid worker timing and admin port values', () => {
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '0',
+      }),
+    /DVT_OUTBOX_WORKER_POLL_INTERVAL_MS/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_OUTBOX_WORKER_BATCH_SIZE: '-1',
+      }),
+    /DVT_OUTBOX_WORKER_BATCH_SIZE/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '0',
+      }),
+    /DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_OUTBOX_ADMIN_PORT: '70000',
+      }),
+    /DVT_OUTBOX_ADMIN_PORT/
+  );
+});

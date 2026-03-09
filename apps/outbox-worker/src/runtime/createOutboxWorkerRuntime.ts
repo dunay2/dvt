@@ -43,27 +43,34 @@ export async function createOutboxWorkerRuntime(
     assumeSchemaReady: !runMigrations,
   });
 
-  if (runMigrations) {
-    await stateStore.migrate();
+  try {
+    if (runMigrations) {
+      await stateStore.migrate();
+    }
+
+    const runtime = new OutboxWorkerRuntime(stateStore, createEventBus(env, logger), logger, {
+      batchSize: env.DVT_OUTBOX_WORKER_BATCH_SIZE,
+      stopOnError: env.DVT_OUTBOX_WORKER_STOP_ON_ERROR,
+      pollIntervalMs: env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
+      errorBackoffMs: env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS,
+      ...(options.observer ? { observer: options.observer } : {}),
+      ...(options.hooks ? { hooks: options.hooks } : {}),
+    });
+    let stopPromise: Promise<void> | null = null;
+
+    return {
+      start: (signal?: globalThis.AbortSignal) => runtime.start(signal),
+      stop: () =>
+        (stopPromise ??= stopRuntimeResources({
+          runtime,
+          stateStore,
+          poolLease,
+        })),
+    };
+  } catch (error) {
+    await safelyReleaseStartupResources(stateStore, poolLease);
+    throw error;
   }
-
-  const runtime = new OutboxWorkerRuntime(stateStore, createEventBus(env, logger), logger, {
-    batchSize: env.DVT_OUTBOX_WORKER_BATCH_SIZE,
-    stopOnError: env.DVT_OUTBOX_WORKER_STOP_ON_ERROR,
-    pollIntervalMs: env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
-    errorBackoffMs: env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS,
-    ...(options.observer ? { observer: options.observer } : {}),
-    ...(options.hooks ? { hooks: options.hooks } : {}),
-  });
-
-  return {
-    start: (signal?: globalThis.AbortSignal) => runtime.start(signal),
-    stop: async () => {
-      await runtime.stop();
-      await stateStore.close();
-      await poolLease.release();
-    },
-  };
 }
 
 function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): IEventBus {
@@ -79,5 +86,52 @@ function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): IEventBus 
       });
     case 'log':
       return new LoggingEventBus(logger);
+  }
+}
+
+async function safelyReleaseStartupResources(
+  stateStore: PostgresStateStoreAdapter,
+  poolLease: { release(): Promise<void> }
+): Promise<void> {
+  try {
+    await stateStore.close();
+  } catch {
+    // Cleanup must not mask the startup failure.
+  }
+
+  try {
+    await poolLease.release();
+  } catch {
+    // Cleanup must not mask the startup failure.
+  }
+}
+
+async function stopRuntimeResources(deps: {
+  runtime: Pick<RuntimeHandle, 'stop'>;
+  stateStore: PostgresStateStoreAdapter;
+  poolLease: { release(): Promise<void> };
+}): Promise<void> {
+  let firstError: unknown = null;
+
+  try {
+    await deps.runtime.stop();
+  } catch (error) {
+    firstError ??= error;
+  }
+
+  try {
+    await deps.stateStore.close();
+  } catch (error) {
+    firstError ??= error;
+  }
+
+  try {
+    await deps.poolLease.release();
+  } catch (error) {
+    firstError ??= error;
+  }
+
+  if (firstError) {
+    throw firstError;
   }
 }

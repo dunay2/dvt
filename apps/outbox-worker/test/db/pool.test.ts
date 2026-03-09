@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Pool } from 'pg';
 
-import { closePgPool, getPgPool } from '../../src/db/pool.js';
+import { acquirePgPool, closePgPool, getPgPool } from '../../src/db/pool.js';
 
 await test('closePgPool ends and resets the shared pool', async () => {
   await closePgPool();
@@ -78,6 +78,60 @@ await test('getPgPool separates caches for different connection settings', async
     assert.notEqual(first, differentDatabase);
     assert.notEqual(first, differentTimeouts);
   } finally {
+    await closePgPool();
+  }
+});
+
+await test('acquirePgPool keeps the shared pool alive until the last lease is released', async () => {
+  await closePgPool();
+
+  const config = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(config);
+  const firstLease = acquirePgPool(config);
+  const secondLease = acquirePgPool(config);
+  let endCalls = 0;
+  const originalEnd = pool.end;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+
+  try {
+    await firstLease.release();
+    assert.equal(endCalls, 0);
+
+    await secondLease.release();
+    assert.equal(endCalls, 1);
+  } finally {
+    pool.end = originalEnd;
+    await closePgPool();
+  }
+});
+
+await test('acquirePgPool release is idempotent for the same lease', async () => {
+  await closePgPool();
+
+  const config = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const lease = acquirePgPool(config);
+  const pool = lease.pool;
+  let endCalls = 0;
+  const originalEnd = pool.end;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+
+  try {
+    await lease.release();
+    await lease.release();
+
+    assert.equal(endCalls, 1);
+  } finally {
+    pool.end = originalEnd;
     await closePgPool();
   }
 });

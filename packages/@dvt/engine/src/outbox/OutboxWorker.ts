@@ -142,5 +142,9 @@ async function resolveRetryBacklogActive(
   if (!storage.hasPendingRetries) {
     return fallback;
   }
-  return storage.hasPendingRetries();
+  try {
+    return await storage.hasPendingRetries();
+  } catch {
+    return fallback;
+  }
 }

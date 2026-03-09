@@ -113,6 +113,26 @@ await test('OutboxWorkerMonitor tracks runtime state, metrics, and delivery tran
   assert.ok(entries.some((entry) => entry.msg === 'outbox record scheduled for retry'));
 });
 
+await test('OutboxWorkerMonitor logs the oldest claimed record across the full batch', () => {
+  const clock = { nowMs: Date.parse('2026-03-08T00:00:10.000Z') };
+  const { logger, entries } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+  });
+
+  monitor.onBatchClaimed([
+    makeRecord('newer', '2026-03-08T00:00:09.000Z'),
+    makeRecord('older-retry', '2026-03-08T00:00:00.000Z', 1),
+  ]);
+
+  const claimedLog = entries.find((entry) => entry.msg === 'outbox records claimed');
+  assert.ok(claimedLog);
+  assert.equal(claimedLog.data.oldestCreatedAt, '2026-03-08T00:00:00.000Z');
+  assert.equal(claimedLog.data.oldestLagSeconds, 10);
+});
+
 await test('OutboxWorkerMonitor marks readiness false when a tick only retries records', () => {
   const clock = { nowMs: 1_741_392_000_000 };
   const { logger } = makeLogger();
@@ -169,4 +189,38 @@ await test('OutboxWorkerMonitor marks readiness false when a tick only retries r
   assert.equal(recovered.ready, true);
   assert.equal(recovered.state, 'idle');
   assert.equal(recovered.lastErrorMessage, null);
+});
+
+await test('OutboxWorkerMonitor clears runtime errors after a healthy recovery tick', () => {
+  const clock = { nowMs: 1_741_392_000_000 };
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+  });
+
+  monitor.onStarted();
+  monitor.onError(new Error('transient runtime failure'));
+
+  const failing = monitor.getHealthSnapshot();
+  assert.equal(failing.ready, false);
+  assert.equal(failing.state, 'failing');
+  assert.equal(failing.lastErrorMessage, 'transient runtime failure');
+
+  clock.nowMs += 1_000;
+  monitor.onTick({
+    claimedCount: 1,
+    deliveredCount: 1,
+    retriedCount: 0,
+    deadLetteredCount: 0,
+    oldestClaimedAgeMs: 3_000,
+    retryBacklogActive: false,
+  });
+
+  const recovered = monitor.getHealthSnapshot();
+  assert.equal(recovered.ready, true);
+  assert.equal(recovered.state, 'draining');
+  assert.equal(recovered.lastErrorMessage, null);
+  assert.ok(recovered.lastTickAt);
 });
