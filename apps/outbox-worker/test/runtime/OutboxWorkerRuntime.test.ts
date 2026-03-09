@@ -171,13 +171,13 @@ await test('stop interrupts idle polling wait without hanging', async () => {
 
 await test('stop interrupts an in-flight tick when an interrupter is configured', async () => {
   let tickStarted = false;
-  let rejectBlockedTick: ((error: Error) => void) | null = null;
+  let interruptBlockedTick: (() => void) | null = null;
   const storage: IOutboxStorage = {
     async enqueueTx(): Promise<void> {},
     async listPending(): Promise<OutboxRecord[]> {
       tickStarted = true;
       return new Promise<OutboxRecord[]>((_resolve, reject) => {
-        rejectBlockedTick = reject;
+        interruptBlockedTick = () => reject(new Error('synthetic tick interruption'));
       });
     },
     async markDelivered(): Promise<void> {},
@@ -191,12 +191,12 @@ await test('stop interrupts an in-flight tick when an interrupter is configured'
     errorBackoffMs: 25,
     interruptPendingTick: async () => {
       interruptCalls += 1;
-      rejectBlockedTick?.(new Error('synthetic tick interruption'));
+      interruptBlockedTick?.();
     },
   });
 
   const loop = runtime.start();
-  await waitFor(() => tickStarted && rejectBlockedTick !== null);
+  await waitFor(() => tickStarted && interruptBlockedTick !== null);
 
   const startedAt = Date.now();
   await runtime.stop();
