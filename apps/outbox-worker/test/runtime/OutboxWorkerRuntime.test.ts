@@ -129,6 +129,20 @@ class CountingHooks implements OutboxWorkerRuntimeHooks {
   }
 }
 
+class AbortDuringListenerRegistrationSignal {
+  private abortedState = false;
+
+  get aborted(): boolean {
+    return this.abortedState;
+  }
+
+  addEventListener(_type: string, _listener: EventListenerOrEventListenerObject): void {
+    this.abortedState = true;
+  }
+
+  removeEventListener(_type: string, _listener: EventListenerOrEventListenerObject): void {}
+}
+
 await test('start drains pending records and stop exits cleanly', async () => {
   const storage = new MemoryOutboxStorage();
   const bus = new InMemoryEventBus();
@@ -406,6 +420,29 @@ await test('runtime does not start the loop when the provided signal is already 
   controller.abort();
 
   await runtime.start(controller.signal);
+
+  assert.equal(hooks.started, false);
+  assert.equal(hooks.tickCount, 0);
+  assert.equal(hooks.stopped, false);
+  assert.equal(bus.published.length, 0);
+  assert.equal((await storage.listPending(10)).length, 1);
+});
+
+await test('runtime does not miss an abort that lands during listener registration', async () => {
+  const storage = new MemoryOutboxStorage();
+  const bus = new InMemoryEventBus();
+  const { logger } = makeLogger();
+  const hooks = new CountingHooks();
+  const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+    pollIntervalMs: 60_000,
+    errorBackoffMs: 25,
+    hooks,
+  });
+  const signal = new AbortDuringListenerRegistrationSignal();
+
+  await storage.enqueueTx('run-1', [makeEvent('1')]);
+
+  await runtime.start(signal as unknown as AbortSignal);
 
   assert.equal(hooks.started, false);
   assert.equal(hooks.tickCount, 0);

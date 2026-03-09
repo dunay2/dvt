@@ -13,6 +13,7 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 export class HttpEventBus implements IEventBus {
   private readonly fetchImpl: typeof globalThis.fetch;
   private readonly timeoutMs: number;
+  private readonly pendingControllers = new Set<AbortController>();
 
   constructor(private readonly options: HttpEventBusOptions) {
     this.fetchImpl = options.fetchImpl ?? globalThis.fetch;
@@ -21,6 +22,7 @@ export class HttpEventBus implements IEventBus {
 
   async publish(events: RunEventPersisted[]): Promise<void> {
     const controller = new globalThis.AbortController();
+    this.pendingControllers.add(controller);
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     let response: Awaited<ReturnType<typeof globalThis.fetch>> | null = null;
 
@@ -44,7 +46,14 @@ export class HttpEventBus implements IEventBus {
       throw error;
     } finally {
       clearTimeout(timeout);
+      this.pendingControllers.delete(controller);
       await safelyDisposeResponse(response);
+    }
+  }
+
+  abortPendingPublishes(): void {
+    for (const controller of [...this.pendingControllers]) {
+      controller.abort();
     }
   }
 }

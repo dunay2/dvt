@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { setTimeout as sleep } from 'node:timers/promises';
 import test from 'node:test';
 import type { Pool } from 'pg';
 
@@ -17,6 +18,25 @@ function makeLogger(): OutboxWorkerRuntimeLogger {
     info: () => {},
     warn: () => {},
     error: () => {},
+  };
+}
+
+function makePendingEvent() {
+  return {
+    eventId: 'evt-1',
+    eventType: 'RunQueued' as const,
+    runId: 'run-1',
+    tenantId: 'tenant-1',
+    projectId: 'project-1',
+    environmentId: 'dev',
+    planId: 'plan-1',
+    planVersion: '1.0.0',
+    logicalAttemptId: 1,
+    engineAttemptId: 1,
+    emittedAt: '2026-03-08T00:00:00.000Z',
+    idempotencyKey: 'key-1',
+    runSeq: 1,
+    persistedAt: '2026-03-08T00:00:00.000Z',
   };
 }
 
@@ -351,3 +371,113 @@ await test('createOutboxWorkerRuntime keeps a shared pool alive until the last r
     await closePgPool();
   }
 });
+
+await test(
+  'createOutboxWorkerRuntime stop prevents a post-abort retry write from opening new pg clients',
+  async () => {
+    await closePgPool();
+
+    const poolConfig = {
+      connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+    };
+    const pool = getPgPool(poolConfig);
+    let fetchStarted = false;
+    let fetchAbortCalls = 0;
+    let abortPendingOperationsCalls = 0;
+    let poolConnectCalls = 0;
+
+    const originalFetch = globalThis.fetch;
+    const originalConnect = pool.connect;
+    const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
+    const originalAbortPendingOperations =
+      PostgresStateStoreAdapter.prototype.abortPendingOperations;
+
+    globalThis.fetch = (async (_url, init) => {
+      fetchStarted = true;
+      const signal = init?.signal;
+
+      return new Promise<globalThis.Response>((_resolve, reject) => {
+        signal?.addEventListener(
+          'abort',
+          () => {
+            fetchAbortCalls += 1;
+            reject(makeAbortError());
+          },
+          { once: true }
+        );
+      });
+    }) as typeof globalThis.fetch;
+    pool.connect = async function connect(): Promise<never> {
+      poolConnectCalls += 1;
+      throw new Error('shutdown-interrupted tick should not open a new pg client');
+    };
+    PostgresStateStoreAdapter.prototype.listPending = async function listPending() {
+      return [
+        {
+          id: 'outbox_1',
+          createdAt: '2026-03-08T00:00:00.000Z',
+          idempotencyKey: 'key-1',
+          payload: makePendingEvent(),
+          attempts: 0,
+        },
+      ];
+    };
+    PostgresStateStoreAdapter.prototype.abortPendingOperations =
+      async function abortPendingOperations(this: PostgresStateStoreAdapter): Promise<void> {
+        abortPendingOperationsCalls += 1;
+        await originalAbortPendingOperations.call(this);
+      };
+
+    try {
+      const runtime = await createOutboxWorkerRuntime(
+        loadEnv({
+          NODE_ENV: 'test',
+          DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+          DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+          DVT_OUTBOX_HTTP_TARGET_URL: 'http://example.test/outbox/events',
+          DVT_OUTBOX_HTTP_TIMEOUT_MS: '60000',
+        }),
+        makeLogger()
+      );
+
+      const loop = runtime.start();
+      await waitFor(() => fetchStarted);
+
+      const startedAt = Date.now();
+      await runtime.stop();
+      await loop;
+      const elapsedMs = Date.now() - startedAt;
+
+      assert.equal(fetchAbortCalls, 1);
+      assert.ok(abortPendingOperationsCalls >= 1);
+      assert.equal(poolConnectCalls, 0);
+      assert.ok(elapsedMs < 1000);
+    } finally {
+      globalThis.fetch = originalFetch;
+      pool.connect = originalConnect;
+      PostgresStateStoreAdapter.prototype.listPending = originalListPending;
+      PostgresStateStoreAdapter.prototype.abortPendingOperations = originalAbortPendingOperations;
+      await closePgPool();
+    }
+  }
+);
+
+async function waitFor(predicate: () => boolean, timeoutMs = 1000): Promise<void> {
+  const startedAt = Date.now();
+
+  while (!predicate()) {
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error('Condition not met before timeout');
+    }
+    await sleep(10);
+  }
+}
+
+function makeAbortError(): Error {
+  const error = new Error('synthetic abort');
+  Object.defineProperty(error, 'name', {
+    value: 'AbortError',
+    configurable: true,
+  });
+  return error;
+}

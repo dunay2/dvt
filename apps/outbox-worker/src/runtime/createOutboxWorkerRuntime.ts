@@ -28,6 +28,10 @@ interface ClosableStateStore {
   close(): Promise<void>;
 }
 
+interface InterruptibleEventBus extends IEventBus {
+  abortPendingPublishes?(): void;
+}
+
 export async function createOutboxWorkerRuntime(
   env: Env,
   logger: OutboxWorkerRuntimeLogger,
@@ -46,18 +50,19 @@ export async function createOutboxWorkerRuntime(
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
     assumeSchemaReady: !runMigrations,
   });
+  const eventBus = createEventBus(env, logger);
 
   try {
     if (runMigrations) {
       await stateStore.migrate();
     }
 
-    const runtime = new OutboxWorkerRuntime(stateStore, createEventBus(env, logger), logger, {
+    const runtime = new OutboxWorkerRuntime(stateStore, eventBus, logger, {
       batchSize: env.DVT_OUTBOX_WORKER_BATCH_SIZE,
       stopOnError: env.DVT_OUTBOX_WORKER_STOP_ON_ERROR,
       pollIntervalMs: env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
       errorBackoffMs: env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS,
-      interruptPendingTick: () => stateStore.abortPendingOperations(),
+      interruptPendingTick: () => interruptPendingTick(stateStore, eventBus),
       ...(options.observer ? { observer: options.observer } : {}),
       ...(options.hooks ? { hooks: options.hooks } : {}),
     });
@@ -78,7 +83,7 @@ export async function createOutboxWorkerRuntime(
   }
 }
 
-function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): IEventBus {
+function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): InterruptibleEventBus {
   switch (env.DVT_OUTBOX_EVENT_BUS_MODE) {
     case 'http':
       return new HttpEventBus({
@@ -92,6 +97,14 @@ function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): IEventBus 
     case 'log':
       return new LoggingEventBus(logger);
   }
+}
+
+async function interruptPendingTick(
+  stateStore: { abortPendingOperations(): Promise<void> },
+  eventBus: InterruptibleEventBus
+): Promise<void> {
+  eventBus.abortPendingPublishes?.();
+  await stateStore.abortPendingOperations();
 }
 
 async function safelyReleaseStartupResources(

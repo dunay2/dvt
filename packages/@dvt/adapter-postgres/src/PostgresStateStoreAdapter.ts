@@ -258,6 +258,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private readonly now: () => string;
   private readonly statementTimeoutMs: number;
   private readonly activeClients = new Set<PoolClient>();
+  private abortPendingOperationsRequested = false;
   /** Deduplicated promise for concurrent migrate() callers. */
   private migratePromise: Promise<void> | null = null;
   private migrated = false;
@@ -342,6 +343,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   async abortPendingOperations(): Promise<void> {
+    this.abortPendingOperationsRequested = true;
     const clients = [...this.activeClients];
     for (const client of clients) {
       this.releaseClient(client, true);
@@ -938,9 +940,20 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   private async connect(): Promise<PoolClient> {
+    this.throwIfPendingOperationsAborted();
     const client = await this.pool.connect();
+    if (this.abortPendingOperationsRequested) {
+      client.release(true);
+      throw createPendingOperationsAbortedError();
+    }
     this.activeClients.add(client);
     return client;
+  }
+
+  private throwIfPendingOperationsAborted(): void {
+    if (this.abortPendingOperationsRequested) {
+      throw createPendingOperationsAbortedError();
+    }
   }
 
   private releaseClient(client: PoolClient, destroy = false): void {
@@ -1436,4 +1449,10 @@ function isUniqueViolation(error: unknown): error is { code: string } {
     'code' in error &&
     (error as { code?: unknown }).code === '23505'
   );
+}
+
+function createPendingOperationsAbortedError(): Error {
+  const error = new Error('PENDING_OPERATIONS_ABORTED');
+  error.name = 'AbortError';
+  return error;
 }

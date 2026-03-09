@@ -49,4 +49,24 @@ describe('PostgresStateStoreAdapter shutdown interruption', () => {
     await expect(pendingList).rejects.toThrow(/synthetic connection terminated/);
     expect(client.releaseCalls).toContain(true);
   });
+
+  it('rejects new outbox writes after shutdown interruption begins', async () => {
+    let connectCalls = 0;
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => {
+          connectCalls += 1;
+          throw new Error('connect should not be called after interruption');
+        },
+      } as never,
+      assumeSchemaReady: true,
+    });
+
+    await adapter.abortPendingOperations();
+
+    await expect(adapter.markFailed('outbox_1', 'synthetic failure')).rejects.toThrow(
+      /PENDING_OPERATIONS_ABORTED/
+    );
+    expect(connectCalls).toBe(0);
+  });
 });

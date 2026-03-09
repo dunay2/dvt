@@ -224,6 +224,50 @@ describe('OutboxWorker', () => {
     await expect(store.listPending(10)).resolves.toHaveLength(0);
   });
 
+  it('passes a stable pre-failure snapshot to observers', async () => {
+    const now = { value: 0 };
+    const store = new InMemoryOutboxStorage({ nowMs: () => now.value });
+    const observed: Array<{
+      attempts: number;
+      nextAttemptAt: string | undefined;
+      lastError: string | undefined;
+    }> = [];
+    const alwaysFailBus: IEventBus = {
+      publish: async () => {
+        throw new Error('synthetic bus failure');
+      },
+    };
+    const worker = new OutboxWorker(store, alwaysFailBus, {
+      batchSize: 10,
+      observer: {
+        onRecordFailed(record) {
+          observed.push({
+            attempts: record.attempts,
+            nextAttemptAt: record.nextAttemptAt,
+            lastError: record.lastError,
+          });
+        },
+      },
+    });
+
+    await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1)]);
+
+    await worker.tick();
+
+    expect(observed).toEqual([
+      {
+        attempts: 0,
+        nextAttemptAt: undefined,
+        lastError: undefined,
+      },
+    ]);
+    now.value = 1_001;
+    const [pending] = await store.listPending(10);
+    expect(pending?.attempts).toBe(1);
+    expect(pending?.nextAttemptAt).toBeDefined();
+    expect(pending?.lastError).toBe('synthetic bus failure');
+  });
+
   it('treats retry backlog probing as best-effort when the batch is empty', async () => {
     const storage: IOutboxStorage = {
       async enqueueTx(): Promise<void> {},

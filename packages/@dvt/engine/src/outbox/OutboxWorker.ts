@@ -7,7 +7,12 @@
  * @date 2026-02-21
  */
 import { MAX_OUTBOX_ATTEMPTS, type IEventBus, type IOutboxStorage } from './types.js';
-import type { OutboxFailureDisposition, OutboxTickResult, OutboxWorkerObserver } from './types.js';
+import type {
+  OutboxFailureDisposition,
+  OutboxRecord,
+  OutboxTickResult,
+  OutboxWorkerObserver,
+} from './types.js';
 
 export interface OutboxWorkerConfig {
   batchSize: number;
@@ -71,13 +76,14 @@ export class OutboxWorker {
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         const disposition = resolveFailureDisposition(rec.attempts);
+        const failedRecord = snapshotRecord(rec);
         await this.storage.markFailed(rec.id, msg);
         if (disposition === 'dead_letter') {
           result.deadLetteredCount += 1;
         } else {
           result.retriedCount += 1;
         }
-        await safelyObserve(() => this.observer?.onRecordFailed?.(rec, msg, disposition));
+        await safelyObserve(() => this.observer?.onRecordFailed?.(failedRecord, msg, disposition));
         if (this.cfg.stopOnError) {
           result.retryBacklogActive = await resolveRetryBacklogActive(
             this.storage,
@@ -119,6 +125,10 @@ function emptyTickResult(): OutboxTickResult {
 
 function resolveFailureDisposition(attemptsBeforeFailure: number): OutboxFailureDisposition {
   return attemptsBeforeFailure + 1 >= MAX_OUTBOX_ATTEMPTS ? 'dead_letter' : 'retry';
+}
+
+function snapshotRecord(record: OutboxRecord): OutboxRecord {
+  return { ...record };
 }
 
 function resolveOldestClaimedAgeMs(

@@ -83,15 +83,24 @@ export class OutboxWorkerRuntime {
     this.running = true;
 
     if (signal) {
-      if (signal.aborted) {
-        this.running = false;
-        return Promise.resolve();
-      }
       const onAbort = (): void => {
         void this.stop();
       };
       signal.addEventListener('abort', onAbort, { once: true });
       this.detachAbortListener = () => signal.removeEventListener('abort', onAbort);
+
+      if (signal.aborted) {
+        this.running = false;
+        this.detachAbortListener();
+        this.detachAbortListener = null;
+        return Promise.resolve();
+      }
+    }
+
+    if (!this.running) {
+      this.detachAbortListener?.();
+      this.detachAbortListener = null;
+      return Promise.resolve();
     }
 
     this.loopPromise = this.runLoop().finally(() => {

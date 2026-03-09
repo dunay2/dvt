@@ -132,3 +132,56 @@ await test('HttpEventBus times out when downstream does not respond', async () =
     );
   }
 });
+
+await test('HttpEventBus aborts an in-flight publish on shutdown interruption', async () => {
+  let abortsObserved = 0;
+  let fetchStarted = false;
+
+  const bus = new HttpEventBus({
+    targetUrl: 'http://example.test/outbox/events',
+    timeoutMs: 60_000,
+    fetchImpl: (async (_url, init) => {
+      fetchStarted = true;
+      const signal = init?.signal;
+
+      return new Promise<globalThis.Response>((_resolve, reject) => {
+        signal?.addEventListener(
+          'abort',
+          () => {
+            abortsObserved += 1;
+            reject(makeAbortError());
+          },
+          { once: true }
+        );
+      });
+    }) as typeof globalThis.fetch,
+  });
+
+  const pendingPublish = bus.publish([makeEvent('1')]);
+  await waitFor(() => fetchStarted);
+
+  bus.abortPendingPublishes();
+
+  await assert.rejects(pendingPublish, /HTTP_EVENT_BUS_TIMEOUT: 60000/);
+  assert.equal(abortsObserved, 1);
+});
+
+function makeAbortError(): Error {
+  const error = new Error('synthetic abort');
+  Object.defineProperty(error, 'name', {
+    value: 'AbortError',
+    configurable: true,
+  });
+  return error;
+}
+
+async function waitFor(predicate: () => boolean, timeoutMs = 1_000): Promise<void> {
+  const startedAt = Date.now();
+
+  while (!predicate()) {
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error('Condition not met before timeout');
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
