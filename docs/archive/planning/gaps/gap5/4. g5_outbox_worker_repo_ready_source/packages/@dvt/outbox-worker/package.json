@@ -13,9 +13,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
-  "dependencies": {
-    "p-limit": "^6.2.0"
-  },
   "devDependencies": {
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"

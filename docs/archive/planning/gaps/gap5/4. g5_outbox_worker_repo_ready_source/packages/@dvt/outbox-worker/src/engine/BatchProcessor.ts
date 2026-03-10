@@ -1,4 +1,3 @@
-import pLimit from 'p-limit';
 import type { ClaimedOutboxRecord } from '../types.js';
 import { CrashWindowInjectedError } from '../delivery/CrashWindowInjectedError.js';
 import { DeliveryCoordinator } from '../delivery/DeliveryCoordinator.js';
@@ -15,9 +14,7 @@ export class BatchProcessor {
   ) {}
 
   async process(records: readonly ClaimedOutboxRecord[]): Promise<BatchProcessingReport> {
-    const limit = pLimit(this.maxConcurrency);
-    const tasks = records.map((record) => limit(async () => this.coordinator.execute(record)));
-    const settled = await Promise.allSettled(tasks);
+    const settled = await Promise.allSettled(this.createWorkers(records));
 
     const fatal = settled.find((item) => item.status === 'rejected');
     if (fatal?.status === 'rejected') {
@@ -32,5 +29,21 @@ export class BatchProcessor {
       claimedCount: records.length,
       processedCount: records.length,
     };
+  }
+
+  private createWorkers(records: readonly ClaimedOutboxRecord[]): Promise<void>[] {
+    const recordQueue = [...records];
+    const workerCount = Math.min(records.length, Math.max(this.maxConcurrency, 1));
+
+    return Array.from({ length: workerCount }, async (): Promise<void> => {
+      while (recordQueue.length > 0) {
+        const record = recordQueue.shift();
+        if (record === undefined) {
+          return;
+        }
+
+        await this.coordinator.execute(record);
+      }
+    });
   }
 }
