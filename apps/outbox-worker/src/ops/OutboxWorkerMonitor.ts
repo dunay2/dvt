@@ -10,7 +10,13 @@ import type {
   OutboxWorkerRuntimeLogger,
 } from '../runtime/OutboxWorkerRuntime.js';
 
-export type OutboxRuntimeState = 'starting' | 'idle' | 'draining' | 'failing' | 'stopped';
+export type OutboxRuntimeState =
+  | 'starting'
+  | 'passive'
+  | 'idle'
+  | 'draining'
+  | 'failing'
+  | 'stopped';
 
 export interface HealthSnapshot {
   ok: boolean;
@@ -39,6 +45,7 @@ interface Counters {
 
 const RUNTIME_STATES: readonly OutboxRuntimeState[] = [
   'starting',
+  'passive',
   'idle',
   'draining',
   'failing',
@@ -122,6 +129,13 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
 
   onStopped(): void {
     this.transitionTo('stopped', 'runtime stopped');
+  }
+
+  enterPassiveMode(): void {
+    this.startedAtMs ??= this.nowMs();
+    this.lastErrorMessage = null;
+    this.lastErrorAtMs = null;
+    this.transitionTo('passive', 'runtime ownership is passive');
   }
 
   onBatchClaimed(records: readonly OutboxRecord[]): void {
@@ -247,7 +261,39 @@ function toRecordLog(record: OutboxRecord): Record<string, unknown> {
 }
 
 function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (error === null) {
+    return 'null';
+  }
+
+  if (typeof error === 'object') {
+    const serialized = safeSerializeObject(error);
+    if (serialized !== null) {
+      return serialized;
+    }
+
+    const constructorName = error.constructor?.name;
+    return constructorName && constructorName !== 'Object'
+      ? constructorName
+      : 'UnserializableErrorObject';
+  }
+
+  return String(error);
+}
+
+function safeSerializeObject(value: object): string | null {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
 }
 
 function resolveLagSeconds(createdAt: string, nowMs: number): number {

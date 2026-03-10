@@ -6,6 +6,7 @@ Current scope:
 
 - bootstrap PostgreSQL storage when explicitly enabled
 - run the polling loop independently from `apps/api`
+- make ownership explicit at host level through `active` / `passive` mode
 - publish envelopes through an explicit bus adapter
 - expose `/healthz`, `/readyz`, and `/metrics`
 - stop cleanly on `SIGINT` / `SIGTERM`
@@ -23,9 +24,18 @@ Operational endpoints:
 - `/readyz`: readiness probe based on runtime state (`idle` / `draining` are ready only when no retry backlog is pending)
 - `/metrics`: Prometheus-style metrics for runtime state, lag, retries, deliveries, DLQ, and errors
 
+Ownership modes:
+
+- `active`: the standalone worker is the explicit owner of outbox polling and downstream publication
+- `passive`: the process exposes operational endpoints but does not start the polling runtime
+
+`DVT_OUTBOX_OWNERSHIP_MODE` is required. Set it explicitly in every environment so process start never implies ownership by omission.
+
 Core env vars:
 
+- `DVT_OUTBOX_OWNERSHIP_MODE`: required `active` or `passive`
 - `DVT_OUTBOX_ADMIN_HOST` / `DVT_OUTBOX_ADMIN_PORT`: bind address for health and metrics endpoints
+- `DATABASE_URL` plus bus/runtime settings: required only when ownership mode is `active`
 - `DVT_OUTBOX_WORKER_RUN_MIGRATIONS`: set `true` only in environments where the worker role is allowed to run DDL
 - `DVT_OUTBOX_EVENT_BUS_MODE`: `http` or `log`
 - `DVT_OUTBOX_HTTP_TARGET_URL`: downstream HTTP sink when bus mode is `http`

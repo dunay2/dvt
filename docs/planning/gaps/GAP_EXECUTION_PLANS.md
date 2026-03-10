@@ -169,6 +169,7 @@ Minimum tuple for this document:
   - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
   - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, and initial runbook now exist in code; promote to evidence after canary and downstream contract hardening
 - Working refs:
+  - [`G5 - AI Execution Tracker`](G5-AI-EXECUTION-TRACKER.md)
   - [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
   - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)

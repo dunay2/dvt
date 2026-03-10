@@ -4,7 +4,7 @@ import type { IEventBus, OutboxWorkerObserver } from '@dvt/engine';
 import { HttpEventBus } from '../bus/HttpEventBus.js';
 import { LoggingEventBus } from '../bus/LoggingEventBus.js';
 import { acquirePgPool } from '../db/pool.js';
-import type { Env } from '../plugins/env.js';
+import type { ActiveEnv } from '../plugins/env.js';
 
 import {
   OutboxWorkerRuntime,
@@ -33,7 +33,7 @@ interface InterruptibleEventBus extends IEventBus {
 }
 
 export async function createOutboxWorkerRuntime(
-  env: Env,
+  env: ActiveEnv,
   logger: OutboxWorkerRuntimeLogger,
   options: CreateOutboxWorkerRuntimeOptions = {}
 ): Promise<RuntimeHandle> {
@@ -83,11 +83,11 @@ export async function createOutboxWorkerRuntime(
   }
 }
 
-function createEventBus(env: Env, logger: OutboxWorkerRuntimeLogger): InterruptibleEventBus {
+function createEventBus(env: ActiveEnv, logger: OutboxWorkerRuntimeLogger): InterruptibleEventBus {
   switch (env.DVT_OUTBOX_EVENT_BUS_MODE) {
     case 'http':
       return new HttpEventBus({
-        targetUrl: env.DVT_OUTBOX_HTTP_TARGET_URL!,
+        targetUrl: env.DVT_OUTBOX_HTTP_TARGET_URL,
         timeoutMs: env.DVT_OUTBOX_HTTP_TIMEOUT_MS,
         serviceName: env.SERVICE_NAME,
         ...(env.DVT_OUTBOX_HTTP_BEARER_TOKEN

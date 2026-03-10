@@ -224,3 +224,39 @@ await test('OutboxWorkerMonitor clears runtime errors after a healthy recovery t
   assert.equal(recovered.lastErrorMessage, null);
   assert.ok(recovered.lastTickAt);
 });
+
+await test('OutboxWorkerMonitor renders structured object failures without default object stringification', () => {
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => 1_741_392_000_000,
+  });
+
+  monitor.onError({ code: 'DOWNSTREAM_TIMEOUT', retryable: true });
+
+  const snapshot = monitor.getHealthSnapshot();
+  assert.equal(snapshot.state, 'failing');
+  assert.equal(snapshot.lastErrorMessage, '{"code":"DOWNSTREAM_TIMEOUT","retryable":true}');
+});
+
+await test('OutboxWorkerMonitor exposes passive ownership as non-ready but healthy', () => {
+  const clock = { nowMs: 1_741_392_000_000 };
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+  });
+
+  monitor.enterPassiveMode();
+
+  const snapshot = monitor.getHealthSnapshot();
+  assert.equal(snapshot.ok, true);
+  assert.equal(snapshot.ready, false);
+  assert.equal(snapshot.state, 'passive');
+
+  const metrics = monitor.renderMetrics();
+  assert.match(metrics, /dvt_outbox_runtime_ready 0/);
+  assert.match(metrics, /dvt_outbox_runtime_state\{state="passive"\} 1/);
+});

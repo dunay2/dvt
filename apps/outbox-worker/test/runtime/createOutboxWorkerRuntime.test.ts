@@ -7,7 +7,7 @@ import type { RunEventPersisted } from '@dvt/engine';
 import type { Pool } from 'pg';
 
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
-import { loadEnv } from '../../src/plugins/env.js';
+import { isActiveEnv, loadEnv, type ActiveEnv } from '../../src/plugins/env.js';
 import { createOutboxWorkerRuntime } from '../../src/runtime/createOutboxWorkerRuntime.js';
 import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
@@ -41,6 +41,17 @@ function makePendingEvent(): RunEventPersisted {
   };
 }
 
+function loadActiveTestEnv(input: NodeJS.ProcessEnv): ActiveEnv {
+  const env = loadEnv({
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    ...input,
+  });
+  if (!isActiveEnv(env)) {
+    throw new Error('expected an active test environment');
+  }
+  return env;
+}
+
 await test('createOutboxWorkerRuntime closes the shared pg pool on stop', async () => {
   await closePgPool();
 
@@ -68,7 +79,7 @@ await test('createOutboxWorkerRuntime closes the shared pg pool on stop', async 
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -111,7 +122,7 @@ await test('createOutboxWorkerRuntime stop is idempotent at the handle boundary'
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -152,7 +163,7 @@ await test('createOutboxWorkerRuntime runs migrations when explicitly enabled', 
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -193,7 +204,7 @@ await test('createOutboxWorkerRuntime releases the shared pool lease even when s
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -238,7 +249,7 @@ await test('createOutboxWorkerRuntime continues cleanup when runtime stop fails'
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -282,7 +293,7 @@ await test('createOutboxWorkerRuntime releases the shared pool lease when startu
     await assert.rejects(
       () =>
         createOutboxWorkerRuntime(
-          loadEnv({
+          loadActiveTestEnv({
             NODE_ENV: 'test',
             DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
             DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -307,7 +318,7 @@ await test('createOutboxWorkerRuntime configures the shared pool with env timeou
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -353,7 +364,7 @@ await test('createOutboxWorkerRuntime keeps a shared pool alive until the last r
   PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {};
 
   try {
-    const env = loadEnv({
+    const env = loadActiveTestEnv({
       NODE_ENV: 'test',
       DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -428,7 +439,7 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'http',
