@@ -24,9 +24,7 @@ function makeLogger(): {
         entries.push(msg === undefined ? { level: 'warn', data } : { level: 'warn', data, msg });
       },
       error(data, msg) {
-        entries.push(
-          msg === undefined ? { level: 'error', data } : { level: 'error', data, msg }
-        );
+        entries.push(msg === undefined ? { level: 'error', data } : { level: 'error', data, msg });
       },
     },
     entries,

@@ -15,9 +15,7 @@ function makeLogger(): {
       info: () => {},
       warn: () => {},
       error(data, msg) {
-        entries.push(
-          msg === undefined ? { level: 'error', data } : { level: 'error', data, msg }
-        );
+        entries.push(msg === undefined ? { level: 'error', data } : { level: 'error', data, msg });
       },
     },
     entries,
