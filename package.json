@@ -62,7 +62,7 @@
     "docs:build": "pnpm docs:sync && zensical build",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
     "release": "echo \"Releases are managed by release-please workflow\"",
-    "prepare": "husky",
+    "prepare": "node scripts/setup-git-hooks.cjs",
     "precommit": "lint-staged && pnpm lint:determinism"
   },
   "lint-staged": {
@@ -119,7 +119,6 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.29.1",
-    "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "lint-staged": "^16.2.7",
     "markdownlint-cli2": "^0.21.0",
