@@ -3,9 +3,11 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import {
   InMemoryEventBus,
+  InMemoryOutboxStorage,
   type IOutboxStorage,
   type OutboxRecord,
   type OutboxTickResult,
+  type RunEventPersisted,
 } from '@dvt/engine';
 
 import {
@@ -23,11 +25,31 @@ import {
   createSyntheticError,
   enqueuePendingEvents,
   runtimeClock,
+  runtimeEventFixture,
   runtimeFailures,
   runtimeScenarios,
   runtimeTest,
   waitForCondition,
 } from './runtimeTestSupport.js';
+
+function makeRuntimeEvent(runId: string, runSeq: number): RunEventPersisted {
+  return {
+    eventId: `evt-${runId}-${runSeq}`,
+    eventType: runtimeEventFixture.eventType,
+    runId,
+    tenantId: runtimeEventFixture.tenantId,
+    projectId: runtimeEventFixture.projectId,
+    environmentId: runtimeEventFixture.environmentId,
+    planId: runtimeEventFixture.planId,
+    planVersion: runtimeEventFixture.planVersion,
+    logicalAttemptId: runtimeEventFixture.logicalAttemptId,
+    engineAttemptId: runtimeEventFixture.engineAttemptId,
+    emittedAt: runtimeEventFixture.emittedAt,
+    idempotencyKey: `key-${runId}-${runSeq}`,
+    runSeq,
+    persistedAt: runtimeEventFixture.persistedAt,
+  };
+}
 
 await runtimeTest(runtimeScenarios.startDrainsPendingRecordsAndStopExitsCleanly, async () => {
   const { storage, bus, runtime } = createMemoryRuntime({
@@ -239,6 +261,62 @@ await runtimeTest(
     const observedError = observed.error;
     assert.ok(observedError instanceof Error);
     assert.equal(observedError.message, runtimeFailures.fatalPublish.message);
+  }
+);
+
+await runtimeTest(
+  { title: 'runtime does not bypass later same-run events after a failure' },
+  async () => {
+    const now = { value: 0 };
+    const storage = new InMemoryOutboxStorage({ nowMs: () => now.value });
+    const published: RunEventPersisted[] = [];
+    let publishCalls = 0;
+    const bus = {
+      async publish(events: RunEventPersisted[]): Promise<void> {
+        publishCalls += 1;
+        if (publishCalls === 1) {
+          throw createSyntheticError(runtimeFailures.fatalPublish);
+        }
+        published.push(...events);
+      },
+    };
+    const { logger } = createLoggerState();
+    const observedTicks: OutboxTickResult[] = [];
+    const runtime = new OutboxWorkerRuntime(storage, bus, logger, {
+      pollIntervalMs: 25,
+      errorBackoffMs: 25,
+      batchSize: 10,
+      nowMs: () => now.value,
+      hooks: {
+        onTick(result) {
+          observedTicks.push(result);
+        },
+      },
+    });
+
+    await storage.enqueueTx('run-ordered', [
+      makeRuntimeEvent('run-ordered', 1),
+      makeRuntimeEvent('run-ordered', 2),
+    ]);
+
+    const loop = runtime.start();
+    await waitForCondition(() => observedTicks.length >= 1);
+
+    assert.equal(published.length, 0);
+    assert.equal(observedTicks[0]?.claimedCount, 1);
+    assert.equal(observedTicks[0]?.retriedCount, 1);
+
+    now.value = 1_001;
+    await waitForCondition(() => published.length === 2);
+
+    await runtime.stop();
+    await loop;
+
+    assert.deepEqual(
+      published.map((event) => event.runSeq),
+      [1, 2]
+    );
+    assert.equal((await storage.listPending(10)).length, 0);
   }
 );
 
