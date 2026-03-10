@@ -13,7 +13,7 @@ interface TransitionCase {
   readonly name: string;
   readonly expectedStatus: string;
   readonly expectedReasonCode: string;
-  readonly run: (store: InMemoryOutboxStore) => Promise<void>;
+  readonly run: (_store: InMemoryOutboxStore) => Promise<void>;
 }
 
 function seedClaimedRecord(store: InMemoryOutboxStore): void {
