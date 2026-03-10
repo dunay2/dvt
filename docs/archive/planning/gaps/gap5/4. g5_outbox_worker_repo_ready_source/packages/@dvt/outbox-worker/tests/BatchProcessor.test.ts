@@ -48,7 +48,8 @@ async function waitFor(predicate: () => boolean): Promise<void> {
       return;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
+    await Promise.resolve();
   }
 
   throw new Error('condition not reached');
