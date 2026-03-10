@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.1](https://github.com/dunay2/dvt/compare/v3.3.0...v3.3.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* **adapters:** Harden outbox worker runtime lifecycle ([d2544c6](https://github.com/dunay2/dvt/commit/d2544c64484cf7c2012d154e5f2e54800cd6bd49))
+* **ci:** Avoid incompatible Vitest ESLint plugin load ([21c5620](https://github.com/dunay2/dvt/commit/21c5620b239d298f4e8f1c21c20ebcbab228c39f))
+
 ## [3.3.0](https://github.com/dunay2/dvt/compare/v3.2.0...v3.3.0) (2026-03-09)
 
 
