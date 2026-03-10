@@ -3,7 +3,6 @@ const eslint = require('@eslint/js');
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
 const importPlugin = require('eslint-plugin-import');
-const vitestPlugin = require('eslint-plugin-vitest');
 const prettier = require('eslint-config-prettier');
 
 module.exports = [
@@ -12,7 +11,7 @@ module.exports = [
 
   // Global language options for all TypeScript files
   {
-    files: ['packages/**/*.{ts,tsx}', 'apps/*/src/**/*.{ts,tsx}'],
+    files: ['packages/**/*.{ts,tsx}', 'apps/**/*.{ts,tsx}'],
     ignores: [
       'packages/frontend/**',
       'packages/@dvt/contracts/vitest.config.ts',
@@ -346,7 +345,6 @@ module.exports = [
     files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts', '**/*.test.tsx', '**/*.spec.tsx'],
     plugins: {
       '@typescript-eslint': tseslint,
-      vitest: vitestPlugin,
     },
     languageOptions: {
       parser: tsparser,
