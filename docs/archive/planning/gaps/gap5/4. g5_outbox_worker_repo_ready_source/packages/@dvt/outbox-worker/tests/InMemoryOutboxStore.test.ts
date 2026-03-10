@@ -9,13 +9,6 @@ interface InternalMutableRecord {
   leaseExpiresAt?: Date;
 }
 
-interface TransitionCase {
-  readonly name: string;
-  readonly expectedStatus: string;
-  readonly expectedReasonCode: string;
-  readonly run: (_store: InMemoryOutboxStore) => Promise<void>;
-}
-
 function seedClaimedRecord(store: InMemoryOutboxStore): void {
   store.append({
     recordId: 'rec-1',
@@ -56,7 +49,7 @@ function getInternalRecord(store: InMemoryOutboxStore): InternalMutableRecord {
   return record;
 }
 
-const transitionCases: readonly TransitionCase[] = [
+const transitionCases = [
   {
     name: 'ackIgnored',
     expectedStatus: 'ignored',
