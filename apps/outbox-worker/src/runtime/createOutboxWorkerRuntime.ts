@@ -12,7 +12,7 @@ import {
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
 
-const { PostgresStateStoreAdapter } = adapterPostgres as typeof import('@dvt/adapter-postgres');
+const { PostgresStateStoreAdapter } = adapterPostgres;
 
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;

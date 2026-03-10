@@ -1189,7 +1189,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     return {
       appended,
       deduped,
-      lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
+      lastSeq: appended.length > 0 ? appended[appended.length - 1]!.runSeq : baseRunSeq,
     };
   }
 
@@ -1370,7 +1370,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     snap: WorkflowSnapshot,
     appended: EventEnvelope[]
   ): Promise<void> {
-    const lastSeq = appended.at(-1)!.runSeq;
+    const lastSeq = appended[appended.length - 1]!.runSeq;
     await client.query(
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)

@@ -52,7 +52,7 @@ export class HttpEventBus implements IEventBus {
   }
 
   abortPendingPublishes(): void {
-    for (const controller of [...this.pendingControllers]) {
+    for (const controller of this.pendingControllers) {
       controller.abort();
     }
   }

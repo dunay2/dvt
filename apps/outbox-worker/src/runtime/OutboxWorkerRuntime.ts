@@ -130,7 +130,7 @@ export class OutboxWorkerRuntime {
   }
 
   private async runLoop(): Promise<void> {
-    this.runHook('onStarted');
+    this.runStartedHook();
     this.logger.info(
       {
         batchSize: this.options.batchSize,
@@ -143,39 +143,59 @@ export class OutboxWorkerRuntime {
 
     try {
       while (this.running) {
-        try {
-          const result = await this.worker.tick();
-          this.runHook('onTick', result);
-        } catch (err) {
-          if (!this.running) {
-            break;
-          }
-          const tickResult = extractTickResult(err);
-          const runtimeError = unwrapTickError(err);
-          if (tickResult) {
-            this.runHook('onTick', tickResult);
-          }
-          this.runHook('onError', runtimeError);
-          this.logger.error(
-            { err: toErrorLike(runtimeError), backoffMs: this.options.errorBackoffMs },
-            'outbox worker tick failed'
-          );
-          if (this.options.stopOnError) {
-            this.running = false;
-            throw runtimeError;
-          }
-          if (!this.running) break;
-          await this.wait(this.options.errorBackoffMs);
-          continue;
-        }
-
-        if (!this.running) break;
-        await this.wait(this.options.pollIntervalMs);
+        const shouldContinue = await this.runLoopIteration();
+        if (!shouldContinue) break;
       }
     } finally {
-      this.runHook('onStopped');
+      this.runStoppedHook();
       this.logger.info({}, 'outbox worker runtime stopped');
     }
+  }
+
+  private async runLoopIteration(): Promise<boolean> {
+    try {
+      const result = await this.worker.tick();
+      this.runTickHook(result);
+    } catch (error) {
+      return this.handleTickFailure(error);
+    }
+
+    if (!this.running) {
+      return false;
+    }
+
+    await this.wait(this.options.pollIntervalMs);
+    return this.running;
+  }
+
+  private async handleTickFailure(error: unknown): Promise<boolean> {
+    if (!this.running) {
+      return false;
+    }
+
+    const tickResult = extractTickResult(error);
+    const runtimeError = unwrapTickError(error);
+
+    if (tickResult) {
+      this.runTickHook(tickResult);
+    }
+    this.runErrorHook(runtimeError);
+    this.logger.error(
+      { err: toErrorLike(runtimeError), backoffMs: this.options.errorBackoffMs },
+      'outbox worker tick failed'
+    );
+
+    if (this.options.stopOnError) {
+      this.running = false;
+      throw runtimeError;
+    }
+
+    if (!this.running) {
+      return false;
+    }
+
+    await this.wait(this.options.errorBackoffMs);
+    return this.running;
   }
 
   private async wait(delayMs: number): Promise<void> {
@@ -194,7 +214,37 @@ export class OutboxWorkerRuntime {
     }
   }
 
-  private runHook(name: keyof OutboxWorkerRuntimeHooks, value?: OutboxTickResult | unknown): void {
+  private runStartedHook(): void {
+    this.runLifecycleHook('onStarted');
+  }
+
+  private runTickHook(result: OutboxTickResult): void {
+    this.runValueHook('onTick', result);
+  }
+
+  private runErrorHook(error: unknown): void {
+    this.runValueHook('onError', error);
+  }
+
+  private runStoppedHook(): void {
+    this.runLifecycleHook('onStopped');
+  }
+
+  private runLifecycleHook(name: 'onStarted' | 'onStopped'): void {
+    const hooks = this.hooks;
+    if (!hooks) return;
+    const hook = hooks[name];
+    if (!hook) return;
+    try {
+      (hook as (this: OutboxWorkerRuntimeHooks) => void).call(hooks);
+    } catch (err) {
+      this.logger.warn?.({ err: toErrorLike(err), hook: name }, 'outbox runtime hook failed');
+    }
+  }
+
+  private runValueHook(name: 'onTick', value: OutboxTickResult): void;
+  private runValueHook(name: 'onError', value: unknown): void;
+  private runValueHook(name: 'onTick' | 'onError', value: unknown): void {
     const hooks = this.hooks;
     if (!hooks) return;
     const hook = hooks[name];
@@ -207,11 +257,7 @@ export class OutboxWorkerRuntime {
         );
         return;
       }
-      if (name === 'onError') {
-        (hook as (this: OutboxWorkerRuntimeHooks, error: unknown) => void).call(hooks, value);
-        return;
-      }
-      (hook as (this: OutboxWorkerRuntimeHooks) => void).call(hooks);
+      (hook as (this: OutboxWorkerRuntimeHooks, error: unknown) => void).call(hooks, value);
     } catch (err) {
       this.logger.warn?.({ err: toErrorLike(err), hook: name }, 'outbox runtime hook failed');
     }
