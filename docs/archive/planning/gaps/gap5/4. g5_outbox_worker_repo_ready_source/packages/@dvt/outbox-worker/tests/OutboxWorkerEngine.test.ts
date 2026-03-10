@@ -28,20 +28,34 @@ const claimedRecord: ClaimedOutboxRecord = {
   leaseExpiresAt: new Date('2026-03-08T00:01:00.000Z'),
 };
 
-function createStore() {
+function createStore(): IOutboxStore & {
+  claimNextBatch: ReturnType<typeof vi.fn>;
+  ackDelivered: ReturnType<typeof vi.fn>;
+  ackIgnored: ReturnType<typeof vi.fn>;
+  scheduleRetry: ReturnType<typeof vi.fn>;
+  moveToDeadLetter: ReturnType<typeof vi.fn>;
+  releaseLease: ReturnType<typeof vi.fn>;
+} {
   return {
-    claimNextBatch: vi.fn<() => Promise<readonly ClaimedOutboxRecord[]>>(),
+    claimNextBatch: vi.fn(async (): Promise<readonly ClaimedOutboxRecord[]> => []),
     ackDelivered: vi.fn(async () => undefined),
     ackIgnored: vi.fn(async () => undefined),
     scheduleRetry: vi.fn(async () => undefined),
     moveToDeadLetter: vi.fn(async () => undefined),
     releaseLease: vi.fn(async () => undefined),
-  } satisfies IOutboxStore;
+  };
 }
 
-function createBatchProcessor() {
+function createBatchProcessor(): {
+  process: ReturnType<typeof vi.fn>;
+} {
   return {
-    process: vi.fn<(records: readonly ClaimedOutboxRecord[]) => Promise<BatchProcessingReport>>(),
+    process: vi.fn(
+      async (): Promise<BatchProcessingReport> => ({
+        claimedCount: 0,
+        processedCount: 0,
+      })
+    ),
   };
 }
 
