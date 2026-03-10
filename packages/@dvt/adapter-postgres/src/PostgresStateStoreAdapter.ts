@@ -1186,18 +1186,18 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   ): Promise<AppendResult> {
     await this.acquireRunLock(client, runId);
     const baseRunSeq = await this.getMaxRunSeq(client, runId);
-    const { appended, deduped } = await this.insertAndDedupEvents(
+    const { appended, deduped, lastAppendedRunSeq } = await this.insertAndDedupEvents(
       client,
       runId,
       envelopes,
       baseRunSeq
     );
-    await this.updateRunSnapshot(client, runId, appended, baseRunSeq);
+    await this.updateRunSnapshot(client, runId, appended, baseRunSeq, lastAppendedRunSeq);
 
     return {
       appended,
       deduped,
-      lastSeq: appended.length > 0 ? appended[appended.length - 1]!.runSeq : baseRunSeq,
+      lastSeq: lastAppendedRunSeq ?? baseRunSeq,
     };
   }
 
@@ -1223,30 +1223,46 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     runId: RunId,
     envelopes: EventInput[],
     baseRunSeq: number
-  ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[] }> {
+  ): Promise<{
+    appended: EventEnvelope[];
+    deduped: EventEnvelope[];
+    lastAppendedRunSeq: number | null;
+  }> {
     const appended: EventEnvelope[] = [];
     const deduped: EventEnvelope[] = [];
+    let lastAppendedRunSeq: number | null = null;
     let nextRunSeq = baseRunSeq + 1;
 
     for (const envelope of envelopes) {
       const withSeq = this.enrichEnvelopeWithSeq(envelope, nextRunSeq);
-      await this.processEnvelopeInsertion(client, runId, withSeq, { appended, deduped });
+      await this.processEnvelopeInsertion(client, runId, withSeq, {
+        appended,
+        deduped,
+        setLastAppendedRunSeq: (runSeq) => {
+          lastAppendedRunSeq = runSeq;
+        },
+      });
       nextRunSeq += 1;
     }
 
-    return { appended, deduped };
+    return { appended, deduped, lastAppendedRunSeq };
   }
 
   private async processEnvelopeInsertion(
     client: PoolClient,
     runId: RunId,
     withSeq: EventEnvelope,
-    result: { appended: EventEnvelope[]; deduped: EventEnvelope[] }
+    result: {
+      appended: EventEnvelope[];
+      deduped: EventEnvelope[];
+      setLastAppendedRunSeq(runSeq: number): void;
+    }
   ): Promise<void> {
     const inserted = await this.tryInsertEvent(client, runId, withSeq);
 
     if (inserted) {
       result.appended.push(withSeq);
+      result.setLastAppendedRunSeq(withSeq.runSeq);
       return;
     }
 
@@ -1334,7 +1350,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     client: PoolClient,
     runId: RunId,
     appended: EventEnvelope[],
-    baseRunSeq: number
+    baseRunSeq: number,
+    lastAppendedRunSeq: number | null
   ): Promise<void> {
     if (appended.length === 0) {
       return;
@@ -1344,7 +1361,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     for (const e of appended) {
       applyEventToSnapshot(snap, e);
     }
-    await this.persistSnapshot(client, runId, snap, appended);
+    await this.persistSnapshot(client, runId, snap, lastAppendedRunSeq);
   }
 
   private async getOrCreateSnapshot(
@@ -1376,9 +1393,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     client: PoolClient,
     runId: RunId,
     snap: WorkflowSnapshot,
-    appended: EventEnvelope[]
+    lastAppendedRunSeq: number | null
   ): Promise<void> {
-    const lastSeq = appended[appended.length - 1]!.runSeq;
+    if (lastAppendedRunSeq === null) {
+      throw new Error('lastAppendedRunSeq is required when persisting a non-empty snapshot update');
+    }
     await client.query(
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
@@ -1388,7 +1407,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           last_run_seq = EXCLUDED.last_run_seq,
           updated_at = EXCLUDED.updated_at
       `,
-      [runId, JSON.stringify(snap), lastSeq, this.now()]
+      [runId, JSON.stringify(snap), lastAppendedRunSeq, this.now()]
     );
   }
 
