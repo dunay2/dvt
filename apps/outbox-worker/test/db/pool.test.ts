@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+
 import type { Pool } from 'pg';
 
 import { acquirePgPool, closePgPool, getPgPool } from '../../src/db/pool.js';

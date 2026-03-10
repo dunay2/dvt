@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import type { AuthAuditEvent } from '../../../src/application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../../src/application/services/authorizeCommandScopeService.js';
 import { TenantHierarchyAuthorizationPolicy } from '../../../src/domain/auth/policy.js';
-import type { AuthAuditEvent } from '../../../src/application/ports/auth.js';
 import { TenantId } from '../../../src/domain/auth/types.js';
 
 await test('AuthorizeCommandScopeService returns approved scope only', async () => {
