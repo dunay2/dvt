@@ -33,6 +33,7 @@ export * from './outbox/IOutboxRateLimiter.js';
 export * from './outbox/TokenBucketRateLimiter.js';
 export * from './outbox/OutboxWorker.js';
 export * from './outbox/InMemoryEventBus.js';
+export { InMemoryOutboxStorage } from './outbox/InMemoryOutboxStorage.js';
 
 export * from './utils/clock.js';
 

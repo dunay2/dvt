@@ -695,12 +695,24 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       const result = await client.query<OutboxRow>(
         `
           WITH picked AS (
-            SELECT id
-            FROM ${quoteIdentifier(this.schema)}.outbox
-            WHERE delivered_at IS NULL
-              AND (next_attempt_at IS NULL OR next_attempt_at <= $2::timestamptz)
-              AND (claimed_at IS NULL OR claimed_at < ($2::timestamptz - INTERVAL '5 minutes'))
-            ORDER BY created_at ASC
+            SELECT o.id
+            FROM ${quoteIdentifier(this.schema)}.outbox o
+            WHERE o.delivered_at IS NULL
+              AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $2::timestamptz)
+              AND (o.claimed_at IS NULL OR o.claimed_at < ($2::timestamptz - INTERVAL '5 minutes'))
+              AND NOT EXISTS (
+                SELECT 1
+                FROM ${quoteIdentifier(this.schema)}.outbox prior
+                WHERE prior.run_id = o.run_id
+                  AND prior.delivered_at IS NULL
+                  AND prior.run_seq < o.run_seq
+              )
+              AND NOT EXISTS (
+                SELECT 1
+                FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
+                WHERE dl.run_id = o.run_id
+              )
+            ORDER BY o.created_at ASC, o.run_seq ASC
             LIMIT $1
             FOR UPDATE SKIP LOCKED
           ), claimed AS (
@@ -1170,6 +1182,12 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     await client.query(`
       CREATE INDEX IF NOT EXISTS outbox_dead_letter_run_id_idx
       ON ${quoteIdentifier(this.schema)}.outbox_dead_letter (run_id)
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS outbox_pending_run_order_idx
+      ON ${quoteIdentifier(this.schema)}.outbox (run_id, run_seq)
+      WHERE delivered_at IS NULL
     `);
 
     // Tenant-scoped listing: listRuns(tenantId) requires this to avoid full scan.

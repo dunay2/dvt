@@ -50,6 +50,36 @@ class FailFirstBus implements IEventBus {
   }
 }
 
+class FailFirstMarkDeliveredStorage implements IOutboxStorage {
+  private failed = false;
+
+  constructor(private readonly inner: InMemoryOutboxStorage) {}
+
+  async enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void> {
+    await this.inner.enqueueTx(runId, events);
+  }
+
+  async listPending(limit: number): Promise<OutboxRecord[]> {
+    return this.inner.listPending(limit);
+  }
+
+  async markDelivered(ids: string[]): Promise<void> {
+    if (!this.failed) {
+      this.failed = true;
+      throw new Error('synthetic ack failure');
+    }
+    await this.inner.markDelivered(ids);
+  }
+
+  async markFailed(id: string, error: string): Promise<void> {
+    await this.inner.markFailed(id, error);
+  }
+
+  async hasPendingRetries(): Promise<boolean> {
+    return (await this.inner.hasPendingRetries?.()) ?? false;
+  }
+}
+
 describe('OutboxWorker', () => {
   it('drains pending outbox on successful publish', async () => {
     const store = new InMemoryOutboxStorage({ nowMs: () => 0 });
@@ -71,16 +101,23 @@ describe('OutboxWorker', () => {
     await expect(store.listPending(10)).resolves.toHaveLength(0);
   });
 
-  it('marks failed record and continues with the rest when stopOnError=false', async () => {
+  it('marks failed record and continues with other runs when stopOnError=false', async () => {
     const now = { value: 0 };
     const store = new InMemoryOutboxStorage({ nowMs: () => now.value });
     const bus = new FailFirstBus();
     const worker = new OutboxWorker(store, bus, { batchSize: 10, stopOnError: false });
 
-    await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1), makeEvent('2', 'run-1', 2)]);
+    await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1)]);
+    await store.enqueueTx('run-2', [makeEvent('2', 'run-2', 1)]);
 
     const firstResult = await worker.tick();
-    expect(firstResult.retryBacklogActive).toBe(true);
+    expect(firstResult).toMatchObject({
+      claimedCount: 2,
+      deliveredCount: 1,
+      retriedCount: 1,
+      deadLetteredCount: 0,
+      retryBacklogActive: true,
+    });
 
     // First record failed and remains pending with attempts=1 + nextAttemptAt backoff.
     // Immediate poll should not surface the failed item yet due to backoff gate.
@@ -97,10 +134,86 @@ describe('OutboxWorker', () => {
     // Retry and drain.
     now.value = 2_000;
     const secondResult = await worker.tick();
-    expect(secondResult.retryBacklogActive).toBe(false);
+    expect(secondResult).toMatchObject({
+      claimedCount: 1,
+      deliveredCount: 1,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      retryBacklogActive: false,
+    });
 
     await expect(store.listPending(10)).resolves.toHaveLength(0);
     expect(bus.published).toHaveLength(2);
+  });
+
+  it('treats markDelivered failures after publish as redelivery-worthy ack failures', async () => {
+    const now = { value: 0 };
+    const storage = new FailFirstMarkDeliveredStorage(
+      new InMemoryOutboxStorage({ nowMs: () => now.value })
+    );
+    const bus = new CapturingBus();
+    const worker = new OutboxWorker(storage, bus, { batchSize: 10, stopOnError: false });
+
+    await storage.enqueueTx('run-ack', [makeEvent('ack', 'run-ack', 1)]);
+
+    const firstResult = await worker.tick();
+    expect(firstResult).toMatchObject({
+      claimedCount: 1,
+      deliveredCount: 0,
+      retriedCount: 1,
+      deadLetteredCount: 0,
+      retryBacklogActive: true,
+    });
+    expect(bus.published.map((event) => event.runSeq)).toEqual([1]);
+
+    now.value = 1_001;
+    const secondResult = await worker.tick();
+    expect(secondResult).toMatchObject({
+      claimedCount: 1,
+      deliveredCount: 1,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      retryBacklogActive: false,
+    });
+
+    expect(bus.published.map((event) => event.runSeq)).toEqual([1, 1]);
+  });
+
+  it('does not bypass a failed record with a later event from the same runId', async () => {
+    const now = { value: 0 };
+    const store = new InMemoryOutboxStorage({ nowMs: () => now.value });
+    const bus = new FailFirstBus();
+    const worker = new OutboxWorker(store, bus, { batchSize: 10, stopOnError: false });
+
+    await store.enqueueTx('run-ordered', [
+      makeEvent('1', 'run-ordered', 1),
+      makeEvent('2', 'run-ordered', 2),
+    ]);
+
+    const firstResult = await worker.tick();
+    expect(firstResult).toMatchObject({
+      claimedCount: 1,
+      deliveredCount: 0,
+      retriedCount: 1,
+      deadLetteredCount: 0,
+      retryBacklogActive: true,
+    });
+    expect(bus.published).toHaveLength(0);
+
+    now.value = 1_001;
+    const pendingAfterBackoff = await store.listPending(10);
+    expect(pendingAfterBackoff).toHaveLength(1);
+    expect(pendingAfterBackoff[0]?.payload.runSeq).toBe(1);
+
+    const secondResult = await worker.tick();
+    expect(secondResult).toMatchObject({
+      claimedCount: 2,
+      deliveredCount: 2,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      retryBacklogActive: false,
+    });
+    expect(bus.published.map((event) => event.runSeq)).toEqual([1, 2]);
   });
 
   it('computes claimed lag from the oldest record in the claimed batch', async () => {
@@ -203,8 +316,8 @@ describe('OutboxWorker', () => {
 
     const firstResult = await worker.tick();
     expect(firstResult).toMatchObject({
-      claimedCount: 2,
-      deliveredCount: 1,
+      claimedCount: 1,
+      deliveredCount: 0,
       retriedCount: 1,
       deadLetteredCount: 0,
       retryBacklogActive: true,
@@ -213,8 +326,8 @@ describe('OutboxWorker', () => {
     now.value = 2_000;
     const secondResult = await worker.tick();
     expect(secondResult).toMatchObject({
-      claimedCount: 1,
-      deliveredCount: 1,
+      claimedCount: 2,
+      deliveredCount: 2,
       retriedCount: 0,
       deadLetteredCount: 0,
       retryBacklogActive: false,
@@ -353,9 +466,15 @@ describe('OutboxWorker', () => {
     await store.enqueueTx('run-1', [makeEvent('1', 'run-1', 1), makeEvent('2', 'run-1', 2)]);
     await retryWorker.tick();
 
-    expect(transitions).toContain('claim:2');
-    expect(transitions).toContain('delivered:outbox_2');
+    expect(transitions).toEqual(['claim:1']);
     expect(failures).toContainEqual({ disposition: 'retry', outboxId: 'outbox_1' });
+
+    now.value = 1_001;
+    await retryWorker.tick();
+
+    expect(transitions.filter((transition) => transition === 'claim:1')).toHaveLength(3);
+    expect(transitions).toContain('delivered:outbox_1');
+    expect(transitions).toContain('delivered:outbox_2');
 
     const dlqStore = new InMemoryOutboxStorage({ nowMs: () => now.value });
     const alwaysFailBus: IEventBus = {

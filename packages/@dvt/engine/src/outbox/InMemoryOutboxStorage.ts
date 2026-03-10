@@ -12,6 +12,12 @@ import { epochMsToIsoUtc, parseIsoUtcToEpochMs } from '../utils/clock.js';
 import type { DeadLetterRecord, OutboxRecord, IOutboxStorage } from './types.js';
 import { MAX_OUTBOX_ATTEMPTS } from './types.js';
 
+type ReplayDeadLetterOptions = {
+  limit?: number;
+  runId?: string;
+  ids?: string[];
+};
+
 export class InMemoryOutboxStorage implements IOutboxStorage {
   private static readonly EPOCH_MS = parseIsoUtcToEpochMs('1970-01-01T00:00:00.000Z');
 
@@ -34,6 +40,111 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     return epochMsToIsoUtc(this.nowMs() + delayMs);
   }
 
+  private buildHeadRunSeqByRunId(blockedRunIds: ReadonlySet<string>): Map<string, number> {
+    const headRunSeqByRunId = new Map<string, number>();
+
+    for (const record of this.pending) {
+      const runId = record.payload.runId;
+      if (blockedRunIds.has(runId)) {
+        continue;
+      }
+      const currentHeadRunSeq = headRunSeqByRunId.get(runId);
+      if (currentHeadRunSeq === undefined || record.payload.runSeq < currentHeadRunSeq) {
+        headRunSeqByRunId.set(runId, record.payload.runSeq);
+      }
+    }
+
+    return headRunSeqByRunId;
+  }
+
+  private isPendingRecordEligible(
+    record: OutboxRecord,
+    blockedRunIds: ReadonlySet<string>,
+    headRunSeqByRunId: ReadonlyMap<string, number>,
+    nowMs: number
+  ): boolean {
+    const runId = record.payload.runId;
+    if (blockedRunIds.has(runId)) {
+      return false;
+    }
+    if (headRunSeqByRunId.get(runId) !== record.payload.runSeq) {
+      return false;
+    }
+    if (!record.nextAttemptAt) {
+      return true;
+    }
+
+    const nextAttemptAtMs = Date.parse(record.nextAttemptAt);
+    return Number.isFinite(nextAttemptAtMs) ? nextAttemptAtMs <= nowMs : true;
+  }
+
+  private static compareEligibleRecords(a: OutboxRecord, b: OutboxRecord): number {
+    const createdAtDiff = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+    if (createdAtDiff !== 0) {
+      return createdAtDiff;
+    }
+    return a.payload.runSeq - b.payload.runSeq;
+  }
+
+  private matchesReplaySelection(
+    deadLetter: DeadLetterRecord,
+    options: { runId?: string } | undefined,
+    ids: ReadonlySet<string> | null
+  ): boolean {
+    if (options?.runId && deadLetter.runId !== options.runId) {
+      return false;
+    }
+    if (ids && !ids.has(deadLetter.id)) {
+      return false;
+    }
+    return true;
+  }
+
+  private restoreDeadLetter(deadLetter: DeadLetterRecord): void {
+    this.pending.push({
+      id: deadLetter.originalId,
+      createdAt: this.nowIsoUtc(),
+      idempotencyKey: deadLetter.payload.idempotencyKey,
+      payload: deadLetter.payload,
+      attempts: 0,
+    });
+  }
+
+  private collectReplayDeadLetterIndexes(
+    limit: number,
+    options: ReplayDeadLetterOptions | undefined,
+    ids: ReadonlySet<string> | null
+  ): number[] {
+    const indexes: number[] = [];
+
+    for (let i = this.deadLetters.length - 1; i >= 0 && indexes.length < limit; i -= 1) {
+      const deadLetter = this.deadLetters[i];
+      if (!deadLetter || !this.matchesReplaySelection(deadLetter, options, ids)) {
+        continue;
+      }
+      indexes.push(i);
+    }
+
+    return indexes;
+  }
+
+  private replayDeadLettersAtIndexes(indexes: readonly number[]): number {
+    let moved = 0;
+
+    for (const index of indexes) {
+      const deadLetter = this.deadLetters[index];
+      if (!deadLetter) {
+        continue;
+      }
+
+      this.restoreDeadLetter(deadLetter);
+      this.deadLetters.splice(index, 1);
+      moved += 1;
+    }
+
+    return moved;
+  }
+
   async enqueueTx(_runId: string, events: RunEventPersisted[]): Promise<void> {
     for (const e of events) {
       this.counter += 1;
@@ -48,27 +159,28 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
+    const boundedLimit = Math.max(0, limit);
+    if (boundedLimit === 0) {
+      return [];
+    }
+
     const nowMs = this.nowMs();
-    const eligible = this.pending.filter((r) => {
-      if (!r.nextAttemptAt) return true;
-      const t = Date.parse(r.nextAttemptAt);
-      return Number.isFinite(t) ? t <= nowMs : true;
-    });
+    const blockedRunIds = new Set(this.deadLetters.map((record) => record.runId));
+    const headRunSeqByRunId = this.buildHeadRunSeqByRunId(blockedRunIds);
+    const eligible = this.pending.filter((record) =>
+      this.isPendingRecordEligible(record, blockedRunIds, headRunSeqByRunId, nowMs)
+    );
 
-    eligible.sort((a, b) => {
-      const an = a.nextAttemptAt ? Date.parse(a.nextAttemptAt) : InMemoryOutboxStorage.EPOCH_MS;
-      const bn = b.nextAttemptAt ? Date.parse(b.nextAttemptAt) : InMemoryOutboxStorage.EPOCH_MS;
-      if (an !== bn) return an - bn;
-      return Date.parse(a.createdAt) - Date.parse(b.createdAt);
-    });
+    eligible.sort(InMemoryOutboxStorage.compareEligibleRecords);
 
-    return eligible.slice(0, limit);
+    return eligible.slice(0, boundedLimit);
   }
 
   async markDelivered(ids: string[]): Promise<void> {
     const set = new Set(ids);
     for (let i = this.pending.length - 1; i >= 0; i--) {
-      if (set.has(this.pending[i]!.id)) {
+      const record = this.pending[i];
+      if (record && set.has(record.id)) {
         this.pending.splice(i, 1);
       }
     }
@@ -77,7 +189,8 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   async markFailed(id: string, error: string): Promise<void> {
     const idx = this.pending.findIndex((r) => r.id === id);
     if (idx === -1) return;
-    const rec = this.pending[idx]!;
+    const rec = this.pending[idx];
+    if (!rec) return;
     rec.attempts += 1;
     rec.lastError = error;
 
@@ -105,34 +218,14 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     return this.deadLetters.slice(0, limit);
   }
 
-  async replayDeadLetters(options?: {
-    limit?: number;
-    runId?: string;
-    ids?: string[];
-  }): Promise<number> {
+  async replayDeadLetters(options?: ReplayDeadLetterOptions): Promise<number> {
     const limit = Math.max(0, options?.limit ?? Number.MAX_SAFE_INTEGER);
-    if (limit === 0) return 0;
-
-    const ids = options?.ids ? new Set(options.ids) : null;
-    let moved = 0;
-
-    for (let i = this.deadLetters.length - 1; i >= 0 && moved < limit; i -= 1) {
-      const dl = this.deadLetters[i]!;
-      if (options?.runId && dl.runId !== options.runId) continue;
-      if (ids && !ids.has(dl.id)) continue;
-
-      this.pending.push({
-        id: dl.originalId,
-        createdAt: this.nowIsoUtc(),
-        idempotencyKey: dl.payload.idempotencyKey,
-        payload: dl.payload,
-        attempts: 0,
-      });
-
-      this.deadLetters.splice(i, 1);
-      moved += 1;
+    if (limit === 0) {
+      return 0;
     }
 
-    return moved;
+    const ids = options?.ids ? new Set(options.ids) : null;
+    const indexes = this.collectReplayDeadLetterIndexes(limit, options, ids);
+    return this.replayDeadLettersAtIndexes(indexes);
   }
 }

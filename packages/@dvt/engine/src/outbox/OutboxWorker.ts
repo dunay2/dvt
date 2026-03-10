@@ -6,8 +6,10 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { MAX_OUTBOX_ATTEMPTS, type IEventBus, type IOutboxStorage } from './types.js';
-import type {
+import {
+  MAX_OUTBOX_ATTEMPTS,
+  type IEventBus,
+  type IOutboxStorage,
   OutboxFailureDisposition,
   OutboxRecord,
   OutboxTickResult,
@@ -46,52 +48,21 @@ export class OutboxWorker {
    * Runs a single poll/deliver cycle.
    */
   async tick(): Promise<OutboxTickResult> {
-    const batch = await this.storage.listPending(this.cfg.batchSize);
-    if (batch.length === 0) {
-      return {
-        ...emptyTickResult(),
-        retryBacklogActive: await resolveRetryBacklogActive(this.storage, false),
-      };
-    }
+    const result = emptyTickResult();
+    const maxBatchSize = Math.max(0, this.cfg.batchSize);
+    const seenRecordIds = new Set<string>();
 
-    await safelyObserve(() => this.observer?.onBatchClaimed?.(batch));
-
-    const result: OutboxTickResult = {
-      claimedCount: batch.length,
-      deliveredCount: 0,
-      retriedCount: 0,
-      deadLetteredCount: 0,
-      oldestClaimedAgeMs: this.nowMs ? resolveOldestClaimedAgeMs(batch, this.nowMs()) : null,
-      retryBacklogActive: false,
-    };
-
-    for (const rec of batch) {
-      try {
-        // Publish one envelope at a time to keep delivery accounting explicit
-        // and avoid batch-level ambiguity on partial failures.
-        await this.bus.publish([rec.payload]);
-        await this.storage.markDelivered([rec.id]);
-        result.deliveredCount += 1;
-        await safelyObserve(() => this.observer?.onRecordDelivered?.(rec));
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        const disposition = resolveFailureDisposition(rec.attempts);
-        const failedRecord = snapshotRecord(rec);
-        await this.storage.markFailed(rec.id, msg);
-        if (disposition === 'dead_letter') {
-          result.deadLetteredCount += 1;
-        } else {
-          result.retriedCount += 1;
-        }
-        await safelyObserve(() => this.observer?.onRecordFailed?.(failedRecord, msg, disposition));
-        if (this.cfg.stopOnError) {
-          result.retryBacklogActive = await resolveRetryBacklogActive(
-            this.storage,
-            result.retriedCount > 0
-          );
-          throw new OutboxWorkerTickError(err, result);
-        }
+    while (result.claimedCount < maxBatchSize) {
+      const batch = await this.claimNextBatch(
+        maxBatchSize - result.claimedCount,
+        seenRecordIds,
+        result
+      );
+      if (batch.length === 0) {
+        break;
       }
+
+      await this.processBatch(result, batch);
     }
 
     result.retryBacklogActive = await resolveRetryBacklogActive(
@@ -99,6 +70,96 @@ export class OutboxWorker {
       result.retriedCount > 0
     );
     return result;
+  }
+
+  private async claimNextBatch(
+    remainingCapacity: number,
+    seenRecordIds: Set<string>,
+    result: OutboxTickResult
+  ): Promise<readonly OutboxRecord[]> {
+    if (remainingCapacity <= 0) {
+      return [];
+    }
+
+    const batch = (await this.storage.listPending(remainingCapacity))
+      .filter((record) => !seenRecordIds.has(record.id))
+      .slice(0, remainingCapacity);
+    if (batch.length === 0) {
+      return batch;
+    }
+
+    await this.recordClaimedBatch(result, batch);
+    for (const record of batch) {
+      seenRecordIds.add(record.id);
+    }
+    return batch;
+  }
+
+  private async recordClaimedBatch(
+    result: OutboxTickResult,
+    batch: readonly OutboxRecord[]
+  ): Promise<void> {
+    await safelyObserve(() => this.observer?.onBatchClaimed?.(batch));
+    result.claimedCount += batch.length;
+
+    if (!this.nowMs) {
+      return;
+    }
+
+    result.oldestClaimedAgeMs = mergeOldestClaimedAgeMs(
+      result.oldestClaimedAgeMs,
+      resolveOldestClaimedAgeMs(batch, this.nowMs())
+    );
+  }
+
+  private async processBatch(
+    result: OutboxTickResult,
+    batch: readonly OutboxRecord[]
+  ): Promise<void> {
+    for (const record of batch) {
+      await this.processRecord(result, record);
+    }
+  }
+
+  private async processRecord(result: OutboxTickResult, record: OutboxRecord): Promise<void> {
+    try {
+      await this.publishRecord(record);
+      result.deliveredCount += 1;
+      await safelyObserve(() => this.observer?.onRecordDelivered?.(record));
+    } catch (err) {
+      await this.handlePublishFailure(result, record, err);
+    }
+  }
+
+  private async publishRecord(record: OutboxRecord): Promise<void> {
+    // Publish one envelope at a time to keep delivery accounting explicit
+    // and avoid batch-level ambiguity on partial failures.
+    await this.bus.publish([record.payload]);
+    await this.storage.markDelivered([record.id]);
+  }
+
+  private async handlePublishFailure(
+    result: OutboxTickResult,
+    record: OutboxRecord,
+    err: unknown
+  ): Promise<void> {
+    const msg = err instanceof Error ? err.message : String(err);
+    const disposition = resolveFailureDisposition(record.attempts);
+    const failedRecord = snapshotRecord(record);
+
+    await this.storage.markFailed(record.id, msg);
+    applyFailureDisposition(result, disposition);
+    await safelyObserve(() => this.observer?.onRecordFailed?.(failedRecord, msg, disposition));
+
+    if (!this.cfg.stopOnError) {
+      return;
+    }
+
+    result.retryBacklogActive = await resolveRetryBacklogActive(
+      this.storage,
+      result.retriedCount > 0
+    );
+    throw new OutboxWorkerTickError(err, result);
   }
 }
 
@@ -131,6 +192,17 @@ function snapshotRecord(record: OutboxRecord): OutboxRecord {
   return { ...record };
 }
 
+function applyFailureDisposition(
+  result: OutboxTickResult,
+  disposition: OutboxFailureDisposition
+): void {
+  if (disposition === 'dead_letter') {
+    result.deadLetteredCount += 1;
+    return;
+  }
+  result.retriedCount += 1;
+}
+
 function resolveOldestClaimedAgeMs(
   records: readonly { createdAt: string }[],
   nowMs: number
@@ -148,6 +220,16 @@ function resolveOldestClaimedAgeMs(
     return null;
   }
   return Math.max(0, nowMs - oldestCreatedAtMs);
+}
+
+function mergeOldestClaimedAgeMs(current: number | null, candidate: number | null): number | null {
+  if (current === null) {
+    return candidate;
+  }
+  if (candidate === null) {
+    return current;
+  }
+  return Math.max(current, candidate);
 }
 
 async function safelyObserve(fn: (() => void | Promise<void>) | undefined): Promise<void> {
