@@ -1,2 +1,5 @@
-echo "🔒 Running pre-push verifications: pnpm verify:prepush"
+#!/bin/sh
+set -e
+
+echo "Running pre-push verifications: pnpm verify:prepush"
 pnpm -s verify:prepush
