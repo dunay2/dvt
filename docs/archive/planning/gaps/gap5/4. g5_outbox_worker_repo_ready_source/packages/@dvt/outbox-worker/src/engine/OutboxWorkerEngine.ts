@@ -1,4 +1,5 @@
 import type { IClock } from '../contracts/IClock.js';
+import type { ClaimNextBatchInput } from '../contracts/IOutboxStore.js';
 import type { IOutboxStore } from '../contracts/IOutboxStore.js';
 import { DeliveryTelemetry } from '../delivery/DeliveryTelemetry.js';
 import { BatchProcessor, type BatchProcessingReport } from './BatchProcessor.js';
@@ -23,15 +24,7 @@ export class OutboxWorkerEngine {
   ) {}
 
   async processBatch(): Promise<BatchProcessingReport> {
-    const claimed = await this.store.claimNextBatch({
-      now: this.clock.now(),
-      leaseOwnerId: this.config.leaseOwnerId,
-      batchSize: this.config.batchSize,
-      leaseDurationMs: this.config.leaseDurationMs,
-      topics: this.config.topics,
-      deliveryChannels: this.config.deliveryChannels,
-      sideEffectKinds: this.config.sideEffectKinds,
-    });
+    const claimed = await this.store.claimNextBatch(this.buildClaimNextBatchInput());
 
     this.telemetry.onClaimBatch(claimed.length);
 
@@ -43,5 +36,46 @@ export class OutboxWorkerEngine {
     }
 
     return this.batchProcessor.process(claimed);
+  }
+
+  private buildClaimNextBatchInput(): ClaimNextBatchInput {
+    const input: ClaimNextBatchInput = {
+      now: this.clock.now(),
+      leaseOwnerId: this.config.leaseOwnerId,
+      batchSize: this.config.batchSize,
+      leaseDurationMs: this.config.leaseDurationMs,
+    };
+
+    if (this.config.topics !== undefined) {
+      return {
+        ...input,
+        topics: this.config.topics,
+        ...(this.config.deliveryChannels !== undefined
+          ? { deliveryChannels: this.config.deliveryChannels }
+          : {}),
+        ...(this.config.sideEffectKinds !== undefined
+          ? { sideEffectKinds: this.config.sideEffectKinds }
+          : {}),
+      };
+    }
+
+    if (this.config.deliveryChannels !== undefined) {
+      return {
+        ...input,
+        deliveryChannels: this.config.deliveryChannels,
+        ...(this.config.sideEffectKinds !== undefined
+          ? { sideEffectKinds: this.config.sideEffectKinds }
+          : {}),
+      };
+    }
+
+    if (this.config.sideEffectKinds !== undefined) {
+      return {
+        ...input,
+        sideEffectKinds: this.config.sideEffectKinds,
+      };
+    }
+
+    return input;
   }
 }
