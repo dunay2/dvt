@@ -75,9 +75,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   onStarted(): void {
-    if (this.startedAtMs === null) {
-      this.startedAtMs = this.nowMs();
-    }
+    this.startedAtMs ??= this.nowMs();
     this.transitionTo('starting', 'runtime bootstrapped');
   }
 

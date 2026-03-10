@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
-
 import { createOperationalServer } from '../../src/ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
+import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
 
 function makeLogger(): OutboxWorkerRuntimeLogger {
   return {
@@ -37,9 +36,9 @@ await test('OperationalServer serves health, readiness, and metrics endpoints', 
 
     let response = await globalThis.fetch(`${baseUrl}/readyz`);
     assert.equal(response.status, 503);
-    let body = (await response.json()) as { state: string; ready: boolean };
-    assert.equal(body.state, 'starting');
-    assert.equal(body.ready, false);
+    const initialReadyBody = (await response.json()) as { state: string; ready: boolean };
+    assert.equal(initialReadyBody.state, 'starting');
+    assert.equal(initialReadyBody.ready, false);
 
     monitor.onTick({
       claimedCount: 0,
@@ -52,9 +51,9 @@ await test('OperationalServer serves health, readiness, and metrics endpoints', 
 
     response = await globalThis.fetch(`${baseUrl}/healthz`);
     assert.equal(response.status, 200);
-    body = (await response.json()) as { state: string; ok: boolean };
-    assert.equal(body.state, 'idle');
-    assert.equal(body.ok, true);
+    const healthBody = (await response.json()) as { state: string; ok: boolean };
+    assert.equal(healthBody.state, 'idle');
+    assert.equal(healthBody.ok, true);
 
     response = await globalThis.fetch(`${baseUrl}/readyz`);
     assert.equal(response.status, 200);
@@ -130,9 +129,9 @@ await test('OperationalServer reflects failing and stopped states in probes', as
 
     let response = await globalThis.fetch(`${baseUrl}/healthz`);
     assert.equal(response.status, 200);
-    let body = (await response.json()) as { state: string; ok: boolean };
-    assert.equal(body.state, 'failing');
-    assert.equal(body.ok, true);
+    const failingHealthBody = (await response.json()) as { state: string; ok: boolean };
+    assert.equal(failingHealthBody.state, 'failing');
+    assert.equal(failingHealthBody.ok, true);
 
     response = await globalThis.fetch(`${baseUrl}/readyz`);
     assert.equal(response.status, 503);
@@ -149,9 +148,9 @@ await test('OperationalServer reflects failing and stopped states in probes', as
 
     response = await globalThis.fetch(`${baseUrl}/healthz`);
     assert.equal(response.status, 503);
-    body = (await response.json()) as { state: string; ok: boolean };
-    assert.equal(body.state, 'stopped');
-    assert.equal(body.ok, false);
+    const stoppedHealthBody = (await response.json()) as { state: string; ok: boolean };
+    assert.equal(stoppedHealthBody.state, 'stopped');
+    assert.equal(stoppedHealthBody.ok, false);
 
     response = await globalThis.fetch(`${baseUrl}/readyz`);
     assert.equal(response.status, 503);

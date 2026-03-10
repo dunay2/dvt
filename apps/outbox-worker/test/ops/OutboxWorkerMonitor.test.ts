@@ -18,13 +18,15 @@ function makeLogger(): {
   return {
     logger: {
       info(data, msg) {
-        entries.push({ level: 'info', data, msg });
+        entries.push(msg === undefined ? { level: 'info', data } : { level: 'info', data, msg });
       },
       warn(data, msg) {
-        entries.push({ level: 'warn', data, msg });
+        entries.push(msg === undefined ? { level: 'warn', data } : { level: 'warn', data, msg });
       },
       error(data, msg) {
-        entries.push({ level: 'error', data, msg });
+        entries.push(
+          msg === undefined ? { level: 'error', data } : { level: 'error', data, msg }
+        );
       },
     },
     entries,

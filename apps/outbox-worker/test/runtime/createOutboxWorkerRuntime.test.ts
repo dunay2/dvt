@@ -1,18 +1,18 @@
 import assert from 'node:assert/strict';
-import { setTimeout as sleep } from 'node:timers/promises';
 import test from 'node:test';
-import type { Pool } from 'pg';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 import adapterPostgres from '@dvt/adapter-postgres';
 import type { RunEventPersisted } from '@dvt/engine';
+import type { Pool } from 'pg';
 
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
 import { loadEnv } from '../../src/plugins/env.js';
-import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
 import { createOutboxWorkerRuntime } from '../../src/runtime/createOutboxWorkerRuntime.js';
+import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
 
-const { PostgresStateStoreAdapter } = adapterPostgres as typeof import('@dvt/adapter-postgres');
+const { PostgresStateStoreAdapter } = adapterPostgres;
 
 function makeLogger(): OutboxWorkerRuntimeLogger {
   return {
@@ -421,7 +421,6 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
     ];
   };
   PostgresStateStoreAdapter.prototype.abortPendingOperations =
-    // eslint-disable-next-line no-unused-vars -- TypeScript this parameter is required for prototype patching.
     async function abortPendingOperations(this: object): Promise<void> {
       abortPendingOperationsCalls += 1;
       await Reflect.apply(originalAbortPendingOperations, this, []);
