@@ -63,6 +63,7 @@ Concept anchors for this page:
 - [Generated Capability Coverage](status/generated-capability-coverage.md)
 - [Generated Code State](status/generated-code-state.md)
 - [Generated Spec Traceability](status/generated-spec-traceability.md)
+- [Governance Document And Rule Inventory](status/governance-document-rule-inventory.md)
 - [Release Please Continuous Mode Status](status/release-please-continuous.md)
 
 ## Reference
