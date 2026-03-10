@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.2](https://github.com/dunay2/dvt/compare/v3.3.1...v3.3.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* **engine:** Harden outbox ordering and correctness ([#444](https://github.com/dunay2/dvt/issues/444)) ([8b79a98](https://github.com/dunay2/dvt/commit/8b79a980775329a3f070dda485b30496981fa7f3))
+
 ## [3.3.1](https://github.com/dunay2/dvt/compare/v3.3.0...v3.3.1) (2026-03-10)
 
 
