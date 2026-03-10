@@ -72,8 +72,7 @@ export class InMemoryOutboxStore implements IOutboxStore {
     const record = this.requireOwnedRecord(input.recordId, input.leaseOwnerId);
     record.status = 'delivered';
     record.dueAt = input.now;
-    record.leaseOwnerId = undefined;
-    record.leaseExpiresAt = undefined;
+    this.clearLease(record);
   }
 
   async ackIgnored(input: AckIgnoredInput): Promise<void> {
@@ -81,9 +80,8 @@ export class InMemoryOutboxStore implements IOutboxStore {
     record.status = 'ignored';
     record.dueAt = input.now;
     record.lastReasonCode = input.reasonCode;
-    record.lastDetail = input.detail;
-    record.leaseOwnerId = undefined;
-    record.leaseExpiresAt = undefined;
+    this.setLastDetail(record, input.detail);
+    this.clearLease(record);
   }
 
   async scheduleRetry(input: ScheduleRetryInput): Promise<void> {
@@ -91,9 +89,8 @@ export class InMemoryOutboxStore implements IOutboxStore {
     record.status = 'retry_scheduled';
     record.dueAt = input.nextAttemptAt;
     record.lastReasonCode = input.reasonCode;
-    record.lastDetail = input.detail;
-    record.leaseOwnerId = undefined;
-    record.leaseExpiresAt = undefined;
+    this.setLastDetail(record, input.detail);
+    this.clearLease(record);
   }
 
   async moveToDeadLetter(input: MoveToDeadLetterInput): Promise<void> {
@@ -101,18 +98,16 @@ export class InMemoryOutboxStore implements IOutboxStore {
     record.status = 'dead_letter';
     record.dueAt = input.now;
     record.lastReasonCode = input.reasonCode;
-    record.lastDetail = input.detail;
-    record.leaseOwnerId = undefined;
-    record.leaseExpiresAt = undefined;
+    this.setLastDetail(record, input.detail);
+    this.clearLease(record);
   }
 
   async releaseLease(input: ReleaseLeaseInput): Promise<void> {
     const record = this.requireOwnedRecord(input.recordId, input.leaseOwnerId);
     record.status = 'pending';
     record.lastReasonCode = input.reasonCode;
-    record.lastDetail = input.detail;
-    record.leaseOwnerId = undefined;
-    record.leaseExpiresAt = undefined;
+    this.setLastDetail(record, input.detail);
+    this.clearLease(record);
   }
 
   private isClaimable(record: MutableRecord, input: ClaimNextBatchInput): boolean {
@@ -152,6 +147,20 @@ export class InMemoryOutboxStore implements IOutboxStore {
     }
 
     return record;
+  }
+
+  private clearLease(record: MutableRecord): void {
+    delete record.leaseOwnerId;
+    delete record.leaseExpiresAt;
+  }
+
+  private setLastDetail(record: MutableRecord, detail: string | undefined): void {
+    if (detail === undefined) {
+      delete record.lastDetail;
+      return;
+    }
+
+    record.lastDetail = detail;
   }
 
   private toClaimed(record: MutableRecord): ClaimedOutboxRecord {
