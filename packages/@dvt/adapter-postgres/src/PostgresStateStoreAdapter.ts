@@ -35,6 +35,8 @@ import type {
 } from './types.js';
 import { MAX_OUTBOX_ATTEMPTS } from './types.js';
 
+type MigrationState = 'not_called' | 'in_progress' | 'ready';
+
 interface RunMetadataRow {
   tenant_id: string;
   project_id: string;
@@ -261,7 +263,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private abortPendingOperationsRequested = false;
   /** Deduplicated promise for concurrent migrate() callers. */
   private migratePromise: Promise<void> | null = null;
-  private migrated = false;
+  private migrationState: MigrationState = 'not_called';
 
   constructor(readonly config: PostgresAdapterConfig = {}) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
@@ -285,8 +287,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       this.ownsPool = true;
     }
     if (config.assumeSchemaReady) {
-      this.migratePromise = Promise.resolve();
-      this.migrated = true;
+      this.migrationState = 'ready';
     }
     // DDL is no longer run at construction time.
     // Callers MUST await adapter.migrate() before using any storage methods.
@@ -303,14 +304,21 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
    * migrations are run as a separate privileged step.
    */
   async migrate(): Promise<void> {
-    this.migratePromise ??= this.ensureSchema().catch((error: unknown) => {
-      // Allow retry if migration fails once (transient DB/network issue).
-      this.migratePromise = null;
-      this.migrated = false;
-      throw error;
-    });
-    await this.migratePromise;
-    this.migrated = true;
+    if (this.migrationState === 'ready') {
+      return;
+    }
+
+    this.migratePromise ??= this.ensureSchema()
+      .then(() => {
+        this.migrationState = 'ready';
+      })
+      .catch((error: unknown) => {
+        // Allow retry if migration fails once (transient DB/network issue).
+        this.migratePromise = null;
+        this.migrationState = 'not_called';
+        throw error;
+      });
+    this.migrationState = 'in_progress';
     return this.migratePromise;
   }
 
@@ -943,10 +951,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   private ready(): void {
-    if (!this.migratePromise) {
+    if (this.migrationState === 'not_called') {
       throw new Error('MIGRATE_NOT_CALLED: call await adapter.migrate() before using the adapter');
     }
-    if (!this.migrated) {
+    if (this.migrationState === 'in_progress') {
       throw new Error('MIGRATE_IN_PROGRESS: await adapter.migrate() before using the adapter');
     }
   }
