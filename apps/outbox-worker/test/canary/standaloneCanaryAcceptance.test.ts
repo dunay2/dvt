@@ -4,11 +4,7 @@ import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import adapterPostgres from '@dvt/adapter-postgres';
-import {
-  MAX_OUTBOX_ATTEMPTS,
-  type OutboxRecord,
-  type RunEventPersisted,
-} from '@dvt/engine';
+import { MAX_OUTBOX_ATTEMPTS, type OutboxRecord, type RunEventPersisted } from '@dvt/engine';
 
 import { closePgPool } from '../../src/db/pool.js';
 import { runOutboxWorkerHost } from '../../src/host/runOutboxWorkerHost.js';
@@ -27,170 +23,161 @@ const WAIT_FOR_POLL_MS = 10;
 
 let nextAdminPortCandidate = ADMIN_PORT_SCAN_MIN + ((process.pid ?? 1) % 1_000);
 
-await test(
-  'standalone canary acceptance covers passive bootstrap, active delivery, metrics, and stop semantics',
-  async () => {
-    const passiveHost = await startHost({
-      NODE_ENV: 'test',
-      DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
-      DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
-      SERVICE_NAME: 'dvt-outbox-worker-canary',
-    });
+await test('standalone canary acceptance covers passive bootstrap, active delivery, metrics, and stop semantics', async () => {
+  const passiveHost = await startHost({
+    NODE_ENV: 'test',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
+    DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
+    SERVICE_NAME: 'dvt-outbox-worker-canary',
+  });
 
-    try {
-      const passiveHealth = await waitFor(async () => {
-        const response = await fetchJson<{
-          ok: boolean;
-          state: string;
-        }>(`${passiveHost.baseUrl}/healthz`);
-        return response.body.state === 'passive' ? response : undefined;
-      });
-      const passiveReady = await fetchJson<{
+  try {
+    const passiveHealth = await waitFor(async () => {
+      const response = await fetchJson<{
         ok: boolean;
-        ready: boolean;
         state: string;
-      }>(`${passiveHost.baseUrl}/readyz`);
-      const passiveMetrics = await fetchText(`${passiveHost.baseUrl}/metrics`);
-
-      assert.equal(passiveHealth.status, 200);
-      assert.equal(passiveHealth.body.ok, true);
-      assert.equal(passiveReady.status, 503);
-      assert.equal(passiveReady.body.ready, false);
-      assert.equal(passiveReady.body.state, 'passive');
-      assert.match(passiveMetrics.body, /dvt_outbox_runtime_ready 0/);
-      assert.match(passiveMetrics.body, /dvt_outbox_runtime_state\{state="passive"\} 1/);
-    } finally {
-      await stopHost(passiveHost);
-    }
-
-    const sink = await startHttpSink();
-
-    try {
-      await withPatchedPostgresOutboxFixture(async (fixture) => {
-        const activeEnvInput = {
-          NODE_ENV: 'test',
-          DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-          DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
-          SERVICE_NAME: 'dvt-outbox-worker-canary',
-          DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
-          DVT_OUTBOX_EVENT_BUS_MODE: 'http',
-          DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
-          DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
-          DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
-          DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
-          DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
-        } as const;
-        const event = makeRunQueuedEvent();
-
-        await fixture.seedPending([event]);
-
-        const activeHost = await startHost(activeEnvInput);
-        try {
-          const activeReady = await waitFor(async () => {
-            const response = await fetchJson<{
-              ok: boolean;
-              ready: boolean;
-              state: string;
-            }>(`${activeHost.baseUrl}/readyz`);
-            return response.status === 200 ? response : undefined;
-          });
-          const deliveredRequest = await waitFor(() =>
-            sink.requests.length === 1 ? sink.requests[0] : undefined
-          );
-          const activeMetrics = await waitFor(async () => {
-            const response = await fetchText(`${activeHost.baseUrl}/metrics`);
-            return /dvt_outbox_delivered_records_total 1/.test(response.body) ? response : undefined;
-          });
-
-          assert.equal(activeReady.body.ready, true);
-          assert.match(activeMetrics.body, /dvt_outbox_runtime_ready 1/);
-          assert.match(
-            activeMetrics.body,
-            /dvt_outbox_runtime_state\{state="(?:idle|draining)"\} 1/
-          );
-          assert.match(activeMetrics.body, /dvt_outbox_delivered_records_total 1/);
-          assert.match(activeMetrics.body, /dvt_outbox_runtime_errors_total 0/);
-          assert.equal(deliveredRequest.events.length, 1);
-          assert.equal(deliveredRequest.events[0]?.eventId, event.eventId);
-          assert.equal(deliveredRequest.events[0]?.runId, event.runId);
-          assert.equal(deliveredRequest.events[0]?.runSeq, event.runSeq);
-        } finally {
-          await stopHost(activeHost);
-        }
-
-        const finalSnapshot = activeHost.monitor.getHealthSnapshot();
-        assert.equal(finalSnapshot.state, 'stopped');
-        assert.equal(finalSnapshot.ok, false);
-        assert.equal(finalSnapshot.ready, false);
-      });
-    } finally {
-      await sink.close();
-    }
-  }
-);
-
-await test(
-  'standalone canary acceptance exposes failing readiness and retry metrics when downstream rejects delivery',
-  async () => {
-    const sink = await startHttpSink({
-      statusCode: 503,
-      responseBody: { error: 'synthetic downstream outage' },
+      }>(`${passiveHost.baseUrl}/healthz`);
+      return response.body.state === 'passive' ? response : undefined;
     });
+    const passiveReady = await fetchJson<{
+      ok: boolean;
+      ready: boolean;
+      state: string;
+    }>(`${passiveHost.baseUrl}/readyz`);
+    const passiveMetrics = await fetchText(`${passiveHost.baseUrl}/metrics`);
 
-    try {
-      await withPatchedPostgresOutboxFixture(async (fixture) => {
-        const activeEnvInput = {
-          NODE_ENV: 'test',
-          DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-          DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
-          SERVICE_NAME: 'dvt-outbox-worker-canary',
-          DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
-          DVT_OUTBOX_EVENT_BUS_MODE: 'http',
-          DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
-          DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
-          DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
-          DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
-          DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
-        } as const;
-        const event = makeRunQueuedEvent();
-
-        await fixture.seedPending([event]);
-
-        const activeHost = await startHost(activeEnvInput);
-        try {
-          const failingReady = await waitFor(async () => {
-            const response = await fetchJson<{
-              ok: boolean;
-              ready: boolean;
-              state: string;
-              lastErrorMessage: string | null;
-            }>(`${activeHost.baseUrl}/readyz`);
-            return response.body.state === 'failing' ? response : undefined;
-          });
-          const failingMetrics = await waitFor(async () => {
-            const response = await fetchText(`${activeHost.baseUrl}/metrics`);
-            return /dvt_outbox_retried_records_total 1/.test(response.body) ? response : undefined;
-          });
-
-          assert.equal(sink.requests.length, 1);
-          assert.equal(failingReady.status, 503);
-          assert.equal(failingReady.body.ready, false);
-          assert.equal(failingReady.body.state, 'failing');
-          assert.equal(failingReady.body.lastErrorMessage, 'HTTP_EVENT_BUS_BAD_STATUS: 503');
-          assert.match(failingMetrics.body, /dvt_outbox_runtime_ready 0/);
-          assert.match(failingMetrics.body, /dvt_outbox_runtime_state\{state="failing"\} 1/);
-          assert.match(failingMetrics.body, /dvt_outbox_delivered_records_total 0/);
-          assert.match(failingMetrics.body, /dvt_outbox_retried_records_total 1/);
-          assert.match(failingMetrics.body, /dvt_outbox_runtime_errors_total 0/);
-        } finally {
-          await stopHost(activeHost);
-        }
-      });
-    } finally {
-      await sink.close();
-    }
+    assert.equal(passiveHealth.status, 200);
+    assert.equal(passiveHealth.body.ok, true);
+    assert.equal(passiveReady.status, 503);
+    assert.equal(passiveReady.body.ready, false);
+    assert.equal(passiveReady.body.state, 'passive');
+    assert.match(passiveMetrics.body, /dvt_outbox_runtime_ready 0/);
+    assert.match(passiveMetrics.body, /dvt_outbox_runtime_state\{state="passive"\} 1/);
+  } finally {
+    await stopHost(passiveHost);
   }
-);
+
+  const sink = await startHttpSink();
+
+  try {
+    await withPatchedPostgresOutboxFixture(async (fixture) => {
+      const activeEnvInput = {
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
+        SERVICE_NAME: 'dvt-outbox-worker-canary',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+        DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
+        DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
+        DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
+        DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
+        DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
+      } as const;
+      const event = makeRunQueuedEvent();
+
+      await fixture.seedPending([event]);
+
+      const activeHost = await startHost(activeEnvInput);
+      try {
+        const activeReady = await waitFor(async () => {
+          const response = await fetchJson<{
+            ok: boolean;
+            ready: boolean;
+            state: string;
+          }>(`${activeHost.baseUrl}/readyz`);
+          return response.status === 200 ? response : undefined;
+        });
+        const deliveredRequest = await waitFor(() =>
+          sink.requests.length === 1 ? sink.requests[0] : undefined
+        );
+        const activeMetrics = await waitFor(async () => {
+          const response = await fetchText(`${activeHost.baseUrl}/metrics`);
+          return /dvt_outbox_delivered_records_total 1/.test(response.body) ? response : undefined;
+        });
+
+        assert.equal(activeReady.body.ready, true);
+        assert.match(activeMetrics.body, /dvt_outbox_runtime_ready 1/);
+        assert.match(activeMetrics.body, /dvt_outbox_runtime_state\{state="(?:idle|draining)"\} 1/);
+        assert.match(activeMetrics.body, /dvt_outbox_delivered_records_total 1/);
+        assert.match(activeMetrics.body, /dvt_outbox_runtime_errors_total 0/);
+        assert.equal(deliveredRequest.events.length, 1);
+        assert.equal(deliveredRequest.events[0]?.eventId, event.eventId);
+        assert.equal(deliveredRequest.events[0]?.runId, event.runId);
+        assert.equal(deliveredRequest.events[0]?.runSeq, event.runSeq);
+      } finally {
+        await stopHost(activeHost);
+      }
+
+      const finalSnapshot = activeHost.monitor.getHealthSnapshot();
+      assert.equal(finalSnapshot.state, 'stopped');
+      assert.equal(finalSnapshot.ok, false);
+      assert.equal(finalSnapshot.ready, false);
+    });
+  } finally {
+    await sink.close();
+  }
+});
+
+await test('standalone canary acceptance exposes failing readiness and retry metrics when downstream rejects delivery', async () => {
+  const sink = await startHttpSink({
+    statusCode: 503,
+    responseBody: { error: 'synthetic downstream outage' },
+  });
+
+  try {
+    await withPatchedPostgresOutboxFixture(async (fixture) => {
+      const activeEnvInput = {
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
+        SERVICE_NAME: 'dvt-outbox-worker-canary',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+        DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
+        DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
+        DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
+        DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
+        DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
+      } as const;
+      const event = makeRunQueuedEvent();
+
+      await fixture.seedPending([event]);
+
+      const activeHost = await startHost(activeEnvInput);
+      try {
+        const failingReady = await waitFor(async () => {
+          const response = await fetchJson<{
+            ok: boolean;
+            ready: boolean;
+            state: string;
+            lastErrorMessage: string | null;
+          }>(`${activeHost.baseUrl}/readyz`);
+          return response.body.state === 'failing' ? response : undefined;
+        });
+        const failingMetrics = await waitFor(async () => {
+          const response = await fetchText(`${activeHost.baseUrl}/metrics`);
+          return /dvt_outbox_retried_records_total 1/.test(response.body) ? response : undefined;
+        });
+
+        assert.equal(sink.requests.length, 1);
+        assert.equal(failingReady.status, 503);
+        assert.equal(failingReady.body.ready, false);
+        assert.equal(failingReady.body.state, 'failing');
+        assert.equal(failingReady.body.lastErrorMessage, 'HTTP_EVENT_BUS_BAD_STATUS: 503');
+        assert.match(failingMetrics.body, /dvt_outbox_runtime_ready 0/);
+        assert.match(failingMetrics.body, /dvt_outbox_runtime_state\{state="failing"\} 1/);
+        assert.match(failingMetrics.body, /dvt_outbox_delivered_records_total 0/);
+        assert.match(failingMetrics.body, /dvt_outbox_retried_records_total 1/);
+        assert.match(failingMetrics.body, /dvt_outbox_runtime_errors_total 0/);
+      } finally {
+        await stopHost(activeHost);
+      }
+    });
+  } finally {
+    await sink.close();
+  }
+});
 
 async function withPatchedPostgresOutboxFixture<T>(
   run: (fixture: PostgresOutboxFixture) => Promise<T>
@@ -241,9 +228,10 @@ async function withPatchedPostgresOutboxFixture<T>(
     record.nextAttemptAt = new Date(Date.now() + 60_000).toISOString();
   };
 
-  PostgresStateStoreAdapter.prototype.hasPendingRetries = async function hasPendingRetries(): Promise<boolean> {
-    return state.pending.some((record) => record.attempts > 0);
-  };
+  PostgresStateStoreAdapter.prototype.hasPendingRetries =
+    async function hasPendingRetries(): Promise<boolean> {
+      return state.pending.some((record) => record.attempts > 0);
+    };
 
   try {
     return await run({
@@ -284,7 +272,9 @@ async function startHost(input: NodeJS.ProcessEnv): Promise<StartedHost> {
     }
   }
 
-  throw lastAddressInUseError ?? new Error('failed to allocate a free admin port for canary acceptance');
+  throw (
+    lastAddressInUseError ?? new Error('failed to allocate a free admin port for canary acceptance')
+  );
 }
 
 async function stopHost(host: StartedHost): Promise<void> {
