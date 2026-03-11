@@ -244,69 +244,68 @@ await test('standalone canary acceptance does not bypass later same-run events a
   }
 });
 
-await test(
-  'standalone canary acceptance redelivers in order when markDelivered fails after publish',
-  async () => {
-    const sink = await startHttpSink();
+await test('standalone canary acceptance redelivers in order when markDelivered fails after publish', async () => {
+  const sink = await startHttpSink();
 
-    try {
-      await withPatchedPostgresOutboxFixture(
-        { retryDelayMs: 25, failMarkDeliveredRunSeqsOnce: [1] },
-        async (fixture) => {
-          const activeEnvInput = {
-            NODE_ENV: 'test',
-            DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-            DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
-            SERVICE_NAME: 'dvt-outbox-worker-canary',
-            DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
-            DVT_OUTBOX_EVENT_BUS_MODE: 'http',
-            DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
-            DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
-            DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
-            DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
-            DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
-          } as const;
+  try {
+    await withPatchedPostgresOutboxFixture(
+      { retryDelayMs: 25, failMarkDeliveredRunSeqsOnce: [1] },
+      async (fixture) => {
+        const activeEnvInput = {
+          NODE_ENV: 'test',
+          DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+          DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
+          SERVICE_NAME: 'dvt-outbox-worker-canary',
+          DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+          DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+          DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
+          DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
+          DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
+          DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
+          DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
+        } as const;
 
-          await fixture.seedPending([
-            makeRunQueuedEvent(1),
-            makeRunQueuedEvent(2),
-            makeRunQueuedEvent(3),
-          ]);
+        await fixture.seedPending([
+          makeRunQueuedEvent(1),
+          makeRunQueuedEvent(2),
+          makeRunQueuedEvent(3),
+        ]);
 
-          const activeHost = await startHost(activeEnvInput);
-          try {
-            const deliveredRequests = await waitFor(() =>
-              sink.requests.length >= 4 ? sink.requests.slice(0, 4) : undefined
-            );
-            const deliveredMetrics = await waitFor(async () => {
-              const response = await fetchText(`${activeHost.baseUrl}/metrics`);
-              return /dvt_outbox_delivered_records_total 3/.test(response.body) ? response : undefined;
-            });
+        const activeHost = await startHost(activeEnvInput);
+        try {
+          const deliveredRequests = await waitFor(() =>
+            sink.requests.length >= 4 ? sink.requests.slice(0, 4) : undefined
+          );
+          const deliveredMetrics = await waitFor(async () => {
+            const response = await fetchText(`${activeHost.baseUrl}/metrics`);
+            return /dvt_outbox_delivered_records_total 3/.test(response.body)
+              ? response
+              : undefined;
+          });
 
-            assert.deepEqual(
-              deliveredRequests.map((request) => request.events[0]?.runSeq),
-              [1, 1, 2, 3]
-            );
-            assert.deepEqual(
-              deliveredRequests.map((request) => request.events[0]?.eventId),
-              ['evt-canary-1', 'evt-canary-1', 'evt-canary-2', 'evt-canary-3']
-            );
-            assert.deepEqual(
-              deliveredRequests.map((request) => request.events[0]?.idempotencyKey),
-              ['key-canary-1', 'key-canary-1', 'key-canary-2', 'key-canary-3']
-            );
-            assert.match(deliveredMetrics.body, /dvt_outbox_retried_records_total 1/);
-            assert.match(deliveredMetrics.body, /dvt_outbox_delivered_records_total 3/);
-          } finally {
-            await stopHost(activeHost);
-          }
+          assert.deepEqual(
+            deliveredRequests.map((request) => request.events[0]?.runSeq),
+            [1, 1, 2, 3]
+          );
+          assert.deepEqual(
+            deliveredRequests.map((request) => request.events[0]?.eventId),
+            ['evt-canary-1', 'evt-canary-1', 'evt-canary-2', 'evt-canary-3']
+          );
+          assert.deepEqual(
+            deliveredRequests.map((request) => request.events[0]?.idempotencyKey),
+            ['key-canary-1', 'key-canary-1', 'key-canary-2', 'key-canary-3']
+          );
+          assert.match(deliveredMetrics.body, /dvt_outbox_retried_records_total 1/);
+          assert.match(deliveredMetrics.body, /dvt_outbox_delivered_records_total 3/);
+        } finally {
+          await stopHost(activeHost);
         }
-      );
-    } finally {
-      await sink.close();
-    }
+      }
+    );
+  } finally {
+    await sink.close();
   }
-);
+});
 
 async function withPatchedPostgresOutboxFixture<T>(
   options: PatchedOutboxFixtureOptions | ((fixture: PostgresOutboxFixture) => Promise<T>),
