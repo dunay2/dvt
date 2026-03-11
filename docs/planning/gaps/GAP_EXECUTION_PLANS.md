@@ -167,7 +167,7 @@ Minimum tuple for this document:
   - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
   - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
   - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
-  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, and initial runbook now exist in code; promote to evidence after canary and downstream contract hardening
+  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, and initial runbook now exist in code; promote to evidence after canary and downstream contract hardening; keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md) and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible until real PostgreSQL evidence, retries-policy alignment, and runtime/core convergence are explicitly closed
 - Working refs:
   - [`G5 - AI Execution Tracker`](G5-AI-EXECUTION-TRACKER.md)
   - [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
@@ -186,6 +186,7 @@ Minimum tuple for this document:
   - deployment-grade downstream target contract beyond the current minimal HTTP publisher mode
   - shard strategy / scaling model
   - environment-scoped canary execution and rollback wiring
+  - formal `G5.3` closeout still depends on real PostgreSQL execution evidence, basic claim-query performance proof, and explicit ADR/runtime alignment for retry policy
 
 ### G6 - OpenLineage mapping tests CI + schema pin
 
