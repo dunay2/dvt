@@ -598,7 +598,15 @@ async function startHttpSink(options: HttpSinkOptions = {}): Promise<HttpSinkHan
   const duplicateKeys: string[] = [];
   const seenKeys = new Set<string>();
   const server = createServer((request, response) => {
-    void handleSinkRequest(request, response, requests, appliedEffects, duplicateKeys, seenKeys, options).catch((error: unknown) => {
+    void handleSinkRequest(
+      request,
+      response,
+      requests,
+      appliedEffects,
+      duplicateKeys,
+      seenKeys,
+      options
+    ).catch((error: unknown) => {
       response.statusCode = 500;
       response.setHeader('content-type', 'application/json; charset=utf-8');
       response.end(JSON.stringify({ error: toErrorMessage(error) }));
