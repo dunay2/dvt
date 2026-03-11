@@ -105,7 +105,7 @@ function isValidHttpTargetUrl(value: string): boolean {
   }
 
   try {
-    const parsed = new URL(value);
+    const parsed = new globalThis.URL(value);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
     return false;

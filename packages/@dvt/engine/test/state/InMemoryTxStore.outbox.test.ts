@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { RunEventInput } from '../../src/contracts/runEvents.js';
 import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
@@ -36,7 +37,7 @@ function makeBootstrap(runId: string): RunBootstrapInput {
   };
 }
 
-function makeStarted(runId: string, idempotencyKey: string) {
+function makeStarted(runId: string, idempotencyKey: string): RunEventInput {
   return {
     eventId: idempotencyKey,
     eventType: 'RunStarted' as const,

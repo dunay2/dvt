@@ -211,7 +211,7 @@ await test('loadEnv accepts explicit ownership modes for canary control', () => 
 });
 
 await test('loadEnv stays aligned with the checked-in example environment', () => {
-  const file = readFileSync(new URL('../../.env.example', import.meta.url), 'utf8');
+  const file = readFileSync(new globalThis.URL('../../.env.example', import.meta.url), 'utf8');
   const input = Object.fromEntries(
     file
       .split(/\r?\n/)
