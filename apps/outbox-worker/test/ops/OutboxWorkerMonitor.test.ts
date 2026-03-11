@@ -260,3 +260,21 @@ await test('OutboxWorkerMonitor exposes passive ownership as non-ready but healt
   assert.match(metrics, /dvt_outbox_runtime_ready 0/);
   assert.match(metrics, /dvt_outbox_runtime_state\{state="passive"\} 1/);
 });
+
+await test('OutboxWorkerMonitor keeps process start timestamp unset until runtime startup', () => {
+  const clock = { nowMs: 1_741_392_000_000 };
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+  });
+
+  const beforeStartMetrics = monitor.renderMetrics();
+  assert.match(beforeStartMetrics, /dvt_outbox_process_start_timestamp_seconds 0/);
+
+  monitor.onStarted();
+
+  const afterStartMetrics = monitor.renderMetrics();
+  assert.match(afterStartMetrics, /dvt_outbox_process_start_timestamp_seconds 1741392000/);
+});

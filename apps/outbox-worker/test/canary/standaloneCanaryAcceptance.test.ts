@@ -179,12 +179,155 @@ await test('standalone canary acceptance exposes failing readiness and retry met
   }
 });
 
+await test('standalone canary acceptance does not bypass later same-run events after downstream recovery', async () => {
+  const sink = await startHttpSink({
+    responseSequence: [
+      {
+        statusCode: 503,
+        responseBody: { error: 'synthetic first-attempt outage' },
+      },
+      {
+        statusCode: 200,
+        responseBody: { ok: true },
+      },
+    ],
+  });
+
+  try {
+    await withPatchedPostgresOutboxFixture({ retryDelayMs: 25 }, async (fixture) => {
+      const activeEnvInput = {
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
+        SERVICE_NAME: 'dvt-outbox-worker-canary',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+        DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
+        DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
+        DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
+        DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
+        DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
+      } as const;
+
+      await fixture.seedPending([
+        makeRunQueuedEvent(1),
+        makeRunQueuedEvent(2),
+        makeRunQueuedEvent(3),
+      ]);
+
+      const activeHost = await startHost(activeEnvInput);
+      try {
+        const deliveredRequests = await waitFor(() =>
+          sink.requests.length >= 4 ? sink.requests.slice(0, 4) : undefined
+        );
+        const recoveredReady = await waitFor(async () => {
+          const response = await fetchJson<{
+            ok: boolean;
+            ready: boolean;
+            state: string;
+          }>(`${activeHost.baseUrl}/readyz`);
+          return response.status === 200 ? response : undefined;
+        });
+
+        assert.deepEqual(
+          deliveredRequests.map((request) => request.events[0]?.runSeq),
+          [1, 1, 2, 3]
+        );
+        assert.equal(recoveredReady.body.ready, true);
+        assert.match(recoveredReady.body.state, /idle|draining/);
+      } finally {
+        await stopHost(activeHost);
+      }
+    });
+  } finally {
+    await sink.close();
+  }
+});
+
+await test(
+  'standalone canary acceptance redelivers in order when markDelivered fails after publish',
+  async () => {
+    const sink = await startHttpSink();
+
+    try {
+      await withPatchedPostgresOutboxFixture(
+        { retryDelayMs: 25, failMarkDeliveredRunSeqsOnce: [1] },
+        async (fixture) => {
+          const activeEnvInput = {
+            NODE_ENV: 'test',
+            DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+            DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
+            SERVICE_NAME: 'dvt-outbox-worker-canary',
+            DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+            DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+            DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
+            DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
+            DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
+            DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
+            DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
+          } as const;
+
+          await fixture.seedPending([
+            makeRunQueuedEvent(1),
+            makeRunQueuedEvent(2),
+            makeRunQueuedEvent(3),
+          ]);
+
+          const activeHost = await startHost(activeEnvInput);
+          try {
+            const deliveredRequests = await waitFor(() =>
+              sink.requests.length >= 4 ? sink.requests.slice(0, 4) : undefined
+            );
+            const deliveredMetrics = await waitFor(async () => {
+              const response = await fetchText(`${activeHost.baseUrl}/metrics`);
+              return /dvt_outbox_delivered_records_total 3/.test(response.body) ? response : undefined;
+            });
+
+            assert.deepEqual(
+              deliveredRequests.map((request) => request.events[0]?.runSeq),
+              [1, 1, 2, 3]
+            );
+            assert.deepEqual(
+              deliveredRequests.map((request) => request.events[0]?.eventId),
+              ['evt-canary-1', 'evt-canary-1', 'evt-canary-2', 'evt-canary-3']
+            );
+            assert.deepEqual(
+              deliveredRequests.map((request) => request.events[0]?.idempotencyKey),
+              ['key-canary-1', 'key-canary-1', 'key-canary-2', 'key-canary-3']
+            );
+            assert.match(deliveredMetrics.body, /dvt_outbox_retried_records_total 1/);
+            assert.match(deliveredMetrics.body, /dvt_outbox_delivered_records_total 3/);
+          } finally {
+            await stopHost(activeHost);
+          }
+        }
+      );
+    } finally {
+      await sink.close();
+    }
+  }
+);
+
 async function withPatchedPostgresOutboxFixture<T>(
-  run: (fixture: PostgresOutboxFixture) => Promise<T>
+  options: PatchedOutboxFixtureOptions | ((fixture: PostgresOutboxFixture) => Promise<T>),
+  run?: (fixture: PostgresOutboxFixture) => Promise<T>
 ): Promise<T> {
   await closePgPool();
 
-  const state: FakeOutboxState = { nextId: 1, pending: [] };
+  const resolvedRun = typeof options === 'function' ? options : run;
+  if (!resolvedRun) {
+    throw new Error('expected a fixture callback');
+  }
+
+  const retryDelayMs = typeof options === 'function' ? 60_000 : (options.retryDelayMs ?? 60_000);
+  const failMarkDeliveredRunSeqsOnce =
+    typeof options === 'function' ? [] : (options.failMarkDeliveredRunSeqsOnce ?? []);
+  const state: FakeOutboxState = {
+    nextId: 1,
+    pending: [],
+    deadLetters: [],
+    failMarkDeliveredRunSeqsOnce: new Set(failMarkDeliveredRunSeqsOnce),
+  };
   const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
   const originalMarkDelivered = PostgresStateStoreAdapter.prototype.markDelivered;
   const originalMarkFailed = PostgresStateStoreAdapter.prototype.markFailed;
@@ -193,18 +336,21 @@ async function withPatchedPostgresOutboxFixture<T>(
   PostgresStateStoreAdapter.prototype.listPending = async function listPending(
     limit: number
   ): Promise<OutboxRecord[]> {
-    const nowMs = Date.now();
-
-    return state.pending
-      .filter((record) => !record.nextAttemptAt || Date.parse(record.nextAttemptAt) <= nowMs)
-      .sort(compareOutboxRecords)
-      .slice(0, limit)
-      .map(cloneOutboxRecord);
+    return listEligiblePendingRecords(state, limit, Date.now()).map(cloneOutboxRecord);
   };
 
   PostgresStateStoreAdapter.prototype.markDelivered = async function markDelivered(
     ids: string[]
   ): Promise<void> {
+    const failingRecord = state.pending.find(
+      (record) =>
+        ids.includes(record.id) && state.failMarkDeliveredRunSeqsOnce.has(record.payload.runSeq)
+    );
+    if (failingRecord) {
+      state.failMarkDeliveredRunSeqsOnce.delete(failingRecord.payload.runSeq);
+      throw new Error(`synthetic ack failure for runSeq ${failingRecord.payload.runSeq}`);
+    }
+
     state.pending = state.pending.filter((record) => !ids.includes(record.id));
   };
 
@@ -222,10 +368,11 @@ async function withPatchedPostgresOutboxFixture<T>(
 
     if (record.attempts >= MAX_OUTBOX_ATTEMPTS) {
       state.pending = state.pending.filter((candidate) => candidate.id !== id);
+      state.deadLetters.push(record.payload.runId);
       return;
     }
 
-    record.nextAttemptAt = new Date(Date.now() + 60_000).toISOString();
+    record.nextAttemptAt = new Date(Date.now() + retryDelayMs).toISOString();
   };
 
   PostgresStateStoreAdapter.prototype.hasPendingRetries =
@@ -234,7 +381,7 @@ async function withPatchedPostgresOutboxFixture<T>(
     };
 
   try {
-    return await run({
+    return await resolvedRun({
       seedPending: async (events) => {
         for (const event of events) {
           state.pending.push({
@@ -293,13 +440,62 @@ function makeLogger(): OutboxWorkerRuntimeLogger {
   };
 }
 
-function compareOutboxRecords(a: OutboxRecord, b: OutboxRecord): number {
-  const aNextAttemptAtMs = a.nextAttemptAt ? Date.parse(a.nextAttemptAt) : Number.NEGATIVE_INFINITY;
-  const bNextAttemptAtMs = b.nextAttemptAt ? Date.parse(b.nextAttemptAt) : Number.NEGATIVE_INFINITY;
-  if (aNextAttemptAtMs !== bNextAttemptAtMs) {
-    return aNextAttemptAtMs - bNextAttemptAtMs;
+function listEligiblePendingRecords(
+  state: FakeOutboxState,
+  limit: number,
+  nowMs: number
+): OutboxRecord[] {
+  const blockedRunIds = new Set(state.deadLetters);
+  const headRunSeqByRunId = buildHeadRunSeqByRunId(state.pending, blockedRunIds);
+
+  return state.pending
+    .filter((record) => {
+      if (blockedRunIds.has(record.payload.runId)) {
+        return false;
+      }
+
+      if (headRunSeqByRunId.get(record.payload.runId) !== record.payload.runSeq) {
+        return false;
+      }
+
+      if (!record.nextAttemptAt) {
+        return true;
+      }
+
+      const nextAttemptAtMs = Date.parse(record.nextAttemptAt);
+      return Number.isFinite(nextAttemptAtMs) ? nextAttemptAtMs <= nowMs : true;
+    })
+    .sort(compareOutboxRecords)
+    .slice(0, Math.max(0, limit));
+}
+
+function buildHeadRunSeqByRunId(
+  pending: readonly OutboxRecord[],
+  blockedRunIds: ReadonlySet<string>
+): Map<string, number> {
+  const headRunSeqByRunId = new Map<string, number>();
+
+  for (const record of pending) {
+    const runId = record.payload.runId;
+    if (blockedRunIds.has(runId)) {
+      continue;
+    }
+
+    const currentHeadRunSeq = headRunSeqByRunId.get(runId);
+    if (currentHeadRunSeq === undefined || record.payload.runSeq < currentHeadRunSeq) {
+      headRunSeqByRunId.set(runId, record.payload.runSeq);
+    }
   }
-  return Date.parse(a.createdAt) - Date.parse(b.createdAt);
+
+  return headRunSeqByRunId;
+}
+
+function compareOutboxRecords(a: OutboxRecord, b: OutboxRecord): number {
+  const createdAtDiff = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+  if (createdAtDiff !== 0) {
+    return createdAtDiff;
+  }
+  return a.payload.runSeq - b.payload.runSeq;
 }
 
 function cloneOutboxRecord(record: OutboxRecord): OutboxRecord {
@@ -313,9 +509,9 @@ function cloneEvent(event: RunEventPersisted): RunEventPersisted {
   return { ...event };
 }
 
-function makeRunQueuedEvent(): RunEventPersisted {
+function makeRunQueuedEvent(runSeq = 1): RunEventPersisted {
   return {
-    eventId: 'evt-canary-1',
+    eventId: `evt-canary-${runSeq}`,
     eventType: 'RunQueued',
     runId: 'run-canary-1',
     tenantId: 'tenant-canary',
@@ -326,8 +522,8 @@ function makeRunQueuedEvent(): RunEventPersisted {
     logicalAttemptId: 1,
     engineAttemptId: 1,
     emittedAt: '2026-03-10T00:00:00.000Z',
-    idempotencyKey: 'key-canary-1',
-    runSeq: 1,
+    idempotencyKey: `key-canary-${runSeq}`,
+    runSeq,
     persistedAt: '2026-03-10T00:00:00.000Z',
   };
 }
@@ -379,10 +575,23 @@ async function handleSinkRequest(
     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
 
-  requests.push(JSON.parse(Buffer.concat(chunks).toString('utf8')) as SinkPayload);
-  response.statusCode = options.statusCode ?? 200;
+  const sinkPayload = JSON.parse(Buffer.concat(chunks).toString('utf8')) as SinkPayload;
+  const responsePlan = resolveSinkResponse(options, requests.length);
+  requests.push(sinkPayload);
+  response.statusCode = responsePlan.statusCode;
   response.setHeader('content-type', 'application/json; charset=utf-8');
-  response.end(JSON.stringify(options.responseBody ?? { ok: true }));
+  response.end(JSON.stringify(responsePlan.responseBody));
+}
+
+function resolveSinkResponse(options: HttpSinkOptions, requestIndex: number): HttpSinkResponse {
+  if (options.responseSequence && options.responseSequence.length > 0) {
+    return options.responseSequence[Math.min(requestIndex, options.responseSequence.length - 1)]!;
+  }
+
+  return {
+    statusCode: options.statusCode ?? 200,
+    responseBody: options.responseBody ?? { ok: true },
+  };
 }
 
 async function fetchJson<T>(url: string): Promise<{ status: number; body: T }> {
@@ -438,15 +647,28 @@ interface HttpSinkHandle {
 interface HttpSinkOptions {
   statusCode?: number;
   responseBody?: Record<string, unknown>;
+  responseSequence?: HttpSinkResponse[];
+}
+
+interface HttpSinkResponse {
+  statusCode: number;
+  responseBody: Record<string, unknown>;
 }
 
 interface PostgresOutboxFixture {
   seedPending(events: readonly RunEventPersisted[]): Promise<void>;
 }
 
+interface PatchedOutboxFixtureOptions {
+  retryDelayMs?: number;
+  failMarkDeliveredRunSeqsOnce?: number[];
+}
+
 interface FakeOutboxState {
   nextId: number;
   pending: OutboxRecord[];
+  deadLetters: string[];
+  failMarkDeliveredRunSeqsOnce: Set<number>;
 }
 
 async function startHostOnCandidatePort(

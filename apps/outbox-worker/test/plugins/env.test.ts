@@ -67,6 +67,30 @@ await test('loadEnv fails fast when active mode is missing DATABASE_URL', () => 
   );
 });
 
+await test('loadEnv fails fast when active mode uses an empty DATABASE_URL', () => {
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: '',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      }),
+    /DATABASE_URL/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: '   ',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      }),
+    /DATABASE_URL/
+  );
+});
+
 await test('loadEnv fails fast when active http mode is selected without target url', () => {
   assert.throws(
     () =>
@@ -87,6 +111,30 @@ await test('loadEnv fails fast when active http mode uses an empty target url', 
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: '',
+      }),
+    /DVT_OUTBOX_HTTP_TARGET_URL/
+  );
+});
+
+await test('loadEnv fails fast when active http mode target url is not a valid http endpoint', () => {
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'not-a-url',
+      }),
+    /DVT_OUTBOX_HTTP_TARGET_URL/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'ftp://localhost:8080/outbox/events',
       }),
     /DVT_OUTBOX_HTTP_TARGET_URL/
   );

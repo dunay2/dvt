@@ -51,6 +51,36 @@ function makeRuntimeEvent(runId: string, runSeq: number): RunEventPersisted {
   };
 }
 
+class FailFirstMarkDeliveredStorage implements IOutboxStorage {
+  private failed = false;
+
+  constructor(private readonly inner: InMemoryOutboxStorage) {}
+
+  async enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void> {
+    await this.inner.enqueueTx(runId, events);
+  }
+
+  async listPending(limit: number): Promise<OutboxRecord[]> {
+    return this.inner.listPending(limit);
+  }
+
+  async markDelivered(ids: string[]): Promise<void> {
+    if (!this.failed) {
+      this.failed = true;
+      throw new Error('synthetic ack failure');
+    }
+    await this.inner.markDelivered(ids);
+  }
+
+  async markFailed(id: string, error: string): Promise<void> {
+    await this.inner.markFailed(id, error);
+  }
+
+  async hasPendingRetries(): Promise<boolean> {
+    return (await this.inner.hasPendingRetries?.()) ?? false;
+  }
+}
+
 await runtimeTest(runtimeScenarios.startDrainsPendingRecordsAndStopExitsCleanly, async () => {
   const { storage, bus, runtime } = createMemoryRuntime({
     pollIntervalMs: 25,
@@ -317,6 +347,75 @@ await runtimeTest(
       [1, 2]
     );
     assert.equal((await storage.listPending(10)).length, 0);
+  }
+);
+
+await runtimeTest(
+  { title: 'runtime redelivers markDelivered failures before later same-run events' },
+  async () => {
+    const now = { value: 0 };
+    const storage = new FailFirstMarkDeliveredStorage(
+      new InMemoryOutboxStorage({ nowMs: () => now.value })
+    );
+    const published: RunEventPersisted[] = [];
+    const { logger } = createLoggerState();
+    const observedTicks: OutboxTickResult[] = [];
+    const runtime = new OutboxWorkerRuntime(
+      storage,
+      {
+        async publish(events: RunEventPersisted[]): Promise<void> {
+          published.push(...events);
+        },
+      },
+      logger,
+      {
+        pollIntervalMs: 25,
+        errorBackoffMs: 25,
+        batchSize: 10,
+        nowMs: () => now.value,
+        hooks: {
+          onTick(result) {
+            observedTicks.push(result);
+          },
+        },
+      }
+    );
+
+    await storage.enqueueTx('run-ack-ordered', [
+      makeRuntimeEvent('run-ack-ordered', 1),
+      makeRuntimeEvent('run-ack-ordered', 2),
+      makeRuntimeEvent('run-ack-ordered', 3),
+    ]);
+
+    const loop = runtime.start();
+    await waitForCondition(() => observedTicks.length >= 1);
+
+    assert.deepEqual(
+      published.map((event) => event.runSeq),
+      [1]
+    );
+    assert.equal(observedTicks[0]?.claimedCount, 1);
+    assert.equal(observedTicks[0]?.retriedCount, 1);
+
+    now.value = 1_001;
+    await waitForCondition(() => published.length === 4);
+
+    await runtime.stop();
+    await loop;
+
+    assert.deepEqual(
+      published.map((event) => event.runSeq),
+      [1, 1, 2, 3]
+    );
+    assert.deepEqual(
+      published.map((event) => event.idempotencyKey),
+      [
+        'key-run-ack-ordered-1',
+        'key-run-ack-ordered-1',
+        'key-run-ack-ordered-2',
+        'key-run-ack-ordered-3',
+      ]
+    );
   }
 );
 

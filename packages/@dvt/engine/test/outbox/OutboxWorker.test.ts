@@ -439,6 +439,35 @@ describe('OutboxWorker', () => {
     await expect(store.listPending(10)).resolves.toHaveLength(1);
   });
 
+  it('replay clears failure state before a dead-lettered record is retried again', async () => {
+    const now = { value: 0 };
+    const store = new InMemoryOutboxStorage({ nowMs: () => now.value });
+    const alwaysFailBus: IEventBus = {
+      publish: async () => {
+        throw new Error('always fail');
+      },
+    };
+
+    const failingWorker = new OutboxWorker(store, alwaysFailBus, {
+      batchSize: 10,
+      stopOnError: false,
+    });
+    await store.enqueueTx('run-replay-clean', [makeEvent('replay-clean', 'run-replay-clean', 1)]);
+
+    for (let i = 0; i < 10; i += 1) {
+      now.value = i * 65_000;
+      await failingWorker.tick();
+    }
+
+    const moved = await store.replayDeadLetters({ runId: 'run-replay-clean' });
+    expect(moved).toBe(1);
+
+    const [replayed] = await store.listPending(10);
+    expect(replayed?.attempts).toBe(0);
+    expect(replayed?.lastError).toBeUndefined();
+    expect(replayed?.nextAttemptAt).toBeUndefined();
+  });
+
   it('emits observer transitions for claim, delivery, retry, and dead-letter', async () => {
     const now = { value: 0 };
     const store = new InMemoryOutboxStorage({ nowMs: () => now.value });

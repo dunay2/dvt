@@ -40,7 +40,9 @@ class AbortDuringListenerRegistrationSignal {
     this.abortedState = true;
   }
 
-  removeEventListener(): void {}
+  removeEventListener(type: unknown): void {
+    void type;
+  }
 }
 
 await test('runOutboxWorkerHost keeps passive mode observable without creating the runtime', async () => {
@@ -82,7 +84,10 @@ await test('runOutboxWorkerHost keeps passive mode observable without creating t
   assert.equal(snapshot.state, 'passive');
   assert.equal(snapshot.ok, true);
   assert.equal(snapshot.ready, false);
-  assert.equal(entries.some((entry) => entry.msg === 'outbox worker bootstrapped'), true);
+  assert.equal(
+    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
+    true
+  );
 });
 
 await test('runOutboxWorkerHost creates and starts the runtime when ownership mode is active', async () => {
@@ -150,7 +155,10 @@ await test('runOutboxWorkerHost creates and starts the runtime when ownership mo
   assert.equal(receivedSignal, shutdown.signal);
   assert.equal(receivedFactoryOptions?.observer, monitor);
   assert.equal(receivedFactoryOptions?.hooks, monitor);
-  assert.equal(entries.some((entry) => entry.msg === 'outbox worker bootstrapped'), true);
+  assert.equal(
+    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
+    true
+  );
 });
 
 await test('runOutboxWorkerHost does not miss an abort that lands during passive listener registration', async () => {
@@ -179,7 +187,8 @@ await test('runOutboxWorkerHost does not miss an abort that lands during passive
           calls.push('operational.stop');
         },
       },
-      shutdownSignal: new AbortDuringListenerRegistrationSignal() as unknown as globalThis.AbortSignal,
+      shutdownSignal:
+        new AbortDuringListenerRegistrationSignal() as unknown as globalThis.AbortSignal,
       createRuntime: async () => {
         calls.push('runtime.factory');
         throw new Error('runtime should not be created in passive mode');
@@ -234,7 +243,10 @@ await test('runOutboxWorkerHost rethrows operational server start failures and d
   );
 
   assert.deepEqual(calls, ['operational.start', 'operational.stop']);
-  assert.equal(entries.some((entry) => entry.msg === 'outbox worker bootstrapped'), false);
+  assert.equal(
+    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
+    false
+  );
   assert.equal(monitor.getHealthSnapshot().state, 'starting');
 });
 
@@ -278,7 +290,10 @@ await test('runOutboxWorkerHost rethrows runtime factory failures after stopping
   );
 
   assert.deepEqual(calls, ['operational.start', 'runtime.factory', 'operational.stop']);
-  assert.equal(entries.some((entry) => entry.msg === 'outbox worker bootstrapped'), true);
+  assert.equal(
+    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
+    true
+  );
   assert.equal(monitor.getHealthSnapshot().state, 'starting');
 });
 
@@ -336,6 +351,9 @@ await test('runOutboxWorkerHost rethrows runtime start failures after cleanup', 
     'runtime.stop',
     'operational.stop',
   ]);
-  assert.equal(entries.some((entry) => entry.msg === 'outbox worker bootstrapped'), true);
+  assert.equal(
+    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
+    true
+  );
   assert.equal(monitor.getHealthSnapshot().state, 'starting');
 });

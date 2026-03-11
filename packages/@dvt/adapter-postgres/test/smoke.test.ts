@@ -34,6 +34,13 @@ function rid(s: string): RunId {
   return s as RunId;
 }
 
+function requireDefined<T>(value: T | null | undefined, message: string): NonNullable<T> {
+  if (value === undefined || value === null) {
+    throw new Error(message);
+  }
+  return value;
+}
+
 function makeEvent(
   overrides: Partial<EventInput> & {
     runId: string;
@@ -99,6 +106,22 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     fn: (adapter: PostgresStateStoreAdapter) => Promise<void>
   ): Promise<void> {
     const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
+    try {
+      await adapter.migrate();
+      await fn(adapter);
+    } finally {
+      await adapter.close();
+    }
+  }
+
+  async function withClockAdapter(
+    nowRef: { value: string },
+    fn: (adapter: PostgresStateStoreAdapter) => Promise<void>
+  ): Promise<void> {
+    const adapter = new PostgresStateStoreAdapter({
+      schema,
+      now: () => nowRef.value,
+    });
     try {
       await adapter.migrate();
       await fn(adapter);
@@ -231,18 +254,53 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       const pending = await adapter.listPending(10);
       expect(pending.length).toBeGreaterThanOrEqual(1);
       const mine = pending.find((r) => r.payload.runId === 'run-outbox');
-      expect(mine).toBeDefined();
+      const outboxRecord = requireDefined(mine, 'expected outbox record for run-outbox');
 
-      await adapter.markDelivered([mine!.id]);
+      await adapter.markDelivered([outboxRecord.id]);
       const after = await adapter.listPending(10);
-      expect(after.find((r) => r.id === mine!.id)).toBeUndefined();
+      expect(after.find((r) => r.id === outboxRecord.id)).toBeUndefined();
+    }));
+
+  test('outbox: listPending only exposes the head-of-line record for a run until prior delivery', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-head-of-line'));
+      await adapter.appendAndEnqueueTx(rid('run-head-of-line'), [
+        makeEvent({
+          runId: 'run-head-of-line',
+          eventType: 'RunStarted',
+          idempotencyKey: 'run-head-of-line:started',
+        }),
+      ]);
+
+      const firstPending = await adapter.listPending(10);
+      const head = firstPending.find((record) => record.payload.runId === 'run-head-of-line');
+      const headRecord = requireDefined(head, 'expected head-of-line record');
+      expect(headRecord.payload.runSeq).toBe(1);
+      expect(
+        firstPending.filter((record) => record.payload.runId === 'run-head-of-line')
+      ).toHaveLength(1);
+
+      const whileHeadClaimed = await adapter.listPending(10);
+      expect(
+        whileHeadClaimed.find((record) => record.payload.runId === 'run-head-of-line')
+      ).toBeUndefined();
+
+      await adapter.markDelivered([headRecord.id]);
+
+      const afterHeadDelivered = await adapter.listPending(10);
+      const next = afterHeadDelivered.find((record) => record.payload.runId === 'run-head-of-line');
+      expect(next).toBeDefined();
+      expect(next?.payload.runSeq).toBe(2);
     }));
 
   test('outbox: markFailed increments attempts; dead-letters after MAX_OUTBOX_ATTEMPTS', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-dl'));
       const pending = await adapter.listPending(10);
-      const rec = pending.find((r) => r.payload.runId === 'run-dl')!;
+      const rec = requireDefined(
+        pending.find((r) => r.payload.runId === 'run-dl'),
+        'expected pending outbox record for run-dl'
+      );
 
       // 9 failures — not yet dead-lettered (still in pending table, gated by backoff)
       for (let i = 0; i < 9; i++) {
@@ -265,23 +323,61 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       await adapter.bootstrapRunTx(makeBootstrap('run-backoff'));
 
       const [rec] = await adapter.listPending(10);
-      expect(rec).toBeDefined();
+      const pendingRecord = requireDefined(rec, 'expected pending outbox record for run-backoff');
 
-      await adapter.markFailed(rec!.id, 'transient-backoff');
+      await adapter.markFailed(pendingRecord.id, 'transient-backoff');
 
       // Same NOW -> pending row should be gated by nextAttemptAt and not returned.
       const pendingNow = await adapter.listPending(10);
-      expect(pendingNow.find((r) => r.id === rec!.id)).toBeUndefined();
+      expect(pendingNow.find((r) => r.id === pendingRecord.id)).toBeUndefined();
     }));
+
+  test('outbox: stale claims expire and reclaim the same head-of-line record before later same-run records', async () => {
+    const nowRef = { value: NOW };
+
+    await withClockAdapter(nowRef, async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-stale-claim'));
+      await adapter.appendAndEnqueueTx(rid('run-stale-claim'), [
+        makeEvent({
+          runId: 'run-stale-claim',
+          eventType: 'RunStarted',
+          idempotencyKey: 'run-stale-claim:started',
+        }),
+      ]);
+
+      const firstClaim = await adapter.listPending(10);
+      const claimed = firstClaim.find((record) => record.payload.runId === 'run-stale-claim');
+      expect(claimed).toBeDefined();
+      expect(claimed?.payload.runSeq).toBe(1);
+
+      nowRef.value = '2026-02-22T00:04:59.000Z';
+      const beforeExpiry = await adapter.listPending(10);
+      expect(
+        beforeExpiry.find((record) => record.payload.runId === 'run-stale-claim')
+      ).toBeUndefined();
+
+      nowRef.value = '2026-02-22T00:05:01.000Z';
+      const afterExpiry = await adapter.listPending(10);
+      const reclaimed = afterExpiry.find((record) => record.payload.runId === 'run-stale-claim');
+      expect(reclaimed).toBeDefined();
+      expect(reclaimed?.id).toBe(claimed?.id);
+      expect(reclaimed?.payload.runSeq).toBe(1);
+      expect(
+        afterExpiry.find(
+          (record) => record.payload.runId === 'run-stale-claim' && record.payload.runSeq === 2
+        )
+      ).toBeUndefined();
+    });
+  });
 
   test('outbox: replayDeadLetters moves records back to pending', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-replay'));
       const [rec] = await adapter.listPending(10);
-      expect(rec).toBeDefined();
+      const pendingRecord = requireDefined(rec, 'expected pending outbox record for run-replay');
 
       for (let i = 0; i < 10; i += 1) {
-        await adapter.markFailed(rec!.id, `e-${i}`);
+        await adapter.markFailed(pendingRecord.id, `e-${i}`);
       }
 
       const dl = await adapter.listDeadLetter(10, 't1');
@@ -299,10 +395,76 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(dlAfter.find((r) => r.runId === 'run-replay')).toBeUndefined();
 
       const pendingAfter = await adapter.listPending(10);
-      expect(pendingAfter.find((r) => r.id === rec!.id)).toBeDefined();
+      const replayed = pendingAfter.find((r) => r.id === pendingRecord.id);
+      expect(replayed).toBeDefined();
+      expect(replayed?.attempts).toBe(0);
+      expect(replayed?.lastError).toBeUndefined();
+      expect(replayed?.nextAttemptAt).toBeUndefined();
     }));
 
   // ── Multi-tenant isolation ────────────────────────────────────────────────
+
+  test('outbox: dead-letter blocks later same-run records until replay restores the original envelope', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-dlq-block'));
+      await adapter.appendAndEnqueueTx(rid('run-dlq-block'), [
+        makeEvent({
+          runId: 'run-dlq-block',
+          eventType: 'RunStarted',
+          idempotencyKey: 'run-dlq-block:started',
+          payload: { synthetic: 'payload-marker' },
+        }),
+      ]);
+
+      const initialPending = await adapter.listPending(10);
+      const head = initialPending.find((record) => record.payload.runId === 'run-dlq-block');
+      const headRecord = requireDefined(head, 'expected head-of-line record for run-dlq-block');
+      expect(headRecord.payload.runSeq).toBe(1);
+
+      for (let i = 0; i < 10; i += 1) {
+        await adapter.markFailed(headRecord.id, `dlq-${i}`);
+      }
+
+      const whileDlqBlocked = await adapter.listPending(10);
+      expect(
+        whileDlqBlocked.find((record) => record.payload.runId === 'run-dlq-block')
+      ).toBeUndefined();
+
+      const dlq = await adapter.listDeadLetter(10, 't1');
+      const deadLetter = dlq.find((record) => record.runId === 'run-dlq-block');
+      expect(deadLetter).toBeDefined();
+      expect(deadLetter?.payload.eventId).toBe(head?.payload.eventId);
+      expect(deadLetter?.payload.runSeq).toBe(head?.payload.runSeq);
+      expect(deadLetter?.payload.idempotencyKey).toBe(head?.payload.idempotencyKey);
+
+      const moved = await adapter.replayDeadLetters({
+        tenantId: 't1',
+        runId: 'run-dlq-block',
+        limit: 1,
+      });
+      expect(moved).toBe(1);
+
+      const afterReplay = await adapter.listPending(10);
+      const replayedHead = afterReplay.find((record) => record.payload.runId === 'run-dlq-block');
+      const replayedHeadRecord = requireDefined(
+        replayedHead,
+        'expected replayed head-of-line record for run-dlq-block'
+      );
+      expect(replayedHeadRecord.id).toBe(headRecord.id);
+      expect(replayedHeadRecord.payload).toEqual(headRecord.payload);
+      expect(
+        afterReplay.find(
+          (record) => record.payload.runId === 'run-dlq-block' && record.payload.runSeq === 2
+        )
+      ).toBeUndefined();
+
+      await adapter.markDelivered([replayedHeadRecord.id]);
+
+      const afterHeadDelivered = await adapter.listPending(10);
+      const next = afterHeadDelivered.find((record) => record.payload.runId === 'run-dlq-block');
+      expect(next).toBeDefined();
+      expect(next?.payload.runSeq).toBe(2);
+    }));
 
   test('listRuns: filters by tenantId', () =>
     withAdapter(async (adapter) => {
@@ -368,12 +530,12 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       const pending = await adapter.listPending(20);
       const recA = pending.find((r) => r.payload.runId === 'run-dl-tenant-a');
       const recB = pending.find((r) => r.payload.runId === 'run-dl-tenant-b');
-      expect(recA).toBeDefined();
-      expect(recB).toBeDefined();
+      const recordA = requireDefined(recA, 'expected pending outbox record for tenant-a');
+      const recordB = requireDefined(recB, 'expected pending outbox record for tenant-b');
 
       for (let i = 0; i < 10; i += 1) {
-        await adapter.markFailed(recA!.id, `tenant-a-${i}`);
-        await adapter.markFailed(recB!.id, `tenant-b-${i}`);
+        await adapter.markFailed(recordA.id, `tenant-a-${i}`);
+        await adapter.markFailed(recordB.id, `tenant-b-${i}`);
       }
 
       await expect(adapter.listDeadLetter(10)).rejects.toThrow('TENANT_SCOPE_REQUIRED');

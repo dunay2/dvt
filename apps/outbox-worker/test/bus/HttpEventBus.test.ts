@@ -86,6 +86,29 @@ await test('HttpEventBus cancels successful response bodies after publish', asyn
   assert.equal(cancelCalls, 1);
 });
 
+await test('HttpEventBus does not let successful response cleanup failures mask publish success', async () => {
+  let cancelCalls = 0;
+
+  const bus = new HttpEventBus({
+    targetUrl: 'http://example.test/outbox/events',
+    fetchImpl: (async () =>
+      ({
+        ok: true,
+        status: 202,
+        body: {
+          cancel: async (): Promise<void> => {
+            cancelCalls += 1;
+            throw new Error('synthetic cancel failure');
+          },
+        },
+      }) as globalThis.Response) as typeof globalThis.fetch,
+  });
+
+  await bus.publish([makeEvent('1')]);
+
+  assert.equal(cancelCalls, 1);
+});
+
 await test('HttpEventBus rejects non-success downstream responses', async () => {
   const server = createServer((_request, response) => {
     response.writeHead(503, { 'content-type': 'application/json' });
@@ -133,6 +156,46 @@ await test('HttpEventBus times out when downstream does not respond', async () =
   }
 });
 
+await test('HttpEventBus surfaces network failures without rewriting them as timeouts', async () => {
+  const bus = new HttpEventBus({
+    targetUrl: 'http://example.test/outbox/events',
+    timeoutMs: 1_000,
+    fetchImpl: (async () => {
+      throw new Error('synthetic network failure');
+    }) as typeof globalThis.fetch,
+  });
+
+  await assert.rejects(
+    () => bus.publish([makeEvent('1')]),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.message !== 'HTTP_EVENT_BUS_TIMEOUT: 1000' &&
+      error.message === 'synthetic network failure'
+  );
+});
+
+await test('HttpEventBus does not let response cleanup mask downstream failures', async () => {
+  let cancelCalls = 0;
+
+  const bus = new HttpEventBus({
+    targetUrl: 'http://example.test/outbox/events',
+    fetchImpl: (async () =>
+      ({
+        ok: false,
+        status: 503,
+        body: {
+          cancel: async (): Promise<void> => {
+            cancelCalls += 1;
+            throw new Error('synthetic cancel failure');
+          },
+        },
+      }) as globalThis.Response) as typeof globalThis.fetch,
+  });
+
+  await assert.rejects(() => bus.publish([makeEvent('1')]), /HTTP_EVENT_BUS_BAD_STATUS: 503/);
+  assert.equal(cancelCalls, 1);
+});
+
 await test('HttpEventBus aborts an in-flight publish on shutdown interruption', async () => {
   let abortsObserved = 0;
   let fetchStarted = false;
@@ -164,6 +227,41 @@ await test('HttpEventBus aborts an in-flight publish on shutdown interruption', 
 
   await assert.rejects(pendingPublish, /HTTP_EVENT_BUS_TIMEOUT: 60000/);
   assert.equal(abortsObserved, 1);
+});
+
+await test('HttpEventBus aborts all in-flight publishes on shutdown interruption', async () => {
+  let abortsObserved = 0;
+  let fetchStarted = 0;
+
+  const bus = new HttpEventBus({
+    targetUrl: 'http://example.test/outbox/events',
+    timeoutMs: 60_000,
+    fetchImpl: (async (_url, init) => {
+      fetchStarted += 1;
+      const signal = init?.signal;
+
+      return new Promise<globalThis.Response>((_resolve, reject) => {
+        signal?.addEventListener(
+          'abort',
+          () => {
+            abortsObserved += 1;
+            reject(makeAbortError());
+          },
+          { once: true }
+        );
+      });
+    }) as typeof globalThis.fetch,
+  });
+
+  const firstPublish = bus.publish([makeEvent('1')]);
+  const secondPublish = bus.publish([makeEvent('2')]);
+  await waitFor(() => fetchStarted === 2);
+
+  bus.abortPendingPublishes();
+
+  await assert.rejects(firstPublish, /HTTP_EVENT_BUS_TIMEOUT: 60000/);
+  await assert.rejects(secondPublish, /HTTP_EVENT_BUS_TIMEOUT: 60000/);
+  assert.equal(abortsObserved, 2);
 });
 
 function makeAbortError(): Error {
