@@ -28,6 +28,7 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
   const createRuntime = options.createRuntime ?? createOutboxWorkerRuntime;
   let primaryError: unknown = null;
   let runtime: RuntimeHandle | null = null;
+  let detachShutdownListener = (): void => {};
 
   try {
     await options.operationalServer.start();
@@ -49,6 +50,11 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
       return;
     }
 
+    detachShutdownListener = observeShutdownForReadinessWithdrawal(
+      options.shutdownSignal,
+      options.monitor
+    );
+
     runtime = await createRuntimeUntilShutdown({
       createRuntime,
       env: options.env,
@@ -64,6 +70,7 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
     primaryError = error;
     throw error;
   } finally {
+    detachShutdownListener();
     await stopRuntimeAndOperationalServer({
       runtime,
       operationalServer: options.operationalServer,
@@ -89,6 +96,25 @@ async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
       onAbort();
     }
   });
+}
+
+function observeShutdownForReadinessWithdrawal(
+  signal: globalThis.AbortSignal,
+  monitor: Pick<OutboxWorkerMonitor, 'onStopping'>
+): () => void {
+  const onAbort = (): void => {
+    signal.removeEventListener('abort', onAbort);
+    monitor.onStopping();
+  };
+
+  signal.addEventListener('abort', onAbort, { once: true });
+  if (signal.aborted) {
+    onAbort();
+  }
+
+  return (): void => {
+    signal.removeEventListener('abort', onAbort);
+  };
 }
 
 async function createRuntimeUntilShutdown(options: {

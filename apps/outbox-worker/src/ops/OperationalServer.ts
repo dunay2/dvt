@@ -95,6 +95,7 @@ async function handleRequest(
         lastErrorMessage: health.lastErrorMessage,
         lastErrorAt: health.lastErrorAt,
         lastTickAt: health.lastTickAt,
+        tickFresh: health.tickFresh,
       });
       return;
     case '/metrics':

@@ -5,7 +5,7 @@ import pino from 'pino';
 import { runOutboxWorkerHost } from './host/runOutboxWorkerHost.js';
 import { createOperationalServer } from './ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from './ops/OutboxWorkerMonitor.js';
-import { loadEnv } from './plugins/env.js';
+import { isActiveEnv, loadEnv } from './plugins/env.js';
 
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
@@ -17,6 +17,15 @@ async function main(): Promise<void> {
   const monitor = new OutboxWorkerMonitor({
     serviceName: env.SERVICE_NAME,
     logger,
+    ...(isActiveEnv(env)
+      ? {
+          readyStaleAfterMs:
+            Math.max(
+              env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
+              env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS
+            ) * 3,
+        }
+      : {}),
   });
   const operationalServer = createOperationalServer({
     host: env.DVT_OUTBOX_ADMIN_HOST,

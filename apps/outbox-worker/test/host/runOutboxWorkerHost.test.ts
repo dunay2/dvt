@@ -269,8 +269,9 @@ await test('runOutboxWorkerHost exits promptly when shutdown lands during active
   assert.equal(result, 'resolved');
   assert.deepEqual(calls, ['operational.start', 'runtime.factory', 'operational.stop']);
 
-  assertDefined(resolveRuntime, 'expected pending runtime resolver for active bootstrap test');
-  resolveRuntime({
+  assert.notEqual(resolveRuntime, null, 'expected pending runtime resolver for active bootstrap test');
+  const resolvePendingRuntime = resolveRuntime!;
+  resolvePendingRuntime({
     start: async () => {
       calls.push('runtime.start');
     },
@@ -332,8 +333,9 @@ await test('runOutboxWorkerHost logs a warning if late runtime cleanup fails aft
   shutdown.abort();
   await hostPromise;
 
-  assertDefined(resolveRuntime, 'expected pending runtime resolver for late cleanup test');
-  resolveRuntime({
+  assert.notEqual(resolveRuntime, null, 'expected pending runtime resolver for late cleanup test');
+  const resolveLateRuntime = resolveRuntime!;
+  resolveLateRuntime({
     start: async () => {
       calls.push('runtime.start');
     },
@@ -358,6 +360,84 @@ await test('runOutboxWorkerHost logs a warning if late runtime cleanup fails aft
     'runtime.stop',
   ]);
   assert.equal(calls.includes('runtime.start'), false);
+});
+
+await test('runOutboxWorkerHost withdraws readiness immediately when shutdown lands during active runtime drain', async () => {
+  const calls: string[] = [];
+  const clock = { nowMs: 1_741_392_000_000 };
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+    readyStaleAfterMs: 60_000,
+  });
+  const env = loadEnv({
+    NODE_ENV: 'test',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+  });
+  const shutdown = new globalThis.AbortController();
+  let releaseRuntimeStart: (() => void) | null = null;
+
+  const hostPromise = runOutboxWorkerHost({
+    env,
+    logger,
+    monitor,
+    operationalServer: {
+      start: async () => {
+        calls.push('operational.start');
+      },
+      stop: async () => {
+        calls.push('operational.stop');
+      },
+    },
+    shutdownSignal: shutdown.signal,
+    createRuntime: async () => ({
+      start: async (signal?: globalThis.AbortSignal) => {
+        calls.push('runtime.start');
+        monitor.onStarted();
+        monitor.onTick({
+          claimedCount: 1,
+          deliveredCount: 1,
+          retriedCount: 0,
+          deadLetteredCount: 0,
+          oldestClaimedAgeMs: 1_000,
+          retryBacklogActive: false,
+        });
+
+        await new Promise<void>((resolve) => {
+          signal?.addEventListener(
+            'abort',
+            () => {
+              releaseRuntimeStart = resolve;
+            },
+            { once: true }
+          );
+        });
+      },
+      stop: async () => {
+        calls.push('runtime.stop');
+      },
+    }),
+  });
+
+  await waitFor(() => calls.includes('runtime.start'));
+  assert.equal(monitor.getHealthSnapshot().ready, true);
+
+  shutdown.abort();
+  await waitFor(() => releaseRuntimeStart !== null);
+
+  const stopping = monitor.getHealthSnapshot();
+  assert.equal(stopping.ok, true);
+  assert.equal(stopping.ready, false);
+  assert.equal(stopping.state, 'stopping');
+
+  releaseRuntimeStart?.();
+  await hostPromise;
+
+  assert.deepEqual(calls, ['operational.start', 'runtime.start', 'runtime.stop', 'operational.stop']);
 });
 
 await test('runOutboxWorkerHost does not miss an abort that lands during passive listener registration', async () => {
@@ -505,10 +585,6 @@ async function waitFor(predicate: () => boolean, timeoutMs = 100): Promise<void>
     }
     await sleep(10);
   }
-}
-
-function assertDefined<T>(value: T, message: string): asserts value is NonNullable<T> {
-  assert.notEqual(value, null, message);
 }
 
 await test('runOutboxWorkerHost rethrows runtime start failures after cleanup', async () => {

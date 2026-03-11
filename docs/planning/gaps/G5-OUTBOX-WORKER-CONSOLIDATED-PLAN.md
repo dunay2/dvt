@@ -15,6 +15,7 @@ what the current repository can realistically absorb.
 
 - [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
 - [G5 - AI Execution Tracker](G5-AI-EXECUTION-TRACKER.md)
+- [G5 / US-G5.4 Operability And Ownership Hardening Plan](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [ADR-0009: Outbox Publication Ordering Guarantees](../../adr/ADR-0009_Outbox_Ordering.md)

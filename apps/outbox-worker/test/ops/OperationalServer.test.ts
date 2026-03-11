@@ -206,6 +206,58 @@ await test('OperationalServer reflects passive ownership as healthy but not read
   }
 });
 
+await test('OperationalServer withdraws readiness when the last tick becomes stale', async () => {
+  const clock = { nowMs: 1_741_392_000_000 };
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger: makeLogger(),
+    nowMs: () => clock.nowMs,
+    readyStaleAfterMs: 5_000,
+  });
+  const server = createOperationalServer({
+    host: '127.0.0.1',
+    port: 0,
+    logger: makeLogger(),
+    monitor,
+  });
+
+  await server.start();
+
+  try {
+    const address = server.getAddress();
+    assert.ok(address);
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+
+    monitor.onStarted();
+    monitor.onTick({
+      claimedCount: 0,
+      deliveredCount: 0,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: null,
+      retryBacklogActive: false,
+    });
+
+    let response = await globalThis.fetch(`${baseUrl}/readyz`);
+    assert.equal(response.status, 200);
+
+    clock.nowMs += 5_001;
+
+    response = await globalThis.fetch(`${baseUrl}/readyz`);
+    assert.equal(response.status, 503);
+    const readyBody = (await response.json()) as {
+      state: string;
+      ready: boolean;
+      tickFresh: boolean;
+    };
+    assert.equal(readyBody.state, 'idle');
+    assert.equal(readyBody.ready, false);
+    assert.equal(readyBody.tickFresh, false);
+  } finally {
+    await server.stop();
+  }
+});
+
 await test('OperationalServer start and stop are idempotent and reset the bound address', async () => {
   const monitor = new OutboxWorkerMonitor({
     serviceName: 'dvt-outbox-worker',

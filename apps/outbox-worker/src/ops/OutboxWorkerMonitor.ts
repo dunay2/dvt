@@ -15,6 +15,7 @@ export type OutboxRuntimeState =
   | 'passive'
   | 'idle'
   | 'draining'
+  | 'stopping'
   | 'failing'
   | 'stopped';
 
@@ -26,12 +27,14 @@ export interface HealthSnapshot {
   lastErrorMessage: string | null;
   lastErrorAt: string | null;
   lastTickAt: string | null;
+  tickFresh: boolean;
 }
 
 interface OutboxWorkerMonitorOptions {
   serviceName: string;
   logger: OutboxWorkerRuntimeLogger;
   nowMs?: () => number;
+  readyStaleAfterMs?: number;
 }
 
 interface Counters {
@@ -48,14 +51,18 @@ const RUNTIME_STATES: readonly OutboxRuntimeState[] = [
   'passive',
   'idle',
   'draining',
+  'stopping',
   'failing',
   'stopped',
 ];
+
+const DEFAULT_READY_STALE_AFTER_MS = 30_000;
 
 export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRuntimeHooks {
   private readonly serviceName: string;
   private readonly logger: OutboxWorkerRuntimeLogger;
   private readonly nowMs: () => number;
+  private readonly readyStaleAfterMs: number;
 
   private state: OutboxRuntimeState = 'starting';
   private readonly counters: Counters = {
@@ -79,6 +86,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     this.serviceName = options.serviceName;
     this.logger = options.logger;
     this.nowMs = options.nowMs ?? (() => Date.now());
+    this.readyStaleAfterMs = options.readyStaleAfterMs ?? DEFAULT_READY_STALE_AFTER_MS;
   }
 
   onStarted(): void {
@@ -131,6 +139,10 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     this.transitionTo('stopped', 'runtime stopped');
   }
 
+  onStopping(): void {
+    this.transitionTo('stopping', 'shutdown requested');
+  }
+
   enterPassiveMode(): void {
     this.startedAtMs ??= this.nowMs();
     this.lastErrorMessage = null;
@@ -178,25 +190,31 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   getHealthSnapshot(): HealthSnapshot {
+    const tickFresh = this.isTickFresh();
     return {
       ok: this.state !== 'stopped',
-      ready: this.state === 'idle' || this.state === 'draining',
+      ready: this.isReadyState() && tickFresh,
       state: this.state,
       service: this.serviceName,
       lastErrorMessage: this.lastErrorMessage,
       lastErrorAt: toIso(this.lastErrorAtMs),
       lastTickAt: toIso(this.lastTickAtMs),
+      tickFresh,
     };
   }
 
   renderMetrics(): string {
+    const ready = this.isReadyState() && this.isTickFresh();
     const lines = [
       '# HELP dvt_outbox_runtime_up Whether the standalone outbox worker process is alive.',
       '# TYPE dvt_outbox_runtime_up gauge',
       `dvt_outbox_runtime_up ${this.state === 'stopped' ? 0 : 1}`,
       '# HELP dvt_outbox_runtime_ready Whether the worker is ready to drain outbox records.',
       '# TYPE dvt_outbox_runtime_ready gauge',
-      `dvt_outbox_runtime_ready ${this.state === 'idle' || this.state === 'draining' ? 1 : 0}`,
+      `dvt_outbox_runtime_ready ${ready ? 1 : 0}`,
+      '# HELP dvt_outbox_runtime_tick_fresh Whether the last completed tick is fresh enough for readiness.',
+      '# TYPE dvt_outbox_runtime_tick_fresh gauge',
+      `dvt_outbox_runtime_tick_fresh ${this.isTickFresh() ? 1 : 0}`,
       '# HELP dvt_outbox_runtime_state Worker runtime state as a labelled gauge.',
       '# TYPE dvt_outbox_runtime_state gauge',
       ...RUNTIME_STATES.map(
@@ -245,6 +263,18 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
       { from: previousState, to: nextState, reason },
       'outbox runtime state changed'
     );
+  }
+
+  private isReadyState(): boolean {
+    return this.state === 'idle' || this.state === 'draining';
+  }
+
+  private isTickFresh(): boolean {
+    if (this.lastTickAtMs === null) {
+      return false;
+    }
+
+    return this.nowMs() - this.lastTickAtMs <= this.readyStaleAfterMs;
   }
 }
 

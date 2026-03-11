@@ -225,6 +225,72 @@ await test('OutboxWorkerMonitor clears runtime errors after a healthy recovery t
   assert.ok(recovered.lastTickAt);
 });
 
+await test('OutboxWorkerMonitor withdraws readiness when the last completed tick becomes stale', () => {
+  const clock = { nowMs: 1_741_392_000_000 };
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+    readyStaleAfterMs: 5_000,
+  });
+
+  monitor.onStarted();
+  monitor.onTick({
+    claimedCount: 0,
+    deliveredCount: 0,
+    retriedCount: 0,
+    deadLetteredCount: 0,
+    oldestClaimedAgeMs: null,
+    retryBacklogActive: false,
+  });
+
+  assert.equal(monitor.getHealthSnapshot().ready, true);
+
+  clock.nowMs += 5_001;
+
+  const snapshot = monitor.getHealthSnapshot();
+  assert.equal(snapshot.ok, true);
+  assert.equal(snapshot.state, 'idle');
+  assert.equal(snapshot.ready, false);
+  assert.equal(snapshot.tickFresh, false);
+
+  const metrics = monitor.renderMetrics();
+  assert.match(metrics, /dvt_outbox_runtime_tick_fresh 0/);
+});
+
+await test('OutboxWorkerMonitor exposes stopping as alive but not ready', () => {
+  const clock = { nowMs: 1_741_392_000_000 };
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => clock.nowMs,
+    readyStaleAfterMs: 5_000,
+  });
+
+  monitor.onStarted();
+  monitor.onTick({
+    claimedCount: 1,
+    deliveredCount: 1,
+    retriedCount: 0,
+    deadLetteredCount: 0,
+    oldestClaimedAgeMs: 1_000,
+    retryBacklogActive: false,
+  });
+  monitor.onStopping();
+
+  const snapshot = monitor.getHealthSnapshot();
+  assert.equal(snapshot.ok, true);
+  assert.equal(snapshot.ready, false);
+  assert.equal(snapshot.state, 'stopping');
+  assert.equal(snapshot.tickFresh, true);
+
+  const metrics = monitor.renderMetrics();
+  assert.match(metrics, /dvt_outbox_runtime_ready 0/);
+  assert.match(metrics, /dvt_outbox_runtime_state\{state="stopping"\} 1/);
+});
+
 await test('OutboxWorkerMonitor renders structured object failures without default object stringification', () => {
   const { logger } = makeLogger();
   const monitor = new OutboxWorkerMonitor({
