@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { isActiveEnv, loadEnv, type ActiveEnv, type Env } from '../../src/plugins/env.js';
@@ -78,6 +79,19 @@ await test('loadEnv fails fast when active http mode is selected without target 
   );
 });
 
+await test('loadEnv fails fast when active http mode uses an empty target url', () => {
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: '',
+      }),
+    /DVT_OUTBOX_HTTP_TARGET_URL/
+  );
+});
+
 await test('loadEnv allows active log mode without target url', () => {
   const env = loadEnv({
     NODE_ENV: 'test',
@@ -146,6 +160,24 @@ await test('loadEnv accepts explicit ownership modes for canary control', () => 
   assert.equal(isActiveEnv(passiveEnv), false);
   assert.equal(activeEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
   assert.equal(passiveEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'passive');
+});
+
+await test('loadEnv stays aligned with the checked-in example environment', () => {
+  const file = readFileSync(new URL('../../.env.example', import.meta.url), 'utf8');
+  const input = Object.fromEntries(
+    file
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith('#'))
+      .map((line) => {
+        const separator = line.indexOf('=');
+        return [line.slice(0, separator), line.slice(separator + 1)];
+      })
+  );
+
+  const env = loadEnv(input);
+  assertActiveEnv(env);
+  assert.equal(env.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
 });
 
 await test('loadEnv rejects ambiguous boolean strings for worker flags', () => {

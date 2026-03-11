@@ -73,6 +73,14 @@ async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
   }
 
   await new Promise<void>((resolve) => {
-    signal.addEventListener('abort', () => resolve(), { once: true });
+    const onAbort = (): void => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    };
+
+    signal.addEventListener('abort', onAbort, { once: true });
+    if (signal.aborted) {
+      onAbort();
+    }
   });
 }

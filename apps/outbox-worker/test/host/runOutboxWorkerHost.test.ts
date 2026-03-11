@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 import { runOutboxWorkerHost } from '../../src/host/runOutboxWorkerHost.js';
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
@@ -23,6 +24,23 @@ function makeLogger(): {
     },
     entries,
   };
+}
+
+class AbortDuringListenerRegistrationSignal {
+  private abortedState = false;
+
+  get aborted(): boolean {
+    return this.abortedState;
+  }
+
+  addEventListener(type: unknown): void {
+    if (type !== 'abort') {
+      return;
+    }
+    this.abortedState = true;
+  }
+
+  removeEventListener(): void {}
 }
 
 await test('runOutboxWorkerHost keeps passive mode observable without creating the runtime', async () => {
@@ -133,6 +151,46 @@ await test('runOutboxWorkerHost creates and starts the runtime when ownership mo
   assert.equal(receivedFactoryOptions?.observer, monitor);
   assert.equal(receivedFactoryOptions?.hooks, monitor);
   assert.equal(entries.some((entry) => entry.msg === 'outbox worker bootstrapped'), true);
+});
+
+await test('runOutboxWorkerHost does not miss an abort that lands during passive listener registration', async () => {
+  const calls: string[] = [];
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => 1_741_392_000_000,
+  });
+  const env = loadEnv({
+    NODE_ENV: 'test',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
+  });
+
+  const result = await Promise.race([
+    runOutboxWorkerHost({
+      env,
+      logger,
+      monitor,
+      operationalServer: {
+        start: async () => {
+          calls.push('operational.start');
+        },
+        stop: async () => {
+          calls.push('operational.stop');
+        },
+      },
+      shutdownSignal: new AbortDuringListenerRegistrationSignal() as unknown as globalThis.AbortSignal,
+      createRuntime: async () => {
+        calls.push('runtime.factory');
+        throw new Error('runtime should not be created in passive mode');
+      },
+    }).then(() => 'resolved'),
+    sleep(100).then(() => 'timed-out'),
+  ]);
+
+  assert.equal(result, 'resolved');
+  assert.deepEqual(calls, ['operational.start', 'operational.stop']);
+  assert.equal(monitor.getHealthSnapshot().state, 'passive');
 });
 
 await test('runOutboxWorkerHost rethrows operational server start failures and does not bootstrap the runtime', async () => {

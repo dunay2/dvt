@@ -39,7 +39,7 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
 
 const ActiveHttpEnvSchema = ActiveCommonEnvSchema.extend({
   DVT_OUTBOX_EVENT_BUS_MODE: z.literal('http'),
-  DVT_OUTBOX_HTTP_TARGET_URL: z.string(),
+  DVT_OUTBOX_HTTP_TARGET_URL: z.string().min(1),
 });
 
 const ActiveLogEnvSchema = ActiveCommonEnvSchema.extend({
