@@ -190,7 +190,6 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   renderMetrics(): string {
-    const nowSeconds = Math.floor(this.nowMs() / 1000);
     const lines = [
       '# HELP dvt_outbox_runtime_up Whether the standalone outbox worker process is alive.',
       '# TYPE dvt_outbox_runtime_up gauge',
@@ -232,7 +231,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
       `dvt_outbox_last_error_timestamp_seconds ${this.lastErrorAtMs === null ? 0 : Math.floor(this.lastErrorAtMs / 1000)}`,
       '# HELP dvt_outbox_process_start_timestamp_seconds Unix timestamp when the worker started.',
       '# TYPE dvt_outbox_process_start_timestamp_seconds gauge',
-      `dvt_outbox_process_start_timestamp_seconds ${this.startedAtMs === null ? nowSeconds : Math.floor(this.startedAtMs / 1000)}`,
+      `dvt_outbox_process_start_timestamp_seconds ${this.startedAtMs === null ? 0 : Math.floor(this.startedAtMs / 1000)}`,
     ];
 
     return `${lines.join('\n')}\n`;

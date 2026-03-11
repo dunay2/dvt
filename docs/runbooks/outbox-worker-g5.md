@@ -57,6 +57,13 @@ Migration rule:
 - keep `DVT_OUTBOX_WORKER_RUN_MIGRATIONS=false` for runtime-only DB roles
 - set `DVT_OUTBOX_WORKER_RUN_MIGRATIONS=true` only for local/bootstrap environments where the worker may execute schema DDL
 
+Fixed correctness policy in this slice:
+
+- `DVT_OUTBOX_HTTP_TARGET_URL` must be a valid `http` or `https` URL when `DVT_OUTBOX_EVENT_BUS_MODE=http`
+- `MAX_OUTBOX_ATTEMPTS` stays fixed at `10`
+- stale claims expire after `5 minutes`
+- retry scheduling stays on exponential backoff with base `1s` and cap `60s`
+
 ## Key metrics
 
 - `dvt_outbox_runtime_state{state=*}`

@@ -13,6 +13,7 @@ Evidence documents that justify or validate relevant changes.
 
 - [ED 20260304 Compiledcoderef Ownership](ED-20260304-compiledcoderef-ownership.md)
 - [ED 20260304 Temporal Lookup Run Ref](ED-20260304-temporal-lookup-run-ref.md)
+- [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
 - [Evidence Doc: G3 IntentStore Postgres + Reconciler Worker](ED-20260304-g3-intentstore-postgres-reconciler.md)
 - [Evidence Doc: G6 US-G6.1 facet contract surface](ED-20260308-g6-us-g6-1-facet-contract-surface.md)
 - [Evidence Doc: G6 US-G6.2 lineage contract artifacts](ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)

@@ -11,11 +11,17 @@ const envBoolean = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+const nonBlankString = z.string().refine((value) => value.trim().length > 0, {
+  message: 'must not be empty',
+});
+
+const httpTargetUrl = z.string().refine(isValidHttpTargetUrl, {
+  message: 'must be a valid http/https URL',
+});
+
 const CommonEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  LOG_LEVEL: z
-    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
-    .default('info'),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DVT_OUTBOX_OWNERSHIP_MODE: z.enum(['active', 'passive']),
   DVT_OUTBOX_ADMIN_HOST: z.string().default('0.0.0.0'),
   DVT_OUTBOX_ADMIN_PORT: z.coerce.number().int().min(1).max(65535).default(9464),
@@ -24,7 +30,7 @@ const CommonEnvSchema = z.object({
 
 const ActiveCommonEnvSchema = CommonEnvSchema.extend({
   DVT_OUTBOX_OWNERSHIP_MODE: z.literal('active'),
-  DATABASE_URL: z.string(),
+  DATABASE_URL: nonBlankString,
   DVT_PG_SCHEMA: z.string().default('dvt'),
   DVT_PG_STATEMENT_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
   DVT_PG_QUERY_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
@@ -39,7 +45,7 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
 
 const ActiveHttpEnvSchema = ActiveCommonEnvSchema.extend({
   DVT_OUTBOX_EVENT_BUS_MODE: z.literal('http'),
-  DVT_OUTBOX_HTTP_TARGET_URL: z.string().min(1),
+  DVT_OUTBOX_HTTP_TARGET_URL: httpTargetUrl,
 });
 
 const ActiveLogEnvSchema = ActiveCommonEnvSchema.extend({
@@ -70,7 +76,8 @@ export function loadEnv(input: NodeJS.ProcessEnv): Env {
   }
 
   const normalizedInput =
-    ownershipMode.data.DVT_OUTBOX_OWNERSHIP_MODE === 'active' && input.DVT_OUTBOX_EVENT_BUS_MODE === undefined
+    ownershipMode.data.DVT_OUTBOX_OWNERSHIP_MODE === 'active' &&
+    input.DVT_OUTBOX_EVENT_BUS_MODE === undefined
       ? { ...input, DVT_OUTBOX_EVENT_BUS_MODE: 'http' }
       : input;
 
@@ -90,4 +97,17 @@ export function isActiveEnv(env: Env): env is ActiveEnv {
 
 function formatIssues(issues: readonly z.ZodIssue[]): string {
   return issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ');
+}
+
+function isValidHttpTargetUrl(value: string): boolean {
+  if (value.trim().length === 0) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
