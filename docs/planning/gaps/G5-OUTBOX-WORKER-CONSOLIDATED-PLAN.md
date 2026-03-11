@@ -219,7 +219,8 @@ Acceptance:
 Deliver:
 
 - environment-scoped worker enablement,
-- explicit ownership toggle between old embedding path and standalone process,
+- explicit standalone worker ownership mode for the canary environment,
+- deployment/runtime wiring that proves the standalone worker is the sole active owner in that environment,
 - canary rollout guide,
 - rollback instructions.
 

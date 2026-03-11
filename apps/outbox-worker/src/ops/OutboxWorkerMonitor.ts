@@ -261,31 +261,35 @@ function toRecordLog(record: OutboxRecord): Record<string, unknown> {
 }
 
 function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
+  if (error instanceof Error) return error.message;
+  if (error === null) return 'null';
+  if (typeof error === 'object') return stringifyObjectError(error);
+  return stringifyScalarError(error);
+}
+
+function stringifyScalarError(error: unknown): string {
+  switch (typeof error) {
+    case 'string':
+      return error;
+    case 'symbol':
+      return error.description ?? error.toString();
+    case 'function':
+      return error.name ? `[function ${error.name}]` : '[function anonymous]';
+    default:
+      return `${error}`;
+  }
+}
+
+function stringifyObjectError(error: object): string {
+  const serialized = safeSerializeObject(error);
+  if (serialized !== null) {
+    return serialized;
   }
 
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error === null) {
-    return 'null';
-  }
-
-  if (typeof error === 'object') {
-    const serialized = safeSerializeObject(error);
-    if (serialized !== null) {
-      return serialized;
-    }
-
-    const constructorName = error.constructor?.name;
-    return constructorName && constructorName !== 'Object'
-      ? constructorName
-      : 'UnserializableErrorObject';
-  }
-
-  return String(error);
+  const constructorName = error.constructor?.name;
+  return constructorName && constructorName !== 'Object'
+    ? constructorName
+    : 'UnserializableErrorObject';
 }
 
 function safeSerializeObject(value: object): string | null {

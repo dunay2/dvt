@@ -73,17 +73,25 @@ Migration rule:
 - Deploy the standalone process in `passive` mode first when you need endpoint and metrics visibility before ownership transfer.
 - Run exactly one active worker instance per environment during the canary.
 - Switch `DVT_OUTBOX_OWNERSHIP_MODE=active` only for the chosen canary owner.
-- Keep any previous delivery owner disabled or otherwise non-owning before activating the standalone worker.
+- Ensure no other outbox publisher path is active for the same environment during the canary window.
 - Verify:
   - `/readyz` becomes `200`
   - `dvt_outbox_runtime_state{state="draining"}` or `idle` appears
   - `dvt_outbox_delivered_records_total` increases when test events are enqueued
   - `dvt_outbox_runtime_errors_total` stays flat during the canary window
 
+Minimal canary evidence to capture:
+
+1. environment name and observation window
+2. the exact `DVT_OUTBOX_OWNERSHIP_MODE` value used by the canary worker
+3. proof that no second active outbox publisher path was running
+4. one successful test-event delivery during the same window
+5. rollback result if the rollout is reverted
+
 ## Rollback expectations
 
-- Switch the standalone worker back to `DVT_OUTBOX_OWNERSHIP_MODE=passive` or stop it entirely before restoring any previous owner.
-- Restore the previous owner of polling only after the standalone process is confirmed non-owning.
+- Switch the standalone worker back to `DVT_OUTBOX_OWNERSHIP_MODE=passive` or stop it entirely before re-enabling any other publisher path for the same environment.
+- Re-enable another publisher path only after the standalone process is confirmed non-owning.
 - Do not run two active owners for the same production responsibility.
 - After rollback, verify outbox lag stabilizes and no duplicate owner remains.
 

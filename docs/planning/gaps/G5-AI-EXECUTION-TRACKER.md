@@ -35,19 +35,23 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-10`
 - `gap`: `G5`
 - `epic`: `#409`
-- `current_focus`: `G5.4 / #413 - single-owner canary cutover and rollback wiring`
+- `current_focus`: `G5.4A / #446 - automated standalone worker canary acceptance test`
 - `state`: `In progress`
-- `currently_working_on`: `Repo-side ownership contract hardening is complete; the remaining PR-4 work is external canary evidence and rollback verification against the real deployment wiring`
-- `next_after_current`: `G5.5 / #414 - ADR-0009 multi-worker strategy before horizontal scale-out`
+- `currently_working_on`: `Automated repo-side canary acceptance now exercises passive bootstrap plus active delivery through the production host/runtime composition, with a controlled PostgreSQL-adapter fixture limited to the public outbox methods the runtime actually consumes, deterministic admin-port retry on bind collisions, and #447 CI wiring plus #448 docs alignment still pending`
+- `next_after_current`: `G5.4B / #447 - CI lane for automated outbox worker canary validation`
 - `blocking_dependencies`: `#410`, `#411`, and `#412` are closed; no remaining GitHub blocker is declared on `#413`
 - `last_completed`: `G5.3 / #412 merged via PR #444 on 2026-03-10`
 
 ## Remaining G5 Roadmap
 
-| Stage | GitHub issue | Scope                                                                   | Current status                                                                           | Exit signal                                                                                                 |
-| ----- | ------------ | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| PR-4  | `#413`       | single-owner canary cutover, explicit ownership toggle, rollback wiring | in progress; repo-side ownership contract landed, external canary evidence still pending | one environment runs the standalone worker as sole active owner and rollback is documented/testable         |
-| PR-5  | `#414`       | choose and implement one ADR-0009 concurrent-worker strategy            | pending after PR-4                                                                       | concurrent workers cannot reorder events for the same `runId` and horizontal scale-out is no longer blocked |
+- `PR-4 / #413`
+  scope: single-owner canary cutover, explicit standalone ownership mode, rollback wiring
+  current status: in progress; repo-side ownership contract landed, external canary evidence still pending
+  exit signal: one environment runs the standalone worker as sole active owner and rollback is documented/testable
+- `PR-5 / #414`
+  scope: choose and implement one ADR-0009 concurrent-worker strategy
+  current status: pending after PR-4
+  exit signal: concurrent workers cannot reorder events for the same `runId` and horizontal scale-out is no longer blocked
 
 ## Execution Protocol For AI
 
@@ -73,7 +77,7 @@ Working checklist:
 - [x] pre-implementation brief written for `#413`
 - [x] current ownership path identified in code and runtime/deployment docs
 - [x] environment-scoped worker enablement surface identified
-- [x] old embedding path toggle or disable path identified
+- [x] canary ownership surface identified without inventing a nonexistent embedded owner path
 - [x] canary checklist written
 - [x] rollback instructions written
 - [x] implementation and docs updated
@@ -82,6 +86,16 @@ Working checklist:
 - [ ] external canary evidence captured for one environment
 - [ ] rollback evidence captured against the real deployment wiring
 - [ ] status docs synced after closure
+
+Short canary evidence checklist:
+
+- [ ] environment name and rollout window recorded
+- [ ] `DVT_OUTBOX_OWNERSHIP_MODE=active` applied only to the chosen standalone worker
+- [ ] no second active outbox publisher path observed during the same window
+- [ ] `/readyz` returned `200` during the canary
+- [ ] `dvt_outbox_delivered_records_total` increased after enqueueing a test event
+- [ ] `dvt_outbox_runtime_errors_total` stayed flat during the observation window
+- [ ] rollback step and post-rollback state captured if rollback is exercised
 
 Expected touched-system candidates:
 
@@ -164,6 +178,74 @@ Current pre-implementation brief:
   - `pnpm docs:quality:check`
   - `pnpm docs:canonical:check`
 
+### Active substep / G5.4A - #446 automated repo-side canary acceptance
+
+Think-first analysis:
+
+- problem summary: `#413` still needs canary evidence, but the repository lacked
+  an executable acceptance that proves `passive -> active -> stop` through the
+  standalone worker without manual steps
+- constraints and invariants:
+  - keep the canary automation inside `apps/outbox-worker`
+  - use the production host/runtime composition rather than a separate runtime
+    harness
+  - do not require a real PostgreSQL service for the default local test lane
+  - do not invent a fake second owner path or browser automation
+- options considered:
+  - keep the first acceptance harness with a custom runtime factory
+  - require a real PostgreSQL service in the worker test lane
+  - patch the PostgreSQL adapter boundary in test while keeping
+    `createOutboxWorkerRuntime()` and `runOutboxWorkerHost()` real
+- selected option and rationale:
+  - patch the PostgreSQL adapter boundary only inside the test
+  - rationale: this preserves the production host/runtime composition, keeps the
+    test deterministic, and avoids adding environment-coupled infrastructure to
+    the default worker lane
+- rejected alternatives:
+  - the custom runtime factory was rejected because it bypassed the active-mode
+    assembly that `#446` is supposed to exercise
+  - a mandatory real PostgreSQL dependency was rejected because the repository
+    does not provide an auto-started database for `dvt-outbox-worker test`
+
+Pre-implementation brief:
+
+- scope:
+  - cover `passive` bootstrap probes
+  - cover `active` delivery through `runOutboxWorkerHost()` with the default
+    `createOutboxWorkerRuntime()`
+  - use a controlled PostgreSQL-adapter fixture to enqueue pending records
+  - keep stop semantics observable at the end of the same automated flow
+- touched files or paths:
+  - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`
+  - `docs/planning/gaps/G5-AI-EXECUTION-TRACKER.md`
+  - `docs/planning/status/generated-code-state.md`
+- expected outcome:
+  - repo-side canary acceptance proves passive probes, active readiness, active
+    delivery, downstream rejection observability, metrics transitions, and stop
+    semantics through the production host/runtime composition
+  - validation evidence no longer overclaims `docs:status:check`
+- risks and mitigations:
+  - risk: the canary harness drifts from production composition
+  - mitigation: keep `runOutboxWorkerHost()` and `createOutboxWorkerRuntime()`
+    real and confine the fake behavior to patched adapter methods inside the
+    test
+  - risk: acceptance starts depending on private adapter fields or a port
+    reservation race that flakes in CI
+  - mitigation: keep the fixture keyed to public adapter methods only and use a
+    retrying candidate-port binder instead of reserve-then-rebind
+  - risk: generated status drift is reported as green when it is not
+  - mitigation: record `docs:status:generate` during in-progress work and only
+    claim `docs:status:check` once the generated file is staged/committed with
+    the slice
+- validation plan:
+  - `pnpm exec eslint apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts --max-warnings 0`
+  - `pnpm --filter dvt-outbox-worker typecheck`
+  - `pnpm --filter dvt-outbox-worker build`
+  - `pnpm --filter dvt-outbox-worker test`
+  - `pnpm lint:md`
+  - `pnpm docs:canonical:check`
+  - `pnpm docs:status:check`
+
 ### PR-5 / G5.5 - Multi-worker strategy before horizontal scale-out
 
 Goal:
@@ -199,11 +281,33 @@ flowchart LR
 
 ## Execution Log
 
-| Date       | Pointer       | State          | Summary                                                                                                                                                                                             | Validation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ---------- | ------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-03-10 | `G5.3 / #412` | done           | merged via PR `#444`; correctness hardening landed in engine, runtime, PostgreSQL adapter, and planning docs                                                                                        | `pnpm test:engine`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm test:adapter-postgres`; `pnpm verify:prepush`; `pnpm docs:ci`                                                                                                                                                                                                                                                                                                                                                                                  |
-| 2026-03-10 | `G5.4 / #413` | ready to start | tracker created to drive the next G5 stage from the canonical plan                                                                                                                                  | `pnpm lint:md`; `pnpm docs:quality:check`; `pnpm docs:canonical:check`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 2026-03-10 | `G5.4 / #413` | in progress    | selected host-level `active/passive` ownership mode as the clean seam for canary and rollback                                                                                                       | repo inspection of `apps/outbox-worker`, `apps/api`, runbook, and issue state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 2026-03-10 | `G5.4 / #413` | in progress    | implemented explicit ownership mode in the standalone host and aligned passive health/readiness semantics                                                                                           | `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm lint:md`; `pnpm docs:quality:check`; `pnpm docs:canonical:check`                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 2026-03-10 | `G5.4 / #413` | in progress    | corrected the ownership contract after QA review: ownership mode is explicit, passive bootstrap is decoupled from runtime-only config, and host boot-path tests now cover active vs passive startup | `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker build`; `pnpm exec eslint apps/outbox-worker/src/server.ts apps/outbox-worker/src/plugins/env.ts apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts apps/outbox-worker/src/host/runOutboxWorkerHost.ts apps/outbox-worker/test/plugins/env.test.ts apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts --max-warnings 0`; `pnpm lint:md`; `pnpm docs:quality:check`; `pnpm docs:canonical:check` |
-| 2026-03-10 | `G5.4 / #413` | in progress    | added negative host-path coverage for bootstrap/runtime failures, normalized cleanup error reporting, and corrected tracker wording so repo-side progress does not masquerade as canary completion  | `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker build`; `pnpm exec eslint apps/outbox-worker/src/lifecycle/stopRuntimeAndOperationalServer.ts apps/outbox-worker/test/lifecycle/stopRuntimeAndOperationalServer.test.ts apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts --max-warnings 0`; `pnpm lint:md`; `pnpm docs:canonical:check`                                                                                                                                                                                  |
+- `2026-03-10` `G5.3 / #412` `done`
+  summary: merged via PR `#444`; correctness hardening landed in engine, runtime, PostgreSQL adapter, and planning docs
+  validation: `pnpm test:engine`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm test:adapter-postgres`; `pnpm verify:prepush`; `pnpm docs:ci`
+- `2026-03-10` `G5.4 / #413` `ready to start`
+  summary: tracker created to drive the next G5 stage from the canonical plan
+  validation: `pnpm lint:md`; `pnpm docs:quality:check`; `pnpm docs:canonical:check`
+- `2026-03-10` `G5.4 / #413` `in progress`
+  summary: selected host-level `active/passive` ownership mode as the clean seam for canary and rollback
+  validation: repo inspection of `apps/outbox-worker`, `apps/api`, runbook, and issue state
+- `2026-03-10` `G5.4 / #413` `in progress`
+  summary: implemented explicit ownership mode in the standalone host and aligned passive health/readiness semantics
+  validation: `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm lint:md`; `pnpm docs:quality:check`; `pnpm docs:canonical:check`
+- `2026-03-10` `G5.4 / #413` `in progress`
+  summary: corrected the ownership contract after QA review: ownership mode is explicit, passive bootstrap is decoupled from runtime-only config, and host boot-path tests now cover active vs passive startup
+  validation: `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker build`; `pnpm exec eslint apps/outbox-worker/src/server.ts apps/outbox-worker/src/plugins/env.ts apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts apps/outbox-worker/src/host/runOutboxWorkerHost.ts apps/outbox-worker/test/plugins/env.test.ts apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts --max-warnings 0`; `pnpm lint:md`; `pnpm docs:quality:check`; `pnpm docs:canonical:check`
+- `2026-03-10` `G5.4 / #413` `in progress`
+  summary: added negative host-path coverage for bootstrap/runtime failures, normalized cleanup error reporting, and corrected tracker wording so repo-side progress does not masquerade as canary completion
+  validation: `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker build`; `pnpm exec eslint apps/outbox-worker/src/lifecycle/stopRuntimeAndOperationalServer.ts apps/outbox-worker/test/lifecycle/stopRuntimeAndOperationalServer.test.ts apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts --max-warnings 0`; `pnpm lint:md`; `pnpm docs:canonical:check`
+- `2026-03-10` `G5.4 / #413` `in progress`
+  summary: removed the fictitious “old embedded owner” wording from PR-4 governance surfaces and replaced it with a concrete canary evidence checklist tied to the standalone worker as sole active owner
+  validation: `pnpm lint:md`; `pnpm docs:canonical:check`
+- `2026-03-10` `G5.4A / #446` `in progress`
+  summary: added a fully automated repo-side canary acceptance test that exercises passive bootstrap and active delivery through the production host/runtime composition, with a controlled PostgreSQL-adapter fixture providing deterministic pending outbox records
+  validation: `pnpm exec eslint apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts --max-warnings 0`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm --filter dvt-outbox-worker test`; `pnpm lint:md`; `pnpm docs:canonical:check`; `pnpm docs:status:generate`
+- `2026-03-10` `G5.4A / #446` `in progress`
+  summary: simplified the canary fixture to seed pending records without patching the adapter write path, removed the admin-port reserve/rebind race, and integrated the generated status file so the documentation gate is now executable for this slice
+  validation: `pnpm exec eslint apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts --max-warnings 0`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm --filter dvt-outbox-worker test`; `pnpm lint:md`; `pnpm docs:canonical:check`; `pnpm docs:status:check`
+- `2026-03-11` `G5.4A / #446` `in progress`
+  summary: extended the automated canary acceptance with a downstream-rejection path that proves the standalone worker surfaces failing readiness plus retry metrics without claiming a runtime-loop error
+  validation: `pnpm exec eslint apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts --max-warnings 0`; `pnpm --filter dvt-outbox-worker test`
