@@ -108,7 +108,8 @@ await test('runOutboxWorkerHost creates and starts the runtime when ownership mo
   });
   const shutdown = new globalThis.AbortController();
   shutdown.abort();
-  let receivedFactoryOptions: CreateOutboxWorkerRuntimeOptions | null = null;
+  let receivedObserver: CreateOutboxWorkerRuntimeOptions['observer'];
+  let receivedHooks: CreateOutboxWorkerRuntimeOptions['hooks'];
   let receivedSignal: globalThis.AbortSignal | null = null;
 
   await runOutboxWorkerHost({
@@ -130,7 +131,8 @@ await test('runOutboxWorkerHost creates and starts the runtime when ownership mo
       runtimeOptions: CreateOutboxWorkerRuntimeOptions = {}
     ) => {
       calls.push('runtime.factory');
-      receivedFactoryOptions = runtimeOptions;
+      receivedObserver = runtimeOptions.observer;
+      receivedHooks = runtimeOptions.hooks;
       assert.equal(runtimeEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
       assert.equal(runtimeEnv.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
       assert.equal(runtimeLogger, logger);
@@ -155,8 +157,8 @@ await test('runOutboxWorkerHost creates and starts the runtime when ownership mo
     'operational.stop',
   ]);
   assert.equal(receivedSignal, shutdown.signal);
-  assert.equal(receivedFactoryOptions?.observer, monitor);
-  assert.equal(receivedFactoryOptions?.hooks, monitor);
+  assert.equal(receivedObserver, monitor);
+  assert.equal(receivedHooks, monitor);
   assert.equal(
     entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
     true
