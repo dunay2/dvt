@@ -233,8 +233,9 @@ await test('runOutboxWorkerHost exits promptly when shutdown lands during active
     DVT_OUTBOX_EVENT_BUS_MODE: 'log',
   });
   const shutdown = new globalThis.AbortController();
-  let resolveRuntime: ((runtime: { start(): Promise<void>; stop(): Promise<void> }) => void) | null =
-    null;
+  let resolveRuntime:
+    | ((runtime: { start(): Promise<void>; stop(): Promise<void> }) => void)
+    | null = null;
 
   const hostPromise = runOutboxWorkerHost({
     env,
@@ -302,8 +303,9 @@ await test('runOutboxWorkerHost logs a warning if late runtime cleanup fails aft
     DVT_OUTBOX_EVENT_BUS_MODE: 'log',
   });
   const shutdown = new globalThis.AbortController();
-  let resolveRuntime: ((runtime: { start(): Promise<void>; stop(): Promise<void> }) => void) | null =
-    null;
+  let resolveRuntime:
+    | ((runtime: { start(): Promise<void>; stop(): Promise<void> }) => void)
+    | null = null;
 
   const hostPromise = runOutboxWorkerHost({
     env,
