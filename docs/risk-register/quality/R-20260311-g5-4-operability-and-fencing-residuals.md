@@ -17,7 +17,7 @@ probability: Medium
 ## Context
 
 `G5.3` materially improved ordered at-least-once delivery and shutdown behavior,
-but the next QA pass still found four operational gaps that can produce real
+but the next QA pass still found five operational gaps that can produce real
 runtime regressions even when the current unit and package-level suites are
 green:
 
@@ -27,6 +27,11 @@ green:
 - shutdown now interrupts bootstrap correctly, but the runtime still lacks an
   explicit `stopping` state and a freshness rule that withdraws readiness as
   soon as shutdown begins;
+- the new bootstrap-abort path still leaves a narrow race for direct
+  `createOutboxWorkerRuntime(..., { shutdownSignal })` callers: an abort that
+  lands just after startup resolves can still trigger
+  `abortPendingOperations()`, leaving the adapter poisoned while returning a
+  runtime handle;
 - single-owner posture is currently enforced by deployment discipline and env
   selection rather than by an explicit runtime fence or lease, so a miswired
   environment can still become dual-active;
@@ -48,6 +53,9 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
   but whose tick loop is stale;
 - a node that is already shutting down can remain externally `ready` long
   enough to absorb work it should no longer own;
+- a direct runtime caller can receive a successfully created runtime handle
+  whose first database access fails immediately with `AbortError` if shutdown
+  lands inside the bootstrap race window;
 - an environment or rollout script can accidentally create ambiguous active
   ownership before `ADR-0009` multi-worker enforcement exists;
 - duplicate publication can be technically correct at the worker boundary while
@@ -64,6 +72,9 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 - Add a freshness-aware readiness invariant, an explicit `stopping` runtime
   state, and tests that prove readiness is withdrawn immediately on shutdown and
   after stale ticks.
+- Harden `waitForStartupOrAbort()` so a late abort after successful startup does
+  not mutate adapter state, and pin that path with a regression test for direct
+  runtime callers.
 - Define the downstream duplicate-handling contract explicitly around
   `eventId` and `idempotencyKey`, and prove it with a canary or contract test.
 - Execute reclaim/orphan recovery and backlog sanity against a real PostgreSQL

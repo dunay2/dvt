@@ -55,179 +55,422 @@ class AbortDuringListenerRegistrationSignal {
   }
 }
 
-await test('runOutboxWorkerHost keeps passive mode observable without creating the runtime', async () => {
-  const calls: string[] = [];
+const TEST_NOW_MS = 1_741_392_000_000;
+const ACTIVE_ENV_INPUT = {
+  NODE_ENV: 'test',
+  DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+  DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+  DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+} satisfies NodeJS.ProcessEnv;
+
+type LogEntry = ReturnType<typeof makeLogger>['entries'][number];
+type HostOptions = Parameters<typeof runOutboxWorkerHost>[0];
+type HostRunOverrides = Omit<
+  HostOptions,
+  'env' | 'logger' | 'monitor' | 'operationalServer' | 'shutdownSignal'
+> & {
+  shutdownSignal?: globalThis.AbortSignal;
+};
+
+interface HostFixture {
+  calls: string[];
+  logger: OutboxWorkerRuntimeLogger;
+  entries: LogEntry[];
+  monitor: OutboxWorkerMonitor;
+  env: HostOptions['env'];
+  operationalServer: HostOptions['operationalServer'];
+  shutdown: globalThis.AbortController;
+}
+
+interface RuntimeFactoryCallbacks {
+  onCreate?(args: {
+    runtimeEnv: ActiveEnv;
+    runtimeLogger: OutboxWorkerRuntimeLogger;
+    runtimeOptions: CreateOutboxWorkerRuntimeOptions;
+  }): void;
+  start?(signal?: globalThis.AbortSignal): Promise<void> | void;
+  stop?(): Promise<void> | void;
+}
+
+interface TestRuntimeHandle {
+  start(signal?: globalThis.AbortSignal): Promise<void>;
+  stop(): Promise<void>;
+}
+
+interface DeferredBootstrapScenario {
+  fixture: HostFixture & { env: ActiveEnv };
+  hostPromise: Promise<void>;
+  resolveRuntime(runtime: TestRuntimeHandle): void;
+}
+
+function loadActiveTestEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): ActiveEnv {
+  const env = loadEnv({ ...ACTIVE_ENV_INPUT, ...overrides });
+  assert.equal(env.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
+  return env;
+}
+
+function loadPassiveTestEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): HostOptions['env'] {
+  return loadEnv({
+    NODE_ENV: 'test',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
+    ...overrides,
+  });
+}
+
+function createHostFixture(
+  env: HostOptions['env'],
+  options: {
+    calls?: string[];
+    nowMs?: () => number;
+    readyStaleAfterMs?: number;
+    startError?: Error;
+    stopError?: Error;
+  } = {}
+): HostFixture {
+  const calls = options.calls ?? [];
   const { logger, entries } = makeLogger();
   const monitor = new OutboxWorkerMonitor({
     serviceName: 'dvt-outbox-worker',
     logger,
-    nowMs: () => 1_741_392_000_000,
+    nowMs: options.nowMs ?? (() => TEST_NOW_MS),
+    ...(options.readyStaleAfterMs === undefined
+      ? {}
+      : { readyStaleAfterMs: options.readyStaleAfterMs }),
   });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
-  });
-  const shutdown = new globalThis.AbortController();
-  shutdown.abort();
 
-  await runOutboxWorkerHost({
-    env,
+  return {
+    calls,
     logger,
+    entries,
     monitor,
+    env,
     operationalServer: {
       start: async () => {
         calls.push('operational.start');
+        if (options.startError) {
+          throw options.startError;
+        }
       },
       stop: async () => {
         calls.push('operational.stop');
+        if (options.stopError) {
+          throw options.stopError;
+        }
       },
     },
-    shutdownSignal: shutdown.signal,
+    shutdown: new globalThis.AbortController(),
+  };
+}
+
+function createActiveHostFixture(
+  options: {
+    calls?: string[];
+    nowMs?: () => number;
+    readyStaleAfterMs?: number;
+    startError?: Error;
+    stopError?: Error;
+    envOverrides?: Partial<NodeJS.ProcessEnv>;
+  } = {}
+): HostFixture & { env: ActiveEnv } {
+  return createHostFixture(loadActiveTestEnv(options.envOverrides), options) as HostFixture & {
+    env: ActiveEnv;
+  };
+}
+
+function createPassiveHostFixture(
+  options: {
+    calls?: string[];
+    nowMs?: () => number;
+    readyStaleAfterMs?: number;
+    startError?: Error;
+    stopError?: Error;
+    envOverrides?: Partial<NodeJS.ProcessEnv>;
+  } = {}
+): HostFixture {
+  return createHostFixture(loadPassiveTestEnv(options.envOverrides), options);
+}
+
+async function runHostWithFixture(
+  fixture: HostFixture,
+  overrides: HostRunOverrides = {}
+): Promise<void> {
+  const { shutdownSignal, ...rest } = overrides;
+
+  await runOutboxWorkerHost({
+    env: fixture.env,
+    logger: fixture.logger,
+    monitor: fixture.monitor,
+    operationalServer: fixture.operationalServer,
+    shutdownSignal: shutdownSignal ?? fixture.shutdown.signal,
+    ...rest,
+  });
+}
+
+function createRuntimeFactory(
+  calls: string[],
+  options: RuntimeFactoryCallbacks = {}
+): NonNullable<HostOptions['createRuntime']> {
+  return async (
+    runtimeEnv: ActiveEnv,
+    runtimeLogger,
+    runtimeOptions: CreateOutboxWorkerRuntimeOptions = {}
+  ) => {
+    calls.push('runtime.factory');
+    options.onCreate?.({ runtimeEnv, runtimeLogger, runtimeOptions });
+
+    return {
+      start: async (signal?: globalThis.AbortSignal) => {
+        calls.push('runtime.start');
+        await options.start?.(signal);
+      },
+      stop: async () => {
+        calls.push('runtime.stop');
+        await options.stop?.();
+      },
+    };
+  };
+}
+
+function createThrowingRuntimeFactory(
+  calls: string[],
+  error: Error
+): NonNullable<HostOptions['createRuntime']> {
+  return async () => {
+    calls.push('runtime.factory');
+    throw error;
+  };
+}
+
+function createUnexpectedRuntimeFactory(
+  calls: string[],
+  message: string
+): NonNullable<HostOptions['createRuntime']> {
+  return createThrowingRuntimeFactory(calls, new Error(message));
+}
+
+function createOwnershipGate(
+  calls: string[],
+  options: {
+    available?: boolean;
+    release?(): Promise<void> | void;
+  } = {}
+): NonNullable<HostOptions['ownershipGate']> {
+  return {
+    acquire: async () => {
+      calls.push('ownership.acquire');
+      if (options.available === false) {
+        return null;
+      }
+
+      return {
+        release: async () => {
+          calls.push('ownership.release');
+          await options.release?.();
+        },
+      };
+    },
+  };
+}
+
+async function assertHostRejects(
+  fixture: HostFixture,
+  expectedError: Error,
+  overrides: HostRunOverrides
+): Promise<void> {
+  await assert.rejects(() => runHostWithFixture(fixture, overrides), expectedError);
+}
+
+function hasLogEntry(entries: readonly LogEntry[], predicate: (entry: LogEntry) => boolean): boolean {
+  return entries.some(predicate);
+}
+
+function assertBootstrappedLog(entries: readonly LogEntry[], expected = true): void {
+  assert.equal(hasLogEntry(entries, (entry) => entry.msg === 'outbox worker bootstrapped'), expected);
+}
+
+function assertPassiveOperationalLifecycle(fixture: HostFixture): void {
+  assert.deepEqual(fixture.calls, ['operational.start', 'operational.stop']);
+  assert.equal(fixture.monitor.getHealthSnapshot().state, 'passive');
+}
+
+async function assertResolvesPromptly(promise: Promise<unknown>, timeoutMs = 100): Promise<void> {
+  const result = await Promise.race([
+    promise.then(() => 'resolved'),
+    sleep(timeoutMs).then(() => 'timed-out'),
+  ]);
+
+  assert.equal(result, 'resolved');
+}
+
+async function assertOwnedRuntimeLifecycle(options: {
+  stopError?: Error;
+  expectedError?: Error;
+} = {}): Promise<HostFixture & { env: ActiveEnv }> {
+  const fixture = createActiveHostFixture(
+    options.stopError === undefined ? {} : { stopError: options.stopError }
+  );
+  const hostOverrides = {
+    ownershipGate: createOwnershipGate(fixture.calls),
+    createRuntime: createRuntimeFactory(fixture.calls),
+  } satisfies HostRunOverrides;
+
+  if (options.expectedError) {
+    await assertHostRejects(fixture, options.expectedError, hostOverrides);
+  } else {
+    await runHostWithFixture(fixture, hostOverrides);
+  }
+
+  assert.deepEqual(fixture.calls, [
+    'operational.start',
+    'ownership.acquire',
+    'runtime.factory',
+    'runtime.start',
+    'runtime.stop',
+    'operational.stop',
+    'ownership.release',
+  ]);
+
+  return fixture;
+}
+
+async function assertHostFailureScenario(options: {
+  expectedError: Error;
+  fixture: HostFixture;
+  overrides: HostRunOverrides;
+  expectedCalls: string[];
+  expectBootstrappedLog: boolean;
+}): Promise<void> {
+  await assertHostRejects(options.fixture, options.expectedError, options.overrides);
+  assert.deepEqual(options.fixture.calls, options.expectedCalls);
+  assertBootstrappedLog(options.fixture.entries, options.expectBootstrappedLog);
+  assert.equal(options.fixture.monitor.getHealthSnapshot().state, 'starting');
+}
+
+async function startDeferredBootstrapScenario(): Promise<DeferredBootstrapScenario> {
+  const fixture = createActiveHostFixture();
+  let pendingRuntimeResolver: ((runtime: TestRuntimeHandle) => void) | null = null;
+
+  const hostPromise = runHostWithFixture(fixture, {
     createRuntime: async () => {
-      calls.push('runtime.factory');
-      throw new Error('runtime should not be created in passive mode');
+      fixture.calls.push('runtime.factory');
+      return new Promise((resolve) => {
+        pendingRuntimeResolver = resolve;
+      });
     },
   });
 
-  const snapshot = monitor.getHealthSnapshot();
-  assert.deepEqual(calls, ['operational.start', 'operational.stop']);
+  await waitFor(() => pendingRuntimeResolver !== null);
+
+  return {
+    fixture,
+    hostPromise,
+    resolveRuntime(runtime) {
+      if (pendingRuntimeResolver === null) {
+        throw new Error('expected pending runtime resolver during bootstrap');
+      }
+      pendingRuntimeResolver(runtime);
+    },
+  };
+}
+
+async function assertRuntimeFailureAfterBootstrap(options: {
+  expectedError: Error;
+  buildCreateRuntime(calls: string[]): NonNullable<HostOptions['createRuntime']>;
+  expectedCalls: string[];
+}): Promise<void> {
+  const fixture = createActiveHostFixture();
+
+  await assertHostFailureScenario({
+    expectedError: options.expectedError,
+    fixture,
+    overrides: {
+      createRuntime: options.buildCreateRuntime(fixture.calls),
+    },
+    expectedCalls: options.expectedCalls,
+    expectBootstrappedLog: true,
+  });
+}
+
+await test('runOutboxWorkerHost keeps passive mode observable without creating the runtime', async () => {
+  const fixture = createPassiveHostFixture();
+  fixture.shutdown.abort();
+
+  await runHostWithFixture(fixture, {
+    createRuntime: createUnexpectedRuntimeFactory(
+      fixture.calls,
+      'runtime should not be created in passive mode'
+    ),
+  });
+
+  const snapshot = fixture.monitor.getHealthSnapshot();
+  assertPassiveOperationalLifecycle(fixture);
   assert.equal(snapshot.state, 'passive');
   assert.equal(snapshot.ok, true);
   assert.equal(snapshot.ready, false);
-  assert.equal(
-    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
-    true
-  );
+  assertBootstrappedLog(fixture.entries);
 });
 
 await test('runOutboxWorkerHost creates and starts the runtime when ownership mode is active', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-  const shutdown = new globalThis.AbortController();
+  const fixture = createActiveHostFixture();
   let receivedObserver: CreateOutboxWorkerRuntimeOptions['observer'];
   let receivedHooks: CreateOutboxWorkerRuntimeOptions['hooks'];
   let receivedShutdownSignal: CreateOutboxWorkerRuntimeOptions['shutdownSignal'];
   let receivedSignal: globalThis.AbortSignal | null = null;
 
-  await runOutboxWorkerHost({
-    env,
-    logger,
-    monitor,
-    operationalServer: {
-      start: async () => {
-        calls.push('operational.start');
+  await runHostWithFixture(fixture, {
+    createRuntime: createRuntimeFactory(fixture.calls, {
+      onCreate: ({ runtimeEnv, runtimeLogger, runtimeOptions }) => {
+        receivedObserver = runtimeOptions.observer;
+        receivedHooks = runtimeOptions.hooks;
+        receivedShutdownSignal = runtimeOptions.shutdownSignal;
+        assert.equal(runtimeEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
+        assert.equal(runtimeEnv.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
+        assert.equal(runtimeLogger, fixture.logger);
       },
-      stop: async () => {
-        calls.push('operational.stop');
+      start: async (signal?: globalThis.AbortSignal) => {
+        receivedSignal = signal ?? null;
       },
-    },
-    shutdownSignal: shutdown.signal,
-    createRuntime: async (
-      runtimeEnv: ActiveEnv,
-      runtimeLogger,
-      runtimeOptions: CreateOutboxWorkerRuntimeOptions = {}
-    ) => {
-      calls.push('runtime.factory');
-      receivedObserver = runtimeOptions.observer;
-      receivedHooks = runtimeOptions.hooks;
-      receivedShutdownSignal = runtimeOptions.shutdownSignal;
-      assert.equal(runtimeEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
-      assert.equal(runtimeEnv.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
-      assert.equal(runtimeLogger, logger);
-
-      return {
-        start: async (signal?: globalThis.AbortSignal) => {
-          calls.push('runtime.start');
-          receivedSignal = signal ?? null;
-        },
-        stop: async () => {
-          calls.push('runtime.stop');
-        },
-      };
-    },
+    }),
   });
 
-  assert.deepEqual(calls, [
+  assert.deepEqual(fixture.calls, [
     'operational.start',
     'runtime.factory',
     'runtime.start',
     'runtime.stop',
     'operational.stop',
   ]);
-  assert.equal(receivedSignal, shutdown.signal);
-  assert.equal(receivedObserver, monitor);
-  assert.equal(receivedHooks, monitor);
-  assert.equal(receivedShutdownSignal, shutdown.signal);
-  assert.equal(
-    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
-    true
-  );
+  assert.equal(receivedSignal, fixture.shutdown.signal);
+  assert.equal(receivedObserver, fixture.monitor);
+  assert.equal(receivedHooks, fixture.monitor);
+  assert.equal(receivedShutdownSignal, fixture.shutdown.signal);
+  assertBootstrappedLog(fixture.entries);
 });
 
 await test('runOutboxWorkerHost stays passive when active ownership is unavailable', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-  const shutdown = new globalThis.AbortController();
+  const fixture = createActiveHostFixture();
 
-  const hostPromise = runOutboxWorkerHost({
-    env,
-    logger,
-    monitor,
-    operationalServer: {
-      start: async () => {
-        calls.push('operational.start');
-      },
-      stop: async () => {
-        calls.push('operational.stop');
-      },
-    },
-    shutdownSignal: shutdown.signal,
-    ownershipGate: {
-      acquire: async () => {
-        calls.push('ownership.acquire');
-        return null;
-      },
-    },
-    createRuntime: async () => {
-      calls.push('runtime.factory');
-      throw new Error('runtime should not be created when ownership is unavailable');
-    },
+  const hostPromise = runHostWithFixture(fixture, {
+    ownershipGate: createOwnershipGate(fixture.calls, { available: false }),
+    createRuntime: createUnexpectedRuntimeFactory(
+      fixture.calls,
+      'runtime should not be created when ownership is unavailable'
+    ),
   });
 
-  await waitFor(() => calls.includes('ownership.acquire'));
-  const passiveSnapshot = monitor.getHealthSnapshot();
+  await waitFor(() => fixture.calls.includes('ownership.acquire'));
+  const passiveSnapshot = fixture.monitor.getHealthSnapshot();
   assert.equal(passiveSnapshot.state, 'passive');
   assert.equal(passiveSnapshot.ready, false);
   assert.equal(passiveSnapshot.owner, false);
 
-  shutdown.abort();
+  fixture.shutdown.abort();
   await hostPromise;
 
-  assert.deepEqual(calls, ['operational.start', 'ownership.acquire', 'operational.stop']);
+  assert.deepEqual(fixture.calls, ['operational.start', 'ownership.acquire', 'operational.stop']);
   assert.equal(
-    entries.some(
+    hasLogEntry(
+      fixture.entries,
       (entry) =>
         entry.level === 'warn' &&
         entry.msg === 'outbox ownership unavailable; entering passive mode'
@@ -237,178 +480,60 @@ await test('runOutboxWorkerHost stays passive when active ownership is unavailab
 });
 
 await test('runOutboxWorkerHost releases acquired ownership after cleanup', async () => {
-  const calls: string[] = [];
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-
-  await runOutboxWorkerHost({
-    env,
-    logger,
-    monitor,
-    operationalServer: {
-      start: async () => {
-        calls.push('operational.start');
-      },
-      stop: async () => {
-        calls.push('operational.stop');
-      },
-    },
-    shutdownSignal: new globalThis.AbortController().signal,
-    ownershipGate: {
-      acquire: async () => {
-        calls.push('ownership.acquire');
-        return {
-          release: async () => {
-            calls.push('ownership.release');
-          },
-        };
-      },
-    },
-    createRuntime: async () => {
-      calls.push('runtime.factory');
-      return {
-        start: async () => {
-          calls.push('runtime.start');
-        },
-        stop: async () => {
-          calls.push('runtime.stop');
-        },
-      };
-    },
-  });
-
-  assert.deepEqual(calls, [
-    'operational.start',
-    'ownership.acquire',
-    'runtime.factory',
-    'runtime.start',
-    'runtime.stop',
-    'operational.stop',
-    'ownership.release',
-  ]);
+  await assertOwnedRuntimeLifecycle();
 });
 
-await test('runOutboxWorkerHost skips active runtime bootstrap when shutdown was already requested', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
+await test('runOutboxWorkerHost releases ownership before surfacing cleanup failures', async () => {
+  const cleanupError = new Error('synthetic admin stop failure');
+  await assertOwnedRuntimeLifecycle({
+    stopError: cleanupError,
+    expectedError: cleanupError,
   });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-  const shutdown = new globalThis.AbortController();
-  shutdown.abort();
+});
 
-  await runOutboxWorkerHost({
-    env,
-    logger,
-    monitor,
-    operationalServer: {
-      start: async () => {
-        calls.push('operational.start');
-      },
-      stop: async () => {
-        calls.push('operational.stop');
+await test('runOutboxWorkerHost skips active ownership acquisition and runtime bootstrap when shutdown was already requested', async () => {
+  const fixture = createActiveHostFixture();
+  fixture.shutdown.abort();
+
+  await runHostWithFixture(fixture, {
+    ownershipGate: {
+      acquire: async () => {
+        fixture.calls.push('ownership.acquire');
+        throw new Error('ownership should not be acquired when shutdown is already requested');
       },
     },
-    shutdownSignal: shutdown.signal,
-    createRuntime: async () => {
-      calls.push('runtime.factory');
-      throw new Error('runtime should not be created when shutdown is already requested');
-    },
+    createRuntime: createUnexpectedRuntimeFactory(
+      fixture.calls,
+      'runtime should not be created when shutdown is already requested'
+    ),
   });
 
-  assert.deepEqual(calls, ['operational.start', 'operational.stop']);
-  assert.equal(
-    entries.some((entry) => entry.level === 'info' && entry.msg === 'outbox worker bootstrapped'),
-    true
-  );
+  assert.deepEqual(fixture.calls, ['operational.start', 'operational.stop']);
+  assertBootstrappedLog(fixture.entries);
 });
 
 await test('runOutboxWorkerHost exits promptly when shutdown lands during active runtime bootstrap', async () => {
-  const calls: string[] = [];
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-  const shutdown = new globalThis.AbortController();
-  let resolveRuntime:
-    | ((runtime: { start(): Promise<void>; stop(): Promise<void> }) => void)
-    | null = null;
+  const scenario = await startDeferredBootstrapScenario();
+  scenario.fixture.shutdown.abort();
 
-  const hostPromise = runOutboxWorkerHost({
-    env,
-    logger,
-    monitor,
-    operationalServer: {
-      start: async () => {
-        calls.push('operational.start');
-      },
-      stop: async () => {
-        calls.push('operational.stop');
-      },
-    },
-    shutdownSignal: shutdown.signal,
-    createRuntime: async () => {
-      calls.push('runtime.factory');
-      return new Promise((resolve) => {
-        resolveRuntime = resolve;
-      });
-    },
-  });
-
-  await waitFor(() => calls.includes('runtime.factory'));
-  shutdown.abort();
-
-  const result = await Promise.race([
-    hostPromise.then(() => 'resolved'),
-    sleep(100).then(() => 'timed-out'),
+  await assertResolvesPromptly(scenario.hostPromise);
+  assert.deepEqual(scenario.fixture.calls, [
+    'operational.start',
+    'runtime.factory',
+    'operational.stop',
   ]);
 
-  assert.equal(result, 'resolved');
-  assert.deepEqual(calls, ['operational.start', 'runtime.factory', 'operational.stop']);
-
-  assert.notEqual(
-    resolveRuntime,
-    null,
-    'expected pending runtime resolver for active bootstrap test'
-  );
-  const resolvePendingRuntime = resolveRuntime!;
-  resolvePendingRuntime({
+  scenario.resolveRuntime({
     start: async () => {
-      calls.push('runtime.start');
+      scenario.fixture.calls.push('runtime.start');
     },
     stop: async () => {
-      calls.push('runtime.stop');
+      scenario.fixture.calls.push('runtime.stop');
     },
   });
 
-  await waitFor(() => calls.includes('runtime.stop'));
-  assert.deepEqual(calls, [
+  await waitFor(() => scenario.fixture.calls.includes('runtime.stop'));
+  assert.deepEqual(scenario.fixture.calls, [
     'operational.start',
     'runtime.factory',
     'operational.stop',
@@ -417,115 +542,51 @@ await test('runOutboxWorkerHost exits promptly when shutdown lands during active
 });
 
 await test('runOutboxWorkerHost logs a warning if late runtime cleanup fails after shutdown during bootstrap', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-  const shutdown = new globalThis.AbortController();
-  let resolveRuntime:
-    | ((runtime: { start(): Promise<void>; stop(): Promise<void> }) => void)
-    | null = null;
+  const scenario = await startDeferredBootstrapScenario();
+  scenario.fixture.shutdown.abort();
+  await scenario.hostPromise;
 
-  const hostPromise = runOutboxWorkerHost({
-    env,
-    logger,
-    monitor,
-    operationalServer: {
-      start: async () => {
-        calls.push('operational.start');
-      },
-      stop: async () => {
-        calls.push('operational.stop');
-      },
-    },
-    shutdownSignal: shutdown.signal,
-    createRuntime: async () => {
-      calls.push('runtime.factory');
-      return new Promise((resolve) => {
-        resolveRuntime = resolve;
-      });
-    },
-  });
-
-  await waitFor(() => calls.includes('runtime.factory'));
-  shutdown.abort();
-  await hostPromise;
-
-  assert.notEqual(resolveRuntime, null, 'expected pending runtime resolver for late cleanup test');
-  const resolveLateRuntime = resolveRuntime!;
-  resolveLateRuntime({
+  scenario.resolveRuntime({
     start: async () => {
-      calls.push('runtime.start');
+      scenario.fixture.calls.push('runtime.start');
     },
     stop: async () => {
-      calls.push('runtime.stop');
+      scenario.fixture.calls.push('runtime.stop');
       throw new Error('synthetic late cleanup failure');
     },
   });
 
   await waitFor(() =>
-    entries.some(
+    hasLogEntry(
+      scenario.fixture.entries,
       (entry) =>
         entry.level === 'warn' &&
         entry.msg === 'outbox runtime cleanup failed after shutdown during bootstrap'
     )
   );
 
-  assert.deepEqual(calls, [
+  assert.deepEqual(scenario.fixture.calls, [
     'operational.start',
     'runtime.factory',
     'operational.stop',
     'runtime.stop',
   ]);
-  assert.equal(calls.includes('runtime.start'), false);
+  assert.equal(scenario.fixture.calls.includes('runtime.start'), false);
 });
 
 await test('runOutboxWorkerHost withdraws readiness immediately when shutdown lands during active runtime drain', async () => {
-  const calls: string[] = [];
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
+  const clock = { nowMs: TEST_NOW_MS };
+  const fixture = createActiveHostFixture({
     nowMs: () => clock.nowMs,
     readyStaleAfterMs: 60_000,
   });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-  const shutdown = new globalThis.AbortController();
   let releaseRuntimeStart: (() => void) | null = null;
 
-  const hostPromise = runOutboxWorkerHost({
-    env,
-    logger,
-    monitor,
-    operationalServer: {
-      start: async () => {
-        calls.push('operational.start');
-      },
-      stop: async () => {
-        calls.push('operational.stop');
-      },
-    },
-    shutdownSignal: shutdown.signal,
-    createRuntime: async () => ({
+  const hostPromise = runHostWithFixture(fixture, {
+    createRuntime: createRuntimeFactory(fixture.calls, {
       start: async (signal?: globalThis.AbortSignal) => {
-        calls.push('runtime.start');
-        monitor.onStarted();
-        monitor.onTick({
+        fixture.monitor.onStarted();
+        fixture.monitor.onTick({
           claimedCount: 1,
           deliveredCount: 1,
           retriedCount: 0,
@@ -544,28 +605,32 @@ await test('runOutboxWorkerHost withdraws readiness immediately when shutdown la
           );
         });
       },
-      stop: async () => {
-        calls.push('runtime.stop');
-      },
     }),
   });
 
-  await waitFor(() => calls.includes('runtime.start'));
-  assert.equal(monitor.getHealthSnapshot().ready, true);
+  await waitFor(() => fixture.calls.includes('runtime.start'));
+  assert.equal(fixture.monitor.getHealthSnapshot().ready, true);
 
-  shutdown.abort();
+  fixture.shutdown.abort();
   await waitFor(() => releaseRuntimeStart !== null);
 
-  const stopping = monitor.getHealthSnapshot();
+  const stopping = fixture.monitor.getHealthSnapshot();
   assert.equal(stopping.ok, true);
   assert.equal(stopping.ready, false);
   assert.equal(stopping.state, 'stopping');
 
-  releaseRuntimeStart?.();
+  assert.notEqual(
+    releaseRuntimeStart,
+    null,
+    'expected runtime start release after shutdown during active runtime drain'
+  );
+  const releasePendingRuntimeStart = releaseRuntimeStart!;
+  releasePendingRuntimeStart();
   await hostPromise;
 
-  assert.deepEqual(calls, [
+  assert.deepEqual(fixture.calls, [
     'operational.start',
+    'runtime.factory',
     'runtime.start',
     'runtime.stop',
     'operational.stop',
@@ -573,139 +638,47 @@ await test('runOutboxWorkerHost withdraws readiness immediately when shutdown la
 });
 
 await test('runOutboxWorkerHost does not miss an abort that lands during passive listener registration', async () => {
-  const calls: string[] = [];
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
-  });
+  const fixture = createPassiveHostFixture();
 
-  const result = await Promise.race([
-    runOutboxWorkerHost({
-      env,
-      logger,
-      monitor,
-      operationalServer: {
-        start: async () => {
-          calls.push('operational.start');
-        },
-        stop: async () => {
-          calls.push('operational.stop');
-        },
-      },
+  await assertResolvesPromptly(
+    runHostWithFixture(fixture, {
       shutdownSignal:
         new AbortDuringListenerRegistrationSignal() as unknown as globalThis.AbortSignal,
-      createRuntime: async () => {
-        calls.push('runtime.factory');
-        throw new Error('runtime should not be created in passive mode');
-      },
-    }).then(() => 'resolved'),
-    sleep(100).then(() => 'timed-out'),
-  ]);
+      createRuntime: createUnexpectedRuntimeFactory(
+        fixture.calls,
+        'runtime should not be created in passive mode'
+      ),
+    })
+  );
 
-  assert.equal(result, 'resolved');
-  assert.deepEqual(calls, ['operational.start', 'operational.stop']);
-  assert.equal(monitor.getHealthSnapshot().state, 'passive');
+  assertPassiveOperationalLifecycle(fixture);
 });
 
 await test('runOutboxWorkerHost rethrows operational server start failures and does not bootstrap the runtime', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
   const startupError = new Error('synthetic admin start failure');
+  const fixture = createActiveHostFixture({ startError: startupError });
 
-  await assert.rejects(
-    () =>
-      runOutboxWorkerHost({
-        env,
-        logger,
-        monitor,
-        operationalServer: {
-          start: async () => {
-            calls.push('operational.start');
-            throw startupError;
-          },
-          stop: async () => {
-            calls.push('operational.stop');
-          },
-        },
-        shutdownSignal: new globalThis.AbortController().signal,
-        createRuntime: async () => {
-          calls.push('runtime.factory');
-          throw new Error('runtime factory should not run after admin start failure');
-        },
-      }),
-    startupError
-  );
-
-  assert.deepEqual(calls, ['operational.start', 'operational.stop']);
-  assert.equal(
-    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
-    false
-  );
-  assert.equal(monitor.getHealthSnapshot().state, 'starting');
+  await assertHostFailureScenario({
+    expectedError: startupError,
+    fixture,
+    overrides: {
+      createRuntime: async () => {
+        fixture.calls.push('runtime.factory');
+        throw new Error('runtime factory should not run after admin start failure');
+      },
+    },
+    expectedCalls: ['operational.start', 'operational.stop'],
+    expectBootstrappedLog: false,
+  });
 });
 
 await test('runOutboxWorkerHost rethrows runtime factory failures after stopping the admin server', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
   const runtimeFactoryError = new Error('synthetic runtime factory failure');
-
-  await assert.rejects(
-    () =>
-      runOutboxWorkerHost({
-        env,
-        logger,
-        monitor,
-        operationalServer: {
-          start: async () => {
-            calls.push('operational.start');
-          },
-          stop: async () => {
-            calls.push('operational.stop');
-          },
-        },
-        shutdownSignal: new globalThis.AbortController().signal,
-        createRuntime: async () => {
-          calls.push('runtime.factory');
-          throw runtimeFactoryError;
-        },
-      }),
-    runtimeFactoryError
-  );
-
-  assert.deepEqual(calls, ['operational.start', 'runtime.factory', 'operational.stop']);
-  assert.equal(
-    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
-    true
-  );
-  assert.equal(monitor.getHealthSnapshot().state, 'starting');
+  await assertRuntimeFailureAfterBootstrap({
+    expectedError: runtimeFactoryError,
+    buildCreateRuntime: (calls) => createThrowingRuntimeFactory(calls, runtimeFactoryError),
+    expectedCalls: ['operational.start', 'runtime.factory', 'operational.stop'],
+  });
 });
 
 async function waitFor(predicate: () => boolean, timeoutMs = 100): Promise<void> {
@@ -720,62 +693,21 @@ async function waitFor(predicate: () => boolean, timeoutMs = 100): Promise<void>
 }
 
 await test('runOutboxWorkerHost rethrows runtime start failures after cleanup', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
   const runtimeStartError = new Error('synthetic runtime start failure');
-
-  await assert.rejects(
-    () =>
-      runOutboxWorkerHost({
-        env,
-        logger,
-        monitor,
-        operationalServer: {
-          start: async () => {
-            calls.push('operational.start');
-          },
-          stop: async () => {
-            calls.push('operational.stop');
-          },
-        },
-        shutdownSignal: new globalThis.AbortController().signal,
-        createRuntime: async () => {
-          calls.push('runtime.factory');
-          return {
-            start: async () => {
-              calls.push('runtime.start');
-              throw runtimeStartError;
-            },
-            stop: async () => {
-              calls.push('runtime.stop');
-            },
-          };
+  await assertRuntimeFailureAfterBootstrap({
+    expectedError: runtimeStartError,
+    buildCreateRuntime: (calls) =>
+      createRuntimeFactory(calls, {
+        start: async () => {
+          throw runtimeStartError;
         },
       }),
-    runtimeStartError
-  );
-
-  assert.deepEqual(calls, [
-    'operational.start',
-    'runtime.factory',
-    'runtime.start',
-    'runtime.stop',
-    'operational.stop',
-  ]);
-  assert.equal(
-    entries.some((entry) => entry.msg === 'outbox worker bootstrapped'),
-    true
-  );
-  assert.equal(monitor.getHealthSnapshot().state, 'starting');
+    expectedCalls: [
+      'operational.start',
+      'runtime.factory',
+      'runtime.start',
+      'runtime.stop',
+      'operational.stop',
+    ],
+  });
 });

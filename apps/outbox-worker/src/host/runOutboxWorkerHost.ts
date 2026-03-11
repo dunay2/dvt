@@ -36,7 +36,8 @@ interface OwnershipGate {
 export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): Promise<void> {
   const createRuntime = options.createRuntime ?? createOutboxWorkerRuntime;
   const ownershipGate = options.ownershipGate ?? ALWAYS_ACTIVE_OWNERSHIP_GATE;
-  let primaryError: unknown = null;
+  let primaryError: Error | null = null;
+  let cleanupError: Error | null = null;
   let runtime: RuntimeHandle | null = null;
   let detachShutdownListener = (): void => {};
   let releaseOwnership = async (): Promise<void> => {};
@@ -58,6 +59,10 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
     if (options.env.DVT_OUTBOX_OWNERSHIP_MODE === 'passive') {
       options.monitor.enterPassiveMode();
       await waitForAbort(options.shutdownSignal);
+      return;
+    }
+
+    if (options.shutdownSignal.aborted) {
       return;
     }
 
@@ -91,21 +96,38 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
     }
     await runtime.start(options.shutdownSignal);
   } catch (error) {
-    primaryError = error;
-    throw error;
+    primaryError = toThrowableError(error);
   } finally {
     detachShutdownListener();
-    await stopRuntimeAndOperationalServer({
-      runtime,
-      operationalServer: options.operationalServer,
-      logger: options.logger,
-      primaryError,
-    });
-    await releaseOwnershipHandle({
-      releaseOwnership,
-      logger: options.logger,
-      primaryError,
-    });
+
+    try {
+      await stopRuntimeAndOperationalServer({
+        runtime,
+        operationalServer: options.operationalServer,
+        logger: options.logger,
+        primaryError,
+      });
+    } catch (error) {
+      cleanupError = toThrowableError(error);
+    }
+
+    try {
+      await releaseOwnershipHandle({
+        releaseOwnership,
+        logger: options.logger,
+        primaryError,
+      });
+    } catch (error) {
+      cleanupError = appendCleanupError(cleanupError, error);
+    }
+  }
+
+  if (cleanupError !== null) {
+    throw cleanupError;
+  }
+
+  if (primaryError !== null) {
+    throw primaryError;
   }
 }
 
@@ -230,4 +252,27 @@ async function releaseOwnershipHandle(options: {
 
     throw error;
   }
+}
+
+function appendCleanupError(current: Error | null, next: unknown): Error {
+  if (current === null) {
+    return toThrowableError(next);
+  }
+
+  return new AggregateError(
+    [...toCleanupErrorList(current), ...toCleanupErrorList(next)],
+    'outbox worker cleanup failed'
+  );
+}
+
+function toCleanupErrorList(error: unknown): unknown[] {
+  if (error instanceof AggregateError) {
+    return Array.from(error.errors);
+  }
+
+  return [toThrowableError(error)];
+}
+
+function toThrowableError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
 }
