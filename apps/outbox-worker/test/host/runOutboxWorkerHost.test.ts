@@ -41,7 +41,9 @@ class AbortDuringListenerRegistrationSignal {
   }
 
   removeEventListener(type: unknown): void {
-    void type;
+    if (type === 'abort') {
+      return;
+    }
   }
 }
 
