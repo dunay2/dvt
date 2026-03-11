@@ -307,6 +307,71 @@ await test('standalone canary acceptance redelivers in order when markDelivered 
   }
 });
 
+await test('standalone canary acceptance shows an idempotent downstream sink absorbing duplicate redelivery', async () => {
+  const sink = await startHttpSink({
+    idempotentBy: 'eventId',
+  });
+
+  try {
+    await withPatchedPostgresOutboxFixture(
+      { retryDelayMs: 25, failMarkDeliveredRunSeqsOnce: [1] },
+      async (fixture) => {
+        const activeEnvInput = {
+          NODE_ENV: 'test',
+          DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+          DVT_OUTBOX_ADMIN_HOST: '127.0.0.1',
+          SERVICE_NAME: 'dvt-outbox-worker-canary',
+          DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+          DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+          DVT_OUTBOX_HTTP_TARGET_URL: sink.url,
+          DVT_OUTBOX_HTTP_TIMEOUT_MS: '1000',
+          DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '25',
+          DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '25',
+          DVT_OUTBOX_WORKER_BATCH_SIZE: '10',
+        } as const;
+
+        await fixture.seedPending([makeRunQueuedEvent(1), makeRunQueuedEvent(2)]);
+
+        const activeHost = await startHost(activeEnvInput);
+        try {
+          const deliveredRequests = await waitFor(() =>
+            sink.requests.length >= 3 ? sink.requests.slice(0, 3) : undefined
+          );
+          const appliedEffects = await waitFor(() =>
+            sink.appliedEffects.length >= 2 ? sink.appliedEffects.slice(0, 2) : undefined
+          );
+          const deliveredMetrics = await waitFor(async () => {
+            const response = await fetchText(`${activeHost.baseUrl}/metrics`);
+            return /dvt_outbox_delivered_records_total 2/.test(response.body)
+              ? response
+              : undefined;
+          });
+
+          assert.deepEqual(
+            deliveredRequests.map((request) => request.events[0]?.eventId),
+            ['evt-canary-1', 'evt-canary-1', 'evt-canary-2']
+          );
+          assert.deepEqual(
+            deliveredRequests.map((request) => request.events[0]?.idempotencyKey),
+            ['key-canary-1', 'key-canary-1', 'key-canary-2']
+          );
+          assert.deepEqual(
+            appliedEffects.map((event) => event.eventId),
+            ['evt-canary-1', 'evt-canary-2']
+          );
+          assert.deepEqual(sink.duplicateKeys, ['evt-canary-1']);
+          assert.match(deliveredMetrics.body, /dvt_outbox_retried_records_total 1/);
+          assert.match(deliveredMetrics.body, /dvt_outbox_delivered_records_total 2/);
+        } finally {
+          await stopHost(activeHost);
+        }
+      }
+    );
+  } finally {
+    await sink.close();
+  }
+});
+
 async function withPatchedPostgresOutboxFixture<T>(
   options: PatchedOutboxFixtureOptions | ((fixture: PostgresOutboxFixture) => Promise<T>),
   run?: (fixture: PostgresOutboxFixture) => Promise<T>
@@ -529,8 +594,11 @@ function makeRunQueuedEvent(runSeq = 1): RunEventPersisted {
 
 async function startHttpSink(options: HttpSinkOptions = {}): Promise<HttpSinkHandle> {
   const requests: SinkPayload[] = [];
+  const appliedEffects: RunEventPersisted[] = [];
+  const duplicateKeys: string[] = [];
+  const seenKeys = new Set<string>();
   const server = createServer((request, response) => {
-    void handleSinkRequest(request, response, requests, options).catch((error: unknown) => {
+    void handleSinkRequest(request, response, requests, appliedEffects, duplicateKeys, seenKeys, options).catch((error: unknown) => {
       response.statusCode = 500;
       response.setHeader('content-type', 'application/json; charset=utf-8');
       response.end(JSON.stringify({ error: toErrorMessage(error) }));
@@ -549,6 +617,8 @@ async function startHttpSink(options: HttpSinkOptions = {}): Promise<HttpSinkHan
   return {
     url: `http://127.0.0.1:${address.port}/outbox/events`,
     requests,
+    appliedEffects,
+    duplicateKeys,
     close: async () => {
       await new Promise<void>((resolve, reject) => {
         server.close((error) => (error ? reject(error) : resolve()));
@@ -561,6 +631,9 @@ async function handleSinkRequest(
   request: IncomingMessage,
   response: ServerResponse<IncomingMessage>,
   requests: SinkPayload[],
+  appliedEffects: RunEventPersisted[],
+  duplicateKeys: string[],
+  seenKeys: Set<string>,
   options: HttpSinkOptions
 ): Promise<void> {
   if (request.method !== 'POST' || request.url !== '/outbox/events') {
@@ -577,9 +650,47 @@ async function handleSinkRequest(
   const sinkPayload = JSON.parse(Buffer.concat(chunks).toString('utf8')) as SinkPayload;
   const responsePlan = resolveSinkResponse(options, requests.length);
   requests.push(sinkPayload);
+  applySinkEffects(sinkPayload, appliedEffects, duplicateKeys, seenKeys, options);
   response.statusCode = responsePlan.statusCode;
   response.setHeader('content-type', 'application/json; charset=utf-8');
   response.end(JSON.stringify(responsePlan.responseBody));
+}
+
+function applySinkEffects(
+  sinkPayload: SinkPayload,
+  appliedEffects: RunEventPersisted[],
+  duplicateKeys: string[],
+  seenKeys: Set<string>,
+  options: HttpSinkOptions
+): void {
+  for (const event of sinkPayload.events) {
+    const key = resolveSinkIdempotencyKey(event, options.idempotentBy);
+    if (key !== null) {
+      if (seenKeys.has(key)) {
+        if (!duplicateKeys.includes(key)) {
+          duplicateKeys.push(key);
+        }
+        continue;
+      }
+      seenKeys.add(key);
+    }
+
+    appliedEffects.push(cloneEvent(event));
+  }
+}
+
+function resolveSinkIdempotencyKey(
+  event: RunEventPersisted,
+  idempotentBy: HttpSinkOptions['idempotentBy']
+): string | null {
+  switch (idempotentBy) {
+    case 'eventId':
+      return event.eventId;
+    case 'idempotencyKey':
+      return event.idempotencyKey;
+    default:
+      return null;
+  }
 }
 
 function resolveSinkResponse(options: HttpSinkOptions, requestIndex: number): HttpSinkResponse {
@@ -640,6 +751,8 @@ interface SinkPayload {
 interface HttpSinkHandle {
   url: string;
   requests: SinkPayload[];
+  appliedEffects: RunEventPersisted[];
+  duplicateKeys: string[];
   close(): Promise<void>;
 }
 
@@ -647,6 +760,7 @@ interface HttpSinkOptions {
   statusCode?: number;
   responseBody?: Record<string, unknown>;
   responseSequence?: HttpSinkResponse[];
+  idempotentBy?: 'eventId' | 'idempotencyKey';
 }
 
 interface HttpSinkResponse {

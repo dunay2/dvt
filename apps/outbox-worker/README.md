@@ -19,6 +19,12 @@ Current bus modes are intentionally narrow:
 
 `http` is the default because the worker should fail fast without a real publisher.
 
+Duplicate-handling contract:
+
+- worker delivery remains `at-least-once`
+- downstream HTTP consumers must absorb duplicate delivery by existing envelope identity, using `eventId` and/or `idempotencyKey`
+- a redelivery after publish success but local ack failure is expected behavior, not protocol breakage
+
 Operational endpoints:
 
 - `/healthz`: liveness probe for the worker process

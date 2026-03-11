@@ -122,5 +122,6 @@ Minimal canary evidence to capture:
 ## Known limits in this slice
 
 - Downstream delivery contract is still a minimal HTTP `POST` with `{ "events": [...] }`.
+- Downstream consumers are required to be idempotent at that boundary, using the existing envelope `eventId` and/or `idempotencyKey` to absorb redelivery.
 - Ownership mode is now explicit and required in the standalone host, but full environment cutover still depends on deployment wiring outside the repo.
 - Multi-worker ordering hardening is still blocked on ADR-0009 enforcement.
