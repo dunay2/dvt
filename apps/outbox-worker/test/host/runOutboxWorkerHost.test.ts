@@ -268,7 +268,8 @@ await test('runOutboxWorkerHost exits promptly when shutdown lands during active
   assert.equal(result, 'resolved');
   assert.deepEqual(calls, ['operational.start', 'runtime.factory', 'operational.stop']);
 
-  resolveRuntime?.({
+  assertDefined(resolveRuntime, 'expected pending runtime resolver for active bootstrap test');
+  resolveRuntime({
     start: async () => {
       calls.push('runtime.start');
     },
@@ -329,7 +330,8 @@ await test('runOutboxWorkerHost logs a warning if late runtime cleanup fails aft
   shutdown.abort();
   await hostPromise;
 
-  resolveRuntime?.({
+  assertDefined(resolveRuntime, 'expected pending runtime resolver for late cleanup test');
+  resolveRuntime({
     start: async () => {
       calls.push('runtime.start');
     },
@@ -501,6 +503,10 @@ async function waitFor(predicate: () => boolean, timeoutMs = 100): Promise<void>
     }
     await sleep(10);
   }
+}
+
+function assertDefined<T>(value: T, message: string): asserts value is NonNullable<T> {
+  assert.notEqual(value, null, message);
 }
 
 await test('runOutboxWorkerHost rethrows runtime start failures after cleanup', async () => {
