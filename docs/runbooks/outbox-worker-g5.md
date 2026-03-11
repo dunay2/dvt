@@ -2,7 +2,7 @@
 title: Outbox Worker Runbook
 status: Active
 owner: sre
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-11
 ---
 
 # Outbox Worker Runbook
@@ -39,7 +39,7 @@ Operational defaults:
 
 ## Runtime states
 
-- `starting`: process bootstrapped but runtime not yet ready to drain
+- `starting`: process bootstrapped but runtime not yet ready to drain, including active bootstrap or migration work before the polling loop begins
 - `passive`: process is alive but intentionally non-owning; no polling runtime is active
 - `idle`: worker is healthy and no eligible outbox records were claimed in the last tick
 - `draining`: worker is healthy and actively draining claimed records
@@ -56,6 +56,12 @@ Migration rule:
 
 - keep `DVT_OUTBOX_WORKER_RUN_MIGRATIONS=false` for runtime-only DB roles
 - set `DVT_OUTBOX_WORKER_RUN_MIGRATIONS=true` only for local/bootstrap environments where the worker may execute schema DDL
+
+Shutdown rule:
+
+- `SIGINT` / `SIGTERM` must stop the host cleanly in both `passive` and `active` ownership modes
+- if shutdown lands while the active runtime is still bootstrapping or running migrations, startup is aborted and pending adapter work is interrupted before the polling loop starts
+- if runtime creation resolves after shutdown was already requested, the host must stop that runtime instead of starting it
 
 Fixed correctness policy in this slice:
 

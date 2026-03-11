@@ -313,6 +313,134 @@ await test('createOutboxWorkerRuntime releases the shared pool lease when startu
   }
 });
 
+await test('createOutboxWorkerRuntime aborts before bootstrap starts when shutdown was already requested', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let migrateCalls = 0;
+  let abortPendingOperationsCalls = 0;
+
+  const originalEnd = pool.end;
+  const originalMigrate = PostgresStateStoreAdapter.prototype.migrate;
+  const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.migrate = async function migrate(): Promise<void> {
+    migrateCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.abortPendingOperations =
+    async function abortPendingOperations(this: object): Promise<void> {
+      abortPendingOperationsCalls += 1;
+      await Reflect.apply(originalAbortPendingOperations, this, []);
+    };
+
+  try {
+    const shutdown = new globalThis.AbortController();
+    shutdown.abort();
+
+    await assert.rejects(
+      () =>
+        createOutboxWorkerRuntime(
+          loadActiveTestEnv({
+            NODE_ENV: 'test',
+            DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+            DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+            DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+          }),
+          makeLogger(),
+          { shutdownSignal: shutdown.signal }
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.name, 'AbortError');
+        return true;
+      }
+    );
+
+    assert.equal(migrateCalls, 0);
+    assert.ok(abortPendingOperationsCalls >= 1);
+    assert.equal(endCalls, 1);
+    assert.notEqual(getPgPool(poolConfig), pool);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.migrate = originalMigrate;
+    PostgresStateStoreAdapter.prototype.abortPendingOperations = originalAbortPendingOperations;
+    await closePgPool();
+  }
+});
+
+await test('createOutboxWorkerRuntime aborts startup work and releases resources when shutdown lands during migration', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let abortPendingOperationsCalls = 0;
+  let rejectMigration: ((error: unknown) => void) | null = null;
+  let migrationReleased = false;
+
+  const originalEnd = pool.end;
+  const originalMigrate = PostgresStateStoreAdapter.prototype.migrate;
+  const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.migrate = async function migrate(): Promise<void> {
+    await new Promise<void>((_resolve, reject) => {
+      rejectMigration = reject;
+    });
+  };
+  PostgresStateStoreAdapter.prototype.abortPendingOperations =
+    async function abortPendingOperations(this: object): Promise<void> {
+      abortPendingOperationsCalls += 1;
+      if (!migrationReleased) {
+        migrationReleased = true;
+        rejectMigration?.(new Error('synthetic migration interrupted'));
+      }
+      await Reflect.apply(originalAbortPendingOperations, this, []);
+    };
+
+  try {
+    const shutdown = new globalThis.AbortController();
+    const startup = createOutboxWorkerRuntime(
+      loadActiveTestEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+      }),
+      makeLogger(),
+      { shutdownSignal: shutdown.signal }
+    );
+
+    shutdown.abort();
+
+    await assert.rejects(startup, (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.equal(error.name, 'AbortError');
+      return true;
+    });
+
+    assert.ok(abortPendingOperationsCalls >= 1);
+    assert.equal(endCalls, 1);
+    assert.notEqual(getPgPool(poolConfig), pool);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.migrate = originalMigrate;
+    PostgresStateStoreAdapter.prototype.abortPendingOperations = originalAbortPendingOperations;
+    await closePgPool();
+  }
+});
+
 await test('createOutboxWorkerRuntime configures the shared pool with env timeouts', async () => {
   await closePgPool();
 

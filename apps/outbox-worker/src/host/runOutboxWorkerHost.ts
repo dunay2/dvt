@@ -49,10 +49,16 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
       return;
     }
 
-    runtime = await createRuntime(options.env, options.logger, {
-      observer: options.monitor,
-      hooks: options.monitor,
+    runtime = await createRuntimeUntilShutdown({
+      createRuntime,
+      env: options.env,
+      logger: options.logger,
+      monitor: options.monitor,
+      shutdownSignal: options.shutdownSignal,
     });
+    if (!runtime) {
+      return;
+    }
     await runtime.start(options.shutdownSignal);
   } catch (error) {
     primaryError = error;
@@ -83,4 +89,64 @@ async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
       onAbort();
     }
   });
+}
+
+async function createRuntimeUntilShutdown(options: {
+  createRuntime: RuntimeFactory;
+  env: ActiveEnv;
+  logger: OutboxWorkerRuntimeLogger;
+  monitor: OutboxWorkerMonitor;
+  shutdownSignal: globalThis.AbortSignal;
+}): Promise<RuntimeHandle | null> {
+  if (options.shutdownSignal.aborted) {
+    return null;
+  }
+
+  const runtimePromise = options
+    .createRuntime(options.env, options.logger, {
+      observer: options.monitor,
+      hooks: options.monitor,
+      shutdownSignal: options.shutdownSignal,
+    })
+    .then(async (runtime) => {
+      if (!options.shutdownSignal.aborted) {
+        return runtime;
+      }
+
+      await safelyStopRuntimeAfterLateBootstrap(runtime, options.logger);
+      return null;
+    })
+    .catch((error) => {
+      if (options.shutdownSignal.aborted && isAbortError(error)) {
+        return null;
+      }
+      throw error;
+    });
+
+  return Promise.race([runtimePromise, waitForAbort(options.shutdownSignal).then(() => null)]);
+}
+
+async function safelyStopRuntimeAfterLateBootstrap(
+  runtime: RuntimeHandle,
+  logger: OutboxWorkerRuntimeLogger
+): Promise<void> {
+  try {
+    await runtime.stop();
+  } catch (error) {
+    logger.warn?.(
+      { err: toErrorLike(error) },
+      'outbox runtime cleanup failed after shutdown during bootstrap'
+    );
+  }
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
+}
+
+function toErrorLike(error: unknown): { message: string; name: string } {
+  if (error instanceof Error) {
+    return { message: error.message, name: error.name };
+  }
+  return { message: String(error), name: 'UnknownError' };
 }

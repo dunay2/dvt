@@ -10,6 +10,7 @@ Current scope:
 - publish envelopes through an explicit bus adapter
 - expose `/healthz`, `/readyz`, and `/metrics`
 - stop cleanly on `SIGINT` / `SIGTERM`
+- abort active bootstrap work when shutdown lands during runtime creation or migrations
 
 Current bus modes are intentionally narrow:
 
@@ -39,5 +40,11 @@ Core env vars:
 - `DVT_OUTBOX_WORKER_RUN_MIGRATIONS`: set `true` only in environments where the worker role is allowed to run DDL
 - `DVT_OUTBOX_EVENT_BUS_MODE`: `http` or `log`
 - `DVT_OUTBOX_HTTP_TARGET_URL`: downstream HTTP sink when bus mode is `http`
+
+Shutdown behavior:
+
+- `SIGINT` / `SIGTERM` keep passive mode observable long enough for a clean stop
+- in `active` mode, shutdown also interrupts runtime bootstrap and pending migrations before the polling loop starts
+- if runtime creation completes after shutdown was requested, the host cleans up that runtime instead of starting it
 
 Operator guidance lives in [`docs/runbooks/outbox-worker-g5.md`](../../docs/runbooks/outbox-worker-g5.md).

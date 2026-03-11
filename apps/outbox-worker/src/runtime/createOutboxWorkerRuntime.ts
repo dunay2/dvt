@@ -22,6 +22,7 @@ export interface RuntimeHandle {
 export interface CreateOutboxWorkerRuntimeOptions {
   observer?: OutboxWorkerObserver;
   hooks?: OutboxWorkerRuntimeHooks;
+  shutdownSignal?: globalThis.AbortSignal;
 }
 
 interface ClosableStateStore {
@@ -53,9 +54,18 @@ export async function createOutboxWorkerRuntime(
   const eventBus = createEventBus(env, logger);
 
   try {
-    if (runMigrations) {
-      await stateStore.migrate();
-    }
+    await waitForStartupOrAbort(
+      async () => {
+        if (runMigrations) {
+          await stateStore.migrate();
+        }
+      },
+      {
+        stateStore,
+        eventBus,
+        ...(options.shutdownSignal ? { shutdownSignal: options.shutdownSignal } : {}),
+      }
+    );
 
     const runtime = new OutboxWorkerRuntime(stateStore, eventBus, logger, {
       batchSize: env.DVT_OUTBOX_WORKER_BATCH_SIZE,
@@ -99,12 +109,62 @@ function createEventBus(env: ActiveEnv, logger: OutboxWorkerRuntimeLogger): Inte
   }
 }
 
+async function waitForStartupOrAbort(
+  startup: () => Promise<void>,
+  deps: {
+    shutdownSignal?: globalThis.AbortSignal;
+    stateStore: { abortPendingOperations(): Promise<void> };
+    eventBus: InterruptibleEventBus;
+  }
+): Promise<void> {
+  const signal = deps.shutdownSignal;
+  if (!signal) {
+    await startup();
+    return;
+  }
+
+  if (signal.aborted) {
+    await interruptPendingTick(deps.stateStore, deps.eventBus);
+    throw createAbortError('outbox runtime startup aborted');
+  }
+
+  let detachAbortListener = (): void => {};
+  const abortPromise = new Promise<never>((_resolve, reject) => {
+    const onAbort = (): void => {
+      detachAbortListener();
+      void interruptPendingTick(deps.stateStore, deps.eventBus);
+      reject(createAbortError('outbox runtime startup aborted'));
+    };
+
+    detachAbortListener = (): void => {
+      signal.removeEventListener('abort', onAbort);
+    };
+
+    signal.addEventListener('abort', onAbort, { once: true });
+    if (signal.aborted) {
+      onAbort();
+    }
+  });
+
+  try {
+    await Promise.race([startup(), abortPromise]);
+  } finally {
+    detachAbortListener();
+  }
+}
+
 async function interruptPendingTick(
   stateStore: { abortPendingOperations(): Promise<void> },
   eventBus: InterruptibleEventBus
 ): Promise<void> {
   eventBus.abortPendingPublishes?.();
   await stateStore.abortPendingOperations();
+}
+
+function createAbortError(message: string): Error {
+  const error = new Error(message);
+  error.name = 'AbortError';
+  return error;
 }
 
 async function safelyReleaseStartupResources(
