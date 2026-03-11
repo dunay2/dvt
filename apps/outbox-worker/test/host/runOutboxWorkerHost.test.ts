@@ -392,7 +392,11 @@ await test('runOutboxWorkerHost exits promptly when shutdown lands during active
   assert.equal(result, 'resolved');
   assert.deepEqual(calls, ['operational.start', 'runtime.factory', 'operational.stop']);
 
-  assert.notEqual(resolveRuntime, null, 'expected pending runtime resolver for active bootstrap test');
+  assert.notEqual(
+    resolveRuntime,
+    null,
+    'expected pending runtime resolver for active bootstrap test'
+  );
   const resolvePendingRuntime = resolveRuntime!;
   resolvePendingRuntime({
     start: async () => {
@@ -560,7 +564,12 @@ await test('runOutboxWorkerHost withdraws readiness immediately when shutdown la
   releaseRuntimeStart?.();
   await hostPromise;
 
-  assert.deepEqual(calls, ['operational.start', 'runtime.start', 'runtime.stop', 'operational.stop']);
+  assert.deepEqual(calls, [
+    'operational.start',
+    'runtime.start',
+    'runtime.stop',
+    'operational.stop',
+  ]);
 });
 
 await test('runOutboxWorkerHost does not miss an abort that lands during passive listener registration', async () => {
