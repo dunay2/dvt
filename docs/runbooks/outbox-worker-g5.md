@@ -23,11 +23,13 @@ Safety rule:
 
 - keep exactly one active owner per environment
 - use `passive` when the standalone process must be present but non-owning during rollout or rollback
+- `active` by itself is not a fence or lease; it only declares which process is intended to own delivery
+- until a real ownership fence exists, dual-active rollout remains unsupported
 
 ## Endpoints
 
-- `GET /healthz`: process liveness
-- `GET /readyz`: runtime readiness
+- `GET /healthz`: process liveness plus effective owner visibility
+- `GET /readyz`: runtime readiness plus effective owner visibility
 - `GET /metrics`: Prometheus-style runtime metrics
 
 Operational defaults:
@@ -51,6 +53,7 @@ Readiness rule:
 - `ready=true` only for `idle` and `draining`
 - keep readiness `false` in `passive` mode because the process is explicitly non-owning
 - keep readiness `false` while any retry backlog is still pending, even if a later poll claims nothing because the failed record is waiting on backoff
+- if active ownership is unavailable at startup, the host must stay `passive`, keep `owner=false`, and must not start delivery
 
 Migration rule:
 
@@ -73,6 +76,7 @@ Fixed correctness policy in this slice:
 ## Key metrics
 
 - `dvt_outbox_runtime_state{state=*}`
+- `dvt_outbox_runtime_owner`
 - `dvt_outbox_runtime_ready`
 - `dvt_outbox_claimed_records_total`
 - `dvt_outbox_delivered_records_total`

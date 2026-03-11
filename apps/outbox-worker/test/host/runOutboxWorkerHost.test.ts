@@ -175,6 +175,129 @@ await test('runOutboxWorkerHost creates and starts the runtime when ownership mo
   );
 });
 
+await test('runOutboxWorkerHost stays passive when active ownership is unavailable', async () => {
+  const calls: string[] = [];
+  const { logger, entries } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => 1_741_392_000_000,
+  });
+  const env = loadEnv({
+    NODE_ENV: 'test',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+  });
+  const shutdown = new globalThis.AbortController();
+
+  const hostPromise = runOutboxWorkerHost({
+    env,
+    logger,
+    monitor,
+    operationalServer: {
+      start: async () => {
+        calls.push('operational.start');
+      },
+      stop: async () => {
+        calls.push('operational.stop');
+      },
+    },
+    shutdownSignal: shutdown.signal,
+    ownershipGate: {
+      acquire: async () => {
+        calls.push('ownership.acquire');
+        return null;
+      },
+    },
+    createRuntime: async () => {
+      calls.push('runtime.factory');
+      throw new Error('runtime should not be created when ownership is unavailable');
+    },
+  });
+
+  await waitFor(() => calls.includes('ownership.acquire'));
+  const passiveSnapshot = monitor.getHealthSnapshot();
+  assert.equal(passiveSnapshot.state, 'passive');
+  assert.equal(passiveSnapshot.ready, false);
+  assert.equal(passiveSnapshot.owner, false);
+
+  shutdown.abort();
+  await hostPromise;
+
+  assert.deepEqual(calls, ['operational.start', 'ownership.acquire', 'operational.stop']);
+  assert.equal(
+    entries.some(
+      (entry) =>
+        entry.level === 'warn' &&
+        entry.msg === 'outbox ownership unavailable; entering passive mode'
+    ),
+    true
+  );
+});
+
+await test('runOutboxWorkerHost releases acquired ownership after cleanup', async () => {
+  const calls: string[] = [];
+  const { logger } = makeLogger();
+  const monitor = new OutboxWorkerMonitor({
+    serviceName: 'dvt-outbox-worker',
+    logger,
+    nowMs: () => 1_741_392_000_000,
+  });
+  const env = loadEnv({
+    NODE_ENV: 'test',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+  });
+
+  await runOutboxWorkerHost({
+    env,
+    logger,
+    monitor,
+    operationalServer: {
+      start: async () => {
+        calls.push('operational.start');
+      },
+      stop: async () => {
+        calls.push('operational.stop');
+      },
+    },
+    shutdownSignal: new globalThis.AbortController().signal,
+    ownershipGate: {
+      acquire: async () => {
+        calls.push('ownership.acquire');
+        return {
+          release: async () => {
+            calls.push('ownership.release');
+          },
+        };
+      },
+    },
+    createRuntime: async () => {
+      calls.push('runtime.factory');
+      return {
+        start: async () => {
+          calls.push('runtime.start');
+        },
+        stop: async () => {
+          calls.push('runtime.stop');
+        },
+      };
+    },
+  });
+
+  assert.deepEqual(calls, [
+    'operational.start',
+    'ownership.acquire',
+    'runtime.factory',
+    'runtime.start',
+    'runtime.stop',
+    'operational.stop',
+    'ownership.release',
+  ]);
+});
+
 await test('runOutboxWorkerHost skips active runtime bootstrap when shutdown was already requested', async () => {
   const calls: string[] = [];
   const { logger, entries } = makeLogger();

@@ -83,6 +83,7 @@ async function handleRequest(
       writeJson(response, health.ok ? 200 : 503, {
         ok: health.ok,
         state: health.state,
+        owner: health.owner,
         service: health.service,
       });
       return;
@@ -91,6 +92,7 @@ async function handleRequest(
         ok: health.ok,
         ready: health.ready,
         state: health.state,
+        owner: health.owner,
         service: health.service,
         lastErrorMessage: health.lastErrorMessage,
         lastErrorAt: health.lastErrorAt,

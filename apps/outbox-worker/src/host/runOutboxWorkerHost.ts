@@ -16,6 +16,7 @@ interface RunOutboxWorkerHostOptions {
   operationalServer: Pick<OperationalServerHandle, 'start' | 'stop'>;
   shutdownSignal: globalThis.AbortSignal;
   createRuntime?: RuntimeFactory;
+  ownershipGate?: OwnershipGate;
 }
 
 type RuntimeFactory = (
@@ -24,11 +25,21 @@ type RuntimeFactory = (
   options?: CreateOutboxWorkerRuntimeOptions
 ) => Promise<RuntimeHandle>;
 
+interface OwnershipLease {
+  release(): Promise<void>;
+}
+
+interface OwnershipGate {
+  acquire(signal: globalThis.AbortSignal): Promise<OwnershipLease | null>;
+}
+
 export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): Promise<void> {
   const createRuntime = options.createRuntime ?? createOutboxWorkerRuntime;
+  const ownershipGate = options.ownershipGate ?? ALWAYS_ACTIVE_OWNERSHIP_GATE;
   let primaryError: unknown = null;
   let runtime: RuntimeHandle | null = null;
   let detachShutdownListener = (): void => {};
+  let releaseOwnership = async (): Promise<void> => {};
 
   try {
     await options.operationalServer.start();
@@ -49,6 +60,19 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
       await waitForAbort(options.shutdownSignal);
       return;
     }
+
+    const ownershipLease = await ownershipGate.acquire(options.shutdownSignal);
+    if (!ownershipLease) {
+      options.logger.warn?.(
+        { ownershipMode: options.env.DVT_OUTBOX_OWNERSHIP_MODE },
+        'outbox ownership unavailable; entering passive mode'
+      );
+      options.monitor.enterPassiveMode();
+      await waitForAbort(options.shutdownSignal);
+      return;
+    }
+    releaseOwnership = () => ownershipLease.release();
+    options.monitor.onOwnershipAcquired();
 
     detachShutdownListener = observeShutdownForReadinessWithdrawal(
       options.shutdownSignal,
@@ -77,8 +101,19 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
       logger: options.logger,
       primaryError,
     });
+    await releaseOwnershipHandle({
+      releaseOwnership,
+      logger: options.logger,
+      primaryError,
+    });
   }
 }
+
+const ALWAYS_ACTIVE_OWNERSHIP_GATE: OwnershipGate = {
+  acquire: async () => ({
+    release: async () => {},
+  }),
+};
 
 async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
   if (signal.aborted) {
@@ -175,4 +210,24 @@ function toErrorLike(error: unknown): { message: string; name: string } {
     return { message: error.message, name: error.name };
   }
   return { message: String(error), name: 'UnknownError' };
+}
+
+async function releaseOwnershipHandle(options: {
+  releaseOwnership: () => Promise<void>;
+  logger: OutboxWorkerRuntimeLogger;
+  primaryError: unknown;
+}): Promise<void> {
+  try {
+    await options.releaseOwnership();
+  } catch (error) {
+    if (options.primaryError !== null) {
+      options.logger.warn?.(
+        { err: toErrorLike(error) },
+        'outbox ownership release failed during cleanup'
+      );
+      return;
+    }
+
+    throw error;
+  }
 }

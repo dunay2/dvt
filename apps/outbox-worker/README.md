@@ -22,8 +22,8 @@ Current bus modes are intentionally narrow:
 Operational endpoints:
 
 - `/healthz`: liveness probe for the worker process
-- `/readyz`: readiness probe based on runtime state (`idle` / `draining` are ready only when no retry backlog is pending)
-- `/metrics`: Prometheus-style metrics for runtime state, lag, retries, deliveries, DLQ, and errors
+- `/readyz`: readiness probe based on runtime state (`idle` / `draining` are ready only when no retry backlog is pending) and the effective `owner` flag
+- `/metrics`: Prometheus-style metrics for runtime state, effective ownership, lag, retries, deliveries, DLQ, and errors
 
 Ownership modes:
 
@@ -31,6 +31,12 @@ Ownership modes:
 - `passive`: the process exposes operational endpoints but does not start the polling runtime
 
 `DVT_OUTBOX_OWNERSHIP_MODE` is required. Set it explicitly in every environment so process start never implies ownership by omission.
+
+Ownership safety rule:
+
+- `active` declares rollout intent, not multi-worker safety by itself
+- dual-active ownership is still unsupported in this slice
+- if a future ownership gate or lease refuses active ownership, the host stays passive and does not start delivery
 
 Core env vars:
 
@@ -46,5 +52,10 @@ Shutdown behavior:
 - `SIGINT` / `SIGTERM` keep passive mode observable long enough for a clean stop
 - in `active` mode, shutdown also interrupts runtime bootstrap and pending migrations before the polling loop starts
 - if runtime creation completes after shutdown was requested, the host cleans up that runtime instead of starting it
+
+Ownership observability:
+
+- `/readyz` includes `owner=true|false` so operators can distinguish an active owner from a passive or refused process
+- `/metrics` exposes `dvt_outbox_runtime_owner`
 
 Operator guidance lives in [`docs/runbooks/outbox-worker-g5.md`](../../docs/runbooks/outbox-worker-g5.md).

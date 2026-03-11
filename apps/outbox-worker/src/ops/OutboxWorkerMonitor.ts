@@ -23,6 +23,7 @@ export interface HealthSnapshot {
   ok: boolean;
   ready: boolean;
   state: OutboxRuntimeState;
+  owner: boolean;
   service: string;
   lastErrorMessage: string | null;
   lastErrorAt: string | null;
@@ -65,6 +66,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   private readonly readyStaleAfterMs: number;
 
   private state: OutboxRuntimeState = 'starting';
+  private owner = false;
   private readonly counters: Counters = {
     claimedRecordsTotal: 0,
     deliveredRecordsTotal: 0,
@@ -90,8 +92,13 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   onStarted(): void {
+    this.owner = true;
     this.startedAtMs ??= this.nowMs();
     this.transitionTo('starting', 'runtime bootstrapped');
+  }
+
+  onOwnershipAcquired(): void {
+    this.owner = true;
   }
 
   onTick(result: OutboxTickResult): void {
@@ -136,6 +143,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   onStopped(): void {
+    this.owner = false;
     this.transitionTo('stopped', 'runtime stopped');
   }
 
@@ -144,6 +152,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
   }
 
   enterPassiveMode(): void {
+    this.owner = false;
     this.startedAtMs ??= this.nowMs();
     this.lastErrorMessage = null;
     this.lastErrorAtMs = null;
@@ -195,6 +204,7 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
       ok: this.state !== 'stopped',
       ready: this.isReadyState() && tickFresh,
       state: this.state,
+      owner: this.owner,
       service: this.serviceName,
       lastErrorMessage: this.lastErrorMessage,
       lastErrorAt: toIso(this.lastErrorAtMs),
@@ -212,6 +222,9 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
       '# HELP dvt_outbox_runtime_ready Whether the worker is ready to drain outbox records.',
       '# TYPE dvt_outbox_runtime_ready gauge',
       `dvt_outbox_runtime_ready ${ready ? 1 : 0}`,
+      '# HELP dvt_outbox_runtime_owner Whether this process currently owns active outbox draining.',
+      '# TYPE dvt_outbox_runtime_owner gauge',
+      `dvt_outbox_runtime_owner ${this.owner ? 1 : 0}`,
       '# HELP dvt_outbox_runtime_tick_fresh Whether the last completed tick is fresh enough for readiness.',
       '# TYPE dvt_outbox_runtime_tick_fresh gauge',
       `dvt_outbox_runtime_tick_fresh ${this.isTickFresh() ? 1 : 0}`,
