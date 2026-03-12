@@ -55,9 +55,7 @@ function makeEvent(
 }
 
 function makeRunEvents(runId: string, runSeqs: number[]): RunEventPersisted[] {
-  return runSeqs.map((seq) =>
-    makeEvent(runId, `evt-${runId}-${seq}`, `key-${runId}-${seq}`, seq)
-  );
+  return runSeqs.map((seq) => makeEvent(runId, `evt-${runId}-${seq}`, `key-${runId}-${seq}`, seq));
 }
 
 // ---------------------------------------------------------------------------
@@ -97,12 +95,8 @@ async function findRunIdPerShard(
   }
 
   if (result.size < shardCount) {
-    const missing = Array.from({ length: shardCount }, (_, i) => i).filter(
-      (s) => !result.has(s)
-    );
-    throw new Error(
-      `could not find runIds for shards ${missing.join(',')} from candidates`
-    );
+    const missing = Array.from({ length: shardCount }, (_, i) => i).filter((s) => !result.has(s));
+    throw new Error(`could not find runIds for shards ${missing.join(',')} from candidates`);
   }
 
   return result;
@@ -158,11 +152,7 @@ await test('shard routing is deterministic: same runId always maps to the same s
   const ownedBatch = await storage.listPendingForClaim(10, { shardIds: [firstShard] });
   assert.ok(ownedBatch.length > 0, 'owning shard returns at least one record');
   for (const record of ownedBatch) {
-    assert.equal(
-      record.payload.runId,
-      runId,
-      'owning shard only returns records for this runId'
-    );
+    assert.equal(record.payload.runId, runId, 'owning shard only returns records for this runId');
   }
 
   // Every other shard returns nothing for this runId.
@@ -231,12 +221,8 @@ await test('two workers with disjoint shards never claim the same outbox record'
   await workerA.tick();
   await workerB.tick();
 
-  const deliveredByA = new Set(
-    workerABus.published.map((e) => `${e.runId}:${e.runSeq}`)
-  );
-  const deliveredByB = new Set(
-    workerBBus.published.map((e) => `${e.runId}:${e.runSeq}`)
-  );
+  const deliveredByA = new Set(workerABus.published.map((e) => `${e.runId}:${e.runSeq}`));
+  const deliveredByB = new Set(workerBBus.published.map((e) => `${e.runId}:${e.runSeq}`));
 
   // The intersection must be empty — no event delivered by both workers.
   const overlap = [...deliveredByA].filter((key) => deliveredByB.has(key));

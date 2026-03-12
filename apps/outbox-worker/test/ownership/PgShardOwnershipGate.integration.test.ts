@@ -123,11 +123,7 @@ await test(
     // gate2 now competes on an uncontested shard — it must succeed.
     const lease2 = await gate2.acquire(signal);
     try {
-      assert.notEqual(
-        lease2,
-        null,
-        'gate2 must acquire the lock after gate1 released its session'
-      );
+      assert.notEqual(lease2, null, 'gate2 must acquire the lock after gate1 released its session');
     } finally {
       await lease2?.release();
     }
