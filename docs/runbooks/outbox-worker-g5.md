@@ -116,6 +116,26 @@ Minimal canary evidence to capture:
 4. one successful test-event delivery during the same window
 5. rollback result if the rollout is reverted
 
+Automation helper:
+
+- `scripts/outbox-worker-canary-evidence.ps1` captures `/readyz`, baseline/final `/metrics`, executes one trigger, and writes `docs/evidence/ED-<date>-g5-canary-<env>.md`
+- prefer `-TriggerCommand` when the environment already has a real trigger path for the event you want to observe
+- use `-PsqlDsn` only as an operational fallback when no environment-native trigger path is available; that mode inserts one `RunQueued` outbox row directly with the same shard formula used by the PostgreSQL adapter
+- the script records deployment and probe state automatically, but a human still needs to supply the proof that no second active outbox publisher path was running if that fact is known outside Kubernetes deployment state
+
+Example:
+
+```powershell
+.\scripts\outbox-worker-canary-evidence.ps1 `
+  -EnvironmentName dev-canary `
+  -WorkerAdminUrl http://127.0.0.1:9464 `
+  -Namespace dvt `
+  -Deployment outbox-worker `
+  -ShardCount 1 `
+  -TriggerCommand "Write-Output 'replace with the real environment trigger command'" `
+  -OwnerProofNote "Confirmed no second active outbox publisher path during the observation window."
+```
+
 ## Rollback expectations
 
 - Switch the standalone worker back to `DVT_OUTBOX_OWNERSHIP_MODE=passive` or stop it entirely before re-enabling any other publisher path for the same environment.

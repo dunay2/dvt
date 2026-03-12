@@ -35,12 +35,12 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-12`
 - `gap`: `G5`
 - `epic`: `#409`
-- `current_focus`: `G5.5C / #414 - concurrent-worker ordering proof (repo-side complete)`
-- `state`: `Validation complete`
-- `currently_working_on`: `G5.5C concurrent-worker ordering tests landed; the only remaining open items are external canary evidence for #413 and the final cross-system G5 closeout sync once that evidence exists`
+- `current_focus`: `G5.5D / #414 - PostgreSQL advisory lock exclusivity integration test`
+- `state`: `Repo-side complete — awaiting real-DB execution evidence`
+- `currently_working_on`: `Integration test written and typecheck/lint clean; 2 tests skip cleanly when DATABASE_URL absent; evidence pending real-DB run`
 - `next_after_current`: `G5 formal closeout — sync system-delivery-status.md once #413 external canary evidence is recorded`
 - `blocking_dependencies`: `#413` external canary evidence still pending; does not block repo-side G5.5 closure
-- `last_completed`: `G5.5C / #414 concurrent-worker ordering proof landed on 2026-03-12`
+- `last_completed`: `G5.5C / #414 concurrent-worker ordering proof (InMemoryOutboxStorage + OutboxWorker) landed on 2026-03-12`
 
 ## Remaining G5 Roadmap
 
@@ -83,6 +83,7 @@ Working checklist:
 - [x] implementation and docs updated
 - [x] validation commands run and reported
 - [x] repo-side negative host-path coverage complete
+- [x] canary evidence collection script written (`scripts/outbox-worker-canary-evidence.ps1`)
 - [ ] external canary evidence captured for one environment
 - [ ] rollback evidence captured against the real deployment wiring
 - [ ] status docs synced after closure
@@ -339,6 +340,63 @@ Pre-implementation brief:
   - `pnpm --filter dvt-outbox-worker typecheck`
   - `pnpm --filter dvt-outbox-worker test`
 
+### Active substep / G5.5D - #414 PostgreSQL advisory lock exclusivity integration test
+
+Think-first analysis:
+
+- problem summary: the in-memory concurrent-worker proof validates the shard
+  routing invariant but does not prove that the real PostgreSQL advisory lock
+  mechanism prevents two `PgShardOwnershipGate` instances from holding the same
+  shard simultaneously; the Postgres lock path is exercised by a mocked client
+  in the unit suite but never by a real database session
+- constraints and invariants:
+  - do not make the default `pnpm --filter dvt-outbox-worker test` lane depend
+    on a live PostgreSQL instance — the test must skip cleanly when `DATABASE_URL`
+    is absent
+  - the proof must use `createPgShardOwnershipGate` without any fake pool
+    injection so the real `acquirePgPool` / pg session path is exercised
+  - no schema migration required — `pg_try_advisory_lock` is a built-in
+    PostgreSQL function and needs no tables
+  - cleanup must release all advisory locks even if assertions fail
+- options considered:
+  - skip file entirely if `DATABASE_URL` absent (exit 0)
+  - use `{ skip: reason }` per test so the runner reports skipped tests
+  - use `DVT_PG_INTEGRATION` env var (consistent with adapter-postgres tests)
+- selected option and rationale:
+  - skip individual tests via `{ skip: reason }` when `DATABASE_URL` is absent
+  - rationale: keeps the test file in the default glob without failing the lane;
+    the skip reason is surfaced in the test output; consistent with the
+    node:test runner used by the outbox-worker package
+- rejected alternatives:
+  - `DVT_PG_INTEGRATION` was considered for consistency with adapter-postgres
+    but the outbox-worker tests already use `DATABASE_URL` directly in canary
+    acceptance fixtures, so reusing the same env var avoids a second gate
+
+Pre-implementation brief:
+
+- scope:
+  - prove that a second gate returns `null` while a first gate holds the lock
+    for the same shard
+  - prove that after the first gate releases, the second gate can acquire
+  - clean up all sessions in finally blocks
+- touched files or paths:
+  - `apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts` (new)
+  - `docs/planning/gaps/G5-AI-EXECUTION-TRACKER.md`
+- expected outcome:
+  - when `DATABASE_URL` is set: 2 tests pass, proving real advisory lock exclusivity
+  - when `DATABASE_URL` is absent: 2 tests skipped, default lane unaffected
+- risks and mitigations:
+  - risk: lock not released after test failure → subsequent tests cannot acquire
+  - mitigation: always release inside finally blocks; each test uses its own
+    independent pair of gate instances
+  - risk: pool caching in `acquirePgPool` retains connections across gates
+  - mitigation: call `closePgPool()` in afterAll to drain all pooled connections
+- validation plan:
+  - `pnpm exec eslint apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts --max-warnings 0`
+  - `pnpm --filter dvt-outbox-worker typecheck`
+  - `DATABASE_URL=<real-url> pnpm --filter dvt-outbox-worker test` (with real DB)
+  - `pnpm --filter dvt-outbox-worker test` (without DATABASE_URL → skipped, no failure)
+
 ## Mermaid State Map
 
 ```mermaid
@@ -398,3 +456,9 @@ flowchart LR
 - `2026-03-12` `G5.5C / #414` `done`
   summary: added 6 deterministic concurrent-worker ordering tests in `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`; tests prove INV-OUTBOX-002 (shard routing determinism, worker exclusivity, zero cross-worker record overlap, strict per-runId runSeq ordering, non-owning worker cannot advance a mid-stream runId, all events delivered exactly once across two workers); 109/109 pass
   validation: `pnpm exec eslint apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts --max-warnings 0` pass; `pnpm --filter dvt-outbox-worker typecheck` pass; `pnpm --filter dvt-outbox-worker test` 109/109 pass
+- `2026-03-12` `G5.5D / #414` `in progress`
+  summary: wrote think-first and pre-implementation brief for PostgreSQL advisory lock exclusivity integration test; added `apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts` with 2 tests that prove two independent gate instances cannot simultaneously hold the same shard advisory lock (gate2 returns null while gate1 holds lock; gate2 acquires after gate1 releases); tests skip cleanly when DATABASE_URL is absent so the default test lane is unaffected
+  validation: `pnpm exec eslint apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts --max-warnings 0` pass; `pnpm --filter dvt-outbox-worker typecheck` pass; `pnpm --filter dvt-outbox-worker test` 109 pass / 2 skipped / 0 fail
+- `2026-03-12` `G5.4 / #413` `in progress`
+  summary: added `scripts/outbox-worker-canary-evidence.ps1` — automated evidence-collection script that requires exactly one of `-PsqlDsn` / `-TriggerCommand`, awaits `/readyz` with `ready=true`, baselines and diffs `/metrics` for delivered/error counters, executes the trigger, waits for delivery increment, writes `docs/evidence/ED-<date>-g5-canary-<env>.md`, optionally captures `kubectl` deployment snapshot, and flags the dual-active proof step as requiring a human note; documented in `docs/runbooks/outbox-worker-g5.md` and `scripts/README.md`
+  validation: script authored and usage documented; external canary execution against a real environment remains pending
