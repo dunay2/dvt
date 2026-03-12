@@ -3,7 +3,7 @@ title: ED-20260312 — G6 Golden Fixtures and Schema Validation Closeout
 status: Accepted
 date: 2026-03-12
 gap: G6
-slices: "Slice 3 (#404), Slice 4 (#407), Slice 5 (#406)"
+slices: 'Slice 3 (#404), Slice 4 (#407), Slice 5 (#406)'
 author: Delivery / Engineering
 ---
 
@@ -18,14 +18,14 @@ that makes these verification lanes runnable by name.
 
 ## Closure Criteria
 
-| Criterion | Met |
-| --------- | --- |
-| Golden fixtures committed for success, fail-open, and no-compiledCodeRef paths | Yes |
-| Fixture drift fails CI (test reads committed file, not re-emitted value) | Yes |
+| Criterion                                                                                          | Met |
+| -------------------------------------------------------------------------------------------------- | --- |
+| Golden fixtures committed for success, fail-open, and no-compiledCodeRef paths                     | Yes |
+| Fixture drift fails CI (test reads committed file, not re-emitted value)                           | Yes |
 | Both `sql` and `dvt_dbt_details` facets validated against repo-local JSON Schema artifacts offline | Yes |
-| Fail-open path schema validation passes even when `sql` facet is absent | Yes |
-| `test:lineage:golden` and `test:lineage:schema` scripts wired in `package.json` | Yes |
-| All 13 traceability-service tests pass | Yes |
+| Fail-open path schema validation passes even when `sql` facet is absent                            | Yes |
+| `test:lineage:golden` and `test:lineage:schema` scripts wired in `package.json`                    | Yes |
+| All 13 traceability-service tests pass                                                             | Yes |
 
 ## Slice 3 — Golden Fixtures (#404)
 
@@ -41,11 +41,11 @@ checked into the repository; any mapper output change becomes a PR diff.
 
 ### Fixture files
 
-| Fixture | Path |
-| ------- | ---- |
-| Success path | `test/fixtures/lineage/mapper-success.json` |
-| Fail-open path | `test/fixtures/lineage/mapper-fail-open.json` |
-| No compiledCodeRef | `test/fixtures/lineage/mapper-no-ref.json` |
+| Fixture            | Path                                          |
+| ------------------ | --------------------------------------------- |
+| Success path       | `test/fixtures/lineage/mapper-success.json`   |
+| Fail-open path     | `test/fixtures/lineage/mapper-fail-open.json` |
+| No compiledCodeRef | `test/fixtures/lineage/mapper-no-ref.json`    |
 
 ### Success fixture excerpt
 
@@ -84,18 +84,18 @@ rejection.
 
 ### Schema artifacts validated
 
-| Facet | Schema file |
-| ----- | ----------- |
-| `sql` | `docs/contracts/traceability/facets/openlineage/SqlJobFacet.1-0-0.schema.json` |
-| `dvt_dbt_details` | `docs/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json` |
+| Facet             | Schema file                                                                    |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `sql`             | `docs/contracts/traceability/facets/openlineage/SqlJobFacet.1-0-0.schema.json` |
+| `dvt_dbt_details` | `docs/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json`      |
 
 ### Test cases
 
-| Test | Result |
-| ---- | ------ |
-| success path: sql facet validates against SqlJobFacet.1-0-0.schema.json | pass |
-| success path: dvt_dbt_details facet validates against DvtDbtDetailsJobFacet.v1.schema.json | pass |
-| fail-open path: dvt_dbt_details facet validates even when sql resolution fails | pass |
+| Test                                                                                       | Result |
+| ------------------------------------------------------------------------------------------ | ------ |
+| success path: sql facet validates against SqlJobFacet.1-0-0.schema.json                    | pass   |
+| success path: dvt_dbt_details facet validates against DvtDbtDetailsJobFacet.v1.schema.json | pass   |
+| fail-open path: dvt_dbt_details facet validates even when sql resolution fails             | pass   |
 
 ## Slice 5 — CI Wiring (#406)
 

@@ -26,6 +26,10 @@ function fixtureFile(name: string): string {
   return join(FIXTURES_DIR, name);
 }
 
+function toSnapshotJson(value: unknown): string {
+  return `${JSON.stringify(value, null, 2)}\n`;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers (same as the unit test suite to keep fixtures representative)
 // ---------------------------------------------------------------------------
@@ -60,7 +64,15 @@ function mkStepStartedEvent(payload?: Record<string, unknown>): EventEnvelope {
   };
 }
 
-function makeMapper(resolveImpl: () => Promise<{ sourceUri: string; sqlText: string; sha256: string; sizeBytes: number; encoding: string }>): StepStartedLineageMapper {
+function makeMapper(
+  resolveImpl: () => Promise<{
+    sourceUri: string;
+    sqlText: string;
+    sha256: string;
+    sizeBytes: number;
+    encoding: string;
+  }>
+): StepStartedLineageMapper {
   return new StepStartedLineageMapper({
     compiledCodeResolver: { resolve: resolveImpl },
     sqlFacetBuilder: new SqlJobFacetBuilder(),
@@ -85,9 +97,7 @@ describe('StepStartedLineageMapper golden fixtures', () => {
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
 
-    await expect(JSON.stringify(result, null, 2)).toMatchFileSnapshot(
-      fixtureFile('mapper-success.json')
-    );
+    await expect(toSnapshotJson(result)).toMatchFileSnapshot(fixtureFile('mapper-success.json'));
   });
 
   it('fail-open path: only dvt_dbt_details emitted with warning', async () => {
@@ -99,7 +109,7 @@ describe('StepStartedLineageMapper golden fixtures', () => {
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
 
-    await expect(JSON.stringify(result, null, 2)).toMatchFileSnapshot(
+    await expect(toSnapshotJson(result)).toMatchFileSnapshot(
       fixtureFile('mapper-fail-open.json')
     );
   });
@@ -111,8 +121,6 @@ describe('StepStartedLineageMapper golden fixtures', () => {
 
     const result = await mapper.map(mkStepStartedEvent());
 
-    await expect(JSON.stringify(result, null, 2)).toMatchFileSnapshot(
-      fixtureFile('mapper-no-ref.json')
-    );
+    await expect(toSnapshotJson(result)).toMatchFileSnapshot(fixtureFile('mapper-no-ref.json'));
   });
 });
