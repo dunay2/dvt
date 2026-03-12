@@ -320,11 +320,21 @@ function isOutboxTickResult(value: unknown): value is OutboxTickResult {
   }
   const candidate = value as Partial<OutboxTickResult>;
   return (
+    hasNumericTickCounters(candidate) &&
+    isOptionalNumber(candidate.oldestClaimedAgeMs) &&
+    typeof candidate.retryBacklogActive === 'boolean'
+  );
+}
+
+function hasNumericTickCounters(candidate: Partial<OutboxTickResult>): boolean {
+  return (
     typeof candidate.claimedCount === 'number' &&
     typeof candidate.deliveredCount === 'number' &&
     typeof candidate.retriedCount === 'number' &&
-    typeof candidate.deadLetteredCount === 'number' &&
-    (candidate.oldestClaimedAgeMs === null || typeof candidate.oldestClaimedAgeMs === 'number') &&
-    typeof candidate.retryBacklogActive === 'boolean'
+    typeof candidate.deadLetteredCount === 'number'
   );
+}
+
+function isOptionalNumber(value: unknown): value is number | null {
+  return value === null || typeof value === 'number';
 }

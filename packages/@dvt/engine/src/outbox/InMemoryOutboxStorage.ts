@@ -193,10 +193,8 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
       return [];
     }
     const ownedShardIds =
-      selection?.shardIds === undefined
-        ? null
-        : new Set(selection.shardIds.map((id) => Number(id)));
-    if (ownedShardIds && ownedShardIds.size === 0) {
+      selection?.shardIds === undefined ? null : new Set(selection.shardIds.map(Number));
+    if (ownedShardIds?.size === 0) {
       return [];
     }
 

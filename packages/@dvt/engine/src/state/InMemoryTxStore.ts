@@ -33,10 +33,13 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private readonly outbox: InMemoryOutboxStorage;
 
   constructor(deps?: { outboxNowMs?: () => number; outboxShardCount?: number }) {
-    const outboxDeps = {
-      ...(deps?.outboxNowMs ? { nowMs: deps.outboxNowMs } : {}),
-      ...(deps?.outboxShardCount !== undefined ? { shardCount: deps.outboxShardCount } : {}),
-    };
+    const outboxDeps: ConstructorParameters<typeof InMemoryOutboxStorage>[0] = {};
+    if (deps?.outboxNowMs !== undefined) {
+      outboxDeps.nowMs = deps.outboxNowMs;
+    }
+    if (deps?.outboxShardCount !== undefined) {
+      outboxDeps.shardCount = deps.outboxShardCount;
+    }
     this.outbox = new InMemoryOutboxStorage(outboxDeps);
   }
 

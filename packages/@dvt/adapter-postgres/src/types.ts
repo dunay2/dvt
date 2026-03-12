@@ -1,4 +1,6 @@
-import type {
+import type { EventEnvelope } from '@dvt/contracts';
+
+export type {
   AppendResult,
   EventInput,
   EventEnvelope,
@@ -15,29 +17,7 @@ import type {
   WorkflowSnapshot,
 } from '@dvt/contracts';
 
-export type {
-  AppendResult,
-  EventInput,
-  EventEnvelope,
-  EventType,
-  IOutboxStorage,
-  IRunStateStore,
-  ListEventsOptions,
-  ListRunsOptions,
-  OutboxClaimSelection,
-  RunId,
-  RunBootstrapInput,
-  RunMetadata,
-  RunStateCommandPort,
-  WorkflowSnapshot,
-};
-
-export type StepSnapshot = WorkflowSnapshot['steps'][string];
-
-export type IsoUtcString = string;
-export type OutboxId = string;
-export type ErrorMessage = string;
-export type SchemaName = string;
+export type StepSnapshot = import('@dvt/contracts').WorkflowSnapshot['steps'][string];
 
 export interface OutboxRecord {
   id: string;
@@ -55,7 +35,7 @@ export interface DeadLetterRecord {
   runId: string;
   payload: EventEnvelope;
   lastError: string;
-  deadLetteredAt: IsoUtcString;
+  deadLetteredAt: string;
 }
 
 /**

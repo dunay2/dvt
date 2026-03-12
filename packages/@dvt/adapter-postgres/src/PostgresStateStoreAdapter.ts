@@ -17,19 +17,16 @@ import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import type {
   AppendResult,
   DeadLetterRecord,
-  ErrorMessage,
   EventInput,
   EventEnvelope,
   IOutboxStorage,
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
-  OutboxId,
   OutboxRecord,
   RunBootstrapInput,
   RunMetadata,
   RunId,
-  SchemaName,
   StepSnapshot,
   WorkflowSnapshot,
 } from './types.js';
@@ -238,7 +235,7 @@ function handleStepSkipped(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
 export interface PostgresAdapterConfig {
   connectionString?: string;
-  schema?: SchemaName;
+  schema?: string;
   pool?: Pool;
   now?: () => string;
   statementTimeoutMs?: number;
@@ -259,7 +256,7 @@ export interface PostgresAdapterConfig {
 export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage {
   private readonly pool: Pool;
   private readonly ownsPool: boolean;
-  private readonly schema: SchemaName;
+  private readonly schema: string;
   private readonly now: () => string;
   private readonly statementTimeoutMs: number;
   private readonly outboxShardCount: number;
@@ -701,7 +698,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) return [];
     const shardIds = normalizeShardSelection(selection?.shardIds);
-    if (shardIds && shardIds.length === 0) {
+    if (shardIds?.length === 0) {
       return [];
     }
 
@@ -763,7 +760,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     });
   }
 
-  async markDelivered(ids: OutboxId[]): Promise<void> {
+  async markDelivered(ids: string[]): Promise<void> {
     this.ready();
     if (ids.length === 0) return;
 
@@ -780,7 +777,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     });
   }
 
-  async markFailed(id: OutboxId, error: ErrorMessage): Promise<void> {
+  async markFailed(id: string, error: string): Promise<void> {
     this.ready();
     await this.withTransaction(async (client) => {
       const result = await client.query<MarkFailedRow>(
@@ -1563,7 +1560,7 @@ function normalizeShardSelection(shardIds: readonly number[] | undefined): numbe
   if (shardIds === undefined) {
     return null;
   }
-  const normalized = shardIds.map((shardId) => Number(shardId));
+  const normalized = shardIds.map(Number);
   if (normalized.some((shardId) => !Number.isInteger(shardId) || shardId < 0)) {
     throw new Error('INVALID_OUTBOX_SHARD_SELECTION');
   }
