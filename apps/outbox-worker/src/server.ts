@@ -3,9 +3,9 @@ import process from 'node:process';
 import pino from 'pino';
 
 import { runOutboxWorkerHost } from './host/runOutboxWorkerHost.js';
-import { createPgShardOwnershipGate } from './ownership/PgShardOwnershipGate.js';
 import { createOperationalServer } from './ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from './ops/OutboxWorkerMonitor.js';
+import { createPgShardOwnershipGate } from './ownership/PgShardOwnershipGate.js';
 import { isActiveEnv, loadEnv } from './plugins/env.js';
 
 async function main(): Promise<void> {

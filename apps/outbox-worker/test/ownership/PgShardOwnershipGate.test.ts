@@ -54,7 +54,13 @@ function createGateHarness(options: {
   shardIds?: readonly number[];
   lockOutcomes?: Array<boolean | Error>;
   failAfterLockIndex?: number | null;
-}) {
+}): {
+  gate: ReturnType<typeof createPgShardOwnershipGate>;
+  client: RecordingOwnershipClient;
+  readonly acquirePoolLeaseCalls: number;
+  readonly connectCalls: number;
+  readonly releaseLeaseCalls: number;
+} {
   const client = new RecordingOwnershipClient(
     options.lockOutcomes ?? [true],
     options.failAfterLockIndex ?? null

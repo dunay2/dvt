@@ -1,4 +1,4 @@
-import { acquirePgPool, type PgPoolConfig, type PgPoolLease } from '../db/pool.js';
+import { acquirePgPool, type PgPoolConfig } from '../db/pool.js';
 import type { OutboxWorkerRuntimeLogger } from '../runtime/OutboxWorkerRuntime.js';
 
 interface OwnershipLease {
