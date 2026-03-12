@@ -280,12 +280,18 @@ async function assertHostRejects(
   await assert.rejects(() => runHostWithFixture(fixture, overrides), expectedError);
 }
 
-function hasLogEntry(entries: readonly LogEntry[], predicate: (entry: LogEntry) => boolean): boolean {
+function hasLogEntry(
+  entries: readonly LogEntry[],
+  predicate: (entry: LogEntry) => boolean
+): boolean {
   return entries.some(predicate);
 }
 
 function assertBootstrappedLog(entries: readonly LogEntry[], expected = true): void {
-  assert.equal(hasLogEntry(entries, (entry) => entry.msg === 'outbox worker bootstrapped'), expected);
+  assert.equal(
+    hasLogEntry(entries, (entry) => entry.msg === 'outbox worker bootstrapped'),
+    expected
+  );
 }
 
 function assertPassiveOperationalLifecycle(fixture: HostFixture): void {
@@ -302,10 +308,12 @@ async function assertResolvesPromptly(promise: Promise<unknown>, timeoutMs = 100
   assert.equal(result, 'resolved');
 }
 
-async function assertOwnedRuntimeLifecycle(options: {
-  stopError?: Error;
-  expectedError?: Error;
-} = {}): Promise<HostFixture & { env: ActiveEnv }> {
+async function assertOwnedRuntimeLifecycle(
+  options: {
+    stopError?: Error;
+    expectedError?: Error;
+  } = {}
+): Promise<HostFixture & { env: ActiveEnv }> {
   const fixture = createActiveHostFixture(
     options.stopError === undefined ? {} : { stopError: options.stopError }
   );
