@@ -109,9 +109,7 @@ describe('StepStartedLineageMapper golden fixtures', () => {
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
 
-    await expect(toSnapshotJson(result)).toMatchFileSnapshot(
-      fixtureFile('mapper-fail-open.json')
-    );
+    await expect(toSnapshotJson(result)).toMatchFileSnapshot(fixtureFile('mapper-fail-open.json'));
   });
 
   it('no-compiledCodeRef path: empty facets and no warnings', async () => {
