@@ -149,6 +149,16 @@ The worker model should define:
 - expired-claim recovery;
 - future shard model, even if initial shard count is `1`.
 
+The active `G5.5` planning direction now chooses deterministic `runId`
+sharding, explicit deployment-owned shard lists, and dedicated PostgreSQL
+advisory-lock fencing as the narrowest scale-out model compatible with the
+current runtime.
+
+See:
+
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](./G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+
 The design should document ordering only per stream or ordering key. It should
 not promise global order.
 
@@ -216,5 +226,7 @@ Not acceptable:
 ## Working References
 
 - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
+- [`docs/adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+- [`docs/planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md`](../../planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../../planning/proposals/g5-outbox-worker-development-proposal-20260308.md)
 - [`docs/planning/gaps/GAP_EXECUTION_PLANS.md`](../../planning/gaps/GAP_EXECUTION_PLANS.md)

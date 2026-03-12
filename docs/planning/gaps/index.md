@@ -30,6 +30,7 @@ Concept anchors for this section:
 - [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - [G5 - AI Execution Tracker](G5-AI-EXECUTION-TRACKER.md)
 - [G5 / US-G5.3 Correctness Hardening Plan](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
+- [G5 / US-G5.5 Sharding And Fencing Plan](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [G5 Outbox Worker Guide](g5-outbox-worker-guide.md)
 - [G6 - OpenLineage CI + Schema Pin](g6/index.md)
 - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)

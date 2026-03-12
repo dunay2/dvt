@@ -95,3 +95,5 @@ This ADR should be used together with:
 - [`docs/planning/gaps/g5-outbox-worker-guide.md`](../../planning/gaps/g5-outbox-worker-guide.md)
 - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../../planning/proposals/g5-outbox-worker-development-proposal-20260308.md)
 - [`docs/planning/gaps/GAP_EXECUTION_PLANS.md`](../../planning/gaps/GAP_EXECUTION_PLANS.md)
+- [`docs/planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md`](../../planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`docs/adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](ADR-0033-outbox-worker-sharding-and-fencing-model.md)

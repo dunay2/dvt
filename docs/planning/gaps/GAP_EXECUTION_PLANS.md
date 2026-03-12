@@ -172,7 +172,9 @@ Minimum tuple for this document:
   - [`G5 - AI Execution Tracker`](G5-AI-EXECUTION-TRACKER.md)
   - [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
   - [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
+  - [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
+  - [`docs/adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
   - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
   - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../proposals/g5-outbox-worker-development-proposal-20260308.md)
 - Delivered:
@@ -189,7 +191,7 @@ Minimum tuple for this document:
   - canary or contract proof that supported downstream consumers absorb duplicate delivery idempotently
   - real PostgreSQL orphan-claim recovery and backlog sanity evidence for the hardened claim path
   - deployment-grade downstream target contract beyond the current minimal HTTP publisher mode
-  - shard strategy / scaling model
+  - implementation of the selected shard strategy / scaling model
   - environment-scoped canary execution and rollback wiring
   - formal `G5.3` closeout still depends on real PostgreSQL execution evidence, basic claim-query performance proof, and explicit ADR/runtime alignment for retry policy
 

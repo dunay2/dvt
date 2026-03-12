@@ -16,9 +16,11 @@ what the current repository can realistically absorb.
 - [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
 - [G5 - AI Execution Tracker](G5-AI-EXECUTION-TRACKER.md)
 - [G5 / US-G5.4 Operability And Ownership Hardening Plan](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
+- [G5 / US-G5.5 Sharding And Fencing Plan](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [ADR-0009: Outbox Publication Ordering Guarantees](../../adr/ADR-0009_Outbox_Ordering.md)
+- [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 - Reference material only: [archived gap5 review packs](../../archive/planning/gaps/gap5/)
 
 ## Traceability tuple
@@ -56,6 +58,8 @@ exists and is observable.
 This layer includes:
 
 - one chosen ADR-0009 enforcement strategy for concurrent workers,
+- deterministic shard routing and explicit shard ownership,
+- dedicated fencing semantics for effective ownership loss,
 - tests that prove no reordering for the same `runId`,
 - deployment rules for safe horizontal ownership.
 
@@ -237,6 +241,20 @@ Deliver exactly one ADR-0009 enforcement mechanism for concurrent workers:
 
 - **Option A**: shard by `runId`, or
 - **Option B**: locking/coordination that really preserves per-`runId` order.
+
+Selected planning direction for `G5`:
+
+- `Option A` is the active design direction.
+- `runId` maps deterministically to `shard_id`.
+- workers own explicit shard lists from deployment configuration.
+- shard ownership is fenced with PostgreSQL advisory locks held on dedicated
+  ownership sessions.
+- `shardCount` changes are treated as explicit topology migrations.
+
+Design detail for this stage lives in:
+
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 Acceptance:
 
