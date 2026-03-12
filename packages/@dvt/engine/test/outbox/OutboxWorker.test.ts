@@ -314,7 +314,11 @@ describe('OutboxWorker', () => {
     await storage.enqueueTx(shard1RunId, [makeEvent('shard-1', shard1RunId, 1)]);
     const shard1Pending = await storage.listPendingForClaim(10, { shardIds: [1] });
     expect(shard1Pending).toHaveLength(1);
-    await storage.markFailed(shard1Pending[0]!.id, 'synthetic shard-1 retry');
+    const shard1Record = shard1Pending[0];
+    if (!shard1Record) {
+      throw new Error('expected pending record for shard 1');
+    }
+    await storage.markFailed(shard1Record.id, 'synthetic shard-1 retry');
 
     const result = await worker.tick();
 

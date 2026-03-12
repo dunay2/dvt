@@ -13,7 +13,9 @@ function loadActiveTestEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): ActiveEn
     DVT_OUTBOX_HTTP_TARGET_URL: 'http://example.test/outbox/events',
     ...overrides,
   });
-  assert.equal(isActiveEnv(env), true);
+  if (!isActiveEnv(env)) {
+    throw new Error('expected an active outbox worker environment');
+  }
   return env;
 }
 

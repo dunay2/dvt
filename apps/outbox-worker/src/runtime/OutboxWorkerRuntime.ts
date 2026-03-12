@@ -83,7 +83,7 @@ export class OutboxWorkerRuntime {
   }
 
   start(signal?: globalThis.AbortSignal): Promise<void> {
-    if (this.loopPromise) return this.loopPromise;
+    if (this.loopPromise !== null) return this.loopPromise;
     this.running = true;
 
     if (signal) {
@@ -124,7 +124,7 @@ export class OutboxWorkerRuntime {
     this.running = false;
     this.waitController?.abort();
     await this.interruptTick();
-    if (loopPromise) {
+    if (loopPromise !== null) {
       try {
         await loopPromise;
       } catch {
@@ -288,7 +288,35 @@ function toErrorLike(error: unknown): { message: string; name: string } {
   if (error instanceof Error) {
     return { message: error.message, name: error.name };
   }
-  return { message: String(error), name: 'UnknownError' };
+  return { message: stringifyUnknownError(error), name: 'UnknownError' };
+}
+
+function stringifyUnknownError(error: unknown): string {
+  switch (typeof error) {
+    case 'string':
+      return error;
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'undefined':
+      return String(error);
+    case 'symbol':
+      return error.description ?? error.toString();
+    case 'function':
+      return error.name ? `[function ${error.name}]` : '[function anonymous]';
+    case 'object':
+      return error === null ? 'null' : serializeErrorObject(error);
+    default:
+      return 'UnknownErrorValue';
+  }
+}
+
+function serializeErrorObject(error: object): string {
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return Object.prototype.toString.call(error);
+  }
 }
 
 function extractTickResult(error: unknown): OutboxTickResult | null {
