@@ -2,7 +2,7 @@
 title: DVT+ - Gap Execution Plans
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-12
 planning_type: proposal
 ---
 
@@ -11,7 +11,7 @@ planning_type: proposal
 Source of truth for execution gaps and delivery state.
 
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
-- Last sync date: 2026-03-08
+- Last sync date: 2026-03-12
 - Scope: Phase 1, Phase 1.5, Phase 2
 
 Concept anchors for this page:
@@ -164,17 +164,17 @@ Minimum tuple for this document:
 - Traceability tuple:
   - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+  - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
   - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
-  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, and initial runbook now exist in code; promote to evidence after canary and downstream contract hardening; keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md), [R-20260311-G5.4 operability and fencing residuals](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md), and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible until real PostgreSQL evidence, stale-readiness hardening, ownership/fencing policy, retries-policy alignment, and runtime/core convergence are explicitly closed
+  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, persisted shard routing, and startup advisory-lock fencing now exist in code; promote to evidence after canary and downstream contract hardening; keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md), [R-20260311-G5.4 operability and fencing residuals](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md), and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible until real PostgreSQL evidence, stale-readiness hardening, lock-loss semantics, retries-policy alignment, and runtime/core convergence are explicitly closed
 - Working refs:
   - [`G5 - AI Execution Tracker`](G5-AI-EXECUTION-TRACKER.md)
   - [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
   - [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
   - [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
-  - [`docs/adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+  - [`docs/adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
   - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
   - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../proposals/g5-outbox-worker-development-proposal-20260308.md)
 - Delivered:
@@ -184,6 +184,8 @@ Minimum tuple for this document:
   - operational endpoints (`/healthz`, `/readyz`, `/metrics`) with explicit runtime states (`starting`, `idle`, `draining`, `failing`, `stopped`)
   - structured logs and counters for claim, delivery, retry, DLQ, lag, and runtime errors
   - initial operator runbook for canary expectations and rollback boundaries
+  - accepted `ADR-0033` plus the first executable `G5.5` slice: persisted `shard_id`, shard-aware claim selection, and single-shard-compatible topology defaults in runtime config
+  - the second executable `G5.5` slice: startup advisory-lock ownership sessions held on a dedicated PostgreSQL connection and wired into the standalone host
 - Remaining:
   - explicit subscriber delivery contract for projector/event-bus consumers
   - stale-readiness hardening, explicit shutdown withdrawal, and freshness-aware operational probes
@@ -191,7 +193,7 @@ Minimum tuple for this document:
   - canary or contract proof that supported downstream consumers absorb duplicate delivery idempotently
   - real PostgreSQL orphan-claim recovery and backlog sanity evidence for the hardened claim path
   - deployment-grade downstream target contract beyond the current minimal HTTP publisher mode
-  - implementation of the selected shard strategy / scaling model
+  - lock-loss semantics and concurrent-worker proof for the selected shard strategy
   - environment-scoped canary execution and rollback wiring
   - formal `G5.3` closeout still depends on real PostgreSQL execution evidence, basic claim-query performance proof, and explicit ADR/runtime alignment for retry policy
 

@@ -32,9 +32,10 @@ green:
   lands just after startup resolves can still trigger
   `abortPendingOperations()`, leaving the adapter poisoned while returning a
   runtime handle;
-- single-owner posture is currently enforced by deployment discipline and env
-  selection rather than by an explicit runtime fence or lease, so a miswired
-  environment can still become dual-active;
+- startup ownership is now fenced by advisory locks on a dedicated PostgreSQL
+  session, but lock-loss semantics after startup are still not fully enforced,
+  so a worker can lose effective ownership without yet proving the required
+  runtime reaction end to end;
 - the worker proves at-least-once delivery at its own boundary, but the
   downstream duplicate-handling contract is still implicit and reclaim/backlog
   behavior is not yet closed with real PostgreSQL evidence.
@@ -56,8 +57,9 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 - a direct runtime caller can receive a successfully created runtime handle
   whose first database access fails immediately with `AbortError` if shutdown
   lands inside the bootstrap race window;
-- an environment or rollout script can accidentally create ambiguous active
-  ownership before `ADR-0009` multi-worker enforcement exists;
+- a broken or reset ownership session can silently remove the startup fence
+  before `ADR-0009` multi-worker enforcement is fully closed if the runtime
+  does not yet react quickly enough to ownership loss;
 - duplicate publication can be technically correct at the worker boundary while
   still causing downstream side effects if the consumer contract does not prove
   idempotent handling;
@@ -67,8 +69,8 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 
 ## Mitigation
 
-- Keep `G5` rollout language explicit: this runtime is single-owner unless and
-  until a real ownership fence lands in code and deployment wiring.
+- Keep `G5` rollout language explicit: startup ownership is fenced, but
+  lock-loss handling and concurrent-worker proof are still incomplete.
 - Add a freshness-aware readiness invariant, an explicit `stopping` runtime
   state, and tests that prove readiness is withdrawn immediately on shutdown and
   after stale ticks.
@@ -85,11 +87,13 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 ## Evidence
 
 - `apps/outbox-worker/src/host/runOutboxWorkerHost.ts`
+- `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`
 - `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`
 - `apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts`
 - `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`
 - `apps/outbox-worker/src/ops/OperationalServer.ts`
 - `apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts`
+- `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`
 - `apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts`
 - `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`

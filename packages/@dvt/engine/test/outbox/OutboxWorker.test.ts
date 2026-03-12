@@ -251,6 +251,46 @@ describe('OutboxWorker', () => {
     expect(result.oldestClaimedAgeMs).toBe(60_000);
   });
 
+  it('uses shard-aware claim selection when storage supports it', async () => {
+    let receivedSelection:
+      | {
+          shardIds?: readonly number[];
+        }
+      | undefined;
+    const storage: IOutboxStorage = {
+      async enqueueTx(): Promise<void> {},
+      async listPending(): Promise<OutboxRecord[]> {
+        throw new Error('listPending fallback should not be used for shard-aware storage');
+      },
+      async listPendingForClaim(
+        _limit: number,
+        selection?: {
+          shardIds?: readonly number[];
+        }
+      ): Promise<OutboxRecord[]> {
+        receivedSelection = selection;
+        return [];
+      },
+      async markDelivered(): Promise<void> {},
+      async markFailed(): Promise<void> {},
+    };
+    const worker = new OutboxWorker(storage, new CapturingBus(), {
+      batchSize: 10,
+      claimSelection: { shardIds: [1, 3] },
+    });
+
+    const result = await worker.tick();
+
+    expect(receivedSelection).toEqual({ shardIds: [1, 3] });
+    expect(result).toMatchObject({
+      claimedCount: 0,
+      deliveredCount: 0,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      retryBacklogActive: false,
+    });
+  });
+
   it('falls back to local retry state when probing pending retries fails', async () => {
     const storage: IOutboxStorage = {
       async enqueueTx(): Promise<void> {},

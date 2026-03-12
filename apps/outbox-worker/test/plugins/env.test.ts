@@ -20,6 +20,8 @@ await test('loadEnv applies active worker defaults when ownership mode is explic
 
   assertActiveEnv(env);
   assert.equal(env.DVT_PG_SCHEMA, 'dvt');
+  assert.equal(env.DVT_OUTBOX_SHARD_COUNT, 1);
+  assert.deepEqual(env.DVT_OUTBOX_OWNED_SHARD_IDS, [0]);
   assert.equal(env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS, 1000);
   assert.equal(env.DVT_OUTBOX_WORKER_BATCH_SIZE, 100);
   assert.equal(env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS, 5000);
@@ -150,6 +152,21 @@ await test('loadEnv allows active log mode without target url', () => {
 
   assertActiveEnv(env);
   assert.equal(env.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
+});
+
+await test('loadEnv accepts explicit shard ownership for active workers', () => {
+  const env = loadEnv({
+    NODE_ENV: 'test',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+    DVT_OUTBOX_SHARD_COUNT: '4',
+    DVT_OUTBOX_OWNED_SHARD_IDS: '3,1',
+  });
+
+  assertActiveEnv(env);
+  assert.equal(env.DVT_OUTBOX_SHARD_COUNT, 4);
+  assert.deepEqual(env.DVT_OUTBOX_OWNED_SHARD_IDS, [1, 3]);
 });
 
 await test('loadEnv parses string booleans for stop-on-error explicitly', () => {
@@ -312,5 +329,45 @@ await test('loadEnv rejects invalid worker timing and admin port values', () => 
         DVT_OUTBOX_ADMIN_PORT: '70000',
       }),
     /DVT_OUTBOX_ADMIN_PORT/
+  );
+});
+
+await test('loadEnv rejects ambiguous shard ownership configuration', () => {
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_OUTBOX_SHARD_COUNT: '2',
+      }),
+    /DVT_OUTBOX_OWNED_SHARD_IDS/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_OUTBOX_SHARD_COUNT: '4',
+        DVT_OUTBOX_OWNED_SHARD_IDS: '1,1',
+      }),
+    /DVT_OUTBOX_OWNED_SHARD_IDS/
+  );
+
+  assert.throws(
+    () =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_OUTBOX_SHARD_COUNT: '4',
+        DVT_OUTBOX_OWNED_SHARD_IDS: '4',
+      }),
+    /DVT_OUTBOX_OWNED_SHARD_IDS/
   );
 });

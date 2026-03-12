@@ -37,6 +37,7 @@ ON __SCHEMA__.run_events (run_id, run_seq);
 CREATE TABLE IF NOT EXISTS __SCHEMA__.outbox (
   id TEXT PRIMARY KEY,
   run_id TEXT NOT NULL,
+  shard_id INTEGER NOT NULL DEFAULT 0,
   run_seq INTEGER NOT NULL,
   created_at TIMESTAMPTZ NOT NULL,
   idempotency_key TEXT NOT NULL,
@@ -48,5 +49,5 @@ CREATE TABLE IF NOT EXISTS __SCHEMA__.outbox (
 );
 
 CREATE INDEX IF NOT EXISTS outbox_pending_idx
-ON __SCHEMA__.outbox (created_at)
+ON __SCHEMA__.outbox (shard_id, created_at)
 WHERE delivered_at IS NULL;

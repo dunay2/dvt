@@ -10,7 +10,12 @@ import type {
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
 import { InMemoryOutboxStorage } from '../outbox/InMemoryOutboxStorage.js';
-import type { DeadLetterRecord, IOutboxStorage, OutboxRecord } from '../outbox/types.js';
+import type {
+  DeadLetterRecord,
+  IOutboxStorage,
+  OutboxClaimSelection,
+  OutboxRecord,
+} from '../outbox/types.js';
 import type {
   IRunStateStore,
   ListEventsOptions,
@@ -27,10 +32,12 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
   private readonly outbox: InMemoryOutboxStorage;
 
-  constructor(deps?: { outboxNowMs?: () => number }) {
-    this.outbox = deps?.outboxNowMs
-      ? new InMemoryOutboxStorage({ nowMs: deps.outboxNowMs })
-      : new InMemoryOutboxStorage();
+  constructor(deps?: { outboxNowMs?: () => number; outboxShardCount?: number }) {
+    const outboxDeps = {
+      ...(deps?.outboxNowMs ? { nowMs: deps.outboxNowMs } : {}),
+      ...(deps?.outboxShardCount !== undefined ? { shardCount: deps.outboxShardCount } : {}),
+    };
+    this.outbox = new InMemoryOutboxStorage(outboxDeps);
   }
 
   private createDefaultSnapshot(runId: string): WorkflowSnapshot {
@@ -245,6 +252,13 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
     return this.outbox.listPending(limit);
+  }
+
+  async listPendingForClaim(
+    limit: number,
+    selection?: OutboxClaimSelection
+  ): Promise<OutboxRecord[]> {
+    return this.outbox.listPendingForClaim(limit, selection);
   }
 
   async markDelivered(ids: string[]): Promise<void> {

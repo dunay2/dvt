@@ -17,6 +17,7 @@ export type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
+  OutboxClaimSelection,
   OutboxRecord,
   RunBootstrapInput,
   RunMetadata,

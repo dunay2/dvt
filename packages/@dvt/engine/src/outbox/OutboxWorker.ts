@@ -10,6 +10,7 @@ import {
   MAX_OUTBOX_ATTEMPTS,
   type IEventBus,
   type IOutboxStorage,
+  type OutboxClaimSelection,
   OutboxFailureDisposition,
   OutboxRecord,
   OutboxTickResult,
@@ -28,6 +29,7 @@ export interface OutboxWorkerConfig {
    * delivery semantics stay driven by storage and bus behavior.
    */
   observer?: OutboxWorkerObserver;
+  claimSelection?: OutboxClaimSelection | (() => OutboxClaimSelection | undefined);
   nowMs?: () => number;
 }
 
@@ -81,7 +83,7 @@ export class OutboxWorker {
       return [];
     }
 
-    const batch = (await this.storage.listPending(remainingCapacity))
+    const batch = (await this.listPendingForClaim(remainingCapacity))
       .filter((record) => !seenRecordIds.has(record.id))
       .slice(0, remainingCapacity);
     if (batch.length === 0) {
@@ -93,6 +95,14 @@ export class OutboxWorker {
       seenRecordIds.add(record.id);
     }
     return batch;
+  }
+
+  private async listPendingForClaim(limit: number): Promise<OutboxRecord[]> {
+    const selection = resolveClaimSelection(this.cfg.claimSelection);
+    if (this.storage.listPendingForClaim) {
+      return this.storage.listPendingForClaim(limit, selection);
+    }
+    return this.storage.listPending(limit);
   }
 
   private async recordClaimedBatch(
@@ -253,4 +263,13 @@ async function resolveRetryBacklogActive(
   } catch {
     return fallback;
   }
+}
+
+function resolveClaimSelection(
+  selection: OutboxClaimSelection | (() => OutboxClaimSelection | undefined) | undefined
+): OutboxClaimSelection | undefined {
+  if (typeof selection === 'function') {
+    return selection();
+  }
+  return selection;
 }

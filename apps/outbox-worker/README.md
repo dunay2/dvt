@@ -6,7 +6,7 @@ Current scope:
 
 - bootstrap PostgreSQL storage when explicitly enabled
 - run the polling loop independently from `apps/api`
-- make ownership explicit at host level through `active` / `passive` mode
+- make ownership explicit at host level through `active` / `passive` mode plus shard-scoped PostgreSQL advisory-lock fencing
 - publish envelopes through an explicit bus adapter
 - expose `/healthz`, `/readyz`, and `/metrics`
 - stop cleanly on `SIGINT` / `SIGTERM`
@@ -40,18 +40,28 @@ Ownership modes:
 
 Ownership safety rule:
 
-- `active` declares rollout intent, not multi-worker safety by itself
-- dual-active ownership is still unsupported in this slice
-- if a future ownership gate or lease refuses active ownership, the host stays passive and does not start delivery
+- `active` now acquires shard-scoped PostgreSQL advisory locks on a dedicated ownership session before delivery starts
+- same-shard dual-active startup should be refused by that fence
+- lock-loss handling and concurrent-worker proof remain open in `G5.5`
+- if the ownership fence refuses active ownership, the host stays passive and does not start delivery
 
 Core env vars:
 
 - `DVT_OUTBOX_OWNERSHIP_MODE`: required `active` or `passive`
 - `DVT_OUTBOX_ADMIN_HOST` / `DVT_OUTBOX_ADMIN_PORT`: bind address for health and metrics endpoints
 - `DATABASE_URL` plus bus/runtime settings: required only when ownership mode is `active`
+- `DVT_OUTBOX_SHARD_COUNT`: total shard topology for persisted outbox routing; defaults to `1`
+- `DVT_OUTBOX_OWNED_SHARD_IDS`: comma-separated shard list owned by this worker; defaults to `0` only when `DVT_OUTBOX_SHARD_COUNT=1`
 - `DVT_OUTBOX_WORKER_RUN_MIGRATIONS`: set `true` only in environments where the worker role is allowed to run DDL
 - `DVT_OUTBOX_EVENT_BUS_MODE`: `http` or `log`
 - `DVT_OUTBOX_HTTP_TARGET_URL`: downstream HTTP sink when bus mode is `http`
+
+Shard ownership rule:
+
+- `DVT_OUTBOX_SHARD_COUNT` must stay aligned with the write-side adapter that enqueues outbox rows
+- multi-shard ownership requires explicit `DVT_OUTBOX_OWNED_SHARD_IDS`
+- shard filtering is enforced in SQL before claim selection; it is not an in-memory discard step
+- active startup holds one dedicated PostgreSQL session for the configured shard locks and destroys that session on shutdown
 
 Shutdown behavior:
 

@@ -3,6 +3,7 @@ import process from 'node:process';
 import pino from 'pino';
 
 import { runOutboxWorkerHost } from './host/runOutboxWorkerHost.js';
+import { createPgShardOwnershipGate } from './ownership/PgShardOwnershipGate.js';
 import { createOperationalServer } from './ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from './ops/OutboxWorkerMonitor.js';
 import { isActiveEnv, loadEnv } from './plugins/env.js';
@@ -33,6 +34,16 @@ async function main(): Promise<void> {
     logger,
     monitor,
   });
+  const ownershipGate = isActiveEnv(env)
+    ? createPgShardOwnershipGate({
+        connectionString: env.DATABASE_URL,
+        statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+        queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+        schema: env.DVT_PG_SCHEMA,
+        shardIds: env.DVT_OUTBOX_OWNED_SHARD_IDS,
+        logger,
+      })
+    : undefined;
   const shutdown = new globalThis.AbortController();
 
   const handleSignal = (signal: NodeJS.Signals): void => {
@@ -49,6 +60,7 @@ async function main(): Promise<void> {
     monitor,
     operationalServer,
     shutdownSignal: shutdown.signal,
+    ...(ownershipGate ? { ownershipGate } : {}),
   });
 }
 

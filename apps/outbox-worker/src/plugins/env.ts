@@ -11,6 +11,18 @@ const envBoolean = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+const envShardIdList = z.preprocess((value) => {
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    if (value.trim().length === 0) {
+      return [];
+    }
+    return value.split(',').map((segment) => segment.trim());
+  }
+  return value;
+}, z.array(z.coerce.number().int().nonnegative()));
+
 const nonBlankString = z.string().refine((value) => value.trim().length > 0, {
   message: 'must not be empty',
 });
@@ -34,6 +46,8 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
   DVT_PG_SCHEMA: z.string().default('dvt'),
   DVT_PG_STATEMENT_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
   DVT_PG_QUERY_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
+  DVT_OUTBOX_SHARD_COUNT: z.coerce.number().int().positive().default(1),
+  DVT_OUTBOX_OWNED_SHARD_IDS: envShardIdList.optional(),
   DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(1000),
   DVT_OUTBOX_WORKER_BATCH_SIZE: z.coerce.number().int().positive().default(100),
   DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: z.coerce.number().int().positive().default(5000),
@@ -65,9 +79,23 @@ const OwnershipModeSchema = CommonEnvSchema.pick({
   DVT_OUTBOX_OWNERSHIP_MODE: true,
 });
 
-export type ActiveEnv = z.infer<typeof ActiveEnvSchema>;
+type ParsedActiveHttpEnv = z.infer<typeof ActiveHttpEnvSchema>;
+type ParsedActiveLogEnv = z.infer<typeof ActiveLogEnvSchema>;
+type ParsedActiveEnv = ParsedActiveHttpEnv | ParsedActiveLogEnv;
+type WithOwnedShardIds<T extends { DVT_OUTBOX_OWNED_SHARD_IDS?: readonly number[] | undefined }> =
+  Omit<T, 'DVT_OUTBOX_OWNED_SHARD_IDS'> & {
+    DVT_OUTBOX_OWNED_SHARD_IDS: readonly number[];
+  };
+
+export type ActiveEnv = WithOwnedShardIds<ParsedActiveHttpEnv> | WithOwnedShardIds<ParsedActiveLogEnv>;
+export type ActiveHttpEnv = WithOwnedShardIds<ParsedActiveHttpEnv>;
+export type ActiveLogEnv = WithOwnedShardIds<ParsedActiveLogEnv>;
 export type PassiveEnv = z.infer<typeof PassiveEnvSchema>;
 export type Env = ActiveEnv | PassiveEnv;
+
+interface ActiveEnvWithOwnedShardIds {
+  DVT_OUTBOX_OWNED_SHARD_IDS: readonly number[];
+}
 
 export function loadEnv(input: NodeJS.ProcessEnv): Env {
   const ownershipMode = OwnershipModeSchema.safeParse(input);
@@ -81,14 +109,19 @@ export function loadEnv(input: NodeJS.ProcessEnv): Env {
       ? { ...input, DVT_OUTBOX_EVENT_BUS_MODE: 'http' }
       : input;
 
-  const parsed =
-    ownershipMode.data.DVT_OUTBOX_OWNERSHIP_MODE === 'passive'
-      ? PassiveEnvSchema.safeParse(normalizedInput)
-      : ActiveEnvSchema.safeParse(normalizedInput);
+  if (ownershipMode.data.DVT_OUTBOX_OWNERSHIP_MODE === 'passive') {
+    const parsed = PassiveEnvSchema.safeParse(normalizedInput);
+    if (!parsed.success) {
+      throw new Error(`Invalid environment: ${formatIssues(parsed.error.issues)}`);
+    }
+    return parsed.data;
+  }
+
+  const parsed = ActiveEnvSchema.safeParse(normalizedInput);
   if (!parsed.success) {
     throw new Error(`Invalid environment: ${formatIssues(parsed.error.issues)}`);
   }
-  return parsed.data;
+  return normalizeActiveEnv(parsed.data);
 }
 
 export function isActiveEnv(env: Env): env is ActiveEnv {
@@ -110,4 +143,45 @@ function isValidHttpTargetUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function normalizeActiveEnv(env: ParsedActiveEnv): ActiveEnv {
+  const ownedShardIds =
+    env.DVT_OUTBOX_OWNED_SHARD_IDS ??
+    (env.DVT_OUTBOX_SHARD_COUNT === 1 ? [0] : null);
+
+  if (ownedShardIds === null) {
+    throw new Error(
+      'Invalid environment: DVT_OUTBOX_OWNED_SHARD_IDS: required when DVT_OUTBOX_SHARD_COUNT is greater than 1'
+    );
+  }
+  if (ownedShardIds.length === 0) {
+    throw new Error(
+      'Invalid environment: DVT_OUTBOX_OWNED_SHARD_IDS: must include at least one shard id'
+    );
+  }
+
+  const normalizedShardIds = [...ownedShardIds].sort((left, right) => left - right);
+  const uniqueShardIds = new Set(normalizedShardIds);
+  if (uniqueShardIds.size !== normalizedShardIds.length) {
+    throw new Error(
+      'Invalid environment: DVT_OUTBOX_OWNED_SHARD_IDS: duplicate shard ids are not allowed'
+    );
+  }
+
+  const outOfRangeShardId = normalizedShardIds.find(
+    (shardId) => shardId >= env.DVT_OUTBOX_SHARD_COUNT
+  );
+  if (outOfRangeShardId !== undefined) {
+    throw new Error(
+      `Invalid environment: DVT_OUTBOX_OWNED_SHARD_IDS: shard id ${outOfRangeShardId} is outside 0..${env.DVT_OUTBOX_SHARD_COUNT - 1}`
+    );
+  }
+
+  const normalizedEnv: ActiveEnvWithOwnedShardIds = {
+    ...env,
+    DVT_OUTBOX_OWNED_SHARD_IDS: normalizedShardIds,
+  };
+
+  return normalizedEnv as ActiveEnv;
 }

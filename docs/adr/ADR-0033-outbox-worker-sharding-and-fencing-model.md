@@ -1,6 +1,6 @@
 ---
 title: ADR-0033 - Outbox Worker Sharding And Fencing Model
-status: Proposed
+status: Accepted
 owner: Architecture / Engine / State / Platform
 last_reviewed: 2026-03-12
 ---
@@ -9,7 +9,7 @@ last_reviewed: 2026-03-12
 
 ## Status
 
-Proposed.
+Accepted.
 
 ## Context
 
@@ -114,9 +114,9 @@ index-supported.
 
 ## Follow-up Documents
 
-Use this ADR draft together with:
+Use this ADR together with:
 
-- [`G5 - Outbox Worker Consolidated Plan`](../../planning/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
-- [`G5 / US-G5.5 Sharding And Fencing Plan`](../../planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
-- [`G5 - AI Execution Tracker`](../../planning/gaps/G5-AI-EXECUTION-TRACKER.md)
-- [`ADR-G5 - Independent Outbox Worker Runtime`](ADR-G5-independent-outbox-worker-runtime.md)
+- [`G5 - Outbox Worker Consolidated Plan`](../planning/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](../planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`G5 - AI Execution Tracker`](../planning/gaps/G5-AI-EXECUTION-TRACKER.md)
+- [`ADR-G5 - Independent Outbox Worker Runtime`](../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)

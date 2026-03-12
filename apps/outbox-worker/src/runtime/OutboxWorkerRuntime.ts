@@ -4,6 +4,7 @@ import {
   OutboxWorker,
   type IEventBus,
   type IOutboxStorage,
+  type OutboxClaimSelection,
   type OutboxTickResult,
   type OutboxWorkerObserver,
 } from '@dvt/engine';
@@ -21,6 +22,7 @@ export interface OutboxWorkerRuntimeOptions {
   errorBackoffMs?: number;
   nowMs?: () => number;
   observer?: OutboxWorkerObserver;
+  claimSelection?: OutboxClaimSelection | (() => OutboxClaimSelection | undefined);
   hooks?: OutboxWorkerRuntimeHooks;
   interruptPendingTick?: () => void | Promise<void>;
 }
@@ -70,10 +72,12 @@ export class OutboxWorkerRuntime {
     };
     this.hooks = options.hooks;
     this.interruptPendingTick = options.interruptPendingTick;
+    const claimSelection = options.claimSelection;
     this.worker = new OutboxWorker(storage, bus, {
       batchSize: this.options.batchSize,
       stopOnError: this.options.stopOnError,
       nowMs: options.nowMs ?? (() => Date.now()),
+      ...(claimSelection === undefined ? {} : { claimSelection }),
       ...(options.observer ? { observer: options.observer } : {}),
     });
   }

@@ -14,7 +14,7 @@ The material previously kept under this directory has been archived.
 
 - [G5 - Outbox Worker Consolidated Plan](../G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - [G5 / US-G5.5 Sharding And Fencing Plan](../G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
-- [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+- [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 ## Archived source material
 

@@ -598,6 +598,70 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
   }
 });
 
+await test('createOutboxWorkerRuntime passes explicit shard ownership into shard-aware claims', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let capturedSelection:
+    | {
+        shardIds?: readonly number[];
+      }
+    | undefined;
+
+  const originalEnd = pool.end;
+  const originalClose = PostgresStateStoreAdapter.prototype.close;
+  const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
+  const originalListPendingForClaim = PostgresStateStoreAdapter.prototype.listPendingForClaim;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {};
+  PostgresStateStoreAdapter.prototype.listPending = async function listPending(): Promise<never> {
+    throw new Error('listPending fallback should not be used for shard-aware runtime claims');
+  };
+  PostgresStateStoreAdapter.prototype.listPendingForClaim = async function listPendingForClaim(
+    _limit: number,
+    selection?: {
+      shardIds?: readonly number[];
+    }
+  ): Promise<[]> {
+    capturedSelection = selection;
+    return [];
+  };
+
+  try {
+    const runtime = await createOutboxWorkerRuntime(
+      loadActiveTestEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_OUTBOX_SHARD_COUNT: '4',
+        DVT_OUTBOX_OWNED_SHARD_IDS: '3,1',
+      }),
+      makeLogger()
+    );
+
+    const loop = runtime.start();
+    await waitFor(() => capturedSelection !== undefined);
+    await runtime.stop();
+    await loop;
+
+    assert.deepEqual(capturedSelection, { shardIds: [1, 3] });
+    assert.equal(endCalls, 1);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.close = originalClose;
+    PostgresStateStoreAdapter.prototype.listPending = originalListPending;
+    PostgresStateStoreAdapter.prototype.listPendingForClaim = originalListPendingForClaim;
+    await closePgPool();
+  }
+});
+
 async function waitFor(predicate: () => boolean, timeoutMs = 1000): Promise<void> {
   const startedAt = Date.now();
 

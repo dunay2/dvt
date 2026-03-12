@@ -50,6 +50,7 @@ export async function createOutboxWorkerRuntime(
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
     assumeSchemaReady: !runMigrations,
+    outboxShardCount: env.DVT_OUTBOX_SHARD_COUNT,
   });
   const eventBus = createEventBus(env, logger);
 
@@ -72,6 +73,7 @@ export async function createOutboxWorkerRuntime(
       stopOnError: env.DVT_OUTBOX_WORKER_STOP_ON_ERROR,
       pollIntervalMs: env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
       errorBackoffMs: env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS,
+      claimSelection: { shardIds: env.DVT_OUTBOX_OWNED_SHARD_IDS },
       interruptPendingTick: () => interruptPendingTick(stateStore, eventBus),
       ...(options.observer ? { observer: options.observer } : {}),
       ...(options.hooks ? { hooks: options.hooks } : {}),

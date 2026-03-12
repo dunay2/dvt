@@ -6,10 +6,17 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import { createHash } from 'node:crypto';
+
 import type { RunEventPersisted } from '../contracts/runEvents.js';
 import { epochMsToIsoUtc, parseIsoUtcToEpochMs } from '../utils/clock.js';
 
-import type { DeadLetterRecord, OutboxRecord, IOutboxStorage } from './types.js';
+import type {
+  DeadLetterRecord,
+  IOutboxStorage,
+  OutboxClaimSelection,
+  OutboxRecord,
+} from './types.js';
 import { MAX_OUTBOX_ATTEMPTS } from './types.js';
 
 type ReplayDeadLetterOptions = {
@@ -18,16 +25,26 @@ type ReplayDeadLetterOptions = {
   ids?: string[];
 };
 
+interface PersistedOutboxRecord extends OutboxRecord {
+  shardId: number;
+}
+
+interface PersistedDeadLetterRecord extends DeadLetterRecord {
+  shardId: number;
+}
+
 export class InMemoryOutboxStorage implements IOutboxStorage {
   private static readonly EPOCH_MS = parseIsoUtcToEpochMs('1970-01-01T00:00:00.000Z');
 
-  private readonly pending: OutboxRecord[] = [];
-  private readonly deadLetters: DeadLetterRecord[] = [];
+  private readonly pending: PersistedOutboxRecord[] = [];
+  private readonly deadLetters: PersistedDeadLetterRecord[] = [];
   private counter = 0;
   private readonly nowMs: () => number;
+  private readonly shardCount: number;
 
-  constructor(deps?: { nowMs?: () => number }) {
+  constructor(deps?: { nowMs?: () => number; shardCount?: number }) {
     this.nowMs = deps?.nowMs ?? (() => InMemoryOutboxStorage.EPOCH_MS);
+    this.shardCount = Math.max(1, deps?.shardCount ?? 1);
   }
 
   private nowIsoUtc(): string {
@@ -58,7 +75,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 
   private isPendingRecordEligible(
-    record: OutboxRecord,
+    record: PersistedOutboxRecord,
     blockedRunIds: ReadonlySet<string>,
     headRunSeqByRunId: ReadonlyMap<string, number>,
     nowMs: number
@@ -78,7 +95,10 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     return Number.isFinite(nextAttemptAtMs) ? nextAttemptAtMs <= nowMs : true;
   }
 
-  private static compareEligibleRecords(a: OutboxRecord, b: OutboxRecord): number {
+  private static compareEligibleRecords(
+    a: PersistedOutboxRecord,
+    b: PersistedOutboxRecord
+  ): number {
     const createdAtDiff = Date.parse(a.createdAt) - Date.parse(b.createdAt);
     if (createdAtDiff !== 0) {
       return createdAtDiff;
@@ -87,7 +107,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 
   private matchesReplaySelection(
-    deadLetter: DeadLetterRecord,
+    deadLetter: PersistedDeadLetterRecord,
     options: { runId?: string } | undefined,
     ids: ReadonlySet<string> | null
   ): boolean {
@@ -100,13 +120,14 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     return true;
   }
 
-  private restoreDeadLetter(deadLetter: DeadLetterRecord): void {
+  private restoreDeadLetter(deadLetter: PersistedDeadLetterRecord): void {
     this.pending.push({
       id: deadLetter.originalId,
       createdAt: this.nowIsoUtc(),
       idempotencyKey: deadLetter.payload.idempotencyKey,
       payload: deadLetter.payload,
       attempts: 0,
+      shardId: deadLetter.shardId,
     });
   }
 
@@ -154,26 +175,43 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
         idempotencyKey: e.idempotencyKey,
         payload: e,
         attempts: 0,
+        shardId: resolveShardId(e.runId, this.shardCount),
       });
     }
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
+    return this.listPendingForClaim(limit);
+  }
+
+  async listPendingForClaim(
+    limit: number,
+    selection?: OutboxClaimSelection
+  ): Promise<OutboxRecord[]> {
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) {
+      return [];
+    }
+    const ownedShardIds =
+      selection?.shardIds === undefined
+        ? null
+        : new Set(selection.shardIds.map((id) => Number(id)));
+    if (ownedShardIds && ownedShardIds.size === 0) {
       return [];
     }
 
     const nowMs = this.nowMs();
     const blockedRunIds = new Set(this.deadLetters.map((record) => record.runId));
     const headRunSeqByRunId = this.buildHeadRunSeqByRunId(blockedRunIds);
-    const eligible = this.pending.filter((record) =>
-      this.isPendingRecordEligible(record, blockedRunIds, headRunSeqByRunId, nowMs)
+    const eligible = this.pending.filter(
+      (record) =>
+        (!ownedShardIds || ownedShardIds.has(record.shardId)) &&
+        this.isPendingRecordEligible(record, blockedRunIds, headRunSeqByRunId, nowMs)
     );
 
     eligible.sort(InMemoryOutboxStorage.compareEligibleRecords);
 
-    return eligible.slice(0, boundedLimit);
+    return eligible.slice(0, boundedLimit).map(stripPersistedShardId);
   }
 
   async markDelivered(ids: string[]): Promise<void> {
@@ -203,6 +241,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
         payload: rec.payload,
         lastError: error,
         deadLetteredAt: this.nowIsoUtc(),
+        shardId: rec.shardId,
       });
       return;
     }
@@ -215,7 +254,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 
   async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
-    return this.deadLetters.slice(0, limit);
+    return this.deadLetters.slice(0, limit).map(stripPersistedDeadLetterShardId);
   }
 
   async replayDeadLetters(options?: ReplayDeadLetterOptions): Promise<number> {
@@ -228,4 +267,21 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     const indexes = this.collectReplayDeadLetterIndexes(limit, options, ids);
     return this.replayDeadLettersAtIndexes(indexes);
   }
+}
+
+function resolveShardId(runId: string, shardCount: number): number {
+  const normalizedShardCount = Math.max(1, shardCount);
+  const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
+  const hashValue = BigInt(`0x${hash}`);
+  return Number(hashValue % BigInt(normalizedShardCount));
+}
+
+function stripPersistedShardId(record: PersistedOutboxRecord): OutboxRecord {
+  const { shardId: _shardId, ...outboxRecord } = record;
+  return outboxRecord;
+}
+
+function stripPersistedDeadLetterShardId(record: PersistedDeadLetterRecord): DeadLetterRecord {
+  const { shardId: _shardId, ...deadLetterRecord } = record;
+  return deadLetterRecord;
 }

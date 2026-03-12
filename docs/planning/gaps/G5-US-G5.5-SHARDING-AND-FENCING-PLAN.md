@@ -15,7 +15,7 @@ runtime and single-owner rollout work.
 - Current status source: [`GAP_EXECUTION_PLANS.md`](GAP_EXECUTION_PLANS.md)
 - Canonical gap plan: [`G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - Predecessor slice: [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
-- Draft ADR: [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+- ADR: [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 - Ordering baseline: [`ADR-0009_Outbox_Ordering.md`](../../adr/ADR-0009_Outbox_Ordering.md)
 
 ## Working Rule
@@ -35,11 +35,13 @@ While this slice is open:
 ## Objective
 
 Choose and document one concrete `ADR-0009` enforcement path for concurrent
-workers so that future implementation can preserve same-`runId` ordering,
-exclusive shard ownership, and operationally understandable rollout behavior.
+workers so that implementation can preserve same-`runId` ordering, exclusive
+shard ownership, and operationally understandable rollout behavior.
 
-This plan does not claim that the strategy is already implemented. It freezes
-the architecture and operational constraints that implementation must follow.
+This plan began as the decision surface for `G5.5`. Code now implements the
+first two executable slices: persisted `shard_id` claim filtering and dedicated
+startup advisory-lock ownership sessions. Lock-loss runtime behavior and
+concurrent-worker proof still remain open follow-up work inside the same stage.
 
 ## Root Problem
 
@@ -304,14 +306,14 @@ autoscaling.
 
 This plan is only complete when all of the following are true:
 
-- [ ] one canonical `ADR-0009` enforcement strategy is selected in active docs
-      and ADR drafts
-- [ ] the PostgreSQL adapter design includes persisted shard filtering and an
+- [x] one canonical `ADR-0009` enforcement strategy is selected in active docs
+      and the accepted ADR catalog
+- [x] the PostgreSQL adapter design includes persisted shard filtering and an
       index-backed claim path
-- [ ] the runtime design defines the dedicated lock-session lifecycle
+- [x] the runtime design defines the dedicated lock-session lifecycle
 - [ ] lock-loss behavior is pinned in runtime semantics and tests
-- [ ] resharding is documented as an explicit migration procedure
-- [ ] `G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`, `GAP_EXECUTION_PLANS.md`, and
+- [x] resharding is documented as an explicit migration procedure
+- [x] `G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`, `GAP_EXECUTION_PLANS.md`, and
       the `G5` tracker all tell the same story
 
 ## Validation Matrix
@@ -320,4 +322,4 @@ This plan is only complete when all of the following are true:
 - `pnpm docs:sync`
 - `pnpm docs:canonical:check`
 - `pnpm docs:quality:check`
-- `pnpm exec markdownlint-cli2 "docs/planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md" "docs/planning/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md" "docs/planning/gaps/G5-AI-EXECUTION-TRACKER.md" "docs/planning/gaps/GAP_EXECUTION_PLANS.md" "docs/adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+- `pnpm exec markdownlint-cli2 "docs/planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md" "docs/planning/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md" "docs/planning/gaps/G5-AI-EXECUTION-TRACKER.md" "docs/planning/gaps/GAP_EXECUTION_PLANS.md" "docs/adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`

@@ -2,7 +2,7 @@
 title: Outbox Worker Runbook
 status: Active
 owner: sre
-last_reviewed: 2026-03-11
+last_reviewed: 2026-03-12
 ---
 
 # Outbox Worker Runbook
@@ -23,8 +23,9 @@ Safety rule:
 
 - keep exactly one active owner per environment
 - use `passive` when the standalone process must be present but non-owning during rollout or rollback
-- `active` by itself is not a fence or lease; it only declares which process is intended to own delivery
-- until a real ownership fence exists, dual-active rollout remains unsupported
+- `active` now acquires shard-scoped PostgreSQL advisory locks on a dedicated ownership session before delivery starts
+- same-shard dual-active startup should be refused by that fence
+- lock-loss handling and concurrent-worker proof remain pending in `G5.5`
 
 ## Endpoints
 
@@ -36,8 +37,17 @@ Operational defaults:
 
 - `DVT_OUTBOX_ADMIN_HOST=0.0.0.0`
 - `DVT_OUTBOX_ADMIN_PORT=9464`
+- `DVT_OUTBOX_SHARD_COUNT=1`
+- `DVT_OUTBOX_OWNED_SHARD_IDS=0`
 - set `DVT_OUTBOX_OWNERSHIP_MODE` explicitly in every environment
 - `DATABASE_URL` and event bus configuration are required only in `active` mode
+
+Shard topology rule:
+
+- keep one deployment-stable `DVT_OUTBOX_SHARD_COUNT` across write-side and worker-side environments
+- when `DVT_OUTBOX_SHARD_COUNT>1`, every active worker must set explicit `DVT_OUTBOX_OWNED_SHARD_IDS`
+- shard ownership is enforced at the claim query, not by scanning the full pending outbox and filtering in memory
+- active startup acquires advisory locks for the configured shard list on one dedicated PostgreSQL session; if any required lock is unavailable, the host stays passive
 
 ## Runtime states
 
@@ -124,4 +134,4 @@ Minimal canary evidence to capture:
 - Downstream delivery contract is still a minimal HTTP `POST` with `{ "events": [...] }`.
 - Downstream consumers are required to be idempotent at that boundary, using the existing envelope `eventId` and/or `idempotencyKey` to absorb redelivery.
 - Ownership mode is now explicit and required in the standalone host, but full environment cutover still depends on deployment wiring outside the repo.
-- Multi-worker ordering hardening is still blocked on ADR-0009 enforcement.
+- Startup advisory-lock fencing now exists on dedicated sessions, but lock-loss handling and concurrent-worker proof are still pending even though persisted shard routing now exists in code.

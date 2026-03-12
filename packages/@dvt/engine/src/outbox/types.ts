@@ -33,6 +33,10 @@ export interface DeadLetterRecord {
 
 export type OutboxFailureDisposition = 'retry' | 'dead_letter';
 
+export interface OutboxClaimSelection {
+  shardIds?: readonly number[];
+}
+
 export interface OutboxWorkerObserver {
   onBatchClaimed?(records: readonly OutboxRecord[]): void | Promise<void>;
   onRecordDelivered?(record: OutboxRecord): void | Promise<void>;
@@ -60,6 +64,7 @@ export const MAX_OUTBOX_ATTEMPTS = 10;
 export interface IOutboxStorage {
   enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void>;
   listPending(limit: number): Promise<OutboxRecord[]>;
+  listPendingForClaim?(limit: number, selection?: OutboxClaimSelection): Promise<OutboxRecord[]>;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
   hasPendingRetries?(): Promise<boolean>;

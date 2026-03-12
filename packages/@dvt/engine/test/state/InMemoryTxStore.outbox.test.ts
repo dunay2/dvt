@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import type { RunEventInput } from '../../src/contracts/runEvents.js';
@@ -63,6 +65,24 @@ function requireDefined<T>(value: T | undefined, message: string): T {
 }
 
 describe('InMemoryTxStore outbox semantics', () => {
+  it('filters pending claims by configured shard ownership', async () => {
+    const shardCount = 2;
+    const store = new InMemoryTxStore({ outboxShardCount: shardCount });
+    const shard0RunId = findRunIdForShard(0, shardCount);
+    const shard1RunId = findRunIdForShard(1, shardCount);
+
+    await store.bootstrapRunTx(makeBootstrap(shard0RunId));
+    await store.bootstrapRunTx(makeBootstrap(shard1RunId));
+
+    const shard0Pending = await store.listPendingForClaim(10, { shardIds: [0] });
+    expect(shard0Pending).toHaveLength(1);
+    expect(shard0Pending[0]?.payload.runId).toBe(shard0RunId);
+
+    const shard1Pending = await store.listPendingForClaim(10, { shardIds: [1] });
+    expect(shard1Pending).toHaveLength(1);
+    expect(shard1Pending[0]?.payload.runId).toBe(shard1RunId);
+  });
+
   it('blocks later same-run records while a failed head is waiting on backoff', async () => {
     const now = { value: 0 };
     const store = new InMemoryTxStore({ outboxNowMs: () => now.value });
@@ -151,3 +171,18 @@ describe('InMemoryTxStore outbox semantics', () => {
     expect(next?.payload.runSeq).toBe(2);
   });
 });
+
+function findRunIdForShard(targetShardId: number, shardCount: number): string {
+  for (let index = 0; index < 256; index += 1) {
+    const candidate = `run-shard-${targetShardId}-${index}`;
+    if (resolveShardId(candidate, shardCount) === targetShardId) {
+      return candidate;
+    }
+  }
+  throw new Error(`Unable to find run id for shard ${targetShardId}`);
+}
+
+function resolveShardId(runId: string, shardCount: number): number {
+  const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
+  return Number(BigInt(`0x${hash}`) % BigInt(shardCount));
+}

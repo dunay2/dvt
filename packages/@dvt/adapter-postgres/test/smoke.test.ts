@@ -15,6 +15,8 @@
  * Run with:
  *   DVT_PG_INTEGRATION=1 DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm test
  */
+import { createHash } from 'node:crypto';
+
 import { Client } from 'pg';
 import { afterAll, describe, expect, test } from 'vitest';
 
@@ -103,9 +105,14 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
   });
 
   async function withAdapter(
-    fn: (adapter: PostgresStateStoreAdapter) => Promise<void>
+    fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
+    options?: { outboxShardCount?: number }
   ): Promise<void> {
-    const adapter = new PostgresStateStoreAdapter({ schema, now: () => NOW });
+    const adapter = new PostgresStateStoreAdapter({
+      schema,
+      now: () => NOW,
+      outboxShardCount: options?.outboxShardCount,
+    });
     try {
       await adapter.migrate();
       await fn(adapter);
@@ -260,6 +267,27 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       const after = await adapter.listPending(10);
       expect(after.find((r) => r.id === outboxRecord.id)).toBeUndefined();
     }));
+
+  test('outbox: listPendingForClaim restricts claims to owned shards', () =>
+    withAdapter(
+      async (adapter) => {
+        const shardCount = 2;
+        const shard0RunId = findRunIdForShard(0, shardCount);
+        const shard1RunId = findRunIdForShard(1, shardCount);
+
+        await adapter.bootstrapRunTx(makeBootstrap(shard0RunId));
+        await adapter.bootstrapRunTx(makeBootstrap(shard1RunId));
+
+        const shard0Pending = await adapter.listPendingForClaim(10, { shardIds: [0] });
+        expect(shard0Pending).toHaveLength(1);
+        expect(shard0Pending[0]?.payload.runId).toBe(shard0RunId);
+
+        const shard1Pending = await adapter.listPendingForClaim(10, { shardIds: [1] });
+        expect(shard1Pending).toHaveLength(1);
+        expect(shard1Pending[0]?.payload.runId).toBe(shard1RunId);
+      },
+      { outboxShardCount: 2 }
+    ));
 
   test('outbox: listPending only exposes the head-of-line record for a run until prior delivery', () =>
     withAdapter(async (adapter) => {
@@ -561,3 +589,18 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(dlBAfter.find((r) => r.runId === 'run-dl-tenant-b')).toBeDefined();
     }));
 });
+
+function findRunIdForShard(targetShardId: number, shardCount: number): string {
+  for (let index = 0; index < 256; index += 1) {
+    const candidate = `run-shard-${targetShardId}-${index}`;
+    if (resolveShardId(candidate, shardCount) === targetShardId) {
+      return candidate;
+    }
+  }
+  throw new Error(`Unable to find run id for shard ${targetShardId}`);
+}
+
+function resolveShardId(runId: string, shardCount: number): number {
+  const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
+  return Number(BigInt(`0x${hash}`) % BigInt(shardCount));
+}

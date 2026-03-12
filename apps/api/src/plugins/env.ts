@@ -14,6 +14,7 @@ const EnvSchema = z.object({
   DVT_PG_SCHEMA: z.string().default('dvt'),
   DVT_PG_STATEMENT_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
   DVT_PG_QUERY_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
+  DVT_OUTBOX_SHARD_COUNT: z.coerce.number().int().positive().default(1),
   DVT_INTENT_RECONCILER_ENABLED: z.coerce.boolean().default(false),
   DVT_INTENT_RECONCILER_INTERVAL_MS: z.coerce.number().int().positive().default(30000),
   DVT_INTENT_RECONCILER_ORPHAN_THRESHOLD_MS: z.coerce.number().int().positive().default(300000),

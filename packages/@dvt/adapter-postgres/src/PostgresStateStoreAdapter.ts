@@ -63,6 +63,7 @@ interface OutboxRow {
   payload: EventEnvelope;
   attempts: number;
   last_error: string | null;
+  next_attempt_at?: string | null;
 }
 
 interface MaxSeqRow {
@@ -86,6 +87,7 @@ interface MarkFailedRow {
   attempts: number;
   payload: EventEnvelope;
   run_id: string;
+  shard_id: number;
 }
 
 const RUN_METADATA_COLUMNS = `
@@ -242,6 +244,7 @@ export interface PostgresAdapterConfig {
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
   assumeSchemaReady?: boolean;
+  outboxShardCount?: number;
 }
 
 /**
@@ -259,6 +262,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private readonly schema: SchemaName;
   private readonly now: () => string;
   private readonly statementTimeoutMs: number;
+  private readonly outboxShardCount: number;
   private readonly activeClients = new Set<PoolClient>();
   private abortPendingOperationsRequested = false;
   /** Deduplicated promise for concurrent migrate() callers. */
@@ -270,6 +274,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     this.now = config.now ?? (() => new Date().toISOString());
     this.statementTimeoutMs =
       config.statementTimeoutMs ?? Number(process.env.DVT_PG_STATEMENT_TIMEOUT_MS ?? 0);
+    this.outboxShardCount = normalizeOutboxShardCount(config.outboxShardCount);
 
     if (config.pool) {
       this.pool = config.pool;
@@ -685,12 +690,29 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
+    return this.listPendingForClaim(limit);
+  }
+
+  async listPendingForClaim(
+    limit: number,
+    selection?: { shardIds?: readonly number[] }
+  ): Promise<OutboxRecord[]> {
     this.ready();
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) return [];
+    const shardIds = normalizeShardSelection(selection?.shardIds);
+    if (shardIds && shardIds.length === 0) {
+      return [];
+    }
 
     return this.withTransaction(async (client) => {
       const now = this.now();
+      const params: unknown[] = [boundedLimit, now];
+      let shardFilterClause = '';
+      if (shardIds) {
+        params.push(shardIds);
+        shardFilterClause = `AND o.shard_id = ANY($${params.length}::int[])`;
+      }
 
       const result = await client.query<OutboxRow>(
         `
@@ -700,6 +722,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
             WHERE o.delivered_at IS NULL
               AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $2::timestamptz)
               AND (o.claimed_at IS NULL OR o.claimed_at < ($2::timestamptz - INTERVAL '5 minutes'))
+              ${shardFilterClause}
               AND NOT EXISTS (
                 SELECT 1
                 FROM ${quoteIdentifier(this.schema)}.outbox prior
@@ -725,7 +748,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           SELECT * FROM claimed
           ORDER BY created_at ASC
         `,
-        [boundedLimit, now]
+        params
       );
 
       return result.rows.map((row: OutboxRow) => ({
@@ -735,8 +758,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         payload: row.payload,
         attempts: Number(row.attempts),
         lastError: row.last_error ?? undefined,
-        nextAttemptAt:
-          (row as OutboxRow & { next_attempt_at?: string | null }).next_attempt_at ?? undefined,
+        nextAttemptAt: row.next_attempt_at ?? undefined,
       }));
     });
   }
@@ -772,7 +794,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
               END,
               claimed_at = NULL
           WHERE id = $1
-          RETURNING attempts, payload, run_id
+          RETURNING attempts, payload, run_id, shard_id
         `,
         [id, error, this.now()]
       );
@@ -782,11 +804,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         await client.query(
           `
             INSERT INTO ${quoteIdentifier(this.schema)}.outbox_dead_letter
-              (id, original_id, run_id, payload, last_error, dead_lettered_at)
-            VALUES ($1, $2, $3, $4::jsonb, $5, $6::timestamptz)
+              (id, original_id, run_id, shard_id, payload, last_error, dead_lettered_at)
+            VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::timestamptz)
             ON CONFLICT (id) DO NOTHING
           `,
-          [`dl_${id}`, id, row.run_id, JSON.stringify(row.payload), error, this.now()]
+          [`dl_${id}`, id, row.run_id, row.shard_id, JSON.stringify(row.payload), error, this.now()]
         );
         await client.query(`DELETE FROM ${quoteIdentifier(this.schema)}.outbox WHERE id = $1`, [
           id,
@@ -908,7 +930,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   ): Promise<{ rows: { moved: number }[] }> {
     const query = `
       WITH picked AS (
-        SELECT dl.id, dl.original_id, dl.run_id, dl.payload
+        SELECT dl.id, dl.original_id, dl.run_id, dl.shard_id, dl.payload
         FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
         INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
         WHERE m.tenant_id = $2
@@ -920,6 +942,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
           id,
           run_id,
+          shard_id,
           run_seq,
           created_at,
           idempotency_key,
@@ -933,6 +956,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         SELECT
           p.original_id,
           p.run_id,
+          p.shard_id,
           ((p.payload->>'runSeq')::int),
           ${replayedAtParam}::timestamptz,
           (p.payload->>'idempotencyKey'),
@@ -949,7 +973,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
             claimed_at = NULL,
             delivered_at = NULL,
             next_attempt_at = NULL,
-            created_at = EXCLUDED.created_at
+            created_at = EXCLUDED.created_at,
+            shard_id = EXCLUDED.shard_id
         RETURNING id
       ), deleted AS (
         DELETE FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
@@ -1079,6 +1104,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.outbox (
         id TEXT PRIMARY KEY,
         run_id TEXT NOT NULL,
+        shard_id INTEGER NOT NULL DEFAULT 0,
         run_seq INTEGER NOT NULL,
         created_at TIMESTAMPTZ NOT NULL,
         idempotency_key TEXT NOT NULL,
@@ -1109,6 +1135,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
         id TEXT PRIMARY KEY,
         original_id TEXT NOT NULL,
         run_id TEXT NOT NULL,
+        shard_id INTEGER NOT NULL DEFAULT 0,
         payload JSONB NOT NULL,
         last_error TEXT NOT NULL,
         dead_lettered_at TIMESTAMPTZ NOT NULL
@@ -1125,6 +1152,16 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     await client.query(`
       ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
       ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox
+      ADD COLUMN IF NOT EXISTS shard_id INTEGER NOT NULL DEFAULT 0
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.outbox_dead_letter
+      ADD COLUMN IF NOT EXISTS shard_id INTEGER NOT NULL DEFAULT 0
     `);
 
     await client.query(`
@@ -1166,6 +1203,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('outbox_pending_idx')}`
     );
 
+    await client.query(
+      `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('outbox_pending_run_order_idx')}`
+    );
+
     // Backward-compat cleanup for previously created redundant run_events index.
     await client.query(
       `DROP INDEX IF EXISTS ${quoteIdentifier(this.schema)}.${quoteIdentifier('run_events_run_id_run_seq_idx')}`
@@ -1175,7 +1216,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private async ensureIndexes(client: PoolClient): Promise<void> {
     await client.query(`
       CREATE INDEX IF NOT EXISTS outbox_pending_idx
-      ON ${quoteIdentifier(this.schema)}.outbox (next_attempt_at, created_at, claimed_at)
+      ON ${quoteIdentifier(this.schema)}.outbox (shard_id, next_attempt_at, created_at, claimed_at)
       WHERE delivered_at IS NULL
     `);
 
@@ -1186,7 +1227,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
 
     await client.query(`
       CREATE INDEX IF NOT EXISTS outbox_pending_run_order_idx
-      ON ${quoteIdentifier(this.schema)}.outbox (run_id, run_seq)
+      ON ${quoteIdentifier(this.schema)}.outbox (shard_id, run_id, run_seq)
       WHERE delivered_at IS NULL
     `);
 
@@ -1477,13 +1518,23 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
             id,
             run_id,
+            shard_id,
             run_seq,
             created_at,
             idempotency_key,
             payload,
             attempts
           )
-          VALUES ($1, $2, $3, $4::timestamptz, $5, $6::jsonb, 0)
+          VALUES (
+            $1,
+            $2,
+            ((mod((('x' || left(md5($2), 16))::bit(64)::bigint), $7::bigint) + $7::bigint) % $7::bigint)::int,
+            $3,
+            $4::timestamptz,
+            $5,
+            $6::jsonb,
+            0
+          )
           ON CONFLICT (id) DO NOTHING
         `,
         [
@@ -1493,10 +1544,30 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           createdAt,
           event.idempotencyKey,
           JSON.stringify(event),
+          this.outboxShardCount,
         ]
       );
     }
   }
+}
+
+function normalizeOutboxShardCount(value: number | undefined): number {
+  const shardCount = value ?? 1;
+  if (!Number.isInteger(shardCount) || shardCount <= 0) {
+    throw new Error(`INVALID_OUTBOX_SHARD_COUNT: ${value}`);
+  }
+  return shardCount;
+}
+
+function normalizeShardSelection(shardIds: readonly number[] | undefined): number[] | null {
+  if (shardIds === undefined) {
+    return null;
+  }
+  const normalized = shardIds.map((shardId) => Number(shardId));
+  if (normalized.some((shardId) => !Number.isInteger(shardId) || shardId < 0)) {
+    throw new Error('INVALID_OUTBOX_SHARD_SELECTION');
+  }
+  return [...new Set(normalized)].sort((left, right) => left - right);
 }
 
 function isUniqueViolation(error: unknown): error is { code: string } {

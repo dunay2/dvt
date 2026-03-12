@@ -2,7 +2,7 @@
 title: G5 - AI Execution Tracker
 status: Active
 owner: Delivery / Engineering
-last_reviewed: 2026-03-10
+last_reviewed: 2026-03-12
 planning_type: execution-plan
 ---
 
@@ -35,11 +35,11 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-12`
 - `gap`: `G5`
 - `epic`: `#409`
-- `current_focus`: `G5.4A / #446 - automated standalone worker canary acceptance test`
+- `current_focus`: `G5.5A / #414 - dedicated advisory-lock ownership sessions`
 - `state`: `In progress`
-- `currently_working_on`: `Automated repo-side canary acceptance now exercises passive bootstrap plus active delivery through the production host/runtime composition, with #447 CI wiring plus external canary evidence still pending; the selected G5.5 sharding direction is now being normalized into canonical planning and ADR draft surfaces without claiming implementation`
-- `next_after_current`: `G5.4B / #447 - CI lane for automated outbox worker canary validation`
-- `blocking_dependencies`: `#410`, `#411`, and `#412` are closed; no remaining GitHub blocker is declared on `#413`
+- `currently_working_on`: `ADR-0033 is now accepted, persisted shard routing is already in code, and the standalone host is landing dedicated PostgreSQL advisory-lock ownership sessions while lock-loss runtime semantics and concurrent-worker proof remain open`
+- `next_after_current`: `G5.5B / #414 - lock-loss runtime semantics and concurrent-worker proof`
+- `blocking_dependencies`: `#410`, `#411`, and `#412` are closed; `#413` still needs external canary/rollback evidence, but it does not block the repo-side G5.5 implementation slice`
 - `last_completed`: `G5.3 / #412 merged via PR #444 on 2026-03-10`
 
 ## Remaining G5 Roadmap
@@ -50,7 +50,7 @@ Update this section before any substantial implementation turn.
   exit signal: one environment runs the standalone worker as sole active owner and rollback is documented/testable
 - `PR-5 / #414`
   scope: choose and implement one ADR-0009 concurrent-worker strategy
-  current status: design direction selected in planning docs; implementation pending after PR-4
+  current status: ADR accepted; persisted shard routing and dedicated startup ownership sessions now exist in code; lock-loss semantics and concurrent-worker proof are still pending
   exit signal: concurrent workers cannot reorder events for the same `runId` and horizontal scale-out is no longer blocked
 
 ## Execution Protocol For AI
@@ -255,15 +255,17 @@ strategy that preserves per-`runId` order across more than one worker instance.
 Working checklist:
 
 - [x] strategy chosen in planning docs: deterministic `runId` sharding with explicit shard ownership and advisory-lock fencing
-- [ ] strategy documented in code and deployment config
+- [x] persisted shard routing and shard-aware claim selection implemented in code
+- [x] dedicated startup ownership session implemented in the standalone host
+- [ ] lock-loss runtime semantics added
 - [ ] concurrent-worker tests added
-- [ ] horizontal scale-out remains blocked until tests pass
+- [x] horizontal scale-out remains blocked until tests pass
 - [ ] status docs synced after closure
 
 Selected planning refs:
 
 - [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
-- [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/_drafts/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+- [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 Primary validation lane:
 
@@ -319,3 +321,6 @@ flowchart LR
 - `2026-03-12` `G5.5 / #414` `in planning`
   summary: consolidated the selected multi-worker direction into canonical G5 docs and an ADR draft: deterministic `runId` sharding, persisted `shard_id`, dedicated advisory-lock ownership sessions, explicit lock-loss semantics, and migration-only resharding
   validation: `pnpm lint:md`; `pnpm docs:sync`; `pnpm docs:quality:check`; `pnpm docs:canonical:check`
+- `2026-03-12` `G5.5A / #414` `in progress`
+  summary: accepted `ADR-0033`, implemented startup advisory-lock ownership sessions on a dedicated PostgreSQL connection, and wired the standalone host to refuse active startup when any configured shard lock is unavailable
+  validation: `node --import tsx --test test/ownership/PgShardOwnershipGate.test.ts`; `pnpm --filter dvt-outbox-worker typecheck`
