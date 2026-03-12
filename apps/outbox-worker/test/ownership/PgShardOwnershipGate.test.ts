@@ -13,14 +13,18 @@ class RecordingOwnershipClient {
     private readonly failAfterLockIndex: number | null = null
   ) {}
 
-  async query(sql: string, params?: unknown[]): Promise<{ rows: Array<{ acquired: boolean }>; rowCount: number }> {
+  async query(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ rows: Array<{ acquired: boolean }>; rowCount: number }> {
     this.queries.push({ sql, params });
     const statement = sql.trim();
     if (!statement.includes('pg_try_advisory_lock')) {
       return { rows: [], rowCount: 0 };
     }
 
-    const lockIndex = this.queries.filter((entry) => entry.sql.includes('pg_try_advisory_lock')).length - 1;
+    const lockIndex =
+      this.queries.filter((entry) => entry.sql.includes('pg_try_advisory_lock')).length - 1;
     if (this.failAfterLockIndex !== null && lockIndex === this.failAfterLockIndex) {
       throw new Error('synthetic lock query failure');
     }

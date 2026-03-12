@@ -87,7 +87,9 @@ type WithOwnedShardIds<T extends { DVT_OUTBOX_OWNED_SHARD_IDS?: readonly number[
     DVT_OUTBOX_OWNED_SHARD_IDS: readonly number[];
   };
 
-export type ActiveEnv = WithOwnedShardIds<ParsedActiveHttpEnv> | WithOwnedShardIds<ParsedActiveLogEnv>;
+export type ActiveEnv =
+  | WithOwnedShardIds<ParsedActiveHttpEnv>
+  | WithOwnedShardIds<ParsedActiveLogEnv>;
 export type ActiveHttpEnv = WithOwnedShardIds<ParsedActiveHttpEnv>;
 export type ActiveLogEnv = WithOwnedShardIds<ParsedActiveLogEnv>;
 export type PassiveEnv = z.infer<typeof PassiveEnvSchema>;
@@ -147,8 +149,7 @@ function isValidHttpTargetUrl(value: string): boolean {
 
 function normalizeActiveEnv(env: ParsedActiveEnv): ActiveEnv {
   const ownedShardIds =
-    env.DVT_OUTBOX_OWNED_SHARD_IDS ??
-    (env.DVT_OUTBOX_SHARD_COUNT === 1 ? [0] : null);
+    env.DVT_OUTBOX_OWNED_SHARD_IDS ?? (env.DVT_OUTBOX_SHARD_COUNT === 1 ? [0] : null);
 
   if (ownedShardIds === null) {
     throw new Error(

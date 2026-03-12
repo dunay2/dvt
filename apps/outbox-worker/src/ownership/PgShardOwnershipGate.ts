@@ -195,4 +195,9 @@ function toErrorLike(error: unknown): { message: string; name: string } {
   return { message: String(error), name: 'UnknownError' };
 }
 
-export type { OwnershipGate, OwnershipLease, PgShardOwnershipGateConfig, PgShardOwnershipGateDependencies };
+export type {
+  OwnershipGate,
+  OwnershipLease,
+  PgShardOwnershipGateConfig,
+  PgShardOwnershipGateDependencies,
+};
