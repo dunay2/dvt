@@ -12,6 +12,8 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
+    "test:lineage:golden": "vitest run --config vitest.config.ts test/lineage/StepStartedLineageMapper.golden.test.ts",
+    "test:lineage:schema": "vitest run --config vitest.config.ts test/lineage/facetSchema.validation.test.ts",
     "trace": "node dist/cli.js"
   },
   "dependencies": {
@@ -19,6 +21,8 @@
     "glob": "^11.0.0"
   },
   "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "typescript": "^5.6.0"
   }
 }

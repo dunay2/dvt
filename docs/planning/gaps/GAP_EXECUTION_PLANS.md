@@ -48,7 +48,7 @@ Minimum tuple for this document:
 | G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed                                   |
 | G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                   |
 | G5  | Outbox worker independiente               | Phase 1.5 | Partial                                  |
-| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Partial                                  |
+| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed                                   |
 | G7  | Read models + standalone projector        | Phase 1.5 | Partial                                  |
 | G8  | Auth real en apps/api                     | Phase 1.5 | Implemented in code (arch tests pending) |
 | G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                  |
@@ -202,14 +202,16 @@ Minimum tuple for this document:
 
 ### G6 - OpenLineage mapping tests CI + schema pin
 
-- Status: Partial
+- Status: Closed
+- Closed: 2026-03-12
+- Evidence: [ED-20260312 - G6 golden schema closeout](../../evidence/ED-20260312-g6-golden-schema-closeout.md)
 - Traceability tuple:
   - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`
-  - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`
-  - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm traceability:adr0`
-  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
+  - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`, `packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts`
+  - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`, `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts`, `packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts`
+  - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm --filter @dvt/traceability-service test:lineage:golden`, `pnpm --filter @dvt/traceability-service test:lineage:schema`
+  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md), [ED-20260312 - G6 golden schema closeout](../../evidence/ED-20260312-g6-golden-schema-closeout.md)
 - Working refs:
   - [G6 hub](g6/index.md)
   - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
@@ -220,11 +222,11 @@ Minimum tuple for this document:
   - package-level tests for mapper/guard/resolver paths
   - `_schemaURL` pinned in emitted `sql` and `dvt_dbt_details` facets
   - repo-local normative artifacts for emitted lineage facets under [Traceability Contracts](../../contracts/traceability/index.md)
-- Remaining:
-  - deterministic OL translation hardening in CI
-  - offline schema validation execution against vendored/local artifacts
-  - committed golden fixtures for mapper regression coverage
-  - explicit golden and schema verification commands for closure
+  - committed golden fixtures for all 3 mapper paths (success, fail-open, no-compiledCodeRef) — drift visible as PR diff in `test/fixtures/lineage/`
+  - offline JSON Schema validation with AJV (draft 2020-12) for both emitted facets against repo-local contract artifacts — no network calls
+  - `test:lineage:golden` and `test:lineage:schema` scripts wired in `package.json`
+  - 13/13 traceability-service tests pass (5 test files, 2026-03-12)
+- Non-blocking follow-up:
   - delivery/runtime concerns stay open outside package scope under `G10`
 
 ### G7 - Read models + standalone projector

@@ -54,14 +54,14 @@ Minimum tuple for this document:
 
 ## Executive Summary
 
-| Area                       | Current posture | What is true now                                                                                                                                                                             | Primary status source                                                                                                                        |
-| -------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Entry layer                | Partial         | `apps/api` and `apps/web` exist; API auth is implemented in code but still carries architecture-test debt; web has no automated tests                                                        | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Planning layer             | Partial         | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened                                    | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Execution layer            | Partial         | engine, Postgres adapter, and Temporal adapter are implemented; the first standalone outbox worker slice now exists, while scheduler and further hardening remain gap-driven                 | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
-| Persistence layer          | Partial         | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
-| Observability              | Partial         | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                 | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Traceability / OpenLineage | Partial         | mapper, package tests, `_schemaURL` pinning, and repo-local facet artifacts exist; golden validation and delivery-runtime concerns remain open                                               | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Area                       | Current posture     | What is true now                                                                                                                                                                                   | Primary status source                                                                                                                        |
+| -------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entry layer                | Partial             | `apps/api` and `apps/web` exist; API auth is implemented in code but still carries architecture-test debt; web has no automated tests                                                              | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Planning layer             | Partial             | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened                                          | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
+| Execution layer            | Partial             | engine, Postgres adapter, and Temporal adapter are implemented; the first standalone outbox worker slice now exists, while scheduler and further hardening remain gap-driven                       | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Persistence layer          | Partial             | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open       | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Observability              | Partial             | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                       | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
+| Traceability / OpenLineage | Closed for Phase 1  | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns remain Phase 2 under G10 | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 
 ## Area Status
 
@@ -104,10 +104,11 @@ Minimum tuple for this document:
   port surface exists and is documented.
 - `@dvt/observability-otel` (`Partial`):
   binding exists, but production validation is still incomplete.
-- `@dvt/traceability-service` (`Partial`):
-  mapper/resolver package exists with tests; `_schemaURL` and repo-local
-  contract artifacts exist; golden validation and runtime delivery hardening
-  remain open.
+- `@dvt/traceability-service` (`Closed for Phase 1`):
+  mapper/resolver package with tests; `_schemaURL` pinned; repo-local contract
+  artifacts committed; golden fixtures for all 3 mapper paths; offline AJV
+  schema validation for both emitted facets; 13/13 tests pass (2026-03-12);
+  runtime delivery hardening remains Phase 2 under G10.
 - future `outbox_lineage` flow (`Pending`):
   delivery worker and fail-open DLQ policy are still Phase 2 work.
 
@@ -120,7 +121,7 @@ Minimum tuple for this document:
 | G3  | Intent store plus reconciler runtime         | Closed                                   |
 | G4  | compiledCodeRef ownership                    | Closed                                   |
 | G5  | Independent outbox worker runtime            | Closed                                   |
-| G6  | OpenLineage mapping tests plus schema pin    | Partial                                  |
+| G6  | OpenLineage mapping tests plus schema pin    | Closed                                   |
 | G7  | Standalone projector and read models         | Partial                                  |
 | G8  | API auth hardening                           | Implemented in code, review debt remains |
 | G9  | StepTypeRegistry plus typed `stepTypeConfig` | Pending                                  |
