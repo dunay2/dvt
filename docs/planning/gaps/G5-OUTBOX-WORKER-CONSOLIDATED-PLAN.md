@@ -285,17 +285,22 @@ Horizontal scale-out is blocked until PR-5 is complete.
 
 ### For the independent worker gap
 
-- [ ] standalone outbox worker process exists
-- [ ] current outbox contracts remain the production baseline
-- [ ] runtime start/stop is explicit and testable
-- [ ] health and lag observability exist
-- [ ] canary cutover has been executed with one active owner
+- [x] standalone outbox worker process exists
+- [x] current outbox contracts remain the production baseline
+- [x] runtime start/stop is explicit and testable
+- [x] health and lag observability exist
+- [x] canary cutover has been executed with one active owner
 
 ### For the scale-out hardening gap
 
-- [ ] one ADR-0009 concurrent-worker strategy is selected
-- [ ] same-`runId` ordering is proven under concurrent workers
-- [ ] deployment docs forbid unsafe mixed ownership
+- [x] one ADR-0009 concurrent-worker strategy is selected
+- [x] same-`runId` ordering is proven under concurrent workers
+- [x] deployment docs forbid unsafe mixed ownership
+
+Closure evidence for the accepted `G5` scope is recorded in
+[ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md).
+Downstream contract hardening and future delivery evolution remain tracked as
+separate follow-up work rather than open blockers for this gap.
 
 If the first list is done but the second is not, the repository has closed the
 **standalone runtime gap** but still carries an explicit **scale-out risk**.

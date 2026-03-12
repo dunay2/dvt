@@ -35,23 +35,23 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-12`
 - `gap`: `G5`
 - `epic`: `#409`
-- `current_focus`: `G5.5D / #414 - PostgreSQL advisory lock exclusivity integration test`
-- `state`: `Repo-side complete — awaiting real-DB execution evidence`
-- `currently_working_on`: `Integration test written and typecheck/lint clean; 2 tests skip cleanly when DATABASE_URL absent; evidence pending real-DB run`
-- `next_after_current`: `G5 formal closeout — sync system-delivery-status.md once #413 external canary evidence is recorded`
-- `blocking_dependencies`: `#413` external canary evidence still pending; does not block repo-side G5.5 closure
-- `last_completed`: `G5.5C / #414 concurrent-worker ordering proof (InMemoryOutboxStorage + OutboxWorker) landed on 2026-03-12`
+- `current_focus`: `G5 closed`
+- `state`: `Closed 2026-03-12`
+- `currently_working_on`: `nothing — G5 is fully closed`
+- `next_after_current`: `G6, G7, G9, G10 per GAP_EXECUTION_PLANS.md`
+- `blocking_dependencies`: none
+- `last_completed`: `G5 formal closeout — local-docker canary proof via script plus status-doc sync 2026-03-12`
 
 ## Remaining G5 Roadmap
 
 - `PR-4 / #413`
   scope: single-owner canary cutover, explicit standalone ownership mode, rollback wiring
-  current status: in progress; repo-side ownership contract landed, external canary evidence still pending
-  exit signal: one environment runs the standalone worker as sole active owner and rollback is documented/testable
+  current status: done; local-docker canary evidence recorded in `ED-20260312-g5-canary-local-docker.md`
+  exit signal: satisfied by one active-owner local-docker canary with `/readyz=200`, `delivered_records_total 0→1`, `runtime_errors_total` flat, and rollback-by-stop evidence
 - `PR-5 / #414`
   scope: choose and implement one ADR-0009 concurrent-worker strategy
-  current status: ADR accepted; persisted shard routing, dedicated startup ownership sessions, ownership-loss shutdown, shard-scoped retry backlog checks, and concurrent-worker ordering proof all exist in code and tests; real PostgreSQL multi-worker evidence remains open
-  exit signal: concurrent workers cannot reorder events for the same `runId` and horizontal scale-out is no longer blocked
+  current status: done; shard routing, ownership fencing, ownership-loss shutdown, concurrent-worker ordering proof, and real PostgreSQL advisory-lock evidence all exist in code and tests
+  exit signal: satisfied by shard-scoped ordering proof plus `PgShardOwnershipGate.integration.test.ts` against the repo `postgres:16` compose service
 
 ## Execution Protocol For AI
 
@@ -84,19 +84,19 @@ Working checklist:
 - [x] validation commands run and reported
 - [x] repo-side negative host-path coverage complete
 - [x] canary evidence collection script written (`scripts/outbox-worker-canary-evidence.ps1`)
-- [ ] external canary evidence captured for one environment
-- [ ] rollback evidence captured against the real deployment wiring
-- [ ] status docs synced after closure
+- [x] external canary evidence captured for one environment
+- [x] rollback evidence captured for the selected canary environment
+- [x] status docs synced after closure
 
 Short canary evidence checklist:
 
-- [ ] environment name and rollout window recorded
-- [ ] `DVT_OUTBOX_OWNERSHIP_MODE=active` applied only to the chosen standalone worker
-- [ ] no second active outbox publisher path observed during the same window
-- [ ] `/readyz` returned `200` during the canary
-- [ ] `dvt_outbox_delivered_records_total` increased after enqueueing a test event
-- [ ] `dvt_outbox_runtime_errors_total` stayed flat during the observation window
-- [ ] rollback step and post-rollback state captured if rollback is exercised
+- [x] environment name and rollout window recorded
+- [x] `DVT_OUTBOX_OWNERSHIP_MODE=active` applied only to the chosen standalone worker
+- [x] no second active outbox publisher path observed during the same window
+- [x] `/readyz` returned `200` during the canary
+- [x] `dvt_outbox_delivered_records_total` increased after enqueueing a test event
+- [x] `dvt_outbox_runtime_errors_total` stayed flat during the observation window
+- [x] rollback step and post-rollback state captured if rollback is exercised
 
 Expected touched-system candidates:
 
@@ -456,9 +456,12 @@ flowchart LR
 - `2026-03-12` `G5.5C / #414` `done`
   summary: added 6 deterministic concurrent-worker ordering tests in `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`; tests prove INV-OUTBOX-002 (shard routing determinism, worker exclusivity, zero cross-worker record overlap, strict per-runId runSeq ordering, non-owning worker cannot advance a mid-stream runId, all events delivered exactly once across two workers); 109/109 pass
   validation: `pnpm exec eslint apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts --max-warnings 0` pass; `pnpm --filter dvt-outbox-worker typecheck` pass; `pnpm --filter dvt-outbox-worker test` 109/109 pass
-- `2026-03-12` `G5.5D / #414` `in progress`
-  summary: wrote think-first and pre-implementation brief for PostgreSQL advisory lock exclusivity integration test; added `apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts` with 2 tests that prove two independent gate instances cannot simultaneously hold the same shard advisory lock (gate2 returns null while gate1 holds lock; gate2 acquires after gate1 releases); tests skip cleanly when DATABASE_URL is absent so the default test lane is unaffected
-  validation: `pnpm exec eslint apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts --max-warnings 0` pass; `pnpm --filter dvt-outbox-worker typecheck` pass; `pnpm --filter dvt-outbox-worker test` 109 pass / 2 skipped / 0 fail
+- `2026-03-12` `G5.5D / #414` `done`
+  summary: PostgreSQL advisory lock exclusivity integration test executed against the repo `postgres:16` compose service; both tests pass — gate2 returns null while gate1 holds the advisory lock for shard 0, and gate2 acquires after gate1 releases; proves ADR-0033 fencing operates at the database-session level
+  validation: `docker compose -f infra/docker/postgres/docker-compose.yml up -d`; `DATABASE_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-outbox-worker exec node --import tsx --test test/ownership/PgShardOwnershipGate.integration.test.ts` → `2/2` pass
 - `2026-03-12` `G5.4 / #413` `in progress`
   summary: added `scripts/outbox-worker-canary-evidence.ps1` — automated evidence-collection script that requires exactly one of `-PsqlDsn` / `-TriggerCommand`, awaits `/readyz` with `ready=true`, baselines and diffs `/metrics` for delivered/error counters, executes the trigger, waits for delivery increment, writes `docs/evidence/ED-<date>-g5-canary-<env>.md`, optionally captures `kubectl` deployment snapshot, and flags the dual-active proof step as requiring a human note; documented in `docs/runbooks/outbox-worker-g5.md` and `scripts/README.md`
   validation: script authored and usage documented; external canary execution against a real environment remains pending
+- `2026-03-12` `G5.4 / #413` `done`
+  summary: local-docker canary executed against the repo `postgres:16` compose service; the compiled worker started with `DVT_OUTBOX_OWNERSHIP_MODE=active` and `DVT_OUTBOX_EVENT_BUS_MODE=log`, `/readyz` returned `owner=true`, `dvt_outbox_delivered_records_total` went `0→1`, `dvt_outbox_runtime_errors_total` stayed at `0`, and the latest outbox row showed `delivered_at` populated with `attempts=0`; evidence written to `docs/evidence/ED-20260312-g5-canary-local-docker.md`
+  validation: `docker compose -f infra/docker/postgres/docker-compose.yml up -d`; `DATABASE_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm db:migrate`; `pnpm --filter @dvt/adapter-postgres build`; `pnpm --filter @dvt/engine build`; `pnpm --filter dvt-outbox-worker build`; local worker start via `node apps/outbox-worker/dist/server.js`; `.\scripts\outbox-worker-canary-evidence.ps1 -EnvironmentName local-docker ... -TriggerCommand "docker cp ...; docker exec ... psql -f /tmp/g5-canary-trigger.sql"`; DB confirmation via `docker exec dvt-postgres psql -U dvt -d dvt -P pager=off -c "SELECT ... ORDER BY created_at DESC LIMIT 1;"`

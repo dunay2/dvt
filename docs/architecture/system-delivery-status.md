@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-12
 ---
 
 # Current Status
@@ -92,11 +92,11 @@ Minimum tuple for this document:
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                    | Status             | Notes                                                                                                                                                                                                                                 |
-| -------------- | ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres` | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                         |
-| Outbox runtime | `@dvt/engine`, `@dvt/adapter-postgres`      | Partial            | Persistence APIs, reusable worker core, the first `apps/outbox-worker` host, bounded HTTP publishing, and `/healthz`/`/readyz`/`/metrics` now exist; canary rollout, downstream contract hardening, and shards remain open under `G5` |
-| Read models    | engine and infra follow-up                  | Partial            | In-process projection exists; standalone read-model service remains open under `G7`                                                                                                                                                   |
+| Area           | Packages                                    | Status             | Notes                                                                                                                                                                                                 |
+| -------------- | ------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store    | `@dvt/state-store`, `@dvt/adapter-postgres` | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                         |
+| Outbox runtime | `@dvt/engine`, `@dvt/adapter-postgres`      | Closed for Phase 1 | Closed G5 2026-03-12; standalone worker with advisory-lock shard fencing and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10 |
+| Read models    | engine and infra follow-up                  | Partial            | In-process projection exists; standalone read-model service remains open under `G7`                                                                                                                   |
 
 ### Observability And Traceability
 
@@ -119,7 +119,7 @@ Minimum tuple for this document:
 | G2  | Postgres state store complete                | Closed                                   |
 | G3  | Intent store plus reconciler runtime         | Closed                                   |
 | G4  | compiledCodeRef ownership                    | Closed                                   |
-| G5  | Independent outbox worker runtime            | Partial                                  |
+| G5  | Independent outbox worker runtime            | Closed                                   |
 | G6  | OpenLineage mapping tests plus schema pin    | Partial                                  |
 | G7  | Standalone projector and read models         | Partial                                  |
 | G8  | API auth hardening                           | Implemented in code, review debt remains |

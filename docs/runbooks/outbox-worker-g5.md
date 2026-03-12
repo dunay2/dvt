@@ -121,7 +121,8 @@ Automation helper:
 - `scripts/outbox-worker-canary-evidence.ps1` captures `/readyz`, baseline/final `/metrics`, executes one trigger, and writes `docs/evidence/ED-<date>-g5-canary-<env>.md`
 - prefer `-TriggerCommand` when the environment already has a real trigger path for the event you want to observe
 - use `-PsqlDsn` only as an operational fallback when no environment-native trigger path is available; that mode inserts one `RunQueued` outbox row directly with the same shard formula used by the PostgreSQL adapter
-- the script records deployment and probe state automatically, but a human still needs to supply the proof that no second active outbox publisher path was running if that fact is known outside Kubernetes deployment state
+- the script records deployment and probe state automatically when `kubectl` can reach the target cluster; if `kubectl` is missing or the current context is not reachable, the script degrades to probe/metrics evidence only
+- a human still needs to supply the proof that no second active outbox publisher path was running if that fact is known outside Kubernetes deployment state
 
 Example:
 

@@ -93,6 +93,7 @@ Captures external canary evidence for the standalone outbox worker.
 - captures baseline and final `/metrics`
 - runs exactly one trigger via `-TriggerCommand` or `-PsqlDsn`
 - writes an evidence doc under `docs/evidence/ED-<date>-g5-canary-<env>.md`
+- captures a `kubectl` deployment snapshot only when `kubectl` and the current cluster context are reachable
 
 **Usage:**
 

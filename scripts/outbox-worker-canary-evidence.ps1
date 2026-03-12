@@ -264,7 +264,14 @@ function Get-DeploymentSnapshot {
     }
   }
 
-  $deploymentJson = & $kubectl.Source get deployment $Deployment -n $Namespace -o json 2>$null
+  try {
+    $deploymentJson = & $kubectl.Source get deployment $Deployment -n $Namespace -o json 2>$null
+  } catch {
+    return [pscustomobject]@{
+      Available = $false
+      Note      = "kubectl found in PATH, but the current context could not read deployment ${Namespace}/${Deployment}"
+    }
+  }
   if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($deploymentJson)) {
     return [pscustomobject]@{
       Available = $false
@@ -281,17 +288,21 @@ function Get-DeploymentSnapshot {
 
   $pods = @()
   if (-not [string]::IsNullOrWhiteSpace($selector)) {
-    $podsJson = & $kubectl.Source get pods -n $Namespace -l $selector -o json 2>$null
-    if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($podsJson)) {
-      $podsObject = $podsJson | ConvertFrom-Json
-      $pods = @(
-        foreach ($item in $podsObject.items) {
-          [pscustomobject]@{
-            Name  = [string]$item.metadata.name
-            Phase = [string]$item.status.phase
+    try {
+      $podsJson = & $kubectl.Source get pods -n $Namespace -l $selector -o json 2>$null
+      if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($podsJson)) {
+        $podsObject = $podsJson | ConvertFrom-Json
+        $pods = @(
+          foreach ($item in $podsObject.items) {
+            [pscustomobject]@{
+              Name  = [string]$item.metadata.name
+              Phase = [string]$item.status.phase
+            }
           }
-        }
-      )
+        )
+      }
+    } catch {
+      $pods = @()
     }
   }
 
@@ -544,6 +555,18 @@ function Write-EvidenceDocument {
     'Rollback was not exercised during this canary window.'
   }
 
+  $triggerRunId = if ([string]::IsNullOrWhiteSpace([string]$Context.TriggerResult.RunId)) {
+    '<not provided by trigger>'
+  } else {
+    [string]$Context.TriggerResult.RunId
+  }
+
+  $triggerEventId = if ([string]::IsNullOrWhiteSpace([string]$Context.TriggerResult.EventId)) {
+    '<not provided by trigger>'
+  } else {
+    [string]$Context.TriggerResult.EventId
+  }
+
   $resultBlock = if ($Context.Success) {
 @"
 ## Closure Relevance
@@ -602,9 +625,9 @@ $($deploymentLines | ForEach-Object { "- $_" } | Out-String)
 - Owner flag: ``$($Context.ReadyProbe.Body.owner)``
 - Runtime state: ``$($Context.ReadyProbe.Body.state)``
 
-```json
+~~~json
 $($Context.ReadyProbe.RawContent)
-```
+~~~
 
 ## Metrics Delta
 
@@ -615,25 +638,25 @@ $($Context.ReadyProbe.RawContent)
 
 Baseline metrics excerpt:
 
-```text
+~~~text
 $($Context.BaselineMetrics.ExcerptText)
-```
+~~~
 
 Final metrics excerpt:
 
-```text
+~~~text
 $($Context.FinalMetrics.ExcerptText)
-```
+~~~
 
 ## Trigger Result
 
 - Trigger summary: ``$($Context.TriggerMode)``
-- Run ID: ``$($Context.TriggerResult.RunId)``
-- Event ID: ``$($Context.TriggerResult.EventId)``
+- Run ID: ``$triggerRunId``
+- Event ID: ``$triggerEventId``
 
-```text
+~~~text
 $($Context.TriggerResult.OutputText)
-```
+~~~
 
 ## Owner Exclusivity Note
 
