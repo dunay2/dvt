@@ -30,6 +30,7 @@ Operational endpoints:
 - `/healthz`: liveness probe for the worker process
 - `/readyz`: readiness probe based on runtime state (`idle` / `draining` are ready only when no retry backlog is pending) and the effective `owner` flag
 - `/metrics`: Prometheus-style metrics for runtime state, effective ownership, lag, retries, deliveries, DLQ, and errors
+- in `active` mode, readiness freshness is sized to cover the configured in-flight batch budget instead of only the sleep between ticks
 
 Ownership modes:
 

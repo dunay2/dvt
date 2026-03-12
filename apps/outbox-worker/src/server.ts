@@ -5,6 +5,7 @@ import pino from 'pino';
 import { runOutboxWorkerHost } from './host/runOutboxWorkerHost.js';
 import { createOperationalServer } from './ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from './ops/OutboxWorkerMonitor.js';
+import { resolveReadyStaleAfterMs } from './ops/resolveReadyStaleAfterMs.js';
 import { createPgShardOwnershipGate } from './ownership/PgShardOwnershipGate.js';
 import { isActiveEnv, loadEnv } from './plugins/env.js';
 
@@ -20,11 +21,7 @@ async function main(): Promise<void> {
     logger,
     ...(isActiveEnv(env)
       ? {
-          readyStaleAfterMs:
-            Math.max(
-              env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS,
-              env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS
-            ) * 3,
+          readyStaleAfterMs: resolveReadyStaleAfterMs(env),
         }
       : {}),
   });

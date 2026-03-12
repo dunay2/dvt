@@ -83,6 +83,19 @@ describe('InMemoryTxStore outbox semantics', () => {
     expect(shard1Pending[0]?.payload.runId).toBe(shard1RunId);
   });
 
+  it('matches PostgreSQL signed 64-bit shard routing when the hash high bit is set', async () => {
+    const store = new InMemoryTxStore({ outboxShardCount: 3 });
+
+    await store.bootstrapRunTx(makeBootstrap('run-3'));
+
+    const shard1Pending = await store.listPendingForClaim(10, { shardIds: [1] });
+    expect(shard1Pending).toHaveLength(1);
+    expect(shard1Pending[0]?.payload.runId).toBe('run-3');
+
+    const shard2Pending = await store.listPendingForClaim(10, { shardIds: [2] });
+    expect(shard2Pending).toHaveLength(0);
+  });
+
   it('blocks later same-run records while a failed head is waiting on backoff', async () => {
     const now = { value: 0 };
     const store = new InMemoryTxStore({ outboxNowMs: () => now.value });
@@ -184,5 +197,13 @@ function findRunIdForShard(targetShardId: number, shardCount: number): string {
 
 function resolveShardId(runId: string, shardCount: number): number {
   const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
-  return Number(BigInt(`0x${hash}`) % BigInt(shardCount));
+  const shardCountBigInt = BigInt(shardCount);
+  let hashValue = BigInt(`0x${hash}`);
+  if (hashValue >= SIGNED_BIGINT_HIGH_BIT) {
+    hashValue -= UINT64_MODULUS;
+  }
+  return Number(((hashValue % shardCountBigInt) + shardCountBigInt) % shardCountBigInt);
 }
+
+const SIGNED_BIGINT_HIGH_BIT = 1n << 63n;
+const UINT64_MODULUS = 1n << 64n;

@@ -64,6 +64,7 @@ Readiness rule:
 - keep readiness `false` in `passive` mode because the process is explicitly non-owning
 - keep readiness `false` while any retry backlog is still pending, even if a later poll claims nothing because the failed record is waiting on backoff
 - if active ownership is unavailable at startup, the host must stay `passive`, keep `owner=false`, and must not start delivery
+- size readiness freshness to cover the configured in-flight batch budget, not only poll/backoff sleep, so healthy long-running HTTP drains do not flap `503`
 
 Migration rule:
 

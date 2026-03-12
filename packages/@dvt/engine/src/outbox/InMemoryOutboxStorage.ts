@@ -192,8 +192,9 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     if (boundedLimit === 0) {
       return [];
     }
+    const selectedShardIds = selection?.shardIds;
     const ownedShardIds =
-      selection?.shardIds === undefined ? null : new Set(selection.shardIds.map(Number));
+      selectedShardIds === undefined ? null : new Set(selectedShardIds.map(Number));
     if (ownedShardIds?.size === 0) {
       return [];
     }
@@ -203,7 +204,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     const headRunSeqByRunId = this.buildHeadRunSeqByRunId(blockedRunIds);
     const eligible = this.pending.filter(
       (record) =>
-        (!ownedShardIds || ownedShardIds.has(record.shardId)) &&
+        (ownedShardIds?.has(record.shardId) ?? true) &&
         this.isPendingRecordEligible(record, blockedRunIds, headRunSeqByRunId, nowMs)
     );
 
@@ -270,9 +271,16 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
 function resolveShardId(runId: string, shardCount: number): number {
   const normalizedShardCount = Math.max(1, shardCount);
   const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
-  const hashValue = BigInt(`0x${hash}`);
-  return Number(hashValue % BigInt(normalizedShardCount));
+  const shardCountBigInt = BigInt(normalizedShardCount);
+  let hashValue = BigInt(`0x${hash}`);
+  if (hashValue >= SIGNED_BIGINT_HIGH_BIT) {
+    hashValue -= UINT64_MODULUS;
+  }
+  return Number(((hashValue % shardCountBigInt) + shardCountBigInt) % shardCountBigInt);
 }
+
+const SIGNED_BIGINT_HIGH_BIT = 1n << 63n;
+const UINT64_MODULUS = 1n << 64n;
 
 function stripPersistedShardId(record: PersistedOutboxRecord): OutboxRecord {
   const { shardId: _shardId, ...outboxRecord } = record;

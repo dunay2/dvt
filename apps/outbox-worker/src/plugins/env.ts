@@ -82,10 +82,9 @@ const OwnershipModeSchema = CommonEnvSchema.pick({
 type ParsedActiveHttpEnv = z.infer<typeof ActiveHttpEnvSchema>;
 type ParsedActiveLogEnv = z.infer<typeof ActiveLogEnvSchema>;
 type ParsedActiveEnv = ParsedActiveHttpEnv | ParsedActiveLogEnv;
-type WithOwnedShardIds<T extends { DVT_OUTBOX_OWNED_SHARD_IDS?: readonly number[] | undefined }> =
-  Omit<T, 'DVT_OUTBOX_OWNED_SHARD_IDS'> & {
-    DVT_OUTBOX_OWNED_SHARD_IDS: readonly number[];
-  };
+type WithOwnedShardIds<T> = Omit<T, 'DVT_OUTBOX_OWNED_SHARD_IDS'> & {
+  DVT_OUTBOX_OWNED_SHARD_IDS: readonly number[];
+};
 
 export type ActiveEnv =
   | WithOwnedShardIds<ParsedActiveHttpEnv>
