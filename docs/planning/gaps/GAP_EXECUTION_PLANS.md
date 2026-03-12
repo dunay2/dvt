@@ -186,6 +186,7 @@ Minimum tuple for this document:
   - initial operator runbook for canary expectations and rollback boundaries
   - accepted `ADR-0033` plus the first executable `G5.5` slice: persisted `shard_id`, shard-aware claim selection, and single-shard-compatible topology defaults in runtime config
   - the second executable `G5.5` slice: startup advisory-lock ownership sessions held on a dedicated PostgreSQL connection and wired into the standalone host
+  - the third executable `G5.5` slice: post-start ownership-loss detection stops the standalone host and keeps retry backlog readiness scoped to the owned shard set
 - Remaining:
   - explicit subscriber delivery contract for projector/event-bus consumers
   - stale-readiness hardening, explicit shutdown withdrawal, and freshness-aware operational probes

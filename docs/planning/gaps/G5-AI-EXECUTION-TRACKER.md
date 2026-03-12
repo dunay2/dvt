@@ -35,12 +35,12 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-12`
 - `gap`: `G5`
 - `epic`: `#409`
-- `current_focus`: `G5.5B / #414 - ownership-loss shutdown and shard-scoped retry readiness`
-- `state`: `Validation / closeout`
-- `currently_working_on`: `ADR-0033 is now accepted, persisted shard routing and dedicated ownership sessions are already in code, and this slice lands host shutdown on ownership loss plus shard-scoped retry backlog checks while concurrent-worker proof remains open`
-- `next_after_current`: `G5.5C / #414 - concurrent-worker proof and real PostgreSQL evidence`
+- `current_focus`: `G5.5C / #414 - concurrent-worker proof and real PostgreSQL evidence`
+- `state`: `Ready to start`
+- `currently_working_on`: `G5.5B is now closed in repo: ADR-0033 runtime ownership-loss shutdown and shard-scoped retry backlog readiness are validated, and the next open repo-side slice is concurrent-worker proof with real PostgreSQL evidence`
+- `next_after_current`: `G5 closeout once #414 concurrent-worker proof and #413 external canary or rollback evidence are both recorded`
 - `blocking_dependencies`: `#410`, `#411`, and `#412` are closed; `#413` still needs external canary/rollback evidence, but it does not block the repo-side G5.5 implementation slice`
-- `last_completed`: `G5.3 / #412 merged via PR #444 on 2026-03-10`
+- `last_completed`: `G5.5B / #414 closed in repo on 2026-03-12`
 
 ## Remaining G5 Roadmap
 
@@ -257,10 +257,10 @@ Working checklist:
 - [x] strategy chosen in planning docs: deterministic `runId` sharding with explicit shard ownership and advisory-lock fencing
 - [x] persisted shard routing and shard-aware claim selection implemented in code
 - [x] dedicated startup ownership session implemented in the standalone host
-- [ ] lock-loss runtime semantics added
+- [x] lock-loss runtime semantics added
 - [ ] concurrent-worker tests added
 - [x] horizontal scale-out remains blocked until tests pass
-- [ ] status docs synced after closure
+- [x] status docs synced after closure
 
 Selected planning refs:
 
@@ -324,3 +324,6 @@ flowchart LR
 - `2026-03-12` `G5.5A / #414` `in progress`
   summary: accepted `ADR-0033`, implemented startup advisory-lock ownership sessions on a dedicated PostgreSQL connection, and wired the standalone host to refuse active startup when any configured shard lock is unavailable
   validation: `node --import tsx --test test/ownership/PgShardOwnershipGate.test.ts`; `pnpm --filter dvt-outbox-worker typecheck`
+- `2026-03-12` `G5.5B / #414` `done`
+  summary: closed the repo-side ownership-loss shutdown and shard-scoped retry readiness slice; the standalone host now stops on lost shard ownership, the retry backlog check is scoped to owned shards, and tracker focus moves to concurrent-worker proof with real PostgreSQL evidence
+  validation: `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm --filter dvt-outbox-worker test`; `pnpm test:engine`; `pnpm test:adapter-postgres`; `pnpm lint:md`; `pnpm docs:quality:check` (archive warnings only, exit `0`); `pnpm docs:canonical:check`
