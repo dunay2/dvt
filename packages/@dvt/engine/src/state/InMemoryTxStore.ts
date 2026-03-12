@@ -272,8 +272,8 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     await this.outbox.markFailed(id, error);
   }
 
-  async hasPendingRetries(): Promise<boolean> {
-    return this.outbox.hasPendingRetries();
+  async hasPendingRetries(selection?: OutboxClaimSelection): Promise<boolean> {
+    return this.outbox.hasPendingRetries(selection);
   }
 
   async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {

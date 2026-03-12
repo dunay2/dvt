@@ -251,14 +251,16 @@ Selected planning direction for `G5`:
   ownership sessions.
 - `shardCount` changes are treated as explicit topology migrations.
 
-The first two executable `G5.5` slices are now:
+The first three executable `G5.5` slices are now:
 
 - persisted `shard_id` plus shard-aware claim path
 - startup advisory-lock ownership sessions held on a dedicated PostgreSQL
   connection
+- post-start ownership-loss detection that stops the host and keeps retry
+  backlog readiness scoped to the owned shard set
 
-Lock-loss runtime behavior and concurrent-worker proof remain open follow-up
-work inside the same stage.
+Concurrent-worker proof and real PostgreSQL multi-worker evidence remain open
+follow-up work inside the same stage.
 
 Design detail for this stage lives in:
 

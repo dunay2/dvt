@@ -10,7 +10,8 @@ class RecordingOwnershipClient {
 
   constructor(
     private readonly lockOutcomes: Array<boolean | Error>,
-    private readonly failAfterLockIndex: number | null = null
+    private readonly failAfterLockIndex: number | null = null,
+    private readonly heartbeatOutcomes: Array<true | Error> = []
   ) {}
 
   async query(
@@ -20,7 +21,11 @@ class RecordingOwnershipClient {
     this.queries.push({ sql, params });
     const statement = sql.trim();
     if (!statement.includes('pg_try_advisory_lock')) {
-      return { rows: [], rowCount: 0 };
+      const heartbeatOutcome = this.heartbeatOutcomes.shift() ?? true;
+      if (heartbeatOutcome instanceof Error) {
+        throw heartbeatOutcome;
+      }
+      return { rows: [{ acquired: true }], rowCount: 1 };
     }
 
     const lockIndex =
@@ -54,6 +59,8 @@ function createGateHarness(options: {
   shardIds?: readonly number[];
   lockOutcomes?: Array<boolean | Error>;
   failAfterLockIndex?: number | null;
+  heartbeatOutcomes?: Array<true | Error>;
+  heartbeatIntervalMs?: number;
 }): {
   gate: ReturnType<typeof createPgShardOwnershipGate>;
   client: RecordingOwnershipClient;
@@ -63,7 +70,8 @@ function createGateHarness(options: {
 } {
   const client = new RecordingOwnershipClient(
     options.lockOutcomes ?? [true],
-    options.failAfterLockIndex ?? null
+    options.failAfterLockIndex ?? null,
+    options.heartbeatOutcomes ?? []
   );
   let acquirePoolLeaseCalls = 0;
   let connectCalls = 0;
@@ -91,6 +99,9 @@ function createGateHarness(options: {
           },
         };
       },
+      ...(options.heartbeatIntervalMs === undefined
+        ? {}
+        : { heartbeatIntervalMs: options.heartbeatIntervalMs }),
     }
   );
 
@@ -179,6 +190,21 @@ await test('PgShardOwnershipGate cleans up the dedicated session when lock acqui
 
   assert.equal(harness.acquirePoolLeaseCalls, 1);
   assert.equal(harness.connectCalls, 1);
+  assert.deepEqual(harness.client.releaseCalls, [true]);
+  assert.equal(harness.releaseLeaseCalls, 1);
+});
+
+await test('PgShardOwnershipGate reports ownership loss when the dedicated session heartbeat fails', async () => {
+  const harness = createGateHarness({
+    shardIds: [0],
+    heartbeatOutcomes: [new Error('synthetic heartbeat failure')],
+    heartbeatIntervalMs: 1,
+  });
+
+  const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
+
+  assert.notEqual(lease, null);
+  await assert.rejects(() => lease?.waitForLoss?.() ?? Promise.resolve(), /OUTBOX_OWNERSHIP_LOST/);
   assert.deepEqual(harness.client.releaseCalls, [true]);
   assert.equal(harness.releaseLeaseCalls, 1);
 });

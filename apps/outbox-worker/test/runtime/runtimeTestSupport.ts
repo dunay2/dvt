@@ -215,7 +215,7 @@ export class MemoryOutboxStorage implements IOutboxStorage {
     record.lastError = error;
   }
 
-  async hasPendingRetries(): Promise<boolean> {
+  async hasPendingRetries(_selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     return this.records.some((record) => record.attempts > 0);
   }
 }

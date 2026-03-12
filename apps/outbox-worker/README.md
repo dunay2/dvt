@@ -28,7 +28,7 @@ Duplicate-handling contract:
 Operational endpoints:
 
 - `/healthz`: liveness probe for the worker process
-- `/readyz`: readiness probe based on runtime state (`idle` / `draining` are ready only when no retry backlog is pending) and the effective `owner` flag
+- `/readyz`: readiness probe based on runtime state (`idle` / `draining` are ready only when no retry backlog is pending for the worker-owned shards) and the effective `owner` flag
 - `/metrics`: Prometheus-style metrics for runtime state, effective ownership, lag, retries, deliveries, DLQ, and errors
 - in `active` mode, readiness freshness is sized to cover the configured in-flight batch budget instead of only the sleep between ticks
 
@@ -43,7 +43,7 @@ Ownership safety rule:
 
 - `active` now acquires shard-scoped PostgreSQL advisory locks on a dedicated ownership session before delivery starts
 - same-shard dual-active startup should be refused by that fence
-- lock-loss handling and concurrent-worker proof remain open in `G5.5`
+- if the dedicated ownership session is lost after startup, the host withdraws ownership and stops the runtime before admitting more work
 - if the ownership fence refuses active ownership, the host stays passive and does not start delivery
 
 Core env vars:
@@ -63,6 +63,7 @@ Shard ownership rule:
 - multi-shard ownership requires explicit `DVT_OUTBOX_OWNED_SHARD_IDS`
 - shard filtering is enforced in SQL before claim selection; it is not an in-memory discard step
 - active startup holds one dedicated PostgreSQL session for the configured shard locks and destroys that session on shutdown
+- retry-backlog readiness is scoped to the same owned shard set used for claim selection
 
 Shutdown behavior:
 

@@ -27,101 +27,58 @@ type RuntimeFactory = (
 
 interface OwnershipLease {
   release(): Promise<void>;
+  waitForLoss?(): Promise<void>;
 }
 
 interface OwnershipGate {
   acquire(signal: globalThis.AbortSignal): Promise<OwnershipLease | null>;
 }
 
+interface HostRunState {
+  runtime: RuntimeHandle | null;
+  detachShutdownListener(): void;
+  detachOwnershipLossListener(): void;
+  releaseOwnership(): Promise<void>;
+  releaseRuntimeAbortBridge(): void;
+}
+
+interface ActiveRuntimeControl {
+  signal: globalThis.AbortSignal;
+  detachOwnershipLossListener(): void;
+  releaseRuntimeAbortBridge(): void;
+  throwIfOwnershipLost(): void;
+}
+
 export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): Promise<void> {
   const createRuntime = options.createRuntime ?? createOutboxWorkerRuntime;
   const ownershipGate = options.ownershipGate ?? ALWAYS_ACTIVE_OWNERSHIP_GATE;
+  const state = createHostRunState();
   let primaryError: Error | null = null;
-  let cleanupError: Error | null = null;
-  let runtime: RuntimeHandle | null = null;
-  let detachShutdownListener = (): void => {};
-  let releaseOwnership = async (): Promise<void> => {};
 
   try {
-    await options.operationalServer.start();
-    options.logger.info(
-      {
-        ownershipMode: options.env.DVT_OUTBOX_OWNERSHIP_MODE,
-        adminHost: options.env.DVT_OUTBOX_ADMIN_HOST,
-        adminPort: options.env.DVT_OUTBOX_ADMIN_PORT,
-        ...(options.env.DVT_OUTBOX_OWNERSHIP_MODE === 'active'
-          ? { busMode: options.env.DVT_OUTBOX_EVENT_BUS_MODE }
-          : {}),
-      },
-      'outbox worker bootstrapped'
-    );
+    await startOperationalServer(options);
 
     if (options.env.DVT_OUTBOX_OWNERSHIP_MODE === 'passive') {
-      options.monitor.enterPassiveMode();
-      await waitForAbort(options.shutdownSignal);
-      return;
+      await runPassiveHost(options);
+    } else {
+      const activeOptions = options as RunOutboxWorkerHostOptions & { env: ActiveEnv };
+      await runActiveHost({
+        options: activeOptions,
+        createRuntime,
+        ownershipGate,
+        state,
+      });
     }
-
-    if (options.shutdownSignal.aborted) {
-      return;
-    }
-
-    const ownershipLease = await ownershipGate.acquire(options.shutdownSignal);
-    if (!ownershipLease) {
-      options.logger.warn?.(
-        { ownershipMode: options.env.DVT_OUTBOX_OWNERSHIP_MODE },
-        'outbox ownership unavailable; entering passive mode'
-      );
-      options.monitor.enterPassiveMode();
-      await waitForAbort(options.shutdownSignal);
-      return;
-    }
-    releaseOwnership = () => ownershipLease.release();
-    options.monitor.onOwnershipAcquired();
-
-    detachShutdownListener = observeShutdownForReadinessWithdrawal(
-      options.shutdownSignal,
-      options.monitor
-    );
-
-    runtime = await createRuntimeUntilShutdown({
-      createRuntime,
-      env: options.env,
-      logger: options.logger,
-      monitor: options.monitor,
-      shutdownSignal: options.shutdownSignal,
-    });
-    if (!runtime) {
-      return;
-    }
-    await runtime.start(options.shutdownSignal);
   } catch (error) {
     primaryError = toThrowableError(error);
-  } finally {
-    detachShutdownListener();
-
-    try {
-      await stopRuntimeAndOperationalServer({
-        runtime,
-        operationalServer: options.operationalServer,
-        logger: options.logger,
-        primaryError,
-      });
-    } catch (error) {
-      cleanupError = toThrowableError(error);
-    }
-
-    try {
-      await releaseOwnershipHandle({
-        releaseOwnership,
-        logger: options.logger,
-        primaryError,
-      });
-    } catch (error) {
-      cleanupError = appendCleanupError(cleanupError, error);
-    }
   }
 
+  const cleanupError = await cleanupHostRun({
+    state,
+    operationalServer: options.operationalServer,
+    logger: options.logger,
+    primaryError,
+  });
   if (cleanupError !== null) {
     throw cleanupError;
   }
@@ -131,11 +88,108 @@ export async function runOutboxWorkerHost(options: RunOutboxWorkerHostOptions): 
   }
 }
 
+function createHostRunState(): HostRunState {
+  return {
+    runtime: null,
+    detachShutdownListener: (): void => {},
+    detachOwnershipLossListener: (): void => {},
+    releaseOwnership: async (): Promise<void> => {},
+    releaseRuntimeAbortBridge: (): void => {},
+  };
+}
+
 const ALWAYS_ACTIVE_OWNERSHIP_GATE: OwnershipGate = {
   acquire: async () => ({
     release: async () => {},
   }),
 };
+
+async function startOperationalServer(
+  options: Pick<RunOutboxWorkerHostOptions, 'env' | 'logger' | 'operationalServer'>
+): Promise<void> {
+  await options.operationalServer.start();
+  options.logger.info(buildBootstrapLogData(options.env), 'outbox worker bootstrapped');
+}
+
+function buildBootstrapLogData(env: Env): Record<string, string | number> {
+  return {
+    ownershipMode: env.DVT_OUTBOX_OWNERSHIP_MODE,
+    adminHost: env.DVT_OUTBOX_ADMIN_HOST,
+    adminPort: env.DVT_OUTBOX_ADMIN_PORT,
+    ...(env.DVT_OUTBOX_OWNERSHIP_MODE === 'active' ? { busMode: env.DVT_OUTBOX_EVENT_BUS_MODE } : {}),
+  };
+}
+
+async function runPassiveHost(
+  options: Pick<RunOutboxWorkerHostOptions, 'monitor' | 'shutdownSignal'>
+): Promise<void> {
+  options.monitor.enterPassiveMode();
+  await waitForAbort(options.shutdownSignal);
+}
+
+async function runActiveHost(options: {
+  options: RunOutboxWorkerHostOptions & { env: ActiveEnv };
+  createRuntime: RuntimeFactory;
+  ownershipGate: OwnershipGate;
+  state: HostRunState;
+}): Promise<void> {
+  if (options.options.shutdownSignal.aborted) {
+    return;
+  }
+
+  const ownershipLease = await acquireOwnershipLease(options);
+  if (!ownershipLease) {
+    return;
+  }
+
+  options.state.releaseOwnership = () => ownershipLease.release();
+  options.options.monitor.onOwnershipAcquired();
+
+  const activeRuntime = createActiveRuntimeControl({
+    lease: ownershipLease,
+    logger: options.options.logger,
+    monitor: options.options.monitor,
+    shutdownSignal: options.options.shutdownSignal,
+  });
+  options.state.releaseRuntimeAbortBridge = activeRuntime.releaseRuntimeAbortBridge;
+  options.state.detachOwnershipLossListener = activeRuntime.detachOwnershipLossListener;
+  options.state.detachShutdownListener = observeShutdownForReadinessWithdrawal(
+    options.options.shutdownSignal,
+    options.options.monitor
+  );
+
+  options.state.runtime = await createRuntimeUntilShutdown({
+    createRuntime: options.createRuntime,
+    env: options.options.env,
+    logger: options.options.logger,
+    monitor: options.options.monitor,
+    shutdownSignal: activeRuntime.signal,
+  });
+  if (!options.state.runtime) {
+    activeRuntime.throwIfOwnershipLost();
+    return;
+  }
+
+  await options.state.runtime.start(activeRuntime.signal);
+  activeRuntime.throwIfOwnershipLost();
+}
+
+async function acquireOwnershipLease(options: {
+  options: RunOutboxWorkerHostOptions & { env: ActiveEnv };
+  ownershipGate: OwnershipGate;
+}): Promise<OwnershipLease | null> {
+  const ownershipLease = await options.ownershipGate.acquire(options.options.shutdownSignal);
+  if (ownershipLease) {
+    return ownershipLease;
+  }
+
+  options.options.logger.warn?.(
+    { ownershipMode: options.options.env.DVT_OUTBOX_OWNERSHIP_MODE },
+    'outbox ownership unavailable; entering passive mode'
+  );
+  await runPassiveHost(options.options);
+  return null;
+}
 
 async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
   if (signal.aborted) {
@@ -155,6 +209,59 @@ async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
   });
 }
 
+function createLinkedAbortController(signal: globalThis.AbortSignal): {
+  controller: AbortController;
+  detach(): void;
+} {
+  const controller = new globalThis.AbortController();
+  const onAbort = (): void => {
+    signal.removeEventListener('abort', onAbort);
+    controller.abort();
+  };
+
+  signal.addEventListener('abort', onAbort, { once: true });
+  if (signal.aborted) {
+    onAbort();
+  }
+
+  return {
+    controller,
+    detach: (): void => {
+      signal.removeEventListener('abort', onAbort);
+    },
+  };
+}
+
+function createActiveRuntimeControl(options: {
+  lease: OwnershipLease;
+  logger: OutboxWorkerRuntimeLogger;
+  monitor: Pick<OutboxWorkerMonitor, 'onOwnershipLost'>;
+  shutdownSignal: globalThis.AbortSignal;
+}): ActiveRuntimeControl {
+  const runtimeAbortBridge = createLinkedAbortController(options.shutdownSignal);
+  let ownershipLossError: Error | null = null;
+
+  return {
+    signal: runtimeAbortBridge.controller.signal,
+    releaseRuntimeAbortBridge: runtimeAbortBridge.detach,
+    detachOwnershipLossListener: observeOwnershipLoss({
+      lease: options.lease,
+      logger: options.logger,
+      monitor: options.monitor,
+      shutdownSignal: options.shutdownSignal,
+      onOwnershipLost(error) {
+        ownershipLossError ??= error;
+        runtimeAbortBridge.controller.abort();
+      },
+    }),
+    throwIfOwnershipLost(): void {
+      if (ownershipLossError !== null) {
+        throw ownershipLossError;
+      }
+    },
+  };
+}
+
 function observeShutdownForReadinessWithdrawal(
   signal: globalThis.AbortSignal,
   monitor: Pick<OutboxWorkerMonitor, 'onStopping'>
@@ -171,6 +278,39 @@ function observeShutdownForReadinessWithdrawal(
 
   return (): void => {
     signal.removeEventListener('abort', onAbort);
+  };
+}
+
+function observeOwnershipLoss(options: {
+  lease: OwnershipLease;
+  logger: OutboxWorkerRuntimeLogger;
+  monitor: Pick<OutboxWorkerMonitor, 'onOwnershipLost'>;
+  shutdownSignal: globalThis.AbortSignal;
+  onOwnershipLost(error: Error): void;
+}): () => void {
+  if (!options.lease.waitForLoss) {
+    return (): void => {};
+  }
+
+  let disposed = false;
+  void options.lease.waitForLoss().catch((error) => {
+    if (disposed || options.shutdownSignal.aborted) {
+      return;
+    }
+
+    const ownershipError = toThrowableError(error);
+    options.monitor.onOwnershipLost(ownershipError);
+    options.logger.error(
+      {
+        err: toErrorLike(ownershipError),
+      },
+      'outbox ownership lost; stopping host'
+    );
+    options.onOwnershipLost(ownershipError);
+  });
+
+  return (): void => {
+    disposed = true;
   };
 }
 
@@ -207,6 +347,42 @@ async function createRuntimeUntilShutdown(options: {
     });
 
   return Promise.race([runtimePromise, waitForAbort(options.shutdownSignal).then(() => null)]);
+}
+
+async function cleanupHostRun(options: {
+  state: HostRunState;
+  operationalServer: Pick<OperationalServerHandle, 'stop'>;
+  logger: OutboxWorkerRuntimeLogger;
+  primaryError: Error | null;
+}): Promise<Error | null> {
+  let cleanupError: Error | null = null;
+
+  options.state.detachShutdownListener();
+  options.state.detachOwnershipLossListener();
+  options.state.releaseRuntimeAbortBridge();
+
+  try {
+    await stopRuntimeAndOperationalServer({
+      runtime: options.state.runtime,
+      operationalServer: options.operationalServer,
+      logger: options.logger,
+      primaryError: options.primaryError,
+    });
+  } catch (error) {
+    cleanupError = toThrowableError(error);
+  }
+
+  try {
+    await releaseOwnershipHandle({
+      releaseOwnership: options.state.releaseOwnership,
+      logger: options.logger,
+      primaryError: options.primaryError,
+    });
+  } catch (error) {
+    cleanupError = appendCleanupError(cleanupError, error);
+  }
+
+  return cleanupError;
 }
 
 async function safelyStopRuntimeAfterLateBootstrap(

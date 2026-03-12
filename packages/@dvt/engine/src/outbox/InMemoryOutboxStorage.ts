@@ -248,8 +248,17 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     rec.nextAttemptAt = this.computeNextAttemptAtIso(rec.attempts);
   }
 
-  async hasPendingRetries(): Promise<boolean> {
-    return this.pending.some((record) => record.attempts > 0);
+  async hasPendingRetries(selection?: OutboxClaimSelection): Promise<boolean> {
+    const selectedShardIds = selection?.shardIds;
+    const ownedShardIds =
+      selectedShardIds === undefined ? null : new Set(selectedShardIds.map(Number));
+    if (ownedShardIds?.size === 0) {
+      return false;
+    }
+
+    return this.pending.some(
+      (record) => (ownedShardIds?.has(record.shardId) ?? true) && record.attempts > 0
+    );
   }
 
   async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {

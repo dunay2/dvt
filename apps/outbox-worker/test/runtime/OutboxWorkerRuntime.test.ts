@@ -76,8 +76,8 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     await this.inner.markFailed(id, error);
   }
 
-  async hasPendingRetries(): Promise<boolean> {
-    return (await this.inner.hasPendingRetries?.()) ?? false;
+  async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
+    return (await this.inner.hasPendingRetries?.(selection)) ?? false;
   }
 }
 

@@ -101,6 +101,13 @@ export class OutboxWorkerMonitor implements OutboxWorkerObserver, OutboxWorkerRu
     this.owner = true;
   }
 
+  onOwnershipLost(error?: unknown): void {
+    this.owner = false;
+    this.lastErrorMessage = error ? toErrorMessage(error) : 'outbox ownership lost';
+    this.lastErrorAtMs = this.nowMs();
+    this.transitionTo('failing', 'ownership lost');
+  }
+
   onTick(result: OutboxTickResult): void {
     this.counters.ticksTotal += 1;
     this.counters.claimedRecordsTotal += result.claimedCount;

@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import type { RunEventPersisted } from '../../src/contracts/runEvents.js';
@@ -75,8 +77,8 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
     await this.inner.markFailed(id, error);
   }
 
-  async hasPendingRetries(): Promise<boolean> {
-    return (await this.inner.hasPendingRetries?.()) ?? false;
+  async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
+    return (await this.inner.hasPendingRetries?.(selection)) ?? false;
   }
 }
 
@@ -257,6 +259,11 @@ describe('OutboxWorker', () => {
           shardIds?: readonly number[];
         }
       | undefined;
+    let receivedRetrySelection:
+      | {
+          shardIds?: readonly number[];
+        }
+      | undefined;
     const storage: IOutboxStorage = {
       async enqueueTx(): Promise<void> {},
       async listPending(): Promise<OutboxRecord[]> {
@@ -273,6 +280,10 @@ describe('OutboxWorker', () => {
       },
       async markDelivered(): Promise<void> {},
       async markFailed(): Promise<void> {},
+      async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
+        receivedRetrySelection = selection;
+        return false;
+      },
     };
     const worker = new OutboxWorker(storage, new CapturingBus(), {
       batchSize: 10,
@@ -282,6 +293,31 @@ describe('OutboxWorker', () => {
     const result = await worker.tick();
 
     expect(receivedSelection).toEqual({ shardIds: [1, 3] });
+    expect(receivedRetrySelection).toEqual({ shardIds: [1, 3] });
+    expect(result).toMatchObject({
+      claimedCount: 0,
+      deliveredCount: 0,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      retryBacklogActive: false,
+    });
+  });
+
+  it('keeps retry backlog scoped to the worker-owned shards', async () => {
+    const storage = new InMemoryOutboxStorage({ nowMs: () => 0, shardCount: 2 });
+    const worker = new OutboxWorker(storage, new CapturingBus(), {
+      batchSize: 10,
+      claimSelection: { shardIds: [0] },
+    });
+
+    const shard1RunId = findRunIdForShard(1, 2);
+    await storage.enqueueTx(shard1RunId, [makeEvent('shard-1', shard1RunId, 1)]);
+    const shard1Pending = await storage.listPendingForClaim(10, { shardIds: [1] });
+    expect(shard1Pending).toHaveLength(1);
+    await storage.markFailed(shard1Pending[0]!.id, 'synthetic shard-1 retry');
+
+    const result = await worker.tick();
+
     expect(result).toMatchObject({
       claimedCount: 0,
       deliveredCount: 0,
@@ -566,3 +602,26 @@ describe('OutboxWorker', () => {
     expect(failures).toContainEqual({ disposition: 'dead_letter', outboxId: 'outbox_1' });
   });
 });
+
+function findRunIdForShard(targetShardId: number, shardCount: number): string {
+  for (let index = 0; index < 256; index += 1) {
+    const candidate = `run-shard-${targetShardId}-${index}`;
+    if (resolveShardId(candidate, shardCount) === targetShardId) {
+      return candidate;
+    }
+  }
+  throw new Error(`Unable to find run id for shard ${targetShardId}`);
+}
+
+function resolveShardId(runId: string, shardCount: number): number {
+  const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
+  const shardCountBigInt = BigInt(shardCount);
+  let hashValue = BigInt(`0x${hash}`);
+  if (hashValue >= SIGNED_BIGINT_HIGH_BIT) {
+    hashValue -= UINT64_MODULUS;
+  }
+  return Number(((hashValue % shardCountBigInt) + shardCountBigInt) % shardCountBigInt);
+}
+
+const SIGNED_BIGINT_HIGH_BIT = 1n << 63n;
+const UINT64_MODULUS = 1n << 64n;

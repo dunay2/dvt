@@ -1,8 +1,11 @@
+import { setTimeout as sleep } from 'node:timers/promises';
+
 import { acquirePgPool, type PgPoolConfig } from '../db/pool.js';
 import type { OutboxWorkerRuntimeLogger } from '../runtime/OutboxWorkerRuntime.js';
 
 interface OwnershipLease {
   release(): Promise<void>;
+  waitForLoss?(): Promise<void>;
 }
 
 interface OwnershipGate {
@@ -31,6 +34,7 @@ interface PgShardOwnershipGateConfig extends PgPoolConfig {
 
 interface PgShardOwnershipGateDependencies {
   acquirePoolLease?: (config: PgPoolConfig) => OwnershipPoolLease;
+  heartbeatIntervalMs?: number;
 }
 
 interface AdvisoryLockResult {
@@ -39,6 +43,8 @@ interface AdvisoryLockResult {
 
 const OWNERSHIP_LOCK_SQL =
   "SELECT pg_try_advisory_lock((('x' || left(md5($1), 16))::bit(64)::bigint)) AS acquired";
+const OWNERSHIP_HEARTBEAT_SQL = 'SELECT 1';
+const DEFAULT_HEARTBEAT_INTERVAL_MS = 1_000;
 
 export function createPgShardOwnershipGate(
   config: PgShardOwnershipGateConfig,
@@ -108,6 +114,7 @@ export function createPgShardOwnershipGate(
           poolLease,
           logger: config.logger,
           acquiredShardIds,
+          heartbeatIntervalMs: deps.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
         });
       } catch (error) {
         await safelyDestroyOwnershipSession(client, poolLease, config.logger);
@@ -122,16 +129,61 @@ function createOwnershipLease(options: {
   poolLease: OwnershipPoolLease;
   logger: OutboxWorkerRuntimeLogger;
   acquiredShardIds: readonly number[];
+  heartbeatIntervalMs: number;
 }): OwnershipLease {
-  let released = false;
+  let settled = false;
+  let sessionClosed = false;
+  let resolveWaitForLoss: (() => void) | null = null;
+  let rejectWaitForLoss: ((error: Error) => void) | null = null;
+  const heartbeatAbort = new globalThis.AbortController();
+  const waitForLossPromise = new Promise<void>((resolve, reject) => {
+    resolveWaitForLoss = resolve;
+    rejectWaitForLoss = reject;
+  });
+
+  const settleWaitForLoss = (error: Error | null): void => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    if (error === null) {
+      resolveWaitForLoss?.();
+      return;
+    }
+    rejectWaitForLoss?.(error);
+  };
+
+  const closeSession = async (): Promise<void> => {
+    if (sessionClosed) {
+      return;
+    }
+    sessionClosed = true;
+    heartbeatAbort.abort();
+    await destroyOwnershipSession(options.client, options.poolLease);
+  };
+
+  void monitorOwnershipSession({
+    client: options.client,
+    intervalMs: options.heartbeatIntervalMs,
+    signal: heartbeatAbort.signal,
+  }).then(
+    () => {
+      settleWaitForLoss(null);
+    },
+    async (error) => {
+      await safelyCloseLostOwnershipSession(options, closeSession);
+      settleWaitForLoss(toOwnershipLossError(error, options.acquiredShardIds));
+    }
+  );
 
   return {
+    waitForLoss: async (): Promise<void> => waitForLossPromise,
     release: async (): Promise<void> => {
-      if (released) {
+      if (sessionClosed) {
         return;
       }
-      released = true;
-      await destroyOwnershipSession(options.client, options.poolLease);
+      await closeSession();
+      settleWaitForLoss(null);
       options.logger.info(
         {
           releasedShardIds: options.acquiredShardIds,
@@ -140,6 +192,53 @@ function createOwnershipLease(options: {
       );
     },
   };
+}
+
+async function monitorOwnershipSession(options: {
+  client: OwnershipClient;
+  intervalMs: number;
+  signal: globalThis.AbortSignal;
+}): Promise<void> {
+  while (!options.signal.aborted) {
+    await waitForHeartbeatInterval(options.intervalMs, options.signal);
+    if (options.signal.aborted) {
+      return;
+    }
+
+    await options.client.query(OWNERSHIP_HEARTBEAT_SQL);
+  }
+}
+
+async function waitForHeartbeatInterval(
+  intervalMs: number,
+  signal: globalThis.AbortSignal
+): Promise<void> {
+  try {
+    await sleep(intervalMs, undefined, { signal });
+  } catch (error) {
+    if (signal.aborted && isAbortError(error)) {
+      return;
+    }
+    throw error;
+  }
+}
+
+async function safelyCloseLostOwnershipSession(
+  options: {
+    logger: OutboxWorkerRuntimeLogger;
+  },
+  closeSession: () => Promise<void>
+): Promise<void> {
+  try {
+    await closeSession();
+  } catch (error) {
+    options.logger.warn?.(
+      {
+        err: toErrorLike(error),
+      },
+      'outbox shard ownership cleanup failed'
+    );
+  }
 }
 
 async function tryAcquireShardLock(
@@ -228,6 +327,29 @@ function serializeErrorObject(error: object): string {
       ? constructorName
       : 'UnserializableErrorObject';
   }
+}
+
+function createOwnershipLostError(error: unknown, shardIds: readonly number[]): Error {
+  const message =
+    shardIds.length === 0
+      ? 'OUTBOX_OWNERSHIP_LOST'
+      : `OUTBOX_OWNERSHIP_LOST: shards=${shardIds.join(',')}`;
+  const ownershipError = new Error(message, {
+    cause: error instanceof Error ? error : new Error(stringifyUnknownError(error)),
+  });
+  ownershipError.name = 'OwnershipLostError';
+  return ownershipError;
+}
+
+function toOwnershipLossError(error: unknown, shardIds: readonly number[]): Error {
+  if (error instanceof Error && error.name === 'OwnershipLostError') {
+    return error;
+  }
+  return createOwnershipLostError(error, shardIds);
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 export type {

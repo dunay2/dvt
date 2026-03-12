@@ -253,6 +253,7 @@ function createOwnershipGate(
   options: {
     available?: boolean;
     release?(): Promise<void> | void;
+    waitForLoss?(): Promise<void>;
   } = {}
 ): NonNullable<HostOptions['ownershipGate']> {
   return {
@@ -267,6 +268,7 @@ function createOwnershipGate(
           calls.push('ownership.release');
           await options.release?.();
         },
+        ...(options.waitForLoss === undefined ? {} : { waitForLoss: options.waitForLoss }),
       };
     },
   };
@@ -448,10 +450,11 @@ await test('runOutboxWorkerHost creates and starts the runtime when ownership mo
     'runtime.stop',
     'operational.stop',
   ]);
-  assert.equal(receivedSignal, fixture.shutdown.signal);
+  assert.notEqual(receivedSignal, null);
+  assert.notEqual(receivedSignal, fixture.shutdown.signal);
   assert.equal(receivedObserver, fixture.monitor);
   assert.equal(receivedHooks, fixture.monitor);
-  assert.equal(receivedShutdownSignal, fixture.shutdown.signal);
+  assert.equal(receivedShutdownSignal, receivedSignal);
   assertBootstrappedLog(fixture.entries);
 });
 
@@ -489,6 +492,93 @@ await test('runOutboxWorkerHost stays passive when active ownership is unavailab
 
 await test('runOutboxWorkerHost releases acquired ownership after cleanup', async () => {
   await assertOwnedRuntimeLifecycle();
+});
+
+await test('runOutboxWorkerHost stops the active runtime when ownership is lost after startup', async () => {
+  const fixture = createActiveHostFixture({
+    nowMs: () => TEST_NOW_MS,
+    readyStaleAfterMs: 60_000,
+  });
+  let ownershipLossProbeInstalled = false;
+  let runtimeAbortObserved = false;
+  let releaseRuntimeStart: () => void = () => {
+    throw new Error('expected runtime abort after ownership loss');
+  };
+  let rejectOwnershipLoss: (error: Error) => void = () => {
+    throw new Error('expected ownership-loss probe to be installed');
+  };
+
+  const hostPromise = runHostWithFixture(fixture, {
+    ownershipGate: createOwnershipGate(fixture.calls, {
+      waitForLoss: () =>
+        new Promise<void>((_resolve, reject) => {
+          ownershipLossProbeInstalled = true;
+          rejectOwnershipLoss = (error) => {
+            reject(error);
+          };
+        }),
+    }),
+    createRuntime: createRuntimeFactory(fixture.calls, {
+      start: async (signal?: globalThis.AbortSignal) => {
+        fixture.monitor.onStarted();
+        fixture.monitor.onTick({
+          claimedCount: 1,
+          deliveredCount: 1,
+          retriedCount: 0,
+          deadLetteredCount: 0,
+          oldestClaimedAgeMs: 1_000,
+          retryBacklogActive: false,
+        });
+
+        await new Promise<void>((resolve) => {
+          signal?.addEventListener(
+            'abort',
+            () => {
+              runtimeAbortObserved = true;
+              releaseRuntimeStart = resolve;
+            },
+            { once: true }
+          );
+        });
+      },
+    }),
+  });
+
+  await waitFor(() => fixture.calls.includes('runtime.start'));
+  assert.equal(fixture.monitor.getHealthSnapshot().ready, true);
+
+  assert.equal(ownershipLossProbeInstalled, true);
+  rejectOwnershipLoss(new Error('synthetic ownership session loss'));
+
+  await waitFor(() => runtimeAbortObserved);
+
+  const ownershipLost = fixture.monitor.getHealthSnapshot();
+  assert.equal(ownershipLost.ok, true);
+  assert.equal(ownershipLost.ready, false);
+  assert.equal(ownershipLost.state, 'failing');
+  assert.equal(ownershipLost.owner, false);
+  assert.equal(ownershipLost.lastErrorMessage, 'synthetic ownership session loss');
+
+  releaseRuntimeStart();
+
+  await assert.rejects(hostPromise, /synthetic ownership session loss/);
+  assert.deepEqual(fixture.calls, [
+    'operational.start',
+    'ownership.acquire',
+    'runtime.factory',
+    'runtime.start',
+    'runtime.stop',
+    'operational.stop',
+    'ownership.release',
+  ]);
+  assert.equal(
+    hasLogEntry(
+      fixture.entries,
+      (entry) =>
+        entry.level === 'error' && entry.msg === 'outbox ownership lost; stopping host'
+    ),
+    true
+  );
 });
 
 await test('runOutboxWorkerHost releases ownership before surfacing cleanup failures', async () => {

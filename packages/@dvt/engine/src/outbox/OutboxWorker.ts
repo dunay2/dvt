@@ -53,22 +53,25 @@ export class OutboxWorker {
     const result = emptyTickResult();
     const maxBatchSize = Math.max(0, this.cfg.batchSize);
     const seenRecordIds = new Set<string>();
+    const claimSelection = resolveClaimSelection(this.cfg.claimSelection);
 
     while (result.claimedCount < maxBatchSize) {
       const batch = await this.claimNextBatch(
         maxBatchSize - result.claimedCount,
         seenRecordIds,
-        result
+        result,
+        claimSelection
       );
       if (batch.length === 0) {
         break;
       }
 
-      await this.processBatch(result, batch);
+      await this.processBatch(result, batch, claimSelection);
     }
 
     result.retryBacklogActive = await resolveRetryBacklogActive(
       this.storage,
+      claimSelection,
       result.retriedCount > 0
     );
     return result;
@@ -77,13 +80,14 @@ export class OutboxWorker {
   private async claimNextBatch(
     remainingCapacity: number,
     seenRecordIds: Set<string>,
-    result: OutboxTickResult
+    result: OutboxTickResult,
+    claimSelection: OutboxClaimSelection | undefined
   ): Promise<readonly OutboxRecord[]> {
     if (remainingCapacity <= 0) {
       return [];
     }
 
-    const batch = (await this.listPendingForClaim(remainingCapacity))
+    const batch = (await this.listPendingForClaim(remainingCapacity, claimSelection))
       .filter((record) => !seenRecordIds.has(record.id))
       .slice(0, remainingCapacity);
     if (batch.length === 0) {
@@ -97,8 +101,10 @@ export class OutboxWorker {
     return batch;
   }
 
-  private async listPendingForClaim(limit: number): Promise<OutboxRecord[]> {
-    const selection = resolveClaimSelection(this.cfg.claimSelection);
+  private async listPendingForClaim(
+    limit: number,
+    selection: OutboxClaimSelection | undefined
+  ): Promise<OutboxRecord[]> {
     if (this.storage.listPendingForClaim) {
       return this.storage.listPendingForClaim(limit, selection);
     }
@@ -124,20 +130,25 @@ export class OutboxWorker {
 
   private async processBatch(
     result: OutboxTickResult,
-    batch: readonly OutboxRecord[]
+    batch: readonly OutboxRecord[],
+    claimSelection?: OutboxClaimSelection
   ): Promise<void> {
     for (const record of batch) {
-      await this.processRecord(result, record);
+      await this.processRecord(result, record, claimSelection);
     }
   }
 
-  private async processRecord(result: OutboxTickResult, record: OutboxRecord): Promise<void> {
+  private async processRecord(
+    result: OutboxTickResult,
+    record: OutboxRecord,
+    claimSelection?: OutboxClaimSelection
+  ): Promise<void> {
     try {
       await this.publishRecord(record);
       result.deliveredCount += 1;
       await safelyObserve(() => this.observer?.onRecordDelivered?.(record));
     } catch (err) {
-      await this.handlePublishFailure(result, record, err);
+      await this.handlePublishFailure(result, record, err, claimSelection);
     }
   }
 
@@ -151,7 +162,8 @@ export class OutboxWorker {
   private async handlePublishFailure(
     result: OutboxTickResult,
     record: OutboxRecord,
-    err: unknown
+    err: unknown,
+    claimSelection?: OutboxClaimSelection
   ): Promise<void> {
     const msg = err instanceof Error ? err.message : String(err);
     const disposition = resolveFailureDisposition(record.attempts);
@@ -167,6 +179,7 @@ export class OutboxWorker {
 
     result.retryBacklogActive = await resolveRetryBacklogActive(
       this.storage,
+      claimSelection,
       result.retriedCount > 0
     );
     throw new OutboxWorkerTickError(err, result);
@@ -253,13 +266,14 @@ async function safelyObserve(fn: (() => void | Promise<void>) | undefined): Prom
 
 async function resolveRetryBacklogActive(
   storage: IOutboxStorage,
+  selection: OutboxClaimSelection | undefined,
   fallback: boolean
 ): Promise<boolean> {
   if (!storage.hasPendingRetries) {
     return fallback;
   }
   try {
-    return await storage.hasPendingRetries();
+    return await storage.hasPendingRetries(selection);
   } catch {
     return fallback;
   }

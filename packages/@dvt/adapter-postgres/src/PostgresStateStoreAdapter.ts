@@ -814,9 +814,19 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     });
   }
 
-  async hasPendingRetries(): Promise<boolean> {
+  async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     this.ready();
+    const shardIds = normalizeShardSelection(selection?.shardIds);
+    if (shardIds?.length === 0) {
+      return false;
+    }
     return this.withClient(async (client) => {
+      const params: unknown[] = [];
+      let shardFilterClause = '';
+      if (shardIds) {
+        params.push(shardIds);
+        shardFilterClause = `AND shard_id = ANY($${params.length}::int[])`;
+      }
       const result = await client.query<{ has_pending_retries: boolean }>(
         `
           SELECT EXISTS (
@@ -825,8 +835,10 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
             WHERE delivered_at IS NULL
               AND attempts > 0
               AND attempts < ${MAX_OUTBOX_ATTEMPTS}
+              ${shardFilterClause}
           ) AS has_pending_retries
-        `
+        `,
+        params
       );
       return result.rows[0]?.has_pending_retries ?? false;
     });

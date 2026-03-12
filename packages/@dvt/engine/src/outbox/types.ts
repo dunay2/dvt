@@ -67,7 +67,7 @@ export interface IOutboxStorage {
   listPendingForClaim?(limit: number, selection?: OutboxClaimSelection): Promise<OutboxRecord[]>;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
-  hasPendingRetries?(): Promise<boolean>;
+  hasPendingRetries?(selection?: OutboxClaimSelection): Promise<boolean>;
   /**
    * Optional DLQ listing capability for operational tooling.
    */

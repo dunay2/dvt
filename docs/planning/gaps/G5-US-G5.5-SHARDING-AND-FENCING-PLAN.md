@@ -39,9 +39,10 @@ workers so that implementation can preserve same-`runId` ordering, exclusive
 shard ownership, and operationally understandable rollout behavior.
 
 This plan began as the decision surface for `G5.5`. Code now implements the
-first two executable slices: persisted `shard_id` claim filtering and dedicated
-startup advisory-lock ownership sessions. Lock-loss runtime behavior and
-concurrent-worker proof still remain open follow-up work inside the same stage.
+first three executable slices: persisted `shard_id` claim filtering, dedicated
+startup advisory-lock ownership sessions, and host shutdown/readiness
+withdrawal after ownership loss. Concurrent-worker proof and real PostgreSQL
+evidence still remain open follow-up work inside the same stage.
 
 ## Root Problem
 

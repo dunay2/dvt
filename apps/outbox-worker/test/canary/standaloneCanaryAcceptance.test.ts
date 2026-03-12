@@ -393,11 +393,17 @@ async function withPatchedPostgresOutboxFixture<T>(
     failMarkDeliveredRunSeqsOnce: new Set(failMarkDeliveredRunSeqsOnce),
   };
   const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
+  const originalListPendingForClaim = PostgresStateStoreAdapter.prototype.listPendingForClaim;
   const originalMarkDelivered = PostgresStateStoreAdapter.prototype.markDelivered;
   const originalMarkFailed = PostgresStateStoreAdapter.prototype.markFailed;
   const originalHasPendingRetries = PostgresStateStoreAdapter.prototype.hasPendingRetries;
 
   PostgresStateStoreAdapter.prototype.listPending = async function listPending(
+    limit: number
+  ): Promise<OutboxRecord[]> {
+    return listEligiblePendingRecords(state, limit, Date.now()).map(cloneOutboxRecord);
+  };
+  PostgresStateStoreAdapter.prototype.listPendingForClaim = async function listPendingForClaim(
     limit: number
   ): Promise<OutboxRecord[]> {
     return listEligiblePendingRecords(state, limit, Date.now()).map(cloneOutboxRecord);
@@ -461,6 +467,7 @@ async function withPatchedPostgresOutboxFixture<T>(
     });
   } finally {
     PostgresStateStoreAdapter.prototype.listPending = originalListPending;
+    PostgresStateStoreAdapter.prototype.listPendingForClaim = originalListPendingForClaim;
     PostgresStateStoreAdapter.prototype.markDelivered = originalMarkDelivered;
     PostgresStateStoreAdapter.prototype.markFailed = originalMarkFailed;
     PostgresStateStoreAdapter.prototype.hasPendingRetries = originalHasPendingRetries;

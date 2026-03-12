@@ -25,7 +25,7 @@ Safety rule:
 - use `passive` when the standalone process must be present but non-owning during rollout or rollback
 - `active` now acquires shard-scoped PostgreSQL advisory locks on a dedicated ownership session before delivery starts
 - same-shard dual-active startup should be refused by that fence
-- lock-loss handling and concurrent-worker proof remain pending in `G5.5`
+- if the dedicated ownership session is lost after startup, the host must withdraw ownership and stop the runtime before admitting more work
 
 ## Endpoints
 
@@ -62,7 +62,7 @@ Readiness rule:
 
 - `ready=true` only for `idle` and `draining`
 - keep readiness `false` in `passive` mode because the process is explicitly non-owning
-- keep readiness `false` while any retry backlog is still pending, even if a later poll claims nothing because the failed record is waiting on backoff
+- keep readiness `false` while any retry backlog is still pending for the owned shard set, even if a later poll claims nothing because the failed record is waiting on backoff
 - if active ownership is unavailable at startup, the host must stay `passive`, keep `owner=false`, and must not start delivery
 - size readiness freshness to cover the configured in-flight batch budget, not only poll/backoff sleep, so healthy long-running HTTP drains do not flap `503`
 
@@ -135,4 +135,4 @@ Minimal canary evidence to capture:
 - Downstream delivery contract is still a minimal HTTP `POST` with `{ "events": [...] }`.
 - Downstream consumers are required to be idempotent at that boundary, using the existing envelope `eventId` and/or `idempotencyKey` to absorb redelivery.
 - Ownership mode is now explicit and required in the standalone host, but full environment cutover still depends on deployment wiring outside the repo.
-- Startup advisory-lock fencing now exists on dedicated sessions, but lock-loss handling and concurrent-worker proof are still pending even though persisted shard routing now exists in code.
+- Startup advisory-lock fencing now exists on dedicated sessions, and lock-loss now forces host shutdown; concurrent-worker proof and rollout wiring remain pending outside this slice.

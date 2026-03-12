@@ -35,10 +35,10 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-12`
 - `gap`: `G5`
 - `epic`: `#409`
-- `current_focus`: `G5.5A / #414 - dedicated advisory-lock ownership sessions`
-- `state`: `In progress`
-- `currently_working_on`: `ADR-0033 is now accepted, persisted shard routing is already in code, and the standalone host is landing dedicated PostgreSQL advisory-lock ownership sessions while lock-loss runtime semantics and concurrent-worker proof remain open`
-- `next_after_current`: `G5.5B / #414 - lock-loss runtime semantics and concurrent-worker proof`
+- `current_focus`: `G5.5B / #414 - ownership-loss shutdown and shard-scoped retry readiness`
+- `state`: `Validation / closeout`
+- `currently_working_on`: `ADR-0033 is now accepted, persisted shard routing and dedicated ownership sessions are already in code, and this slice lands host shutdown on ownership loss plus shard-scoped retry backlog checks while concurrent-worker proof remains open`
+- `next_after_current`: `G5.5C / #414 - concurrent-worker proof and real PostgreSQL evidence`
 - `blocking_dependencies`: `#410`, `#411`, and `#412` are closed; `#413` still needs external canary/rollback evidence, but it does not block the repo-side G5.5 implementation slice`
 - `last_completed`: `G5.3 / #412 merged via PR #444 on 2026-03-10`
 
@@ -50,7 +50,7 @@ Update this section before any substantial implementation turn.
   exit signal: one environment runs the standalone worker as sole active owner and rollback is documented/testable
 - `PR-5 / #414`
   scope: choose and implement one ADR-0009 concurrent-worker strategy
-  current status: ADR accepted; persisted shard routing and dedicated startup ownership sessions now exist in code; lock-loss semantics and concurrent-worker proof are still pending
+  current status: ADR accepted; persisted shard routing, dedicated startup ownership sessions, ownership-loss shutdown, and shard-scoped retry backlog checks now exist in code; concurrent-worker proof and real PostgreSQL evidence are still pending
   exit signal: concurrent workers cannot reorder events for the same `runId` and horizontal scale-out is no longer blocked
 
 ## Execution Protocol For AI

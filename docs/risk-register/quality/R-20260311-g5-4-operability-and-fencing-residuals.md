@@ -33,9 +33,9 @@ green:
   `abortPendingOperations()`, leaving the adapter poisoned while returning a
   runtime handle;
 - startup ownership is now fenced by advisory locks on a dedicated PostgreSQL
-  session, but lock-loss semantics after startup are still not fully enforced,
-  so a worker can lose effective ownership without yet proving the required
-  runtime reaction end to end;
+  session, and post-start lock loss now forces the host to withdraw ownership
+  and stop, but the multi-worker proof and real PostgreSQL evidence for that
+  fencing model are still incomplete;
 - the worker proves at-least-once delivery at its own boundary, but the
   downstream duplicate-handling contract is still implicit and reclaim/backlog
   behavior is not yet closed with real PostgreSQL evidence.
@@ -57,9 +57,9 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 - a direct runtime caller can receive a successfully created runtime handle
   whose first database access fails immediately with `AbortError` if shutdown
   lands inside the bootstrap race window;
-- a broken or reset ownership session can silently remove the startup fence
-  before `ADR-0009` multi-worker enforcement is fully closed if the runtime
-  does not yet react quickly enough to ownership loss;
+- a broken or reset ownership session now stops the current host, but
+  `ADR-0009` multi-worker enforcement still lacks concurrent-worker proof and
+  real PostgreSQL evidence for the selected shard/fencing model;
 - duplicate publication can be technically correct at the worker boundary while
   still causing downstream side effects if the consumer contract does not prove
   idempotent handling;
@@ -69,8 +69,9 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 
 ## Mitigation
 
-- Keep `G5` rollout language explicit: startup ownership is fenced, but
-  lock-loss handling and concurrent-worker proof are still incomplete.
+- Keep `G5` rollout language explicit: startup ownership is fenced and
+  post-start lock loss now forces host shutdown, but concurrent-worker proof
+  and real PostgreSQL evidence are still incomplete.
 - Add a freshness-aware readiness invariant, an explicit `stopping` runtime
   state, and tests that prove readiness is withdrawn immediately on shutdown and
   after stale ticks.
@@ -97,6 +98,7 @@ If those gaps remain undocumented or are treated as "non-blocking ops details",
 - `apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts`
 - `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`
+- `packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts`
 - `packages/@dvt/adapter-postgres/test/smoke.test.ts`
 - `docs/planning/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md`
 - `docs/risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md`
