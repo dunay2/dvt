@@ -116,7 +116,9 @@ function buildBootstrapLogData(env: Env): Record<string, string | number> {
     ownershipMode: env.DVT_OUTBOX_OWNERSHIP_MODE,
     adminHost: env.DVT_OUTBOX_ADMIN_HOST,
     adminPort: env.DVT_OUTBOX_ADMIN_PORT,
-    ...(env.DVT_OUTBOX_OWNERSHIP_MODE === 'active' ? { busMode: env.DVT_OUTBOX_EVENT_BUS_MODE } : {}),
+    ...(env.DVT_OUTBOX_OWNERSHIP_MODE === 'active'
+      ? { busMode: env.DVT_OUTBOX_EVENT_BUS_MODE }
+      : {}),
   };
 }
 

@@ -560,18 +560,17 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
       },
     ];
   };
-  PostgresStateStoreAdapter.prototype.listPendingForClaim =
-    async function listPendingForClaim() {
-      return [
-        {
-          id: 'outbox_1',
-          createdAt: '2026-03-08T00:00:00.000Z',
-          idempotencyKey: 'key-1',
-          payload: makePendingEvent(),
-          attempts: 0,
-        },
-      ];
-    };
+  PostgresStateStoreAdapter.prototype.listPendingForClaim = async function listPendingForClaim() {
+    return [
+      {
+        id: 'outbox_1',
+        createdAt: '2026-03-08T00:00:00.000Z',
+        idempotencyKey: 'key-1',
+        payload: makePendingEvent(),
+        attempts: 0,
+      },
+    ];
+  };
   PostgresStateStoreAdapter.prototype.abortPendingOperations =
     async function abortPendingOperations(this: object): Promise<void> {
       abortPendingOperationsCalls += 1;

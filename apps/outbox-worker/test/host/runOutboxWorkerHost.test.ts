@@ -574,8 +574,7 @@ await test('runOutboxWorkerHost stops the active runtime when ownership is lost 
   assert.equal(
     hasLogEntry(
       fixture.entries,
-      (entry) =>
-        entry.level === 'error' && entry.msg === 'outbox ownership lost; stopping host'
+      (entry) => entry.level === 'error' && entry.msg === 'outbox ownership lost; stopping host'
     ),
     true
   );
