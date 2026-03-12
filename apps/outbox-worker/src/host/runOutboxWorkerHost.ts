@@ -212,7 +212,7 @@ async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
 }
 
 function createLinkedAbortController(signal: globalThis.AbortSignal): {
-  controller: AbortController;
+  controller: globalThis.AbortController;
   detach(): void;
 } {
   const controller = new globalThis.AbortController();

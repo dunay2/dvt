@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { loadEnv, isActiveEnv, type ActiveEnv } from '../../src/plugins/env.js';
 import { resolveReadyStaleAfterMs } from '../../src/ops/resolveReadyStaleAfterMs.js';
+import { loadEnv, isActiveEnv, type ActiveEnv } from '../../src/plugins/env.js';
 
 function loadActiveTestEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): ActiveEnv {
   const env = loadEnv({
