@@ -28,7 +28,7 @@ what the current repository can realistically absorb.
 - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - `status_doc`: [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
 - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
 - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
 - `evidence_or_risk`: standalone host, bounded HTTP publisher, health/readiness endpoints, metrics, and runbook now exist in code; keep canary and scale-out risk explicit until PR-4/PR-5 land
 
@@ -251,16 +251,18 @@ Selected planning direction for `G5`:
   ownership sessions.
 - `shardCount` changes are treated as explicit topology migrations.
 
-The first three executable `G5.5` slices are now:
+The first four executable `G5.5` slices are now:
 
 - persisted `shard_id` plus shard-aware claim path
 - startup advisory-lock ownership sessions held on a dedicated PostgreSQL
   connection
 - post-start ownership-loss detection that stops the host and keeps retry
   backlog readiness scoped to the owned shard set
+- deterministic concurrent-worker ordering proof at the worker/storage
+  boundary using shard-scoped ownership tests
 
-Concurrent-worker proof and real PostgreSQL multi-worker evidence remain open
-follow-up work inside the same stage.
+Real PostgreSQL multi-worker evidence remains open follow-up work inside the
+same stage.
 
 Design detail for this stage lives in:
 

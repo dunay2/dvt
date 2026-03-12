@@ -165,9 +165,9 @@ Minimum tuple for this document:
   - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
   - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
   - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
-  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, persisted shard routing, startup advisory-lock fencing, ownership-loss shutdown, and shard-scoped retry backlog checks now exist in code; promote to evidence after canary and downstream contract hardening; keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md), [R-20260311-G5.4 operability and fencing residuals](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md), and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible until real PostgreSQL evidence, stale-readiness hardening, retries-policy alignment, concurrent-worker proof, and runtime/core convergence are explicitly closed
+  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, persisted shard routing, startup advisory-lock fencing, ownership-loss shutdown, shard-scoped retry backlog checks, and deterministic concurrent-worker ordering proof now exist in code and tests; promote to evidence after canary and downstream contract hardening; keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md), [R-20260311-G5.4 operability and fencing residuals](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md), and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible until real PostgreSQL evidence, stale-readiness hardening, retries-policy alignment, and runtime/core convergence are explicitly closed
 - Working refs:
   - [`G5 - AI Execution Tracker`](G5-AI-EXECUTION-TRACKER.md)
   - [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
@@ -187,6 +187,7 @@ Minimum tuple for this document:
   - accepted `ADR-0033` plus the first executable `G5.5` slice: persisted `shard_id`, shard-aware claim selection, and single-shard-compatible topology defaults in runtime config
   - the second executable `G5.5` slice: startup advisory-lock ownership sessions held on a dedicated PostgreSQL connection and wired into the standalone host
   - the third executable `G5.5` slice: post-start ownership-loss detection stops the standalone host and keeps retry backlog readiness scoped to the owned shard set
+  - the fourth executable `G5.5` slice: deterministic concurrent-worker ordering proof at the worker/storage boundary using shard-scoped ownership tests
 - Remaining:
   - explicit subscriber delivery contract for projector/event-bus consumers
   - stale-readiness hardening, explicit shutdown withdrawal, and freshness-aware operational probes
@@ -194,7 +195,7 @@ Minimum tuple for this document:
   - canary or contract proof that supported downstream consumers absorb duplicate delivery idempotently
   - real PostgreSQL orphan-claim recovery and backlog sanity evidence for the hardened claim path
   - deployment-grade downstream target contract beyond the current minimal HTTP publisher mode
-  - concurrent-worker proof and real PostgreSQL evidence for the selected shard strategy
+  - real PostgreSQL multi-worker evidence for the selected shard strategy
   - environment-scoped canary execution and rollback wiring
   - formal `G5.3` closeout still depends on real PostgreSQL execution evidence, basic claim-query performance proof, and explicit ADR/runtime alignment for retry policy
 

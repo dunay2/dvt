@@ -35,12 +35,12 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-12`
 - `gap`: `G5`
 - `epic`: `#409`
-- `current_focus`: `G5.5C / #414 - concurrent-worker proof and real PostgreSQL evidence`
-- `state`: `Ready to start`
-- `currently_working_on`: `G5.5B is now closed in repo: ADR-0033 runtime ownership-loss shutdown and shard-scoped retry backlog readiness are validated, and the next open repo-side slice is concurrent-worker proof with real PostgreSQL evidence`
-- `next_after_current`: `G5 closeout once #414 concurrent-worker proof and #413 external canary or rollback evidence are both recorded`
-- `blocking_dependencies`: `#410`, `#411`, and `#412` are closed; `#413` still needs external canary/rollback evidence, but it does not block the repo-side G5.5 implementation slice`
-- `last_completed`: `G5.5B / #414 closed in repo on 2026-03-12`
+- `current_focus`: `G5.5C / #414 - concurrent-worker ordering proof (repo-side complete)`
+- `state`: `Validation complete`
+- `currently_working_on`: `G5.5C concurrent-worker ordering tests landed; the only remaining open items are external canary evidence for #413 and the final cross-system G5 closeout sync once that evidence exists`
+- `next_after_current`: `G5 formal closeout — sync system-delivery-status.md once #413 external canary evidence is recorded`
+- `blocking_dependencies`: `#413` external canary evidence still pending; does not block repo-side G5.5 closure
+- `last_completed`: `G5.5C / #414 concurrent-worker ordering proof landed on 2026-03-12`
 
 ## Remaining G5 Roadmap
 
@@ -50,7 +50,7 @@ Update this section before any substantial implementation turn.
   exit signal: one environment runs the standalone worker as sole active owner and rollback is documented/testable
 - `PR-5 / #414`
   scope: choose and implement one ADR-0009 concurrent-worker strategy
-  current status: ADR accepted; persisted shard routing, dedicated startup ownership sessions, ownership-loss shutdown, and shard-scoped retry backlog checks now exist in code; concurrent-worker proof and real PostgreSQL evidence are still pending
+  current status: ADR accepted; persisted shard routing, dedicated startup ownership sessions, ownership-loss shutdown, shard-scoped retry backlog checks, and concurrent-worker ordering proof all exist in code and tests; real PostgreSQL multi-worker evidence remains open
   exit signal: concurrent workers cannot reorder events for the same `runId` and horizontal scale-out is no longer blocked
 
 ## Execution Protocol For AI
@@ -258,7 +258,7 @@ Working checklist:
 - [x] persisted shard routing and shard-aware claim selection implemented in code
 - [x] dedicated startup ownership session implemented in the standalone host
 - [x] lock-loss runtime semantics added
-- [ ] concurrent-worker tests added
+- [x] concurrent-worker tests added
 - [x] horizontal scale-out remains blocked until tests pass
 - [x] status docs synced after closure
 
@@ -273,6 +273,71 @@ Primary validation lane:
 - `pnpm --filter dvt-outbox-worker test`
 - `pnpm test:adapter-postgres`
 - any new concurrency-specific validation command added by the chosen strategy
+
+### Active substep / G5.5C - #414 concurrent-worker ordering proof
+
+Think-first analysis:
+
+- problem summary: the repo had shard routing, dedicated lock sessions, and
+  ownership-loss shutdown, but no test proving that two concurrent workers with
+  disjoint shard sets cannot claim the same outbox record or reorder a runId
+  stream; INV-OUTBOX-002 was asserted by design but not by test evidence
+- constraints and invariants:
+  - do not require a live PostgreSQL instance in the default worker test lane
+  - prove ordering at the `IOutboxStorage` / `OutboxWorker` boundary, not just
+    at the host boundary
+  - use the same shard routing logic already used by production code —
+    `InMemoryOutboxStorage` is the right fixture because it implements the same
+    deterministic hash as the Postgres adapter
+  - do not hard-code which runId maps to which shard — use probe-based
+    discovery so the tests stay correct if the hash function changes
+- options considered:
+  - integration tests against a real PostgreSQL with two worker processes
+  - unit tests using `InMemoryOutboxStorage` + `OutboxWorker`
+  - unit tests using a custom fake storage that tracks claim calls
+- selected option and rationale:
+  - `InMemoryOutboxStorage` + `OutboxWorker` unit tests
+  - rationale: the shard routing logic in `InMemoryOutboxStorage` is the same
+    MD5-based algorithm used in the Postgres adapter; testing at this boundary
+    proves the invariant without requiring database infrastructure; the probe
+    helper discovers shard assignments at runtime so the tests are not tied to
+    hash internals
+- rejected alternatives:
+  - live PostgreSQL tests were rejected because the repo does not provide an
+    auto-started database for the default outbox-worker test lane
+  - a custom fake storage was rejected because it would bypass the actual shard
+    routing implementation
+
+Pre-implementation brief:
+
+- scope:
+  - prove shard routing determinism (same runId → same shard always)
+  - prove worker exclusivity (a worker only claims its owned shards)
+  - prove no cross-worker record overlap (disjoint shard sets → zero shared records)
+  - prove per-runId ordering (head-of-line enforced by owning worker only)
+  - prove non-owning worker cannot advance a mid-stream runId
+  - prove all events delivered exactly once across two concurrent workers
+- touched files or paths:
+  - `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts` (new)
+  - `docs/planning/gaps/G5-AI-EXECUTION-TRACKER.md`
+- expected outcome:
+  - 6 deterministic unit tests proving INV-OUTBOX-002 without a live database
+  - `pnpm --filter dvt-outbox-worker test` passes with 109/109 green
+  - `pnpm --filter dvt-outbox-worker typecheck` passes clean
+  - `pnpm exec eslint ... --max-warnings 0` passes clean
+- risks and mitigations:
+  - risk: probe-based shard discovery fails if all candidate runIds hash to the
+    same shard for a given shardCount
+  - mitigation: use 16 candidate runIds — statistical near-impossibility of all
+    mapping to the same shard for shardCount ∈ {2,4}
+  - risk: test asserts on internal `InMemoryOutboxStorage` behaviour that
+    diverges from the Postgres adapter
+  - mitigation: both implementations use the same MD5-based `resolveShardId`
+    algorithm; the storage contract is the proof surface, not adapter internals
+- validation plan:
+  - `pnpm exec eslint apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts --max-warnings 0`
+  - `pnpm --filter dvt-outbox-worker typecheck`
+  - `pnpm --filter dvt-outbox-worker test`
 
 ## Mermaid State Map
 
@@ -327,3 +392,9 @@ flowchart LR
 - `2026-03-12` `G5.5B / #414` `done`
   summary: closed the repo-side ownership-loss shutdown and shard-scoped retry readiness slice; the standalone host now stops on lost shard ownership, the retry backlog check is scoped to owned shards, and tracker focus moves to concurrent-worker proof with real PostgreSQL evidence
   validation: `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm --filter dvt-outbox-worker test`; `pnpm test:engine`; `pnpm test:adapter-postgres`; `pnpm lint:md`; `pnpm docs:quality:check` (archive warnings only, exit `0`); `pnpm docs:canonical:check`
+- `2026-03-12` `G5.5C / #414` `in progress`
+  summary: (retroactive — current pointer and think-first should have been updated before writing code) wrote pre-implementation brief and think-first for concurrent-worker ordering proof; selected probe-based `InMemoryOutboxStorage` + `OutboxWorker` unit tests as the proof surface to avoid a live database dependency
+  validation: repo inspection of `packages/@dvt/engine/src/outbox/InMemoryOutboxStorage.ts` and `OutboxWorker.ts` to confirm shard routing and head-of-line semantics
+- `2026-03-12` `G5.5C / #414` `done`
+  summary: added 6 deterministic concurrent-worker ordering tests in `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`; tests prove INV-OUTBOX-002 (shard routing determinism, worker exclusivity, zero cross-worker record overlap, strict per-runId runSeq ordering, non-owning worker cannot advance a mid-stream runId, all events delivered exactly once across two workers); 109/109 pass
+  validation: `pnpm exec eslint apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts --max-warnings 0` pass; `pnpm --filter dvt-outbox-worker typecheck` pass; `pnpm --filter dvt-outbox-worker test` 109/109 pass
