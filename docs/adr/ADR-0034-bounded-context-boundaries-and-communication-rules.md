@@ -52,8 +52,8 @@ The repository recognizes these bounded contexts as the canonical model.
 | Planner             | core domain                  | Build deterministic execution plans from canonical inputs                              | `ExecutionPlan`                                                                     | `@dvt/planner`                                                    |
 | Execution           | core domain                  | Orchestrate run lifecycle and enforce execution invariants                             | `Run`                                                                               | `@dvt/engine`                                                     |
 | State               | supporting context           | Persist ordered run facts, snapshots, and intent state with storage authority          | per-run persisted state under `IRunStateStore` and `IStartRunIntentStore` contracts | state adapters such as `@dvt/adapter-postgres`                    |
-| Artifacts           | supporting context           | Store immutable plan and compiled-code artifacts and expose stable references          | immutable artifact blobs and refs such as `PlanRef` and `CompiledCodeRef`           | currently split; target is a dedicated artifact boundary          |
-| Delivery            | supporting context           | Drain outbox records and publish persisted events without owning run semantics         | `OutboxRecord`                                                                      | currently split; target is a dedicated outbox or delivery package |
+| Artifacts           | supporting context           | Store immutable plan and compiled-code artifacts and expose stable references          | immutable artifact blobs and refs such as `PlanRef` and `CompiledCodeRef`           | currently split; target is `@dvt/artifacts`                      |
+| Delivery            | supporting context           | Drain outbox records and publish persisted events without owning run semantics         | `OutboxRecord`                                                                      | currently split; target is `@dvt/delivery`                       |
 | Observability       | supporting technical context | Provide logs, traces, metrics, and audit correlation without becoming domain authority | telemetry facades and correlation utilities, not business aggregates                | `@dvt/observability`, `@dvt/observability-otel`                   |
 | Entry / Application | composition layer            | Compose domains and adapters into runnable use cases and processes                     | application service or host root, not domain aggregates                             | `apps/api`, `apps/outbox-worker`, future entrypoints              |
 
@@ -100,6 +100,16 @@ The repository recognizes these bounded contexts as the canonical model.
 - Per ADR-0018, the serializable ref shapes still live in `@dvt/contracts`;
   artifact-specific ports and implementations belong to the artifact owner
   package once that package is extracted.
+- `@dvt/artifacts` is the canonical package home for artifact-context
+  application services, ports, and domain policies.
+- `@dvt/artifacts` must not redefine shared refs such as `PlanRef` or
+  `CompiledCodeRef`; those stay physically hosted in `@dvt/contracts`.
+- Concrete artifact storage adapters such as S3, MinIO, filesystem, or cloud
+  vendor clients live outside the owner package and plug in through
+  artifact-owned ports.
+- Artifact-boundary extraction is a priority follow-up, not an optional cleanup:
+  planner and execution packages must not accumulate new direct artifact-storage
+  responsibilities while the dedicated boundary is still being extracted.
 - Planner and traceability may depend on artifact contracts, but artifact
   adapters must not depend on planner or execution internals.
 
@@ -108,6 +118,15 @@ The repository recognizes these bounded contexts as the canonical model.
 - Owns outbox draining, retries, DLQ handling, shard ownership, and publication
   wiring.
 - It is operational infrastructure over persisted domain events.
+- `@dvt/delivery` is the canonical package home for delivery-context
+  application logic, ports, worker orchestration, and delivery policies such as
+  retry, sharding, and fencing.
+- `@dvt/delivery` must not redefine `OutboxRecord`; shared delivery payload
+  shapes remain in `@dvt/contracts`.
+- Concrete publishers, buses, and delivery-side storage implementations live
+  outside the owner package and are injected through delivery-owned ports.
+- `apps/outbox-worker` is a composition root for `@dvt/delivery`; it must not
+  remain the long-term owner of delivery logic.
 - It must not own run state truth, run transitions, or planner policy.
 
 #### 2.6 Observability context
@@ -117,10 +136,15 @@ The repository recognizes these bounded contexts as the canonical model.
 - Owns telemetry-facing facades such as `IObservability`, cardinality policy,
   trace correlation helpers, and concrete exporter adapters such as OpenTelemetry
   bindings.
+- The facade package must remain lightweight and exporter-free: it may expose
+  contracts, no-op implementations, and label-cardinality policy, but it must
+  not pull OpenTelemetry SDKs or provider-specific runtime dependencies.
 - Follows the same import rule as the rest of the repository: domain packages
   may depend on a stable observability facade, but they must not depend on
   concrete OTel implementations, app-local loggers, or provider-specific
   telemetry code.
+- Concrete observability implementations are composed and injected at
+  application roots.
 - Must never become the source of truth for run state, planner policy, or
   delivery ownership.
 
@@ -133,7 +157,8 @@ Composition is performed by entrypoint applications and runtime hosts.
 Canonical composition roots are:
 
 - `apps/api` for planner + execution + state + provider adapters;
-- `apps/outbox-worker` for delivery + state adapter;
+- `apps/outbox-worker` for `@dvt/delivery` + state adapter + concrete publisher
+  wiring;
 - future operational services for traceability, read models, and artifact
   access.
 
@@ -156,6 +181,8 @@ services, aggregates, or package-local internals.
 
 Logical ownership of a concern does not change ADR-0018's physical rule:
 serializable cross-context shapes are still exported from `@dvt/contracts`.
+This includes persisted envelope and outbox payload shapes such as
+`EventEnvelope` and `OutboxRecord`.
 
 #### 4.2 Ports are for domain-to-infrastructure relationships
 
@@ -170,6 +197,14 @@ Examples:
 
 Ports are not the primary mechanism for peer domain communication.
 Peer domain communication uses shared contracts, refs, or messages.
+
+Execution must not import persistence-internal DTOs from state packages.
+If a state-shaped DTO is genuinely consumed across contexts, it must be
+published as a serializable shared contract in `@dvt/contracts` with State
+declared as the semantic owner.
+If the shape exists only to describe storage internals or adapter-local
+projection state, it remains private to the state package and Execution may not
+depend on it.
 
 #### 4.3 Cross-context sync calls are mediated by the application layer
 
@@ -216,6 +251,8 @@ sequenceDiagram
 `EventEnvelope` is produced on the execution write path.
 `OutboxRecord` is produced by the state adapter as delivery metadata in the same
 atomic persistence boundary.
+Both are serializable cross-context contracts and therefore belong in
+`@dvt/contracts` per ADR-0018.
 Delivery is the only context allowed to drain, retry, shard, fence, dead-letter,
 or mark those records as published.
 
@@ -236,6 +273,78 @@ Interpretation:
 3. `apps/api` passes the `PlanRef` to execution.
 4. Execution validates and consumes the ref without importing planner services
    or planner internals.
+
+#### 4.6 Concrete composition example from the current repo
+
+The current repository already contains the application-layer composition that
+this ADR expects.
+
+At the composition root, `apps/api` constructs `WorkflowEngine` and injects
+state, intent, projector, adapter, policy, and observability dependencies:
+
+```ts
+const stateAdapter = new PostgresStateStoreAdapter({ connectionString: databaseUrl });
+const intentStore = new PostgresStartRunIntentStore({ connectionString: databaseUrl });
+const projector = new SnapshotProjector();
+const mockAdapter = new MockAdapter({ stateStore: stateAdapter, projector });
+
+const engine = new WorkflowEngine({
+  stateStore: stateAdapter,
+  outbox: stateAdapter,
+  projector,
+  idempotency: new IdempotencyKeyBuilder(),
+  clock: { nowIsoUtc: () => new Date().toISOString() },
+  authorizer: new AllowAllAuthorizer(),
+  planRefPolicy: new PlanRefPolicy({
+    allowedSchemes: ['https', 's3', 'gs', 'azure'],
+  }),
+  intentStore,
+  adapters: new Map([['mock', mockAdapter]]),
+  observability,
+});
+
+const useCase = new EngineStartRunUseCase(engine);
+```
+
+On the application path, the API command model carries a `planRef` value object
+and the use case forwards only the shared contract fields required by
+`IWorkflowEngine.startRun()`:
+
+```ts
+const ref = await this.engine.startRun(
+  {
+    uri: command.planRef.uri,
+    sha256: command.planRef.sha256,
+    schemaVersion: command.planRef.schemaVersion,
+    planId: command.planRef.planId,
+    planVersion: command.planRef.planVersion,
+  },
+  {
+    tenantId: context.scope.tenantId.value,
+    projectId: context.scope.projectId?.value ?? '',
+    environmentId: context.scope.environmentId?.value ?? '',
+    runId: command.runId,
+    targetAdapter: command.targetAdapter,
+    logicalAttemptId: 1,
+  }
+);
+```
+
+Error handling on that path is also already layered:
+
+1. `startRunRoute` rejects malformed request bodies such as invalid `planRef`
+   with HTTP `400`;
+2. `StartRunAuthorizedFacade` turns authentication and authorization failures
+   into explicit facade results instead of leaking HTTP concerns into the
+   domain;
+3. `EngineStartRunUseCase` does not swallow engine errors;
+4. `WorkflowEngine.startRun()` validates `PlanRef` through `parsePlanRef()`,
+   validates schema and policy preconditions before adapter dispatch, and then
+   propagates domain errors if validation or persistence fails.
+
+The important point is that `planRef` remains a shared serializable reference:
+it contains location and integrity metadata, not planner internals or plan
+bytes, and the engine normalizes it via `parsePlanRef()` before use.
 
 ### 5. Import rules
 
@@ -265,16 +374,71 @@ As a consequence:
 Narrow import surfaces must be expressed through export maps on the owner
 package, not through empty satellite packages.
 
-#### 6.2 Shared contract ownership remains governed by ADR-0018
+#### 6.2 `@dvt/contracts` is a governed shared kernel, not a neutral dump
 
-Serializable cross-package contracts remain owned by `@dvt/contracts` unless a
-separate ADR explicitly changes ownership.
+Serializable cross-package contracts remain physically hosted in
+`@dvt/contracts` unless a separate ADR explicitly changes ownership.
+
+That does not make `@dvt/contracts` an ownerless neutral zone.
+
+The governance rule is:
+
+1. `@dvt/contracts` is a shared-kernel package governed by ADR-0018 and
+   repository contract governance, not by ad hoc convenience imports;
+2. every exported contract family must have a declared owning bounded context
+   even when the physical export lives in `@dvt/contracts`;
+3. adding a new contract to `@dvt/contracts` requires proving that the shape is
+   serializable, cross-context, and not better owned by a domain package;
+4. `@dvt/contracts` must not become the place where contexts dump internal DTOs
+   just to avoid choosing an owner.
 
 This ADR does not supersede ADR-0018.
-It defines how imports and package boundaries must behave while ADR-0018 is
+It makes the ownership and boundary implications explicit while ADR-0018 is
 applied.
 
-#### 6.3 Test boundaries are real boundaries
+#### 6.3 Allowed and forbidden contents of `@dvt/contracts`
+
+Allowed contents are:
+
+- serializable DTOs, refs, identifiers, event-envelope shapes, and persisted
+  message shapes;
+- machine-readable schemas and compatibility artifacts required by ADR-0005 and
+  ADR-0017;
+- boundary validators or parsers that exist only to validate those serializable
+  contracts at runtime.
+
+Forbidden contents are:
+
+- domain services, policies, aggregates, and business rules;
+- infrastructure adapters, storage implementations, network clients, and side
+  effects;
+- convenience utilities unrelated to boundary validation;
+- behavior ports that express domain-owned behavior rather than a shared
+  serializable contract.
+
+Put differently: `@dvt/contracts` may contain contract-validation logic, but it
+must not contain domain logic.
+
+#### 6.4 Versioning and compatibility for `@dvt/contracts`
+
+`@dvt/contracts` is not versionless glue.
+
+Its governance follows these rules:
+
+1. breaking semantic changes to exported contracts require a major-version
+   change and compatibility treatment per ADR-0005;
+2. additive backward-compatible contract evolution uses minor-version updates;
+3. non-semantic clarification stays patch-level;
+4. consumers such as planner, execution, artifacts, delivery, and adapters must
+   declare and test against compatible contract ranges;
+5. contracts that affect multi-context execution paths, such as `ExecutionPlan`
+   and `PlanRef`, require machine-readable compatibility artifacts and CI checks
+   per ADR-0017 instead of relying on coordinated guesswork.
+
+If planner changes a shared contract shape in a breaking way without versioning
+or compatibility artifacts, that change is invalid by policy.
+
+#### 6.5 Test boundaries are real boundaries
 
 Package-level tests must follow the same bounded-context rules as production
 code.
@@ -285,6 +449,14 @@ Therefore:
 - `@dvt/planner` tests must not import `@dvt/engine`;
 - cross-context compatibility tests belong in composition-root or dedicated
   integration surfaces, not inside one peer domain package.
+
+Recommended homes for cross-context compatibility tests are:
+
+- composition-root integration tests under `apps/*/test`;
+- dedicated compatibility workspaces following the existing `packages/test` and
+  `contracts/compat` pattern;
+- a future top-level compatibility workspace if the current dedicated surfaces
+  stop being sufficient.
 
 ### 7. Canonical dependency direction
 
@@ -307,7 +479,7 @@ flowchart LR
     Delivery --> Contracts
 
     State --> Contracts
-    State --> Execution
+    State -. implements ports .-> Execution
 
     API --> Planner
     API --> Execution
@@ -375,7 +547,7 @@ flowchart TB
     State --> Shared
     Delivery --> Shared
 
-    State --> Execution
+    State -. implements ports .-> Execution
 ```
 
 ### 9. Consequences
@@ -408,13 +580,29 @@ This ADR authorizes the following follow-up work and migration order:
    production code;
 5. remove peer-domain test coupling such as `@dvt/engine` tests importing
    `@dvt/planner`;
-6. extract delivery or outbox runtime code from execution package roots into a
-   dedicated delivery boundary;
-7. extract artifact storage ports and adapters into a dedicated artifact
-   boundary;
+6. extract artifact storage ports and application logic into `@dvt/artifacts`,
+   keep concrete storage adapters outside the owner package, and stop adding
+   new direct artifact-handling logic to planner or execution roots during the
+   transition;
+7. extract delivery or outbox runtime code from execution package roots into
+   `@dvt/delivery`, keeping concrete publishers and stores outside the owner
+   package;
 8. relocate cross-context compatibility tests to integration or composition
    surfaces;
 9. enforce package-boundary rules in package manifests, lints, and arch tests.
+
+### Transitional duplication rule
+
+Temporary duplication during migration is allowed only under these constraints:
+
+1. the owner package remains the canonical source of truth;
+2. temporary aliases are owner-controlled re-exports or compatibility entry
+   points, not new satellite packages with fake ownership;
+3. the alias is explicitly marked as transitional in code or package metadata;
+4. migration removes downstream references until residual imports reach zero;
+5. the alias is deleted once residual references reach zero.
+
+Do not create new wrapper packages as a migration tactic.
 
 ### Enforcement target
 
@@ -436,6 +624,25 @@ The target enforcement stack is:
 
 Where a gate is not yet wired, this ADR authorizes adding it as part of the
 refactor instead of relying on reviewer memory.
+
+### Operational execution requirement
+
+This ADR is a normative boundary decision, not the operational migration plan.
+
+Before any substantial implementation slice starts under this ADR, the work
+must have a companion execution plan in `GAP_EXECUTION_PLANS.md` or a dedicated
+tracker that declares:
+
+1. the slice owner;
+2. the target date;
+3. the touched packages and entrypoints;
+4. the validation commands;
+5. the rollback or residual-risk note.
+
+At least one pilot package or application must prove the enforcement approach
+before repository-wide rollout. The existing `apps/api` architectural test lane
+is the first reference pattern for this enforcement style; other workspaces may
+reuse that pattern or establish an equivalent repo-approved gate.
 
 ## Related
 

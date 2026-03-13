@@ -13,6 +13,7 @@
       "@dvt/engine": ["packages/@dvt/engine/dist/index.d.ts"],
       "@dvt/engine/*": ["packages/@dvt/engine/dist/*"],
       "@dvt/engine/testing": ["packages/@dvt/engine/dist/testing.d.ts"],
+      "@dvt/planner": ["packages/@dvt/planner/dist/index.d.ts"],
       "@dvt/observability": ["packages/@dvt/observability/dist/index.d.ts"],
       "@dvt/observability-otel": [
         "packages/@dvt/observability-otel/dist/index.d.ts"

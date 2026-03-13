@@ -138,6 +138,9 @@ importers:
         specifier: ^3.0.0
         version: 3.25.76
     devDependencies:
+      '@dvt/planner':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/planner
       '@types/node':
         specifier: 25.3.5
         version: 25.3.5
@@ -159,6 +162,9 @@ importers:
       '@dvt/adapter-postgres':
         specifier: workspace:*
         version: link:../../packages/@dvt/adapter-postgres
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/contracts
       '@dvt/engine':
         specifier: workspace:*
         version: link:../../packages/@dvt/engine
@@ -512,9 +518,6 @@ importers:
         specifier: workspace:*
         version: link:../observability
     devDependencies:
-      '@dvt/planner':
-        specifier: workspace:*
-        version: link:../planner
       '@types/node':
         specifier: 25.3.5
         version: 25.3.5
@@ -524,16 +527,6 @@ importers:
       vitest:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.5)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/@dvt/engine-contracts:
-    dependencies:
-      '@dvt/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-    devDependencies:
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
 
   packages/@dvt/observability:
     devDependencies:
@@ -595,16 +588,6 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.5)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/planner-contracts:
-    dependencies:
-      '@dvt/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-    devDependencies:
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
-  packages/@dvt/state-contracts:
     dependencies:
       '@dvt/contracts':
         specifier: workspace:*

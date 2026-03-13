@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/observability-otel build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/engine build",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/observability-otel build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/engine build",
     "test": "node --import tsx --test test/**/*.test.ts",
     "test:arch": "depcruise src --config .dependency-cruiser.cjs"
   },
@@ -27,6 +27,7 @@
     "zod": "^3.0.0"
   },
   "devDependencies": {
+    "@dvt/planner": "workspace:*",
     "@types/node": "^25.3.5",
     "@types/pg": "^8.11.10",
     "dependency-cruiser": "^17.3.9",

@@ -67,9 +67,7 @@ Concept anchors for this page:
 | `@dvt/observability-otel` | OpenTelemetry implementation path                                 | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [packages/@dvt/observability-otel/README.md](../../packages/@dvt/observability-otel/README.md) | `linked-local` |
 | `@dvt/cli`                | CLI smoke surface and validation entrypoint                       | [CLI Package](../architecture/shared/cli.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                   | `canonical`    |
 | `@dvt/crypto`             | Canonicalization and hashing helpers in `packages/@dvt/canonical` | [Crypto Package](../architecture/shared/crypto.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                             | `canonical`    |
-| `@dvt/engine-contracts`   | Package boundary for engine contract artifacts                    | [Contracts Index](../contracts/index.md), [Engine Contracts](../contracts/engine/index.md)                                                                                   | `canonical`    |
 | `@dvt/planner-contracts`  | Package boundary for planner contract artifacts                   | [Contracts Index](../contracts/index.md), [Planner Contracts](../contracts/planner/index.md)                                                                                 | `canonical`    |
-| `@dvt/state-contracts`    | Package boundary for state contract artifacts                     | [Contracts Index](../contracts/index.md), [Shared Contracts](../contracts/shared/index.md)                                                                                   | `canonical`    |
 
 ## Relationships
 
