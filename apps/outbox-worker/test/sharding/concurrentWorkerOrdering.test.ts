@@ -21,10 +21,7 @@ import test from 'node:test';
 
 import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 import { OutboxWorker } from '@dvt/engine';
-import {
-  InMemoryEventBus,
-  InMemoryOutboxStorage,
-} from '@dvt/engine/testing';
+import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/engine/testing';
 
 // ---------------------------------------------------------------------------
 // Test fixtures

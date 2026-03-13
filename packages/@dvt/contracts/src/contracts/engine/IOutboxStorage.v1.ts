@@ -51,10 +51,7 @@ export const MAX_OUTBOX_ATTEMPTS = 10;
 export interface IOutboxStorage {
   enqueueTx(runId: string, events: EventEnvelope[]): Promise<void>;
   listPending(limit: number): Promise<OutboxRecord[]>;
-  listPendingForClaim?(
-    limit: number,
-    selection?: OutboxClaimSelection
-  ): Promise<OutboxRecord[]>;
+  listPendingForClaim?(limit: number, selection?: OutboxClaimSelection): Promise<OutboxRecord[]>;
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
   hasPendingRetries?(selection?: OutboxClaimSelection): Promise<boolean>;

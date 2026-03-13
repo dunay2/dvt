@@ -6,9 +6,7 @@ import type {
   IOutboxStorage,
   OutboxRecord,
 } from '@dvt/contracts';
-import {
-  InMemoryEventBus,
-} from '@dvt/engine/testing';
+import { InMemoryEventBus } from '@dvt/engine/testing';
 
 import {
   OutboxWorkerRuntime,
