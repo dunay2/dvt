@@ -13,14 +13,14 @@ Evidence document for the final two tasks of the G8 API auth hardening gap.
 
 ## Closure Criteria
 
-| Criterion | Exit signal | Result |
-| --- | --- | --- |
-| T8-6: dependency-cruiser rules installed | `pnpm --filter dvt-api test:arch` passes | Pass — 0 violations |
-| T8-6: 5 §16.2 layer rules present | config file checked | Pass — 5 rules |
-| T8-7: `EngineStartRunUseCase` replaces stub | `POST /runs/start` calls `engine.startRun()` | Pass — use case unit test confirms |
-| T8-7: `WorkflowEngine` wired with real adapters | `app.ts` inspected | Pass |
-| T8-7: all existing tests still pass | `pnpm --filter dvt-api test` | Pass — 21/21 |
-| T8-7: typecheck clean | `pnpm --filter dvt-api typecheck` | Pass — 0 errors |
+| Criterion                                       | Exit signal                                  | Result                             |
+| ----------------------------------------------- | -------------------------------------------- | ---------------------------------- |
+| T8-6: dependency-cruiser rules installed        | `pnpm --filter dvt-api test:arch` passes     | Pass — 0 violations                |
+| T8-6: 5 §16.2 layer rules present               | config file checked                          | Pass — 5 rules                     |
+| T8-7: `EngineStartRunUseCase` replaces stub     | `POST /runs/start` calls `engine.startRun()` | Pass — use case unit test confirms |
+| T8-7: `WorkflowEngine` wired with real adapters | `app.ts` inspected                           | Pass                               |
+| T8-7: all existing tests still pass             | `pnpm --filter dvt-api test`                 | Pass — 21/21                       |
+| T8-7: typecheck clean                           | `pnpm --filter dvt-api typecheck`            | Pass — 0 errors                    |
 
 ## T8-6 — dependency-cruiser Architectural Rules
 
@@ -31,13 +31,13 @@ Evidence document for the final two tasks of the G8 API auth hardening gap.
 
 ### Rules (apps/api/.dependency-cruiser.cjs)
 
-| Rule name | From | To | Purpose |
-| --- | --- | --- | --- |
-| `no-domain-to-application` | `src/domain/` | `src/(application\|entrypoints\|infrastructure)/` | Domain must not depend on outer rings |
-| `no-application-to-fastify-or-jwt` | `src/application/` | `fastify`, `@fastify`, `jose` | Application layer must not import HTTP/JWT libraries |
-| `no-application-to-oidc-libs` | `src/application/` | `openid-client`, `oidc-provider` | Application layer must not import OIDC runtime libs |
-| `no-ports-to-http-types` | `src/application/ports/` | `fastify`, `@fastify`, `http`, `node:http` | Port interfaces must be HTTP-agnostic |
-| `no-routes-direct-policy` | `src/(routes\|entrypoints)/` | `src/domain/auth/policy` | Entrypoints must not bypass application layer |
+| Rule name                          | From                         | To                                                | Purpose                                              |
+| ---------------------------------- | ---------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
+| `no-domain-to-application`         | `src/domain/`                | `src/(application\|entrypoints\|infrastructure)/` | Domain must not depend on outer rings                |
+| `no-application-to-fastify-or-jwt` | `src/application/`           | `fastify`, `@fastify`, `jose`                     | Application layer must not import HTTP/JWT libraries |
+| `no-application-to-oidc-libs`      | `src/application/`           | `openid-client`, `oidc-provider`                  | Application layer must not import OIDC runtime libs  |
+| `no-ports-to-http-types`           | `src/application/ports/`     | `fastify`, `@fastify`, `http`, `node:http`        | Port interfaces must be HTTP-agnostic                |
+| `no-routes-direct-policy`          | `src/(routes\|entrypoints)/` | `src/domain/auth/policy`                          | Entrypoints must not bypass application layer        |
 
 ### Validation Run
 
@@ -115,15 +115,15 @@ duration_ms 1475.4323
 
 ## Touched Files
 
-| File | Change |
-| --- | --- |
-| `apps/api/package.json` | added `dependency-cruiser` devDep; added `test:arch`; added `@dvt/contracts` build to `pretest` |
-| `apps/api/.dependency-cruiser.cjs` | new — 5 arch rules |
-| `apps/api/src/application/ports/auth.ts` | extended `StartRunCommand` with `StartRunPlanRef`, `runId`, `targetAdapter` |
-| `apps/api/src/application/services/engineStartRunUseCase.ts` | new — `EngineStartRunUseCase` |
-| `apps/api/src/entrypoints/http/startRunRoute.ts` | parse `planRef`, `runId`, `targetAdapter` from body |
-| `apps/api/src/app.ts` | wire `WorkflowEngine` with real adapters; deferred dynamic imports |
-| `apps/api/src/server.ts` | await `buildApp()` |
-| `apps/api/test/app.test.ts` | await `buildApp()`; updated async rejection assertion |
-| `apps/api/test/entrypoints/http/startRunRoute.test.ts` | updated command assertions for new fields |
-| `apps/api/test/application/services/engineStartRunUseCase.test.ts` | new — 2 tests |
+| File                                                               | Change                                                                                          |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `apps/api/package.json`                                            | added `dependency-cruiser` devDep; added `test:arch`; added `@dvt/contracts` build to `pretest` |
+| `apps/api/.dependency-cruiser.cjs`                                 | new — 5 arch rules                                                                              |
+| `apps/api/src/application/ports/auth.ts`                           | extended `StartRunCommand` with `StartRunPlanRef`, `runId`, `targetAdapter`                     |
+| `apps/api/src/application/services/engineStartRunUseCase.ts`       | new — `EngineStartRunUseCase`                                                                   |
+| `apps/api/src/entrypoints/http/startRunRoute.ts`                   | parse `planRef`, `runId`, `targetAdapter` from body                                             |
+| `apps/api/src/app.ts`                                              | wire `WorkflowEngine` with real adapters; deferred dynamic imports                              |
+| `apps/api/src/server.ts`                                           | await `buildApp()`                                                                              |
+| `apps/api/test/app.test.ts`                                        | await `buildApp()`; updated async rejection assertion                                           |
+| `apps/api/test/entrypoints/http/startRunRoute.test.ts`             | updated command assertions for new fields                                                       |
+| `apps/api/test/application/services/engineStartRunUseCase.test.ts` | new — 2 tests                                                                                   |

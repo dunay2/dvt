@@ -41,18 +41,18 @@ Minimum tuple for this document:
 
 ## Executive State (2026-03-08)
 
-| Gap | Title                                     | Phase     | Current state                            |
-| --- | ----------------------------------------- | --------- | ---------------------------------------- |
-| G1  | Temporal Adapter real                     | Phase 1   | Closed                                   |
-| G2  | PostgresStateStore complete               | Phase 1   | Closed                                   |
-| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed                                   |
-| G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                   |
-| G5  | Outbox worker independiente               | Phase 1.5 | Partial                                  |
-| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed                                   |
-| G7  | Read models + standalone projector        | Phase 1.5 | Partial                                  |
-| G8  | Auth real en apps/api                     | Phase 1.5 | Closed                                   |
-| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                  |
-| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                  |
+| Gap | Title                                     | Phase     | Current state |
+| --- | ----------------------------------------- | --------- | ------------- |
+| G1  | Temporal Adapter real                     | Phase 1   | Closed        |
+| G2  | PostgresStateStore complete               | Phase 1   | Closed        |
+| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed        |
+| G4  | compiledCodeRef ownership                 | Phase 1   | Closed        |
+| G5  | Outbox worker independiente               | Phase 1.5 | Partial       |
+| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed        |
+| G7  | Read models + standalone projector        | Phase 1.5 | Partial       |
+| G8  | Auth real en apps/api                     | Phase 1.5 | Closed        |
+| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending       |
+| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending       |
 
 ## Confirmed Progress Since Previous Draft
 
