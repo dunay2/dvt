@@ -409,7 +409,7 @@ function toErrorLike(error: unknown): { message: string; name: string } {
   if (error instanceof Error) {
     return { message: error.message, name: error.name };
   }
-  return { message: String(error), name: 'UnknownError' };
+  return { message: stringifyUnknownError(error), name: 'UnknownError' };
 }
 
 async function releaseOwnershipHandle(options: {
@@ -452,5 +452,39 @@ function toCleanupErrorList(error: unknown): unknown[] {
 }
 
 function toThrowableError(error: unknown): Error {
-  return error instanceof Error ? error : new Error(String(error));
+  if (error instanceof Error) {
+    return error;
+  }
+  return new Error(stringifyUnknownError(error));
+}
+
+function stringifyUnknownError(error: unknown): string {
+  switch (typeof error) {
+    case 'string':
+      return error;
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'undefined':
+      return String(error);
+    case 'symbol':
+      return error.description ?? error.toString();
+    case 'function':
+      return error.name ? `[function ${error.name}]` : '[function anonymous]';
+    case 'object':
+      return error === null ? 'null' : serializeErrorObject(error);
+    default:
+      return 'UnknownErrorValue';
+  }
+}
+
+function serializeErrorObject(error: object): string {
+  try {
+    return JSON.stringify(error);
+  } catch {
+    const constructorName = error.constructor?.name;
+    return constructorName && constructorName !== 'Object'
+      ? constructorName
+      : 'UnserializableErrorObject';
+  }
 }
