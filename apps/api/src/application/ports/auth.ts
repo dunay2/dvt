@@ -46,7 +46,18 @@ export interface IPrincipalAccessRepository {
   loadEffectiveAccess(principal: PrincipalRef): Promise<EffectivePrincipalAccess | null>;
 }
 
+export interface StartRunPlanRef {
+  readonly uri: string;
+  readonly sha256: string;
+  readonly schemaVersion: string;
+  readonly planId: string;
+  readonly planVersion: string;
+}
+
 export interface StartRunCommand {
+  readonly planRef: StartRunPlanRef;
+  readonly runId: string;
+  readonly targetAdapter: 'temporal' | 'mock';
   readonly selection: ReadonlyArray<string>;
 }
 

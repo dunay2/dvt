@@ -50,7 +50,7 @@ Minimum tuple for this document:
 | G5  | Outbox worker independiente               | Phase 1.5 | Partial                                  |
 | G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed                                   |
 | G7  | Read models + standalone projector        | Phase 1.5 | Partial                                  |
-| G8  | Auth real en apps/api                     | Phase 1.5 | Implemented in code (arch tests pending) |
+| G8  | Auth real en apps/api                     | Phase 1.5 | Closed                                   |
 | G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                  |
 | G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                  |
 
@@ -240,7 +240,9 @@ Minimum tuple for this document:
 
 ### G8 - Auth real en apps/api
 
-- Status: Implemented in code
+- Status: Closed
+- Closed: 2026-03-12
+- Evidence: [`docs/evidence/ED-20260312-g8-arch-tests-engine-wiring.md`](../../evidence/ED-20260312-g8-arch-tests-engine-wiring.md)
 - Delivered:
   - `TenantHierarchyAuthorizationPolicy` with full tenant → project → environment grant hierarchy
   - `OidcAuthenticator` + `JwksJwtVerifier` (jose-based JWKS) behind `IJwtVerifierGateway`
@@ -251,9 +253,15 @@ Minimum tuple for this document:
   - `StartRunFacadeResult` semantic result type — no HTTP models in application layer
   - `authErrorMapper` in entrypoints/http — single HTTP mapping point
   - Route exposure policy: `/readyz`, `/version`, `/db/ready` all gated by explicit flags
-- Pending:
-  - `dependency-cruiser` architectural tests (T8-6)
-  - Replace `NotImplementedStartRunUseCase` with engine-backed use case (T8-7)
+  - `dependency-cruiser` arch rules (5 rules, `test:arch`) — T8-6
+  - `EngineStartRunUseCase` replacing `NotImplementedStartRunUseCase` — T8-7
+  - `WorkflowEngine` wired in `app.ts` with real Postgres adapters — T8-7
+- test_paths:
+  - `apps/api/test/**/*.test.ts` (21 tests)
+  - `apps/api/.dependency-cruiser.cjs` (arch rules)
+- verification_cmd:
+  - `pnpm --filter dvt-api test` → 21/21 pass
+  - `pnpm --filter dvt-api test:arch` → 0 violations
 - Spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)
 
 ### G9 - StepTypeRegistry + typed stepTypeConfig

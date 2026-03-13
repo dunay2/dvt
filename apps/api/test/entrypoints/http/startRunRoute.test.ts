@@ -115,6 +115,14 @@ await test('startRunRoute returns 400 on non-string selection items', async () =
   assert.deepEqual(reply.payload, { error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
 });
 
+const VALID_PLAN_REF = {
+  uri: 'https://plans.example.com/plan-1.json',
+  sha256: 'abc123',
+  schemaVersion: '1.0.0',
+  planId: 'plan-1',
+  planVersion: '2.0',
+};
+
 await test('startRunRoute passes normalized command and requested scope', async () => {
   const reply = {
     statusCode: 200,
@@ -146,6 +154,9 @@ await test('startRunRoute passes normalized command and requested scope', async 
         projectId: 'p1',
         environmentId: 'e1',
         selection: ['model_a'],
+        planRef: VALID_PLAN_REF,
+        runId: 'run-abc',
+        targetAdapter: 'mock',
       },
     } as never,
     reply as never,
@@ -156,7 +167,12 @@ await test('startRunRoute passes normalized command and requested scope', async 
   assert.deepEqual(reply.payload, { runId: 'r1', accepted: true });
   assert.equal(received?.token, 'token');
   assert.equal(received?.requestId, 'req-2');
-  assert.deepEqual(received?.command, { selection: ['model_a'] });
+  assert.deepEqual(received?.command, {
+    planRef: VALID_PLAN_REF,
+    runId: 'run-abc',
+    targetAdapter: 'mock',
+    selection: ['model_a'],
+  });
 });
 
 await test('startRunRoute accepts lowercase bearer scheme', async () => {
@@ -190,6 +206,9 @@ await test('startRunRoute accepts lowercase bearer scheme', async () => {
         projectId: 'p1',
         environmentId: 'e1',
         selection: ['model_a'],
+        planRef: VALID_PLAN_REF,
+        runId: 'run-xyz',
+        targetAdapter: 'mock',
       },
     } as never,
     reply as never,

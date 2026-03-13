@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import type { StartRunCommand } from '../../application/ports/auth.js';
+import type { StartRunCommand, StartRunPlanRef } from '../../application/ports/auth.js';
 import { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 import {
   type AuthorizationAction,
@@ -44,6 +44,33 @@ function parseSelection(
   return { ok: true, value: normalized };
 }
 
+function parsePlanRef(
+  raw: unknown
+):
+  | { readonly ok: true; readonly value: StartRunPlanRef }
+  | { readonly ok: false; readonly code: string } {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+    return { ok: false, code: 'INVALID_PLAN_REF' };
+  }
+  const r = raw as Record<string, unknown>;
+  const uri = asStringOrUndefined(r.uri);
+  const sha256 = asStringOrUndefined(r.sha256);
+  const schemaVersion = asStringOrUndefined(r.schemaVersion);
+  const planId = asStringOrUndefined(r.planId);
+  const planVersion = asStringOrUndefined(r.planVersion);
+  if (!uri || !sha256 || !schemaVersion || !planId || !planVersion) {
+    return { ok: false, code: 'INVALID_PLAN_REF' };
+  }
+  return { ok: true, value: { uri, sha256, schemaVersion, planId, planVersion } };
+}
+
+function parseTargetAdapter(
+  raw: unknown
+): { readonly ok: true; readonly value: 'temporal' | 'mock' } | { readonly ok: false } {
+  if (raw === 'temporal' || raw === 'mock') return { ok: true, value: raw };
+  return { ok: false };
+}
+
 function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
   if (body === null || typeof body !== 'object' || Array.isArray(body)) {
     return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: 'INVALID_BODY' } };
@@ -75,10 +102,34 @@ function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
     return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: 'INVALID_SELECTION' } };
   }
 
+  const planRef = parsePlanRef(record.planRef);
+  if (!planRef.ok) {
+    return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: planRef.code } };
+  }
+
+  const runId = asStringOrUndefined(record.runId);
+  if (!runId) {
+    return { ok: false, status: 400, body: { error: 'BAD_REQUEST', code: 'INVALID_RUN_ID' } };
+  }
+
+  const targetAdapter = parseTargetAdapter(record.targetAdapter);
+  if (!targetAdapter.ok) {
+    return {
+      ok: false,
+      status: 400,
+      body: { error: 'BAD_REQUEST', code: 'INVALID_TARGET_ADAPTER' },
+    };
+  }
+
   return {
     ok: true,
     value: {
-      command: { selection: selection.value },
+      command: {
+        planRef: planRef.value,
+        runId,
+        targetAdapter: targetAdapter.value,
+        selection: selection.value,
+      },
       requestedScope: {
         tenantId: tenantId.value,
         projectId: projectId.value,

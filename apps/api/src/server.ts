@@ -2,7 +2,7 @@ import { buildApp } from './app.js';
 import { createIntentReconcilerRuntime } from './runtime/intentReconcilerRuntime.js';
 
 async function main(): Promise<void> {
-  const { app, ctx } = buildApp();
+  const { app, ctx } = await buildApp();
   let reconcilerRuntimePromise: Promise<
     Awaited<ReturnType<typeof createIntentReconcilerRuntime>>
   > | null = null;
