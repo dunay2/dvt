@@ -47,15 +47,15 @@ boundaries, and one-way dependency rules.
 
 The repository recognizes these bounded contexts as the canonical model.
 
-| Context | Kind | Core responsibility | Aggregate root or owned root | Current or target package home |
-| --- | --- | --- | --- | --- |
-| Planner | core domain | Build deterministic execution plans from canonical inputs | `ExecutionPlan` | `@dvt/planner` |
-| Execution | core domain | Orchestrate run lifecycle and enforce execution invariants | `Run` | `@dvt/engine` |
-| State | supporting context | Persist ordered run facts, snapshots, and intent state with storage authority | per-run persisted state under `IRunStateStore` and `IStartRunIntentStore` contracts | state adapters such as `@dvt/adapter-postgres` |
-| Artifacts | supporting context | Store immutable plan and compiled-code artifacts and expose stable references | immutable artifact blobs and refs such as `PlanRef` and `CompiledCodeRef` | currently split; target is a dedicated artifact boundary |
-| Delivery | supporting context | Drain outbox records and publish persisted events without owning run semantics | `OutboxRecord` | currently split; target is a dedicated outbox or delivery package |
-| Observability | supporting technical context | Provide logs, traces, metrics, and audit correlation without becoming domain authority | telemetry facades and correlation utilities, not business aggregates | `@dvt/observability`, `@dvt/observability-otel` |
-| Entry / Application | composition layer | Compose domains and adapters into runnable use cases and processes | application service or host root, not domain aggregates | `apps/api`, `apps/outbox-worker`, future entrypoints |
+| Context             | Kind                         | Core responsibility                                                                    | Aggregate root or owned root                                                        | Current or target package home                                    |
+| ------------------- | ---------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Planner             | core domain                  | Build deterministic execution plans from canonical inputs                              | `ExecutionPlan`                                                                     | `@dvt/planner`                                                    |
+| Execution           | core domain                  | Orchestrate run lifecycle and enforce execution invariants                             | `Run`                                                                               | `@dvt/engine`                                                     |
+| State               | supporting context           | Persist ordered run facts, snapshots, and intent state with storage authority          | per-run persisted state under `IRunStateStore` and `IStartRunIntentStore` contracts | state adapters such as `@dvt/adapter-postgres`                    |
+| Artifacts           | supporting context           | Store immutable plan and compiled-code artifacts and expose stable references          | immutable artifact blobs and refs such as `PlanRef` and `CompiledCodeRef`           | currently split; target is a dedicated artifact boundary          |
+| Delivery            | supporting context           | Drain outbox records and publish persisted events without owning run semantics         | `OutboxRecord`                                                                      | currently split; target is a dedicated outbox or delivery package |
+| Observability       | supporting technical context | Provide logs, traces, metrics, and audit correlation without becoming domain authority | telemetry facades and correlation utilities, not business aggregates                | `@dvt/observability`, `@dvt/observability-otel`                   |
+| Entry / Application | composition layer            | Compose domains and adapters into runnable use cases and processes                     | application service or host root, not domain aggregates                             | `apps/api`, `apps/outbox-worker`, future entrypoints              |
 
 ### 2. Aggregate and component ownership details
 
@@ -241,14 +241,14 @@ Interpretation:
 
 Imports must express ownership.
 
-| Imported thing | Canonical import location | Rule |
-| --- | --- | --- |
-| Shared serializable DTOs, refs, schemas, persisted envelopes | `@dvt/contracts` or explicit subpaths of `@dvt/contracts` | Default cross-context import surface |
-| Domain-owned behavior ports | the owning domain package | Ports stay with the domain that defines the need |
-| Domain services, aggregates, policies | the owning domain package | Only composition roots and the owning package may wire them |
-| Technical support facades such as observability | the owning support package such as `@dvt/observability` | Domains may depend on the facade, never on the concrete exporter adapter |
-| Concrete adapters and implementations | adapter packages or app roots | Not imported by peer domains |
-| Test doubles, in-memory stores, stubs | `package/testing` subpath | Never exported from the production root surface |
+| Imported thing                                               | Canonical import location                                 | Rule                                                                     |
+| ------------------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Shared serializable DTOs, refs, schemas, persisted envelopes | `@dvt/contracts` or explicit subpaths of `@dvt/contracts` | Default cross-context import surface                                     |
+| Domain-owned behavior ports                                  | the owning domain package                                 | Ports stay with the domain that defines the need                         |
+| Domain services, aggregates, policies                        | the owning domain package                                 | Only composition roots and the owning package may wire them              |
+| Technical support facades such as observability              | the owning support package such as `@dvt/observability`   | Domains may depend on the facade, never on the concrete exporter adapter |
+| Concrete adapters and implementations                        | adapter packages or app roots                             | Not imported by peer domains                                             |
+| Test doubles, in-memory stores, stubs                        | `package/testing` subpath                                 | Never exported from the production root surface                          |
 
 ### 6. Package boundary rules
 
