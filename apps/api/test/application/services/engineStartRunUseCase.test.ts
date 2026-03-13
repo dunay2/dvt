@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import type {
   AuthorizedCommandExecutionContext,
   StartRunCommand,
 } from '../../../src/application/ports/auth.js';
+import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
 
 const PLAN_REF = {
