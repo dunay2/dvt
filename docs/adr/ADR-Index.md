@@ -32,6 +32,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0031   | Storage Adapter Tenant Isolation Strategy                                                       | Accepted                 | 2026-03-03                       | [ADR-0031-adapter-tenant-isolation.md](ADR-0031-adapter-tenant-isolation.md)                                                               |
 | ADR-0032   | compiledCodeRef Ownership: Reference in StepStarted Payload                                     | Accepted                 | 2026-03-04                       | [ADR-0032-compiledcoderef-ownership.md](ADR-0032-compiledcoderef-ownership.md)                                                             |
 | ADR-0033   | Outbox Worker Sharding And Fencing Model                                                        | Accepted                 | 2026-03-12                       | [ADR-0033-outbox-worker-sharding-and-fencing-model.md](ADR-0033-outbox-worker-sharding-and-fencing-model.md)                               |
+| ADR-0034   | Bounded Context Boundaries And Communication Rules                                              | Accepted                 | 2026-03-13                       | [ADR-0034-bounded-context-boundaries-and-communication-rules.md](ADR-0034-bounded-context-boundaries-and-communication-rules.md)           |
 
 ## Usage rules
 
