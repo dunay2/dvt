@@ -165,9 +165,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../../packages/@dvt/contracts
-      '@dvt/engine':
+      '@dvt/delivery':
         specifier: workspace:*
-        version: link:../../packages/@dvt/engine
+        version: link:../../packages/@dvt/delivery
       pg:
         specifier: ^8.12.0
         version: 8.18.0
@@ -184,6 +184,9 @@ importers:
       '@types/pg':
         specifier: ^8.11.10
         version: 8.16.0
+      dependency-cruiser:
+        specifier: ^17.3.9
+        version: 17.3.9
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
@@ -486,6 +489,22 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.3.5)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/delivery:
+    dependencies:
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      '@types/node':
+        specifier: 25.3.5
+        version: 25.3.5
       typescript:
         specifier: 5.9.3
         version: 5.9.3

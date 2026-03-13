@@ -2,6 +2,13 @@
  * @baseline ADR-0003
  */
 import type {
+  DeadLetterRecord,
+  IOutboxStorage,
+  OutboxClaimSelection,
+  OutboxRecord,
+} from '@dvt/contracts';
+
+import type {
   AppendResult,
   RunEventInput,
   RunEventPersisted,
@@ -9,19 +16,14 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
-import { InMemoryOutboxStorage } from '../outbox/InMemoryOutboxStorage.js';
-import type {
-  DeadLetterRecord,
-  IOutboxStorage,
-  OutboxClaimSelection,
-  OutboxRecord,
-} from '../outbox/types.js';
 import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
+
+import { InMemoryOutboxState } from './InMemoryOutboxState.js';
 
 export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
@@ -30,17 +32,17 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
-  private readonly outbox: InMemoryOutboxStorage;
+  private readonly outbox: InMemoryOutboxState;
 
   constructor(deps?: { outboxNowMs?: () => number; outboxShardCount?: number }) {
-    const outboxDeps: ConstructorParameters<typeof InMemoryOutboxStorage>[0] = {};
+    const outboxDeps: ConstructorParameters<typeof InMemoryOutboxState>[0] = {};
     if (deps?.outboxNowMs !== undefined) {
       outboxDeps.nowMs = deps.outboxNowMs;
     }
     if (deps?.outboxShardCount !== undefined) {
       outboxDeps.shardCount = deps.outboxShardCount;
     }
-    this.outbox = new InMemoryOutboxStorage(outboxDeps);
+    this.outbox = new InMemoryOutboxState(outboxDeps);
   }
 
   private createDefaultSnapshot(runId: string): WorkflowSnapshot {

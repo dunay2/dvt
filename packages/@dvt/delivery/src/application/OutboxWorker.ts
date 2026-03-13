@@ -1,11 +1,3 @@
-/**
- * @file packages/@dvt/engine/src/outbox/OutboxWorker.ts
- * @baseline ADR-0004: Event Sourcing Strategy (Extended)
- * @decision Decision — Outbox delivery is executed in batches with explicit marking of delivered/failed
- * @consequence The publish cycle maintains operational consistency and tolerance to bus errors
- * @version 1.0.0
- * @date 2026-02-21
- */
 import {
   MAX_OUTBOX_ATTEMPTS,
   type IEventBus,
@@ -15,19 +7,11 @@ import {
   type OutboxRecord,
   type OutboxTickResult,
   type OutboxWorkerObserver,
-} from './types.js';
+} from '@dvt/contracts';
 
 export interface OutboxWorkerConfig {
   batchSize: number;
-  /**
-   * When true, `tick()` aborts on first publish failure after recording the
-   * failed attempt in storage. Default: false (best-effort batch processing).
-   */
   stopOnError?: boolean;
-  /**
-   * Best-effort hooks for logs/metrics. Observer failures are swallowed so
-   * delivery semantics stay driven by storage and bus behavior.
-   */
   observer?: OutboxWorkerObserver;
   claimSelection?: OutboxClaimSelection | (() => OutboxClaimSelection | undefined);
   nowMs?: () => number;
@@ -46,9 +30,6 @@ export class OutboxWorker {
     this.nowMs = cfg.nowMs;
   }
 
-  /**
-   * Runs a single poll/deliver cycle.
-   */
   async tick(): Promise<OutboxTickResult> {
     const result = emptyTickResult();
     const maxBatchSize = Math.max(0, this.cfg.batchSize);
@@ -153,8 +134,6 @@ export class OutboxWorker {
   }
 
   private async publishRecord(record: OutboxRecord): Promise<void> {
-    // Publish one envelope at a time to keep delivery accounting explicit
-    // and avoid batch-level ambiguity on partial failures.
     await this.bus.publish([record.payload]);
     await this.storage.markDelivered([record.id]);
   }

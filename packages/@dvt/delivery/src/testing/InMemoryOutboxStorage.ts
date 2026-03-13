@@ -1,23 +1,13 @@
-/**
- * @file packages/@dvt/engine/src/outbox/InMemoryOutboxStorage.ts
- * @baseline ADR-0004: Event Sourcing Strategy (Extended)
- * @decision Decision — The outbox storage maintains at-least-once delivery with explicit transition to dead-letter
- * @consequence Event publication preserves durability and operational idempotency in the face of delivery failures
- * @version 1.0.0
- * @date 2026-02-21
- */
 import { createHash } from 'node:crypto';
 
-import type { RunEventPersisted } from '../contracts/runEvents.js';
-import { epochMsToIsoUtc, parseIsoUtcToEpochMs } from '../utils/clock.js';
-
-import type {
-  DeadLetterRecord,
-  IOutboxStorage,
-  OutboxClaimSelection,
-  OutboxRecord,
-} from './types.js';
-import { MAX_OUTBOX_ATTEMPTS } from './types.js';
+import {
+  MAX_OUTBOX_ATTEMPTS,
+  type DeadLetterRecord,
+  type EventEnvelope,
+  type IOutboxStorage,
+  type OutboxClaimSelection,
+  type OutboxRecord,
+} from '@dvt/contracts';
 
 type ReplayDeadLetterOptions = {
   limit?: number;
@@ -52,7 +42,6 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 
   private computeNextAttemptAtIso(attempts: number): string {
-    // Exponential backoff base 1s, capped at 60s.
     const delayMs = Math.min(60_000, 1_000 * 2 ** Math.max(0, attempts - 1));
     return epochMsToIsoUtc(this.nowMs() + delayMs);
   }
@@ -138,12 +127,16 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   ): number[] {
     const indexes: number[] = [];
 
-    for (let i = this.deadLetters.length - 1; i >= 0 && indexes.length < limit; i -= 1) {
-      const deadLetter = this.deadLetters[i];
+    for (
+      let index = this.deadLetters.length - 1;
+      index >= 0 && indexes.length < limit;
+      index -= 1
+    ) {
+      const deadLetter = this.deadLetters[index];
       if (!deadLetter || !this.matchesReplaySelection(deadLetter, options, ids)) {
         continue;
       }
-      indexes.push(i);
+      indexes.push(index);
     }
 
     return indexes;
@@ -166,16 +159,16 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     return moved;
   }
 
-  async enqueueTx(_runId: string, events: RunEventPersisted[]): Promise<void> {
-    for (const e of events) {
+  async enqueueTx(_runId: string, events: EventEnvelope[]): Promise<void> {
+    for (const event of events) {
       this.counter += 1;
       this.pending.push({
         id: `outbox_${this.counter}`,
         createdAt: this.nowIsoUtc(),
-        idempotencyKey: e.idempotencyKey,
-        payload: e,
+        idempotencyKey: event.idempotencyKey,
+        payload: event,
         attempts: 0,
-        shardId: resolveShardId(e.runId, this.shardCount),
+        shardId: resolveShardId(event.runId, this.shardCount),
       });
     }
   }
@@ -214,38 +207,38 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 
   async markDelivered(ids: string[]): Promise<void> {
-    const set = new Set(ids);
-    for (let i = this.pending.length - 1; i >= 0; i--) {
-      const record = this.pending[i];
-      if (record && set.has(record.id)) {
-        this.pending.splice(i, 1);
+    const deliveredIds = new Set(ids);
+    for (let index = this.pending.length - 1; index >= 0; index -= 1) {
+      const record = this.pending[index];
+      if (record && deliveredIds.has(record.id)) {
+        this.pending.splice(index, 1);
       }
     }
   }
 
   async markFailed(id: string, error: string): Promise<void> {
-    const idx = this.pending.findIndex((r) => r.id === id);
-    if (idx === -1) return;
-    const rec = this.pending[idx];
-    if (!rec) return;
-    rec.attempts += 1;
-    rec.lastError = error;
+    const index = this.pending.findIndex((record) => record.id === id);
+    if (index === -1) return;
+    const record = this.pending[index];
+    if (!record) return;
+    record.attempts += 1;
+    record.lastError = error;
 
-    if (rec.attempts >= MAX_OUTBOX_ATTEMPTS) {
-      this.pending.splice(idx, 1);
+    if (record.attempts >= MAX_OUTBOX_ATTEMPTS) {
+      this.pending.splice(index, 1);
       this.deadLetters.push({
-        id: `dl_${rec.id}`,
-        originalId: rec.id,
-        runId: rec.payload.runId,
-        payload: rec.payload,
+        id: `dl_${record.id}`,
+        originalId: record.id,
+        runId: record.payload.runId,
+        payload: record.payload,
         lastError: error,
         deadLetteredAt: this.nowIsoUtc(),
-        shardId: rec.shardId,
+        shardId: record.shardId,
       });
       return;
     }
 
-    rec.nextAttemptAt = this.computeNextAttemptAtIso(rec.attempts);
+    record.nextAttemptAt = this.computeNextAttemptAtIso(record.attempts);
   }
 
   async hasPendingRetries(selection?: OutboxClaimSelection): Promise<boolean> {
@@ -299,4 +292,16 @@ function stripPersistedShardId(record: PersistedOutboxRecord): OutboxRecord {
 function stripPersistedDeadLetterShardId(record: PersistedDeadLetterRecord): DeadLetterRecord {
   const { shardId: _shardId, ...deadLetterRecord } = record;
   return deadLetterRecord;
+}
+
+function epochMsToIsoUtc(epochMs: number): string {
+  return new Date(epochMs).toISOString();
+}
+
+function parseIsoUtcToEpochMs(isoUtc: string): number {
+  const epochMs = Date.parse(isoUtc);
+  if (!Number.isFinite(epochMs)) {
+    throw new Error(`INVALID_ISO_UTC: ${isoUtc}`);
+  }
+  return epochMs;
 }

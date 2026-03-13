@@ -1,11 +1,11 @@
 # dvt-outbox-worker
 
-Standalone host for the current `OutboxWorker` runtime.
+Composition root for the `@dvt/delivery` runtime.
 
 Current scope:
 
 - bootstrap PostgreSQL storage when explicitly enabled
-- run the polling loop independently from `apps/api`
+- assemble the polling loop independently from `apps/api`
 - make ownership explicit at host level through `active` / `passive` mode plus shard-scoped PostgreSQL advisory-lock fencing
 - publish envelopes through an explicit bus adapter
 - expose `/healthz`, `/readyz`, and `/metrics`
@@ -18,6 +18,12 @@ Current bus modes are intentionally narrow:
 - `log`: emits one structured log record per published envelope for controlled local runs
 
 `http` is the default because the worker should fail fast without a real publisher.
+
+Boundary rule:
+
+- delivery logic lives in `@dvt/delivery`
+- this app is only the composition root plus operational adapters
+- `apps/outbox-worker` must not re-own delivery internals or import them back from `@dvt/engine`
 
 Duplicate-handling contract:
 

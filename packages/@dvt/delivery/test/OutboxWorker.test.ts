@@ -1,16 +1,16 @@
 import { createHash } from 'node:crypto';
 
-import { describe, expect, it } from 'vitest';
-
-import type { RunEventPersisted } from '../../src/contracts/runEvents.js';
-import { InMemoryOutboxStorage } from '../../src/outbox/InMemoryOutboxStorage.js';
-import { OutboxWorker } from '../../src/outbox/OutboxWorker.js';
 import type {
+  EventEnvelope as RunEventPersisted,
   IEventBus,
   IOutboxStorage,
   OutboxFailureDisposition,
   OutboxRecord,
-} from '../../src/outbox/types.js';
+} from '@dvt/contracts';
+import { describe, expect, it } from 'vitest';
+
+import { OutboxWorker } from '../src/application/OutboxWorker.js';
+import { InMemoryOutboxStorage } from '../src/testing/InMemoryOutboxStorage.js';
 
 function makeEvent(id: string, runId = 'run-1', runSeq = 1): RunEventPersisted {
   return {
@@ -121,19 +121,15 @@ describe('OutboxWorker', () => {
       retryBacklogActive: true,
     });
 
-    // First record failed and remains pending with attempts=1 + nextAttemptAt backoff.
-    // Immediate poll should not surface the failed item yet due to backoff gate.
     const pendingAfterFirstTick = await store.listPending(10);
     expect(pendingAfterFirstTick).toHaveLength(0);
 
-    // Advance clock and confirm failed item is eligible with attempts=1.
     now.value = 1_001;
     const pendingAfterBackoff = await store.listPending(10);
     expect(pendingAfterBackoff).toHaveLength(1);
     expect(pendingAfterBackoff[0]?.attempts).toBe(1);
     expect(pendingAfterBackoff[0]?.nextAttemptAt).toBeDefined();
 
-    // Retry and drain.
     now.value = 2_000;
     const secondResult = await worker.tick();
     expect(secondResult).toMatchObject({
@@ -254,16 +250,8 @@ describe('OutboxWorker', () => {
   });
 
   it('uses shard-aware claim selection when storage supports it', async () => {
-    let receivedSelection:
-      | {
-          shardIds?: readonly number[];
-        }
-      | undefined;
-    let receivedRetrySelection:
-      | {
-          shardIds?: readonly number[];
-        }
-      | undefined;
+    let receivedSelection: { shardIds?: readonly number[] } | undefined;
+    let receivedRetrySelection: { shardIds?: readonly number[] } | undefined;
     const storage: IOutboxStorage = {
       async enqueueTx(): Promise<void> {},
       async listPending(): Promise<OutboxRecord[]> {
@@ -271,9 +259,7 @@ describe('OutboxWorker', () => {
       },
       async listPendingForClaim(
         _limit: number,
-        selection?: {
-          shardIds?: readonly number[];
-        }
+        selection?: { shardIds?: readonly number[] }
       ): Promise<OutboxRecord[]> {
         receivedSelection = selection;
         return [];
@@ -501,11 +487,10 @@ describe('OutboxWorker', () => {
     const worker = new OutboxWorker(store, alwaysFailBus, { batchSize: 10, stopOnError: false });
     await store.enqueueTx('run-dlq', [makeEvent('dlq', 'run-dlq', 1)]);
 
-    // 10 failures -> DLQ
-    for (let i = 0; i < 10; i += 1) {
-      now.value = i * 65_000;
+    for (let index = 0; index < 10; index += 1) {
+      now.value = index * 65_000;
       const result = await worker.tick();
-      expect(result.retryBacklogActive).toBe(i < 9);
+      expect(result.retryBacklogActive).toBe(index < 9);
     }
 
     await expect(store.listPending(10)).resolves.toHaveLength(0);
@@ -534,8 +519,8 @@ describe('OutboxWorker', () => {
     });
     await store.enqueueTx('run-replay-clean', [makeEvent('replay-clean', 'run-replay-clean', 1)]);
 
-    for (let i = 0; i < 10; i += 1) {
-      now.value = i * 65_000;
+    for (let index = 0; index < 10; index += 1) {
+      now.value = index * 65_000;
       await failingWorker.tick();
     }
 
@@ -586,20 +571,20 @@ describe('OutboxWorker', () => {
     expect(transitions).toContain('delivered:outbox_2');
 
     const dlqStore = new InMemoryOutboxStorage({ nowMs: () => now.value });
-    const alwaysFailBus: IEventBus = {
+    const alwaysFailingBus: IEventBus = {
       publish: async () => {
         throw new Error('always fail');
       },
     };
-    const dlqWorker = new OutboxWorker(dlqStore, alwaysFailBus, {
+    const dlqWorker = new OutboxWorker(dlqStore, alwaysFailingBus, {
       batchSize: 10,
       observer,
       nowMs: () => now.value,
     });
     await dlqStore.enqueueTx('run-dlq', [makeEvent('3', 'run-dlq', 1)]);
 
-    for (let i = 0; i < 10; i += 1) {
-      now.value = 100_000 + i * 65_000;
+    for (let index = 0; index < 10; index += 1) {
+      now.value = 100_000 + index * 65_000;
       await dlqWorker.tick();
     }
 

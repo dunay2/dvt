@@ -14,11 +14,11 @@ Generated automatically from repository code on 2026-03-13.
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
-| Total workspaces             | 18    |
-| Total source files           | 297   |
+| Total workspaces             | 19    |
+| Total source files           | 299   |
 | Total test files             | 98    |
-| Workspaces with build script | 18/18 |
-| Workspaces with test script  | 16/18 |
+| Workspaces with build script | 19/19 |
+| Workspaces with test script  | 17/19 |
 
 ## Workspace Matrix
 
@@ -32,8 +32,9 @@ Generated automatically from repository code on 2026-03-13.
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/contracts            | `packages/@dvt/contracts`            | 27        | 6          | yes   | yes  | no        | 19                      |
+| @dvt/delivery             | `packages/@dvt/delivery`             | 6         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 56        | 21         | yes   | yes  | no        | 26                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 52        | 20         | yes   | yes  | no        | 24                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |

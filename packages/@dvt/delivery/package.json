@@ -1,0 +1,36 @@
+{
+  "name": "@dvt/delivery",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "pretest": "pnpm --filter @dvt/contracts build",
+    "build": "tsc -p tsconfig.json",
+    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/delivery/test/OutboxWorker.test.ts"
+  },
+  "dependencies": {
+    "@dvt/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "25.3.5",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

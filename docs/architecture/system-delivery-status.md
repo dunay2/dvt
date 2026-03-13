@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-12
+last_reviewed: 2026-03-13
 ---
 
 # Current Status
@@ -44,13 +44,13 @@ Minimum tuple for this document:
 
 ## Snapshot
 
-- Review date: 2026-03-08
+- Review date: 2026-03-13
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
-- Active workspaces: 19
-- Source files: 281
-- Test files: 75
-- Workspaces with test scripts: 15 of 19
+- Active workspaces: 20
+- Source files: 289
+- Test files: 76
+- Workspaces with test scripts: 16 of 20
 
 ## Executive Summary
 
@@ -58,7 +58,7 @@ Minimum tuple for this document:
 | -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Entry layer                | Partial            | `apps/api` auth hardening closed (G8): OIDC auth, tenant policy, arch rules, and engine-backed StartRun all closed; web has no automated tests                                                     | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
 | Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened                                          | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; the first standalone outbox worker slice now exists, while scheduler and further hardening remain gap-driven                       | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
+| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; delivery runtime ownership is now extracted into `@dvt/delivery`, while scheduler and further hardening remain gap-driven          | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
 | Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open       | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
 | Observability              | Partial            | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                       | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
 | Traceability / OpenLineage | Closed for Phase 1 | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns remain Phase 2 under G10 | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
@@ -92,11 +92,11 @@ Minimum tuple for this document:
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                    | Status             | Notes                                                                                                                                                                                                 |
-| -------------- | ------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres` | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                         |
-| Outbox runtime | `@dvt/engine`, `@dvt/adapter-postgres`      | Closed for Phase 1 | Closed G5 2026-03-12; standalone worker with advisory-lock shard fencing and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10 |
-| Read models    | engine and infra follow-up                  | Partial            | In-process projection exists; standalone read-model service remains open under `G7`                                                                                                                   |
+| Area           | Packages                                                      | Status             | Notes                                                                                                                                                                                                                                                               |
+| -------------- | ------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                   | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                       |
+| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10 |
+| Read models    | engine and infra follow-up                                    | Partial            | In-process projection exists; standalone read-model service remains open under `G7`                                                                                                                                                                                 |
 
 ### Observability And Traceability
 

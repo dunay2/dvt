@@ -35,6 +35,7 @@ Concept anchors for this section:
 - [G6 - OpenLineage CI + Schema Pin](g6/index.md)
 - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
 - [G6 Architecture and QA Review](g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md)
+- [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - [G3 TASK SPECIFICATION](G3-TASK-SPECIFICATION.md)
 - [G4 - compiledCodeRef Task Specification](G4-TASK-SPECIFICATION.md)
 - [G4-T3 - Sonar Refactor Plan](G4-T3-SONAR-REFACTOR-PLAN.md)

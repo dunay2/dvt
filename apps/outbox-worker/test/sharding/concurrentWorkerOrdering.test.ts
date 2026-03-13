@@ -20,8 +20,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
-import { OutboxWorker } from '@dvt/engine';
-import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/engine/testing';
+import { OutboxWorker } from '@dvt/delivery';
+import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/delivery/testing';
 
 // ---------------------------------------------------------------------------
 // Test fixtures

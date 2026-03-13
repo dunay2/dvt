@@ -232,6 +232,7 @@ Minimum tuple for this document:
 ### G7 - Read models + standalone projector
 
 - Status: Partial
+- Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
 - Remaining:

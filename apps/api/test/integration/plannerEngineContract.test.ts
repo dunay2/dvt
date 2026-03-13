@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 
@@ -11,12 +12,9 @@ import {
   SnapshotProjector,
   WorkflowEngine,
   type ExecutionPlan,
+  type RunEventInput,
 } from '@dvt/engine';
-import {
-  InMemoryStartRunIntentStore,
-  InMemoryTxStore,
-  MockAdapter,
-} from '@dvt/engine/testing';
+import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
 import type { IObservability } from '@dvt/observability';
 import observabilityPkg from '@dvt/observability';
 import { Planner, type ExecutionPlanV2 } from '@dvt/planner';
@@ -39,7 +37,7 @@ function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan 
 }
 
 function utf8(value: string): Uint8Array {
-  return new TextEncoder().encode(value);
+  return Buffer.from(value, 'utf8');
 }
 
 function sha256Hex(bytes: Uint8Array): string {
@@ -111,7 +109,7 @@ function makeRunEvent(
   clock: SequenceClock,
   meta: { runId: string; planId: string; planVersion: string },
   eventType: 'RunStarted' | 'RunCompleted' | 'RunFailed'
-) {
+): RunEventInput {
   return {
     eventId: idempotency.eventId(),
     eventType,
@@ -140,7 +138,7 @@ function makeStepEvent(
   meta: { runId: string; planId: string; planVersion: string },
   stepId: string,
   eventType: 'StepStarted' | 'StepCompleted' | 'StepFailed'
-) {
+): RunEventInput {
   return {
     eventId: idempotency.eventId(),
     eventType,
@@ -165,7 +163,7 @@ function makeStepEvent(
   };
 }
 
-test('planner -> engine: full lifecycle with 3-step DAG', async () => {
+await test('planner -> engine: full lifecycle with 3-step DAG', async () => {
   const planner = new Planner();
   const { plan: plannerPlan } = await planner.buildPlan({
     nodes: [
@@ -193,7 +191,10 @@ test('planner -> engine: full lifecycle with 3-step DAG', async () => {
   assert.equal(enginePlan.metadata.contractVersion, '1.0.0');
   assert.equal(enginePlan.metadata.planId, plannerPlan.metadata.planId);
 
-  const planRef = makePlanRefFromEnginePlan('https://plans.example.com/revenue-dag.json', enginePlan);
+  const planRef = makePlanRefFromEnginePlan(
+    'https://plans.example.com/revenue-dag.json',
+    enginePlan
+  );
   const runId = 'integration-run-1';
   const runContext = makeRunContext(runId);
 
@@ -213,7 +214,9 @@ test('planner -> engine: full lifecycle with 3-step DAG', async () => {
     planVersion: enginePlan.metadata.planVersion,
   };
 
-  await store.appendAndEnqueueTx(runId, [makeRunEvent(idempotency, clock, eventMeta, 'RunStarted')]);
+  await store.appendAndEnqueueTx(runId, [
+    makeRunEvent(idempotency, clock, eventMeta, 'RunStarted'),
+  ]);
 
   const afterRunStarted = await engine.getRunStatus(runRef);
   assert.equal(afterRunStarted.status, 'RUNNING');
@@ -227,7 +230,9 @@ test('planner -> engine: full lifecycle with 3-step DAG', async () => {
     ]);
   }
 
-  await store.appendAndEnqueueTx(runId, [makeRunEvent(idempotency, clock, eventMeta, 'RunCompleted')]);
+  await store.appendAndEnqueueTx(runId, [
+    makeRunEvent(idempotency, clock, eventMeta, 'RunCompleted'),
+  ]);
 
   const finalSnapshot = await engine.getRunStatus(runRef);
   assert.equal(finalSnapshot.status, 'COMPLETED');
@@ -246,7 +251,7 @@ test('planner -> engine: full lifecycle with 3-step DAG', async () => {
   assert.equal(allEvents.length, 9);
 });
 
-test('planner planId is deterministic for identical input', async () => {
+await test('planner planId is deterministic for identical input', async () => {
   const planner = new Planner();
   const input = {
     nodes: [
@@ -263,7 +268,7 @@ test('planner planId is deterministic for identical input', async () => {
   assert.equal(plan1.metadata.inputHashSha256, plan2.metadata.inputHashSha256);
 });
 
-test('planner step fields remain compatible with engine step consumption', async () => {
+await test('planner step fields remain compatible with engine step consumption', async () => {
   const planner = new Planner();
   const { plan } = await planner.buildPlan({
     nodes: [
@@ -296,7 +301,7 @@ test('planner step fields remain compatible with engine step consumption', async
   assert.equal(runRef.provider, 'mock');
 });
 
-test('bridge preserves planner planId and step order', async () => {
+await test('bridge preserves planner planId and step order', async () => {
   const planner = new Planner();
   const { plan: plannerPlan } = await planner.buildPlan({
     nodes: [
@@ -318,7 +323,7 @@ test('bridge preserves planner planId and step order', async () => {
   }
 });
 
-test('planner output still documents current schema drift against engine metadata', async () => {
+await test('planner output still documents current schema drift against engine metadata', async () => {
   const planner = new Planner();
   const { plan } = await planner.buildPlan({
     nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],
