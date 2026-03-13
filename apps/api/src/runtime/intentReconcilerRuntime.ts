@@ -1,7 +1,6 @@
 import { PostgresStartRunIntentStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { EngineRunRef } from '@dvt/contracts';
 import {
-  MockAdapter,
   IdempotencyKeyBuilder,
   IntentReconcilerWorker,
   type IntentReconcilerWorkerOptions,
@@ -12,6 +11,7 @@ import {
   type IClock,
   type IProviderAdapter,
 } from '@dvt/engine';
+import { MockAdapter } from '@dvt/engine/testing';
 import type { IObservability } from '@dvt/observability';
 import type { FastifyBaseLogger } from 'fastify';
 

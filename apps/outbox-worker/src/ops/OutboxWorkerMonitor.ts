@@ -3,7 +3,7 @@ import type {
   OutboxRecord,
   OutboxTickResult,
   OutboxWorkerObserver,
-} from '@dvt/engine';
+} from '@dvt/contracts';
 
 import type {
   OutboxWorkerRuntimeHooks,

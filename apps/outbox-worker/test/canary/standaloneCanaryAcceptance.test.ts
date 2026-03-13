@@ -4,7 +4,11 @@ import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import adapterPostgres from '@dvt/adapter-postgres';
-import { MAX_OUTBOX_ATTEMPTS, type OutboxRecord, type RunEventPersisted } from '@dvt/engine';
+import {
+  MAX_OUTBOX_ATTEMPTS,
+  type EventEnvelope as RunEventPersisted,
+  type OutboxRecord,
+} from '@dvt/contracts';
 
 import { closePgPool } from '../../src/db/pool.js';
 import { runOutboxWorkerHost } from '../../src/host/runOutboxWorkerHost.js';

@@ -1,12 +1,14 @@
 import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 
+import type {
+  EventEnvelope as RunEventPersisted,
+  IOutboxStorage,
+  OutboxRecord,
+} from '@dvt/contracts';
 import {
   InMemoryEventBus,
-  type IOutboxStorage,
-  type OutboxRecord,
-  type RunEventPersisted,
-} from '@dvt/engine';
+} from '@dvt/engine/testing';
 
 import {
   OutboxWorkerRuntime,

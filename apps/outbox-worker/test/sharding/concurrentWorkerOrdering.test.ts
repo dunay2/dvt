@@ -19,12 +19,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { OutboxWorker } from '@dvt/engine';
 import {
   InMemoryEventBus,
   InMemoryOutboxStorage,
-  OutboxWorker,
-  type RunEventPersisted,
-} from '@dvt/engine';
+} from '@dvt/engine/testing';
 
 // ---------------------------------------------------------------------------
 // Test fixtures

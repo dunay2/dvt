@@ -3,7 +3,7 @@ import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import adapterPostgres from '@dvt/adapter-postgres';
-import type { RunEventPersisted } from '@dvt/engine';
+import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 import type { Pool } from 'pg';
 
 import { closePgPool, getPgPool } from '../../src/db/pool.js';

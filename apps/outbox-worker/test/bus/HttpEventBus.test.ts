@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import test from 'node:test';
 
-import type { RunEventPersisted } from '@dvt/engine';
+import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 
 import { HttpEventBus } from '../../src/bus/HttpEventBus.js';
 

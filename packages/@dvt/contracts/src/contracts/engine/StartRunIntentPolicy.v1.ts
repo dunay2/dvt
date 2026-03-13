@@ -9,7 +9,7 @@
 import type {
   StartRunIntentStatus,
   StartRunIntentTransitionTarget,
-} from './IStartRunIntentStore.v1';
+} from './IStartRunIntentStore.v1.js';
 
 const TRANSITION_RULES: Record<StartRunIntentTransitionTarget, readonly StartRunIntentStatus[]> = {
   DISPATCHED: ['PENDING'],

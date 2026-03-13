@@ -1,5 +1,5 @@
 import adapterPostgres from '@dvt/adapter-postgres';
-import type { IEventBus, OutboxWorkerObserver } from '@dvt/engine';
+import type { IEventBus, OutboxWorkerObserver } from '@dvt/contracts';
 
 import { HttpEventBus } from '../bus/HttpEventBus.js';
 import { LoggingEventBus } from '../bus/LoggingEventBus.js';

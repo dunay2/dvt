@@ -1,13 +1,13 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import {
-  OutboxWorker,
-  type IEventBus,
-  type IOutboxStorage,
-  type OutboxClaimSelection,
-  type OutboxTickResult,
-  type OutboxWorkerObserver,
-} from '@dvt/engine';
+import type {
+  IEventBus,
+  IOutboxStorage,
+  OutboxClaimSelection,
+  OutboxTickResult,
+  OutboxWorkerObserver,
+} from '@dvt/contracts';
+import { OutboxWorker } from '@dvt/engine';
 
 export interface OutboxWorkerRuntimeLogger {
   info(data: Record<string, unknown>, msg?: string): void;

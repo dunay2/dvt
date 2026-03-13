@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@dvt/adapter-postgres": "workspace:*",
+    "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*",
     "pg": "^8.12.0",
     "pino": "^9.0.0",

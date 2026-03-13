@@ -11,10 +11,10 @@ import {
   type IEventBus,
   type IOutboxStorage,
   type OutboxClaimSelection,
-  OutboxFailureDisposition,
-  OutboxRecord,
-  OutboxTickResult,
-  OutboxWorkerObserver,
+  type OutboxFailureDisposition,
+  type OutboxRecord,
+  type OutboxTickResult,
+  type OutboxWorkerObserver,
 } from './types.js';
 
 export interface OutboxWorkerConfig {

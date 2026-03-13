@@ -9,6 +9,9 @@
       "@dvt/adapter-postgres": [
         "packages/@dvt/adapter-postgres/dist/index.d.ts"
       ],
+      "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/engine/*": ["packages/@dvt/engine/dist/*"],
+      "@dvt/engine/testing": ["packages/@dvt/engine/dist/testing.d.ts"],
       "@dvt/engine": ["packages/@dvt/engine/dist/index.d.ts"]
     },
     "types": ["node"],

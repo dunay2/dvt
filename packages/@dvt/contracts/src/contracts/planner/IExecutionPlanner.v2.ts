@@ -1,4 +1,4 @@
-import type { PlannerBuildResultV2, PlannerInputEnvelopeV2 } from './ExecutionPlan.v2';
+import type { PlannerBuildResultV2, PlannerInputEnvelopeV2 } from './ExecutionPlan.v2.js';
 
 /**
  * Contrato normativo del planner (GAP-P0-02).

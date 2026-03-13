@@ -7,7 +7,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { TenantId, EventId, IdempotencyKey } from '../types/contracts';
+import { TenantId, EventId, IdempotencyKey } from '../types/contracts.js';
 
 export interface OutboxEventRecord {
   readonly outboxId: string;

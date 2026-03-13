@@ -1,14 +1,16 @@
 import assert from 'node:assert/strict';
 import { setTimeout as sleep } from 'node:timers/promises';
 
+import type {
+  EventEnvelope as RunEventPersisted,
+  IOutboxStorage,
+  OutboxRecord,
+  OutboxTickResult,
+} from '@dvt/contracts';
 import {
   InMemoryEventBus,
   InMemoryOutboxStorage,
-  type IOutboxStorage,
-  type OutboxRecord,
-  type OutboxTickResult,
-  type RunEventPersisted,
-} from '@dvt/engine';
+} from '@dvt/engine/testing';
 
 import {
   OutboxWorkerRuntime,

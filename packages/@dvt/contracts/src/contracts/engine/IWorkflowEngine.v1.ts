@@ -3,4 +3,4 @@ export type {
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
-} from '../../types/contracts';
+} from '../../types/contracts.js';

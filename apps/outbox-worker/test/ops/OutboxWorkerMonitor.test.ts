@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { OutboxRecord, RunEventPersisted } from '@dvt/engine';
+import type { EventEnvelope as RunEventPersisted, OutboxRecord } from '@dvt/contracts';
 
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
