@@ -71,15 +71,15 @@ Operational playbook for executing gaps in parallel by independent teams.
 
 ## Dependency Matrix
 
-| Gap / Task | Can start now      | Blocks              |
-| ---------- | ------------------ | ------------------- |
-| G1 closure | Yes                | None                |
-| G5         | Yes                | None                |
-| G6         | Yes                | None                |
-| G7         | Yes                | None                |
-| G8         | Yes                | None                |
-| G9         | After Phase 1.5    | G5-G8 stabilization |
-| G10        | After G5/G6 stable | G5 + G6             |
+| Gap / Task | Can start now      | Blocks  |
+| ---------- | ------------------ | ------- |
+| G1 closure | Yes                | None    |
+| G5         | Yes                | None    |
+| G6         | Yes                | None    |
+| G7         | Yes                | None    |
+| G8         | Yes                | None    |
+| G9         | Yes (Partial)      | None    |
+| G10        | After G5/G6 stable | G5 + G6 |
 
 ## Team Cadence
 

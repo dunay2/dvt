@@ -229,6 +229,44 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   `pnpm --filter @dvt/traceability-service test`
 
+### Step type registry and step config hardening
+
+- Canonical source today:
+  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G9`)
+  for remaining closure scope,
+  and
+  [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md)
+  for the current `compiledCodeRef` carve-out inside opaque `stepTypeConfig`
+- Current status source:
+  [System Delivery Status](../../architecture/system-delivery-status.md)
+- G9 status: **Closed 2026-03-14**
+- Primary code:
+  [packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
+  and
+  [packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts](../../../packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts)
+  and
+  [packages/@dvt/planner/src/domain/Planner.ts](../../../packages/@dvt/planner/src/domain/Planner.ts)
+  and
+  [packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
+- Design note:
+  `stepTypeConfig` remains `Record<string, unknown>` in
+  [ExecutionPlan.v2.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+  and
+  [schemas.ts](../../../packages/@dvt/contracts/src/schemas.ts)
+  **by design** — extensibility requires the shared contract to stay open.
+  Per-kind enforcement is at the Planner (build-time via `IStepTypeRegistry`) and each
+  adapter (consumption-time via `DbtStepTypeConfigSchema`). Promoting to a discriminated
+  union would require an ADR contract revision, not a G9 follow-up.
+- Key tests:
+  [packages/@dvt/contracts/test/step-registry.test.ts](../../../packages/@dvt/contracts/test/step-registry.test.ts)
+  and
+  [packages/@dvt/planner/test/unit/step-registry-integration.test.ts](../../../packages/@dvt/planner/test/unit/step-registry-integration.test.ts)
+  and
+  [packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
+- Verification: `pnpm --filter @dvt/contracts test` (32/32)
+  · `pnpm --filter @dvt/planner test` (37/37)
+  · `pnpm --filter @dvt/adapter-temporal test` (93/93)
+
 ### OpenLineage mapping and delivery debt
 
 - Canonical source today:

@@ -15,6 +15,8 @@
  *  This class is the entry-point Domain Service: it orchestrates the pipeline
  *  and owns cross-cutting concerns (abort, metrics, limits).
  */
+import { createDefaultStepTypeRegistry, type IStepTypeRegistry } from '@dvt/contracts';
+
 import { nowMs } from '../runtime/time.js';
 
 import { asPlannerError, PlannerError, PlannerErrorCode } from './errors.js';
@@ -57,6 +59,13 @@ export interface PlannerOptions {
    */
   shouldAbort?: () => boolean;
   stepFactory?: StepFactory;
+  /**
+   * Registry used to validate stepTypeConfig per step kind at plan build-time (G9).
+   * Defaults to the built-in registry (DBT_MODEL, DBT_TEST, DBT_SNAPSHOT).
+   * Known kinds with invalid config throw INVALID_STEP_CONFIG.
+   * Unknown kinds pass through (fail-open per ADR-0006).
+   */
+  stepTypeRegistry?: IStepTypeRegistry;
 }
 
 // ── Planner (Domain Service / Command Handler) ─────────────────────────────────
@@ -74,6 +83,7 @@ export class Planner {
   private readonly metrics: PlannerMetrics;
   private readonly shouldAbort: () => boolean;
   private readonly stepFactory: StepFactory;
+  private readonly stepTypeRegistry: IStepTypeRegistry;
   private readonly validator = new InputEnvelopeValidator();
   private readonly selector = new NodeSelector();
   private readonly assembler: PlanAssembler;
@@ -83,6 +93,7 @@ export class Planner {
     this.metrics = options?.metrics ?? NoopPlannerMetrics;
     this.shouldAbort = options?.shouldAbort ?? (() => false);
     this.stepFactory = options?.stepFactory ?? dbtStepFactory;
+    this.stepTypeRegistry = options?.stepTypeRegistry ?? createDefaultStepTypeRegistry();
     this.assembler = new PlanAssembler(this.metrics);
   }
 
@@ -140,8 +151,11 @@ export class Planner {
       }
       this.checkAbort(started);
 
-      // 6-7) Steps + assemble plan
+      // 6) Build steps + validate configs via registry (G9)
       const normalizedSteps = this.buildNormalizedSteps(graph.nodesById, topo, resolvedPolicies);
+      this.validateStepConfigs(normalizedSteps);
+
+      // 7) Assemble plan
       const result = await this.assembler.execute(
         new AssemblePlanCommand(normalizedInput, normalizedSteps, this.limits.maxPlanSizeBytes)
       );
@@ -191,6 +205,15 @@ export class Planner {
         return this.stepFactory(node, resolvedPolicies);
       })
       .map((s) => ({ ...s, dependsOn: [...s.dependsOn].sort(binaryCompare) }));
+  }
+
+  private validateStepConfigs(steps: PlanCore['steps']): void {
+    for (const step of steps) {
+      const result = this.stepTypeRegistry.validate(step.kind, step.stepTypeConfig);
+      if (!result.success) {
+        throw new PlannerError(PlannerErrorCode.INVALID_STEP_CONFIG, result.error);
+      }
+    }
   }
 
   private checkAbort(startedMs: number): void {

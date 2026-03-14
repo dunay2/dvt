@@ -64,7 +64,9 @@
       "Bash(xargs wc:*)",
       "Bash(find /f/segundodvt/dvt/packages/@dvt/planner/src -name *tep* -o -name *trike*)",
       "Bash(pnpm --filter @dvt/contracts exec vitest run --reporter=verbose)",
-      "Bash(pnpm --filter @dvt/adapter-temporal exec vitest run --reporter=verbose)"
+      "Bash(pnpm --filter @dvt/adapter-temporal exec vitest run --reporter=verbose)",
+      "Bash(pnpm --filter @dvt/planner exec vitest run --reporter=verbose)",
+      "Bash(pnpm --filter @dvt/planner exec vitest run test/unit/step-registry-integration.test.ts --reporter=verbose)"
     ]
   }
 }
