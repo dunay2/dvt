@@ -22,4 +22,11 @@ export interface IProviderAdapter {
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
+
+  /**
+   * Optional. Computes a deterministic EngineRunRef from RunContext WITHOUT a network call.
+   * When implemented, WorkflowEngine bootstraps run_metadata before adapter.startRun(),
+   * eliminating the dual-producer event ordering race.
+   */
+  estimateRunRef?(ctx: RunContext): EngineRunRef;
 }

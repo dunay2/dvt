@@ -135,3 +135,16 @@ export class OutboxRateLimitExceededError extends DvtError {
     this.name = 'OutboxRateLimitExceededError';
   }
 }
+
+export class InvalidStateTransitionError extends DvtError {
+  constructor(runId: string, fromStatus: string, eventType: string, stepId?: string) {
+    const subject = stepId ? `step ${stepId}` : 'run';
+    super(
+      'INVALID_STATE_TRANSITION',
+      `Cannot apply ${eventType} to ${subject} already in terminal status ${fromStatus}: runId=${runId}`,
+      runId,
+      { details: { fromStatus, eventType, ...(stepId !== undefined ? { stepId } : {}) } }
+    );
+    this.name = 'InvalidStateTransitionError';
+  }
+}

@@ -20,12 +20,12 @@ import {
 } from '@dvt/contracts';
 import type {
   EngineRunRef,
+  IOutboxStorage,
   PlanRef,
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
-import type { IOutboxStorage } from '@dvt/contracts';
 import type { IObservability, ISpan } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
@@ -96,6 +96,10 @@ interface HealthCheckable {
   ping?: () => Promise<void>;
 }
 
+interface StartRunErrorContext {
+  intentId?: string;
+}
+
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly observability: IObservability;
 
@@ -112,6 +116,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       operation: 'startRun',
     });
     const traceContext = buildTraceContext(validatedContext, validatedPlanRef.planId);
+    const errorContext: StartRunErrorContext = {};
 
     return this.observability.withContext(traceContext, () =>
       this.observability.traces.withSpan(
@@ -140,11 +145,18 @@ export class WorkflowEngine implements IWorkflowEngine {
               metricTags,
               traceContext,
               span,
+              errorContext,
             });
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
-            return this.handleStartRunError(error, validatedContext, metricTags, traceContext);
+            return this.handleStartRunError(
+              error,
+              validatedContext,
+              metricTags,
+              traceContext,
+              errorContext
+            );
           }
         }
       )
@@ -158,6 +170,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     metricTags,
     traceContext,
     span,
+    errorContext,
   }: {
     validatedPlanRef: PlanRef;
     validatedContext: RunContext;
@@ -165,6 +178,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     metricTags: Record<string, string>;
     traceContext: ReturnType<typeof buildTraceContext>;
     span: ISpan;
+    errorContext: StartRunErrorContext;
   }): Promise<EngineRunRef> {
     await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
     this.checkOutboxRateLimit(validatedContext);
@@ -174,26 +188,60 @@ export class WorkflowEngine implements IWorkflowEngine {
     this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
 
     const intentId = await this._createStartRunIntent(validatedContext, provider);
-    const runRef = await this.withTimeout(
-      adapter.startRun(validatedPlanRef, validatedContext),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.startRun'
-    );
-    await this.deps.intentStore.markDispatched(intentId, runRef);
+    errorContext.intentId = intentId;
 
-    const bootMeta: RunMetadata = buildRunMetadata(
-      validatedContext,
-      validatedPlanRef,
-      runRef,
-      this.deps.clock.nowIsoUtc()
-    );
-    await this._bootstrapRunTxWithCompensation({
-      bootMeta,
-      adapter,
-      runRef,
-      intentId,
-      traceContext,
-    });
+    let runRef: EngineRunRef;
+    if (adapter.estimateRunRef) {
+      // Pre-bootstrap path: eliminates dual-producer ordering race.
+      // Commits run_metadata + RunQueued BEFORE adapter.startRun() so the workflow
+      // worker sees run_metadata already committed when its first activity runs.
+      // No activity can write to an uncommitted stream.
+      const estimatedRef = adapter.estimateRunRef(validatedContext);
+      const bootMeta: RunMetadata = buildRunMetadata(
+        validatedContext,
+        validatedPlanRef,
+        estimatedRef,
+        this.deps.clock.nowIsoUtc()
+      );
+      await this.deps.stateStore.bootstrapRunTx({
+        metadata: bootMeta,
+        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+      });
+      // bootstrapRunTx failure propagates; startRun never called; intent stays PENDING for reconciler.
+
+      runRef = await this.withTimeout(
+        adapter.startRun(validatedPlanRef, validatedContext),
+        this.deps.timeouts?.adapterCallMs ?? 30_000,
+        'adapter.startRun'
+      );
+      // startRun failure propagates to handleStartRunError; it finds bootMeta → emits RunFailed.
+      // Intent stays PENDING; reconciler probes lookupRunRef, finds no workflow, marks resolved.
+
+      await this.deps.intentStore.markDispatched(intentId, runRef);
+      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+    } else {
+      // Legacy path for adapters without estimateRunRef: startRun first, then bootstrap.
+      runRef = await this.withTimeout(
+        adapter.startRun(validatedPlanRef, validatedContext),
+        this.deps.timeouts?.adapterCallMs ?? 30_000,
+        'adapter.startRun'
+      );
+      await this.deps.intentStore.markDispatched(intentId, runRef);
+
+      const bootMeta: RunMetadata = buildRunMetadata(
+        validatedContext,
+        validatedPlanRef,
+        runRef,
+        this.deps.clock.nowIsoUtc()
+      );
+      await this._bootstrapRunTxWithCompensation({
+        bootMeta,
+        adapter,
+        runRef,
+        intentId,
+        traceContext,
+      });
+    }
 
     this.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
     this.observability.metrics
@@ -291,13 +339,14 @@ export class WorkflowEngine implements IWorkflowEngine {
     error: unknown,
     validatedContext: RunContext,
     metricTags: Record<string, string>,
-    traceContext: ReturnType<typeof buildTraceContext>
+    traceContext: ReturnType<typeof buildTraceContext>,
+    errorContext: StartRunErrorContext
   ): Promise<never> {
     this.observability.metrics.counter('dvt.run.start_failed_total', metricTags).add(1);
     this.observability.logs.error({
       msg: 'startRun failed',
       context: traceContext,
-      err: error,
+      err: error instanceof Error ? error.message : String(error),
       attributes: {
         provider: validatedContext.targetAdapter,
         error: toErrorMessage(error),
@@ -308,11 +357,27 @@ export class WorkflowEngine implements IWorkflowEngine {
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
     if (failMeta) {
+      const pendingIntent = errorContext.intentId
+        ? await this.deps.intentStore.getIntent(errorContext.intentId).catch(() => null)
+        : null;
+      if (pendingIntent?.status === 'PENDING') {
+        this.observability.logs.warn({
+          msg: 'Skipping RunFailed emission after startRun error because intent remains pending',
+          context: traceContext,
+          attributes: {
+            intentId: pendingIntent.intentId,
+            runId: pendingIntent.runId,
+            provider: pendingIntent.provider,
+          },
+        });
+        throw error;
+      }
+
       await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
         this.observability.logs.error({
           msg: 'RunFailed emission failed after startRun error',
           context: traceContext,
-          err: emitErr,
+          err: emitErr instanceof Error ? emitErr.message : String(emitErr),
           attributes: {
             error: toErrorMessage(emitErr),
           },
@@ -450,13 +515,13 @@ export class WorkflowEngine implements IWorkflowEngine {
               this.deps.timeouts?.adapterCallMs ?? 30_000,
               'adapter.getRunStatus'
             );
+            const substatus = providerView.substatus ?? base.substatus;
+            const message = providerView.message ?? base.message;
             span.setStatus('ok');
             return {
               ...base,
-              ...(providerView.substatus !== undefined
-                ? { substatus: providerView.substatus }
-                : {}),
-              ...(providerView.message !== undefined ? { message: providerView.message } : {}),
+              ...(substatus !== undefined ? { substatus } : {}),
+              ...(message !== undefined ? { message } : {}),
             };
           } catch (error) {
             span.recordException(error);
@@ -564,7 +629,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       CANCEL: 'RunCancelRequested',
     };
 
-    return byType[type as 'PAUSE' | 'RESUME' | 'CANCEL'] ?? null;
+    return byType[type] ?? null;
   }
 
   private async resolveMetaOrThrow(runRef: EngineRunRef): Promise<RunMetadata> {
@@ -636,7 +701,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         planId: meta.planId,
         planVersion: meta.planVersion,
       }),
-      ...(payload !== undefined ? { payload } : {}),
+      ...(payload ? { payload } : {}),
     };
   }
 
@@ -699,11 +764,7 @@ function buildMetricTags(
   tenantId: string,
   extras?: Record<string, string>
 ): Record<string, string> {
-  return {
-    provider,
-    tenantId,
-    ...(extras ?? {}),
-  };
+  return extras ? { provider, tenantId, ...extras } : { provider, tenantId };
 }
 
 function buildTraceContext(

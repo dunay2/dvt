@@ -1,3 +1,4 @@
+import type { EngineRunRef, IProviderAdapter } from '@dvt/engine';
 import type { ISpan } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -8,6 +9,7 @@ import type { Logger } from 'pino';
 import { AuthorizeCommandScopeService } from './application/services/authorizeCommandScopeService.js';
 import { EngineStartRunUseCase } from './application/services/engineStartRunUseCase.js';
 import { StartRunAuthorizedFacade } from './application/services/startRunAuthorizedFacade.js';
+import { createWorkflowEngine } from './application/services/WorkflowEngineFactory.js';
 import { getPgPool } from './db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from './domain/auth/policy.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
@@ -147,13 +149,8 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       import('@dvt/engine/testing'),
       import('@dvt/adapter-postgres'),
     ]);
-    const {
-      AllowAllAuthorizer,
-      IdempotencyKeyBuilder,
-      PlanRefPolicy,
-      SnapshotProjector,
-      WorkflowEngine,
-    } = engineMod;
+    const { AllowAllAuthorizer, IdempotencyKeyBuilder, PlanRefPolicy, SnapshotProjector } =
+      engineMod;
     const { MockAdapter } = engineTestingMod;
     const { PostgresStartRunIntentStore, PostgresStateStoreAdapter } = adapterMod;
 
@@ -161,20 +158,46 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     const intentStore = new PostgresStartRunIntentStore({ connectionString: databaseUrl });
     const projector = new SnapshotProjector();
     const mockAdapter = new MockAdapter({ stateStore: stateAdapter, projector });
-    const engine = new WorkflowEngine({
+    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
+
+    if (env.TEMPORAL_ADDRESS) {
+      const { TemporalAdapter, TemporalClientManager, loadTemporalAdapterConfig } =
+        await import('@dvt/adapter-temporal');
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_ADDRESS: env.TEMPORAL_ADDRESS,
+        TEMPORAL_NAMESPACE: env.TEMPORAL_NAMESPACE,
+        TEMPORAL_TASK_QUEUE: env.TEMPORAL_TASK_QUEUE,
+        TEMPORAL_IDENTITY: env.TEMPORAL_IDENTITY,
+        TEMPORAL_CONNECT_TIMEOUT_MS: env.TEMPORAL_CONNECT_TIMEOUT_MS,
+        TEMPORAL_REQUEST_TIMEOUT_MS: env.TEMPORAL_REQUEST_TIMEOUT_MS,
+        TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
+      });
+      const temporalClientManager = new TemporalClientManager(temporalConfig, observability);
+      const temporalAdapter = new TemporalAdapter({
+        clientManager: temporalClientManager,
+        config: temporalConfig,
+        stateStore: stateAdapter,
+        projector,
+      });
+      adapters.set('temporal', temporalAdapter);
+      app.addHook('onClose', async () => {
+        await temporalClientManager.close();
+      });
+      app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
+    }
+
+    const engine = createWorkflowEngine({
       stateStore: stateAdapter,
       outbox: stateAdapter,
       projector,
       idempotency: new IdempotencyKeyBuilder(),
       clock: { nowIsoUtc: () => new Date().toISOString() },
-      // G8 application layer already enforces tenant authorization via
-      // TenantHierarchyAuthorizationPolicy; engine-level check is redundant.
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({
         allowedSchemes: ['https', 's3', 'gs', 'azure'],
       }),
       intentStore,
-      adapters: new Map([['mock', mockAdapter]]),
+      adapters,
       observability,
     });
 
@@ -186,6 +209,8 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
     app.addHook('onReady', async () => {
       await accessRepo.migrate();
+      await stateAdapter.migrate();
+      await intentStore.migrate();
     });
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
@@ -200,5 +225,5 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
   }
 
-  return Promise.resolve({ app, ctx });
+  return { app, ctx };
 }

@@ -81,6 +81,21 @@ export class TemporalAdapter implements IProviderAdapter {
 
   constructor(private readonly deps: TemporalAdapterDeps) {}
 
+  estimateRunRef(ctx: RunContext): EngineRunRef {
+    const validatedCtx = parseRunContext(ctx);
+    const workflowId = toTemporalWorkflowId(validatedCtx.runId);
+    const taskQueue = toTemporalTaskQueue(validatedCtx.tenantId, this.deps.config);
+    return toTemporalRunRef({
+      tenantId: validatedCtx.tenantId,
+      workflowId,
+      // Temporal assigns firstExecutionRunId only after start. Before that, the
+      // engine can still pre-bootstrap metadata using the stable caller runId.
+      runId: validatedCtx.runId,
+      config: this.deps.config,
+      taskQueue,
+    });
+  }
+
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
     const validatedPlanRef = parsePlanRef(planRef);
     const validatedCtx = parseRunContext(ctx);
@@ -153,8 +168,7 @@ export class TemporalAdapter implements IProviderAdapter {
       case 'RETRY_RUN':
         throw new Error('NotImplemented: RETRY_* signals are Phase 2');
       default: {
-        const _never: never = validatedRequest.type;
-        throw new Error(`Unknown signal type: ${String(_never)}`);
+        throw new Error(`Unknown signal type: ${String(validatedRequest.type)}`);
       }
     }
   }
