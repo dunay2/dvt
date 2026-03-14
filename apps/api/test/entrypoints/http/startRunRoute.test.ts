@@ -3,6 +3,14 @@ import test from 'node:test';
 
 import { startRunRoute } from '../../../src/entrypoints/http/startRunRoute.js';
 
+const VALID_PLAN_REF = {
+  uri: 'https://plans.example.com/plan-1.json',
+  sha256: 'abc123',
+  schemaVersion: '1.0.0',
+  planId: 'plan-1',
+  planVersion: '2.0',
+};
+
 await test('startRunRoute returns 400 on malformed tenantId', async () => {
   const reply = {
     statusCode: 200,
@@ -201,14 +209,6 @@ await test('startRunRoute returns 400 on blank planRef fields', async () => {
   assert.equal(reply.statusCode, 400);
   assert.deepEqual(reply.payload, { error: 'BAD_REQUEST', code: 'INVALID_PLAN_REF' });
 });
-
-const VALID_PLAN_REF = {
-  uri: 'https://plans.example.com/plan-1.json',
-  sha256: 'abc123',
-  schemaVersion: '1.0.0',
-  planId: 'plan-1',
-  planVersion: '2.0',
-};
 
 await test('startRunRoute passes normalized command and requested scope', async () => {
   const reply = {
