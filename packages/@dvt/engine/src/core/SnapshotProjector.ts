@@ -11,8 +11,8 @@
 import type { RunStatus, RunStatusSnapshot } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 
-import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
 import { InvalidStateTransitionError } from '../contracts/errors.js';
+import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
 
 /** Run statuses from which no further status-mutating event is valid. */
 const TERMINAL_RUN_STATUSES = new Set<RunStatus>(['COMPLETED', 'FAILED', 'CANCELLED']);
@@ -29,11 +29,7 @@ function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {
   }
 }
 
-function assertStepNotTerminal(
-  snap: WorkflowSnapshot,
-  stepId: string,
-  eventType: string
-): void {
+function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: string, eventType: string): void {
   const step = snap.steps[stepId];
   if (step !== undefined && TERMINAL_STEP_STATUSES.has(step.status)) {
     throw new InvalidStateTransitionError(snap.runId, step.status, eventType, stepId);
