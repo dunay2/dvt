@@ -174,26 +174,59 @@ export class WorkflowEngine implements IWorkflowEngine {
     this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
 
     const intentId = await this._createStartRunIntent(validatedContext, provider);
-    const runRef = await this.withTimeout(
-      adapter.startRun(validatedPlanRef, validatedContext),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.startRun'
-    );
-    await this.deps.intentStore.markDispatched(intentId, runRef);
 
-    const bootMeta: RunMetadata = buildRunMetadata(
-      validatedContext,
-      validatedPlanRef,
-      runRef,
-      this.deps.clock.nowIsoUtc()
-    );
-    await this._bootstrapRunTxWithCompensation({
-      bootMeta,
-      adapter,
-      runRef,
-      intentId,
-      traceContext,
-    });
+    let runRef: EngineRunRef;
+    if (adapter.estimateRunRef) {
+      // Pre-bootstrap path: eliminates dual-producer ordering race.
+      // Commits run_metadata + RunQueued BEFORE adapter.startRun() so the workflow
+      // worker sees run_metadata already committed when its first activity runs.
+      // No activity can write to an uncommitted stream.
+      const estimatedRef = adapter.estimateRunRef(validatedContext);
+      const bootMeta: RunMetadata = buildRunMetadata(
+        validatedContext,
+        validatedPlanRef,
+        estimatedRef,
+        this.deps.clock.nowIsoUtc()
+      );
+      await this.deps.stateStore.bootstrapRunTx({
+        metadata: bootMeta,
+        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+      });
+      // bootstrapRunTx failure propagates; startRun never called; intent stays PENDING for reconciler.
+
+      runRef = await this.withTimeout(
+        adapter.startRun(validatedPlanRef, validatedContext),
+        this.deps.timeouts?.adapterCallMs ?? 30_000,
+        'adapter.startRun'
+      );
+      // startRun failure propagates to handleStartRunError; it finds bootMeta → emits RunFailed.
+      // Intent stays PENDING; reconciler probes lookupRunRef, finds no workflow, marks resolved.
+
+      await this.deps.intentStore.markDispatched(intentId, runRef);
+      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+    } else {
+      // Legacy path for adapters without estimateRunRef: startRun first, then bootstrap.
+      runRef = await this.withTimeout(
+        adapter.startRun(validatedPlanRef, validatedContext),
+        this.deps.timeouts?.adapterCallMs ?? 30_000,
+        'adapter.startRun'
+      );
+      await this.deps.intentStore.markDispatched(intentId, runRef);
+
+      const bootMeta: RunMetadata = buildRunMetadata(
+        validatedContext,
+        validatedPlanRef,
+        runRef,
+        this.deps.clock.nowIsoUtc()
+      );
+      await this._bootstrapRunTxWithCompensation({
+        bootMeta,
+        adapter,
+        runRef,
+        intentId,
+        traceContext,
+      });
+    }
 
     this.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
     this.observability.metrics
@@ -297,7 +330,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     this.observability.logs.error({
       msg: 'startRun failed',
       context: traceContext,
-      err: error,
+      err: error instanceof Error ? error.message : String(error),
       attributes: {
         provider: validatedContext.targetAdapter,
         error: toErrorMessage(error),
@@ -312,7 +345,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         this.observability.logs.error({
           msg: 'RunFailed emission failed after startRun error',
           context: traceContext,
-          err: emitErr,
+          err: emitErr instanceof Error ? emitErr.message : String(emitErr),
           attributes: {
             error: toErrorMessage(emitErr),
           },

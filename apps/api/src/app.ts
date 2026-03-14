@@ -9,6 +9,7 @@ import type { Logger } from 'pino';
 import { AuthorizeCommandScopeService } from './application/services/authorizeCommandScopeService.js';
 import { EngineStartRunUseCase } from './application/services/engineStartRunUseCase.js';
 import { StartRunAuthorizedFacade } from './application/services/startRunAuthorizedFacade.js';
+import { createWorkflowEngine } from './application/services/WorkflowEngineFactory.js';
 import { getPgPool } from './db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from './domain/auth/policy.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
@@ -148,13 +149,8 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       import('@dvt/engine/testing'),
       import('@dvt/adapter-postgres'),
     ]);
-    const {
-      AllowAllAuthorizer,
-      IdempotencyKeyBuilder,
-      PlanRefPolicy,
-      SnapshotProjector,
-      WorkflowEngine,
-    } = engineMod;
+    const { AllowAllAuthorizer, IdempotencyKeyBuilder, PlanRefPolicy, SnapshotProjector } =
+      engineMod;
     const { MockAdapter } = engineTestingMod;
     const { PostgresStartRunIntentStore, PostgresStateStoreAdapter } = adapterMod;
 
@@ -190,14 +186,12 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
     }
 
-    const engine = new WorkflowEngine({
+    const engine = createWorkflowEngine({
       stateStore: stateAdapter,
       outbox: stateAdapter,
       projector,
       idempotency: new IdempotencyKeyBuilder(),
       clock: { nowIsoUtc: () => new Date().toISOString() },
-      // G8 application layer already enforces tenant authorization via
-      // TenantHierarchyAuthorizationPolicy; engine-level check is redundant.
       authorizer: new AllowAllAuthorizer(),
       planRefPolicy: new PlanRefPolicy({
         allowedSchemes: ['https', 's3', 'gs', 'azure'],
