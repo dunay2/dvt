@@ -54,7 +54,11 @@
       "Bash(ls f:/segundodvt/dvt/packages/@dvt/contracts/dist/*.js)",
       "Bash(grep '\"\"module\"\"\\\\|\"\"type\"\"' f:/segundodvt/dvt/packages/@dvt/adapter-postgres/package.json)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''type'''',''''CJS''''\\), d.get\\(''''main'''',''''''''\\)\\)\")",
-      "Bash(pnpm --filter dvt-api test:arch)"
+      "Bash(pnpm --filter dvt-api test:arch)",
+      "Bash(pnpm --filter @dvt/delivery exec vitest run --reporter=verbose)",
+      "Bash(for f:*)",
+      "Bash(do grep:*)",
+      "Bash(grep -l \"\"test\"\" /f/segundodvt/dvt/packages/@dvt/*/package.json)"
     ]
   }
 }
