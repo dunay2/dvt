@@ -2,7 +2,7 @@
 title: G5 - AI Execution Tracker
 status: Active
 owner: Delivery / Engineering
-last_reviewed: 2026-03-12
+last_reviewed: 2026-03-14
 planning_type: execution-plan
 ---
 
@@ -38,7 +38,7 @@ Update this section before any substantial implementation turn.
 - `current_focus`: `G5 closed`
 - `state`: `Closed 2026-03-12`
 - `currently_working_on`: `nothing — G5 is fully closed`
-- `next_after_current`: `G6, G7, G9, G10 per GAP_EXECUTION_PLANS.md`
+- `next_after_current`: `G6, G7, G10 per GAP_EXECUTION_PLANS.md`
 - `blocking_dependencies`: none
 - `last_completed`: `G5 formal closeout — local-docker canary proof via script plus status-doc sync 2026-03-12`
 

@@ -123,7 +123,7 @@ Two separate but related decoupling concerns exist:
      extract a reusable core or leave the engine-local worker as a thin wrapper.
 2. broader repository coupling concern:
    - structural coupling such as `G9` (`StepTypeRegistry + typed stepTypeConfig`)
-     remains pending and must stay visible as separate debt;
+     was out of scope for `#412` and was tracked separately at the repository level;
    - `#412` must not pretend to close that broader coupling problem.
 
 Working rule:
@@ -162,7 +162,7 @@ implied by implementation or closeout language:
 - new subscriber abstraction families;
 - new outbox schema generalization;
 - automatic DLQ replay without operator intent.
-- broad repository-wide coupling cleanup such as `G9`.
+- broad repository-wide coupling cleanup beyond the local G5 scope.
 
 The following topic is in scope only to the extent needed for correctness
 transparency, not for broad platform redesign:
@@ -406,8 +406,8 @@ correctness execution:
    - avoid long-lived duplication between engine-local and standalone runtime paths;
    - prefer extraction of proven reusable logic or an engine-local thin wrapper.
 2. For broader architectural coupling:
-   - keep `G9` visible as the repository-level step for typed `stepTypeConfig`
-     and registry-driven decoupling;
+   - keep repository-level typed `stepTypeConfig` governance visible; this was
+     subsequently closed as `G9` in current governance;
    - do not relabel `#412` as if it solved that debt.
 
 ## Closeout Condition For This Plan

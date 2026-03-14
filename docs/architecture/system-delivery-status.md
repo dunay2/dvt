@@ -74,12 +74,12 @@ Minimum tuple for this document:
 
 ### Planning And Interpretation
 
-| Area                | Packages                | Status      | Notes                                                                                                                                |
-| ------------------- | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Planning core       | `@dvt/planner`          | Partial     | Planner code and contract coupling exist; registry/schema hardening landed, but contract and planner validation remain open under G9 |
-| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer                               |
-| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page                                            |
-| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                                                   |
+| Area                | Packages                | Status      | Notes                                                                                                                                                           |
+| ------------------- | ----------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planning core       | `@dvt/planner`          | Partial     | Planner code and contract coupling exist; registry/schema hardening and planner validation closed under G9, while broader planning-layer hardening remains open |
+| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer                                                          |
+| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page                                                                       |
+| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                                                                              |
 
 ### Execution And Adapters
 
@@ -124,7 +124,7 @@ Minimum tuple for this document:
 | G6  | OpenLineage mapping tests plus schema pin    | Closed        |
 | G7  | Standalone projector and read models         | Partial       |
 | G8  | API auth hardening                           | Closed        |
-| G9  | StepTypeRegistry plus typed `stepTypeConfig` | Partial       |
+| G9  | StepTypeRegistry plus typed `stepTypeConfig` | Closed        |
 | G10 | `outbox_lineage` worker plus fail-open DLQ   | Pending       |
 
 For closure criteria, evidence, and exact verification commands, use

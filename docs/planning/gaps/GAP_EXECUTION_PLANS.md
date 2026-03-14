@@ -51,7 +51,7 @@ Minimum tuple for this document:
 | G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed        |
 | G7  | Read models + standalone projector        | Phase 1.5 | Partial       |
 | G8  | Auth real en apps/api                     | Phase 1.5 | Closed        |
-| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Partial       |
+| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Closed        |
 | G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending       |
 
 ## Confirmed Progress Since Previous Draft
@@ -79,10 +79,11 @@ Minimum tuple for this document:
 5. `G6` and `G7` are not green, but they are no longer zero-state.
    - Lineage mapping/tests: [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
    - In-process projector: [`packages/@dvt/engine/src/core/SnapshotProjector.ts`](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
-6. `G9` now has package-level hardening in repo, but not full plan-boundary closure.
+6. `G9` is now closed in code, tests, and evidence.
    - Registry and schema: [`packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts`](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
-   - Planner factory typing: [`packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`](../../../packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts)
+   - Planner validation path: [`packages/@dvt/planner/src/domain/Planner.ts`](../../../packages/@dvt/planner/src/domain/Planner.ts)
    - Adapter validation path: [`packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
+   - Closeout evidence: [`docs/evidence/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
 
 ## Gap-by-Gap Status
 
@@ -272,7 +273,9 @@ Minimum tuple for this document:
 
 ### G9 - StepTypeRegistry + typed stepTypeConfig
 
-- Status: Closed — 2026-03-14
+- Status: Closed
+- Closed: 2026-03-14
+- Evidence: [`docs/evidence/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
 - Delivered:
   - `IStepTypeRegistry`, `StepTypeRegistry`, `createDefaultStepTypeRegistry`, and
     `DbtStepTypeConfigSchema` in `@dvt/contracts/src/step-registry/StepTypeRegistry.ts`
@@ -305,13 +308,13 @@ Minimum tuple for this document:
   - [`packages/@dvt/planner/src/domain/Planner.ts`](../../../packages/@dvt/planner/src/domain/Planner.ts)
   - [`packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
 - Tests:
-  - [`packages/@dvt/contracts/test/step-registry.test.ts`](../../../packages/@dvt/contracts/test/step-registry.test.ts) — 20 cases: schema validation, registry behaviour, extensions
-  - [`packages/@dvt/planner/test/unit/step-registry-integration.test.ts`](../../../packages/@dvt/planner/test/unit/step-registry-integration.test.ts) — 8 cases: `INVALID_STEP_CONFIG` rejection, fail-open for unknown kinds, custom registry injection
+  - [`packages/@dvt/contracts/test/step-registry.test.ts`](../../../packages/@dvt/contracts/test/step-registry.test.ts) - 19 cases: schema validation, registry behaviour, extensions
+  - [`packages/@dvt/planner/test/unit/step-registry-integration.test.ts`](../../../packages/@dvt/planner/test/unit/step-registry-integration.test.ts) - 8 cases: `INVALID_STEP_CONFIG` rejection, fail-open for unknown kinds, custom registry injection
   - [`packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
 - Verification:
-  - `pnpm --filter @dvt/contracts test` → 32/32
-  - `pnpm --filter @dvt/planner test` → 37/37
-  - `pnpm --filter @dvt/adapter-temporal test` → 93/93
+  - `pnpm --filter @dvt/contracts test` -> 32/32
+  - `pnpm --filter @dvt/planner test` -> 37/37
+  - `pnpm --filter @dvt/adapter-temporal test` -> 87/87
 
 ### G10 - outbox_lineage worker + fail-open DLQ
 
@@ -325,9 +328,8 @@ Minimum tuple for this document:
 Recommended order for next cycles:
 
 1. Continue `G7` standalone projector and read-model work.
-2. Close the remaining contract and planner-validation slice for `G9`.
-3. Prepare and execute `G10` after the remaining Phase 1.5 follow-up (`G7`) is
-   stable and the `G9` contract boundary is explicit.
+2. Prepare and execute `G10` after the remaining Phase 1.5 follow-up (`G7`) is
+   stable and the `G5`/`G6` delivery-runtime boundaries remain explicit.
 
 Parallel execution track detail:
 

@@ -233,13 +233,15 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 
 - Canonical source today:
   [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G9`)
-  for remaining closure scope,
+  for closeout status and evidence,
   and
   [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md)
   for the current `compiledCodeRef` carve-out inside opaque `stepTypeConfig`
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - G9 status: **Closed 2026-03-14**
+- Evidence:
+  [ED-20260314 - G9 Step Type Registry Closeout](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
 - Primary code:
   [packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
   and
@@ -253,7 +255,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [ExecutionPlan.v2.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
   and
   [schemas.ts](../../../packages/@dvt/contracts/src/schemas.ts)
-  **by design** — extensibility requires the shared contract to stay open.
+  **by design** - extensibility requires the shared contract to stay open.
   Per-kind enforcement is at the Planner (build-time via `IStepTypeRegistry`) and each
   adapter (consumption-time via `DbtStepTypeConfigSchema`). Promoting to a discriminated
   union would require an ADR contract revision, not a G9 follow-up.
@@ -263,9 +265,12 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/planner/test/unit/step-registry-integration.test.ts](../../../packages/@dvt/planner/test/unit/step-registry-integration.test.ts)
   and
   [packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
-- Verification: `pnpm --filter @dvt/contracts test` (32/32)
-  · `pnpm --filter @dvt/planner test` (37/37)
-  · `pnpm --filter @dvt/adapter-temporal test` (93/93)
+- Verification:
+  `pnpm --filter @dvt/contracts test` (32/32)
+  and
+  `pnpm --filter @dvt/planner test` (37/37)
+  and
+  `pnpm --filter @dvt/adapter-temporal test` (87/87)
 
 ### OpenLineage mapping and delivery debt
 

@@ -2,7 +2,7 @@
 title: G8 - AI Execution Tracker
 status: Active
 owner: Delivery / Engineering
-last_reviewed: 2026-03-12
+last_reviewed: 2026-03-14
 planning_type: execution-plan
 ---
 
@@ -35,7 +35,7 @@ Update this section before any substantial implementation turn.
 - `current_focus`: `closed`
 - `state`: `Closed`
 - `currently_working_on`: `nothing — all tasks complete`
-- `next_after_current`: `G9 StepTypeRegistry`
+- `next_after_current`: `G7 / G10 per GAP_EXECUTION_PLANS.md`
 - `blocking_dependencies`: none
 - `last_completed`: `T8-7 — EngineStartRunUseCase wired; 21/21 api tests pass`
 

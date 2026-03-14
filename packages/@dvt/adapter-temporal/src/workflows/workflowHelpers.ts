@@ -153,12 +153,12 @@ export function buildStepStartedPayload(
   return { compiledCodeRef };
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef | undefined {
-  if (
-    stepTypeConfig === null ||
-    typeof stepTypeConfig !== 'object' ||
-    Array.isArray(stepTypeConfig)
-  ) {
+  if (!isPlainObject(stepTypeConfig)) {
     return undefined;
   }
 
@@ -203,8 +203,10 @@ function isNonNegativeInteger(val: unknown): val is number {
 }
 
 function isNonNegativeIntegerString(val: unknown): val is string {
-  if (typeof val !== 'string' || val.trim().length === 0) return false;
-  const n = Number(val);
+  if (typeof val !== 'string') return false;
+  const trimmed = val.trim();
+  if (trimmed.length === 0) return false;
+  const n = Number(trimmed);
   return Number.isInteger(n) && n >= 0;
 }
 
