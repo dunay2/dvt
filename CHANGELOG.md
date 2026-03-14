@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.0](https://github.com/dunay2/dvt/compare/v3.3.2...v3.4.0) (2026-03-14)
+
+
+### Features
+
+* **adapters:** Finalize outbox worker extraction and ownership hardening ([#449](https://github.com/dunay2/dvt/issues/449)) ([88c35aa](https://github.com/dunay2/dvt/commit/88c35aa929f5ce99f4ca294349e862696683d530))
+
 ## [3.3.2](https://github.com/dunay2/dvt/compare/v3.3.1...v3.3.2) (2026-03-10)
 
 
