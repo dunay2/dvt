@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.1](https://github.com/dunay2/dvt/compare/v3.4.0...v3.4.1) (2026-03-14)
+
+
+### Bug Fixes
+
+* **engine:** Harden bootstrap ordering and projector transitions ([#452](https://github.com/dunay2/dvt/issues/452)) ([4a5d104](https://github.com/dunay2/dvt/commit/4a5d1042c6ba2698f7aced053f5a339ffb514f1e))
+
 ## [3.4.0](https://github.com/dunay2/dvt/compare/v3.3.2...v3.4.0) (2026-03-14)
 
 
