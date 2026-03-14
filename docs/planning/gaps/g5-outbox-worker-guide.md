@@ -211,13 +211,14 @@ Structured logs should include:
 
 ## Migration Note For The Existing Worker
 
-`packages/@dvt/engine/src/outbox/OutboxWorker.ts` should not remain an
-unowned architectural duplicate once G5 is implemented.
+The reusable worker now lives in
+`packages/@dvt/delivery/src/application/OutboxWorker.ts`; do not reintroduce
+an engine-local architectural duplicate.
 
-Acceptable outcomes:
+Accepted outcome today:
 
-- extract the reusable core and leave a temporary deprecated facade;
-- or make the engine-local worker a thin wrapper over the new core.
+- keep `@dvt/delivery` as the canonical owner of the reusable core;
+- if a compatibility shim is ever needed, keep it as a temporary deprecated facade over that core.
 
 Not acceptable:
 

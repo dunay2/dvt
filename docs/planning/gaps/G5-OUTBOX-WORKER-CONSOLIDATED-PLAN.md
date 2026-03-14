@@ -1,8 +1,8 @@
 ---
 title: G5 - Outbox Worker Consolidated Plan
-status: Proposed
+status: Active
 owner: architecture
-last_reviewed: 2026-03-12
+last_reviewed: 2026-03-14
 planning_type: execution-plan
 ---
 
@@ -27,10 +27,10 @@ what the current repository can realistically absorb.
 
 - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - `status_doc`: [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
-- `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
-- `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
-- `evidence_or_risk`: standalone host, bounded HTTP publisher, health/readiness endpoints, metrics, and runbook now exist in code; keep canary and scale-out risk explicit until PR-4/PR-5 land
+- `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/delivery/src/application/OutboxWorker.ts`, `packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `packages/@dvt/delivery/test/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+- `verification_cmd`: `pnpm --filter @dvt/delivery test`, `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm --filter dvt-outbox-worker test:arch`, `pnpm test:adapter-postgres`
+- `evidence_or_risk`: standalone host, bounded HTTP publisher, health/readiness endpoints, metrics, runbook, canary evidence, and sharding/fencing proof now exist in code; downstream lineage delivery remains explicit under `G10`
 
 ## 1. Executive decision
 
@@ -85,10 +85,10 @@ implementation source of truth.
 The current repository already has the following real baseline:
 
 - standalone host scaffold in [`apps/outbox-worker/`](../../../apps/outbox-worker/),
-- reusable worker logic in [`packages/@dvt/engine/src/outbox/OutboxWorker.ts`](../../../packages/@dvt/engine/src/outbox/OutboxWorker.ts),
+- reusable worker logic in [`packages/@dvt/delivery/src/application/OutboxWorker.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorker.ts),
 - PostgreSQL claiming, retries, and DLQ support in [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts),
 - outbox payloads shaped as current run event envelopes, not generic side-effect records,
-- operational status that now marks the standalone host and initial operational boundary as partial in [System Delivery Status](../../architecture/system-delivery-status.md).
+- operational status that now marks the delivery runtime as closed for Phase 1 in [System Delivery Status](../../architecture/system-delivery-status.md).
 
 The broad `gap5` package changes all of these at once:
 
@@ -171,7 +171,8 @@ Deliver:
 Primary code targets:
 
 - `apps/outbox-worker/*` new package or app
-- `packages/@dvt/engine/src/outbox/OutboxWorker.ts`
+- `packages/@dvt/delivery/src/application/OutboxWorker.ts`
+- `packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
 
 Acceptance:
@@ -314,7 +315,7 @@ change the platform shape rather than closing the immediate gap:
 - lane lease tables,
 - subscriber registry keyed by `(topic, deliveryChannel, sideEffectKind)`,
 - CDC/polling coexistence matrix,
-- dedicated `@dvt/outbox-worker` core package extracted from a proven runtime.
+- further internal split inside `@dvt/delivery` only if the delivery surface grows beyond the current canonical package boundary.
 
 These are future architecture candidates, not entry criteria for the next
 implementation slice.

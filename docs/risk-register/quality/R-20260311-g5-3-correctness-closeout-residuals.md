@@ -75,6 +75,6 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
 - `docs/runbooks/outbox-worker-g5.md`
 - `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`
-- `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`
+- `packages/@dvt/delivery/test/OutboxWorker.test.ts`
 - `packages/@dvt/adapter-postgres/test/smoke.test.ts`
 - `docs/risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md`

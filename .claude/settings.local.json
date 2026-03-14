@@ -58,7 +58,11 @@
       "Bash(pnpm --filter @dvt/delivery exec vitest run --reporter=verbose)",
       "Bash(for f:*)",
       "Bash(do grep:*)",
-      "Bash(grep -l \"\"test\"\" /f/segundodvt/dvt/packages/@dvt/*/package.json)"
+      "Bash(grep -l \"\"test\"\" /f/segundodvt/dvt/packages/@dvt/*/package.json)",
+      "Bash(ls -d /f/segundodvt/dvt/packages/@dvt/*/)",
+      "Bash(grep -r 'pnpm -C' /f/segundodvt/dvt/packages/@dvt/*/package.json)",
+      "Bash(xargs wc:*)",
+      "Bash(find /f/segundodvt/dvt/packages/@dvt/planner/src -name *tep* -o -name *trike*)"
     ]
   }
 }

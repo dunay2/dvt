@@ -270,7 +270,7 @@ Selected planning refs:
 
 Primary validation lane:
 
-- `pnpm test:engine`
+- `pnpm --filter @dvt/delivery test`
 - `pnpm --filter dvt-outbox-worker test`
 - `pnpm test:adapter-postgres`
 - any new concurrency-specific validation command added by the chosen strategy
@@ -413,7 +413,7 @@ flowchart LR
 
 - `2026-03-10` `G5.3 / #412` `done`
   summary: merged via PR `#444`; correctness hardening landed in engine, runtime, PostgreSQL adapter, and planning docs
-  validation: `pnpm test:engine`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm test:adapter-postgres`; `pnpm verify:prepush`; `pnpm docs:ci`
+  validation: `pnpm --filter @dvt/delivery test`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm test:adapter-postgres`; `pnpm verify:prepush`; `pnpm docs:ci`
 - `2026-03-10` `G5.4 / #413` `ready to start`
   summary: tracker created to drive the next G5 stage from the canonical plan
   validation: `pnpm lint:md`; `pnpm docs:quality:check`; `pnpm docs:canonical:check`
@@ -449,10 +449,10 @@ flowchart LR
   validation: `node --import tsx --test test/ownership/PgShardOwnershipGate.test.ts`; `pnpm --filter dvt-outbox-worker typecheck`
 - `2026-03-12` `G5.5B / #414` `done`
   summary: closed the repo-side ownership-loss shutdown and shard-scoped retry readiness slice; the standalone host now stops on lost shard ownership, the retry backlog check is scoped to owned shards, and tracker focus moves to concurrent-worker proof with real PostgreSQL evidence
-  validation: `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm --filter dvt-outbox-worker test`; `pnpm test:engine`; `pnpm test:adapter-postgres`; `pnpm lint:md`; `pnpm docs:quality:check` (archive warnings only, exit `0`); `pnpm docs:canonical:check`
+  validation: `pnpm --filter dvt-outbox-worker typecheck`; `pnpm --filter dvt-outbox-worker build`; `pnpm --filter dvt-outbox-worker test`; `pnpm --filter @dvt/delivery test`; `pnpm test:adapter-postgres`; `pnpm lint:md`; `pnpm docs:quality:check` (archive warnings only, exit `0`); `pnpm docs:canonical:check`
 - `2026-03-12` `G5.5C / #414` `in progress`
   summary: (retroactive — current pointer and think-first should have been updated before writing code) wrote pre-implementation brief and think-first for concurrent-worker ordering proof; selected probe-based `InMemoryOutboxStorage` + `OutboxWorker` unit tests as the proof surface to avoid a live database dependency
-  validation: repo inspection of `packages/@dvt/engine/src/outbox/InMemoryOutboxStorage.ts` and `OutboxWorker.ts` to confirm shard routing and head-of-line semantics
+  validation: repo inspection of `packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts` and `packages/@dvt/delivery/src/application/OutboxWorker.ts` to confirm shard routing and head-of-line semantics
 - `2026-03-12` `G5.5C / #414` `done`
   summary: added 6 deterministic concurrent-worker ordering tests in `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`; tests prove INV-OUTBOX-002 (shard routing determinism, worker exclusivity, zero cross-worker record overlap, strict per-runId runSeq ordering, non-owning worker cannot advance a mid-stream runId, all events delivered exactly once across two workers); 109/109 pass
   validation: `pnpm exec eslint apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts --max-warnings 0` pass; `pnpm --filter dvt-outbox-worker typecheck` pass; `pnpm --filter dvt-outbox-worker test` 109/109 pass

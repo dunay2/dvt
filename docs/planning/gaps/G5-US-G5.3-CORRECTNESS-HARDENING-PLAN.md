@@ -207,9 +207,9 @@ Rejected alternatives:
 
 ### In Scope
 
-- `packages/@dvt/engine/src/outbox/OutboxWorker.ts`
-- `packages/@dvt/engine/src/outbox/InMemoryOutboxStorage.ts`
-- `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`
+- `packages/@dvt/delivery/src/application/OutboxWorker.ts`
+- `packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts`
+- `packages/@dvt/delivery/test/OutboxWorker.test.ts`
 - `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
 - `packages/@dvt/adapter-postgres/test/smoke.test.ts`
@@ -311,7 +311,7 @@ Leave `#412` with executable evidence, not just local confidence.
 
 Definition of Done:
 
-- [ ] `pnpm test:engine` passes
+- [ ] `pnpm --filter @dvt/delivery test` passes
 - [ ] `pnpm --filter dvt-outbox-worker test` passes
 - [ ] `pnpm --filter dvt-outbox-worker typecheck` passes
 - [ ] `pnpm --filter dvt-outbox-worker build` passes
@@ -327,7 +327,7 @@ Definition of Done:
 ```mermaid
 flowchart LR
     A[Current state<br/>G5 runtime exists<br/>Correctness proof incomplete<br/>Same-run bypass risk<br/>Claim-recovery gap<br/>Downstream idempotency boundary implicit<br/>Some correctness knobs still hardcoded] --> B[Step 1<br/>Freeze invariants and config inventory]
-    B --> C[Step 2<br/>Harden engine core and in-memory semantics]
+    B --> C[Step 2<br/>Harden delivery core and in-memory semantics]
     C --> D[Step 3<br/>Harden PostgreSQL claim, expiry, replay, and policy knobs]
     D --> E[Step 4<br/>Confirm standalone runtime and operator parity]
     E --> F[Step 5<br/>Canonical validation and status sync]
@@ -336,7 +336,7 @@ flowchart LR
 
 ## Validation Matrix
 
-- `pnpm test:engine`
+- `pnpm --filter @dvt/delivery test`
 - `pnpm --filter dvt-outbox-worker test`
 - `pnpm --filter dvt-outbox-worker typecheck`
 - `pnpm --filter dvt-outbox-worker build`
