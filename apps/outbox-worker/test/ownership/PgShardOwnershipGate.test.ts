@@ -18,7 +18,11 @@ class RecordingOwnershipClient {
     sql: string,
     params?: unknown[]
   ): Promise<{ rows: Array<{ acquired: boolean }>; rowCount: number }> {
-    this.queries.push({ sql, params });
+    if (params === undefined) {
+      this.queries.push({ sql });
+    } else {
+      this.queries.push({ sql, params });
+    }
     const statement = sql.trim();
     if (!statement.includes('pg_try_advisory_lock')) {
       const heartbeatOutcome = this.heartbeatOutcomes.shift() ?? true;
