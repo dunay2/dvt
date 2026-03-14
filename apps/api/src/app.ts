@@ -209,6 +209,8 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
     app.addHook('onReady', async () => {
       await accessRepo.migrate();
+      await stateAdapter.migrate();
+      await intentStore.migrate();
     });
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
@@ -223,5 +225,5 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
   }
 
-  return Promise.resolve({ app, ctx });
+  return { app, ctx };
 }

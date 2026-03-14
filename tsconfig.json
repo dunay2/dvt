@@ -30,6 +30,8 @@
     "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
+      "@dvt/crypto": ["packages/@dvt/canonical/src/index.ts"],
+      "@dvt/crypto/*": ["packages/@dvt/canonical/src/*"],
       "@dvt/canonical": ["packages/@dvt/canonical/src/index.ts"],
       "@dvt/canonical/*": ["packages/@dvt/canonical/src/*"],
       "@dvt/dsl": ["packages/@dvt/dsl/src/index.ts"],
