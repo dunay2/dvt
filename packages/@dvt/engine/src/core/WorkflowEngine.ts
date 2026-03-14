@@ -515,11 +515,13 @@ export class WorkflowEngine implements IWorkflowEngine {
               this.deps.timeouts?.adapterCallMs ?? 30_000,
               'adapter.getRunStatus'
             );
+            const substatus = providerView.substatus ?? base.substatus;
+            const message = providerView.message ?? base.message;
             span.setStatus('ok');
             return {
               ...base,
-              substatus: providerView.substatus ?? base.substatus,
-              message: providerView.message ?? base.message,
+              ...(substatus !== undefined ? { substatus } : {}),
+              ...(message !== undefined ? { message } : {}),
             };
           } catch (error) {
             span.recordException(error);
@@ -843,9 +845,11 @@ function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
     schemaVersion: input.schemaVersion,
     planId: input.planId,
     planVersion: input.planVersion,
-    sizeBytes: input.sizeBytes ?? undefined,
-    expiresAt: input.expiresAt ?? undefined,
-    requiresCapabilities: input.requiresCapabilities ?? undefined,
+    ...(input.sizeBytes !== undefined ? { sizeBytes: input.sizeBytes } : {}),
+    ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
+    ...(input.requiresCapabilities !== undefined
+      ? { requiresCapabilities: input.requiresCapabilities }
+      : {}),
   };
 }
 
@@ -857,7 +861,7 @@ function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): Eng
       namespace: input.namespace,
       workflowId: input.workflowId,
       runId: input.runId,
-      taskQueue: input.taskQueue ?? undefined,
+      ...(input.taskQueue !== undefined ? { taskQueue: input.taskQueue } : {}),
     };
   }
 
@@ -883,9 +887,9 @@ function normalizeSignalRequest(input: ReturnType<typeof parseSignalRequest>): S
   return {
     signalId: input.signalId,
     type: input.type,
-    stepId: input.stepId ?? undefined,
-    reason: input.reason ?? undefined,
-    requestedAt: input.requestedAt ?? undefined,
+    ...(input.stepId !== undefined ? { stepId: input.stepId } : {}),
+    ...(input.reason !== undefined ? { reason: input.reason } : {}),
+    ...(input.requestedAt !== undefined ? { requestedAt: input.requestedAt } : {}),
   };
 }
 
@@ -896,6 +900,6 @@ function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunCont
     environmentId: input.environmentId,
     runId: input.runId,
     targetAdapter: input.targetAdapter,
-    logicalAttemptId: input.logicalAttemptId ?? undefined,
+    ...(input.logicalAttemptId !== undefined ? { logicalAttemptId: input.logicalAttemptId } : {}),
   };
 }
