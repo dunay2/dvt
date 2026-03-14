@@ -66,7 +66,8 @@
       "Bash(pnpm --filter @dvt/contracts exec vitest run --reporter=verbose)",
       "Bash(pnpm --filter @dvt/adapter-temporal exec vitest run --reporter=verbose)",
       "Bash(pnpm --filter @dvt/planner exec vitest run --reporter=verbose)",
-      "Bash(pnpm --filter @dvt/planner exec vitest run test/unit/step-registry-integration.test.ts --reporter=verbose)"
+      "Bash(pnpm --filter @dvt/planner exec vitest run test/unit/step-registry-integration.test.ts --reporter=verbose)",
+      "Bash(pnpm --filter @dvt/planner exec tsc --noEmit)"
     ]
   }
 }

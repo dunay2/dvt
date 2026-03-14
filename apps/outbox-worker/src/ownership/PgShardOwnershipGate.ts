@@ -41,6 +41,39 @@ interface AdvisoryLockResult {
   acquired: boolean;
 }
 
+interface AcquireOwnershipOptions {
+  signal: globalThis.AbortSignal;
+  config: PgShardOwnershipGateConfig;
+  shardIds: readonly number[];
+  acquirePoolLease: (config: PgPoolConfig) => OwnershipPoolLease;
+  heartbeatIntervalMs: number;
+}
+
+interface AcquireLocksAndBuildLeaseOptions {
+  client: OwnershipClient;
+  poolLease: OwnershipPoolLease;
+  signal: globalThis.AbortSignal;
+  schema: string;
+  shardIds: readonly number[];
+  logger: OutboxWorkerRuntimeLogger;
+  heartbeatIntervalMs: number;
+}
+
+type ShardLockAcquisitionOutcome =
+  | {
+      status: 'acquired';
+      acquiredShardIds: number[];
+    }
+  | {
+      status: 'aborted';
+      acquiredShardIds: number[];
+    }
+  | {
+      status: 'unavailable';
+      acquiredShardIds: number[];
+      failedShardId: number;
+    };
+
 const OWNERSHIP_LOCK_SQL =
   "SELECT pg_try_advisory_lock((('x' || left(md5($1), 16))::bit(64)::bigint)) AS acquired";
 const OWNERSHIP_HEARTBEAT_SQL = 'SELECT 1';
@@ -52,75 +85,137 @@ export function createPgShardOwnershipGate(
 ): OwnershipGate {
   const acquirePoolLease = deps.acquirePoolLease ?? acquirePgPool;
   const shardIds = normalizeShardIds(config.shardIds);
+  const heartbeatIntervalMs = deps.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS;
 
   return {
-    async acquire(signal: globalThis.AbortSignal): Promise<OwnershipLease | null> {
-      if (signal.aborted) {
-        return null;
-      }
+    acquire: async (signal: globalThis.AbortSignal): Promise<OwnershipLease | null> =>
+      acquireOwnershipLease({
+        signal,
+        config,
+        shardIds,
+        acquirePoolLease,
+        heartbeatIntervalMs,
+      }),
+  };
+}
 
-      const poolLease = acquirePoolLease({
-        connectionString: config.connectionString,
-        ...(config.statementTimeoutMs === undefined
-          ? {}
-          : { statementTimeoutMs: config.statementTimeoutMs }),
-        ...(config.queryTimeoutMs === undefined ? {} : { queryTimeoutMs: config.queryTimeoutMs }),
-      });
+function buildPoolConfig(config: PgShardOwnershipGateConfig): PgPoolConfig {
+  return {
+    connectionString: config.connectionString,
+    ...(config.statementTimeoutMs === undefined
+      ? {}
+      : { statementTimeoutMs: config.statementTimeoutMs }),
+    ...(config.queryTimeoutMs === undefined ? {} : { queryTimeoutMs: config.queryTimeoutMs }),
+  };
+}
 
-      let client: OwnershipClient | null = null;
-      const acquiredShardIds: number[] = [];
+async function acquireOwnershipLease(options: AcquireOwnershipOptions): Promise<OwnershipLease | null> {
+  if (options.signal.aborted) {
+    return null;
+  }
 
-      try {
-        client = await poolLease.pool.connect();
+  const poolLease = options.acquirePoolLease(buildPoolConfig(options.config));
+  let client: OwnershipClient | null = null;
 
-        for (const shardId of shardIds) {
-          if (signal.aborted) {
-            await destroyOwnershipSession(client, poolLease);
-            return null;
-          }
+  try {
+    client = await poolLease.pool.connect();
+    return await acquireLocksAndBuildLease({
+      client,
+      poolLease,
+      signal: options.signal,
+      schema: options.config.schema,
+      shardIds: options.shardIds,
+      logger: options.config.logger,
+      heartbeatIntervalMs: options.heartbeatIntervalMs,
+    });
+  } catch (error) {
+    await safelyDestroyOwnershipSession(client, poolLease, options.config.logger);
+    throw error;
+  }
+}
 
-          const acquired = await tryAcquireShardLock(client, config.schema, shardId);
-          if (!acquired) {
-            config.logger.warn?.(
-              {
-                configuredShardIds: shardIds,
-                acquiredShardIds,
-                failedShardIds: [shardId],
-              },
-              'outbox shard ownership unavailable'
-            );
-            await destroyOwnershipSession(client, poolLease);
-            return null;
-          }
+async function acquireLocksAndBuildLease(
+  options: AcquireLocksAndBuildLeaseOptions
+): Promise<OwnershipLease | null> {
+  const lockOutcome = await acquireConfiguredShardLocks({
+    client: options.client,
+    signal: options.signal,
+    schema: options.schema,
+    shardIds: options.shardIds,
+  });
 
-          acquiredShardIds.push(shardId);
-        }
+  if (lockOutcome.status === 'aborted') {
+    await destroyOwnershipSession(options.client, options.poolLease);
+    return null;
+  }
 
-        if (signal.aborted) {
-          await destroyOwnershipSession(client, poolLease);
-          return null;
-        }
+  if (lockOutcome.status === 'unavailable') {
+    options.logger.warn?.(
+      {
+        configuredShardIds: options.shardIds,
+        acquiredShardIds: lockOutcome.acquiredShardIds,
+        failedShardIds: [lockOutcome.failedShardId],
+      },
+      'outbox shard ownership unavailable'
+    );
+    await destroyOwnershipSession(options.client, options.poolLease);
+    return null;
+  }
 
-        config.logger.info(
-          {
-            configuredShardIds: shardIds,
-            acquiredShardIds,
-          },
-          'outbox shard ownership acquired'
-        );
-
-        return createOwnershipLease({
-          client,
-          poolLease,
-          logger: config.logger,
-          acquiredShardIds,
-          heartbeatIntervalMs: deps.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
-        });
-      } catch (error) {
-        await safelyDestroyOwnershipSession(client, poolLease, config.logger);
-        throw error;
-      }
+  options.logger.info(
+    {
+      configuredShardIds: options.shardIds,
+      acquiredShardIds: lockOutcome.acquiredShardIds,
     },
+    'outbox shard ownership acquired'
+  );
+
+  return createOwnershipLease({
+    client: options.client,
+    poolLease: options.poolLease,
+    logger: options.logger,
+    acquiredShardIds: lockOutcome.acquiredShardIds,
+    heartbeatIntervalMs: options.heartbeatIntervalMs,
+  });
+}
+
+async function acquireConfiguredShardLocks(options: {
+  client: OwnershipClient;
+  signal: globalThis.AbortSignal;
+  schema: string;
+  shardIds: readonly number[];
+}): Promise<ShardLockAcquisitionOutcome> {
+  const acquiredShardIds: number[] = [];
+  for (const shardId of options.shardIds) {
+    if (options.signal.aborted) {
+      return {
+        status: 'aborted',
+        acquiredShardIds,
+      };
+    }
+
+    const acquired = await tryAcquireShardLock(options.client, options.schema, shardId);
+    if (!acquired) {
+      return {
+        status: 'unavailable',
+        acquiredShardIds,
+        failedShardId: shardId,
+      };
+    }
+
+    acquiredShardIds.push(shardId);
+  }
+
+  if (options.signal.aborted) {
+    return {
+      status: 'aborted',
+      acquiredShardIds,
+    };
+  }
+
+  return {
+    status: 'acquired',
+    acquiredShardIds,
   };
 }
 
@@ -257,7 +352,21 @@ function buildOwnershipLockScope(schema: string, shardId: number): string {
 }
 
 function normalizeShardIds(shardIds: readonly number[]): number[] {
-  return [...new Set(shardIds)].sort((left, right) => left - right);
+  const normalizedShardIds = [...new Set(shardIds)].sort((left, right) => left - right);
+  if (normalizedShardIds.length === 0) {
+    throw new Error('PgShardOwnershipGate requires at least one shard id');
+  }
+
+  const invalidShardId = normalizedShardIds.find(
+    (shardId) => !Number.isInteger(shardId) || shardId < 0
+  );
+  if (invalidShardId !== undefined) {
+    throw new Error(
+      `PgShardOwnershipGate shard ids must be non-negative integers; received ${invalidShardId}`
+    );
+  }
+
+  return normalizedShardIds;
 }
 
 async function safelyDestroyOwnershipSession(
@@ -281,10 +390,20 @@ async function destroyOwnershipSession(
   client: OwnershipClient | null,
   poolLease: OwnershipPoolLease
 ): Promise<void> {
+  let releaseClientError: unknown;
   if (client) {
-    client.release(true);
+    try {
+      client.release(true);
+    } catch (error) {
+      releaseClientError = error;
+    }
   }
+
   await poolLease.release();
+
+  if (releaseClientError !== undefined) {
+    throw releaseClientError;
+  }
 }
 
 function toErrorLike(error: unknown): { message: string; name: string } {

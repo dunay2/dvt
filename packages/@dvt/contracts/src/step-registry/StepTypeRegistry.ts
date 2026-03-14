@@ -37,7 +37,7 @@ export const CompiledCodeRefSchema = z
  * Written by the planner's dbtStepFactory (policy fields), then optionally
  * enriched with compiledCodeRef by attachCompiledCodeRefs (ADR-0032).
  */
-export interface DbtStepTypeConfig {
+export interface DbtStepTypeConfig extends Record<string, unknown> {
   stepTimeoutMs?: number;
   retries?: {
     maxAttempts: number;

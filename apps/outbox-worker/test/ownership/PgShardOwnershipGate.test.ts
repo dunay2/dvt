@@ -208,3 +208,29 @@ await test('PgShardOwnershipGate reports ownership loss when the dedicated sessi
   assert.deepEqual(harness.client.releaseCalls, [true]);
   assert.equal(harness.releaseLeaseCalls, 1);
 });
+
+await test('PgShardOwnershipGate rejects empty shard id configuration', async () => {
+  assert.throws(
+    () =>
+      createPgShardOwnershipGate({
+        connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+        schema: 'dvt',
+        shardIds: [],
+        logger: makeLogger(),
+      }),
+    /requires at least one shard id/
+  );
+});
+
+await test('PgShardOwnershipGate rejects negative shard id configuration', async () => {
+  assert.throws(
+    () =>
+      createPgShardOwnershipGate({
+        connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+        schema: 'dvt',
+        shardIds: [-1],
+        logger: makeLogger(),
+      }),
+    /non-negative integers/
+  );
+});
