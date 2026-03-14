@@ -20,12 +20,12 @@ import {
 } from '@dvt/contracts';
 import type {
   EngineRunRef,
+  IOutboxStorage,
   PlanRef,
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
-import type { IOutboxStorage } from '@dvt/contracts';
 import type { IObservability, ISpan } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
@@ -96,6 +96,10 @@ interface HealthCheckable {
   ping?: () => Promise<void>;
 }
 
+interface StartRunErrorContext {
+  intentId?: string;
+}
+
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly observability: IObservability;
 
@@ -112,6 +116,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       operation: 'startRun',
     });
     const traceContext = buildTraceContext(validatedContext, validatedPlanRef.planId);
+    const errorContext: StartRunErrorContext = {};
 
     return this.observability.withContext(traceContext, () =>
       this.observability.traces.withSpan(
@@ -140,11 +145,18 @@ export class WorkflowEngine implements IWorkflowEngine {
               metricTags,
               traceContext,
               span,
+              errorContext,
             });
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
-            return this.handleStartRunError(error, validatedContext, metricTags, traceContext);
+            return this.handleStartRunError(
+              error,
+              validatedContext,
+              metricTags,
+              traceContext,
+              errorContext
+            );
           }
         }
       )
@@ -158,6 +170,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     metricTags,
     traceContext,
     span,
+    errorContext,
   }: {
     validatedPlanRef: PlanRef;
     validatedContext: RunContext;
@@ -165,6 +178,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     metricTags: Record<string, string>;
     traceContext: ReturnType<typeof buildTraceContext>;
     span: ISpan;
+    errorContext: StartRunErrorContext;
   }): Promise<EngineRunRef> {
     await this.validateStartRunPreconditions(validatedPlanRef, validatedContext);
     this.checkOutboxRateLimit(validatedContext);
@@ -174,6 +188,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     this.validateCapabilitiesOrThrow(validatedPlanRef, adapter);
 
     const intentId = await this._createStartRunIntent(validatedContext, provider);
+    errorContext.intentId = intentId;
 
     let runRef: EngineRunRef;
     if (adapter.estimateRunRef) {
@@ -324,7 +339,8 @@ export class WorkflowEngine implements IWorkflowEngine {
     error: unknown,
     validatedContext: RunContext,
     metricTags: Record<string, string>,
-    traceContext: ReturnType<typeof buildTraceContext>
+    traceContext: ReturnType<typeof buildTraceContext>,
+    errorContext: StartRunErrorContext
   ): Promise<never> {
     this.observability.metrics.counter('dvt.run.start_failed_total', metricTags).add(1);
     this.observability.logs.error({
@@ -341,6 +357,22 @@ export class WorkflowEngine implements IWorkflowEngine {
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
     if (failMeta) {
+      const pendingIntent = errorContext.intentId
+        ? await this.deps.intentStore.getIntent(errorContext.intentId).catch(() => null)
+        : null;
+      if (pendingIntent?.status === 'PENDING') {
+        this.observability.logs.warn({
+          msg: 'Skipping RunFailed emission after startRun error because intent remains pending',
+          context: traceContext,
+          attributes: {
+            intentId: pendingIntent.intentId,
+            runId: pendingIntent.runId,
+            provider: pendingIntent.provider,
+          },
+        });
+        throw error;
+      }
+
       await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
         this.observability.logs.error({
           msg: 'RunFailed emission failed after startRun error',
@@ -486,10 +518,8 @@ export class WorkflowEngine implements IWorkflowEngine {
             span.setStatus('ok');
             return {
               ...base,
-              ...(providerView.substatus !== undefined
-                ? { substatus: providerView.substatus }
-                : {}),
-              ...(providerView.message !== undefined ? { message: providerView.message } : {}),
+              substatus: providerView.substatus ?? base.substatus,
+              message: providerView.message ?? base.message,
             };
           } catch (error) {
             span.recordException(error);
@@ -597,7 +627,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       CANCEL: 'RunCancelRequested',
     };
 
-    return byType[type as 'PAUSE' | 'RESUME' | 'CANCEL'] ?? null;
+    return byType[type] ?? null;
   }
 
   private async resolveMetaOrThrow(runRef: EngineRunRef): Promise<RunMetadata> {
@@ -669,7 +699,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         planId: meta.planId,
         planVersion: meta.planVersion,
       }),
-      ...(payload !== undefined ? { payload } : {}),
+      ...(payload ? { payload } : {}),
     };
   }
 
@@ -732,11 +762,7 @@ function buildMetricTags(
   tenantId: string,
   extras?: Record<string, string>
 ): Record<string, string> {
-  return {
-    provider,
-    tenantId,
-    ...(extras ?? {}),
-  };
+  return extras ? { provider, tenantId, ...extras } : { provider, tenantId };
 }
 
 function buildTraceContext(
@@ -817,11 +843,9 @@ function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
     schemaVersion: input.schemaVersion,
     planId: input.planId,
     planVersion: input.planVersion,
-    ...(input.sizeBytes !== undefined ? { sizeBytes: input.sizeBytes } : {}),
-    ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
-    ...(input.requiresCapabilities !== undefined
-      ? { requiresCapabilities: input.requiresCapabilities }
-      : {}),
+    sizeBytes: input.sizeBytes ?? undefined,
+    expiresAt: input.expiresAt ?? undefined,
+    requiresCapabilities: input.requiresCapabilities ?? undefined,
   };
 }
 
@@ -833,7 +857,7 @@ function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): Eng
       namespace: input.namespace,
       workflowId: input.workflowId,
       runId: input.runId,
-      ...(input.taskQueue !== undefined ? { taskQueue: input.taskQueue } : {}),
+      taskQueue: input.taskQueue ?? undefined,
     };
   }
 
@@ -859,9 +883,9 @@ function normalizeSignalRequest(input: ReturnType<typeof parseSignalRequest>): S
   return {
     signalId: input.signalId,
     type: input.type,
-    ...(input.stepId !== undefined ? { stepId: input.stepId } : {}),
-    ...(input.reason !== undefined ? { reason: input.reason } : {}),
-    ...(input.requestedAt !== undefined ? { requestedAt: input.requestedAt } : {}),
+    stepId: input.stepId ?? undefined,
+    reason: input.reason ?? undefined,
+    requestedAt: input.requestedAt ?? undefined,
   };
 }
 
@@ -872,6 +896,6 @@ function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunCont
     environmentId: input.environmentId,
     runId: input.runId,
     targetAdapter: input.targetAdapter,
-    ...(input.logicalAttemptId !== undefined ? { logicalAttemptId: input.logicalAttemptId } : {}),
+    logicalAttemptId: input.logicalAttemptId ?? undefined,
   };
 }

@@ -11,7 +11,7 @@
 import type { EngineRunRef, PlanRef, RunContext, RunId, RunStatusSnapshot } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
@@ -356,7 +356,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
   });
 
-  it('emits RunFailed after a pre-bootstrapped adapter.startRun failure', async () => {
+  it('keeps a pre-bootstrapped run pending when adapter.startRun fails before dispatch', async () => {
     const adapters = makeAdapters({
       estimateRunRef(ctx) {
         return {
@@ -372,14 +372,59 @@ describe('WorkflowEngine (basic failure modes)', () => {
       },
     });
 
-    const { engine, store } = createEngine({ adapters });
+    const { engine, store, intentStore } = createEngine({ adapters });
 
     await expect(
       engine.startRun(makePlanRef(), makeContext('fail-after-bootstrap-1'))
     ).rejects.toThrow(/provider failure after bootstrap/);
 
     const events = await store.listEvents('t', 'fail-after-bootstrap-1');
-    expect(events.map((event) => event.eventType)).toEqual(['RunQueued', 'RunFailed']);
+    expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
+
+    const orphaned = await intentStore.listOrphaned(0, Date.now());
+    expect(orphaned).toHaveLength(1);
+    expect(orphaned[0]?.status).toBe('PENDING');
+  });
+
+  it('keeps a pre-bootstrapped run pending when markDispatched fails after provider start', async () => {
+    const store = new InMemoryTxStore();
+    const intentStore = new InMemoryStartRunIntentStore();
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+    });
+    vi.spyOn(intentStore, 'markDispatched').mockRejectedValueOnce(new Error('dispatch boom'));
+
+    const engine = new WorkflowEngine({
+      stateStore: store,
+      outbox: store,
+      projector: new SnapshotProjector(),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      intentStore,
+      observability: createNoopObservability(),
+      adapters,
+    });
+
+    await expect(engine.startRun(makePlanRef(), makeContext('dispatch-fail-1'))).rejects.toThrow(
+      /dispatch boom/
+    );
+
+    const events = await store.listEvents('t', 'dispatch-fail-1');
+    expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
+
+    const orphaned = await intentStore.listOrphaned(0, Date.now());
+    expect(orphaned).toHaveLength(1);
+    expect(orphaned[0]?.status).toBe('PENDING');
   });
 
   // ADR-0015: getRunStatus must not call the adapter under any circumstances.
