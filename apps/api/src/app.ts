@@ -1,3 +1,4 @@
+import type { EngineRunRef, IProviderAdapter } from '@dvt/engine';
 import type { ISpan } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
