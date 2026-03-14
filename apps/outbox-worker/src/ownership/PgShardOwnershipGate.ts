@@ -109,7 +109,9 @@ function buildPoolConfig(config: PgShardOwnershipGateConfig): PgPoolConfig {
   };
 }
 
-async function acquireOwnershipLease(options: AcquireOwnershipOptions): Promise<OwnershipLease | null> {
+async function acquireOwnershipLease(
+  options: AcquireOwnershipOptions
+): Promise<OwnershipLease | null> {
   if (options.signal.aborted) {
     return null;
   }

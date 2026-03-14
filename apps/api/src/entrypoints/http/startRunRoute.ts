@@ -98,7 +98,9 @@ function parseBodyRecord(body: unknown): ParseStartRunFieldResult<Record<string,
   return { ok: true, value: body as Record<string, unknown> };
 }
 
-function parseStartRunScope(record: Record<string, unknown>): ParseStartRunFieldResult<ParsedStartRunScope> {
+function parseStartRunScope(
+  record: Record<string, unknown>
+): ParseStartRunFieldResult<ParsedStartRunScope> {
   const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
   if (!tenantId.ok) {
     return { ok: false, code: tenantId.code };
@@ -124,7 +126,9 @@ function parseStartRunScope(record: Record<string, unknown>): ParseStartRunField
   };
 }
 
-function parseStartRunCommand(record: Record<string, unknown>): ParseStartRunFieldResult<StartRunCommand> {
+function parseStartRunCommand(
+  record: Record<string, unknown>
+): ParseStartRunFieldResult<StartRunCommand> {
   const selection = parseSelection(record.selection);
   if (!selection.ok) {
     return { ok: false, code: 'INVALID_SELECTION' };
