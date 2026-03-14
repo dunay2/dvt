@@ -241,9 +241,14 @@ Minimum tuple for this document:
 - Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
+  - terminal-state transition guards with typed `InvalidStateTransitionError`
+  - `WorkflowEngine.startRun()` pre-bootstrap path for adapters that implement
+    `estimateRunRef`, so `RunQueued` can be committed before `adapter.startRun()`
 - Remaining:
   - standalone projector service
   - denormalized read models and indexes for production read paths
+  - provider execution-id reconciliation when a pre-bootstrap adapter can only
+    compute an approximate provider run id before start
 
 ### G8 - Auth real en apps/api
 

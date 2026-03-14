@@ -73,9 +73,12 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts)
   and
   [packages/@dvt/engine/src/core/WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+  and
+  [packages/@dvt/engine/src/core/SnapshotProjector.ts](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
 - Key tests:
   [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts),
   [packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts),
+  [packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts](../../../packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts),
   [packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts](../../../packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts)
 - Verification:
   `pnpm test:engine`
@@ -309,10 +312,12 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [System Delivery Status](../../architecture/system-delivery-status.md) (`G8`)
 - Primary code:
   [apps/api/src/app.ts](../../../apps/api/src/app.ts),
+  [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),
   [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts),
   [apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts](../../../apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts)
 - Key tests:
   [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
+  [apps/api/test/application/services/WorkflowEngineFactory.test.ts](../../../apps/api/test/application/services/WorkflowEngineFactory.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.test.ts),
   [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts)
 - Risk:

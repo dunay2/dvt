@@ -44,15 +44,15 @@ tracker to it.
 
 Update this section before any substantial implementation turn.
 
-- `as_of`: `2026-03-13`
+- `as_of`: `2026-03-14`
 - `gap`: `G7`
 - `epic`: `G7`
-- `current_focus`: `G7.0 think-first scope baseline`
+- `current_focus`: `G7.1 in-process projector hardening`
 - `state`: `Active`
-- `currently_working_on`: `tracker + first-slice decomposition; no code work started`
-- `next_after_current`: `select the first read-model slice and, if needed, write a dedicated G7 spec`
+- `currently_working_on`: `documented hardening of in-process projection and bootstrap ordering; standalone host work not started`
+- `next_after_current`: `write the dedicated G7 standalone projector/checkpoint spec and choose the first read-model slice`
 - `blocking_dependencies`: `the first read-model tuple, projector host boundary, and checkpoint/rebuild contract still need explicit sign-off`
-- `last_completed`: `G8 closed 2026-03-12; G7 promoted as the next open Phase 1.5 architecture gap`
+- `last_completed`: `in-process projector now rejects terminal-state rewrites; WorkflowEngine pre-bootstrap path validated when an adapter exposes estimateRunRef`
 
 ## Remaining G7 Roadmap
 
@@ -196,3 +196,25 @@ Current pre-implementation brief:
   `system-delivery-status.md`, `SnapshotProjector.ts`,
   `WorkflowEngine.getRunStatus`, `ExecutionSemantics.v2.0.md`,
   `ADR-0004`, `ADR-0015`, `State Store Overview`, and `c4-engine.md`
+- `2026-03-14` `G7` `hardening`
+  summary: hardened the in-process projection baseline while keeping `G7`
+  partial; `SnapshotProjector` now rejects terminal-state rewrites with
+  `InvalidStateTransitionError`; `WorkflowEngine.startRun()` now supports a
+  pre-bootstrap path for adapters that provide `estimateRunRef`; synced active
+  status docs and recorded the remaining residual around provider run-id
+  reconciliation for providers that only know the execution-level id after
+  start
+  validation: `pnpm --filter dvt-api typecheck` PASS;
+  `pnpm --filter @dvt/planner build` PASS;
+  `pnpm --filter @dvt/adapter-temporal build` PASS;
+  `pnpm --filter dvt-api test` PASS (`34/34`);
+  `pnpm --filter @dvt/engine test` PASS (`225/225`);
+  `pnpm --filter @dvt/adapter-temporal test` PASS (`87/87`);
+  `pnpm exec eslint apps/api/src/app.ts apps/api/src/application/services/WorkflowEngineFactory.ts apps/api/test/application/services/WorkflowEngineFactory.test.ts packages/@dvt/adapter-temporal/src/TemporalAdapter.ts packages/@dvt/engine/test/core/WorkflowEngine.test.ts packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts packages/@dvt/planner/src/domain/types.ts` PASS;
+  `pnpm exec prettier --check apps/api/src/app.ts apps/api/src/application/services/WorkflowEngineFactory.ts apps/api/test/application/services/WorkflowEngineFactory.test.ts packages/@dvt/adapter-temporal/src/TemporalAdapter.ts packages/@dvt/engine/test/core/WorkflowEngine.test.ts packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts packages/@dvt/planner/src/domain/types.ts docs/architecture/system-delivery-status.md docs/planning/gaps/GAP_EXECUTION_PLANS.md docs/planning/status/canonical-doc-code-matrix.md docs/planning/gaps/G7-AI-EXECUTION-TRACKER.md "docs/planning/reviews/20260314 review.md"` PASS;
+  `pnpm exec markdownlint-cli2 docs/architecture/system-delivery-status.md docs/planning/gaps/GAP_EXECUTION_PLANS.md docs/planning/status/canonical-doc-code-matrix.md docs/planning/gaps/G7-AI-EXECUTION-TRACKER.md "docs/planning/reviews/20260314 review.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc` PASS;
+  `pnpm docs:quality:check` PASS with pre-existing non-English warnings in
+  `docs/archive/**`, `docs/planning/gaps/GAP_EXECUTION_PLANS.md`,
+  `docs/planning/reviews/**`, and
+  `docs/planning/status/canonical-doc-code-matrix.md`;
+  `pnpm docs:canonical:check` PASS

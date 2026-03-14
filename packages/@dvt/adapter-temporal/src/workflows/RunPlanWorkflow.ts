@@ -32,7 +32,7 @@ import {
   setHandler,
 } from '@temporalio/workflow';
 
-import type { EventType, ExecutionPlan, RunMetadata } from '../engine-types.js';
+import type { EventType, ExecutionPlan } from '../engine-types.js';
 
 import {
   buildCompletedStepFact,
@@ -76,7 +76,6 @@ type WorkflowActivitiesPort = {
     payload?: Record<string, unknown>;
     logicalAttemptId?: number;
   }): Promise<void>;
-  saveRunMetadata(meta: RunMetadata): Promise<void>;
 };
 
 // ---------------------------------------------------------------------------
@@ -336,20 +335,8 @@ async function bootstrapFirstExecutionIfNeeded(
   planRef: RunPlanWorkflowInput['planRef']
 ): Promise<void> {
   if (resumeFromLayerIndex !== 0) return;
-
-  await activities.saveRunMetadata({
-    tenantId: ctx.tenantId,
-    projectId: ctx.projectId,
-    environmentId: ctx.environmentId,
-    runId: ctx.runId,
-    planId: planRef.planId,
-    planVersion: planRef.planVersion,
-    logicalAttemptId: 1,
-    provider: 'temporal',
-    providerWorkflowId: ctx.runId,
-    providerRunId: ctx.runId,
-  });
-
+  // run_metadata + RunQueued are committed by WorkflowEngine before adapter.startRun(),
+  // so the event store is guaranteed to exist by the time this activity executes.
   await activities.emitEvent({ ctx, planRef, eventType: 'RunStarted' });
 }
 
