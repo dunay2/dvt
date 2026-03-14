@@ -104,6 +104,9 @@ importers:
       '@dvt/adapter-postgres':
         specifier: workspace:*
         version: link:../../packages/@dvt/adapter-postgres
+      '@dvt/adapter-temporal':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/adapter-temporal
       '@dvt/engine':
         specifier: workspace:*
         version: link:../../packages/@dvt/engine

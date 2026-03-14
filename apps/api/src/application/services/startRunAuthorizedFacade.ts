@@ -37,7 +37,14 @@ export class StartRunAuthorizedFacade {
       return { kind: 'unauthorized', reason: authorization.reason };
     }
 
-    const result = await this.useCase.execute(input.command, authorization.context);
-    return { kind: 'accepted', result };
+    try {
+      const result = await this.useCase.execute(input.command, authorization.context);
+      return { kind: 'accepted', result };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AdapterNotRegisteredError') {
+        return { kind: 'adapter_not_configured', adapter: input.command.targetAdapter };
+      }
+      throw error;
+    }
   }
 }

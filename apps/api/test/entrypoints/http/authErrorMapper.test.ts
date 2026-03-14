@@ -15,6 +15,18 @@ await test('mapStartRunFacadeResult: unauthorized → 403', () => {
   assert.deepEqual(result.body, { error: 'FORBIDDEN', code: 'TENANT_NOT_GRANTED' });
 });
 
+await test('mapStartRunFacadeResult: adapter_not_configured → 422', () => {
+  const result = mapStartRunFacadeResult({
+    kind: 'adapter_not_configured',
+    adapter: 'temporal',
+  });
+  assert.equal(result.status, 422);
+  assert.deepEqual(result.body, {
+    error: 'ADAPTER_NOT_CONFIGURED',
+    adapter: 'temporal',
+  });
+});
+
 await test('mapStartRunFacadeResult: accepted → 202 with runId', () => {
   const result = mapStartRunFacadeResult({
     kind: 'accepted',
