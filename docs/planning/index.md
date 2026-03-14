@@ -73,6 +73,7 @@ Concept anchors for this page:
 
 - [Execution Model](execution-model/)
 - [Gaps](gaps/)
+- [Plans](plans/)
 - [Roadmap](roadmap/)
 - [Templates](templates/)
 
