@@ -28,6 +28,7 @@ export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecution
 export * from './errors.js';
 export * from './ports/artifact-store.js';
 export * from './schemas.js';
+export * from './step-registry/StepTypeRegistry.js';
 export * from './planner-input.js';
 export * from './validation.js';
 export type {

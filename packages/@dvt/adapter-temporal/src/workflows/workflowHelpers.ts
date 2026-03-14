@@ -10,6 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import type { CompiledCodeRef } from '@dvt/contracts';
+import { DbtStepTypeConfigSchema } from '@dvt/contracts';
 
 export function normalizeDependsOn(dependsOn: unknown): string[] {
   if (!Array.isArray(dependsOn)) return [];
@@ -153,20 +154,20 @@ export function buildStepStartedPayload(
 }
 
 export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef | undefined {
-  if (!isRecord(stepTypeConfig)) {
+  if (
+    stepTypeConfig === null ||
+    typeof stepTypeConfig !== 'object' ||
+    Array.isArray(stepTypeConfig)
+  ) {
     return undefined;
   }
 
-  const candidate = stepTypeConfig.compiledCodeRef;
-  if (candidate === undefined) {
-    return undefined;
-  }
-
-  if (!isCompiledCodeRef(candidate)) {
+  const result = DbtStepTypeConfigSchema.safeParse(stepTypeConfig);
+  if (!result.success) {
     throw new TypeError('INVALID_PLAN_SCHEMA: step_compiledCodeRef_invalid');
   }
 
-  return candidate;
+  return result.data.compiledCodeRef;
 }
 
 // ---------------------------------------------------------------------------
@@ -205,35 +206,6 @@ function isNonNegativeIntegerString(val: unknown): val is string {
   if (typeof val !== 'string' || val.trim().length === 0) return false;
   const n = Number(val);
   return Number.isInteger(n) && n >= 0;
-}
-
-function isCompiledCodeRef(value: unknown): value is CompiledCodeRef {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return (
-    isSha256Hex(value.sha256) &&
-    isNonEmptyString(value.storageUri) &&
-    isNonNegativeInteger(value.sizeBytes) &&
-    isUtf8Encoding(value.encoding)
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
-function isSha256Hex(value: unknown): value is string {
-  return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value);
-}
-
-function isUtf8Encoding(value: unknown): value is 'utf-8' | undefined {
-  return value === undefined || value === 'utf-8';
 }
 
 // ---------------------------------------------------------------------------

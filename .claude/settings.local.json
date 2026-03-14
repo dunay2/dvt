@@ -62,7 +62,9 @@
       "Bash(ls -d /f/segundodvt/dvt/packages/@dvt/*/)",
       "Bash(grep -r 'pnpm -C' /f/segundodvt/dvt/packages/@dvt/*/package.json)",
       "Bash(xargs wc:*)",
-      "Bash(find /f/segundodvt/dvt/packages/@dvt/planner/src -name *tep* -o -name *trike*)"
+      "Bash(find /f/segundodvt/dvt/packages/@dvt/planner/src -name *tep* -o -name *trike*)",
+      "Bash(pnpm --filter @dvt/contracts exec vitest run --reporter=verbose)",
+      "Bash(pnpm --filter @dvt/adapter-temporal exec vitest run --reporter=verbose)"
     ]
   }
 }
