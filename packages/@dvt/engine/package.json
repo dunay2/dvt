@@ -11,6 +11,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
+    },
     "./contracts/engine/*": {
       "types": "./dist/contracts/engine/*.d.ts",
       "import": "./dist/contracts/engine/*.js",
@@ -21,7 +26,7 @@
     "dist"
   ],
   "scripts": {
-    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -32,7 +37,6 @@
     "@dvt/contracts": "workspace:*"
   },
   "devDependencies": {
-    "@dvt/planner": "workspace:*",
     "@types/node": "25.3.5",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

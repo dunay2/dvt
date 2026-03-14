@@ -3,7 +3,7 @@ import type { RuntimeHandle } from '../runtime/createOutboxWorkerRuntime.js';
 import type { OutboxWorkerRuntimeLogger } from '../runtime/OutboxWorkerRuntime.js';
 
 interface StopRuntimeAndOperationalServerOptions {
-  runtime: Pick<RuntimeHandle, 'stop'>;
+  runtime: Pick<RuntimeHandle, 'stop'> | null;
   operationalServer: Pick<OperationalServerHandle, 'stop'>;
   logger: OutboxWorkerRuntimeLogger;
   primaryError: unknown;
@@ -14,10 +14,12 @@ export async function stopRuntimeAndOperationalServer(
 ): Promise<void> {
   const cleanupErrors: unknown[] = [];
 
-  try {
-    await options.runtime.stop();
-  } catch (error) {
-    cleanupErrors.push(error);
+  if (options.runtime) {
+    try {
+      await options.runtime.stop();
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
   }
 
   try {
@@ -51,5 +53,31 @@ function toErrorLike(error: unknown): { message: string; name: string } {
   if (error instanceof Error) {
     return { message: error.message, name: error.name };
   }
-  return { message: String(error), name: 'UnknownError' };
+
+  if (typeof error === 'string') {
+    return { message: error, name: 'ErrorString' };
+  }
+
+  if (error === null) {
+    return { message: 'null', name: 'UnknownError' };
+  }
+
+  if (typeof error === 'object') {
+    const constructorName = error.constructor?.name;
+    const serialized = safeSerializeObject(error);
+    return {
+      message: serialized ?? constructorName ?? 'UnserializableErrorObject',
+      name: constructorName && constructorName !== 'Object' ? constructorName : 'UnknownError',
+    };
+  }
+
+  return { message: String(error), name: typeof error };
+}
+
+function safeSerializeObject(value: object): string | null {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
 }

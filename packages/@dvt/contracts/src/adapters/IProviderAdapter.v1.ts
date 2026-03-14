@@ -13,7 +13,7 @@ import type {
   RunContext,
   RunStatusSnapshot,
   SignalRequest,
-} from '../types/contracts';
+} from '../types/contracts.js';
 
 export interface IProviderAdapter {
   readonly provider: EngineRunRef['provider'];

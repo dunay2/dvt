@@ -74,3 +74,47 @@ await test('stopRuntimeAndOperationalServer surfaces cleanup failures when there
 
   assert.deepEqual(calls, ['runtime.stop', 'operationalServer.stop']);
 });
+
+await test('stopRuntimeAndOperationalServer skips runtime cleanup when no runtime owner was started', async () => {
+  const calls: string[] = [];
+  const { logger } = makeLogger();
+
+  await stopRuntimeAndOperationalServer({
+    runtime: null,
+    operationalServer: {
+      stop: async () => {
+        calls.push('operationalServer.stop');
+      },
+    },
+    logger,
+    primaryError: null,
+  });
+
+  assert.deepEqual(calls, ['operationalServer.stop']);
+});
+
+await test('stopRuntimeAndOperationalServer logs structured cleanup errors without object stringification', async () => {
+  const { logger, entries } = makeLogger();
+
+  await stopRuntimeAndOperationalServer({
+    runtime: {
+      stop: async () => {
+        throw { code: 'RUNTIME_STOP_FAILED', retryable: false };
+      },
+    },
+    operationalServer: {
+      stop: async () => {},
+    },
+    logger,
+    primaryError: new Error('synthetic primary failure'),
+  });
+
+  assert.equal(entries.length, 1);
+  const cleanupErrors = entries[0]?.data.cleanupErrors;
+  assert.deepEqual(cleanupErrors, [
+    {
+      message: '{"code":"RUNTIME_STOP_FAILED","retryable":false}',
+      name: 'UnknownError',
+    },
+  ]);
+});

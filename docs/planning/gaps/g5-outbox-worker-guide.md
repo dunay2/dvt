@@ -149,6 +149,16 @@ The worker model should define:
 - expired-claim recovery;
 - future shard model, even if initial shard count is `1`.
 
+The active `G5.5` planning direction now chooses deterministic `runId`
+sharding, explicit deployment-owned shard lists, and dedicated PostgreSQL
+advisory-lock fencing as the narrowest scale-out model compatible with the
+current runtime.
+
+See:
+
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](./G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+
 The design should document ordering only per stream or ordering key. It should
 not promise global order.
 
@@ -201,13 +211,14 @@ Structured logs should include:
 
 ## Migration Note For The Existing Worker
 
-`packages/@dvt/engine/src/outbox/OutboxWorker.ts` should not remain an
-unowned architectural duplicate once G5 is implemented.
+The reusable worker now lives in
+`packages/@dvt/delivery/src/application/OutboxWorker.ts`; do not reintroduce
+an engine-local architectural duplicate.
 
-Acceptable outcomes:
+Accepted outcome today:
 
-- extract the reusable core and leave a temporary deprecated facade;
-- or make the engine-local worker a thin wrapper over the new core.
+- keep `@dvt/delivery` as the canonical owner of the reusable core;
+- if a compatibility shim is ever needed, keep it as a temporary deprecated facade over that core.
 
 Not acceptable:
 
@@ -216,5 +227,7 @@ Not acceptable:
 ## Working References
 
 - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
+- [`docs/adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
+- [`docs/planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md`](../../planning/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../../planning/proposals/g5-outbox-worker-development-proposal-20260308.md)
 - [`docs/planning/gaps/GAP_EXECUTION_PLANS.md`](../../planning/gaps/GAP_EXECUTION_PLANS.md)

@@ -14,4 +14,4 @@ export type {
   RunMetadata,
   RunStateCommandPort,
   WorkflowSnapshot,
-} from '../../engine/IRunStateStore.v1';
+} from '../../engine/IRunStateStore.v1.js';

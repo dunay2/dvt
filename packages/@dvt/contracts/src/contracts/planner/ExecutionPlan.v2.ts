@@ -66,6 +66,21 @@ export interface ExecutionStepV2 {
   stepId: string;
   kind: StepKind;
   dependsOn: readonly string[];
+  /**
+   * Kind-specific configuration blob.
+   *
+   * Runtime type is intentionally `Record<string, unknown>` to support arbitrary step kinds
+   * without coupling the contract to any specific adapter.
+   *
+   * For built-in DBT kinds (DBT_MODEL, DBT_TEST, DBT_SNAPSHOT) the canonical shape is
+   * `DbtStepTypeConfig` from `@dvt/contracts/step-registry`.
+   *
+   * Validation at plan build-time is enforced by `IStepTypeRegistry` in the Planner.
+   * Validation at adapter consumption is enforced by `DbtStepTypeConfigSchema.safeParse`.
+   *
+   * @see IStepTypeRegistry — registry contract (G9)
+   * @see DbtStepTypeConfig — typed config for DBT_* kinds
+   */
   stepTypeConfig?: Record<string, unknown>;
 }
 

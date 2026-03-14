@@ -1,12 +1,12 @@
 import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import {
-  InMemoryEventBus,
-  type IOutboxStorage,
-  type OutboxRecord,
-  type RunEventPersisted,
-} from '@dvt/engine';
+import type {
+  EventEnvelope as RunEventPersisted,
+  IOutboxStorage,
+  OutboxRecord,
+} from '@dvt/contracts';
+import { InMemoryEventBus } from '@dvt/delivery/testing';
 
 import {
   OutboxWorkerRuntime,
@@ -215,7 +215,7 @@ export class MemoryOutboxStorage implements IOutboxStorage {
     record.lastError = error;
   }
 
-  async hasPendingRetries(): Promise<boolean> {
+  async hasPendingRetries(_selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     return this.records.some((record) => record.attempts > 0);
   }
 }

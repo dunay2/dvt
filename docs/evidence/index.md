@@ -13,7 +13,12 @@ Evidence documents that justify or validate relevant changes.
 
 - [ED 20260304 Compiledcoderef Ownership](ED-20260304-compiledcoderef-ownership.md)
 - [ED 20260304 Temporal Lookup Run Ref](ED-20260304-temporal-lookup-run-ref.md)
+- [ED-20260312 — G6 Golden Fixtures and Schema Validation Closeout](ED-20260312-g6-golden-schema-closeout.md)
+- [ED-20260312 — G8 Arch Tests and Engine Wiring Closeout](ED-20260312-g8-arch-tests-engine-wiring.md)
+- [ED-20260314 - G9 Step Type Registry Closeout](ED-20260314-g9-step-type-registry-closeout.md)
+- [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
 - [Evidence Doc: G3 IntentStore Postgres + Reconciler Worker](ED-20260304-g3-intentstore-postgres-reconciler.md)
+- [Evidence Doc: G5 canary local-docker](ED-20260312-g5-canary-local-docker.md)
 - [Evidence Doc: G6 US-G6.1 facet contract surface](ED-20260308-g6-us-g6-1-facet-contract-surface.md)
 - [Evidence Doc: G6 US-G6.2 lineage contract artifacts](ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
 - [Evidence Doc: Temporal adapter operational close-out](ED-20260308-temporal-operational-close-out.md)

@@ -123,7 +123,7 @@ Two separate but related decoupling concerns exist:
      extract a reusable core or leave the engine-local worker as a thin wrapper.
 2. broader repository coupling concern:
    - structural coupling such as `G9` (`StepTypeRegistry + typed stepTypeConfig`)
-     remains pending and must stay visible as separate debt;
+     was out of scope for `#412` and was tracked separately at the repository level;
    - `#412` must not pretend to close that broader coupling problem.
 
 Working rule:
@@ -162,7 +162,7 @@ implied by implementation or closeout language:
 - new subscriber abstraction families;
 - new outbox schema generalization;
 - automatic DLQ replay without operator intent.
-- broad repository-wide coupling cleanup such as `G9`.
+- broad repository-wide coupling cleanup beyond the local G5 scope.
 
 The following topic is in scope only to the extent needed for correctness
 transparency, not for broad platform redesign:
@@ -207,9 +207,9 @@ Rejected alternatives:
 
 ### In Scope
 
-- `packages/@dvt/engine/src/outbox/OutboxWorker.ts`
-- `packages/@dvt/engine/src/outbox/InMemoryOutboxStorage.ts`
-- `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`
+- `packages/@dvt/delivery/src/application/OutboxWorker.ts`
+- `packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts`
+- `packages/@dvt/delivery/test/OutboxWorker.test.ts`
 - `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
 - `packages/@dvt/adapter-postgres/test/smoke.test.ts`
@@ -311,7 +311,7 @@ Leave `#412` with executable evidence, not just local confidence.
 
 Definition of Done:
 
-- [ ] `pnpm test:engine` passes
+- [ ] `pnpm --filter @dvt/delivery test` passes
 - [ ] `pnpm --filter dvt-outbox-worker test` passes
 - [ ] `pnpm --filter dvt-outbox-worker typecheck` passes
 - [ ] `pnpm --filter dvt-outbox-worker build` passes
@@ -327,7 +327,7 @@ Definition of Done:
 ```mermaid
 flowchart LR
     A[Current state<br/>G5 runtime exists<br/>Correctness proof incomplete<br/>Same-run bypass risk<br/>Claim-recovery gap<br/>Downstream idempotency boundary implicit<br/>Some correctness knobs still hardcoded] --> B[Step 1<br/>Freeze invariants and config inventory]
-    B --> C[Step 2<br/>Harden engine core and in-memory semantics]
+    B --> C[Step 2<br/>Harden delivery core and in-memory semantics]
     C --> D[Step 3<br/>Harden PostgreSQL claim, expiry, replay, and policy knobs]
     D --> E[Step 4<br/>Confirm standalone runtime and operator parity]
     E --> F[Step 5<br/>Canonical validation and status sync]
@@ -336,7 +336,7 @@ flowchart LR
 
 ## Validation Matrix
 
-- `pnpm test:engine`
+- `pnpm --filter @dvt/delivery test`
 - `pnpm --filter dvt-outbox-worker test`
 - `pnpm --filter dvt-outbox-worker typecheck`
 - `pnpm --filter dvt-outbox-worker build`
@@ -406,8 +406,8 @@ correctness execution:
    - avoid long-lived duplication between engine-local and standalone runtime paths;
    - prefer extraction of proven reusable logic or an engine-local thin wrapper.
 2. For broader architectural coupling:
-   - keep `G9` visible as the repository-level step for typed `stepTypeConfig`
-     and registry-driven decoupling;
+   - keep repository-level typed `stepTypeConfig` governance visible; this was
+     subsequently closed as `G9` in current governance;
    - do not relabel `#412` as if it solved that debt.
 
 ## Closeout Condition For This Plan

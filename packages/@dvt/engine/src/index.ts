@@ -20,20 +20,14 @@ export * from './core/idempotency.js';
 export * from './ports/IRunStateStore.js';
 export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';
-export * from './state/InMemoryStartRunIntentStore.js';
-export * from './state/InMemoryTxStore.js';
 export * from './adapters/IProviderAdapter.js';
 
 export * from './services/RunMaintenanceService.js';
 export * from './workers/IntentReconcilerWorker.js';
 export * from './domain/startRunIntentPolicy.js';
 
-export * from './outbox/types.js';
 export * from './outbox/IOutboxRateLimiter.js';
 export * from './outbox/TokenBucketRateLimiter.js';
-export * from './outbox/OutboxWorker.js';
-export * from './outbox/InMemoryEventBus.js';
-export { InMemoryOutboxStorage } from './outbox/InMemoryOutboxStorage.js';
 
 export * from './utils/clock.js';
 
@@ -41,9 +35,5 @@ export * from './security/authorizer.js';
 export * from './security/AuthorizationError.js';
 export * from './security/planRefPolicy.js';
 export * from './security/planIntegrity.js';
-
-export * from './adapters/mock/MockAdapter.js';
-export * from './adapters/temporal/TemporalAdapterStub.js';
-export * from './adapters/conductor/ConductorAdapterStub.js';
 
 export * from './application/providerSelection.js';

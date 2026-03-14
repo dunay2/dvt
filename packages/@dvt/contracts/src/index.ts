@@ -1,14 +1,14 @@
-export * from './types/contracts';
-export * from './types/artifacts';
-export * from './workflows';
-export * from './adapters/IOutboxStorageAdapter.v1';
-export * from './adapters/IProjectorAdapter.v1';
-export * from './adapters/IStateStoreAdapter.v1';
-export * from './adapters/IWorkflowEngineAdapter.v1';
-export * from './adapters/IProviderAdapter.v1';
-export * from './contracts/engine/IOutboxStorage.v1';
-export * from './contracts/engine/IStartRunIntentStore.v1';
-export * from './contracts/engine/StartRunIntentPolicy.v1';
+export * from './types/contracts.js';
+export * from './types/artifacts.js';
+export * from './workflows.js';
+export * from './adapters/IOutboxStorageAdapter.v1.js';
+export * from './adapters/IProjectorAdapter.v1.js';
+export * from './adapters/IStateStoreAdapter.v1.js';
+export * from './adapters/IWorkflowEngineAdapter.v1.js';
+export * from './adapters/IProviderAdapter.v1.js';
+export * from './contracts/engine/IOutboxStorage.v1.js';
+export * from './contracts/engine/IStartRunIntentStore.v1.js';
+export * from './contracts/engine/StartRunIntentPolicy.v1.js';
 export type {
   DbtManifestLike,
   DbtManifestRef,
@@ -23,13 +23,14 @@ export type {
   PlannerPolicies,
   PlannerSelection,
   StepKind,
-} from './contracts/planner/ExecutionPlan.v2';
-export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2';
-export * from './errors';
-export * from './ports/artifact-store';
-export * from './schemas';
-export * from './planner-input';
-export * from './validation';
+} from './contracts/planner/ExecutionPlan.v2.js';
+export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
+export * from './errors.js';
+export * from './ports/artifact-store.js';
+export * from './schemas.js';
+export * from './step-registry/StepTypeRegistry.js';
+export * from './planner-input.js';
+export * from './validation.js';
 export type {
   AppendResult,
   CompiledCodeRef,
@@ -52,4 +53,4 @@ export type {
   RunStateCommandPort,
   StepEventInput,
   WorkflowSnapshot,
-} from './engine/IRunStateStore.v1';
+} from './engine/IRunStateStore.v1.js';

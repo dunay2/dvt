@@ -1,8 +1,8 @@
 ---
 title: G5 - Outbox Worker Consolidated Plan
-status: Proposed
+status: Active
 owner: architecture
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-14
 planning_type: execution-plan
 ---
 
@@ -14,19 +14,23 @@ what the current repository can realistically absorb.
 ## Related documents
 
 - [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
+- [G5 - AI Execution Tracker](G5-AI-EXECUTION-TRACKER.md)
+- [G5 / US-G5.4 Operability And Ownership Hardening Plan](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
+- [G5 / US-G5.5 Sharding And Fencing Plan](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [ADR-0009: Outbox Publication Ordering Guarantees](../../adr/ADR-0009_Outbox_Ordering.md)
+- [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 - Reference material only: [archived gap5 review packs](../../archive/planning/gaps/gap5/)
 
 ## Traceability tuple
 
 - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
 - `status_doc`: [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
-- `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
-- `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
-- `evidence_or_risk`: standalone host, bounded HTTP publisher, health/readiness endpoints, metrics, and runbook now exist in code; keep canary and scale-out risk explicit until PR-4/PR-5 land
+- `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/delivery/src/application/OutboxWorker.ts`, `packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+- `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `packages/@dvt/delivery/test/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+- `verification_cmd`: `pnpm --filter @dvt/delivery test`, `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm --filter dvt-outbox-worker test:arch`, `pnpm test:adapter-postgres`
+- `evidence_or_risk`: standalone host, bounded HTTP publisher, health/readiness endpoints, metrics, runbook, canary evidence, and sharding/fencing proof now exist in code; downstream lineage delivery remains explicit under `G10`
 
 ## 1. Executive decision
 
@@ -54,6 +58,8 @@ exists and is observable.
 This layer includes:
 
 - one chosen ADR-0009 enforcement strategy for concurrent workers,
+- deterministic shard routing and explicit shard ownership,
+- dedicated fencing semantics for effective ownership loss,
 - tests that prove no reordering for the same `runId`,
 - deployment rules for safe horizontal ownership.
 
@@ -79,10 +85,10 @@ implementation source of truth.
 The current repository already has the following real baseline:
 
 - standalone host scaffold in [`apps/outbox-worker/`](../../../apps/outbox-worker/),
-- reusable worker logic in [`packages/@dvt/engine/src/outbox/OutboxWorker.ts`](../../../packages/@dvt/engine/src/outbox/OutboxWorker.ts),
+- reusable worker logic in [`packages/@dvt/delivery/src/application/OutboxWorker.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorker.ts),
 - PostgreSQL claiming, retries, and DLQ support in [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts),
 - outbox payloads shaped as current run event envelopes, not generic side-effect records,
-- operational status that now marks the standalone host and initial operational boundary as partial in [System Delivery Status](../../architecture/system-delivery-status.md).
+- operational status that now marks the delivery runtime as closed for Phase 1 in [System Delivery Status](../../architecture/system-delivery-status.md).
 
 The broad `gap5` package changes all of these at once:
 
@@ -165,7 +171,8 @@ Deliver:
 Primary code targets:
 
 - `apps/outbox-worker/*` new package or app
-- `packages/@dvt/engine/src/outbox/OutboxWorker.ts`
+- `packages/@dvt/delivery/src/application/OutboxWorker.ts`
+- `packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
 
 Acceptance:
@@ -218,7 +225,8 @@ Acceptance:
 Deliver:
 
 - environment-scoped worker enablement,
-- explicit ownership toggle between old embedding path and standalone process,
+- explicit standalone worker ownership mode for the canary environment,
+- deployment/runtime wiring that proves the standalone worker is the sole active owner in that environment,
 - canary rollout guide,
 - rollback instructions.
 
@@ -234,6 +242,33 @@ Deliver exactly one ADR-0009 enforcement mechanism for concurrent workers:
 
 - **Option A**: shard by `runId`, or
 - **Option B**: locking/coordination that really preserves per-`runId` order.
+
+Selected planning direction for `G5`:
+
+- `Option A` is the active design direction.
+- `runId` maps deterministically to `shard_id`.
+- workers own explicit shard lists from deployment configuration.
+- shard ownership is fenced with PostgreSQL advisory locks held on dedicated
+  ownership sessions.
+- `shardCount` changes are treated as explicit topology migrations.
+
+The first four executable `G5.5` slices are now:
+
+- persisted `shard_id` plus shard-aware claim path
+- startup advisory-lock ownership sessions held on a dedicated PostgreSQL
+  connection
+- post-start ownership-loss detection that stops the host and keeps retry
+  backlog readiness scoped to the owned shard set
+- deterministic concurrent-worker ordering proof at the worker/storage
+  boundary using shard-scoped ownership tests
+
+Real PostgreSQL multi-worker evidence remains open follow-up work inside the
+same stage.
+
+Design detail for this stage lives in:
+
+- [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [`ADR-0033 - Outbox Worker Sharding And Fencing Model`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 Acceptance:
 
@@ -251,17 +286,22 @@ Horizontal scale-out is blocked until PR-5 is complete.
 
 ### For the independent worker gap
 
-- [ ] standalone outbox worker process exists
-- [ ] current outbox contracts remain the production baseline
-- [ ] runtime start/stop is explicit and testable
-- [ ] health and lag observability exist
-- [ ] canary cutover has been executed with one active owner
+- [x] standalone outbox worker process exists
+- [x] current outbox contracts remain the production baseline
+- [x] runtime start/stop is explicit and testable
+- [x] health and lag observability exist
+- [x] canary cutover has been executed with one active owner
 
 ### For the scale-out hardening gap
 
-- [ ] one ADR-0009 concurrent-worker strategy is selected
-- [ ] same-`runId` ordering is proven under concurrent workers
-- [ ] deployment docs forbid unsafe mixed ownership
+- [x] one ADR-0009 concurrent-worker strategy is selected
+- [x] same-`runId` ordering is proven under concurrent workers
+- [x] deployment docs forbid unsafe mixed ownership
+
+Closure evidence for the accepted `G5` scope is recorded in
+[ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md).
+Downstream contract hardening and future delivery evolution remain tracked as
+separate follow-up work rather than open blockers for this gap.
 
 If the first list is done but the second is not, the repository has closed the
 **standalone runtime gap** but still carries an explicit **scale-out risk**.
@@ -275,7 +315,7 @@ change the platform shape rather than closing the immediate gap:
 - lane lease tables,
 - subscriber registry keyed by `(topic, deliveryChannel, sideEffectKind)`,
 - CDC/polling coexistence matrix,
-- dedicated `@dvt/outbox-worker` core package extracted from a proven runtime.
+- further internal split inside `@dvt/delivery` only if the delivery surface grows beyond the current canonical package boundary.
 
 These are future architecture candidates, not entry criteria for the next
 implementation slice.

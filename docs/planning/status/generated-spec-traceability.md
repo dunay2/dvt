@@ -2,61 +2,60 @@
 title: Generated Spec Traceability
 status: Active
 owner: docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-13
 planning_type: status
 ---
 
 # Generated Spec Traceability
 
-Generated automatically from repository documentation and source-code signals on 2026-03-08.
+Generated automatically from repository documentation and source-code signals on 2026-03-13.
 
 ## Summary
 
 | Metric                            | Value     |
 | --------------------------------- | --------- |
-| Canonical docs scanned            | 167       |
-| Canonical docs with code links    | 28 (17%)  |
-| Canonical docs with ADR links     | 31 (19%)  |
-| Code files scanned                | 369       |
-| Code files with ADR baseline tags | 103 (28%) |
+| Canonical docs scanned            | 187       |
+| Canonical docs with code links    | 28 (15%)  |
+| Canonical docs with ADR links     | 40 (21%)  |
+| Code files scanned                | 406       |
+| Code files with ADR baseline tags | 103 (25%) |
 | Code files with explicit doc refs | 0 (0%)    |
 
 ## Canonical Doc Coverage By Section
 
 | Section       | Docs | Docs With Code Links | Docs With ADR Links |
 | ------------- | ---- | -------------------- | ------------------- |
-| adr           | 33   | 6 (18%)              | 12 (36%)            |
-| architecture  | 66   | 12 (18%)             | 12 (18%)            |
-| contracts     | 4    | 0 (0%)               | 0 (0%)              |
-| evidence      | 5    | 1 (20%)              | 0 (0%)              |
+| adr           | 35   | 6 (17%)              | 15 (43%)            |
+| architecture  | 62   | 11 (18%)             | 9 (15%)             |
+| contracts     | 6    | 0 (0%)               | 0 (0%)              |
+| evidence      | 11   | 2 (18%)              | 0 (0%)              |
 | guides        | 3    | 1 (33%)              | 2 (67%)             |
-| planning      | 40   | 8 (20%)              | 5 (13%)             |
-| risk-register | 14   | 0 (0%)               | 0 (0%)              |
-| runbooks      | 2    | 0 (0%)               | 0 (0%)              |
+| planning      | 51   | 8 (16%)              | 14 (27%)            |
+| risk-register | 16   | 0 (0%)               | 0 (0%)              |
+| runbooks      | 3    | 0 (0%)               | 0 (0%)              |
 
 ## Source Traceability By Workspace
 
 | Workspace                          | Files | Files With ADR Baselines | Files With Doc Refs |
 | ---------------------------------- | ----- | ------------------------ | ------------------- |
-| apps/api                           | 30    | 0 (0%)                   | 0 (0%)              |
+| apps/api                           | 33    | 0 (0%)                   | 0 (0%)              |
+| apps/outbox-worker                 | 29    | 0 (0%)                   | 0 (0%)              |
 | apps/web                           | 79    | 0 (0%)                   | 0 (0%)              |
-| packages/@dvt/adapter-postgres     | 10    | 7 (70%)                  | 0 (0%)              |
+| packages/@dvt/adapter-postgres     | 13    | 7 (54%)                  | 0 (0%)              |
 | packages/@dvt/adapter-temporal     | 26    | 11 (42%)                 | 0 (0%)              |
 | packages/@dvt/canonical            | 4     | 2 (50%)                  | 0 (0%)              |
 | packages/@dvt/cli                  | 2     | 0 (0%)                   | 0 (0%)              |
 | packages/@dvt/contracts            | 36    | 13 (36%)                 | 0 (0%)              |
 | packages/@dvt/dsl                  | 5     | 0 (0%)                   | 0 (0%)              |
-| packages/@dvt/engine               | 77    | 55 (71%)                 | 0 (0%)              |
-| packages/@dvt/engine-contracts     | 1     | 0 (0%)                   | 0 (0%)              |
+| packages/@dvt/engine               | 78    | 55 (71%)                 | 0 (0%)              |
 | packages/@dvt/observability        | 6     | 0 (0%)                   | 0 (0%)              |
 | packages/@dvt/observability-otel   | 3     | 0 (0%)                   | 0 (0%)              |
 | packages/@dvt/plan-interpreter     | 5     | 5 (100%)                 | 0 (0%)              |
 | packages/@dvt/plan-verifier        | 6     | 0 (0%)                   | 0 (0%)              |
 | packages/@dvt/planner              | 46    | 0 (0%)                   | 0 (0%)              |
 | packages/@dvt/planner-contracts    | 1     | 0 (0%)                   | 0 (0%)              |
-| packages/@dvt/state-contracts      | 1     | 0 (0%)                   | 0 (0%)              |
 | packages/@dvt/state-store          | 4     | 0 (0%)                   | 0 (0%)              |
-| packages/@dvt/traceability-service | 26    | 10 (38%)                 | 0 (0%)              |
+| packages/@dvt/traceability-service | 29    | 10 (34%)                 | 0 (0%)              |
 | packages/test                      | 1     | 0 (0%)                   | 0 (0%)              |
 
 ## Canonical Docs Missing Code Links
@@ -87,6 +86,8 @@ Generated automatically from repository documentation and source-code signals on
 | adr          | [ADR-0019 — Adapter Equivalence and Maintenance Boundary](../../adr/ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md)                                | -        |
 | adr          | [ADR-0029 — Run Maintenance Service Extraction](../../adr/ADR-0029-run-maintenance-service.md)                                                               | -        |
 | adr          | [ADR-0031 - Storage Adapter Tenant Isolation Strategy](../../adr/ADR-0031-adapter-tenant-isolation.md)                                                       | -        |
+| adr          | [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)                                        | Accepted |
+| adr          | [ADR-0034 - Bounded Context Boundaries And Communication Rules](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)                    | Accepted |
 | adr          | [Architecture Decision Records (ADR) Index](../../adr/ADR-Index.md)                                                                                          | -        |
 | adr          | [ADRs](../../adr/index.md)                                                                                                                                   | Active   |
 | architecture | [DVT+ Architecture Atlas (Code-Aligned)](../../architecture/atlas/architecture/architecture_atlas.md)                                                        | -        |
@@ -101,8 +102,6 @@ Generated automatically from repository documentation and source-code signals on
 | architecture | [Capabilities: Executable Contracts](../../architecture/engine/contracts/capabilities/README.md)                                                             | -        |
 | architecture | [Contract Template (v1)](../../architecture/engine/contracts/CONTRACT_TEMPLATE.v1.md)                                                                        | -        |
 | architecture | [Decision & Risk Log — Contracts v2.0.0](../../architecture/engine/contracts/DECISION_AND_RISK_LOG_v2.0.0.md)                                                | -        |
-| architecture | [Agnostic Event Layer Strategy (v2.0.1)](../../architecture/engine/contracts/engine/AgnosticEventLayerStrategy.v2.0.1.md)                                    | -        |
-| architecture | [Execution Semantics Contract (Normative v1)](../../architecture/engine/contracts/engine/ExecutionSemantics.v1.md)                                           | -        |
 
 ## Duplicate Language Pairs Detected
 

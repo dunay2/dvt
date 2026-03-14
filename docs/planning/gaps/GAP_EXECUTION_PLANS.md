@@ -2,7 +2,7 @@
 title: DVT+ - Gap Execution Plans
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-14
 planning_type: proposal
 ---
 
@@ -11,7 +11,7 @@ planning_type: proposal
 Source of truth for execution gaps and delivery state.
 
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
-- Last sync date: 2026-03-08
+- Last sync date: 2026-03-14
 - Scope: Phase 1, Phase 1.5, Phase 2
 
 Concept anchors for this page:
@@ -39,20 +39,20 @@ Minimum tuple for this document:
 - `verification_cmd`: gap-specific. See each active gap section below.
 - `evidence_or_risk`: linked evidence docs and risk records where the gap is already formalized
 
-## Executive State (2026-03-08)
+## Executive State (2026-03-14)
 
-| Gap | Title                                     | Phase     | Current state                            |
-| --- | ----------------------------------------- | --------- | ---------------------------------------- |
-| G1  | Temporal Adapter real                     | Phase 1   | Closed                                   |
-| G2  | PostgresStateStore complete               | Phase 1   | Closed                                   |
-| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed                                   |
-| G4  | compiledCodeRef ownership                 | Phase 1   | Closed                                   |
-| G5  | Outbox worker independiente               | Phase 1.5 | Partial                                  |
-| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Partial                                  |
-| G7  | Read models + standalone projector        | Phase 1.5 | Partial                                  |
-| G8  | Auth real en apps/api                     | Phase 1.5 | Implemented in code (arch tests pending) |
-| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Pending                                  |
-| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending                                  |
+| Gap | Title                                     | Phase     | Current state |
+| --- | ----------------------------------------- | --------- | ------------- |
+| G1  | Temporal Adapter real                     | Phase 1   | Closed        |
+| G2  | PostgresStateStore complete               | Phase 1   | Closed        |
+| G3  | IStartRunIntentStore Postgres + scheduler | Phase 1   | Closed        |
+| G4  | compiledCodeRef ownership                 | Phase 1   | Closed        |
+| G5  | Outbox worker independiente               | Phase 1.5 | Closed        |
+| G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed        |
+| G7  | Read models + standalone projector        | Phase 1.5 | Partial       |
+| G8  | Auth real en apps/api                     | Phase 1.5 | Closed        |
+| G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Closed        |
+| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending       |
 
 ## Confirmed Progress Since Previous Draft
 
@@ -72,12 +72,18 @@ Minimum tuple for this document:
    - Planner enrichment: [`packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts)
    - Temporal propagation: [`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
    - Traceability resolver/mapper: [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
-4. `G5` already has reusable worker and storage foundations in code.
-   - Worker core: [`packages/@dvt/engine/src/outbox/OutboxWorker.ts`](../../../packages/@dvt/engine/src/outbox/OutboxWorker.ts)
+4. `G5` extracted the delivery worker and standalone host into their canonical package homes.
+   - Worker core: [`packages/@dvt/delivery/src/application/OutboxWorker.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorker.ts)
+   - Runtime loop: [`packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
    - Postgres outbox APIs: [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
 5. `G6` and `G7` are not green, but they are no longer zero-state.
    - Lineage mapping/tests: [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
    - In-process projector: [`packages/@dvt/engine/src/core/SnapshotProjector.ts`](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
+6. `G9` is now closed in code, tests, and evidence.
+   - Registry and schema: [`packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts`](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
+   - Planner validation path: [`packages/@dvt/planner/src/domain/Planner.ts`](../../../packages/@dvt/planner/src/domain/Planner.ts)
+   - Adapter validation path: [`packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
+   - Closeout evidence: [`docs/evidence/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
 
 ## Gap-by-Gap Status
 
@@ -160,42 +166,58 @@ Minimum tuple for this document:
 
 ### G5 - Outbox worker independiente
 
-- Status: Partial
+- Status: Closed
+- Closed: 2026-03-12
+- Evidence: [ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md)
 - Traceability tuple:
   - `canonical_spec`: [G5 - Outbox Worker Consolidated Plan](G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/engine/src/outbox/OutboxWorker.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
-  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `packages/@dvt/engine/test/outbox/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
-  - `verification_cmd`: `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm test:engine`, `pnpm test:adapter-postgres`
-  - `evidence_or_risk`: standalone host, bounded HTTP publisher, runtime state endpoints, metrics, and initial runbook now exist in code; promote to evidence after canary and downstream contract hardening
+  - `code_paths`: `apps/outbox-worker/src/server.ts`, `apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts`, `apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`, `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/bus/HttpEventBus.ts`, `packages/@dvt/delivery/src/application/OutboxWorker.ts`, `packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`, `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`
+  - `test_paths`: `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`, `apps/outbox-worker/test/plugins/env.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts`, `apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts`, `apps/outbox-worker/test/bus/HttpEventBus.test.ts`, `apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts`, `apps/outbox-worker/test/ops/OperationalServer.test.ts`, `apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts`, `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`, `packages/@dvt/delivery/test/OutboxWorker.test.ts`, `packages/@dvt/adapter-postgres/test/smoke.test.ts`
+  - `verification_cmd`: `pnpm --filter @dvt/delivery test`, `pnpm --filter dvt-outbox-worker typecheck`, `pnpm --filter dvt-outbox-worker build`, `pnpm --filter dvt-outbox-worker test`, `pnpm --filter dvt-outbox-worker test:arch`, `pnpm test:adapter-postgres`
+  - `evidence_or_risk`: closed — local-docker canary evidence in [ED-20260312-g5-canary-local-docker](../../evidence/ED-20260312-g5-canary-local-docker.md); advisory lock exclusivity proven by `PgShardOwnershipGate.integration.test.ts` (2/2 pass against the repo `postgres:16` compose service, 2026-03-12); keep [R-20260311-G5.3 correctness closeout residuals](../../risk-register/quality/R-20260311-g5-3-correctness-closeout-residuals.md), [R-20260311-G5.4 operability and fencing residuals](../../risk-register/quality/R-20260311-g5-4-operability-and-fencing-residuals.md), and [R-20260308-G5-OUTBOX-WORKER-01](../../risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md) visible for downstream contract hardening and `outbox_lineage` flow (Phase 2 / G10)
 - Working refs:
+  - [`G5 - AI Execution Tracker`](G5-AI-EXECUTION-TRACKER.md)
   - [`G5 / US-G5.3 Correctness Hardening Plan`](G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md)
+  - [`G5 / US-G5.4 Operability And Ownership Hardening Plan`](G5-US-G5.4-OPERABILITY-AND-OWNERSHIP-HARDENING-PLAN.md)
+  - [`G5 / US-G5.5 Sharding And Fencing Plan`](G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
   - [`docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md`](../../adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md)
+  - [`docs/adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md`](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
   - [`docs/planning/gaps/g5-outbox-worker-guide.md`](g5-outbox-worker-guide.md)
   - [`docs/planning/proposals/g5-outbox-worker-development-proposal-20260308.md`](../proposals/g5-outbox-worker-development-proposal-20260308.md)
 - Delivered:
   - outbox persistence APIs (`listPending`, `markDelivered`, `markFailed`, `replayDeadLetters`)
-  - reusable engine `OutboxWorker` core
+  - reusable `@dvt/delivery` worker core and runtime loop
   - standalone `apps/outbox-worker` host scaffold with runtime loop, env parsing, shutdown wiring, and bounded HTTP publisher mode
   - operational endpoints (`/healthz`, `/readyz`, `/metrics`) with explicit runtime states (`starting`, `idle`, `draining`, `failing`, `stopped`)
   - structured logs and counters for claim, delivery, retry, DLQ, lag, and runtime errors
   - initial operator runbook for canary expectations and rollback boundaries
-- Remaining:
+  - accepted `ADR-0033` plus the first executable `G5.5` slice: persisted `shard_id`, shard-aware claim selection, and single-shard-compatible topology defaults in runtime config
+  - the second executable `G5.5` slice: startup advisory-lock ownership sessions held on a dedicated PostgreSQL connection and wired into the standalone host
+  - the third executable `G5.5` slice: post-start ownership-loss detection stops the standalone host and keeps retry backlog readiness scoped to the owned shard set
+  - the fourth executable `G5.5` slice: deterministic concurrent-worker ordering proof at the worker/storage boundary using shard-scoped ownership tests
+  - the fifth executable `G5.5` slice: real PostgreSQL advisory lock exclusivity integration test — two independent `PgShardOwnershipGate` instances against the repo `postgres:16` compose service; gate2 returns null while gate1 holds shard 0 advisory lock, and gate2 acquires after gate1 releases; 2/2 targeted pass (2026-03-12)
+  - automated repo-side canary acceptance test proving `passive → active → delivery → stop` through the production host/runtime composition without a live database dependency
+- Non-blocking follow-up:
   - explicit subscriber delivery contract for projector/event-bus consumers
+  - stale-readiness hardening, explicit shutdown withdrawal, and freshness-aware operational probes
+  - explicit ownership/fencing policy for rollout safety before any dual-active deployment posture is tolerated
+  - canary or contract proof that supported downstream consumers absorb duplicate delivery idempotently
+  - real PostgreSQL orphan-claim recovery and backlog sanity evidence for the hardened claim path
   - deployment-grade downstream target contract beyond the current minimal HTTP publisher mode
-  - shard strategy / scaling model
-  - environment-scoped canary execution and rollback wiring
 
 ### G6 - OpenLineage mapping tests CI + schema pin
 
-- Status: Partial
+- Status: Closed
+- Closed: 2026-03-12
+- Evidence: [ED-20260312 - G6 golden schema closeout](../../evidence/ED-20260312-g6-golden-schema-closeout.md)
 - Traceability tuple:
   - `canonical_spec`: [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`
-  - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`
-  - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm traceability:adr0`
-  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)
+  - `code_paths`: `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`, `packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts`, `packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts`
+  - `test_paths`: `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`, `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts`, `packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts`
+  - `verification_cmd`: `pnpm --filter @dvt/traceability-service test`, `pnpm --filter @dvt/traceability-service test:lineage:golden`, `pnpm --filter @dvt/traceability-service test:lineage:schema`
+  - `evidence_or_risk`: [ED-20260308 - G6 US-G6.1 facet contract surface](../../evidence/ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 - G6 US-G6.2 lineage contract artifacts](../../evidence/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md), [ED-20260312 - G6 golden schema closeout](../../evidence/ED-20260312-g6-golden-schema-closeout.md)
 - Working refs:
   - [G6 hub](g6/index.md)
   - [G6 OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
@@ -206,16 +228,17 @@ Minimum tuple for this document:
   - package-level tests for mapper/guard/resolver paths
   - `_schemaURL` pinned in emitted `sql` and `dvt_dbt_details` facets
   - repo-local normative artifacts for emitted lineage facets under [Traceability Contracts](../../contracts/traceability/index.md)
-- Remaining:
-  - deterministic OL translation hardening in CI
-  - offline schema validation execution against vendored/local artifacts
-  - committed golden fixtures for mapper regression coverage
-  - explicit golden and schema verification commands for closure
+  - committed golden fixtures for all 3 mapper paths (success, fail-open, no-compiledCodeRef) — drift visible as PR diff in `test/fixtures/lineage/`
+  - offline JSON Schema validation with AJV (draft 2020-12) for both emitted facets against repo-local contract artifacts — no network calls
+  - `test:lineage:golden` and `test:lineage:schema` scripts wired in `package.json`
+  - 13/13 traceability-service tests pass (5 test files, 2026-03-12)
+- Non-blocking follow-up:
   - delivery/runtime concerns stay open outside package scope under `G10`
 
 ### G7 - Read models + standalone projector
 
 - Status: Partial
+- Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
 - Remaining:
@@ -224,7 +247,9 @@ Minimum tuple for this document:
 
 ### G8 - Auth real en apps/api
 
-- Status: Implemented in code
+- Status: Closed
+- Closed: 2026-03-12
+- Evidence: [`docs/evidence/ED-20260312-g8-arch-tests-engine-wiring.md`](../../evidence/ED-20260312-g8-arch-tests-engine-wiring.md)
 - Delivered:
   - `TenantHierarchyAuthorizationPolicy` with full tenant → project → environment grant hierarchy
   - `OidcAuthenticator` + `JwksJwtVerifier` (jose-based JWKS) behind `IJwtVerifierGateway`
@@ -235,16 +260,61 @@ Minimum tuple for this document:
   - `StartRunFacadeResult` semantic result type — no HTTP models in application layer
   - `authErrorMapper` in entrypoints/http — single HTTP mapping point
   - Route exposure policy: `/readyz`, `/version`, `/db/ready` all gated by explicit flags
-- Pending:
-  - `dependency-cruiser` architectural tests (T8-6)
-  - Replace `NotImplementedStartRunUseCase` with engine-backed use case (T8-7)
+  - `dependency-cruiser` arch rules (5 rules, `test:arch`) — T8-6
+  - `EngineStartRunUseCase` replacing `NotImplementedStartRunUseCase` — T8-7
+  - `WorkflowEngine` wired in `app.ts` with real Postgres adapters — T8-7
+- test_paths:
+  - `apps/api/test/**/*.test.ts` (21 tests)
+  - `apps/api/.dependency-cruiser.cjs` (arch rules)
+- verification_cmd:
+  - `pnpm --filter dvt-api test` → 21/21 pass
+  - `pnpm --filter dvt-api test:arch` → 0 violations
 - Spec: [`G8-REAL-AUTH-FINAL-SPEC.md`](G8-REAL-AUTH-FINAL-SPEC.md)
 
 ### G9 - StepTypeRegistry + typed stepTypeConfig
 
-- Status: Pending
-- Target:
-  - registry-based validation and safer step config contracts
+- Status: Closed
+- Closed: 2026-03-14
+- Evidence: [`docs/evidence/ED-20260314-g9-step-type-registry-closeout.md`](../../evidence/ED-20260314-g9-step-type-registry-closeout.md)
+- Delivered:
+  - `IStepTypeRegistry`, `StepTypeRegistry`, `createDefaultStepTypeRegistry`, and
+    `DbtStepTypeConfigSchema` in `@dvt/contracts/src/step-registry/StepTypeRegistry.ts`
+  - built-in DBT kinds (`DBT_MODEL`, `DBT_TEST`, `DBT_SNAPSHOT`) registered with strict
+    Zod validation; fail-open for unknown kinds (ADR-0006)
+  - `dbtStepFactory` emits typed `DbtStepTypeConfig` shape
+  - `adapter-temporal/workflowHelpers.ts` validates `compiledCodeRef` via
+    `DbtStepTypeConfigSchema.safeParse`, replacing 5 manual type-guard functions
+  - `Planner.ts` injects `IStepTypeRegistry` via `PlannerOptions.stepTypeRegistry`
+    (default: `createDefaultStepTypeRegistry()`); `validateStepConfigs()` runs between
+    step-build and plan-assembly, throwing `PlannerErrorCode.INVALID_STEP_CONFIG` for
+    known kinds with invalid config
+  - `PlannerErrorCode.INVALID_STEP_CONFIG` added to `errors.ts`
+  - `ExecutionPlan.v2.ts` and `schemas.ts` annotated to document that
+    `stepTypeConfig: Record<string, unknown>` is **intentional** for extensibility;
+    per-kind validation is explicitly delegated to `IStepTypeRegistry` at build-time
+- Design decision (not a residual):
+  - `stepTypeConfig` remains `Record<string, unknown>` in the TypeScript contract and
+    Zod schema by design. The enforcement boundary is the Planner (build-time) and each
+    adapter (consumption-time), not the shared contract type. Promoting it to a typed
+    discriminated union would couple the contract to specific adapters and break
+    extensibility. If a future ADR decides otherwise, it requires a contract revision,
+    not a G9 follow-up.
+- Code:
+  - [`packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts`](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
+  - [`packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts)
+  - [`packages/@dvt/contracts/src/schemas.ts`](../../../packages/@dvt/contracts/src/schemas.ts)
+  - [`packages/@dvt/planner/src/domain/errors.ts`](../../../packages/@dvt/planner/src/domain/errors.ts)
+  - [`packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts`](../../../packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts)
+  - [`packages/@dvt/planner/src/domain/Planner.ts`](../../../packages/@dvt/planner/src/domain/Planner.ts)
+  - [`packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
+- Tests:
+  - [`packages/@dvt/contracts/test/step-registry.test.ts`](../../../packages/@dvt/contracts/test/step-registry.test.ts) - 19 cases: schema validation, registry behaviour, extensions
+  - [`packages/@dvt/planner/test/unit/step-registry-integration.test.ts`](../../../packages/@dvt/planner/test/unit/step-registry-integration.test.ts) - 8 cases: `INVALID_STEP_CONFIG` rejection, fail-open for unknown kinds, custom registry injection
+  - [`packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
+- Verification:
+  - `pnpm --filter @dvt/contracts test` -> 32/32
+  - `pnpm --filter @dvt/planner test` -> 37/37
+  - `pnpm --filter @dvt/adapter-temporal test` -> 87/87
 
 ### G10 - outbox_lineage worker + fail-open DLQ
 
@@ -257,9 +327,9 @@ Minimum tuple for this document:
 
 Recommended order for next cycles:
 
-1. Start `G5` and `G6` in parallel.
-2. Start `G7` and `G8` after `G5/G6` direction is stable.
-3. Leave Phase 2 (`G9`, `G10`) after Phase 1.5 operational stability.
+1. Continue `G7` standalone projector and read-model work.
+2. Prepare and execute `G10` after the remaining Phase 1.5 follow-up (`G7`) is
+   stable and the `G5`/`G6` delivery-runtime boundaries remain explicit.
 
 Parallel execution track detail:
 

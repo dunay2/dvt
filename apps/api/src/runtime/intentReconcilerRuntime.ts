@@ -1,7 +1,6 @@
 import { PostgresStartRunIntentStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { EngineRunRef } from '@dvt/contracts';
 import {
-  MockAdapter,
   IdempotencyKeyBuilder,
   IntentReconcilerWorker,
   type IntentReconcilerWorkerOptions,
@@ -12,6 +11,7 @@ import {
   type IClock,
   type IProviderAdapter,
 } from '@dvt/engine';
+import { MockAdapter } from '@dvt/engine/testing';
 import type { IObservability } from '@dvt/observability';
 import type { FastifyBaseLogger } from 'fastify';
 
@@ -33,6 +33,7 @@ interface ReconcilerRuntimeConfig {
   schema: string;
   statementTimeoutMs: number;
   queryTimeoutMs: number;
+  outboxShardCount: number;
   providers: readonly EngineRunRef['provider'][];
   workerOptions: IntentReconcilerWorkerOptions;
 }
@@ -56,6 +57,7 @@ function resolveRuntimeConfig(env: Env, logger: FastifyBaseLogger): ReconcilerRu
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+    outboxShardCount: env.DVT_OUTBOX_SHARD_COUNT,
     providers: parseProviderList(env.DVT_INTENT_RECONCILER_PROVIDERS),
     workerOptions: {
       intervalMs: env.DVT_INTENT_RECONCILER_INTERVAL_MS,
@@ -86,6 +88,7 @@ function createRuntimeStores(config: ReconcilerRuntimeConfig): RuntimeStores {
     schema: config.schema,
     statementTimeoutMs: config.statementTimeoutMs,
     queryTimeoutMs: config.queryTimeoutMs,
+    outboxShardCount: config.outboxShardCount,
   });
   const intentStore = new PostgresStartRunIntentStore({
     pool,

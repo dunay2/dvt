@@ -1,0 +1,20 @@
+{
+  "jobFacets": {
+    "dvt_dbt_details": {
+      "_producer": "https://github.com/dunay2/dvt/tree/main/packages/@dvt/traceability-service",
+      "_schemaURL": "https://dvt.local/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json",
+      "compiledCodeRef": {
+        "sha256": "5a8b07d0bfedcd0da2460304234320a87eb1c4efbd83f31f2e23e0b041214d0c",
+        "storageUri": "memory://compiled/sql-step",
+        "sizeBytes": 27,
+        "encoding": "utf-8"
+      }
+    }
+  },
+  "warnings": [
+    {
+      "code": "COMPILED_CODE_RESOLUTION_FAILED",
+      "message": "storage timeout"
+    }
+  ]
+}

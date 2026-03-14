@@ -10,9 +10,11 @@ planning_type: archive-pointer
 
 The material previously kept under this directory has been archived.
 
-## Active canonical document
+## Active canonical and working documents
 
 - [G5 - Outbox Worker Consolidated Plan](../G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md)
+- [G5 / US-G5.5 Sharding And Fencing Plan](../G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
+- [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)
 
 ## Archived source material
 
@@ -23,12 +25,13 @@ The material previously kept under this directory has been archived.
 The original `gap5` packs contain useful design exploration, but they are no
 longer the active implementation source of truth.
 
-Use the consolidated plan for:
+Use the active G5 docs for:
 
 - execution scope,
 - implementation sequencing,
 - closure criteria,
-- and traceability.
+- traceability,
+- and the selected multi-worker design direction.
 
 Use the archive only for:
 

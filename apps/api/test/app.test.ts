@@ -9,7 +9,7 @@ await test('buildApp wires observability and health endpoint works', async () =>
   process.env.OBS_ENABLED = 'false';
   process.env.NODE_ENV = 'test';
 
-  const { app, ctx } = buildApp();
+  const { app, ctx } = await buildApp();
   assert.ok(ctx.observability);
 
   const res = await app.inject({
@@ -38,7 +38,7 @@ await test('buildApp migrates principal grants before serving protected runtime 
   process.env.OIDC_AUDIENCE = 'dvt-api';
 
   try {
-    const { app } = buildApp();
+    const { app } = await buildApp();
     await app.ready();
 
     assert.equal(migrateCalls, 1);
@@ -53,7 +53,7 @@ await test('buildApp migrates principal grants before serving protected runtime 
   }
 });
 
-await test('buildApp fails fast when OIDC is enabled without DATABASE_URL', () => {
+await test('buildApp fails fast when OIDC is enabled without DATABASE_URL', async () => {
   process.env.OBS_ENABLED = 'false';
   process.env.NODE_ENV = 'test';
   delete process.env.DATABASE_URL;
@@ -62,7 +62,7 @@ await test('buildApp fails fast when OIDC is enabled without DATABASE_URL', () =
   process.env.OIDC_AUDIENCE = 'dvt-api';
 
   try {
-    assert.throws(
+    await assert.rejects(
       () => buildApp(),
       /DATABASE_URL is required when OIDC-protected runtime routes are enabled/
     );

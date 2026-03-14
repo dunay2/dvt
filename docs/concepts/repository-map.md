@@ -2,7 +2,7 @@
 title: Repository Map
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-13
 ---
 
 # Repository Map
@@ -39,10 +39,11 @@ Concept anchors for this page:
 
 ## Entry Surfaces
 
-| Workspace  | Responsibility                                            | Primary documentation entry point                                                                                                                      | Coverage       |
-| ---------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| `dvt-api`  | HTTP entrypoint, auth boundary, background runtime wiring | [G8 Real Auth Final Spec](../planning/gaps/G8-REAL-AUTH-FINAL-SPEC.md), [System Delivery Status](../architecture/system-delivery-status.md)            | `canonical`    |
-| `@dvt/web` | UI shell, graph canvas, run monitoring, client routing    | [Frontend Architecture](../architecture/frontend/index.md), [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md) | `linked-local` |
+| Workspace           | Responsibility                                                                  | Primary documentation entry point                                                                                                                      | Coverage       |
+| ------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
+| `dvt-api`           | HTTP entrypoint, auth boundary, background runtime wiring                       | [G8 Real Auth Final Spec](../planning/gaps/G8-REAL-AUTH-FINAL-SPEC.md), [System Delivery Status](../architecture/system-delivery-status.md)            | `canonical`    |
+| `dvt-outbox-worker` | Delivery composition root, active/passive ownership host, operational endpoints | [ADR-0034](../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md), [System Delivery Status](../architecture/system-delivery-status.md) | `canonical`    |
+| `@dvt/web`          | UI shell, graph canvas, run monitoring, client routing                          | [Frontend Architecture](../architecture/frontend/index.md), [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md) | `linked-local` |
 
 ## Core Planning and Execution
 
@@ -56,6 +57,7 @@ Concept anchors for this page:
 | `@dvt/engine`               | Core workflow execution and orchestration                     | [Engine Architecture](../architecture/engine/index.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                    | `canonical`    |
 | `@dvt/adapter-temporal`     | Temporal provider runtime and worker host                     | [Temporal Adapter Specification](../architecture/engine/adapters/temporal/TemporalAdapter.spec.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)        | `canonical`    |
 | `@dvt/adapter-postgres`     | Postgres state store, intent store, outbox persistence        | [Postgres State Store Adapter](../architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) | `canonical`    |
+| `@dvt/delivery`             | Delivery worker orchestration, retry and shard-aware draining | [ADR-0034](../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md), [ADR-0033](../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)                              | `canonical`    |
 | `@dvt/state-store`          | State-store contract and storage boundary                     | [Postgres State Store Adapter](../architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md), [System Delivery Status](../architecture/system-delivery-status.md)          | `canonical`    |
 | `@dvt/traceability-service` | Lineage mapping and governance tooling surface                | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [packages/@dvt/traceability-service/README.md](../../packages/@dvt/traceability-service/README.md)        | `linked-local` |
 
@@ -67,9 +69,7 @@ Concept anchors for this page:
 | `@dvt/observability-otel` | OpenTelemetry implementation path                                 | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [packages/@dvt/observability-otel/README.md](../../packages/@dvt/observability-otel/README.md) | `linked-local` |
 | `@dvt/cli`                | CLI smoke surface and validation entrypoint                       | [CLI Package](../architecture/shared/cli.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                   | `canonical`    |
 | `@dvt/crypto`             | Canonicalization and hashing helpers in `packages/@dvt/canonical` | [Crypto Package](../architecture/shared/crypto.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                             | `canonical`    |
-| `@dvt/engine-contracts`   | Package boundary for engine contract artifacts                    | [Contracts Index](../contracts/index.md), [Engine Contracts](../contracts/engine/index.md)                                                                                   | `canonical`    |
 | `@dvt/planner-contracts`  | Package boundary for planner contract artifacts                   | [Contracts Index](../contracts/index.md), [Planner Contracts](../contracts/planner/index.md)                                                                                 | `canonical`    |
-| `@dvt/state-contracts`    | Package boundary for state contract artifacts                     | [Contracts Index](../contracts/index.md), [Shared Contracts](../contracts/shared/index.md)                                                                                   | `canonical`    |
 
 ## Relationships
 

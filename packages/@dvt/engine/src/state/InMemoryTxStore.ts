@@ -2,6 +2,13 @@
  * @baseline ADR-0003
  */
 import type {
+  DeadLetterRecord,
+  IOutboxStorage,
+  OutboxClaimSelection,
+  OutboxRecord,
+} from '@dvt/contracts';
+
+import type {
   AppendResult,
   RunEventInput,
   RunEventPersisted,
@@ -9,14 +16,14 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
-import type { DeadLetterRecord, IOutboxStorage, OutboxRecord } from '../outbox/types.js';
-import { MAX_OUTBOX_ATTEMPTS } from '../outbox/types.js';
 import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
+
+import { InMemoryOutboxState } from './InMemoryOutboxState.js';
 
 export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
@@ -25,10 +32,18 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
+  private readonly outbox: InMemoryOutboxState;
 
-  private readonly pending: OutboxRecord[] = [];
-  private readonly deadLetters: DeadLetterRecord[] = [];
-  private outboxCounter = 0;
+  constructor(deps?: { outboxNowMs?: () => number; outboxShardCount?: number }) {
+    const outboxDeps: ConstructorParameters<typeof InMemoryOutboxState>[0] = {};
+    if (deps?.outboxNowMs !== undefined) {
+      outboxDeps.nowMs = deps.outboxNowMs;
+    }
+    if (deps?.outboxShardCount !== undefined) {
+      outboxDeps.shardCount = deps.outboxShardCount;
+    }
+    this.outbox = new InMemoryOutboxState(outboxDeps);
+  }
 
   private createDefaultSnapshot(runId: string): WorkflowSnapshot {
     return {
@@ -62,10 +77,10 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     }
 
     const record = event as unknown as Record<string, unknown>;
-    if (Object.prototype.hasOwnProperty.call(record, 'runSeq')) {
+    if (Object.hasOwn(record, 'runSeq')) {
       throw new Error(`INVALID_EVENT_WRITE_SHAPE: runSeq forbidden at index ${index}`);
     }
-    if (Object.prototype.hasOwnProperty.call(record, 'persistedAt')) {
+    if (Object.hasOwn(record, 'persistedAt')) {
       throw new Error(`INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden at index ${index}`);
     }
   }
@@ -188,21 +203,12 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     }
 
     // Commit outbox in the same "transaction"
-    for (const e of appended) {
-      this.outboxCounter += 1;
-      this.pending.push({
-        id: `outbox_${this.outboxCounter}`,
-        createdAt: InMemoryTxStore.EPOCH_ISO,
-        idempotencyKey: e.idempotencyKey,
-        payload: e,
-        attempts: 0,
-      });
-    }
+    await this.outbox.enqueueTx(runId, appended);
 
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+      lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
     };
   }
 
@@ -221,11 +227,11 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     options?: ListEventsOptions
   ): Promise<RunEventPersisted[]> {
     const meta = this.metadataByRunId.get(runId);
-    if (!meta || meta.tenantId !== tenantId) return [];
+    if (meta?.tenantId !== tenantId) return [];
     const all = (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
     const afterSeq = options?.afterSeq;
-    const filtered = afterSeq !== undefined ? all.filter((e) => e.runSeq > afterSeq) : all;
-    return options?.limit !== undefined ? filtered.slice(0, options.limit) : filtered;
+    const filtered = afterSeq === undefined ? all : all.filter((e) => e.runSeq > afterSeq);
+    return options?.limit === undefined ? filtered : filtered.slice(0, options.limit);
   }
 
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
@@ -233,60 +239,54 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     const all = Array.from(this.metadataByRunId.values());
     const byTenant = all.filter((m) => m.tenantId === options.tenantId);
     const byStatus =
-      options?.status !== undefined
-        ? byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status)
-        : byTenant;
+      options?.status === undefined
+        ? byTenant
+        : byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status);
     return byStatus.slice(-limit).reverse();
   }
 
   async getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null> {
     const meta = this.metadataByRunId.get(runId);
-    if (!meta || meta.tenantId !== tenantId) return null;
+    if (meta?.tenantId !== tenantId) return null;
     return this.snapshotByRunId.get(runId) ?? null;
   }
 
   async enqueueTx(_runId: string, _events: RunEventPersisted[]): Promise<void> {
-    // No-op: enqueue is already performed inside appendAndEnqueueTx for this store.
+    await this.outbox.enqueueTx(_runId, _events);
   }
 
   async listPending(limit: number): Promise<OutboxRecord[]> {
-    return this.pending.slice(0, limit);
+    return this.outbox.listPending(limit);
+  }
+
+  async listPendingForClaim(
+    limit: number,
+    selection?: OutboxClaimSelection
+  ): Promise<OutboxRecord[]> {
+    return this.outbox.listPendingForClaim(limit, selection);
   }
 
   async markDelivered(ids: string[]): Promise<void> {
-    const set = new Set(ids);
-    for (let i = this.pending.length - 1; i >= 0; i--) {
-      if (set.has(this.pending[i]!.id)) {
-        this.pending.splice(i, 1);
-      }
-    }
+    await this.outbox.markDelivered(ids);
   }
 
   async markFailed(id: string, error: string): Promise<void> {
-    const idx = this.pending.findIndex((r) => r.id === id);
-    if (idx === -1) return;
-    const rec = this.pending[idx]!;
-    rec.attempts += 1;
-    rec.lastError = error;
-
-    if (rec.attempts >= MAX_OUTBOX_ATTEMPTS) {
-      this.pending.splice(idx, 1);
-      this.deadLetters.push({
-        id: `dl_${rec.id}`,
-        originalId: rec.id,
-        runId: rec.payload.runId,
-        payload: rec.payload,
-        lastError: error,
-        deadLetteredAt: InMemoryTxStore.EPOCH_ISO,
-      });
-    }
+    await this.outbox.markFailed(id, error);
   }
 
-  async hasPendingRetries(): Promise<boolean> {
-    return this.pending.some((record) => record.attempts > 0);
+  async hasPendingRetries(selection?: OutboxClaimSelection): Promise<boolean> {
+    return this.outbox.hasPendingRetries(selection);
   }
 
   async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
-    return this.deadLetters.slice(0, limit);
+    return this.outbox.listDeadLetter(limit);
+  }
+
+  async replayDeadLetters(options?: {
+    limit?: number;
+    runId?: string;
+    ids?: string[];
+  }): Promise<number> {
+    return this.outbox.replayDeadLetters(options);
   }
 }

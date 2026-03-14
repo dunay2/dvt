@@ -295,6 +295,12 @@ export const DbtManifestRefSchema = z
   })
   .strict();
 
+/**
+ * Generic structural schema for an execution step.
+ * stepTypeConfig is intentionally untyped here — per-kind validation is
+ * delegated to IStepTypeRegistry at Planner build-time (G9).
+ * For DBT_* kinds the canonical shape is DbtStepTypeConfig / DbtStepTypeConfigSchema.
+ */
 export const ExecutionStepV2Schema = z
   .object({
     stepId: z.string().min(1),

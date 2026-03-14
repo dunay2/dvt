@@ -43,6 +43,7 @@ Append-only event stream per run:
 Transactional outbox records used for at-least-once dispatch semantics:
 
 - primary key: `id` (`<runId>:<runSeq>`)
+- persisted routing key: `shard_id`
 - delivery lifecycle: `attempts`, `last_error`, `claimed_at`, `next_attempt_at`, `delivered_at`
 
 ### `run_snapshots`
@@ -51,7 +52,8 @@ Persisted hot-read snapshot updated in the same transaction as event append.
 
 ### `outbox_dead_letter`
 
-Dead-letter storage for outbox records that exceed the max retry budget.
+Dead-letter storage for outbox records that exceed the max retry budget,
+including the persisted `shard_id` needed to replay back into the same topology.
 
 ## Transaction semantics
 
@@ -68,6 +70,10 @@ in a single DB transaction to preserve atomicity.
 
 Per-run ordering is stabilized with a 64-bit MD5-derived advisory transaction
 lock before sequence allocation.
+
+For `G5.5`, enqueue also persists `shard_id` and the claim path supports
+`listPendingForClaim(limit, { shardIds })` so workers can restrict selection in
+SQL before claim updates happen.
 
 ## Idempotency behavior
 

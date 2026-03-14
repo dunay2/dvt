@@ -42,6 +42,8 @@
       "@dvt/plan-interpreter/*": ["packages/@dvt/plan-interpreter/src/*"],
       "@dvt/contracts": ["packages/@dvt/contracts/index.ts"],
       "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
+      "@dvt/delivery": ["packages/@dvt/delivery/src/index.ts"],
+      "@dvt/delivery/*": ["packages/@dvt/delivery/src/*"],
       "@dvt/adapter-postgres": ["packages/@dvt/adapter-postgres/src/index.ts"],
       "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
       "@dvt/adapter-temporal": ["packages/@dvt/adapter-temporal/src/index.ts"],

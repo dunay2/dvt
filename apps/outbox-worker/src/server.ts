@@ -2,11 +2,12 @@ import process from 'node:process';
 
 import pino from 'pino';
 
-import { stopRuntimeAndOperationalServer } from './lifecycle/stopRuntimeAndOperationalServer.js';
+import { runOutboxWorkerHost } from './host/runOutboxWorkerHost.js';
 import { createOperationalServer } from './ops/OperationalServer.js';
 import { OutboxWorkerMonitor } from './ops/OutboxWorkerMonitor.js';
-import { loadEnv } from './plugins/env.js';
-import { createOutboxWorkerRuntime } from './runtime/createOutboxWorkerRuntime.js';
+import { resolveReadyStaleAfterMs } from './ops/resolveReadyStaleAfterMs.js';
+import { createPgShardOwnershipGate } from './ownership/PgShardOwnershipGate.js';
+import { isActiveEnv, loadEnv } from './plugins/env.js';
 
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
@@ -18,6 +19,11 @@ async function main(): Promise<void> {
   const monitor = new OutboxWorkerMonitor({
     serviceName: env.SERVICE_NAME,
     logger,
+    ...(isActiveEnv(env)
+      ? {
+          readyStaleAfterMs: resolveReadyStaleAfterMs(env),
+        }
+      : {}),
   });
   const operationalServer = createOperationalServer({
     host: env.DVT_OUTBOX_ADMIN_HOST,
@@ -25,10 +31,16 @@ async function main(): Promise<void> {
     logger,
     monitor,
   });
-  const runtime = await createOutboxWorkerRuntime(env, logger, {
-    observer: monitor,
-    hooks: monitor,
-  });
+  const ownershipGate = isActiveEnv(env)
+    ? createPgShardOwnershipGate({
+        connectionString: env.DATABASE_URL,
+        statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+        queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+        schema: env.DVT_PG_SCHEMA,
+        shardIds: env.DVT_OUTBOX_OWNED_SHARD_IDS,
+        logger,
+      })
+    : undefined;
   const shutdown = new globalThis.AbortController();
 
   const handleSignal = (signal: NodeJS.Signals): void => {
@@ -39,29 +51,14 @@ async function main(): Promise<void> {
   process.once('SIGINT', () => handleSignal('SIGINT'));
   process.once('SIGTERM', () => handleSignal('SIGTERM'));
 
-  let primaryError: unknown = null;
-  try {
-    await operationalServer.start();
-    logger.info(
-      {
-        busMode: env.DVT_OUTBOX_EVENT_BUS_MODE,
-        adminHost: env.DVT_OUTBOX_ADMIN_HOST,
-        adminPort: env.DVT_OUTBOX_ADMIN_PORT,
-      },
-      'outbox worker bootstrapped'
-    );
-    await runtime.start(shutdown.signal);
-  } catch (error) {
-    primaryError = error;
-    throw error;
-  } finally {
-    await stopRuntimeAndOperationalServer({
-      runtime,
-      operationalServer,
-      logger,
-      primaryError,
-    });
-  }
+  await runOutboxWorkerHost({
+    env,
+    logger,
+    monitor,
+    operationalServer,
+    shutdownSignal: shutdown.signal,
+    ...(ownershipGate ? { ownershipGate } : {}),
+  });
 }
 
 try {

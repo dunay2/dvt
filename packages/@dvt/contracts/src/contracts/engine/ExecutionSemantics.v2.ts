@@ -5,4 +5,4 @@ export type {
   IIdempotencyKeyBuilder,
   IPlanFetcher,
   IPlanIntegrityValidator,
-} from './IRunStateStore.v1';
+} from './IRunStateStore.v1.js';

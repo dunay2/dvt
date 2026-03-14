@@ -2,6 +2,8 @@
  * Default dbt-compatible step factory.
  * ADR baseline: ADR-0006-extensibility
  */
+import type { DbtStepTypeConfig } from '@dvt/contracts';
+
 import { PlannerError, PlannerErrorCode } from '../errors.js';
 import {
   DBT_MODEL,
@@ -24,7 +26,7 @@ function kindForResourceType(resourceType: string): string {
   );
 }
 
-function policyConfig(resolved: ResolvedPolicies): Record<string, unknown> {
+function policyConfig(resolved: ResolvedPolicies): DbtStepTypeConfig {
   return {
     stepTimeoutMs: resolved.stepTimeoutMs,
     retries: resolved.retries,

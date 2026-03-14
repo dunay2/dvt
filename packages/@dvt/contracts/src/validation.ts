@@ -57,7 +57,7 @@ import {
   type StepOutputSchemaT,
   StepSnapshotSchema,
   type StepSnapshotSchemaT,
-} from './schemas';
+} from './schemas.js';
 
 export interface ValidationIssue {
   path: string;

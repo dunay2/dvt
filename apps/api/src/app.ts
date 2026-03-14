@@ -6,7 +6,7 @@ import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import type { Logger } from 'pino';
 
 import { AuthorizeCommandScopeService } from './application/services/authorizeCommandScopeService.js';
-import { NotImplementedStartRunUseCase } from './application/services/notImplementedStartRunUseCase.js';
+import { EngineStartRunUseCase } from './application/services/engineStartRunUseCase.js';
 import { StartRunAuthorizedFacade } from './application/services/startRunAuthorizedFacade.js';
 import { getPgPool } from './db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from './domain/auth/policy.js';
@@ -40,7 +40,7 @@ function requireDatabaseUrlForProtectedRoutes(env: Env): string {
   return env.DATABASE_URL;
 }
 
-export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
+export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContext }> {
   const env = loadEnv(process.env);
   const observability = buildObservability(env);
 
@@ -123,7 +123,8 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
 
   // Protected runtime routes — wired only when OIDC is fully configured
   if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) {
-    const pool = getPgPool(requireDatabaseUrlForProtectedRoutes(env));
+    const databaseUrl = requireDatabaseUrlForProtectedRoutes(env);
+    const pool = getPgPool(databaseUrl);
     const accessRepo = new PostgresPrincipalAccessRepository(pool, env.DVT_PG_SCHEMA);
     const auditLogger = new StructuredAuditLogger(app.log as unknown as Logger);
     const policy = new TenantHierarchyAuthorizationPolicy();
@@ -141,10 +142,46 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
         algorithms: env.OIDC_ALGORITHMS.split(',').map((a) => a.trim()),
       })
     );
+    const [engineMod, engineTestingMod, adapterMod] = await Promise.all([
+      import('@dvt/engine'),
+      import('@dvt/engine/testing'),
+      import('@dvt/adapter-postgres'),
+    ]);
+    const {
+      AllowAllAuthorizer,
+      IdempotencyKeyBuilder,
+      PlanRefPolicy,
+      SnapshotProjector,
+      WorkflowEngine,
+    } = engineMod;
+    const { MockAdapter } = engineTestingMod;
+    const { PostgresStartRunIntentStore, PostgresStateStoreAdapter } = adapterMod;
+
+    const stateAdapter = new PostgresStateStoreAdapter({ connectionString: databaseUrl });
+    const intentStore = new PostgresStartRunIntentStore({ connectionString: databaseUrl });
+    const projector = new SnapshotProjector();
+    const mockAdapter = new MockAdapter({ stateStore: stateAdapter, projector });
+    const engine = new WorkflowEngine({
+      stateStore: stateAdapter,
+      outbox: stateAdapter,
+      projector,
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: { nowIsoUtc: () => new Date().toISOString() },
+      // G8 application layer already enforces tenant authorization via
+      // TenantHierarchyAuthorizationPolicy; engine-level check is redundant.
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({
+        allowedSchemes: ['https', 's3', 'gs', 'azure'],
+      }),
+      intentStore,
+      adapters: new Map([['mock', mockAdapter]]),
+      observability,
+    });
+
     const facade = new StartRunAuthorizedFacade(
       authenticator,
       authorizer,
-      new NotImplementedStartRunUseCase()
+      new EngineStartRunUseCase(engine)
     );
 
     app.addHook('onReady', async () => {
@@ -163,5 +200,5 @@ export function buildApp(): { app: FastifyInstance; ctx: AppContext } {
     );
   }
 
-  return { app, ctx };
+  return Promise.resolve({ app, ctx });
 }

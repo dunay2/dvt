@@ -3,11 +3,11 @@ import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import adapterPostgres from '@dvt/adapter-postgres';
-import type { RunEventPersisted } from '@dvt/engine';
+import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 import type { Pool } from 'pg';
 
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
-import { loadEnv } from '../../src/plugins/env.js';
+import { isActiveEnv, loadEnv, type ActiveEnv } from '../../src/plugins/env.js';
 import { createOutboxWorkerRuntime } from '../../src/runtime/createOutboxWorkerRuntime.js';
 import { OutboxWorkerRuntime } from '../../src/runtime/OutboxWorkerRuntime.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
@@ -41,6 +41,17 @@ function makePendingEvent(): RunEventPersisted {
   };
 }
 
+function loadActiveTestEnv(input: NodeJS.ProcessEnv): ActiveEnv {
+  const env = loadEnv({
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    ...input,
+  });
+  if (!isActiveEnv(env)) {
+    throw new Error('expected an active test environment');
+  }
+  return env;
+}
+
 await test('createOutboxWorkerRuntime closes the shared pg pool on stop', async () => {
   await closePgPool();
 
@@ -68,7 +79,7 @@ await test('createOutboxWorkerRuntime closes the shared pg pool on stop', async 
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -111,7 +122,7 @@ await test('createOutboxWorkerRuntime stop is idempotent at the handle boundary'
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -152,7 +163,7 @@ await test('createOutboxWorkerRuntime runs migrations when explicitly enabled', 
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -193,7 +204,7 @@ await test('createOutboxWorkerRuntime releases the shared pool lease even when s
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -238,7 +249,7 @@ await test('createOutboxWorkerRuntime continues cleanup when runtime stop fails'
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -282,7 +293,7 @@ await test('createOutboxWorkerRuntime releases the shared pool lease when startu
     await assert.rejects(
       () =>
         createOutboxWorkerRuntime(
-          loadEnv({
+          loadActiveTestEnv({
             NODE_ENV: 'test',
             DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
             DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -302,12 +313,140 @@ await test('createOutboxWorkerRuntime releases the shared pool lease when startu
   }
 });
 
+await test('createOutboxWorkerRuntime aborts before bootstrap starts when shutdown was already requested', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let migrateCalls = 0;
+  let abortPendingOperationsCalls = 0;
+
+  const originalEnd = pool.end;
+  const originalMigrate = PostgresStateStoreAdapter.prototype.migrate;
+  const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.migrate = async function migrate(): Promise<void> {
+    migrateCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.abortPendingOperations =
+    async function abortPendingOperations(this: object): Promise<void> {
+      abortPendingOperationsCalls += 1;
+      await Reflect.apply(originalAbortPendingOperations, this, []);
+    };
+
+  try {
+    const shutdown = new globalThis.AbortController();
+    shutdown.abort();
+
+    await assert.rejects(
+      () =>
+        createOutboxWorkerRuntime(
+          loadActiveTestEnv({
+            NODE_ENV: 'test',
+            DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+            DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+            DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+          }),
+          makeLogger(),
+          { shutdownSignal: shutdown.signal }
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.name, 'AbortError');
+        return true;
+      }
+    );
+
+    assert.equal(migrateCalls, 0);
+    assert.ok(abortPendingOperationsCalls >= 1);
+    assert.equal(endCalls, 1);
+    assert.notEqual(getPgPool(poolConfig), pool);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.migrate = originalMigrate;
+    PostgresStateStoreAdapter.prototype.abortPendingOperations = originalAbortPendingOperations;
+    await closePgPool();
+  }
+});
+
+await test('createOutboxWorkerRuntime aborts startup work and releases resources when shutdown lands during migration', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let abortPendingOperationsCalls = 0;
+  let rejectMigration: ((error: unknown) => void) | null = null;
+  let migrationReleased = false;
+
+  const originalEnd = pool.end;
+  const originalMigrate = PostgresStateStoreAdapter.prototype.migrate;
+  const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.migrate = async function migrate(): Promise<void> {
+    await new Promise<void>((_resolve, reject) => {
+      rejectMigration = reject;
+    });
+  };
+  PostgresStateStoreAdapter.prototype.abortPendingOperations =
+    async function abortPendingOperations(this: object): Promise<void> {
+      abortPendingOperationsCalls += 1;
+      if (!migrationReleased) {
+        migrationReleased = true;
+        rejectMigration?.(new Error('synthetic migration interrupted'));
+      }
+      await Reflect.apply(originalAbortPendingOperations, this, []);
+    };
+
+  try {
+    const shutdown = new globalThis.AbortController();
+    const startup = createOutboxWorkerRuntime(
+      loadActiveTestEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+      }),
+      makeLogger(),
+      { shutdownSignal: shutdown.signal }
+    );
+
+    shutdown.abort();
+
+    await assert.rejects(startup, (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.equal(error.name, 'AbortError');
+      return true;
+    });
+
+    assert.ok(abortPendingOperationsCalls >= 1);
+    assert.equal(endCalls, 1);
+    assert.notEqual(getPgPool(poolConfig), pool);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.migrate = originalMigrate;
+    PostgresStateStoreAdapter.prototype.abortPendingOperations = originalAbortPendingOperations;
+    await closePgPool();
+  }
+});
+
 await test('createOutboxWorkerRuntime configures the shared pool with env timeouts', async () => {
   await closePgPool();
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -353,7 +492,7 @@ await test('createOutboxWorkerRuntime keeps a shared pool alive until the last r
   PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {};
 
   try {
-    const env = loadEnv({
+    const env = loadActiveTestEnv({
       NODE_ENV: 'test',
       DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
@@ -388,6 +527,7 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
   const originalFetch = globalThis.fetch;
   const originalConnect = pool.connect;
   const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
+  const originalListPendingForClaim = PostgresStateStoreAdapter.prototype.listPendingForClaim;
   const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
 
   globalThis.fetch = (async (_url, init) => {
@@ -420,6 +560,17 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
       },
     ];
   };
+  PostgresStateStoreAdapter.prototype.listPendingForClaim = async function listPendingForClaim() {
+    return [
+      {
+        id: 'outbox_1',
+        createdAt: '2026-03-08T00:00:00.000Z',
+        idempotencyKey: 'key-1',
+        payload: makePendingEvent(),
+        attempts: 0,
+      },
+    ];
+  };
   PostgresStateStoreAdapter.prototype.abortPendingOperations =
     async function abortPendingOperations(this: object): Promise<void> {
       abortPendingOperationsCalls += 1;
@@ -428,7 +579,7 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
 
   try {
     const runtime = await createOutboxWorkerRuntime(
-      loadEnv({
+      loadActiveTestEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'http',
@@ -454,7 +605,72 @@ await test('createOutboxWorkerRuntime stop prevents a post-abort retry write fro
     globalThis.fetch = originalFetch;
     pool.connect = originalConnect;
     PostgresStateStoreAdapter.prototype.listPending = originalListPending;
+    PostgresStateStoreAdapter.prototype.listPendingForClaim = originalListPendingForClaim;
     PostgresStateStoreAdapter.prototype.abortPendingOperations = originalAbortPendingOperations;
+    await closePgPool();
+  }
+});
+
+await test('createOutboxWorkerRuntime passes explicit shard ownership into shard-aware claims', async () => {
+  await closePgPool();
+
+  const poolConfig = {
+    connectionString: 'postgresql://user:pass@localhost:5432/dvt',
+  };
+  const pool = getPgPool(poolConfig);
+  let endCalls = 0;
+  let capturedSelection:
+    | {
+        shardIds?: readonly number[];
+      }
+    | undefined;
+
+  const originalEnd = pool.end;
+  const originalClose = PostgresStateStoreAdapter.prototype.close;
+  const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
+  const originalListPendingForClaim = PostgresStateStoreAdapter.prototype.listPendingForClaim;
+
+  pool.end = async function end(): Promise<void> {
+    endCalls += 1;
+  };
+  PostgresStateStoreAdapter.prototype.close = async function close(): Promise<void> {};
+  PostgresStateStoreAdapter.prototype.listPending = async function listPending(): Promise<never> {
+    throw new Error('listPending fallback should not be used for shard-aware runtime claims');
+  };
+  PostgresStateStoreAdapter.prototype.listPendingForClaim = async function listPendingForClaim(
+    _limit: number,
+    selection?: {
+      shardIds?: readonly number[];
+    }
+  ): Promise<[]> {
+    capturedSelection = selection;
+    return [];
+  };
+
+  try {
+    const runtime = await createOutboxWorkerRuntime(
+      loadActiveTestEnv({
+        NODE_ENV: 'test',
+        DATABASE_URL: 'postgresql://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+        DVT_OUTBOX_SHARD_COUNT: '4',
+        DVT_OUTBOX_OWNED_SHARD_IDS: '3,1',
+      }),
+      makeLogger()
+    );
+
+    const loop = runtime.start();
+    await waitFor(() => capturedSelection !== undefined);
+    await runtime.stop();
+    await loop;
+
+    assert.deepEqual(capturedSelection, { shardIds: [1, 3] });
+    assert.equal(endCalls, 1);
+  } finally {
+    pool.end = originalEnd;
+    PostgresStateStoreAdapter.prototype.close = originalClose;
+    PostgresStateStoreAdapter.prototype.listPending = originalListPending;
+    PostgresStateStoreAdapter.prototype.listPendingForClaim = originalListPendingForClaim;
     await closePgPool();
   }
 });

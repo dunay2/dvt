@@ -1,4 +1,4 @@
-import type { IsoUtcString, PlanRef, RunStatus } from '../types/contracts';
+import type { IsoUtcString, PlanRef, RunStatus } from '../types/contracts.js';
 
 export type EventType =
   | 'RunQueued'

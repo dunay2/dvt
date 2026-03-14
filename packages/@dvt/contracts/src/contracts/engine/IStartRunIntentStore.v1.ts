@@ -6,7 +6,7 @@
  * @version 1.0.0
  * @date 2026-03-05
  */
-import type { EngineRunRef } from '../../types/contracts';
+import type { EngineRunRef } from '../../types/contracts.js';
 
 export type StartRunIntentStatus = 'PENDING' | 'DISPATCHED' | 'RESOLVED' | 'EXPIRED';
 export type StartRunIntentTransitionTarget = Exclude<StartRunIntentStatus, 'PENDING'>;

@@ -83,6 +83,35 @@ pnpm db:migrate
 
 **Status:** Functional (Issue #6 real PostgreSQL persistence enabled).
 
+### `outbox-worker-canary-evidence.ps1`
+
+Captures external canary evidence for the standalone outbox worker.
+
+**What it does:**
+
+- waits for `/readyz` to return `200` with `owner=true`
+- captures baseline and final `/metrics`
+- runs exactly one trigger via `-TriggerCommand` or `-PsqlDsn`
+- writes an evidence doc under `docs/evidence/ED-<date>-g5-canary-<env>.md`
+- captures a `kubectl` deployment snapshot only when `kubectl` and the current cluster context are reachable
+
+**Usage:**
+
+```powershell
+.\scripts\outbox-worker-canary-evidence.ps1 `
+  -EnvironmentName dev-canary `
+  -WorkerAdminUrl http://127.0.0.1:9464 `
+  -Namespace dvt `
+  -Deployment outbox-worker `
+  -ShardCount 1 `
+  -TriggerCommand "Write-Output 'replace with the real environment trigger command'"
+```
+
+**Fallback mode:**
+
+- `-PsqlDsn` inserts one `RunQueued` outbox row directly when no environment-native trigger path exists.
+- `-TriggerCommand` is preferred when the environment already has a real write-side trigger available.
+
 ### `validate-rfc2119.cjs`
 
 Scans contract markdown files under `docs/architecture/engine/contracts/**.md` and detects
