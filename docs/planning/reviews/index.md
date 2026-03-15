@@ -12,9 +12,9 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 ## Index
 
 - ['DVT+ Architectural Review — Pass 2'](DVT+_Architectural_Review_Pass_2.md)
-- [20260305 Review](20260305%20review.md)
+- [20260305 Review](20260305-review.md)
 - [20260314 Domain Cohesion Review](20260314-domain-cohesion-review.md)
-- [20260314 Review](20260314%20review.md)
+- [20260314 Review](20260314-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](ARCH_DOC_CONSOLIDATION_MATRIX_20260307.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
 - [DVT+ — Consolidated Architectural Review](DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md)
