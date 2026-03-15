@@ -206,7 +206,7 @@ After conflict fallback, validate that the stored row matches the requested iden
 If not, throw a dedicated conflict error such as:
 
 ```ts
-IntentCreateConflictError
+IntentCreateConflictError;
 ```
 
 ### Severity
@@ -767,50 +767,65 @@ Its purpose is to ensure that intent creation and subsequent transition reconcil
 ## 14.3. Constructor dependencies
 
 ### `pool?: Pool`
+
 Allows external connection management.
 
 ### `connectionString?: string`
+
 Fallback when no pool is injected.
 
 ### `schema?: string`
+
 Schema name, normalized via `normalizeSchema(...)`.
 
 ### `now?: () => string`
+
 Clock injection for deterministic testing.
 
 ### `statementTimeoutMs?: number`
+
 Postgres statement timeout.
 
 ### `queryTimeoutMs?: number`
+
 Postgres query timeout.
 
 ### `schemaManager?: StartRunIntentSchemaManager`
+
 Schema bootstrap collaborator.
 
 ## 14.4. Public API behavior
 
 ### `migrate(): Promise<void>`
+
 Initializes required schema objects. Must be called before operational methods.
 
 ### `close(): Promise<void>`
+
 Ends the pool only if the store owns it.
 
 ### `createIntent(input: CreateIntentInput): Promise<StartRunIntent>`
+
 Creates a new `PENDING` intent or returns the existing one for the same identity. Should reject conflicting duplicate identity tuples.
 
 ### `markDispatched(intentId, engineRunRef): Promise<void>`
+
 Marks the intent as `DISPATCHED`. Should become idempotent for duplicate-success replay.
 
 ### `markResolved(intentId): Promise<void>`
+
 Marks the intent as `RESOLVED` when valid.
 
 ### `markExpired(intentId): Promise<void>`
+
 Marks the intent as `EXPIRED` when valid.
 
 ### `listOrphaned(thresholdMs, nowMs, limit?): Promise<StartRunIntent[]>`
+
 Returns intents older than the cutoff according to orphan semantics. The time basis should be state-aware.
 
 ### `getIntent(intentId): Promise<StartRunIntent | null>`
+
 Reads the current persisted intent by identifier. Should be tenant-scoped.
 
 ---

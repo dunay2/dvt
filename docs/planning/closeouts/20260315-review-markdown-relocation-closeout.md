@@ -85,16 +85,16 @@ code directories, and update any references that still point to `packages/**`.
 
 ## Changes made
 
-| File | Change | Why |
-| ---- | ------ | --- |
-| `docs/planning/reviews/PostgresStateStoreAdapter_Refactor_Review.md` | Added canonical review copy under `docs/` | Remove dependence on code-directory prose |
-| `docs/planning/reviews/StartRunIntentSchemaManager_Architecture_Review.md` | Added canonical review copy under `docs/` | Keep review content in approved documentation tree |
-| `docs/planning/reviews/RunPlanWorkflow_Architecture_Review.md` | Added canonical review copy under `docs/` | Keep workflow architecture review outside `src/` |
-| `docs/planning/reviews/WorkflowHelpers_Architecture_Review.md` | Added canonical review copy under `docs/` | Keep helper architecture review outside `src/` |
-| `docs/planning/reviews/PostgresStartRunIntentStore_QA_Review.md` | Added canonical review copy under `docs/` | Preserve the QA review while removing `src/` copies locally |
-| `docs/planning/reviews/index.md` | Regenerated review index | Make the relocated reviews discoverable |
-| `docs/planning/index.md` | Regenerated planning index | Keep planning navigation aligned |
-| `docs/planning/closeouts/20260315-review-markdown-relocation-closeout.md` | Added mandatory closeout | Record think-first and validation evidence |
+| File                                                                       | Change                                    | Why                                                         |
+| -------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------- |
+| `docs/planning/reviews/PostgresStateStoreAdapter_Refactor_Review.md`       | Added canonical review copy under `docs/` | Remove dependence on code-directory prose                   |
+| `docs/planning/reviews/StartRunIntentSchemaManager_Architecture_Review.md` | Added canonical review copy under `docs/` | Keep review content in approved documentation tree          |
+| `docs/planning/reviews/RunPlanWorkflow_Architecture_Review.md`             | Added canonical review copy under `docs/` | Keep workflow architecture review outside `src/`            |
+| `docs/planning/reviews/WorkflowHelpers_Architecture_Review.md`             | Added canonical review copy under `docs/` | Keep helper architecture review outside `src/`              |
+| `docs/planning/reviews/PostgresStartRunIntentStore_QA_Review.md`           | Added canonical review copy under `docs/` | Preserve the QA review while removing `src/` copies locally |
+| `docs/planning/reviews/index.md`                                           | Regenerated review index                  | Make the relocated reviews discoverable                     |
+| `docs/planning/index.md`                                                   | Regenerated planning index                | Keep planning navigation aligned                            |
+| `docs/planning/closeouts/20260315-review-markdown-relocation-closeout.md`  | Added mandatory closeout                  | Record think-first and validation evidence                  |
 
 ## Libraries evaluated
 
@@ -108,12 +108,12 @@ None.
 
 ## Test evidence
 
-| Command | Result |
-| ------- | ------ |
-| `pnpm docs:sync` | PASS |
-| `pnpm exec markdownlint-cli2 "docs/planning/reviews/PostgresStateStoreAdapter_Refactor_Review.md" "docs/planning/reviews/StartRunIntentSchemaManager_Architecture_Review.md" "docs/planning/reviews/RunPlanWorkflow_Architecture_Review.md" "docs/planning/reviews/WorkflowHelpers_Architecture_Review.md" "docs/planning/reviews/PostgresStartRunIntentStore_QA_Review.md" "docs/planning/closeouts/20260315-review-markdown-relocation-closeout.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc` | PASS |
-| `pnpm docs:quality:check` | PASS with pre-existing non-English warnings outside this slice |
-| `pnpm docs:canonical:check` | PASS |
+| Command                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Result                                                         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `pnpm docs:sync`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | PASS                                                           |
+| `pnpm exec markdownlint-cli2 "docs/planning/reviews/PostgresStateStoreAdapter_Refactor_Review.md" "docs/planning/reviews/StartRunIntentSchemaManager_Architecture_Review.md" "docs/planning/reviews/RunPlanWorkflow_Architecture_Review.md" "docs/planning/reviews/WorkflowHelpers_Architecture_Review.md" "docs/planning/reviews/PostgresStartRunIntentStore_QA_Review.md" "docs/planning/closeouts/20260315-review-markdown-relocation-closeout.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc` | PASS                                                           |
+| `pnpm docs:quality:check`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | PASS with pre-existing non-English warnings outside this slice |
+| `pnpm docs:canonical:check`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | PASS                                                           |
 
 ## Debt introduced
 
