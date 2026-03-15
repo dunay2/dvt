@@ -83,20 +83,20 @@ Minimum tuple for this document:
 
 ### Execution And Adapters
 
-| Area              | Packages                   | Status             | Notes                                                                                                                                |
-| ----------------- | -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Workflow engine   | `@dvt/engine`              | Partial            | Core engine exists and remains the largest architecture surface; standalone projector and some runtime separations remain open       |
-| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately |
-| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and treated as closed in current gap tracking                          |
-| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                        |
+| Area              | Packages                   | Status             | Notes                                                                                                                                    |
+| ----------------- | -------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflow engine   | `@dvt/engine`              | Closed for Phase 1 | Core engine, standalone projector worker, provider run-id reconciliation, and snapshot catch-up loop all delivered; G7 closed 2026-03-15 |
+| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately     |
+| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and treated as closed in current gap tracking                              |
+| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                            |
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                                      | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| -------------- | ------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                   | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                                                                                                        |
-| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10                                                                                                                                                                                  |
-| Read models    | engine and infra follow-up                                    | Partial            | In-process projection exists and rejects terminal-state rewrites via `InvalidStateTransitionError`; `WorkflowEngine` can pre-bootstrap `RunQueued` before `adapter.startRun()` when an adapter provides `estimateRunRef`; G7.1 closed 2026-03-14 with numbered migration `004`, `rebuildSnapshot` on `IRunStateStore`, Postgres and in-memory implementations, index-backed `snapshot_status`, and admin rebuild endpoint; G7.2 and G7.3 remain open |
+| Area           | Packages                                                          | Status             | Notes                                                                                                                                                                                                                                                                                                                                                         |
+| -------------- | ----------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                 |
+| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10                                                                                           |
+| Read models    | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | G7 closed 2026-03-15: `run_snapshots` numbered migration (`004`), `rebuildSnapshot` + `listStaleSnapshotRuns` + `saveProviderRef` on `IRunStateStore`, `ProjectorWorkerRuntime` in `@dvt/delivery`, `apps/projector-worker` standalone process, provider execution-ID reconciliation in engine pre-bootstrap path; 235/235 engine tests, 22/22 delivery tests |
 
 ### Observability And Traceability
 
@@ -108,9 +108,17 @@ Minimum tuple for this document:
   mapper/resolver package with tests; `_schemaURL` pinned; repo-local contract
   artifacts committed; golden fixtures for all 3 mapper paths; offline AJV
   schema validation for both emitted facets; 13/13 tests pass (2026-03-12);
-  runtime delivery hardening remains Phase 2 under G10.
-- future `outbox_lineage` flow (`Pending`):
-  delivery worker and fail-open DLQ policy are still Phase 2 work.
+  runtime delivery hardening closed under G10 on 2026-03-15.
+- `outbox_lineage` flow (`Closed for Phase 1`):
+  G10 closed 2026-03-15: `lineage_outbox` + `lineage_dead_letter` migration,
+  `ILineageSink` + `ILineageOutboxStore` contracts, `PostgresLineageOutboxStore`,
+  `LineageOutboxObserver` (fail-soft bridge), `LineageWorkerRuntime` with
+  per-record retry and DLQ, `HttpOpenLineageSink` (Marquez-compatible),
+  `apps/lineage-worker` standalone process; validation passed for
+  `LineageWorkerRuntime.test.ts` (14/14), `pnpm --filter @dvt/delivery test`
+  (14/14), `pnpm --filter @dvt/adapter-postgres test` (13/13 with 23 skipped),
+  `pnpm --filter @dvt/traceability-service build`, and
+  `pnpm --filter dvt-lineage-worker typecheck`.
 
 ## Gap Summary
 
@@ -122,10 +130,10 @@ Minimum tuple for this document:
 | G4  | compiledCodeRef ownership                    | Closed        |
 | G5  | Independent outbox worker runtime            | Closed        |
 | G6  | OpenLineage mapping tests plus schema pin    | Closed        |
-| G7  | Standalone projector and read models         | Partial       |
+| G7  | Standalone projector and read models         | Closed        |
 | G8  | API auth hardening                           | Closed        |
 | G9  | StepTypeRegistry plus typed `stepTypeConfig` | Closed        |
-| G10 | `outbox_lineage` worker plus fail-open DLQ   | Pending       |
+| G10 | `outbox_lineage` worker plus fail-open DLQ   | Closed        |
 
 For closure criteria, evidence, and exact verification commands, use
 [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md).
@@ -149,3 +157,95 @@ For closure criteria, evidence, and exact verification commands, use
   [Contracts Index](../contracts/index.md)
 - Planning and execution debt:
   [Planning](../planning/index.md)
+
+## System Element Diagrams (from Closeouts)
+
+### Workflow Engine Relationships
+
+See [workflowengine-separation-closeout.md](../planning/closeouts/workflowengine-separation-closeout.md):
+
+```mermaid
+classDiagram
+    WorkflowEngine <|-- StartRunCoordinator
+    WorkflowEngine <|-- RunStatusReader
+    WorkflowEngine <|-- RunSignalService
+    WorkflowEngine <|-- EngineHealthReporter
+    StartRunCoordinator --> IProviderAdapter
+    RunStatusReader --> IProviderAdapter
+    RunSignalService --> IProviderAdapter
+    EngineHealthReporter --> IProviderAdapter
+```
+
+### Engine Domain Structure
+
+See [workflowengine-separation-closeout.md](../planning/closeouts/workflowengine-separation-closeout.md):
+
+```mermaid
+classDiagram
+    class WorkflowEngine {
+        +startRun()
+        +getRunStatus()
+        +signal()
+        +healthCheck()
+    }
+    class StartRunCoordinator {
+        +startRun()
+    }
+    class RunStatusReader {
+        +getRunStatus()
+    }
+    class RunSignalService {
+        +signal()
+    }
+    class EngineHealthReporter {
+        +pingAll()
+    }
+    class IProviderAdapter {
+        +startRun()
+        +getRunStatus()
+        +signal()
+        +ping()
+    }
+    WorkflowEngine <|-- StartRunCoordinator
+    WorkflowEngine <|-- RunStatusReader
+    WorkflowEngine <|-- RunSignalService
+    WorkflowEngine <|-- EngineHealthReporter
+    StartRunCoordinator --> IProviderAdapter
+    RunStatusReader --> IProviderAdapter
+    RunSignalService --> IProviderAdapter
+    EngineHealthReporter --> IProviderAdapter
+```
+
+### RunMetadata Field Relationships
+
+See [providerRunId-semantics-closeout.md](../planning/closeouts/providerRunId-semantics-closeout.md):
+
+```mermaid
+classDiagram
+    class RunMetadata {
+        +requestedRunId
+        +providerExecutionRunId
+        +providerRunId
+    }
+    RunMetadata <.. WorkflowEngine
+    WorkflowEngine <.. IProviderAdapter
+```
+
+### Reconciliation Flow
+
+See [providerRunId-semantics-closeout.md](../planning/closeouts/providerRunId-semantics-closeout.md):
+
+```mermaid
+sequenceDiagram
+    participant Engine as WorkflowEngine
+    participant Adapter as IProviderAdapter
+    participant Store as StateStore
+    Engine->>Adapter: estimateRunRef()
+    Adapter-->>Engine: requestedRunId
+    Engine->>Store: bootstrapRunTx(requestedRunId)
+    Engine->>Adapter: startRun()
+    Adapter-->>Engine: providerExecutionRunId
+    Engine->>Store: update RunMetadata (providerExecutionRunId)
+```
+
+---

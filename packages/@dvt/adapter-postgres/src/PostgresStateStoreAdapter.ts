@@ -13,6 +13,7 @@
  */
 import { Pool, type PoolClient } from 'pg';
 
+import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
 import { PostgresOutboxStore, normalizeOutboxShardCount } from './PostgresOutboxStore.js';
 import { PostgresRunEventStore } from './PostgresRunEventStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
@@ -69,6 +70,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   private readonly metadataRepo: PostgresRunMetadataRepository;
   private readonly eventStore: PostgresRunEventStore;
   private readonly snapshotStore: PostgresRunSnapshotStore;
+  readonly lineageOutboxStore: PostgresLineageOutboxStore;
 
   constructor(readonly config: PostgresAdapterConfig = {}) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
@@ -117,6 +119,9 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       this.now,
       (fn) => this.withTransaction(fn),
       (fn) => this.withClient(fn)
+    );
+    this.lineageOutboxStore = new PostgresLineageOutboxStore(this.schema, (fn) =>
+      this.withClient(fn)
     );
     if (config.assumeSchemaReady) {
       this.schemaManager.markReady();

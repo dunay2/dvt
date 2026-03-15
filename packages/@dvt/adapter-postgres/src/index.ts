@@ -28,11 +28,9 @@ export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
 export type { PostgresStartRunIntentStoreConfig } from './PostgresStartRunIntentStore.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
-export { PostgresOutboxStore } from './PostgresOutboxStore.js';
-export { PostgresRunEventStore } from './PostgresRunEventStore.js';
 export { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
+export { PostgresRunEventStore } from './PostgresRunEventStore.js';
 export { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
-export { PostgresSchemaManager } from './PostgresSchemaManager.js';
 export { PostgresStartRunIntentStore } from './PostgresStartRunIntentStore.js';
 export { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
 export {
@@ -43,3 +41,4 @@ export {
   StoreNotReadyError,
 } from '@dvt/contracts';
 export { PostgresRunStateCommandPortBridge } from './runStateCommandPortBridge.js';
+export { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';

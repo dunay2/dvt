@@ -10,3 +10,4 @@ export * from './readers/CompositeCompiledCodeReader.js';
 export * from './resolver/CachedRetryCompiledCodeResolver.js';
 export * from './facets/SqlJobFacetBuilder.js';
 export * from './mapper/StepStartedLineageMapper.js';
+export * from './HttpOpenLineageSink.js';

@@ -49,10 +49,10 @@ Minimum tuple for this document:
 | G4  | compiledCodeRef ownership                 | Phase 1   | Closed        |
 | G5  | Outbox worker independiente               | Phase 1.5 | Closed        |
 | G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed        |
-| G7  | Read models + standalone projector        | Phase 1.5 | Partial       |
+| G7  | Read models + standalone projector        | Phase 1.5 | Closed        |
 | G8  | Auth real en apps/api                     | Phase 1.5 | Closed        |
 | G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Closed        |
-| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Pending       |
+| G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Closed        |
 
 ## Confirmed Progress Since Previous Draft
 
@@ -237,7 +237,9 @@ Minimum tuple for this document:
 
 ### G7 - Read models + standalone projector
 
-- Status: Partial
+- Status: Closed
+- Closed: 2026-03-15
+- Evidence: [`docs/evidence/ED-20260315-g7-closeout.md`](../../evidence/ED-20260315-g7-closeout.md)
 - Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
@@ -252,15 +254,16 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
     `InMemoryRunStateStore`, and `InMemoryTxStore`; `listRuns` status filter
     now uses the generated column (index-backed); `DVT_ADMIN_ROUTES_ENABLED`
     flag + `POST /admin/runs/:runId/rebuild-snapshot` wired in `dvt-api`
-- Remaining:
-  - G7.2 standalone projector runtime (`ProjectorWorkerRuntime` in
-    `@dvt/delivery`, `apps/projector-worker` composition root)
-  - denormalized read models and indexes for production read paths
-  - G7.3 provider execution-id reconciliation (`updateProviderRunRef` after
-    `adapter.startRun()` returns the real `firstExecutionRunId`) when a
-    pre-bootstrap adapter can only compute an approximate provider run id
-    before start
-  - G7.4 evidence doc + full closeout
+  - G7.2 (2026-03-15): `listStaleSnapshotRuns?(batchSize)` added to `IRunStateStore`
+    (contracts + engine-internal); implemented in `PostgresStateStoreAdapter`;
+    `ProjectorWorkerRuntime` added to `@dvt/delivery`; `apps/projector-worker`
+    composition root created (env validation, admin `/healthz`, SIGTERM/SIGINT)
+  - G7.3 (2026-03-15): `saveProviderRef?(tenantId, runId, update)` added to
+    `IRunStateStore`; `InMemoryRunStateStore` + `InMemoryTxStore` updated to
+    unified signature; `WorkflowEngine` pre-bootstrap path calls `saveProviderRef`
+    fail-soft when `adapter.startRun()` returns a different `runId` than
+    `estimateRunRef()`; 3 new tests (reconcile/no-op/fail-soft), 235/235 pass
+- Remaining: none
 
 ### G8 - Auth real en apps/api
 
@@ -335,18 +338,33 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
 
 ### G10 - outbox_lineage worker + fail-open DLQ
 
-- Status: Pending
-- Target:
-  - lineage delivery worker, DLQ, fail-open behavior for external lineage sinks
-  - explicit worker parameters: poll interval, batch size, ordering, retry, and lag metrics
+- Status: Closed
+- Closed: 2026-03-15
+- Evidence: [`docs/evidence/ED-20260315-g10-closeout.md`](../../evidence/ED-20260315-g10-closeout.md)
+- Active tracker: [G10 - AI Execution Tracker](G10-AI-EXECUTION-TRACKER.md)
+- Delivered:
+  - `ILineageSink` and `ILineageOutboxStore` contract interfaces in `@dvt/contracts`
+  - `lineage_outbox` + `lineage_dead_letter` tables as migration `005`
+  - `PostgresLineageOutboxStore` — enqueue, listPending, markDelivered, markFailed, deadLetter
+  - `PostgresStateStoreAdapter` exposes `lineageOutboxStore` field
+  - `LineageOutboxObserver` — `OutboxWorkerObserver` that enqueues `StepStarted` events fail-soft
+  - `LineageWorkerRuntime` in `@dvt/delivery` — poll loop, `runOnce()`, `lagCount`, per-record retry, DLQ at `MAX_LINEAGE_ATTEMPTS=5`
+  - `HttpOpenLineageSink` in `@dvt/traceability-service` — HTTP POST to Marquez-compatible OL API
+  - `apps/lineage-worker` standalone process (env validation, `/healthz`, SIGTERM/SIGINT)
+  - validation: `pnpm exec vitest run packages/@dvt/delivery/test/LineageWorkerRuntime.test.ts` -> 14/14,
+    `pnpm --filter @dvt/delivery test` -> 14/14,
+    `pnpm --filter @dvt/adapter-postgres test` -> 13/13 with 23 skipped,
+    `pnpm --filter @dvt/traceability-service build` -> clean,
+    `pnpm --filter dvt-lineage-worker typecheck` -> clean
+- Remaining: none
 
 ## Execution Order (Updated)
 
 Recommended order for next cycles:
 
-1. Continue `G7` standalone projector and read-model work.
-2. Prepare and execute `G10` after the remaining Phase 1.5 follow-up (`G7`) is
-   stable and the `G5`/`G6` delivery-runtime boundaries remain explicit.
+1. Use subsequent planning cycles for post-gap hardening and operational follow-up.
+2. Keep `G10` evidence and runtime ownership explicit if later OpenLineage
+   enhancement slices are opened.
 
 Parallel execution track detail:
 

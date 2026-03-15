@@ -55,7 +55,13 @@
       "@dvt/observability-otel": [
         "packages/@dvt/observability-otel/src/index.ts"
       ],
-      "@dvt/observability-otel/*": ["packages/@dvt/observability-otel/src/*"]
+      "@dvt/observability-otel/*": ["packages/@dvt/observability-otel/src/*"],
+      "@dvt/traceability-service": [
+        "packages/@dvt/traceability-service/src/index.ts"
+      ],
+      "@dvt/traceability-service/*": [
+        "packages/@dvt/traceability-service/src/*"
+      ]
     }
   },
   "include": ["packages/**/src/**/*.ts", "packages/**/index.ts"],
