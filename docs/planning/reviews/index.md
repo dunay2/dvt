@@ -21,6 +21,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 - [DVT+ — Consolidated Architectural Review](DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md)
 - [DVT+ Review Action Plan](DVT_review_action_plan_2026-03-14.md)
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](PostgresStateStoreAdapter_Refactor_Review.md)
+- [QA Review and Class Documentation — `PostgresStartRunIntentStore`](PostgresStartRunIntentStore_QA_Review.md)
 - [RunPlanWorkflow — Architecture Review, Refactor Map, and Mermaid Diagrams](RunPlanWorkflow_Architecture_Review.md)
 - [StartRunIntentSchemaManager — QA, Architecture Review, and Refactor Proposal](StartRunIntentSchemaManager_Architecture_Review.md)
 
