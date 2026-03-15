@@ -50,7 +50,10 @@ describe('PostgresStateStoreAdapter migration state', () => {
 
     await expect(adapter.listPending(0)).resolves.toEqual([]);
     expect(
-      (adapter as unknown as { migratePromise: Promise<void> | null }).migratePromise
+      (
+        (adapter as unknown as { schemaManager: { migratePromise: Promise<void> | null } })
+          .schemaManager
+      ).migratePromise
     ).toBeNull();
     expect(connectCalls).toBe(0);
   });
