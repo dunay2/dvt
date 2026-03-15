@@ -1,23 +1,13 @@
-import type { EngineRunRef, IProviderAdapter } from '@dvt/engine';
 import type { ISpan } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
-import type { Logger } from 'pino';
 
-import { AuthorizeCommandScopeService } from './application/services/authorizeCommandScopeService.js';
-import { EngineStartRunUseCase } from './application/services/engineStartRunUseCase.js';
-import { StartRunAuthorizedFacade } from './application/services/startRunAuthorizedFacade.js';
-import { buildWorkflowEngine } from './application/services/WorkflowEngineFactory.js';
-import { getPgPool } from './db/pool.js';
-import { TenantHierarchyAuthorizationPolicy } from './domain/auth/policy.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
-import { StructuredAuditLogger } from './infrastructure/audit/structuredAuditLogger.js';
-import { JwksJwtVerifier } from './infrastructure/auth/jwksJwtVerifier.js';
-import { OidcAuthenticator } from './infrastructure/auth/oidcAuthenticator.js';
-import { PostgresPrincipalAccessRepository } from './infrastructure/auth/postgresPrincipalAccessRepository.js';
+import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
+import { registerOperationalHooks } from './modules/registerOperationalHooks.js';
 import { loadEnv, type Env } from './plugins/env.js';
 import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
@@ -35,13 +25,6 @@ const REQUEST_SPAN = Symbol('requestSpan');
 type RequestWithSpan = FastifyRequest & {
   [REQUEST_SPAN]?: ISpan;
 };
-
-function requireDatabaseUrlForProtectedRoutes(env: Env): string {
-  if (!env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is required when OIDC-protected runtime routes are enabled');
-  }
-  return env.DATABASE_URL;
-}
 
 export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContext }> {
   const env = loadEnv(process.env);
@@ -126,102 +109,20 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
   // Protected runtime routes — wired only when OIDC is fully configured
   if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) {
-    const databaseUrl = requireDatabaseUrlForProtectedRoutes(env);
-    const pool = getPgPool(databaseUrl);
-    const accessRepo = new PostgresPrincipalAccessRepository(pool, env.DVT_PG_SCHEMA);
-    const auditLogger = new StructuredAuditLogger(app.log as unknown as Logger);
-    const policy = new TenantHierarchyAuthorizationPolicy();
-    const authorizer = new AuthorizeCommandScopeService(
-      accessRepo,
-      policy,
-      auditLogger,
-      () => new Date()
-    );
-    const authenticator = new OidcAuthenticator(
-      new JwksJwtVerifier({
-        jwksUri: env.OIDC_JWKS_URI,
-        issuer: env.OIDC_ISSUER,
-        audience: env.OIDC_AUDIENCE,
-        algorithms: env.OIDC_ALGORITHMS.split(',').map((a) => a.trim()),
-      })
-    );
-    const [engineMod, engineTestingMod, adapterMod] = await Promise.all([
-      import('@dvt/engine'),
-      import('@dvt/engine/testing'),
-      import('@dvt/adapter-postgres'),
-    ]);
-    const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
-    const { MockAdapter } = engineTestingMod;
-    const { PostgresStartRunIntentStore, PostgresStateStoreAdapter } = adapterMod;
-
-    const stateAdapter = new PostgresStateStoreAdapter({ connectionString: databaseUrl });
-    const intentStore = new PostgresStartRunIntentStore({ connectionString: databaseUrl });
-    const projector = new SnapshotProjector();
-    const mockAdapter = new MockAdapter({ stateStore: stateAdapter, projector });
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
-
-    if (env.TEMPORAL_ADDRESS) {
-      const { TemporalAdapter, TemporalClientManager, loadTemporalAdapterConfig } =
-        await import('@dvt/adapter-temporal');
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_ADDRESS: env.TEMPORAL_ADDRESS,
-        TEMPORAL_NAMESPACE: env.TEMPORAL_NAMESPACE,
-        TEMPORAL_TASK_QUEUE: env.TEMPORAL_TASK_QUEUE,
-        TEMPORAL_IDENTITY: env.TEMPORAL_IDENTITY,
-        TEMPORAL_CONNECT_TIMEOUT_MS: env.TEMPORAL_CONNECT_TIMEOUT_MS,
-        TEMPORAL_REQUEST_TIMEOUT_MS: env.TEMPORAL_REQUEST_TIMEOUT_MS,
-        TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
-      });
-      const temporalClientManager = new TemporalClientManager(temporalConfig, observability);
-      const temporalAdapter = new TemporalAdapter({
-        clientManager: temporalClientManager,
-        config: temporalConfig,
-        stateStore: stateAdapter,
-        projector,
-      });
-      adapters.set('temporal', temporalAdapter);
-      app.addHook('onClose', async () => {
-        await temporalClientManager.close();
-      });
-      app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
-    }
-
-    const engine = buildWorkflowEngine({
-      persistence: { stateStore: stateAdapter, intentStore },
-      security: {
-        authorizer: new AllowAllAuthorizer(),
-        planRefAllowedSchemes: ['https', 's3', 'gs', 'azure'],
-      },
-      runtime: { adapters },
-      infrastructure: {
-        clock: { nowIsoUtc: () => new Date().toISOString() },
-        observability,
-      },
-    });
-
-    const facade = new StartRunAuthorizedFacade(
-      authenticator,
-      authorizer,
-      new EngineStartRunUseCase(engine)
-    );
-
-    app.addHook('onReady', async () => {
-      await accessRepo.migrate();
-      await stateAdapter.migrate();
-      await intentStore.migrate();
-    });
+    const protectedModule = await buildProtectedRuntimeModule(app, env, observability);
+    registerOperationalHooks(app, protectedModule);
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       '/runs/start',
-      async (request, reply) => startRunRoute(request as never, reply, facade)
+      async (request, reply) => startRunRoute(request as never, reply, protectedModule.facade)
     );
 
-    app.log.info('protected runtime routes registered: POST /runs/start');
-
     if (env.DVT_ADMIN_ROUTES_ENABLED) {
-      registerAdminRoutes(app, stateAdapter);
+      registerAdminRoutes(app, protectedModule.stateStore);
       app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
     }
+
+    app.log.info('protected runtime routes registered: POST /runs/start');
   } else {
     app.log.warn(
       'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) — protected runtime endpoints are disabled'
