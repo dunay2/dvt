@@ -9,6 +9,14 @@
 -- Compatible with Postgres 12+ (GENERATED ALWAYS AS ... STORED).
 -- Safe to re-run: all statements use IF NOT EXISTS / IF EXISTS guards.
 
+CREATE TABLE IF NOT EXISTS __SCHEMA__.run_snapshots (
+  run_id TEXT PRIMARY KEY,
+  snapshot JSONB NOT NULL,
+  snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED,
+  last_run_seq INTEGER NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
 ALTER TABLE __SCHEMA__.run_snapshots
 ADD COLUMN IF NOT EXISTS snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED;
 

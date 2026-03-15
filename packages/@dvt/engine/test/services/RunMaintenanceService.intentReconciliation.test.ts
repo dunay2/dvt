@@ -86,6 +86,9 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
+      async lookupRunRef() {
+        return null;
+      },
       async cancelRun() {},
       async getRunStatus(runRef) {
         return { runId: runRef.runId, status: 'RUNNING' } as any;
@@ -201,17 +204,11 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(intent?.status).toBe('PENDING');
   });
 
-  it('resolves PENDING intent without cancel when run metadata already exists', async () => {
+  it('keeps PENDING intent unresolved when run metadata exists but provider lookup finds no workflow', async () => {
     const cancelledRefs: EngineRunRef[] = [];
     const { service, store, intentStore, clock } = createFixture({
       async lookupRunRef(runId: string, tenantId: string) {
-        return {
-          provider: 'temporal',
-          tenantId,
-          namespace: 'default',
-          workflowId: `wf-${runId}`,
-          runId,
-        } as EngineRunRef;
+        return null;
       },
       async cancelRun(ref: EngineRunRef) {
         cancelledRefs.push(ref);
@@ -246,13 +243,39 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
       thresholdMs: 0,
     });
 
-    expect(result.cancelled).toContain('pending-intent-with-meta');
+    expect(result.cancelled).toEqual([]);
     expect(result.expired).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
     expect(cancelledRefs).toEqual([]);
 
     const intent = await intentStore.getIntent('pending-intent-with-meta');
-    expect(intent?.status).toBe('RESOLVED');
+    expect(intent?.status).toBe('PENDING');
+  });
+
+  it('keeps PENDING intent unresolved when provider lookup is unsupported', async () => {
+    const { service, intentStore, idempotency, clock } = createFixture({
+      lookupRunRef: undefined,
+    });
+
+    const intentId = idempotency.eventId();
+    await intentStore.createIntent({
+      intentId,
+      tenantId: 't',
+      runId: 'pending-without-lookup',
+      provider: 'temporal',
+      createdAt: clock.nowIsoUtc(),
+    });
+
+    const result = await service.reconcileOrphanedIntents({
+      thresholdMs: 0,
+    });
+
+    expect(result.expired).toEqual([]);
+    expect(result.cancelled).toEqual([]);
+    expect(result.cancelFailed).toEqual([]);
+
+    const intent = await intentStore.getIntent(intentId);
+    expect(intent?.status).toBe('PENDING');
   });
 
   it('cancels provider workflow for DISPATCHED intent with no bootstrapped run', async () => {

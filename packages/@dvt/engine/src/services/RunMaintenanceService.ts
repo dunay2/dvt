@@ -193,26 +193,43 @@ export class RunMaintenanceService implements IRunMaintenanceService {
           .getRunMetadataByRunId(intent.tenantId, intent.runId)
           .catch(() => null);
 
-        if (existingMeta) {
-          await this.deps.intentStore.markResolved(intent.intentId);
-          cancelled.push(intent.intentId);
-          this.observability.logs.info({
-            msg: 'Resolved orphaned PENDING intent (run already bootstrapped)',
-            context: traceContext,
-            attributes: { intentId: intent.intentId, runId: intent.runId },
-          });
-          continue;
-        }
+        const adapter = this.deps.adapters.get(intent.provider);
 
         // ADR-0030 §3.3: A PENDING intent may still have an orphaned provider workflow if the
         // process crashed between adapter.startRun() returning and markDispatched() being called.
         // Use lookupRunRef (if the adapter supports it) to detect this case.
-        const adapter = this.deps.adapters.get(intent.provider);
-        const runRef = adapter?.lookupRunRef
-          ? await adapter.lookupRunRef(intent.runId, intent.tenantId).catch(() => null)
-          : null;
+        if (!adapter?.lookupRunRef) {
+          this.observability.logs.warn({
+            msg: 'Keeping orphaned PENDING intent unresolved because provider lookup is unsupported',
+            context: traceContext,
+            attributes: {
+              intentId: intent.intentId,
+              runId: intent.runId,
+              provider: intent.provider,
+              hasBootstrappedRun: String(existingMeta !== null),
+            },
+          });
+          continue;
+        }
 
-        if (runRef && adapter) {
+        let runRef: EngineRunRef | null = null;
+        try {
+          runRef = await adapter.lookupRunRef(intent.runId, intent.tenantId);
+        } catch (lookupErr) {
+          this.observability.logs.warn({
+            msg: 'Keeping orphaned PENDING intent unresolved because provider lookup failed',
+            context: traceContext,
+            err: lookupErr,
+            attributes: {
+              intentId: intent.intentId,
+              runId: intent.runId,
+              provider: intent.provider,
+            },
+          });
+          continue;
+        }
+
+        if (runRef) {
           // Workflow exists on the provider side without a DVT+ state record.
           // Cancel it before expiring the intent. On cancel failure, leave the intent as PENDING
           // so the next reconciliation sweep retries (INV-INTENT-011).
@@ -245,19 +262,32 @@ export class RunMaintenanceService implements IRunMaintenanceService {
               attributes: { intentId: intent.intentId, runId: intent.runId },
             });
           }
-        } else {
-          // No workflow found on provider side (or adapter does not support lookupRunRef).
-          await this.deps.intentStore.markExpired(intent.intentId);
-          expired.push(intent.intentId);
-          this.observability.logs.info({
-            msg: 'Expired orphaned PENDING intent (no provider workflow)',
-            context: traceContext,
-            attributes: { intentId: intent.intentId, runId: intent.runId },
-          });
-          this.observability.metrics
-            .counter('dvt.intent.expired_total', { operation: 'reconcileOrphanedIntents' })
-            .add(1);
+          continue;
         }
+
+        if (existingMeta) {
+          this.observability.logs.warn({
+            msg: 'Keeping orphaned PENDING intent unresolved because run is bootstrapped but provider workflow was not found',
+            context: traceContext,
+            attributes: {
+              intentId: intent.intentId,
+              runId: intent.runId,
+              provider: intent.provider,
+            },
+          });
+          continue;
+        }
+
+        await this.deps.intentStore.markExpired(intent.intentId);
+        expired.push(intent.intentId);
+        this.observability.logs.info({
+          msg: 'Expired orphaned PENDING intent (no provider workflow)',
+          context: traceContext,
+          attributes: { intentId: intent.intentId, runId: intent.runId },
+        });
+        this.observability.metrics
+          .counter('dvt.intent.expired_total', { operation: 'reconcileOrphanedIntents' })
+          .add(1);
       } else if (intent.status === 'DISPATCHED') {
         // Check if the run was actually bootstrapped (crash between bootstrap and markResolved).
         const existingMeta = await this.deps.stateStore
