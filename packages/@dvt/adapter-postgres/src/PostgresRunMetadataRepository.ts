@@ -10,11 +10,7 @@ import type { PoolClient } from 'pg';
 
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { quoteIdentifier } from './sqlUtils.js';
-import type {
-  ListRunsOptions,
-  RunId,
-  RunMetadata,
-} from './types.js';
+import type { ListRunsOptions, RunId, RunMetadata } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)

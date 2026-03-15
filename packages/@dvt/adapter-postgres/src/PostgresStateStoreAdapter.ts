@@ -198,7 +198,13 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   ): Promise<AppendResult> {
     const { appended, deduped, lastAppendedRunSeq, baseRunSeq } =
       await this.eventStore.appendWithClient(client, runId, envelopes);
-    await this.snapshotStore.updateWithClient(client, runId, appended, baseRunSeq, lastAppendedRunSeq);
+    await this.snapshotStore.updateWithClient(
+      client,
+      runId,
+      appended,
+      baseRunSeq,
+      lastAppendedRunSeq
+    );
     return { appended, deduped, lastSeq: lastAppendedRunSeq ?? baseRunSeq };
   }
 
@@ -223,7 +229,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           input.metadata.runId as RunId,
           input.firstEvents
         );
-        await this.outboxStore.enqueueWithClient(client, input.metadata.runId as RunId, append.appended);
+        await this.outboxStore.enqueueWithClient(
+          client,
+          input.metadata.runId as RunId,
+          append.appended
+        );
         return append;
       });
     } catch (error: unknown) {
