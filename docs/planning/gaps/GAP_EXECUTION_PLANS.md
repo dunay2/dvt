@@ -241,9 +241,23 @@ Minimum tuple for this document:
 - Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
+  - terminal-state transition guards with typed `InvalidStateTransitionError`
+  - `WorkflowEngine.startRun()` pre-bootstrap path for adapters that implement
+    `estimateRunRef`, so `RunQueued` can be committed before `adapter.startRun()`
+  - G7.1 (2026-03-14): `run_snapshots` promoted to numbered migration
+    (`004_run_snapshots_and_status_index.sql`); `snapshot_status TEXT GENERATED
+ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
+    `rebuildSnapshot(tenantId, runId)` added to `IRunStateStore` (contracts +
+    engine-internal), implemented in `PostgresStateStoreAdapter`,
+    `InMemoryRunStateStore`, and `InMemoryTxStore`; `listRuns` status filter
+    now uses the generated column (index-backed); `DVT_ADMIN_ROUTES_ENABLED`
+    flag + `POST /admin/runs/:runId/rebuild-snapshot` wired in `dvt-api`
 - Remaining:
-  - standalone projector service
-  - denormalized read models and indexes for production read paths
+  - G7.2 standalone projector runtime (`ProjectorWorkerRuntime` in
+    `@dvt/delivery`, `apps/projector-worker` composition root)
+  - G7.3 provider execution-id reconciliation (`updateProviderRunRef` after
+    `adapter.startRun()` returns the real `firstExecutionRunId`)
+  - G7.4 evidence doc + full closeout
 
 ### G8 - Auth real en apps/api
 

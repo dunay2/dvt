@@ -19,6 +19,7 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -144,12 +145,14 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: input?.observability ?? createNoopObservability(),
       adapters: input?.adapters ?? new Map(),
@@ -308,6 +311,80 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
     const events = await store.listEvents('t', 'fail-1');
     expect(events).toHaveLength(0);
+  });
+
+  it('pre-bootstraps RunQueued before adapter.startRun when estimateRunRef is available', async () => {
+    const store = new InMemoryTxStore();
+    let sawQueuedEventBeforeStart = false;
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+      async startRun(_planRef, ctx) {
+        const events = await store.listEvents(ctx.tenantId, ctx.runId);
+        sawQueuedEventBeforeStart = events.some((event) => event.eventType === 'RunQueued');
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+    });
+    const intentStore = new InMemoryStartRunIntentStore();
+    const engine = new WorkflowEngine({
+      stateStore: store,
+
+      projector: new SnapshotProjector(),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
+      intentStore,
+      observability: createNoopObservability(),
+      adapters,
+    });
+
+    await engine.startRun(makePlanRef(), makeContext('pre-bootstrap-1'));
+
+    expect(sawQueuedEventBeforeStart).toBe(true);
+    const events = await store.listEvents('t', 'pre-bootstrap-1');
+    expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
+  });
+
+  it('emits RunFailed after a pre-bootstrapped adapter.startRun failure', async () => {
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+      async startRun() {
+        throw new Error('provider failure after bootstrap');
+      },
+    });
+
+    const { engine, store } = createEngine({ adapters });
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('fail-after-bootstrap-1'))
+    ).rejects.toThrow(/provider failure after bootstrap/);
+
+    const events = await store.listEvents('t', 'fail-after-bootstrap-1');
+    expect(events.map((event) => event.eventType)).toEqual(['RunQueued', 'RunFailed']);
   });
 
   // ADR-0015: getRunStatus must not call the adapter under any circumstances.

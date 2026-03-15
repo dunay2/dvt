@@ -70,6 +70,7 @@ Concept anchors for this page:
 
 ## Reference
 
+- [Closeouts](closeouts/)
 - [Execution Model](execution-model/)
 - [Gaps](gaps/)
 - [Roadmap](roadmap/)

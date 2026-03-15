@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import process from 'node:process';
 import test from 'node:test';
 
+import adapterPostgresPkg from '@dvt/adapter-postgres';
 import { buildApp } from '../src/app.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
 
@@ -23,12 +24,20 @@ await test('buildApp wires observability and health endpoint works', async () =>
 });
 
 await test('buildApp migrates principal grants before serving protected runtime routes', async () => {
+  const { PostgresStartRunIntentStore, PostgresStateStoreAdapter } = adapterPostgresPkg as {
+    PostgresStateStoreAdapter: typeof import('@dvt/adapter-postgres').PostgresStateStoreAdapter;
+    PostgresStartRunIntentStore: typeof import('@dvt/adapter-postgres').PostgresStartRunIntentStore;
+  };
   const originalMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+  const originalStateMigrate = PostgresStateStoreAdapter.prototype.migrate;
+  const originalIntentMigrate = PostgresStartRunIntentStore.prototype.migrate;
   let migrateCalls = 0;
 
   PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {
     migrateCalls += 1;
   };
+  PostgresStateStoreAdapter.prototype.migrate = async function migrate() {};
+  PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
 
   process.env.OBS_ENABLED = 'false';
   process.env.NODE_ENV = 'test';
@@ -46,6 +55,8 @@ await test('buildApp migrates principal grants before serving protected runtime 
     await app.close();
   } finally {
     PostgresPrincipalAccessRepository.prototype.migrate = originalMigrate;
+    PostgresStateStoreAdapter.prototype.migrate = originalStateMigrate;
+    PostgresStartRunIntentStore.prototype.migrate = originalIntentMigrate;
     delete process.env.DATABASE_URL;
     delete process.env.OIDC_JWKS_URI;
     delete process.env.OIDC_ISSUER;

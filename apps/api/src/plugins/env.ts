@@ -28,6 +28,14 @@ const EnvSchema = z.object({
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   OTEL_SERVICE_NAME: z.string().optional(),
   OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
+  // Temporal — optional; when set, the Temporal adapter is registered alongside mock
+  TEMPORAL_ADDRESS: z.string().optional(),
+  TEMPORAL_NAMESPACE: z.string().optional(),
+  TEMPORAL_TASK_QUEUE: z.string().optional(),
+  TEMPORAL_IDENTITY: z.string().optional(),
+  TEMPORAL_CONNECT_TIMEOUT_MS: z.string().optional(),
+  TEMPORAL_REQUEST_TIMEOUT_MS: z.string().optional(),
+  TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: z.string().optional(),
   // OIDC / auth — all three required together when auth is enabled
   OIDC_JWKS_URI: z.string().optional(),
   OIDC_ISSUER: z.string().optional(),
@@ -37,6 +45,8 @@ const EnvSchema = z.object({
   DVT_READYZ_ENABLED: z.coerce.boolean().default(false),
   DVT_VERSION_ENABLED: z.coerce.boolean().default(false),
   DVT_DB_READY_ENABLED: z.coerce.boolean().default(false),
+  // Admin routes (snapshot repair, etc.) — disabled by default; never expose publicly
+  DVT_ADMIN_ROUTES_ENABLED: z.coerce.boolean().default(false),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

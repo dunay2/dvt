@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@dvt/adapter-postgres": "workspace:*",
+    "@dvt/adapter-temporal": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/observability": "workspace:*",
     "@dvt/observability-otel": "workspace:*",

@@ -189,6 +189,21 @@ export class RunMaintenanceService implements IRunMaintenanceService {
       if (dryRun) continue;
 
       if (intent.status === 'PENDING') {
+        const existingMeta = await this.deps.stateStore
+          .getRunMetadataByRunId(intent.tenantId, intent.runId)
+          .catch(() => null);
+
+        if (existingMeta) {
+          await this.deps.intentStore.markResolved(intent.intentId);
+          cancelled.push(intent.intentId);
+          this.observability.logs.info({
+            msg: 'Resolved orphaned PENDING intent (run already bootstrapped)',
+            context: traceContext,
+            attributes: { intentId: intent.intentId, runId: intent.runId },
+          });
+          continue;
+        }
+
         // ADR-0030 §3.3: A PENDING intent may still have an orphaned provider workflow if the
         // process crashed between adapter.startRun() returning and markDispatched() being called.
         // Use lookupRunRef (if the adapter supports it) to detect this case.

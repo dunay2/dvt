@@ -35,5 +35,6 @@ export * from './security/authorizer.js';
 export * from './security/AuthorizationError.js';
 export * from './security/planRefPolicy.js';
 export * from './security/planIntegrity.js';
+export * from './security/RunAccessPolicy.js';
 
 export * from './application/providerSelection.js';

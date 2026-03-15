@@ -12,9 +12,9 @@
  *   - Engine skips validation when adapter omits capabilities() (graceful degradation).
  *   - Matrix drift gate: adapter.capabilities() must match adapters.capabilities.json.
  */
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { EngineRunRef, PlanRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
@@ -28,6 +28,7 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -65,7 +66,7 @@ function makePlanRef(requiresCapabilities?: string[]): PlanRef {
     planId: 'cap-test',
     planVersion: '1.0.0',
     sizeBytes: bytes.byteLength,
-    ...(requiresCapabilities !== undefined ? { requiresCapabilities } : {}),
+    ...(requiresCapabilities === undefined ? {} : { requiresCapabilities }),
   };
 }
 
@@ -94,12 +95,14 @@ function createEngine(adapter?: IProviderAdapter): { engine: WorkflowEngine; moc
 
   const engine = new WorkflowEngine({
     stateStore: store,
-    outbox: store,
+
     projector,
     idempotency: new IdempotencyKeyBuilder(),
     clock: new SequenceClock('2026-02-23T00:00:00.000Z'),
-    authorizer: new AllowAllAuthorizer(),
-    planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    policy: new RunAccessPolicy({
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
     intentStore: new InMemoryStartRunIntentStore(),
     observability: createNoopObservability(),
     adapters: new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', effective]]),
@@ -215,14 +218,22 @@ describe('adapters.capabilities.json matrix drift gate', () => {
   it('mock adapter capabilities match the matrix', () => {
     const store = new InMemoryTxStore();
     const mock = new MockAdapter({ stateStore: store, projector: new SnapshotProjector() });
-    const declared = [...mock.capabilities()].sort();
-    const matrix = loadMatrix().adapters['mock']?.capabilities.slice().sort() ?? [];
+    const declared = [...mock.capabilities()].sort((a, b) => a.localeCompare(b));
+    const matrix =
+      loadMatrix()
+        .adapters['mock']?.capabilities.slice()
+        .sort((a, b) => a.localeCompare(b)) ?? [];
     expect(declared).toEqual(matrix);
   });
 
   it('conductor adapter capabilities match the matrix', () => {
-    const declared = [...new ConductorAdapterStub().capabilities()].sort();
-    const matrix = loadMatrix().adapters['conductor']?.capabilities.slice().sort() ?? [];
+    const declared = [...new ConductorAdapterStub().capabilities()].sort((a, b) =>
+      a.localeCompare(b)
+    );
+    const matrix =
+      loadMatrix()
+        .adapters['conductor']?.capabilities.slice()
+        .sort((a, b) => a.localeCompare(b)) ?? [];
     expect(declared).toEqual(matrix);
   });
 });

@@ -161,6 +161,23 @@ export interface IRunStateStore {
    * Callers MUST fall back to full event replay when null is returned.
    */
   getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null>;
+
+  /**
+   * Replays all persisted events for the run from the beginning and overwrites
+   * the materialized snapshot with the result.
+   *
+   * Use for recovery/repair when the snapshot is known to be stale, missing,
+   * or corrupt.
+   *
+   * ADR-0004 §2.2: runSeq is the authority for event ordering; replay MUST
+   * consume events ordered by runSeq ASC.
+   * ADR-0031: tenant isolation enforced — throws when the run does not belong
+   * to the given tenantId.
+   *
+   * @throws Error with message `RUN_NOT_FOUND: <runId>` when the run does not
+   *   exist or belongs to a different tenant.
+   */
+  rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot>;
 }
 
 export interface RunStateCommandPort {

@@ -37,6 +37,13 @@ export interface IProviderAdapter {
   ping?(): Promise<void>;
 
   /**
+   * Optional. Computes a deterministic EngineRunRef from RunContext WITHOUT a network call.
+   * When implemented, WorkflowEngine bootstraps run_metadata before adapter.startRun(),
+   * eliminating the dual-producer event ordering race.
+   */
+  estimateRunRef?(ctx: RunContext): EngineRunRef;
+
+  /**
    * Returns the capability identifiers this adapter implements.
    * Used by the engine to enforce `PlanRef.requiresCapabilities` before starting a run.
    * Strings MUST be from capabilities.schema.json.

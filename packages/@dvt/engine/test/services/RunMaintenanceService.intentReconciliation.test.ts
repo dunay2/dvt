@@ -17,12 +17,30 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { RunMaintenanceService } from '../../src/services/RunMaintenanceService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
 describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
+  function makeRunQueuedEventInput(runId: string) {
+    return {
+      eventId: `evt-${runId}`,
+      eventType: 'RunQueued' as const,
+      runId,
+      tenantId: 't',
+      projectId: 'p',
+      environmentId: 'dev',
+      planId: 'p',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      engineAttemptId: 1,
+      emittedAt: '2026-02-12T00:00:00.000Z',
+      idempotencyKey: `queued-${runId}`,
+    };
+  }
+
   function makePlanRef(): PlanRef {
     return {
       uri: 'https://example.com/plan',
@@ -85,12 +103,14 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency,
       clock,
-      authorizer,
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer,
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -166,6 +186,60 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
 
     const intent = await intentStore.getIntent(intentId);
     expect(intent?.status).toBe('PENDING');
+  });
+
+  it('resolves PENDING intent without cancel when run metadata already exists', async () => {
+    const cancelledRefs: EngineRunRef[] = [];
+    const { service, store, intentStore, clock } = createFixture({
+      async lookupRunRef(runId: string, tenantId: string) {
+        return {
+          provider: 'temporal',
+          tenantId,
+          namespace: 'default',
+          workflowId: `wf-${runId}`,
+          runId,
+        } as EngineRunRef;
+      },
+      async cancelRun(ref: EngineRunRef) {
+        cancelledRefs.push(ref);
+      },
+    });
+
+    await store.bootstrapRunTx({
+      metadata: {
+        tenantId: 't',
+        projectId: 'p',
+        environmentId: 'dev',
+        runId: 'pending-with-meta-1',
+        planId: 'p',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        provider: 'temporal',
+        providerWorkflowId: 'wf-pending-with-meta-1',
+        providerRunId: 'pending-with-meta-1',
+      },
+      firstEvents: [makeRunQueuedEventInput('pending-with-meta-1')],
+    });
+
+    await intentStore.createIntent({
+      intentId: 'pending-intent-with-meta',
+      tenantId: 't',
+      runId: 'pending-with-meta-1',
+      provider: 'temporal',
+      createdAt: clock.nowIsoUtc(),
+    });
+
+    const result = await service.reconcileOrphanedIntents({
+      thresholdMs: 0,
+    });
+
+    expect(result.cancelled).toContain('pending-intent-with-meta');
+    expect(result.expired).toEqual([]);
+    expect(result.cancelFailed).toEqual([]);
+    expect(cancelledRefs).toEqual([]);
+
+    const intent = await intentStore.getIntent('pending-intent-with-meta');
+    expect(intent?.status).toBe('RESOLVED');
   });
 
   it('cancels provider workflow for DISPATCHED intent with no bootstrapped run', async () => {
