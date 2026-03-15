@@ -93,7 +93,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       this.ownsPool = true;
     }
 
-    this.schemaManager = new PostgresSchemaManager(this.pool, this.schema);
+    this.schemaManager = new PostgresSchemaManager(this.pool, this.schema, this.statementTimeoutMs);
     this.outboxStore = new PostgresOutboxStore(
       this.schema,
       this.now,

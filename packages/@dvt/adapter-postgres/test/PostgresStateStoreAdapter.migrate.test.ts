@@ -23,6 +23,20 @@ function createDeferred<T>(): Deferred<T> {
   };
 }
 
+class RecordingMigrationClient {
+  public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
+  public releaseCalls = 0;
+
+  async query(sql: string, params?: unknown[]): Promise<{ rows: unknown[]; rowCount: number }> {
+    this.queries.push({ sql, params });
+    return { rows: [], rowCount: 0 };
+  }
+
+  release(): void {
+    this.releaseCalls += 1;
+  }
+}
+
 describe('PostgresStateStoreAdapter migration state', () => {
   it('rejects use before migrate() is called', async () => {
     const adapter = new PostgresStateStoreAdapter({
@@ -72,5 +86,26 @@ describe('PostgresStateStoreAdapter migration state', () => {
 
     await expect(migratePromise).rejects.toThrow(/synthetic migrate failure/);
     await expect(adapter.listPending(0)).rejects.toThrow(/MIGRATE_NOT_CALLED/);
+  });
+
+  it('applies SET LOCAL statement_timeout during migrate() when configured', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+      statementTimeoutMs: 4321,
+    });
+
+    await adapter.migrate();
+
+    expect(client.queries[0]?.sql).toBe('BEGIN');
+    expect(client.queries[1]).toEqual({
+      sql: 'SET LOCAL statement_timeout = $1',
+      params: [4321],
+    });
+    expect(client.queries.at(-1)?.sql).toBe('COMMIT');
+    expect(client.releaseCalls).toBe(1);
   });
 });
