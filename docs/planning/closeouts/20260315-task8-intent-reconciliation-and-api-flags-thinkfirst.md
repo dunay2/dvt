@@ -162,28 +162,175 @@ not a new feature.
 - Reject Option C for this turn because it expands scope into a larger design
   refactor not required to close the review blockers.
 
+## Diagram Review
+
+### Review of existing buildApp diagrams
+
+The diagrams in
+[`20260314-task4-buildApp-closeout.md`](./20260314-task4-buildApp-closeout.md)
+are useful as intent sketches, but they are **not valid class diagrams of the
+real system**.
+
+Problems:
+
+- `buildApp` is a function/composition root, not a class.
+- `OIDC`, `Providers`, and `Fastify` are shown as if they were direct domain
+  classes in the same model.
+- the diagram omits real participants such as `Env`, `StartRunAuthorizedFacade`,
+  `AuthorizeCommandScopeService`, `WorkflowEngineFactory`, and the storage ports.
+
+Rule going forward:
+
+- use `classDiagram` only for actual types/classes or interface relationships
+- use `graph TD` / `flowchart` for composition-root and module wiring
+- mark conceptual diagrams as conceptual; do not present them as the canonical
+  dependency graph
+
+## Class Diagram: Real Participants For This Slice
+
+```mermaid
+classDiagram
+    class WorkflowEngine {
+        +startRun(planRef, context)
+        -_startRunCore(...)
+        -handleStartRunError(...)
+    }
+    class RunMaintenanceService {
+        +reconcileOrphanedIntents(options)
+        +detectStuckRuns(options)
+        +detectStuckCancellingRuns(options)
+    }
+    class IRunStateStore {
+        +bootstrapRunTx(input)
+        +getRunMetadataByRunId(tenantId, runId)
+    }
+    class IStartRunIntentStore {
+        +createIntent(input)
+        +markDispatched(intentId, runRef)
+        +markResolved(intentId)
+        +markExpired(intentId)
+        +listOrphaned(thresholdMs, nowMs, limit)
+    }
+    class IProviderAdapter {
+        +startRun(planRef, context)
+        +lookupRunRef(runId, tenantId)
+        +cancelRun(runRef)
+    }
+    class EnvSchema {
+        +loadEnv(input)
+    }
+    class buildApp {
+        +buildApp()
+    }
+
+    WorkflowEngine --> IRunStateStore : bootstrap + metadata reads
+    WorkflowEngine --> IStartRunIntentStore : intent lifecycle
+    WorkflowEngine --> IProviderAdapter : provider dispatch
+    RunMaintenanceService --> IStartRunIntentStore : orphan scanning
+    RunMaintenanceService --> IRunStateStore : metadata verification
+    RunMaintenanceService --> IProviderAdapter : lookup/cancel
+    buildApp --> EnvSchema : boundary parsing
+```
+
+### Diagram warning
+
+`buildApp` is shown above as a diagram node for readability. It is not a domain
+class and should be treated as a composition-root boundary, not as an aggregate
+or OO entity.
+
+## Sequence Diagram: The Real Crash Window
+
+```mermaid
+sequenceDiagram
+    participant Engine as WorkflowEngine
+    participant Intents as IStartRunIntentStore
+    participant Store as IRunStateStore
+    participant Adapter as IProviderAdapter
+    participant Maint as RunMaintenanceService
+
+    Engine->>Intents: createIntent(PENDING)
+    Engine->>Store: bootstrapRunTx(metadata + RunQueued)
+    Note over Engine,Adapter: Crash window before provider workflow is guaranteed
+    Engine->>Adapter: startRun()
+    Adapter-->>Engine: runRef
+    Engine->>Intents: markDispatched(intentId, runRef)
+
+    alt Current buggy inference
+        Maint->>Store: getRunMetadataByRunId()
+        Store-->>Maint: metadata exists
+        Maint->>Intents: markResolved(intentId)
+        Note over Maint: Wrong: metadata != confirmed provider dispatch
+    else Target behavior
+        Maint->>Adapter: lookupRunRef(runId, tenantId)
+        alt provider workflow exists
+            Maint->>Adapter: cancelRun(runRef)
+            Maint->>Intents: markExpired() or markResolved()
+        else provider state can be proven absent
+            Maint->>Intents: markExpired()
+        else provider state cannot be proven
+            Note over Maint: Keep intent retryable
+        end
+    end
+```
+
+## Hexagonal Diagram: Boundary Ownership
+
+```mermaid
+graph TD
+    A[Env / ProcessEnv] --> B[apps/api loadEnv]
+    B --> C[buildApp composition root]
+    C --> D[AuthorizeCommandScopeService / Facades]
+    C --> E[WorkflowEngine]
+    C --> F[RunMaintenanceService]
+    E --> G[IRunStateStore]
+    E --> H[IStartRunIntentStore]
+    E --> I[IProviderAdapter]
+    F --> G
+    F --> H
+    F --> I
+
+    classDef boundary fill:#eef6ff,stroke:#4477aa,color:#112233;
+    classDef domain fill:#eef9ee,stroke:#4f8a4f,color:#112233;
+    classDef port fill:#fff7e6,stroke:#aa7a00,color:#112233;
+
+    class B,C boundary;
+    class E,F domain;
+    class G,H,I port;
+```
+
+## DDD / SOLID / Hexagonal / OOP Review
+
+| Area                    | Current state        | Assessment                                                                                                                                                                                |
+| ----------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DDD aggregate ownership | Partial              | `WorkflowEngine` and `RunMaintenanceService` still share lifecycle semantics indirectly. This slice must avoid letting reconciliation redefine run lifecycle based on metadata shortcuts. |
+| SRP                     | Partial              | `RunMaintenanceService` owns three maintenance policies plus event-building support. That is already broad; this slice should reduce semantic leakage, not add more.                      |
+| OCP                     | Partial              | API flags are currently unsafe to extend because each new boolean inherits JS coercion behavior. A strict boolean parser improves extension safety.                                       |
+| LSP                     | Partial              | Optional `lookupRunRef` means not every adapter can support the same reconciliation guarantees. Code must degrade by retrying, not by assuming absence.                                   |
+| ISP                     | Partial              | `IProviderAdapter` already mixes runtime and maintenance capabilities. This slice should not widen it further; just use existing optional capabilities carefully.                         |
+| DIP                     | Good                 | Both `WorkflowEngine` and `RunMaintenanceService` depend on ports, not concrete adapters/stores. The fix should preserve this.                                                            |
+| Hexagonal architecture  | Good but leaky       | Ports are in place, but the reconciler currently infers external runtime truth from internal metadata. That is a boundary leak.                                                           |
+| OOP diagram quality     | Weak in current docs | Some existing docs model functions/modules as classes. This slice should document real type relationships separately from conceptual wiring diagrams.                                     |
+
 ## Pre-Implementation Brief
 
 - **Mode**: `Slim`
 - **Scope**:
   - fix `PENDING` intent reconciliation semantics
   - harden API boolean parsing with explicit string semantics
-  - make SQL migration `004` safe on fresh databases
   - add negative-path tests for both behaviors
 - **Touched files or paths**:
   - `packages/@dvt/engine/src/services/RunMaintenanceService.ts`
   - `packages/@dvt/engine/test/services/RunMaintenanceService.intentReconciliation.test.ts`
   - `apps/api/src/plugins/env.ts`
-  - `apps/api/test/plugins/*.test.ts`
-  - `packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql`
+  - `apps/api/test/plugins/*.test.ts` or a new dedicated env test file
+  - possibly `apps/api/test/app.test.ts` if route exposure needs coverage
 - **Expected outcome**:
   - `PENDING` intents are not resolved from metadata-only evidence
   - API flags parse `"true"/"1"` as true and `"false"/"0"` as false
   - ambiguous boolean strings fail validation
-  - migration `004` no longer fails on a fresh schema
 - **Risks and mitigations**:
   - risk: adapters without `lookupRunRef` may need a conservative fallback
-    mitigation: keep intents retryable when provider state cannot be proven
+    mitigation: keep intents retryable when absence cannot be proven
   - risk: stricter env parsing may break loose local setups
     mitigation: document accepted boolean literals and add explicit tests
 - **Out-of-scope items**:
@@ -193,14 +340,13 @@ not a new feature.
 - **Validation plan**:
   - `pnpm --filter @dvt/engine test`
   - `pnpm --filter dvt-api test`
-  - `pnpm --filter @dvt/adapter-postgres test`
-  - `pnpm golden:validate`
+  - `pnpm docs:quality:check`
+  - `pnpm docs:canonical:check`
 - **Test coverage plan**:
   - negative: `PENDING + metadata exists + no verified provider workflow`
   - negative: `PENDING + lookup unsupported`
   - negative: `DVT_ADMIN_ROUTES_ENABLED="false"` stays disabled
   - negative: ambiguous boolean strings such as `"yes"` are rejected
-  - negative: fresh migration path applies `004` without pre-existing `run_snapshots`
 - **Libraries evaluated**:
   - no external library adopted
   - repo-local pattern reused from
@@ -213,4 +359,4 @@ not a new feature.
 - [`packages/@dvt/engine/test/services/RunMaintenanceService.intentReconciliation.test.ts`](../../../packages/@dvt/engine/test/services/RunMaintenanceService.intentReconciliation.test.ts)
 - [`apps/api/src/plugins/env.ts`](../../../apps/api/src/plugins/env.ts)
 - [`apps/outbox-worker/src/plugins/env.ts`](../../../apps/outbox-worker/src/plugins/env.ts)
-- [`packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql`](../../../packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql)
+- [`docs/planning/reviews/20260314-domain-cohesion-review.md`](../reviews/20260314-domain-cohesion-review.md)
