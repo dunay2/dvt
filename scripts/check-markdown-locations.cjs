@@ -24,7 +24,7 @@ function walkMarkdown(dir) {
       continue;
     }
 
-    if (entry.isFile() && entry.name.endsWith('.md')) {
+    if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
       results.push(fullPath);
     }
   }
