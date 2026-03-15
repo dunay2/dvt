@@ -84,7 +84,6 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
 export class PostgresRunMetadataRepository {
   constructor(
     private readonly schema: string,
-    private readonly now: () => string,
     private readonly withTransaction: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>,
     private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>
   ) {}

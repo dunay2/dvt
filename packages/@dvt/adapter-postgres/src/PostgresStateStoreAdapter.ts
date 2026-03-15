@@ -103,7 +103,6 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     );
     this.metadataRepo = new PostgresRunMetadataRepository(
       this.schema,
-      this.now,
       (fn) => this.withTransaction(fn),
       (fn) => this.withClient(fn)
     );
