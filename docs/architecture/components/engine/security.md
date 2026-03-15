@@ -1,17 +1,18 @@
-# Engine Security
+﻿# Engine Security
 
 ## Purpose
 
-Threat model, invariants, authorization, audit, plugin policies, tenant isolation tests.
+Summarizes the engine security surface and links to the canonical policy and
+contract documents.
 
-## Security Documents
+## Canonical security docs
 
-- [Threat Model](security/THREAT_MODEL.md)
-- [Security Invariants](security/SECURITY_INVARIANTS.v1.md)
-- [Authorization Contract](contracts/security/IAuthorization.v1.md)
-- [Audit Log Contract](contracts/security/AuditLog.v1.md)
-- [Plugin Provenance Policy](security/PLUGIN_PROVENANCE_POLICY.v1.md)
-- [Tenant Isolation Tests](security/TENANT_ISOLATION_TESTS.v1.md)
+- [Threat model](../../engine/security/THREAT_MODEL.md)
+- [Security invariants](../../engine/security/SECURITY_INVARIANTS.v1.md)
+- [Plugin provenance policy](../../engine/security/PLUGIN_PROVENANCE_POLICY.v1.md)
+- [Tenant isolation tests](../../engine/security/TENANT_ISOLATION_TESTS.v1.md)
+- [Authorization contract](../../engine/contracts/security/IAuthorization.v1.md)
+- [Audit log contract](../../engine/contracts/security/AuditLog.v1.md)
 
 ## Navigation
 
@@ -22,9 +23,3 @@ Threat model, invariants, authorization, audit, plugin policies, tenant isolatio
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
 - [C4 Engine Diagram](c4-engine.md)
-
----
-
-## Details
-
-Refer to the documents above for security policies, invariants, and compliance requirements.

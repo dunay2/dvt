@@ -13,9 +13,9 @@ Provides infrastructure, scripts, tools, and CI/CD for the DVT system.
 
 ## Boundaries
 
-- [infra/](../../contracts/index.md)
-- [scripts/](../../contracts/index.md)
-- [tools/](../../contracts/index.md)
+- [infra/](../contracts/index.md)
+- [scripts/](../contracts/index.md)
+- [tools/](../contracts/index.md)
 
 ## Responsibilities
 

@@ -13,10 +13,10 @@ Defines contracts, types, observability, traceability, and hashing for the DVT s
 
 ## Boundaries
 
-- [@dvt/contracts](../../contracts/index.md)
-- [@dvt/crypto](../../contracts/index.md)
-- [@dvt/observability](../../contracts/index.md)
-- [@dvt/traceability-service](../../contracts/index.md)
+- [@dvt/contracts](../contracts/index.md)
+- [@dvt/crypto](../contracts/index.md)
+- [@dvt/observability](../contracts/index.md)
+- [@dvt/traceability-service](../contracts/index.md)
 
 ## Responsibilities
 

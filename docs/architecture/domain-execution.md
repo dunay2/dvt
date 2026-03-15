@@ -13,9 +13,9 @@ Orchestrates workflows, manages adapters, and handles persistence in the DVT sys
 
 ## Boundaries
 
-- [@dvt/engine](../../contracts/index.md)
-- [@dvt/adapter-temporal](../../contracts/index.md)
-- [@dvt/adapter-postgres](../../contracts/index.md)
+- [@dvt/engine](../contracts/index.md)
+- [@dvt/adapter-temporal](../contracts/index.md)
+- [@dvt/adapter-postgres](../contracts/index.md)
 
 ## Responsibilities
 

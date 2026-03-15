@@ -1,21 +1,23 @@
-# Engine Adapters
+﻿# Engine Adapters
 
 ## Purpose
 
-Specifications and integration of adapters (Temporal, Conductor, Snowflake, Postgres).
+Summarizes adapter integration points for the engine component map and links to
+canonical adapter specifications.
 
-## Adapter Specs
+## Canonical adapter specs
 
-- [Temporal Adapter](adapters/temporal/TemporalAdapter.spec.md)
-- [Temporal Engine Policies](adapters/temporal/EnginePolicies.md)
-- [Conductor Adapter](adapters/conductor/ConductorAdapter.spec.md)
-- [State Store Adapter (Postgres)](adapters/state-store/postgres/StateStoreAdapter.md)
-- [State Store Adapter (Snowflake)](adapters/state-store/snowflake/StateStoreAdapter.md)
+- [Temporal adapter specification](../../engine/adapters/temporal/TemporalAdapter.spec.md)
+- [Temporal engine policies](../../engine/adapters/temporal/EnginePolicies.md)
+- [Conductor adapter specification](../../engine/adapters/conductor/ConductorAdapter.spec.md)
+- [Postgres state-store adapter](../../engine/adapters/state-store/postgres/StateStoreAdapter.md)
+- [Snowflake state-store adapter](../../engine/adapters/state-store/snowflake/StateStoreAdapter.md)
 
-## Capabilities & Contracts
+## Related contracts
 
-- [Capabilities Matrix](contracts/capabilities/adapters.capabilities.json)
-- [Provider Adapter Contract](contracts/engine/IProviderAdapter.v1.md)
+- [Provider adapter contract](../../engine/contracts/engine/IProviderAdapter.v1.md)
+- [Capabilities guide](../../engine/contracts/capabilities/README.md)
+- [Adapter capabilities matrix](../../engine/contracts/capabilities/adapters.capabilities.json)
 
 ## Navigation
 
@@ -26,9 +28,3 @@ Specifications and integration of adapters (Temporal, Conductor, Snowflake, Post
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
 - [C4 Engine Diagram](c4-engine.md)
-
----
-
-## Details
-
-Refer to the specs and contracts above for implementation details and integration patterns.

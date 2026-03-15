@@ -13,8 +13,8 @@ Provides visualization, monitoring, and user interaction for the DVT system.
 
 ## Boundaries
 
-- [apps/web](../../contracts/index.md)
-- [@dvt/web](../../contracts/index.md)
+- [apps/web](../contracts/index.md)
+- [@dvt/web](../contracts/index.md)
 
 ## Responsibilities
 

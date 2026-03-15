@@ -14,9 +14,9 @@ Defines the construction, compilation, and integrity validation of plans in the 
 ## Boundaries
 
 - [@dvt/planner](../../packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md)
-- [@dvt/plan-verifier](../../contracts/index.md)
-- [@dvt/plan-interpreter](../../contracts/index.md)
-- [@dvt/dsl](../../contracts/index.md)
+- [@dvt/plan-verifier](../contracts/index.md)
+- [@dvt/plan-interpreter](../contracts/index.md)
+- [@dvt/dsl](../contracts/index.md)
 
 ## Responsibilities
 

@@ -1,20 +1,20 @@
-# Engine Workflows
+﻿# Engine Workflows
 
 ## Purpose
 
-Workflow models, state transitions, adapter integration, event contracts, signals, sequence diagrams.
+Summarizes workflow-centric references for the engine component map.
 
-## Models
+## Canonical workflow references
 
-- Orchestration
-- State transitions
-- Adapter integration
+- [Run event catalog](../../engine/contracts/engine/RunEventCatalog.v1.md)
+- [Signals and auth](../../engine/contracts/engine/SignalsAndAuth.v1.md)
+- [Workflow engine interface](../../engine/contracts/engine/IWorkflowEngine.v1.md)
+- [Execution semantics](../../engine/contracts/engine/ExecutionSemantics.v1.md)
 
-## Event Contracts & Signals
+## Local references
 
-- [Run Event Catalog](contracts/engine/RunEventCatalog.v1.md)
-- [Signals and Auth](contracts/engine/SignalsAndAuth.v1.md)
-- [Sequence Diagram](engine-sequence.md)
+- [Sequence notes](structure/engine-sequence.md)
+- [RunPlanWorkflow refactor analysis](delivery-gaps/RunPlanWorkflow_Refactor_Analysis.md)
 
 ## Navigation
 
@@ -25,9 +25,3 @@ Workflow models, state transitions, adapter integration, event contracts, signal
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
 - [C4 Engine Diagram](c4-engine.md)
-
----
-
-## Details
-
-Refer to the event contracts and sequence diagrams above for workflow orchestration and signal handling.

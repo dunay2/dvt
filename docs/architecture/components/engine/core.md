@@ -1,21 +1,33 @@
-# Engine Core
+﻿# Engine Core
 
 ## Purpose
 
-Describes orchestration, state management, persistence, constraints, domain-driven design (DDD), functional overview, sequence diagrams, and metrics.
+Summarizes the core orchestration role of `@dvt/engine` inside the component map.
+The detailed normative and operational material stays in the canonical engine docs.
 
 ## Responsibilities
 
-- Workflow orchestration
-- State management
-- Persistence and consistency
-- Validation and determinism
-- Constraints & invariants ([engine-constraints.md](structure/engine-constraints.md))
-- DDD structure ([engine-ddd.md](structure/engine-ddd.md))
-- Functionalities ([engine-functional.md](structure/engine-functional.md))
-- Sequence diagrams ([engine-sequence.md](structure/engine-sequence.md))
-- Metrics ([metrics-catalog.md](structure/metrics-catalog.md))
-- Versioning ([VERSIONING.md](VERSIONING.md))
+- workflow orchestration
+- state management
+- persistence and crash consistency
+- validation and determinism
+- aggregate-level execution invariants
+
+## Canonical references
+
+- [Canonical engine index](../../engine/index.md)
+- [Canonical C4 architecture](../../engine/c4-engine.md)
+- [Versioning policy](../../engine/VERSIONING.md)
+- [Execution semantics](../../engine/contracts/engine/ExecutionSemantics.v1.md)
+- [Workflow engine contract](../../engine/contracts/engine/IWorkflowEngine.v1.md)
+
+## Local structure notes
+
+- [Constraints and invariants](structure/engine-constraints.md)
+- [DDD structure](structure/engine-ddd.md)
+- [Functional notes](structure/engine-functional.md)
+- [Sequence notes](structure/engine-sequence.md)
+- [Metrics catalog](structure/metrics-catalog.md)
 
 ## Navigation
 
@@ -26,17 +38,3 @@ Describes orchestration, state management, persistence, constraints, domain-driv
 - [Contracts](contracts.md)
 - [Capabilities](capabilities.md)
 - [C4 Engine Diagram](c4-engine.md)
-
----
-
-## Details
-
-See the referenced documents above for diagrams, methods, and constraints.
-
-## Structural References
-
-- [Constraints & Invariants](structure/engine-constraints.md)
-- [DDD Structure](structure/engine-ddd.md)
-- [Functionalities](structure/engine-functional.md)
-- [Sequence Diagram](structure/engine-sequence.md)
-- [Metrics Catalog](structure/metrics-catalog.md)

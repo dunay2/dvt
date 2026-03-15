@@ -1,21 +1,30 @@
-# Engine Contracts
+﻿# Engine Contracts
 
 ## Purpose
 
-Normative contracts, glossary, versioning policies, event contracts, interfaces, capabilities, security, state store, schemas.
+Provides a component-level directory for the canonical engine contracts. The
+normative sources remain under `docs/architecture/engine/contracts/`.
 
-## Main Contracts
+## Canonical contract references
 
-- [Workflow Engine Interface](contracts/engine/IWorkflowEngine.v1.md)
-- [Execution Semantics](contracts/engine/ExecutionSemantics.v1.md)
-- [Run Event Catalog](contracts/engine/RunEventCatalog.v1.md)
-- [Glossary](contracts/engine/GlossaryContract.v1.md)
-- [Provider Adapter Contract](contracts/engine/IProviderAdapter.v1.md)
-- [State Store Contracts](contracts/state-store/IRunStateStore.v1.md), [IRunStateStore.v2.0.md](contracts/state-store/IRunStateStore.v2.0.md)
-- [Security Contracts](contracts/security/IAuthorization.v1.md), [AuditLog.v1.md](contracts/security/AuditLog.v1.md)
-- [Capabilities](contracts/capabilities/README.md)
-- [VERSIONING.md](VERSIONING.md)
-- [Schemas](contracts/schemas/canvas-state.schema.json), [logical-graph.schema.json](contracts/schemas/logical-graph.schema.json), [provenance-event.schema.json](contracts/schemas/provenance-event.schema.json)
+- [Contract registry](../../engine/contracts/README.md)
+- [Workflow engine interface](../../engine/contracts/engine/IWorkflowEngine.v1.md)
+- [Execution semantics](../../engine/contracts/engine/ExecutionSemantics.v1.md)
+- [Run event catalog](../../engine/contracts/engine/RunEventCatalog.v1.md)
+- [Glossary](../../engine/contracts/engine/GlossaryContract.v1.md)
+- [Provider adapter contract](../../engine/contracts/engine/IProviderAdapter.v1.md)
+- [State store contracts](../../engine/contracts/state-store/README.md)
+- [Security contracts](../../engine/contracts/security/IAuthorization.v1.md)
+- [Capabilities guide](../../engine/contracts/capabilities/README.md)
+- [Versioning policy](../../engine/VERSIONING.md)
+
+## Canonical schemas and assets
+
+- [Capabilities schema](../../engine/contracts/capabilities/capabilities.schema.json)
+- [Adapter capabilities matrix](../../engine/contracts/capabilities/adapters.capabilities.json)
+- [Validation report schema](../../engine/contracts/capabilities/validation-report.schema.json)
+- [Logical graph schema](../../engine/contracts/schemas/logical-graph.schema.json)
+- [Provenance event schema](../../engine/contracts/schemas/provenance-event.schema.json)
 
 ## Navigation
 
@@ -26,9 +35,3 @@ Normative contracts, glossary, versioning policies, event contracts, interfaces,
 - [Operations](operations.md)
 - [Capabilities](capabilities.md)
 - [C4 Engine Diagram](c4-engine.md)
-
----
-
-## Details
-
-Refer to the contracts and schemas above for normative definitions and integration points.

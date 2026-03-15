@@ -13,8 +13,8 @@ Handles outbox worker, retry logic, sharding, and delivery ownership in the DVT 
 
 ## Boundaries
 
-- [@dvt/delivery](../../contracts/index.md)
-- [dvt-outbox-worker](../../contracts/index.md)
+- [@dvt/delivery](../contracts/index.md)
+- [dvt-outbox-worker](../contracts/index.md)
 
 ## Responsibilities
 

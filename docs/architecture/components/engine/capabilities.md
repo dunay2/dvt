@@ -1,15 +1,21 @@
-# Engine Capabilities
+﻿# Engine Capabilities
 
 ## Purpose
 
-Capability specifications, matrices, validation reports, schemas.
+Summarizes the capability-related assets used by the engine component and points
+to the canonical capability definitions.
 
-## Capability Documents
+## Canonical capability assets
 
-- [Capabilities Schema](contracts/capabilities/capabilities.schema.json)
-- [Adapter Capabilities Matrix](contracts/capabilities/adapters.capabilities.json)
-- [Validation Report Schema](contracts/capabilities/validation-report.schema.json)
-- [Capabilities Guide](contracts/capabilities/README.md)
+- [Capabilities guide](../../engine/contracts/capabilities/README.md)
+- [Capabilities schema](../../engine/contracts/capabilities/capabilities.schema.json)
+- [Adapter capabilities matrix](../../engine/contracts/capabilities/adapters.capabilities.json)
+- [Validation report schema](../../engine/contracts/capabilities/validation-report.schema.json)
+
+## Related contracts
+
+- [Provider adapter contract](../../engine/contracts/engine/IProviderAdapter.v1.md)
+- [Workflow engine interface](../../engine/contracts/engine/IWorkflowEngine.v1.md)
 
 ## Navigation
 
@@ -20,9 +26,3 @@ Capability specifications, matrices, validation reports, schemas.
 - [Operations](operations.md)
 - [Contracts](contracts.md)
 - [C4 Engine Diagram](c4-engine.md)
-
----
-
-## Details
-
-Refer to the schemas and matrices above for capability definitions and validation.

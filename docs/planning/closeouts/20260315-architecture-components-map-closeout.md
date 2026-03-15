@@ -1,8 +1,9 @@
-﻿---
+---
 slice: architecture-components-map
 date: 2026-03-15
 gap: docs-architecture-navigation
 author: AI (GPT-5)
+last_reviewed: 2026-03-15
 ---
 
 # Closeout: Architecture Components Map
