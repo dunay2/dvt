@@ -22,9 +22,9 @@ export type {
   PlannerInputEnvelopeV2,
   PlannerPolicies,
   PlannerSelection,
-  StepKind,
 } from './contracts/planner/ExecutionPlan.v2.js';
 export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
+export * from './contracts/lineage/ILineageSink.v1.js';
 export * from './errors.js';
 export * from './ports/artifact-store.js';
 export * from './schemas.js';

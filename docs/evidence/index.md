@@ -17,6 +17,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260312 — G8 Arch Tests and Engine Wiring Closeout](ED-20260312-g8-arch-tests-engine-wiring.md)
 - [ED-20260314 - G9 Step Type Registry Closeout](ED-20260314-g9-step-type-registry-closeout.md)
 - [ED-20260315 - API Protected Runtime Module extraction](ED-20260315-api-modules-protected-runtime.md)
+- [ED-20260315 - G10 Closeout: outbox_lineage worker + fail-open DLQ](ED-20260315-g10-closeout.md)
 - [ED-20260315 - PostgresStateStoreAdapter Phase 1 Items 5-7](ED-20260315-adapter-postgres-phase1-items5-7.md)
 - [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
 - [Evidence Doc: G3 IntentStore Postgres + Reconciler Worker](ED-20260304-g3-intentstore-postgres-reconciler.md)

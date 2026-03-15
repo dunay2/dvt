@@ -1,0 +1,26 @@
+{
+  "name": "dvt-lineage-worker",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "prebuild": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/traceability-service build && pnpm --filter @dvt/delivery build",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "pretypecheck": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/traceability-service build && pnpm --filter @dvt/delivery build",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@dvt/adapter-postgres": "workspace:*",
+    "@dvt/delivery": "workspace:*",
+    "@dvt/traceability-service": "workspace:*",
+    "pino": "^9.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

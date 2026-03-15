@@ -55,7 +55,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | OpenTelemetry observability binding            | `@dvt/observability-otel`                                                              | [Observability Guide](../../architecture/engine/ops/observability.md), [@dvt/observability-otel README](../../../packages/@dvt/observability-otel/README.md)                                                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | CLI validation surface                         | `@dvt/cli`                                                                             | [CLI Package](../../architecture/shared/cli.md)                                                                                                                                                                                    | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
 | Canonicalization and hashing utilities         | `@dvt/crypto`                                                                          | [Crypto Package](../../architecture/shared/crypto.md), [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)                                                                                                                  | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
-| Documentation governance and checks            | `scripts/*`, `tools/ci/*`                                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [Mandatory AI Workflow](../../guides/SISTEMA%20DE%20TRABAJO%20OBLIGATORIO%20PARA%20IA.md)                                                              | [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md) |
+| Documentation governance and checks            | `scripts/*`, `tools/ci/*`                                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [AI Work Protocol](../../guides/ai-work-protocol.md)                                                                                                   | [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md) |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -493,7 +493,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Canonical docs:
   [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)
   and
-  [Mandatory AI Workflow](../../guides/SISTEMA%20DE%20TRABAJO%20OBLIGATORIO%20PARA%20IA.md)
+  [AI Work Protocol](../../guides/ai-work-protocol.md)
 - Current status source:
   [Documentation Restructuring Diagnostic and Roadmap](../proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - Primary code:
