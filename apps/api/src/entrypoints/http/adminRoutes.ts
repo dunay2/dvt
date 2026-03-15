@@ -11,7 +11,6 @@
 import type { IRunStateStore } from '@dvt/contracts';
 import type { FastifyInstance } from 'fastify';
 
-
 export function registerAdminRoutes(app: FastifyInstance, stateStore: IRunStateStore): void {
   /**
    * POST /admin/runs/:runId/rebuild-snapshot
