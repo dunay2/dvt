@@ -30,6 +30,8 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - [ExecutionSemantics.v2.0.md](../../architecture/engine/contracts/engine/ExecutionSemantics.v2.0.md)
 - [GlossaryContract.v1.md](../../architecture/engine/contracts/engine/GlossaryContract.v1.md)
 - [GlossaryContract.v2.0.md](../../architecture/engine/contracts/engine/GlossaryContract.v2.0.md)
+- [IProviderAdapter.v1.0.md](../../architecture/engine/contracts/engine/IProviderAdapter.v1.0.md)
+- [IProviderAdapter.v1.1.md](../../architecture/engine/contracts/engine/IProviderAdapter.v1.1.md)
 - [IProviderAdapter.v1.md](../../architecture/engine/contracts/engine/IProviderAdapter.v1.md)
 - [IWorkflowEngine.reference.v1.md](../../architecture/engine/contracts/engine/IWorkflowEngine.reference.v1.md)
 - [IWorkflowEngine.v1.md](../../architecture/engine/contracts/engine/IWorkflowEngine.v1.md)
