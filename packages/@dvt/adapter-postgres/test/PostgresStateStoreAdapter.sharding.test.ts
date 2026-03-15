@@ -109,4 +109,26 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     expect(retryQuery?.sql).toContain('shard_id = ANY($1::int[])');
     expect(retryQuery?.params).toEqual([[0, 2]]);
   });
+
+  it('quotes mixed-case schemas in stale snapshot probing', async () => {
+    const client = new RecordingPoolClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+      assumeSchemaReady: true,
+    });
+
+    await adapter.listStaleSnapshotRuns(5);
+
+    const staleQuery = client.queries.find((entry) =>
+      entry.sql.includes('ORDER BY m.created_at ASC')
+    );
+    expect(staleQuery).toBeDefined();
+    expect(staleQuery?.sql).toContain('FROM "DvtOps".run_metadata m');
+    expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s ON s.run_id = m.run_id');
+    expect(staleQuery?.sql).toContain('FROM "DvtOps".run_events e');
+    expect(staleQuery?.params).toEqual([5]);
+  });
 });
