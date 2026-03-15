@@ -81,10 +81,10 @@ export class InMemoryRunStateStore implements IRunStateStore {
 
     for (const [i, env] of eventsToAppend.entries()) {
       const record = env as unknown as Record<string, unknown>;
-      if (Object.prototype.hasOwnProperty.call(record, 'runSeq')) {
+      if (Object.hasOwn(record, 'runSeq')) {
         throw new Error(`INVALID_EVENT_WRITE_SHAPE: runSeq forbidden at index ${i}`);
       }
-      if (Object.prototype.hasOwnProperty.call(record, 'persistedAt')) {
+      if (Object.hasOwn(record, 'persistedAt')) {
         throw new Error(`INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden at index ${i}`);
       }
 
@@ -124,7 +124,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
     return {
       appended,
       deduped,
-      lastSeq: appended[appended.length - 1]?.runSeq ?? baseRunSeq,
+      lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
     };
   }
 
@@ -134,11 +134,11 @@ export class InMemoryRunStateStore implements IRunStateStore {
     options?: ListEventsOptions
   ): Promise<RunEventPersisted[]> {
     const meta = this.metadataByRunId.get(runId);
-    if (!meta || meta.tenantId !== tenantId) return [];
+    if (meta?.tenantId !== tenantId) return [];
     const all = (this.eventsByRunId.get(runId) ?? []).slice().sort((a, b) => a.runSeq - b.runSeq);
     const afterSeq = options?.afterSeq;
-    const filtered = afterSeq !== undefined ? all.filter((e) => e.runSeq > afterSeq) : all;
-    return options?.limit !== undefined ? filtered.slice(0, options.limit) : filtered;
+    const filtered = afterSeq === undefined ? all : all.filter((e) => e.runSeq > afterSeq);
+    return options?.limit === undefined ? filtered : filtered.slice(0, options.limit);
   }
 
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
@@ -146,15 +146,38 @@ export class InMemoryRunStateStore implements IRunStateStore {
     const all = Array.from(this.metadataByRunId.values());
     const byTenant = all.filter((m) => m.tenantId === options.tenantId);
     const byStatus =
-      options.status !== undefined
-        ? byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status)
-        : byTenant;
+      options.status === undefined
+        ? byTenant
+        : byTenant.filter((m) => this.snapshotByRunId.get(m.runId)?.status === options.status);
     return byStatus.slice(-limit).reverse();
   }
 
   async getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null> {
     const meta = this.metadataByRunId.get(runId);
-    if (!meta || meta.tenantId !== tenantId) return null;
+    if (meta?.tenantId !== tenantId) return null;
     return this.snapshotByRunId.get(runId) ?? null;
+  }
+
+  async rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot> {
+    const meta = this.metadataByRunId.get(runId);
+    if (meta?.tenantId !== tenantId) {
+      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    }
+    const events = (this.eventsByRunId.get(runId) ?? [])
+      .slice()
+      .sort((a, b) => a.runSeq - b.runSeq);
+    const snap: WorkflowSnapshot = {
+      runId,
+      status: 'PENDING',
+      paused: false,
+      cancelling: false,
+      gatewayDecisions: {},
+      steps: {},
+    };
+    for (const e of events) {
+      applyRunEvent(snap, e);
+    }
+    this.snapshotByRunId.set(runId, snap);
+    return snap;
   }
 }

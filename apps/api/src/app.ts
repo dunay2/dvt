@@ -9,9 +9,10 @@ import type { Logger } from 'pino';
 import { AuthorizeCommandScopeService } from './application/services/authorizeCommandScopeService.js';
 import { EngineStartRunUseCase } from './application/services/engineStartRunUseCase.js';
 import { StartRunAuthorizedFacade } from './application/services/startRunAuthorizedFacade.js';
-import { createWorkflowEngine } from './application/services/WorkflowEngineFactory.js';
+import { buildWorkflowEngine } from './application/services/WorkflowEngineFactory.js';
 import { getPgPool } from './db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from './domain/auth/policy.js';
+import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
 import { StructuredAuditLogger } from './infrastructure/audit/structuredAuditLogger.js';
 import { JwksJwtVerifier } from './infrastructure/auth/jwksJwtVerifier.js';
@@ -149,8 +150,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       import('@dvt/engine/testing'),
       import('@dvt/adapter-postgres'),
     ]);
-    const { AllowAllAuthorizer, IdempotencyKeyBuilder, PlanRefPolicy, SnapshotProjector } =
-      engineMod;
+    const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
     const { MockAdapter } = engineTestingMod;
     const { PostgresStartRunIntentStore, PostgresStateStoreAdapter } = adapterMod;
 
@@ -186,19 +186,17 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
     }
 
-    const engine = createWorkflowEngine({
-      stateStore: stateAdapter,
-      outbox: stateAdapter,
-      projector,
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: { nowIsoUtc: () => new Date().toISOString() },
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({
-        allowedSchemes: ['https', 's3', 'gs', 'azure'],
-      }),
-      intentStore,
-      adapters,
-      observability,
+    const engine = buildWorkflowEngine({
+      persistence: { stateStore: stateAdapter, intentStore },
+      security: {
+        authorizer: new AllowAllAuthorizer(),
+        planRefAllowedSchemes: ['https', 's3', 'gs', 'azure'],
+      },
+      runtime: { adapters },
+      infrastructure: {
+        clock: { nowIsoUtc: () => new Date().toISOString() },
+        observability,
+      },
     });
 
     const facade = new StartRunAuthorizedFacade(
@@ -219,6 +217,11 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
 
     app.log.info('protected runtime routes registered: POST /runs/start');
+
+    if (env.DVT_ADMIN_ROUTES_ENABLED) {
+      registerAdminRoutes(app, stateAdapter);
+      app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
+    }
   } else {
     app.log.warn(
       'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) — protected runtime endpoints are disabled'

@@ -20,7 +20,6 @@ import {
 } from '@dvt/contracts';
 import type {
   EngineRunRef,
-  IOutboxStorage,
   PlanRef,
   RunContext,
   RunStatusSnapshot,
@@ -34,18 +33,15 @@ import {
   CapabilitiesNotSupportedError,
   InvalidRunIdError,
   InvalidSchemaVersionError,
-  OutboxRateLimitExceededError,
   RunAlreadyExistsError,
   RunMetadataNotFoundError,
   SignalNotImplementedError,
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEvents.js';
-import type { IOutboxRateLimiter } from '../outbox/IOutboxRateLimiter.js';
 import type { IRunStateStore } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
-import type { IAuthorizer } from '../security/authorizer.js';
-import { PlanRefPolicy } from '../security/planRefPolicy.js';
+import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import type { IClock } from '../utils/clock.js';
 
 import { IdempotencyKeyBuilder } from './idempotency.js';
@@ -53,25 +49,17 @@ import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
 
 export interface WorkflowEngineDeps {
   stateStore: IRunStateStore;
-  outbox: IOutboxStorage;
   projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
-  authorizer: IAuthorizer;
-  planRefPolicy: PlanRefPolicy;
+  /** Access-control policy: tenant authorization, plan ref validation, rate limiting. */
+  policy: IRunAccessPolicy;
   /** Pre-dispatch intent log for crash-consistency of startRun. */
   intentStore: IStartRunIntentStore;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
 
   /** Optional providers that MUST be registered at boot time. */
   requiredProviders?: EngineRunRef['provider'][];
-
-  /**
-   * Optional per-tenant outbox rate limiter.
-   * When provided, `startRun` will reject with `OutboxRateLimitExceededError`
-   * if the tenant has exceeded its configured burst / sustained throughput.
-   */
-  outboxRateLimiter?: IOutboxRateLimiter;
 
   /** Structured observability port used for logs, metrics and traces. */
   observability: IObservability;
@@ -98,6 +86,20 @@ interface HealthCheckable {
 
 interface StartRunErrorContext {
   intentId?: string;
+}
+
+class PostStartIntentPersistenceError extends Error {
+  constructor(
+    readonly intentId: string,
+    readonly runRef: EngineRunRef,
+    readonly originalError: unknown
+  ) {
+    const cause = originalError instanceof Error ? originalError : new Error(String(originalError));
+    super(`Intent persistence failed after adapter.startRun succeeded: ${cause.message}`, {
+      cause,
+    });
+    this.name = 'PostStartIntentPersistenceError';
+  }
 }
 
 export class WorkflowEngine implements IWorkflowEngine {
@@ -208,16 +210,20 @@ export class WorkflowEngine implements IWorkflowEngine {
         firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
       });
       // bootstrapRunTx failure propagates; startRun never called; intent stays PENDING for reconciler.
-
       runRef = await this.withTimeout(
         adapter.startRun(validatedPlanRef, validatedContext),
         this.deps.timeouts?.adapterCallMs ?? 30_000,
         'adapter.startRun'
       );
-      // startRun failure propagates to handleStartRunError; it finds bootMeta → emits RunFailed.
-      // Intent stays PENDING; reconciler probes lookupRunRef, finds no workflow, marks resolved.
-
-      await this.deps.intentStore.markDispatched(intentId, runRef);
+      // startRun failure propagates to handleStartRunError. With a pending intent,
+      // the error path skips RunFailed emission and leaves reconciliation to the
+      // maintenance worker, which probes lookupRunRef and marks the intent resolved
+      // if no workflow exists.
+      try {
+        await this.deps.intentStore.markDispatched(intentId, runRef);
+      } catch (markDispatchedError) {
+        throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
+      }
       await this.deps.intentStore.markResolved(intentId).catch(() => {});
     } else {
       // Legacy path for adapters without estimateRunRef: startRun first, then bootstrap.
@@ -305,9 +311,9 @@ export class WorkflowEngine implements IWorkflowEngine {
     planRef: PlanRef,
     context: RunContext
   ): Promise<void> {
-    this.deps.planRefPolicy.validateOrThrow(planRef.uri);
+    this.deps.policy.validatePlanRef(planRef);
     validateSchemaVersionOrThrow(planRef.schemaVersion);
-    await this.deps.authorizer.assertTenantAccess(context.tenantId);
+    await this.deps.policy.assertTenantAccess(context.tenantId);
     validateRunIdOrThrow(context.runId);
     await this.ensureRunDoesNotExist(context.tenantId, context.runId);
   }
@@ -327,12 +333,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   private checkOutboxRateLimit(context: RunContext): void {
-    if (
-      this.deps.outboxRateLimiter &&
-      !this.deps.outboxRateLimiter.tryAcquire(context.tenantId, 1)
-    ) {
-      throw new OutboxRateLimitExceededError(context.tenantId);
-    }
+    this.deps.policy.checkRateLimit(context.tenantId);
   }
 
   private async handleStartRunError(
@@ -352,6 +353,20 @@ export class WorkflowEngine implements IWorkflowEngine {
         error: toErrorMessage(error),
       },
     });
+
+    if (error instanceof PostStartIntentPersistenceError) {
+      this.observability.logs.warn({
+        msg: 'Provider workflow started but intent persistence failed; leaving reconciliation to maintenance worker',
+        context: traceContext,
+        attributes: {
+          intentId: error.intentId,
+          runId: error.runRef.runId,
+          provider: error.runRef.provider,
+          error: toErrorMessage(error.originalError),
+        },
+      });
+      throw error;
+    }
 
     const failMeta = await this.deps.stateStore
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
@@ -389,7 +404,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
-    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
+    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
 
     const adapter = this.getAdapterOrThrow(meta.provider);
@@ -436,7 +451,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async getRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
-    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
+    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
     const metricTags = buildMetricTags(meta.provider, meta.tenantId, { operation: 'getRunStatus' });
@@ -487,7 +502,7 @@ export class WorkflowEngine implements IWorkflowEngine {
    */
   async enrichRunStatus(engineRunRef: EngineRunRef): Promise<RunStatusSnapshot> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
-    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
+    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
 
     const adapter = this.getAdapterOrThrow(meta.provider);
@@ -536,7 +551,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(engineRunRef));
     const validatedRequest = normalizeSignalRequest(parseSignalRequest(request));
-    await this.deps.authorizer.assertTenantAccess(validatedRunRef.tenantId);
+    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
 
     const meta = await this.resolveMetaOrThrow(validatedRunRef);
     const adapter = this.getAdapterOrThrow(meta.provider);
@@ -579,7 +594,6 @@ export class WorkflowEngine implements IWorkflowEngine {
   async healthCheck(): Promise<HealthStatus> {
     const checks: Array<{ name: string; target: HealthCheckable }> = [
       { name: 'stateStore', target: this.deps.stateStore as IRunStateStore & HealthCheckable },
-      { name: 'outbox', target: this.deps.outbox as IOutboxStorage & HealthCheckable },
       ...Array.from(this.deps.adapters.values()).map((adapter) => ({
         name: `adapter-${adapter.provider}`,
         target: adapter as IProviderAdapter & HealthCheckable,
@@ -623,12 +637,11 @@ export class WorkflowEngine implements IWorkflowEngine {
     }
 
     // ADR-0007: CANCEL signal maps to RunCancelRequested (intent). Adapter emits RunCancelled.
-    const byType: Record<'PAUSE' | 'RESUME' | 'CANCEL', EventType> = {
+    const byType: Record<string, EventType> = {
       PAUSE: 'RunPaused',
       RESUME: 'RunResumed',
       CANCEL: 'RunCancelRequested',
     };
-
     return byType[type] ?? null;
   }
 
@@ -732,12 +745,10 @@ export class WorkflowEngine implements IWorkflowEngine {
   private validateDependencies(): void {
     const requiredDeps: Array<[name: string, value: unknown]> = [
       ['stateStore', this.deps.stateStore],
-      ['outbox', this.deps.outbox],
       ['projector', this.deps.projector],
       ['idempotency', this.deps.idempotency],
       ['clock', this.deps.clock],
-      ['authorizer', this.deps.authorizer],
-      ['planRefPolicy', this.deps.planRefPolicy],
+      ['policy', this.deps.policy],
       ['intentStore', this.deps.intentStore],
       ['adapters', this.deps.adapters],
       ['observability', this.deps.observability],

@@ -19,6 +19,7 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -144,12 +145,14 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: input?.observability ?? createNoopObservability(),
       adapters: input?.adapters ?? new Map(),
@@ -338,12 +341,13 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const intentStore = new InMemoryStartRunIntentStore();
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -404,12 +408,13 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,

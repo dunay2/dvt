@@ -8,6 +8,7 @@ import {
   AllowAllAuthorizer,
   IdempotencyKeyBuilder,
   PlanRefPolicy,
+  RunAccessPolicy,
   SequenceClock,
   SnapshotProjector,
   WorkflowEngine,
@@ -90,12 +91,13 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
 
   const engine = new WorkflowEngine({
     stateStore: store,
-    outbox: store,
     projector,
     idempotency,
     clock,
-    authorizer: new AllowAllAuthorizer(),
-    planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    policy: new RunAccessPolicy({
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
     intentStore: new InMemoryStartRunIntentStore(),
     observability: createNoopObservability(),
     adapters: new Map([['mock', mockAdapter]]),

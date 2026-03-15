@@ -16,6 +16,7 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -71,12 +72,14 @@ function createEngine(input?: { adapters?: Map<EngineRunRef['provider'], IProvid
 
   const engine = new WorkflowEngine({
     stateStore: store,
-    outbox: store,
+
     projector: new SnapshotProjector(),
     idempotency: new IdempotencyKeyBuilder(),
     clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-    authorizer: new AllowAllAuthorizer(),
-    planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    policy: new RunAccessPolicy({
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
     intentStore,
     observability: createNoopObservability(),
     adapters: input?.adapters ?? new Map(),
@@ -111,12 +114,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -151,12 +156,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -170,6 +177,61 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const created = await createSpy.mock.results[0]?.value;
     const intent = await intentStore.getIntent(created.intentId);
     expect(intent?.status).toBe('PENDING');
+  });
+
+  it('does not emit RunFailed when intent persistence fails after pre-bootstrap start succeeds', async () => {
+    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+      [
+        'temporal',
+        makeTemporalAdapter({
+          estimateRunRef(ctx) {
+            return {
+              provider: 'temporal',
+              tenantId: ctx.tenantId,
+              namespace: 'default',
+              workflowId: `wf-${ctx.runId}`,
+              runId: ctx.runId,
+            } as EngineRunRef;
+          },
+        }),
+      ],
+    ]);
+
+    const intentStore = new InMemoryStartRunIntentStore();
+    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    intentStore.markDispatched = async () => {
+      throw new Error('intent store boom');
+    };
+
+    const store = new InMemoryTxStore();
+    const engine = new WorkflowEngine({
+      stateStore: store,
+      projector: new SnapshotProjector(),
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
+      intentStore,
+      observability: createNoopObservability(),
+      adapters,
+    });
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('il-mark-dispatched-fail-1'))
+    ).rejects.toThrow(/Intent persistence failed after adapter.startRun succeeded/);
+
+    const created = await createSpy.mock.results[0]?.value;
+    const intent = await intentStore.getIntent(created.intentId);
+    expect(intent?.status).toBe('PENDING');
+    expect(intent?.engineRunRef).toBeUndefined();
+
+    const meta = await store.getRunMetadataByRunId('t', 'il-mark-dispatched-fail-1');
+    expect(meta?.runId).toBe('il-mark-dispatched-fail-1');
+
+    const events = await store.listEvents('t', 'il-mark-dispatched-fail-1');
+    expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
   });
 
   it('when bootstrapRunTx() throws, compensation fires AND intent is RESOLVED', async () => {
@@ -200,12 +262,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -252,12 +316,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -287,12 +353,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T12:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -315,12 +383,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -343,12 +413,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -390,12 +462,14 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,

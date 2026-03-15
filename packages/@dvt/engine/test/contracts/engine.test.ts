@@ -7,8 +7,7 @@
  *   expectations in the mocked adapter path (`PENDING` until completion events are present).
  */
 import { createNoopObservability } from '@dvt/observability';
-import { describe, it, expect } from 'vitest';
-import { vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
@@ -20,6 +19,7 @@ import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -102,12 +102,14 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     });
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector,
       idempotency,
       clock,
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
       adapters: new Map([['mock', mock]]),
@@ -153,12 +155,14 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector,
       idempotency,
       clock,
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
       adapters: new Map([['mock', mock]]),
@@ -246,17 +250,17 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const projector = new SnapshotProjector();
     const idempotency = new IdempotencyKeyBuilder();
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-    const authorizer = new AllowAllAuthorizer();
-    const planRefPolicy = new PlanRefPolicy({ allowedSchemes: ['https'] });
     const planFetcher = { fetch: vi.fn(async () => makeHelloWorldPlan()) };
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector,
       idempotency,
       clock,
-      authorizer,
-      planRefPolicy,
+      policy: new RunAccessPolicy({
+        authorizer: new AllowAllAuthorizer(),
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
       adapters: new Map([['conductor', adapter]]),

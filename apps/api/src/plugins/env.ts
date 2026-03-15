@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+const envBoolean = z.preprocess((value) => {
+  if (value === undefined) return undefined;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1') return true;
+    if (normalized === 'false' || normalized === '0') return false;
+  }
+  return value;
+}, z.boolean());
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   // Railway injects PORT. We still keep a sane default for local runs.
@@ -15,7 +26,7 @@ const EnvSchema = z.object({
   DVT_PG_STATEMENT_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
   DVT_PG_QUERY_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
   DVT_OUTBOX_SHARD_COUNT: z.coerce.number().int().positive().default(1),
-  DVT_INTENT_RECONCILER_ENABLED: z.coerce.boolean().default(false),
+  DVT_INTENT_RECONCILER_ENABLED: envBoolean.default(false),
   DVT_INTENT_RECONCILER_INTERVAL_MS: z.coerce.number().int().positive().default(30000),
   DVT_INTENT_RECONCILER_ORPHAN_THRESHOLD_MS: z.coerce.number().int().positive().default(300000),
   DVT_INTENT_RECONCILER_LIMIT: z.coerce.number().int().positive().default(50),
@@ -24,7 +35,7 @@ const EnvSchema = z.object({
   DVT_INTENT_RECONCILER_TICK_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
   DVT_INTENT_RECONCILER_PROVIDERS: z.string().default('mock'),
   SERVICE_NAME: z.string().default('dbf-api'),
-  OBS_ENABLED: z.coerce.boolean().default(false),
+  OBS_ENABLED: envBoolean.default(false),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   OTEL_SERVICE_NAME: z.string().optional(),
   OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
@@ -42,9 +53,11 @@ const EnvSchema = z.object({
   OIDC_AUDIENCE: z.string().optional(),
   OIDC_ALGORITHMS: z.string().default('RS256'),
   // Route exposure policy — off by default; enable explicitly per deployment
-  DVT_READYZ_ENABLED: z.coerce.boolean().default(false),
-  DVT_VERSION_ENABLED: z.coerce.boolean().default(false),
-  DVT_DB_READY_ENABLED: z.coerce.boolean().default(false),
+  DVT_READYZ_ENABLED: envBoolean.default(false),
+  DVT_VERSION_ENABLED: envBoolean.default(false),
+  DVT_DB_READY_ENABLED: envBoolean.default(false),
+  // Admin routes (snapshot repair, etc.) — disabled by default; never expose publicly
+  DVT_ADMIN_ROUTES_ENABLED: envBoolean.default(false),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

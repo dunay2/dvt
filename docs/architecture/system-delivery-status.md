@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-13
+last_reviewed: 2026-03-14
 ---
 
 # Current Status
@@ -44,7 +44,7 @@ Minimum tuple for this document:
 
 ## Snapshot
 
-- Review date: 2026-03-13
+- Review date: 2026-03-14
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
 - Active workspaces: 20
@@ -92,11 +92,11 @@ Minimum tuple for this document:
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                                      | Status             | Notes                                                                                                                                                                                                                                                                               |
-| -------------- | ------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                   | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                       |
-| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10                 |
-| Read models    | engine and infra follow-up                                    | Partial            | In-process projection exists and now rejects terminal-state rewrites via `InvalidStateTransitionError`; `WorkflowEngine` can pre-bootstrap `RunQueued` before `adapter.startRun()` when an adapter provides `estimateRunRef`; standalone read-model service remains open under `G7` |
+| Area           | Packages                                                      | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------- | ------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                   | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                                                                                                        |
+| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10                                                                                                                                                                                  |
+| Read models    | engine and infra follow-up                                    | Partial            | In-process projection exists and rejects terminal-state rewrites via `InvalidStateTransitionError`; `WorkflowEngine` can pre-bootstrap `RunQueued` before `adapter.startRun()` when an adapter provides `estimateRunRef`; G7.1 closed 2026-03-14 with numbered migration `004`, `rebuildSnapshot` on `IRunStateStore`, Postgres and in-memory implementations, index-backed `snapshot_status`, and admin rebuild endpoint; G7.2 and G7.3 remain open |
 
 ### Observability And Traceability
 

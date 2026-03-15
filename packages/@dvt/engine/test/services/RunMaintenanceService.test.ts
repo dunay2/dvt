@@ -8,6 +8,7 @@ import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
+import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { RunMaintenanceService } from '../../src/services/RunMaintenanceService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -74,12 +75,14 @@ describe('RunMaintenanceService', () => {
 
     const engine = new WorkflowEngine({
       stateStore: store,
-      outbox: store,
+
       projector: new SnapshotProjector(),
       idempotency,
       clock,
-      authorizer,
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      policy: new RunAccessPolicy({
+        authorizer,
+        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      }),
       intentStore,
       observability: createNoopObservability(),
       adapters,
@@ -351,16 +354,16 @@ describe('RunMaintenanceService', () => {
       expect(result).toEqual({ inspected: 0, expired: [], cancelled: [], cancelFailed: [] });
     });
 
-    it('expires PENDING intent when adapter does not implement lookupRunRef', async () => {
+    it('keeps PENDING intent unresolved when adapter does not implement lookupRunRef', async () => {
       const { service, intentStore } = createFixture();
       await makePendingIntent(intentStore, 'orphan-pending-1', 'i-p1');
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
-      expect(result.expired).toEqual(['i-p1']);
+      expect(result.expired).toEqual([]);
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
-      expect((await intentStore.getIntent('i-p1'))?.status).toBe('EXPIRED');
+      expect((await intentStore.getIntent('i-p1'))?.status).toBe('PENDING');
     });
 
     it('expires PENDING intent when lookupRunRef returns null (no workflow on provider)', async () => {

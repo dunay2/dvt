@@ -603,7 +603,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
           FROM ${quoteIdentifier(this.schema)}.run_metadata m
           INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
           WHERE m.tenant_id = $2
-            AND s.snapshot->>'status' = ${statusParam}
+            AND s.snapshot_status = ${statusParam}
           ORDER BY m.created_at DESC
           LIMIT $1
         `,
@@ -676,6 +676,66 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       )
     );
     return result.rows[0]?.snapshot ?? null;
+  }
+
+  /**
+   * ADR-0004 §2.2 — Full event replay from runSeq=1, overwrites the materialized snapshot.
+   * ADR-0031 — Tenant isolation verified before replay; throws RUN_NOT_FOUND on mismatch.
+   */
+  async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
+    this.ready();
+    return this.withTransaction(async (client) => {
+      // ADR-0031: verify tenant ownership before any read or write.
+      const metaResult = await client.query<{ run_id: string }>(
+        `
+          SELECT run_id
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE tenant_id = $1 AND run_id = $2
+          LIMIT 1
+        `,
+        [tenantId, runId]
+      );
+      if (!metaResult.rows[0]) {
+        throw new Error(`RUN_NOT_FOUND: ${runId}`);
+      }
+
+      // Acquire per-run advisory lock to prevent concurrent snapshot mutations.
+      await this.acquireRunLock(client, runId);
+
+      // ADR-0004 §2.2: replay MUST use runSeq ASC.
+      const eventsResult = await client.query<EventPayloadRow>(
+        `
+          SELECT payload
+          FROM ${quoteIdentifier(this.schema)}.run_events
+          WHERE run_id = $1
+          ORDER BY run_seq ASC
+        `,
+        [runId]
+      );
+
+      const snap: WorkflowSnapshot = {
+        runId,
+        status: 'PENDING',
+        paused: false,
+        cancelling: false,
+        gatewayDecisions: {},
+        steps: {},
+      };
+      for (const row of eventsResult.rows) {
+        applyEventToSnapshot(snap, row.payload);
+      }
+
+      const seqResult = await client.query<MaxSeqRow>(
+        `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(this.schema)}.run_events WHERE run_id = $1`,
+        [runId]
+      );
+      const lastSeq = Number(seqResult.rows[0]?.max_seq ?? 0);
+
+      // Pass lastSeq directly; 0 is valid when the run has no events (degenerate case).
+      // persistSnapshot only rejects null, not 0.
+      await this.persistSnapshot(client, runId, snap, lastSeq);
+      return snap;
+    });
   }
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
@@ -1132,6 +1192,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_snapshots (
         run_id TEXT PRIMARY KEY,
         snapshot JSONB NOT NULL,
+        snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED,
         last_run_seq INTEGER NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL
       )
@@ -1197,6 +1258,12 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       ALTER TABLE ${quoteIdentifier(this.schema)}.run_events
       ADD COLUMN IF NOT EXISTS persisted_at TIMESTAMPTZ
     `);
+
+    // Migration 004: generated status column for index-backed listRuns status filter.
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_snapshots
+      ADD COLUMN IF NOT EXISTS snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED
+    `);
   }
 
   private async ensureCompatibilityCleanup(client: PoolClient): Promise<void> {
@@ -1244,6 +1311,12 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     await client.query(`
       CREATE INDEX IF NOT EXISTS run_metadata_tenant_created_idx
       ON ${quoteIdentifier(this.schema)}.run_metadata (tenant_id, created_at DESC)
+    `);
+
+    // Migration 004: index on generated snapshot_status for listRuns status filter.
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS run_snapshots_snapshot_status_idx
+      ON ${quoteIdentifier(this.schema)}.run_snapshots (snapshot_status)
     `);
   }
 

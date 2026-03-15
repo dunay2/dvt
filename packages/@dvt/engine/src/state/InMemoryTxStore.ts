@@ -251,6 +251,22 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     return this.snapshotByRunId.get(runId) ?? null;
   }
 
+  async rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot> {
+    const meta = this.metadataByRunId.get(runId);
+    if (meta?.tenantId !== tenantId) {
+      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    }
+    const events = (this.eventsByRunId.get(runId) ?? [])
+      .slice()
+      .sort((a, b) => a.runSeq - b.runSeq);
+    const snap: WorkflowSnapshot = this.createDefaultSnapshot(runId);
+    for (const e of events) {
+      applyRunEvent(snap, e);
+    }
+    this.snapshotByRunId.set(runId, snap);
+    return snap;
+  }
+
   async enqueueTx(_runId: string, _events: RunEventPersisted[]): Promise<void> {
     await this.outbox.enqueueTx(_runId, _events);
   }
