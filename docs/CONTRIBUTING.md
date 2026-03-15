@@ -17,6 +17,13 @@ including normative contracts, runbooks, and architectural decisions.
 
 ## Documentation Structure
 
+Markdown documentation MUST live under `docs/` unless it is an explicit
+repository-level surface such as the root `README.md`, `AGENTS.md`, or a GitHub
+template under `.github/`. Do not place Markdown notes, reviews, or design docs
+inside code directories such as `apps/**/src/**`, `apps/**/test/**`,
+`packages/**/src/**`, or `packages/**/test/**`; move that prose into the
+canonical docs tree instead.
+
 ```text
 docs/
 ├── architecture/engine/

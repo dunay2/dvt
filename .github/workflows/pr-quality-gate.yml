@@ -62,6 +62,9 @@ jobs:
       - name: Run docs doctor (duplicates/legacy/staleness)
         run: pnpm docs:doctor
 
+      - name: Enforce Markdown location policy
+        run: pnpm docs:gov:locations
+
       - name: Enforce canonical docs paths and links
         run: pnpm docs:canonical:check
 
