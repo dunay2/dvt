@@ -24,7 +24,20 @@ import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
 describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
-  function makeRunQueuedEventInput(runId: string) {
+  function makeRunQueuedEventInput(runId: string): {
+    eventId: string;
+    eventType: 'RunQueued';
+    runId: string;
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    planId: string;
+    planVersion: string;
+    logicalAttemptId: number;
+    engineAttemptId: number;
+    emittedAt: string;
+    idempotencyKey: string;
+  } {
     return {
       eventId: `evt-${runId}`,
       eventType: 'RunQueued' as const,

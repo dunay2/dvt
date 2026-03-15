@@ -5,7 +5,9 @@ import Fastify from 'fastify';
 
 import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 
-function createApp(rebuildSnapshot: (tenantId: string, runId: string) => Promise<unknown>) {
+function createApp(
+  rebuildSnapshot: (tenantId: string, runId: string) => Promise<unknown>
+): ReturnType<typeof Fastify> {
   const app = Fastify({ logger: false });
   registerAdminRoutes(app, {
     rebuildSnapshot,

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import observabilityPkg from '@dvt/observability';
 import type { WorkflowEngine, WorkflowEngineDeps } from '@dvt/engine';
+import observabilityPkg from '@dvt/observability';
 
 import {
   buildWorkflowEngine,

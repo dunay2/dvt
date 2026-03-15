@@ -20,11 +20,10 @@ import {
   type IRunStateStore,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
-import type { IObservability } from '@dvt/observability';
-
 import type { IAuthorizer } from '@dvt/engine';
 import type { IStartRunIntentStore } from '@dvt/engine';
 import type { IClock } from '@dvt/engine';
+import type { IObservability } from '@dvt/observability';
 
 // ── Subsystem config types ────────────────────────────────────────────────────
 

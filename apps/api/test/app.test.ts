@@ -3,6 +3,7 @@ import process from 'node:process';
 import test from 'node:test';
 
 import adapterPostgresPkg from '@dvt/adapter-postgres';
+
 import { buildApp } from '../src/app.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
 
