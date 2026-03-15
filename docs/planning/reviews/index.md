@@ -13,7 +13,7 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 
 - ['DVT+ Architectural Review — Pass 2'](DVT+_Architectural_Review_Pass_2.md)
 - [`workflowHelpers.ts` — Architecture Review](WorkflowHelpers_Architecture_Review.md)
-- [20260305 Review](20260305%20review.md)
+- [20260305 Review](20260305-review.md)
 - [20260314 Domain Cohesion Review](20260314-domain-cohesion-review.md)
 - [20260314 Review](20260314-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](ARCH_DOC_CONSOLIDATION_MATRIX_20260307.md)
