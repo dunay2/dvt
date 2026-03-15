@@ -49,6 +49,15 @@ export class MockAdapter implements IProviderAdapter {
 
   constructor(private readonly deps: MockAdapterDeps) {}
 
+  estimateRunRef(ctx: RunContext): EngineRunRef {
+    return {
+      provider: 'mock',
+      tenantId: ctx.tenantId,
+      workflowId: `mock_${ctx.runId}`,
+      runId: ctx.runId,
+    };
+  }
+
   async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
     const plan: ExecutionPlan = this.deps.planFetcher
       ? await this.deps.planFetcher.fetch(planRef)

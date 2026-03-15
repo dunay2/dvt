@@ -2,10 +2,8 @@
  * @file apps/api/src/application/services/WorkflowEngineFactory.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Provide two construction paths:
- *   - buildWorkflowEngine: production path — accepts subsystem-grouped config,
- *     validates adapters.size > 0 at construction time, hides internal dep wiring.
- *   - createWorkflowEngine: test-seam path — accepts a flat WorkflowEngineDeps
- *     and an optional constructor override, allowing unit tests to inject fakes.
+ *   - buildWorkflowEngine: production path with subsystem-grouped config
+ *   - createWorkflowEngine: test seam that accepts flat deps and an override ctor
  */
 import {
   IdempotencyKeyBuilder,
@@ -14,27 +12,20 @@ import {
   SnapshotProjector,
   WorkflowEngine,
   type EngineRunRef,
+  type IAuthorizer,
+  type IClock,
   type IOutboxRateLimiter,
   type IProviderAdapter,
-  type IRunAccessPolicy,
   type IRunStateStore,
+  type IStartRunIntentStore,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
-import type { IAuthorizer } from '@dvt/engine';
-import type { IStartRunIntentStore } from '@dvt/engine';
-import type { IClock } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 
-// ── Subsystem config types ────────────────────────────────────────────────────
-
 export interface EngineSecurityConfig {
-  /** Authorizer that enforces tenant-level access control. */
   authorizer: IAuthorizer;
-  /** URI schemes that are permitted in PlanRef (e.g. ['https', 's3']). */
   planRefAllowedSchemes: string[];
-  /** Optional host allowlist for http/https PlanRef URIs. */
   planRefAllowedHosts?: string[];
-  /** Optional per-tenant rate limiter for the outbox. */
   outboxRateLimiter?: IOutboxRateLimiter;
 }
 
@@ -45,7 +36,6 @@ export interface EnginePersistenceConfig {
 
 export interface EngineRuntimeConfig {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
-  /** Providers that MUST be registered at boot time. Engine throws at construction if missing. */
   requiredProviders?: EngineRunRef['provider'][];
   timeouts?: { adapterCallMs?: number; outboxEnqueueMs?: number };
 }
@@ -62,14 +52,6 @@ export interface EngineConfig {
   infrastructure: EngineInfrastructureConfig;
 }
 
-// ── Production factory ────────────────────────────────────────────────────────
-
-/**
- * Builds a WorkflowEngine from a structured subsystem config.
- * Validates that at least one adapter is registered before construction.
- * Constructs SnapshotProjector, IdempotencyKeyBuilder, PlanRefPolicy, and
- * RunAccessPolicy internally — callers only provide infrastructure inputs.
- */
 export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
   if (config.runtime.adapters.size === 0) {
     throw new Error(
@@ -77,7 +59,7 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
     );
   }
 
-  const policy: IRunAccessPolicy = new RunAccessPolicy({
+  const policy = new RunAccessPolicy({
     authorizer: config.security.authorizer,
     planRefPolicy: new PlanRefPolicy({
       allowedSchemes: config.security.planRefAllowedSchemes,
@@ -106,14 +88,8 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
   });
 }
 
-// ── Test seam ─────────────────────────────────────────────────────────────────
-
 export type WorkflowEngineConstructor = new (deps: WorkflowEngineDeps) => WorkflowEngine;
 
-/**
- * Test seam: allows unit tests to inject a fake engine constructor while keeping
- * the same dep shape. Do not use in production code — use buildWorkflowEngine.
- */
 export function createWorkflowEngine(
   deps: WorkflowEngineDeps,
   EngineCtor: WorkflowEngineConstructor = WorkflowEngine

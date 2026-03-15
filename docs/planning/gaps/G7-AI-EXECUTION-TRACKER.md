@@ -548,7 +548,6 @@ Pre-implementation brief:
   `docs/planning/reviews/**`, and
   `docs/planning/status/canonical-doc-code-matrix.md`;
   `pnpm docs:canonical:check` PASS
-
 - `2026-03-14` `G7.1` `implementation — run_snapshots formalization + rebuildSnapshot API`
   summary: G7.1 fully delivered; migration `004_run_snapshots_and_status_index.sql` added
   with `snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED` column and

@@ -8,10 +8,33 @@
  * @version 1.1.0
  * @date 2026-02-21
  */
-import type { RunStatusSnapshot } from '@dvt/contracts';
+import type { RunStatus, RunStatusSnapshot } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 
+import { InvalidStateTransitionError } from '../contracts/errors.js';
 import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js';
+
+/** Run statuses from which no further status-mutating event is valid. */
+const TERMINAL_RUN_STATUSES = new Set<RunStatus>(['COMPLETED', 'FAILED', 'CANCELLED']);
+
+/**
+ * Step statuses from which no further mutation is valid.
+ * FAILED is intentionally excluded: retries re-emit StepStarted on a failed step.
+ */
+const TERMINAL_STEP_STATUSES = new Set(['COMPLETED', 'SKIPPED']);
+
+function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {
+  if (TERMINAL_RUN_STATUSES.has(snap.status)) {
+    throw new InvalidStateTransitionError(snap.runId, snap.status, eventType);
+  }
+}
+
+function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: string, eventType: string): void {
+  const step = snap.steps[stepId];
+  if (step !== undefined && TERMINAL_STEP_STATUSES.has(step.status)) {
+    throw new InvalidStateTransitionError(snap.runId, step.status, eventType, stepId);
+  }
+}
 
 /**
  * Pure function: applies a single event to a mutable WorkflowSnapshot.
@@ -19,6 +42,10 @@ import type { EventEnvelope, WorkflowSnapshot } from '../contracts/runEvents.js'
  * Exported so state store implementations can incrementally maintain a
  * materialized snapshot without depending on SnapshotProjector as a class.
  * Must remain a pure value transform — no I/O, no side effects.
+ *
+ * Throws `InvalidStateTransitionError` when an event targets a run or step
+ * already in a terminal status. This surfaces upstream bugs (duplicate events,
+ * out-of-order delivery) instead of silently corrupting the snapshot.
  */
 export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): WorkflowSnapshot {
   const handlers: Record<string, (snap: WorkflowSnapshot, e: EventEnvelope) => void> = {
@@ -42,42 +69,50 @@ export function applyRunEvent(snap: WorkflowSnapshot, e: EventEnvelope): Workflo
 }
 
 function handleRunStarted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  assertRunNotTerminal(snap, 'RunStarted');
   snap.status = 'RUNNING';
   snap.startedAt = snap.startedAt ?? e.emittedAt;
 }
 
 function handleRunPaused(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  assertRunNotTerminal(snap, 'RunPaused');
   snap.status = 'PAUSED';
   snap.paused = true;
 }
 
 function handleRunResumed(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  assertRunNotTerminal(snap, 'RunResumed');
   snap.status = 'RUNNING';
   snap.paused = false;
 }
 
 function handleRunCancelRequested(snap: WorkflowSnapshot, _e: EventEnvelope): void {
+  assertRunNotTerminal(snap, 'RunCancelRequested');
   snap.cancelling = true;
 }
 
 function handleRunCancelled(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  assertRunNotTerminal(snap, 'RunCancelled');
   snap.status = 'CANCELLED';
   snap.cancelling = false;
   snap.completedAt = e.emittedAt;
 }
 
 function handleRunCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  assertRunNotTerminal(snap, 'RunCompleted');
   snap.status = 'COMPLETED';
   snap.completedAt = e.emittedAt;
 }
 
 function handleRunFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
+  assertRunNotTerminal(snap, 'RunFailed');
   snap.status = 'FAILED';
   snap.completedAt = e.emittedAt;
 }
 
 function handleStepStarted(snap: WorkflowSnapshot, e: EventEnvelope): void {
   const stepId = (e as { stepId: string }).stepId;
+  assertStepNotTerminal(snap, stepId, 'StepStarted');
   const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
   s.status = 'RUNNING';
   s.startedAt = s.startedAt ?? e.emittedAt;
@@ -87,6 +122,7 @@ function handleStepStarted(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
 function handleStepCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
   const stepId = (e as { stepId: string }).stepId;
+  assertStepNotTerminal(snap, stepId, 'StepCompleted');
   const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
   s.status = 'COMPLETED';
   s.completedAt = e.emittedAt;
@@ -103,6 +139,7 @@ function handleStepCompleted(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
 function handleStepFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
   const stepId = (e as { stepId: string }).stepId;
+  assertStepNotTerminal(snap, stepId, 'StepFailed');
   const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
   s.status = 'FAILED';
   s.completedAt = e.emittedAt;
@@ -111,6 +148,7 @@ function handleStepFailed(snap: WorkflowSnapshot, e: EventEnvelope): void {
 
 function handleStepSkipped(snap: WorkflowSnapshot, e: EventEnvelope): void {
   const stepId = (e as { stepId: string }).stepId;
+  assertStepNotTerminal(snap, stepId, 'StepSkipped');
   const s = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
   s.status = 'SKIPPED';
   s.completedAt = e.emittedAt;

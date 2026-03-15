@@ -255,8 +255,11 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
 - Remaining:
   - G7.2 standalone projector runtime (`ProjectorWorkerRuntime` in
     `@dvt/delivery`, `apps/projector-worker` composition root)
+  - denormalized read models and indexes for production read paths
   - G7.3 provider execution-id reconciliation (`updateProviderRunRef` after
-    `adapter.startRun()` returns the real `firstExecutionRunId`)
+    `adapter.startRun()` returns the real `firstExecutionRunId`) when a
+    pre-bootstrap adapter can only compute an approximate provider run id
+    before start
   - G7.4 evidence doc + full closeout
 
 ### G8 - Auth real en apps/api
