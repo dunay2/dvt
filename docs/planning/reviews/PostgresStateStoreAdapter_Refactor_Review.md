@@ -1,3 +1,11 @@
+---
+title: PostgresStateStoreAdapter — Architecture Review and Refactor Proposal
+status: Draft
+owner: docs
+last_reviewed: 2026-03-15
+planning_type: review
+---
+
 # PostgresStateStoreAdapter — Architecture Review and Refactor Proposal
 
 **Target**: `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`  
@@ -21,7 +29,7 @@ The main problem is not SQL correctness. The main problem is **boundary collapse
 - outbox/dead-letter concerns are mixed into the same object as run state persistence,
 - the adapter is acting as façade, repository, schema manager, projector host, retry store, and replay service at once.
 
-That shape conflicts with the DVT+ product rule that **state is the source of truth**, the **engine does not decide**, and the architecture must remain contract-first and adapter-based. It also conflicts with the V2 architecture guidance that the **Metadata/State Store** is a dedicated layer behind explicit contracts, and that **RBAC / tenant scoping** is first-class.`r`n`r`n---
+## That shape conflicts with the DVT+ product rule that **state is the source of truth**, the **engine does not decide**, and the architecture must remain contract-first and adapter-based. It also conflicts with the V2 architecture guidance that the **Metadata/State Store** is a dedicated layer behind explicit contracts, and that **RBAC / tenant scoping** is first-class.`r`n
 
 ## 2. What is good in the current implementation
 
@@ -705,9 +713,3 @@ That gets you much closer to the DVT+ architecture rule set:
 - UI state-driven,
 - contract-first,
 - multi-tenant by boundary, not by convention.
-
-## 18. Short PR summary
-
-**Good:** transactional persistence flow, append ordering, and snapshot/outbox coupling are directionally strong.
-**Bad:** projection rules and too many infrastructure concerns collapse into one adapter class.
-**Next move:** split projector, repositories/stores, and tenant-scoped boundaries while keeping the transactional SQL core.

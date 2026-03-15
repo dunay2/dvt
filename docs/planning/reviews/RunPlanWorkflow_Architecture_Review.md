@@ -1,3 +1,11 @@
+---
+title: RunPlanWorkflow — Architecture Review, Refactor Map, and Mermaid Diagrams
+status: Draft
+owner: docs
+last_reviewed: 2026-03-15
+planning_type: review
+---
+
 # RunPlanWorkflow — Architecture Review, Refactor Map, and Mermaid Diagrams
 
 **File under review**  
@@ -832,4 +840,4 @@ That should be fixed now, before the file becomes the canonical place where engi
 **Short form:**  
 Good architecture direction.  
 Not yet the final boundary shape.  
-Refactor now while the file is still tractable.`r`n
+Refactor now while the file is still tractable.

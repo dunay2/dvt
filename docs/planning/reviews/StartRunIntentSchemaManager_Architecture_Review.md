@@ -1,3 +1,11 @@
+---
+title: StartRunIntentSchemaManager — QA, Architecture Review, and Refactor Proposal
+status: Draft
+owner: docs
+last_reviewed: 2026-03-15
+planning_type: review
+---
+
 # StartRunIntentSchemaManager — QA, Architecture Review, and Refactor Proposal
 
 **File under review**  
@@ -670,7 +678,7 @@ sequenceDiagram
 1. Extract migration definitions into separate files
 2. Extract lock strategy into `PostgresMigrationLock`
 3. Extract migration history persistence into `PostgresMigrationHistoryStore`
-4. Leave `StartRunIntentSchemaManager` as a thin bootstrap façade or rename it to `StartRunIntentSchemaBootstrap`
+4. Leave `StartRunIntentSchemaManager` as a thin bootstrap facade or rename it to `StartRunIntentSchemaBootstrap`
 
 ### Phase 3 — portfolio-level consistency
 

@@ -547,6 +547,20 @@ dvt-cli trace-divergence \
 
 ---
 
+## 11) Repository Enforcement Surfaces
+
+The repository enforces determinism in three places:
+
+- source linting through `pnpm lint:determinism`
+- focused test execution through `pnpm test:determinism`
+- engine test assets under `packages/@dvt/engine/test/determinism/`
+
+The engine source restrictions apply to `packages/@dvt/engine/src/**/*.ts`.
+Temporal workflow restrictions additionally apply to
+`packages/@dvt/adapter-temporal/src/workflows/**/*.ts`.
+
+---
+
 ## Change Log
 
 | Version | Date       | Change                                        |

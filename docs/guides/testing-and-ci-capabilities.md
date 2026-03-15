@@ -88,6 +88,7 @@ Relevant code and fixtures:
 | Docs sync drift check               | `pnpm docs:sync:check`       | [`package.json`](../../package.json) |
 | Docs quality policy check           | `pnpm docs:quality:check`    | [`package.json`](../../package.json) |
 | Docs doctor                         | `pnpm docs:doctor`           | [`package.json`](../../package.json) |
+| Markdown location policy            | `pnpm docs:gov:locations`    | [`package.json`](../../package.json) |
 | Canonical path/link check           | `pnpm docs:canonical:check`  | [`package.json`](../../package.json) |
 | Generated code-state check          | `pnpm docs:status:check`     | [`package.json`](../../package.json) |
 | Generated capability coverage check | `pnpm docs:capability:check` | [`package.json`](../../package.json) |

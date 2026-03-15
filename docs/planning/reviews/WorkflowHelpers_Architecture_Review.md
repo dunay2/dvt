@@ -1,3 +1,11 @@
+---
+title: `workflowHelpers.ts` — Architecture Review
+status: Draft
+owner: docs
+last_reviewed: 2026-03-15
+planning_type: review
+---
+
 # `workflowHelpers.ts` — Architecture Review
 
 **File**: `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`  

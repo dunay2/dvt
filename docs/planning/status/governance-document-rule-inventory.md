@@ -169,6 +169,12 @@ Usage rules already declared in the ADR index:
 | [scripts/docs-canonical-check.cjs](../../../scripts/docs-canonical-check.cjs) | `canonical path gate`   | Canonical docs path and legacy segment validation.                                                                                        |
 | [scripts/sync-docs.cjs](../../../scripts/sync-docs.cjs)                       | `docs generator`        | Rebuilds generated indexes and docs navigation surfaces.                                                                                  |
 
+Additional enforcement surface:
+
+- [check-markdown-locations.cjs](../../../scripts/check-markdown-locations.cjs)
+  blocks Markdown files from code directories under `apps/**` and
+  `packages/**`.
+
 ### GitHub workflows
 
 | Source                                                                                  | Role                      | Main enforced rules                                                                                                                                                                                                                  |
