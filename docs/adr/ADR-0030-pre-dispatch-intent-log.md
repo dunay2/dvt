@@ -246,6 +246,7 @@ Two new error classes extending `DvtError`:
 - **INV-INTENT-008**: Reconciliation checks `stateStore.getRunMetadataByRunId()` before cancelling a DISPATCHED intent — if the run exists, it marks the intent resolved without cancelling.
 - **INV-INTENT-009**: `listOrphaned()` returns only PENDING and DISPATCHED intents older than the threshold, ordered by `createdAt` ASC.
 - **INV-INTENT-010**: Failed cancellations are reported in `cancelFailed[]` for retry on the next sweep.
+- **INV-INTENT-011**: Callers of `createIntent()` MUST derive `intentId` deterministically from `(tenantId, runId)` — e.g., `canonicalHash(tenantId | runId | "startRun")` following the ADR-0008 pattern — so that a scheduler crash-restart produces the same `intentId` and the idempotency-on-`intentId` guarantee absorbs the retry. Generating a fresh UUID on every invocation violates this invariant. Implementations MUST throw `IntentActiveConflictError` if a different `intentId` is submitted for a `(tenantId, runId)` pair that already has an active (PENDING or DISPATCHED) intent.
 
 ---
 

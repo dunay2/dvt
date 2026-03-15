@@ -16,11 +16,13 @@ import type {
 } from '@dvt/contracts';
 import {
   getAllowedFromStatuses,
+  IntentActiveConflictError,
+  IntentDispatchConflictError,
   IntentInvalidTransitionError,
   IntentNotFoundError,
   StoreNotReadyError,
 } from '@dvt/contracts';
-import { Pool } from 'pg';
+import { DatabaseError, Pool } from 'pg';
 
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
@@ -42,7 +44,7 @@ type RunId = StartRunIntent['runId'];
 type IntentTimestamp = StartRunIntent['createdAt'];
 type EngineRunRef = NonNullable<StartRunIntent['engineRunRef']>;
 type NonDispatchTransitionTarget = Exclude<StartRunIntentTransitionTarget, 'DISPATCHED'>;
-type TransitionOutcome = 'UPDATED' | 'INVALID' | 'NOT_FOUND';
+type TransitionOutcome = 'UPDATED' | 'NO_OP' | 'CONFLICT' | 'INVALID' | 'NOT_FOUND';
 
 interface IntentIdentity {
   intentId: IntentId;
@@ -101,6 +103,7 @@ const DEFAULT_ORPHAN_LIMIT = 100;
 const MIN_ORPHAN_LIMIT = 1;
 const MAX_ORPHAN_LIMIT = 1000;
 const INVALID_ORPHAN_LIMIT_MESSAGE = 'INVALID_LIMIT: listOrphaned limit must be between 1 and 1000';
+const ACTIVE_INTENT_UNIQUE_INDEX = 'start_run_intents_active_run_uniq';
 
 export interface PostgresStartRunIntentStoreConfig {
   connectionString?: string;
@@ -172,34 +175,42 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   async createIntent(input: CreateIntentInput): Promise<StartRunIntent> {
     this.ready();
     const now = this.now();
-    const result = await this.pool.query<IntentRow>(
-      `
-        WITH inserted AS (
-          INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
-            intent_id,
-            tenant_id,
-            run_id,
-            provider,
-            status,
-            engine_run_ref,
-            created_at,
-            updated_at
+    let result;
+    try {
+      result = await this.pool.query<IntentRow>(
+        `
+          WITH inserted AS (
+            INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
+              intent_id,
+              tenant_id,
+              run_id,
+              provider,
+              status,
+              engine_run_ref,
+              created_at,
+              updated_at
+            )
+            VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
+            ON CONFLICT (intent_id) DO NOTHING
+            RETURNING ${INTENT_SELECT_COLUMNS}
           )
-          VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
-          ON CONFLICT (intent_id) DO NOTHING
-          RETURNING ${INTENT_SELECT_COLUMNS}
-        )
-        SELECT ${INTENT_SELECT_COLUMNS}
-        FROM inserted
-        UNION ALL
-        SELECT ${INTENT_SELECT_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.start_run_intents
-        WHERE intent_id = $1
-          AND NOT EXISTS (SELECT 1 FROM inserted)
-        LIMIT 1
-      `,
-      [input.intentId, input.tenantId, input.runId, input.provider, input.createdAt, now]
-    );
+          SELECT ${INTENT_SELECT_COLUMNS}
+          FROM inserted
+          UNION ALL
+          SELECT ${INTENT_SELECT_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.start_run_intents
+          WHERE intent_id = $1
+            AND NOT EXISTS (SELECT 1 FROM inserted)
+          LIMIT 1
+        `,
+        [input.intentId, input.tenantId, input.runId, input.provider, input.createdAt, now]
+      );
+    } catch (error: unknown) {
+      if (isActiveIntentConflict(error)) {
+        throw new IntentActiveConflictError(input.tenantId, input.runId);
+      }
+      throw error;
+    }
     const row = result.rows[0];
     if (!row) {
       throw new IntentNotFoundError(input.intentId);
@@ -254,8 +265,8 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
       `
         SELECT ${INTENT_SELECT_COLUMNS}
         FROM ${quoteIdentifier(this.schema)}.start_run_intents
-        WHERE status IN ('PENDING', 'DISPATCHED')
-          AND created_at < $1::timestamptz
+        WHERE (status = 'PENDING' AND created_at < $1::timestamptz)
+           OR (status = 'DISPATCHED' AND updated_at < $1::timestamptz)
         ORDER BY created_at ASC
         LIMIT $2
       `,
@@ -268,23 +279,31 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     command: TransitionCommand
   ): Promise<TransitionOutcomeRow> {
     const mutation = this.buildTransitionMutation(command);
+    const isDispatch = command.kind === 'dispatch';
     const result = await this.pool.query<TransitionOutcomeRow>(
       `
         WITH updated AS (
           ${mutation.sql}
         ),
         existing AS (
-          SELECT status::text AS current_status
+          SELECT status, engine_run_ref
           FROM ${quoteIdentifier(this.schema)}.start_run_intents
           WHERE intent_id = $1
         )
         SELECT
           CASE
             WHEN EXISTS (SELECT 1 FROM updated) THEN 'UPDATED'
-            WHEN EXISTS (SELECT 1 FROM existing) THEN 'INVALID'
-            ELSE 'NOT_FOUND'
+            WHEN NOT EXISTS (SELECT 1 FROM existing) THEN 'NOT_FOUND'
+            ${
+              isDispatch
+                ? `WHEN (SELECT status FROM existing) = 'DISPATCHED'
+                     AND (SELECT engine_run_ref FROM existing) = $2::jsonb THEN 'NO_OP'
+                   WHEN (SELECT status FROM existing) = 'DISPATCHED' THEN 'CONFLICT'`
+                : ''
+            }
+            ELSE 'INVALID'
           END::text AS outcome,
-          (SELECT current_status FROM existing LIMIT 1)::text AS current_status
+          (SELECT status::text FROM existing LIMIT 1) AS current_status
       `,
       mutation.params
     );
@@ -352,6 +371,10 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     to: StartRunIntentStatus
   ): void {
     if (transition.outcome === 'UPDATED') return;
+    if (transition.outcome === 'NO_OP') return;
+    if (transition.outcome === 'CONFLICT') {
+      throw new IntentDispatchConflictError(intentId);
+    }
     if (transition.outcome === 'NOT_FOUND') {
       throw new IntentNotFoundError(intentId);
     }
@@ -417,4 +440,12 @@ function toIntent(state: PersistedIntentState): StartRunIntent {
     createdAt: state.timestamps.createdAt,
     updatedAt: state.timestamps.updatedAt,
   };
+}
+
+function isActiveIntentConflict(error: unknown): boolean {
+  return (
+    error instanceof DatabaseError &&
+    error.code === '23505' &&
+    error.constraint === ACTIVE_INTENT_UNIQUE_INDEX
+  );
 }

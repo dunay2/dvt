@@ -34,6 +34,8 @@ export { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 export { PostgresStartRunIntentStore } from './PostgresStartRunIntentStore.js';
 export { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
 export {
+  IntentActiveConflictError,
+  IntentDispatchConflictError,
   IntentInvalidTransitionError,
   IntentNotFoundError,
   StoreNotReadyError,

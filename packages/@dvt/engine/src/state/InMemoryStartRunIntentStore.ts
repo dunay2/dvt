@@ -9,7 +9,12 @@
  */
 import type { EngineRunRef } from '@dvt/contracts';
 
-import { IntentInvalidTransitionError, IntentNotFoundError } from '../contracts/intentErrors.js';
+import {
+  IntentActiveConflictError,
+  IntentDispatchConflictError,
+  IntentInvalidTransitionError,
+  IntentNotFoundError,
+} from '../contracts/intentErrors.js';
 import { canTransitionStartRunIntent } from '../domain/startRunIntentPolicy.js';
 import type {
   CreateIntentInput,
@@ -30,6 +35,16 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
     const existing = this.intents.get(input.intentId);
     if (existing) return existing;
 
+    for (const i of this.intents.values()) {
+      if (
+        i.tenantId === input.tenantId &&
+        i.runId === input.runId &&
+        (i.status === 'PENDING' || i.status === 'DISPATCHED')
+      ) {
+        throw new IntentActiveConflictError(input.tenantId, input.runId);
+      }
+    }
+
     const intent: StartRunIntent = {
       intentId: input.intentId,
       tenantId: input.tenantId,
@@ -45,6 +60,10 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
 
   async markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void> {
     const intent = this.assertExists(intentId);
+    if (intent.status === 'DISPATCHED') {
+      if (JSON.stringify(intent.engineRunRef) === JSON.stringify(engineRunRef)) return;
+      throw new IntentDispatchConflictError(intentId);
+    }
     if (!canTransitionStartRunIntent(intent.status, 'DISPATCHED')) {
       throw new IntentInvalidTransitionError(intentId, intent.status, 'DISPATCHED');
     }
@@ -78,10 +97,11 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
   ): Promise<StartRunIntent[]> {
     const cutoff = nowMs - thresholdMs;
     const candidates = Array.from(this.intents.values())
-      .filter(
-        (i) =>
-          (i.status === 'PENDING' || i.status === 'DISPATCHED') && Date.parse(i.createdAt) < cutoff
-      )
+      .filter((i) => {
+        if (i.status === 'PENDING') return Date.parse(i.createdAt) < cutoff;
+        if (i.status === 'DISPATCHED') return Date.parse(i.updatedAt) < cutoff;
+        return false;
+      })
       .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
     return limit === undefined ? candidates : candidates.slice(0, limit);
   }

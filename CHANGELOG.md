@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.1](https://github.com/dunay2/dvt/compare/v4.0.0...v4.0.1) (2026-03-15)
+
+
+### Bug Fixes
+
+* **state-store:** Harden intent store conflict semantics ([#475](https://github.com/dunay2/dvt/issues/475)) ([a2f2883](https://github.com/dunay2/dvt/commit/a2f2883b0c7528620b0871262c837b184c1be5b7))
+
 ## [4.0.0](https://github.com/dunay2/dvt/compare/v3.5.1...v4.0.0) (2026-03-15)
 
 
