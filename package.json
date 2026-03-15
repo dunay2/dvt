@@ -1,6 +1,6 @@
 {
   "name": "dvt",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "type": "module",
   "description": "DVT - Workflow Engine Documentation and Code",
   "main": "dist/index.js",

@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/dunay2/dvt/compare/v4.0.1...v4.1.0) (2026-03-15)
+
+
+### Features
+
+* **adapters:** Add lineage runtime and worker ([#476](https://github.com/dunay2/dvt/issues/476)) ([2c895bd](https://github.com/dunay2/dvt/commit/2c895bd171c6e73465fdc73787441cc6da84161d))
+
 ## [4.0.1](https://github.com/dunay2/dvt/compare/v4.0.0...v4.0.1) (2026-03-15)
 
 
