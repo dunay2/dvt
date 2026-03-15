@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.1](https://github.com/dunay2/dvt/compare/v3.5.0...v3.5.1) (2026-03-15)
+
+
+### Bug Fixes
+
+* **adapter-postgres:** quote stale snapshot schema ([#468](https://github.com/dunay2/dvt/issues/468)) ([5d7c1d0](https://github.com/dunay2/dvt/commit/5d7c1d044d5f96c3c503e8414d08e46a1d4c0524))
+
 ## [3.5.0](https://github.com/dunay2/dvt/compare/v3.4.1...v3.5.0) (2026-03-15)
 
 
