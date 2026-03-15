@@ -8,11 +8,7 @@
  */
 import type { PoolClient } from 'pg';
 import { quoteIdentifier } from './sqlUtils.js';
-import type {
-  EventEnvelope,
-  RunId,
-  WorkflowSnapshot,
-} from './types.js';
+import type { EventEnvelope, RunId, WorkflowSnapshot } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)

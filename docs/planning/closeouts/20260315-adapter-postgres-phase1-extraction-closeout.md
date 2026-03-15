@@ -94,18 +94,18 @@ schema, outbox, metadata, events, and snapshots, with
 
 ## Changes made
 
-| File | Change | Why |
-| ---- | ------ | --- |
-| `packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts` | Extract schema and DDL lifecycle from the main adapter | Separate migration readiness and compatibility patches from data access |
-| `packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts` | Extract outbox and dead-letter persistence | Narrow outbox responsibility and keep retry/dead-letter SQL local |
-| `packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts` | Extract `run_metadata` operations | Isolate tenant-scoped metadata reads and writes |
-| `packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts` | Extract `run_events` append and list logic | Keep ordering and idempotency logic focused and testable |
-| `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts` | Extract `run_snapshots` reads and replay/update logic | Separate read-model projection persistence from transaction orchestration |
-| `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts` | Reduce to facade plus transactional coordinator | Keep connection lifecycle and multi-store transaction boundaries in one place |
-| `packages/@dvt/adapter-postgres/src/index.ts` | Export the extracted store classes | Publish the refactored package surface explicitly |
-| `packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts` | Update migrate-state assertion to follow `schemaManager` ownership | Keep tests aligned with the extracted migration state owner |
-| `docs/evidence/ED-20260315-adapter-postgres-phase1-items5-7.md` | Record extraction evidence and validation | Tie the slice to explicit proof |
-| `docs/planning/closeouts/20260315-adapter-postgres-phase1-extraction-closeout.md` | Record think-first, scope, and validation evidence | Satisfy mandatory closeout governance |
+| File                                                                              | Change                                                             | Why                                                                           |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts`                     | Extract schema and DDL lifecycle from the main adapter             | Separate migration readiness and compatibility patches from data access       |
+| `packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts`                       | Extract outbox and dead-letter persistence                         | Narrow outbox responsibility and keep retry/dead-letter SQL local             |
+| `packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts`             | Extract `run_metadata` operations                                  | Isolate tenant-scoped metadata reads and writes                               |
+| `packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts`                     | Extract `run_events` append and list logic                         | Keep ordering and idempotency logic focused and testable                      |
+| `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts`                  | Extract `run_snapshots` reads and replay/update logic              | Separate read-model projection persistence from transaction orchestration     |
+| `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`                 | Reduce to facade plus transactional coordinator                    | Keep connection lifecycle and multi-store transaction boundaries in one place |
+| `packages/@dvt/adapter-postgres/src/index.ts`                                     | Export the extracted store classes                                 | Publish the refactored package surface explicitly                             |
+| `packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts`   | Update migrate-state assertion to follow `schemaManager` ownership | Keep tests aligned with the extracted migration state owner                   |
+| `docs/evidence/ED-20260315-adapter-postgres-phase1-items5-7.md`                   | Record extraction evidence and validation                          | Tie the slice to explicit proof                                               |
+| `docs/planning/closeouts/20260315-adapter-postgres-phase1-extraction-closeout.md` | Record think-first, scope, and validation evidence                 | Satisfy mandatory closeout governance                                         |
 
 ## Libraries evaluated
 
@@ -119,13 +119,13 @@ None adopted; see Think-First analysis.
 
 ## Test evidence
 
-| Command | Result |
-| ------- | ------ |
-| `pnpm --filter @dvt/adapter-postgres typecheck` | PASS |
-| `pnpm --filter @dvt/adapter-postgres test` | PASS - 11 passed, 23 skipped (`DVT_PG_INTEGRATION` and smoke-gated) |
-| `pnpm docs:sync` | PASS |
-| `pnpm docs:quality:check` | PASS with pre-existing non-English warnings outside this slice |
-| `pnpm docs:canonical:check` | PASS |
+| Command                                         | Result                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------- |
+| `pnpm --filter @dvt/adapter-postgres typecheck` | PASS                                                                |
+| `pnpm --filter @dvt/adapter-postgres test`      | PASS - 11 passed, 23 skipped (`DVT_PG_INTEGRATION` and smoke-gated) |
+| `pnpm docs:sync`                                | PASS                                                                |
+| `pnpm docs:quality:check`                       | PASS with pre-existing non-English warnings outside this slice      |
+| `pnpm docs:canonical:check`                     | PASS                                                                |
 
 ## Debt introduced
 

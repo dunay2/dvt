@@ -9,13 +9,7 @@
 import type { PoolClient } from 'pg';
 
 import { quoteIdentifier } from './sqlUtils.js';
-import type {
-  AppendResult,
-  EventEnvelope,
-  EventInput,
-  ListEventsOptions,
-  RunId,
-} from './types.js';
+import type { AppendResult, EventEnvelope, EventInput, ListEventsOptions, RunId } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)

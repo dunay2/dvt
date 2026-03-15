@@ -31,15 +31,15 @@ adapter from a god-object (~955 lines) to a thin transactional coordinator.
 
 Phase 1 status after this ED:
 
-| Item | Description | Status |
-| ---- | ----------- | ------ |
-| 1 | Extract `RunEventProjector` -> `@dvt/run-domain` | Done (prior session) |
-| 2 | Extract `PostgresSchemaManager` | Done (prior session) |
-| 3 | Extract `PostgresOutboxStore` | Done (prior session) |
-| 4 | Extract `PostgresDeadLetterStore` | Done (part of OutboxStore) |
-| 5 | Extract `PostgresRunMetadataRepository` | Done (this ED) |
-| 6 | Extract `PostgresRunEventStore` | Done (this ED) |
-| 7 | Extract `PostgresRunSnapshotStore` | Done (this ED) |
+| Item | Description                                      | Status                     |
+| ---- | ------------------------------------------------ | -------------------------- |
+| 1    | Extract `RunEventProjector` -> `@dvt/run-domain` | Done (prior session)       |
+| 2    | Extract `PostgresSchemaManager`                  | Done (prior session)       |
+| 3    | Extract `PostgresOutboxStore`                    | Done (prior session)       |
+| 4    | Extract `PostgresDeadLetterStore`                | Done (part of OutboxStore) |
+| 5    | Extract `PostgresRunMetadataRepository`          | Done (this ED)             |
+| 6    | Extract `PostgresRunEventStore`                  | Done (this ED)             |
+| 7    | Extract `PostgresRunSnapshotStore`               | Done (this ED)             |
 
 ## Extracted Classes
 
@@ -48,6 +48,7 @@ Phase 1 status after this ED:
 Owns all `run_metadata` table operations.
 
 Extracted methods:
+
 - `insertWithClient(client, meta)` - inserts a new `run_metadata` row within a
   caller-owned transaction
 - `resolveTenantWithClient(client, runId)` - resolves `tenant_id` from `run_id`
@@ -62,6 +63,7 @@ Extracted methods:
 Owns all `run_events` table operations.
 
 Extracted methods:
+
 - `appendWithClient(client, runId, envelopes)` - acquires advisory lock, gets
   max `run_seq`, inserts and deduplicates events, and returns append metadata
 - `listEvents(tenantId, runId, options?)` - tenant-scoped ordered event list
@@ -73,6 +75,7 @@ Extracted methods:
 Owns all `run_snapshots` table operations.
 
 Extracted methods:
+
 - `getSnapshot(tenantId, runId)` - tenant-scoped snapshot fetch
 - `rebuildSnapshot(tenantId, runId)` - full event replay with advisory lock
 - `updateWithClient(client, runId, appended, baseRunSeq, lastAppendedRunSeq)` -

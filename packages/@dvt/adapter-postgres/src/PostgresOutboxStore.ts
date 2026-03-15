@@ -98,7 +98,11 @@ export class PostgresOutboxStore implements IOutboxStorage {
    * The caller owns the PoolClient and manages BEGIN/COMMIT.
    * Called by the adapter from bootstrapRunTx and appendAndEnqueueTx.
    */
-  async enqueueWithClient(client: PoolClient, runId: RunId, events: EventEnvelope[]): Promise<void> {
+  async enqueueWithClient(
+    client: PoolClient,
+    runId: RunId,
+    events: EventEnvelope[]
+  ): Promise<void> {
     const createdAt = this.now();
     for (const event of events) {
       await client.query(
