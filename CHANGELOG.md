@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.0](https://github.com/dunay2/dvt/compare/v3.4.1...v3.5.0) (2026-03-15)
+
+
+### Features
+
+* **engine:** Formalize snapshot recovery and startup hardening ([#459](https://github.com/dunay2/dvt/issues/459)) ([4a88b41](https://github.com/dunay2/dvt/commit/4a88b4155e0f789e0084c872330cba55f551b381))
+
 ## [3.4.1](https://github.com/dunay2/dvt/compare/v3.4.0...v3.4.1) (2026-03-14)
 
 
