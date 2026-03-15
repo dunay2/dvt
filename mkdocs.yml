@@ -47,7 +47,7 @@ nav:
       - Reference Architecture: architecture/reference-architecture.md
   - How-To:
       - Guides Index: guides/index.md
-      - Mandatory AI Workflow: guides/SISTEMA DE TRABAJO OBLIGATORIO PARA IA.md
+      - Mandatory AI Workflow: guides/ai-work-protocol.md
   - Operations:
       - Runbooks: runbooks/index.md
       - Risk Register: risk-register/index.md
