@@ -2,7 +2,8 @@ import { Client } from 'pg';
 import { afterAll, describe, expect, test } from 'vitest';
 
 import {
-  IntentInvalidTransitionError,
+  IntentActiveConflictError,
+  IntentDispatchConflictError,
   IntentNotFoundError,
   PostgresStartRunIntentStore,
 } from '../src/index.js';
@@ -51,8 +52,11 @@ describeIfPg('PostgresStartRunIntentStore integration', () => {
 
   test('markDispatched rejects missing intent', () => withStore(testMarkDispatchedMissingIntent));
 
-  test('markDispatched rejects invalid state transition', () =>
-    withStore(testMarkDispatchedInvalidTransition));
+  test('markDispatched is idempotent for same engineRunRef', () =>
+    withStore(testMarkDispatchedIdempotency));
+
+  test('markDispatched throws IntentDispatchConflictError for different engineRunRef', () =>
+    withStore(testMarkDispatchedConflict));
 
   test('listOrphaned returns only pending/dispatched older than threshold', () =>
     withStore(testListOrphaned));
@@ -85,20 +89,32 @@ async function testMarkDispatchedMissingIntent(store: PostgresStartRunIntentStor
   );
 }
 
-async function testMarkDispatchedInvalidTransition(
-  store: PostgresStartRunIntentStore
-): Promise<void> {
+async function testMarkDispatchedIdempotency(store: PostgresStartRunIntentStore): Promise<void> {
   await store.createIntent({
-    intentId: 'intent-2',
+    intentId: 'intent-idem',
     tenantId: 't1',
-    runId: 'r2',
+    runId: 'r-idem',
     provider: 'temporal',
     createdAt: '2026-03-04T00:00:00.000Z',
   });
-  await store.markDispatched('intent-2', dispatchTestData);
+  await store.markDispatched('intent-idem', dispatchTestData);
 
-  await expect(store.markDispatched('intent-2', dispatchTestData)).rejects.toBeInstanceOf(
-    IntentInvalidTransitionError
+  await expect(store.markDispatched('intent-idem', dispatchTestData)).resolves.toBeUndefined();
+}
+
+async function testMarkDispatchedConflict(store: PostgresStartRunIntentStore): Promise<void> {
+  await store.createIntent({
+    intentId: 'intent-conflict',
+    tenantId: 't1',
+    runId: 'r-conflict',
+    provider: 'temporal',
+    createdAt: '2026-03-04T00:00:00.000Z',
+  });
+  await store.markDispatched('intent-conflict', dispatchTestData);
+
+  const differentRef = { ...dispatchTestData, workflowId: 'wf-different' };
+  await expect(store.markDispatched('intent-conflict', differentRef)).rejects.toBeInstanceOf(
+    IntentDispatchConflictError
   );
 }
 
@@ -151,5 +167,5 @@ async function testActiveUniqueIndex(store: PostgresStartRunIntentStore): Promis
       provider: 'temporal',
       createdAt: '2026-03-04T00:00:01.000Z',
     })
-  ).rejects.toThrow();
+  ).rejects.toBeInstanceOf(IntentActiveConflictError);
 }

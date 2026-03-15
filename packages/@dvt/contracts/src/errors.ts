@@ -37,6 +37,26 @@ export class IntentInvalidTransitionError extends Error {
   }
 }
 
+export class IntentActiveConflictError extends Error {
+  readonly code = 'INTENT_ACTIVE_CONFLICT' as const;
+
+  constructor(tenantId: string, runId: string) {
+    super(`An active intent already exists for tenant=${tenantId} run=${runId}`);
+    this.name = 'IntentActiveConflictError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class IntentDispatchConflictError extends Error {
+  readonly code = 'INTENT_DISPATCH_CONFLICT' as const;
+
+  constructor(intentId: string) {
+    super(`Intent ${intentId} is already DISPATCHED with a different engineRunRef`);
+    this.name = 'IntentDispatchConflictError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 export class StoreNotReadyError extends Error {
   readonly code = 'STORE_NOT_READY' as const;
 
