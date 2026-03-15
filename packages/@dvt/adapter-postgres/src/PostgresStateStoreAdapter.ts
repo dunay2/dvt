@@ -18,7 +18,7 @@ import { PostgresRunEventStore } from './PostgresRunEventStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
-import { normalizeSchema } from './sqlUtils.js';
+import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import type {
   AppendResult,
   DeadLetterRecord,
@@ -334,12 +334,12 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     return this.withClient(async (client) => {
       const result = await client.query<{ run_id: string; tenant_id: string }>(
         `SELECT m.run_id, m.tenant_id
-           FROM ${this.schema}.run_metadata m
-           LEFT JOIN ${this.schema}.run_snapshots s ON s.run_id = m.run_id
+           FROM ${quoteIdentifier(this.schema)}.run_metadata m
+           LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
           WHERE s.run_id IS NULL
              OR s.last_run_seq < (
                   SELECT MAX(e.run_seq)
-                    FROM ${this.schema}.run_events e
+                    FROM ${quoteIdentifier(this.schema)}.run_events e
                    WHERE e.run_id = m.run_id
                 )
           ORDER BY m.created_at ASC
