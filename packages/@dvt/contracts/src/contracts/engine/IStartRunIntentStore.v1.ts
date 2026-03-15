@@ -34,6 +34,21 @@ export interface CreateIntentInput {
  * Commands mutate intent state.
  */
 export interface IStartRunIntentCommandStore {
+  /**
+   * Creates a new PENDING intent for the given (tenantId, runId).
+   *
+   * Idempotent on `intentId`: if an intent with the same `intentId` already
+   * exists, implementations MUST return the existing record unchanged.
+   *
+   * INV-INTENT-011: Callers MUST derive `intentId` deterministically from
+   * (tenantId, runId) so that a scheduler crash-restart produces the same
+   * `intentId` and the idempotency guarantee absorbs the retry. Generating a
+   * fresh UUID on every call breaks this guarantee.
+   *
+   * If a different `intentId` is supplied but an active (PENDING or DISPATCHED)
+   * intent already exists for the same (tenantId, runId), implementations MUST
+   * throw `IntentActiveConflictError` — this indicates a caller bug.
+   */
   createIntent(input: CreateIntentInput): Promise<StartRunIntent>;
   markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void>;
   markResolved(intentId: string): Promise<void>;

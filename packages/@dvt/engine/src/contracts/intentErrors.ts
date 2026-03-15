@@ -8,6 +8,8 @@
  * @date 2026-03-05
  */
 export {
+  IntentActiveConflictError,
+  IntentDispatchConflictError,
   IntentInvalidTransitionError,
   IntentNotFoundError,
   StoreNotReadyError,
