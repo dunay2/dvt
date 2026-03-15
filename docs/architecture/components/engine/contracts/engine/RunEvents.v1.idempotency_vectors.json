@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "1.0.0",
+  "contractVersion": "v1",
+  "formulaVersion": "v1",
+  "formula": "SHA256(runId | stepIdNormalized | logicalAttemptId | eventType | planVersion)",
+  "vectors": [
+    {
+      "name": "step-started-attempt-1",
+      "eventScope": "step",
+      "runId": "run-001",
+      "stepIdNormalized": "model.orders",
+      "logicalAttemptId": 1,
+      "eventType": "StepStarted",
+      "planVersion": "1.2.0",
+      "expectedDigest": "6c99484df8a52a1dc3f2533b796f7257c11f57149d3fe3277d4c7ab98433d033"
+    },
+    {
+      "name": "run-started-uses-run-token",
+      "eventScope": "run",
+      "runId": "run-001",
+      "stepIdNormalized": "RUN",
+      "logicalAttemptId": 1,
+      "eventType": "RunStarted",
+      "planVersion": "1.2.0",
+      "expectedDigest": "d219f09c191299aed8f136206aac54aba08233611a71d86470eb60174fb086b4"
+    },
+    {
+      "name": "step-failed-attempt-2",
+      "eventScope": "step",
+      "runId": "run-001",
+      "stepIdNormalized": "model.orders",
+      "logicalAttemptId": 2,
+      "eventType": "StepFailed",
+      "planVersion": "1.2.0",
+      "expectedDigest": "4f18c2cf80d85cdea73fac0533dd58b1eb5d3acc92b6c13d6b445c821122c1e4"
+    },
+    {
+      "name": "run-failed-attempt-1",
+      "eventScope": "run",
+      "runId": "run-001",
+      "stepIdNormalized": "RUN",
+      "logicalAttemptId": 1,
+      "eventType": "RunFailed",
+      "planVersion": "1.2.0",
+      "expectedDigest": "ca371c53bc82cae11e9cacc286e8c769b06048e86714a8b1d79125cc37d04564"
+    },
+    {
+      "name": "step-skipped-seed-customers",
+      "eventScope": "step",
+      "runId": "run-002",
+      "stepIdNormalized": "seed.customers",
+      "logicalAttemptId": 1,
+      "eventType": "StepSkipped",
+      "planVersion": "2026.02.19",
+      "expectedDigest": "7132ad0fe081216bb22aeceb390c290b0737afdef5ac2d5f39a4b46181e157d0"
+    }
+  ]
+}

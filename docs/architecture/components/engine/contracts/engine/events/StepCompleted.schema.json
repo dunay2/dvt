@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/StepCompleted.schema.json",
+  "title": "StepCompleted Event",
+  "description": "Emitted by Activity when step execution succeeds",
+  "type": "object",
+  "required": [
+    "eventType",
+    "eventId",
+    "runId",
+    "runSeq",
+    "idempotencyKey",
+    "emittedAt",
+    "emittedBy",
+    "stepId",
+    "logicalAttemptId",
+    "completedAt",
+    "artifactRefs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "const": "StepCompleted",
+      "description": "Event type discriminator"
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier (UUID v4)"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^run_[a-zA-Z0-9_-]+$",
+      "description": "Workflow run identifier"
+    },
+    "runSeq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic sequence number (per runId, assigned by Append Authority)"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 hash: SHA256(runId | stepId | logicalAttemptId | eventType | planVersion)"
+    },
+    "emittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event was persisted to StateStore (processing time)"
+    },
+    "emittedBy": {
+      "type": "string",
+      "enum": ["engine", "planner", "activity-worker", "system"],
+      "description": "Component that emitted the event"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp (UTC) when event actually occurred at source (optional, event time)"
+    },
+    "stepId": {
+      "type": "string",
+      "description": "Step identifier from plan"
+    },
+    "logicalAttemptId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Business-level attempt counter (increments on RETRY_STEP signal)"
+    },
+    "engineAttemptId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Infrastructure-level attempt counter (platform retries)"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when step execution completed"
+    },
+    "artifactRefs": {
+      "type": "array",
+      "description": "References to artifacts produced by step (never binary payloads)",
+      "items": {
+        "type": "object",
+        "required": ["uri", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "uri",
+            "description": "Storage URI (s3://, gs://, azure://, etc.)"
+          },
+          "kind": {
+            "type": "string",
+            "description": "Artifact type (dbt-manifest, dbt-run-results, log-bundle, etc.)"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "Integrity hash"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Artifact size in bytes"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Expiration timestamp (retention policy per kind)"
+          }
+        }
+      }
+    },
+    "planVersion": {
+      "type": "string",
+      "description": "Plan version for idempotency key calculation"
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Step execution duration in milliseconds"
+    }
+  },
+  "examples": [
+    {
+      "eventType": "StepCompleted",
+      "eventId": "a1b2c3d4-1234-5678-9012-345678901234",
+      "runId": "run_2026-02-11_abc123",
+      "runSeq": 8,
+      "idempotencyKey": "b2c3d4e5f67890123456789012345678901234567890123456789012345678901",
+      "occurredAt": "2026-02-11T10:32:45.000Z",
+      "emittedBy": "activity-worker",
+      "stepId": "extract_data",
+      "logicalAttemptId": 1,
+      "engineAttemptId": 1,
+      "completedAt": "2026-02-11T10:32:45.000Z",
+      "artifactRefs": [
+        {
+          "uri": "s3://dvt-artifacts/runs/run_2026-02-11_abc123/extract_data_output.json",
+          "kind": "dbt-manifest",
+          "sha256": "abc123def456789012345678901234567890123456789012345678901234567890",
+          "sizeBytes": 2048,
+          "expiresAt": "2026-03-11T10:32:45.000Z"
+        }
+      ],
+      "planVersion": "1.2",
+      "durationMs": 150000
+    }
+  ]
+}
