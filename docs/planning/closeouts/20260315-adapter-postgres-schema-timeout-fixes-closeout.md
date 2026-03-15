@@ -11,62 +11,76 @@ author: AI (GPT-5)
 
 ### Problem summary
 
-`@dvt/adapter-postgres` still had one stale-snapshot query that interpolated the
-schema name without quoting, despite the rest of the adapter using quoted schema
-identifiers and allowing mixed-case schema names.
+`@dvt/adapter-postgres` regressed in two places after the state-store extraction:
+schema migration no longer guaranteed the adapter-level `statement_timeout`, and
+`listStaleSnapshotRuns()` interpolated the schema name without quoting.
 
 ### Root cause
 
-`listStaleSnapshotRuns()` remained as an inline adapter-facade query after the
-state-store extraction, while the extracted repository/store classes had already
-standardized on `quoteIdentifier(this.schema)`.
+The refactor moved DDL execution into `PostgresSchemaManager.runMigrations()`,
+which now owns its own transaction instead of reusing `PostgresStateStoreAdapter`
+transaction helpers. That dropped the `SET LOCAL statement_timeout` behavior.
+Separately, `listStaleSnapshotRuns()` remained in the adapter facade as an older
+inline query while the extracted stores consistently adopted `quoteIdentifier()`.
 
 ### Constraints and invariants
 
-- `ADR-0013`: startup and persistence behavior must remain deterministic and
-  operationally safe.
-- `ADR-0031`: storage-adapter SQL boundaries must be handled consistently and safely.
-- `AGENTS.md`: no debt, no stubs, and negative-path coverage for new behavior.
+- `ADR-0013`: adapter bootstrap and storage startup behavior must remain
+  deterministic and operationally safe.
+- `ADR-0031`: storage adapters are the authority for safe SQL boundary handling
+  and tenant-safe access patterns.
+- `AGENTS.md`: no hidden debt, no stubs, and negative-path validation is required.
 
 ### Options considered
 
-- Quote the schema references in place and add regression coverage.
-- Move `listStaleSnapshotRuns()` fully into a repository/store that already owns
-  quoted SQL generation.
-- Libraries evaluated: None. This is a local adapter bug, not a library gap.
+- Reapply `statement_timeout` inside `PostgresSchemaManager.runMigrations()` and
+  quote the stale-snapshot query in place.
+- Route migration through the adapter transaction helper again.
+- Move `listStaleSnapshotRuns()` fully into `PostgresRunMetadataRepository`.
+- Libraries evaluated: None. This is a repo-local Postgres adapter regression,
+  not a gap better solved by an external library.
 
 ### Selected option and rationale
 
-Quote the schema references in place and add a mixed-case schema regression test.
-This is the smallest safe fix against `main`.
+Apply the timeout at the migration runner boundary and quote the inline stale
+snapshot query in place. This is the smallest corrective slice with no contract
+change and preserves the current extraction shape.
 
 ### Rejected alternatives
 
-- Moving the query to another class would be a broader refactor than needed for
-  this corrective slice.
+- Re-routing migrations through adapter helpers would re-couple DDL ownership to
+  the facade and partially undo the extraction.
+- Moving stale-snapshot lookup into the repository is reasonable, but it is a
+  broader refactor than needed to fix the regression safely in this slice.
 
 ## Changes made
 
-| File                                                                                                                                                                      | Change                                                | Why                                           |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------- |
-| [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)                               | Quoted schema references in `listStaleSnapshotRuns()` | Prevent mixed-case schema lookup failures     |
-| [packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts) | Added mixed-case schema regression test               | Negative-path coverage for identifier folding |
+| File                                                                                                                                                                      | Change                                                                                | Why                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts](../../../packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts)                                       | Added migration-scoped `statement_timeout` support                                    | Preserve startup timeout behavior after schema-manager extraction     |
+| [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)                               | Passed timeout config into schema manager and quoted stale-snapshot schema references | Prevent mixed-case schema failures and keep timeout wiring consistent |
+| [packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts)   | Added migration timeout regression test                                               | Negative-path coverage for dropped `SET LOCAL statement_timeout`      |
+| [packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts) | Added mixed-case schema quoting assertion for stale snapshot query                    | Negative-path coverage for schema-folding bug                         |
 
 ## Libraries evaluated
 
-None evaluated — no custom implementation beyond a local bug fix.
+None evaluated -- no custom implementation beyond fixing local adapter regressions.
 
 ## Docs synced
 
-- [x] None required — no public contract, ADR, or status surface changed
+- [x] None required -- no public contract, ADR, or status surface changed
 - [x] This closeout file added as mandatory slice evidence
 
 ## Test evidence
 
-| Command                                         | Result |
-| ----------------------------------------------- | ------ |
-| `pnpm --filter @dvt/adapter-postgres typecheck` | Passed |
-| `pnpm --filter @dvt/adapter-postgres test`      | Passed |
+| Command                                                                                                                                                                                                                                                                                                                                                                                                  | Result                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `pnpm install --frozen-lockfile`                                                                                                                                                                                                                                                                                                                                                                         | Passed                             |
+| `pnpm --filter @dvt/adapter-postgres typecheck`                                                                                                                                                                                                                                                                                                                                                          | Passed                             |
+| `pnpm --filter @dvt/adapter-postgres test`                                                                                                                                                                                                                                                                                                                                                               | Passed (`13` passed, `23` skipped) |
+| `pnpm exec eslint packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts`                                                                                              | Passed                             |
+| `pnpm exec prettier --check packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts docs/planning/closeouts/20260315-adapter-postgres-schema-timeout-fixes-closeout.md` | Passed                             |
+| `pnpm exec markdownlint-cli2 "docs/planning/closeouts/20260315-adapter-postgres-schema-timeout-fixes-closeout.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`                                                                                                                                                                                                                   | Passed                             |
 
 ## Debt introduced
 

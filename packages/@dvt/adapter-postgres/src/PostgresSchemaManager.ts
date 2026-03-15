@@ -21,7 +21,8 @@ export class PostgresSchemaManager {
 
   constructor(
     private readonly pool: Pool,
-    private readonly schema: string
+    private readonly schema: string,
+    private readonly statementTimeoutMs = 0
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -100,6 +101,9 @@ export class PostgresSchemaManager {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
+      if (this.statementTimeoutMs > 0) {
+        await client.query('SET LOCAL statement_timeout = $1', [this.statementTimeoutMs]);
+      }
       await this.ensureSchemaObjects(client);
       await this.ensureCompatibilityColumns(client);
       await this.ensureCompatibilityCleanup(client);
@@ -128,6 +132,8 @@ export class PostgresSchemaManager {
     await this.ensureOutboxTable(client);
     await this.ensureRunSnapshotsTable(client);
     await this.ensureOutboxDeadLetterTable(client);
+    await this.ensureLineageOutboxTable(client);
+    await this.ensureLineageDeadLetterTable(client);
   }
 
   private async ensureRunMetadataTable(client: PoolClient): Promise<void> {
@@ -215,6 +221,35 @@ export class PostgresSchemaManager {
         payload JSONB NOT NULL,
         last_error TEXT NOT NULL,
         dead_lettered_at TIMESTAMPTZ NOT NULL
+      )
+    `);
+  }
+
+  private async ensureLineageOutboxTable(client: PoolClient): Promise<void> {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.lineage_outbox (
+        id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        payload JSONB NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+  }
+
+  private async ensureLineageDeadLetterTable(client: PoolClient): Promise<void> {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.lineage_dead_letter (
+        id TEXT PRIMARY KEY,
+        original_id TEXT NOT NULL,
+        run_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        payload JSONB NOT NULL,
+        last_error TEXT NOT NULL,
+        dead_lettered_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
   }
@@ -331,6 +366,23 @@ export class PostgresSchemaManager {
     await client.query(`
       CREATE INDEX IF NOT EXISTS run_snapshots_snapshot_status_idx
       ON ${quoteIdentifier(this.schema)}.run_snapshots (snapshot_status)
+    `);
+
+    // Migration 005: lineage outbox indexes.
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS lineage_outbox_pending_idx
+      ON ${quoteIdentifier(this.schema)}.lineage_outbox (created_at)
+      WHERE status = 'pending'
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS lineage_outbox_run_id_idx
+      ON ${quoteIdentifier(this.schema)}.lineage_outbox (run_id)
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS lineage_dead_letter_run_id_idx
+      ON ${quoteIdentifier(this.schema)}.lineage_dead_letter (run_id)
     `);
   }
 }
