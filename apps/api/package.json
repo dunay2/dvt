@@ -5,8 +5,10 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "prebuild": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/observability-otel build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/adapter-temporal build && pnpm --filter @dvt/engine build",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "pretypecheck": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/observability-otel build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/adapter-temporal build && pnpm --filter @dvt/engine build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/planner build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/observability-otel build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/adapter-temporal build && pnpm --filter @dvt/engine build",
     "test": "node --import tsx --test test/**/*.test.ts",

@@ -21,6 +21,7 @@
     "dist"
   ],
   "scripts": {
+    "prebuild": "pnpm --filter @dvt/contracts build",
     "pretest": "pnpm --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
     "test": "pnpm -C ../../.. exec vitest run packages/@dvt/delivery/test/OutboxWorker.test.ts"

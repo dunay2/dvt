@@ -26,6 +26,7 @@
     "dist"
   ],
   "scripts": {
+    "prebuild": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/run-domain build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build",
     "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/run-domain build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
