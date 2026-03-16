@@ -30,6 +30,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
   }
 
   async saveProviderRef(
+    tenantId: string,
     runId: string,
     runRef: {
       providerWorkflowId: string;
@@ -40,7 +41,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
     }
   ): Promise<void> {
     const current = this.metadataByRunId.get(runId);
-    if (!current) throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    if (!current || current.tenantId !== tenantId) throw new Error(`RUN_NOT_FOUND: ${runId}`);
     this.metadataByRunId.set(runId, {
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,

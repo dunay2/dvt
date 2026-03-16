@@ -215,6 +215,28 @@ export class WorkflowEngine implements IWorkflowEngine {
         this.deps.timeouts?.adapterCallMs ?? 30_000,
         'adapter.startRun'
       );
+      if (
+        this.deps.stateStore.saveProviderRef &&
+        (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
+      ) {
+        await this.deps.stateStore
+          .saveProviderRef(
+            validatedContext.tenantId,
+            validatedContext.runId,
+            buildProviderRefUpdate(runRef)
+          )
+          .catch((refErr: unknown) => {
+            this.observability.logs.warn({
+              msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
+              context: traceContext,
+              attributes: {
+                error: toErrorMessage(refErr),
+                provider: runRef.provider,
+                runId: validatedContext.runId,
+              },
+            });
+          });
+      }
       // startRun failure propagates to handleStartRunError. With a pending intent,
       // the error path skips RunFailed emission and leaves reconciliation to the
       // maintenance worker, which probes lookupRunRef and marks the intent resolved
@@ -846,6 +868,24 @@ function buildRunMetadata(
       : {}),
     ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
     createdAt,
+  };
+}
+
+function buildProviderRefUpdate(runRef: EngineRunRef): {
+  providerWorkflowId: string;
+  providerRunId: string;
+  providerNamespace?: string;
+  providerTaskQueue?: string;
+  providerConductorUrl?: string;
+} {
+  return {
+    providerWorkflowId: runRef.workflowId,
+    providerRunId: runRef.runId,
+    ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
+    ...(runRef.provider === 'temporal' && runRef.taskQueue
+      ? { providerTaskQueue: runRef.taskQueue }
+      : {}),
+    ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
   };
 }
 

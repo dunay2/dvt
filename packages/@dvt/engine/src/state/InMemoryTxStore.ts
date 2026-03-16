@@ -100,6 +100,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   }
 
   async saveProviderRef(
+    _tenantId: string,
     runId: string,
     runRef: {
       providerWorkflowId: string;

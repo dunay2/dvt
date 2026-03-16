@@ -49,7 +49,7 @@ Minimum tuple for this document:
 | G4  | compiledCodeRef ownership                 | Phase 1   | Closed        |
 | G5  | Outbox worker independiente               | Phase 1.5 | Closed        |
 | G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed        |
-| G7  | Read models + standalone projector        | Phase 1.5 | Partial       |
+| G7  | Read models + standalone projector        | Phase 1.5 | Closed        |
 | G8  | Auth real en apps/api                     | Phase 1.5 | Closed        |
 | G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Closed        |
 | G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Closed        |
@@ -76,9 +76,10 @@ Minimum tuple for this document:
    - Worker core: [`packages/@dvt/delivery/src/application/OutboxWorker.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorker.ts)
    - Runtime loop: [`packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
    - Postgres outbox APIs: [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-5. `G7` is no longer zero-state and now includes a standalone projector runtime, but provider run-id reconciliation is still open.
-   - Lineage mapping/tests: [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
+5. `G7` is now closed with `run_snapshots` formalization, standalone projector runtime, and provider run-id reconciliation delivered.
    - In-process projector: [`packages/@dvt/engine/src/core/SnapshotProjector.ts`](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
+   - Standalone projector: [`packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts`](../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
+   - Provider ref reconciliation: [`packages/@dvt/engine/src/core/WorkflowEngine.ts`](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
 6. `G9` is now closed in code, tests, and evidence.
    - Registry and schema: [`packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts`](../../../packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts)
    - Planner validation path: [`packages/@dvt/planner/src/domain/Planner.ts`](../../../packages/@dvt/planner/src/domain/Planner.ts)
@@ -237,7 +238,7 @@ Minimum tuple for this document:
 
 ### G7 - Read models + standalone projector
 
-- Status: Partial
+- Status: Closed
 - Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
@@ -256,13 +257,13 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
     (contracts + engine-internal); implemented in `PostgresStateStoreAdapter`;
     `ProjectorWorkerRuntime` added to `@dvt/delivery`; `apps/projector-worker`
     composition root created (env validation, admin `/healthz`, SIGTERM/SIGINT)
-  - `saveProviderRef` storage primitives exist on `IRunStateStore`,
-    `PostgresStateStoreAdapter`, `InMemoryRunStateStore`, and `InMemoryTxStore`,
-    but the engine does not yet consume them in the pre-bootstrap path
-- Remaining:
-  - G7.3: reconcile the real provider execution id after `adapter.startRun()`
-    when `estimateRunRef()` only returns an approximation
-  - G7.4: evidence doc + final closeout once G7.3 lands
+  - G7.3 (2026-03-16): `ProviderRefUpdate` and optional `saveProviderRef?`
+    added to `IRunStateStore` (contracts + engine-internal); `WorkflowEngine`
+    now calls `saveProviderRef` fail-soft when `adapter.startRun()` returns a
+    different provider run-id than `estimateRunRef()`
+- Evidence:
+  - [ED-20260316 - G7 provider run-id reconciliation](../../evidence/ED-20260316-g7-provider-ref-reconciliation.md)
+  - [ED-20260316 - G7 closeout](../../evidence/ED-20260316-g7-closeout.md)
 
 ### G8 - Auth real en apps/api
 

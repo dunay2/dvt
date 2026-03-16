@@ -215,9 +215,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Current status source:
   [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G7`)
 - Current posture:
-  G7 is **Partial**. G7.1 (`run_snapshots` formalization + `rebuildSnapshot`)
-  and G7.2 (standalone projector runtime) are delivered. G7.3 provider
-  run-id reconciliation remains open.
+  G7 is **Closed**. G7.1 (`run_snapshots` formalization + `rebuildSnapshot`),
+  G7.2 (standalone projector runtime), and G7.3 (provider run-id
+  reconciliation) are delivered.
 - Primary code:
   [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
   and
@@ -225,16 +225,30 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
   and
+  [packages/@dvt/engine/src/core/WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+  and
   [packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts](../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
   and
   [apps/projector-worker/src/server.ts](../../../apps/projector-worker/src/server.ts)
 - Key tests:
+  [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts)
+  and
   [packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts](../../../packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts)
   and
   [apps/projector-worker/test/env.test.ts](../../../apps/projector-worker/test/env.test.ts)
   and
-  [packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts)
+  [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
+- Evidence:
+  [ED-20260316 - G7 provider run-id reconciliation](../../evidence/ED-20260316-g7-provider-ref-reconciliation.md)
+  and
+  [ED-20260316 - G7 closeout](../../evidence/ED-20260316-g7-closeout.md)
 - Verification:
+  `pnpm --filter @dvt/contracts build`
+  and
+  `pnpm --filter @dvt/engine test`
+  and
+  `pnpm --filter @dvt/adapter-postgres test`
+  and
   `pnpm --filter @dvt/delivery test`
   and
   `pnpm --filter dvt-projector-worker typecheck`
