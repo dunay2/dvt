@@ -47,6 +47,7 @@ Concept anchors for this page:
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Engine Migration Plan: Current Gap to Target Blueprint v0.6](engine-gap-to-target-migration-plan.md)
 - [G5 Outbox Worker Development Proposal](proposals/g5-outbox-worker-development-proposal-20260308.md)
+- [Phase 2 Architectural Debt Roadmap](proposals/phase2-arch-debt-roadmap-20260315.md)
 
 ## Reviews
 
