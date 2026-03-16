@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.1](https://github.com/dunay2/dvt/compare/v4.2.0...v4.2.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* **ci:** Lock platform baseline ([#499](https://github.com/dunay2/dvt/issues/499)) ([fd8261a](https://github.com/dunay2/dvt/commit/fd8261ab78d84d2b5dda5a3db242dd0e78e1d05b))
+* **engine:** Reconcile provider run id after pre-bootstrap start ([#497](https://github.com/dunay2/dvt/issues/497)) ([e356625](https://github.com/dunay2/dvt/commit/e356625c3010d1b1037233d71391204262442c4f))
+
 ## [4.2.0](https://github.com/dunay2/dvt/compare/v4.1.2...v4.2.0) (2026-03-16)
 
 
