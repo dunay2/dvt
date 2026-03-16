@@ -10,6 +10,8 @@
     "paths": {
       "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"],
       "@dvt/contracts/*": ["packages/@dvt/contracts/dist/*"],
+      "@dvt/run-domain": ["packages/@dvt/run-domain/dist/index.d.ts"],
+      "@dvt/run-domain/*": ["packages/@dvt/run-domain/dist/*"],
       "@dvt/engine": ["packages/@dvt/engine/dist/index.d.ts"],
       "@dvt/engine/*": ["packages/@dvt/engine/dist/*"]
     }

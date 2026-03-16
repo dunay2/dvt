@@ -1,19 +1,15 @@
 /**
- * @file packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts
- *
- * Verifies that applyRunEvent throws InvalidStateTransitionError when an event
- * targets a run or step already in a terminal status.
- *
- * Terminal run statuses: COMPLETED, FAILED, CANCELLED
- * Terminal step statuses: COMPLETED, SKIPPED (FAILED is not terminal; retries allowed)
+ * @file packages/@dvt/run-domain/test/applyRunEvent.test.ts
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @decision Verify shared run projection guards and fail-open compatibility.
+ * @version 1.0.0
+ * @date 2026-03-15
  */
-import { InvalidStateTransitionError } from '@dvt/run-domain';
+import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import type { EventEnvelope, WorkflowSnapshot } from '../../src/contracts/runEvents.js';
-import { applyRunEvent } from '../../src/core/SnapshotProjector.js';
-
-// Helpers
+import { applyRunEvent, InvalidStateTransitionError } from '../src/index.js';
 
 function makeSnap(status: WorkflowSnapshot['status']): WorkflowSnapshot {
   return {
@@ -51,8 +47,6 @@ function makeStepEvent(eventType: string, stepId: string): EventEnvelope {
   } as unknown as EventEnvelope;
 }
 
-// Run-level terminal guards
-
 const RUN_MUTATING_EVENTS = [
   'RunStarted',
   'RunPaused',
@@ -70,16 +64,16 @@ describe('applyRunEvent - run terminal guard', () => {
     for (const eventType of RUN_MUTATING_EVENTS) {
       it(`throws InvalidStateTransitionError for ${eventType} on ${terminalStatus} run`, () => {
         const snap = makeSnap(terminalStatus);
-        const event = makeRunEvent(eventType);
-        expect(() => applyRunEvent(snap, event)).toThrow(InvalidStateTransitionError);
+        expect(() => applyRunEvent(snap, makeRunEvent(eventType))).toThrow(
+          InvalidStateTransitionError
+        );
       });
 
-      it(`error code is INVALID_STATE_TRANSITION for ${eventType} on ${terminalStatus}`, () => {
+      it(`includes stable error details for ${eventType} on ${terminalStatus}`, () => {
         const snap = makeSnap(terminalStatus);
-        const event = makeRunEvent(eventType);
         let caught: unknown;
         try {
-          applyRunEvent(snap, event);
+          applyRunEvent(snap, makeRunEvent(eventType));
         } catch (error) {
           caught = error;
         }
@@ -93,20 +87,18 @@ describe('applyRunEvent - run terminal guard', () => {
     }
   }
 
-  it('does not throw for RunQueued on any status (no-op handler)', () => {
+  it('does not throw for RunQueued on terminal statuses', () => {
     for (const status of TERMINAL_RUN_STATUSES) {
-      const snap = makeSnap(status);
-      expect(() => applyRunEvent(snap, makeRunEvent('RunQueued'))).not.toThrow();
+      expect(() => applyRunEvent(makeSnap(status), makeRunEvent('RunQueued'))).not.toThrow();
     }
   });
 
-  it('does not throw for unknown event types on terminal runs (fail-open)', () => {
-    const snap = makeSnap('COMPLETED');
-    expect(() => applyRunEvent(snap, makeRunEvent('SomeUnknownEvent'))).not.toThrow();
+  it('does not throw for unknown event types on terminal runs', () => {
+    expect(() =>
+      applyRunEvent(makeSnap('COMPLETED'), makeRunEvent('SomeUnknownEvent'))
+    ).not.toThrow();
   });
 });
-
-// Step terminal guards
 
 describe('applyRunEvent - step terminal guard', () => {
   const stepEvents = ['StepStarted', 'StepCompleted', 'StepFailed', 'StepSkipped'];
@@ -116,17 +108,13 @@ describe('applyRunEvent - step terminal guard', () => {
     for (const eventType of stepEvents) {
       it(`throws for ${eventType} on step already in ${terminalStepStatus}`, () => {
         const snap = makeSnap('RUNNING');
-        snap.steps['step-a'] = {
-          status: terminalStepStatus,
-          attempts: 1,
-          completedAt: '2026-01-01T00:00:00Z',
-        };
+        snap.steps['step-a'] = { status: terminalStepStatus, attempts: 1 };
         expect(() => applyRunEvent(snap, makeStepEvent(eventType, 'step-a'))).toThrow(
           InvalidStateTransitionError
         );
       });
 
-      it(`error includes stepId for ${eventType} on ${terminalStepStatus} step`, () => {
+      it(`includes step details for ${eventType} on ${terminalStepStatus}`, () => {
         const snap = makeSnap('RUNNING');
         snap.steps['step-b'] = { status: terminalStepStatus, attempts: 1 };
         let caught: unknown;
@@ -143,20 +131,21 @@ describe('applyRunEvent - step terminal guard', () => {
     }
   }
 
-  it('allows StepStarted on FAILED step (retry path)', () => {
+  it('allows StepStarted on FAILED step for retry', () => {
     const snap = makeSnap('RUNNING');
-    snap.steps['step-c'] = {
-      status: 'FAILED',
-      attempts: 1,
-      completedAt: '2026-01-01T00:00:00Z',
-    };
-    expect(() => applyRunEvent(snap, makeStepEvent('StepStarted', 'step-c'))).not.toThrow();
+    snap.steps['step-c'] = { status: 'FAILED', attempts: 1 };
+    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-c'));
     expect(snap.steps['step-c']?.status).toBe('RUNNING');
     expect(snap.steps['step-c']?.attempts).toBe(2);
   });
 
-  it('allows all step events on new (unseen) steps', () => {
+  it('records gatewayDecision on StepCompleted', () => {
     const snap = makeSnap('RUNNING');
-    expect(() => applyRunEvent(snap, makeStepEvent('StepStarted', 'step-new'))).not.toThrow();
+    const event = {
+      ...makeStepEvent('StepCompleted', 'step-gw'),
+      payload: { gatewayDecision: true },
+    } as unknown as EventEnvelope;
+    applyRunEvent(snap, event);
+    expect(snap.gatewayDecisions?.['step-gw']).toBe(true);
   });
 });

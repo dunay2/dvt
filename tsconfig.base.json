@@ -19,6 +19,8 @@
       "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
       "@dvt/delivery": ["packages/@dvt/delivery/src/index.ts"],
       "@dvt/delivery/*": ["packages/@dvt/delivery/src/*"],
+      "@dvt/run-domain": ["packages/@dvt/run-domain/src/index.ts"],
+      "@dvt/run-domain/*": ["packages/@dvt/run-domain/src/*"],
       "@dvt/planner-contracts": ["packages/@dvt/planner-contracts/index.ts"],
       "@dvt/planner-contracts/*": ["packages/@dvt/planner-contracts/src/*"],
       "@dvt/dsl": ["packages/@dvt/dsl/src/index.ts"],
