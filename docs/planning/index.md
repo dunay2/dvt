@@ -61,6 +61,7 @@ Concept anchors for this page:
 - [DVT+ — Consolidated Architectural Review](reviews/DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md)
 - [DVT+ Review Action Plan](reviews/DVT_review_action_plan_2026-03-14.md)
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](reviews/PostgresStateStoreAdapter_Refactor_Review.md)
+- [Principal Architecture Review - DVT+](reviews/20260316-principal-architecture-review.md)
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](reviews/PostgresStartRunIntentStore_QA_Review.md)
 - [RunPlanWorkflow — Architecture Review, Refactor Map, and Mermaid Diagrams](reviews/RunPlanWorkflow_Architecture_Review.md)
 - [StartRunIntentSchemaManager — QA, Architecture Review, and Refactor Proposal](reviews/StartRunIntentSchemaManager_Architecture_Review.md)
