@@ -1,10 +1,25 @@
 ---
 title: 'ED-20260315 - G10 Closeout: outbox_lineage worker + fail-open DLQ'
-status: Active
-owner: delivery
+status: accepted
+owners: delivery
 date: 2026-03-15
 gap: G10
 arc: ARC-1
+arc_level: ARC-1
+breaking: false
+code_refs:
+  - packages/@dvt/contracts/src/contracts/lineage/ILineageSink.v1.ts
+  - packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql
+  - packages/@dvt/adapter-postgres/src/PostgresLineageOutboxStore.ts
+  - packages/@dvt/delivery/src/application/LineageOutboxObserver.ts
+  - packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts
+  - packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts
+  - apps/lineage-worker/src/server.ts
+evidence:
+  - Durable lineage outbox and dead-letter tables ship as migration 005.
+  - Delivery runtime enqueues StepStarted lineage records fail-soft and processes them via a dedicated worker.
+  - OpenLineage publication is provided through HttpOpenLineageSink.
+  - Delivery, adapter-postgres, traceability-service, and lineage-worker validation lanes passed.
 ---
 
 # ED-20260315 - G10 Closeout: outbox_lineage worker + fail-open DLQ

@@ -1,10 +1,24 @@
 ---
 title: ED-20260312 — G8 Arch Tests and Engine Wiring Closeout
 gap: G8
-status: Closed
+status: accepted
 date: 2026-03-12
+owners: API / Engineering
+arc_level: ARC-1
+breaking: false
 author: AI-assisted delivery (Claude Sonnet 4.6)
 tasks: T8-6, T8-7
+code_refs:
+  - apps/api/.dependency-cruiser.cjs
+  - apps/api/src/application/services/engineStartRunUseCase.ts
+  - apps/api/src/app.ts
+  - apps/api/src/entrypoints/http/startRunRoute.ts
+  - apps/api/test/app.test.ts
+evidence:
+  - dependency-cruiser architectural rules are installed and enforced for apps/api.
+  - EngineStartRunUseCase replaced the stubbed start-run path.
+  - app.ts wires WorkflowEngine with real adapters behind the protected runtime path.
+  - dvt-api test and typecheck lanes passed at closeout time.
 ---
 
 # ED-20260312 — G8 Arch Tests and Engine Wiring Closeout

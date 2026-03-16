@@ -1,8 +1,19 @@
 ---
 title: ED-20260312 — G6 Golden Fixtures and Schema Validation Closeout
-status: Accepted
+status: accepted
 date: 2026-03-12
+owners: Traceability / Engineering
+arc_level: ARC-1
+breaking: false
 gap: G6
+code_refs:
+  - packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts
+  - packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts
+  - packages/@dvt/traceability-service/package.json
+evidence:
+  - Golden fixtures are committed for success, fail-open, and no-compiledCodeRef paths.
+  - Offline JSON schema validation runs against repo-local OpenLineage and DVT facet schemas.
+  - Named CI lanes exist for lineage golden and schema validation.
 slices: 'Slice 3 (#404), Slice 4 (#407), Slice 5 (#406)'
 author: Delivery / Engineering
 ---

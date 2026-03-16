@@ -239,7 +239,7 @@ Minimum tuple for this document:
 
 - Status: Closed
 - Closed: 2026-03-15
-- Evidence: [`docs/evidence/ED-20260315-g7-closeout.md`](../../evidence/ED-20260315-g7-closeout.md)
+- Closure record: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine

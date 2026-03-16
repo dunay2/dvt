@@ -20,8 +20,8 @@ evidence:
   - markDispatched is idempotent for the same engineRunRef and conflicts on a different engineRunRef
   - listOrphaned uses createdAt for PENDING and updatedAt for DISPATCHED
   - 21/21 InMemoryStartRunIntentStore tests passed
-  - @dvt/contracts build passed
-  - @dvt/adapter-postgres typecheck passed
+  - '@dvt/contracts build passed'
+  - '@dvt/adapter-postgres typecheck passed'
 ---
 
 # ED-20260315 - Intent store bug fixes
