@@ -82,8 +82,8 @@ links, and canonical reference integrity.
 
 ## Docs synced
 
-- [x] [docs/adr/index.md](/f:/segundodvt/dvt/.worktrees/pr-adapter-postgres-phase1-r3/docs/adr/index.md) - regenerated with correct ADR statuses and implementation-status link
-- [x] [docs/evidence/index.md](/f:/segundodvt/dvt/.worktrees/pr-adapter-postgres-phase1-r3/docs/evidence/index.md) - regenerated after evidence frontmatter normalization
+- [x] [docs/adr/index.md](../../adr/index.md) - regenerated with correct ADR statuses and implementation-status link
+- [x] [docs/evidence/index.md](../../evidence/index.md) - regenerated after evidence frontmatter normalization
 - [x] [docs/planning/index.md](../../index.md) - closeout indexed by docs sync
 - [x] [docs/planning/closeouts/index.md](../index.md) - closeout index synced by docs sync
 

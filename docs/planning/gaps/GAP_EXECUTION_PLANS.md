@@ -2,7 +2,7 @@
 title: DVT+ - Gap Execution Plans
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-14
+last_reviewed: 2026-03-16
 planning_type: proposal
 ---
 
@@ -11,7 +11,7 @@ planning_type: proposal
 Source of truth for execution gaps and delivery state.
 
 - Baseline source: [`docs/architecture/system-delivery-status.md`](../../architecture/system-delivery-status.md)
-- Last sync date: 2026-03-14
+- Last sync date: 2026-03-16
 - Scope: Phase 1, Phase 1.5, Phase 2
 
 Concept anchors for this page:
@@ -39,7 +39,7 @@ Minimum tuple for this document:
 - `verification_cmd`: gap-specific. See each active gap section below.
 - `evidence_or_risk`: linked evidence docs and risk records where the gap is already formalized
 
-## Executive State (2026-03-14)
+## Executive State (2026-03-16)
 
 | Gap | Title                                     | Phase     | Current state |
 | --- | ----------------------------------------- | --------- | ------------- |
@@ -49,7 +49,7 @@ Minimum tuple for this document:
 | G4  | compiledCodeRef ownership                 | Phase 1   | Closed        |
 | G5  | Outbox worker independiente               | Phase 1.5 | Closed        |
 | G6  | OpenLineage mapping tests + schema pin    | Phase 1.5 | Closed        |
-| G7  | Read models + standalone projector        | Phase 1.5 | Closed        |
+| G7  | Read models + standalone projector        | Phase 1.5 | Partial       |
 | G8  | Auth real en apps/api                     | Phase 1.5 | Closed        |
 | G9  | StepTypeRegistry + typed stepTypeConfig   | Phase 2   | Closed        |
 | G10 | outbox_lineage worker + fail-open DLQ     | Phase 2   | Closed        |
@@ -76,7 +76,7 @@ Minimum tuple for this document:
    - Worker core: [`packages/@dvt/delivery/src/application/OutboxWorker.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorker.ts)
    - Runtime loop: [`packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts`](../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
    - Postgres outbox APIs: [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
-5. `G6` and `G7` are not green, but they are no longer zero-state.
+5. `G7` is no longer zero-state and now includes a standalone projector runtime, but provider run-id reconciliation is still open.
    - Lineage mapping/tests: [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
    - In-process projector: [`packages/@dvt/engine/src/core/SnapshotProjector.ts`](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
 6. `G9` is now closed in code, tests, and evidence.
@@ -237,9 +237,7 @@ Minimum tuple for this document:
 
 ### G7 - Read models + standalone projector
 
-- Status: Closed
-- Closed: 2026-03-15
-- Closure record: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
+- Status: Partial
 - Active tracker: [G7 - AI Execution Tracker](G7-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - in-process `SnapshotProjector` in engine
@@ -254,16 +252,17 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
     `InMemoryRunStateStore`, and `InMemoryTxStore`; `listRuns` status filter
     now uses the generated column (index-backed); `DVT_ADMIN_ROUTES_ENABLED`
     flag + `POST /admin/runs/:runId/rebuild-snapshot` wired in `dvt-api`
-  - G7.2 (2026-03-15): `listStaleSnapshotRuns?(batchSize)` added to `IRunStateStore`
+  - G7.2 (2026-03-16): `listStaleSnapshotRuns?(batchSize)` added to `IRunStateStore`
     (contracts + engine-internal); implemented in `PostgresStateStoreAdapter`;
     `ProjectorWorkerRuntime` added to `@dvt/delivery`; `apps/projector-worker`
     composition root created (env validation, admin `/healthz`, SIGTERM/SIGINT)
-  - G7.3 (2026-03-15): `saveProviderRef?(tenantId, runId, update)` added to
-    `IRunStateStore`; `InMemoryRunStateStore` + `InMemoryTxStore` updated to
-    unified signature; `WorkflowEngine` pre-bootstrap path calls `saveProviderRef`
-    fail-soft when `adapter.startRun()` returns a different `runId` than
-    `estimateRunRef()`; 3 new tests (reconcile/no-op/fail-soft), 235/235 pass
-- Remaining: none
+  - `saveProviderRef` storage primitives exist on `IRunStateStore`,
+    `PostgresStateStoreAdapter`, `InMemoryRunStateStore`, and `InMemoryTxStore`,
+    but the engine does not yet consume them in the pre-bootstrap path
+- Remaining:
+  - G7.3: reconcile the real provider execution id after `adapter.startRun()`
+    when `estimateRunRef()` only returns an approximation
+  - G7.4: evidence doc + final closeout once G7.3 lands
 
 ### G8 - Auth real en apps/api
 
