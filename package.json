@@ -3,6 +3,7 @@
   "version": "4.2.0",
   "type": "module",
   "description": "DVT - Workflow Engine Documentation and Code",
+  "packageManager": "pnpm@10.28.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -101,8 +102,9 @@
   "author": "",
   "license": "ISC",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0",
+    "pnpm": ">=10.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.6.1",
@@ -116,7 +118,7 @@
     "@vitest/ui": "3.2.4",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "eslint": "^10.0.3",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.29.1",
