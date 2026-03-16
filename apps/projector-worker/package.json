@@ -1,0 +1,27 @@
+{
+  "name": "dvt-projector-worker",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "prebuild": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/delivery build",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "pretypecheck": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/delivery build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/delivery build",
+    "test": "node --import tsx --test test/**/*.test.ts"
+  },
+  "dependencies": {
+    "@dvt/adapter-postgres": "workspace:*",
+    "@dvt/delivery": "workspace:*",
+    "pino": "^9.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

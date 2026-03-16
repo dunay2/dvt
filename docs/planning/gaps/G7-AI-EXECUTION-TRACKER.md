@@ -2,7 +2,7 @@
 title: G7 - AI Execution Tracker
 status: Active
 owner: Delivery / Engineering
-last_reviewed: 2026-03-14
+last_reviewed: 2026-03-16
 planning_type: execution-plan
 ---
 
@@ -44,15 +44,15 @@ tracker to it.
 
 Update this section before any substantial implementation turn.
 
-- `as_of`: `2026-03-14`
+- `as_of`: `2026-03-16`
 - `gap`: `G7`
 - `epic`: `G7`
-- `current_focus`: `G7.2 — standalone projector runtime (catch-up worker)`
+- `current_focus`: `G7.3 - provider run-id reconciliation`
 - `state`: `Active`
-- `currently_working_on`: `G7.2 design and implementation — ProjectorWorkerRuntime in @dvt/delivery, apps/projector-worker composition root, listStaleSnapshotRunIds query`
-- `next_after_current`: `G7.3 provider run-id reconciliation (updateProviderRunRef after adapter.startRun)`
-- `blocking_dependencies`: `none — G7.1 closed; G7.2 design fixed in stage detail below`
-- `last_completed`: `G7.1 closed 2026-03-14 — migration 004, rebuildSnapshot on IRunStateStore (contracts + engine-internal), PostgresStateStoreAdapter, InMemoryRunStateStore, InMemoryTxStore, snapshot_status generated column + index, listRuns query updated, DVT_ADMIN_ROUTES_ENABLED flag, POST /admin/runs/:runId/rebuild-snapshot; 165/165 engine tests + 35/35 dvt-api tests pass`
+- `currently_working_on`: `G7.2 delivered and docs synced; next implementation slice is G7.3 provider run-id reconciliation in WorkflowEngine pre-bootstrap path`
+- `next_after_current`: `G7.4 evidence and final closeout`
+- `blocking_dependencies`: `none - G7.1 and G7.2 are closed; G7.3 is the remaining code slice`
+- `last_completed`: `G7.2 closed 2026-03-16 - listStaleSnapshotRuns on IRunStateStore (contracts + engine-internal), PostgresStateStoreAdapter stale-snapshot query, ProjectorWorkerRuntime in @dvt/delivery, apps/projector-worker composition root, /healthz endpoint, 23/23 delivery tests + 2/2 projector-worker tests pass`
 
 ## Remaining G7 Roadmap
 
@@ -67,11 +67,15 @@ Update this section before any substantial implementation turn.
   exit signal: `pnpm --filter @dvt/engine test` 165/165 PASS;
   `pnpm --filter dvt-api test` 35/35 PASS;
   `@dvt/engine build`, `@dvt/adapter-postgres build`, `dvt-api build` all clean
-- `Slice 2 / standalone projector runtime`
+- `Slice 2 / standalone projector runtime` - **Done** 2026-03-16
   scope: implement a catch-up projector worker in `apps/projector-worker` that
   polls for runs with stale snapshots and calls `rebuildSnapshot`; expose a
   lag signal and basic health check
   exit signal: worker starts, processes a backlog, and resumes after restart
+  delivered: `listStaleSnapshotRuns?(batchSize)` added to `IRunStateStore`
+  (contracts + engine-internal); implemented in `PostgresStateStoreAdapter`;
+  `ProjectorWorkerRuntime` added to `@dvt/delivery`; `apps/projector-worker`
+  composition root added with env parsing, `/healthz`, and graceful shutdown
 - `Slice 3 / provider run-id reconciliation + closeout prep`
   scope: address the `providerRunId` approximation residual from the
   `estimateRunRef` path; update `run_metadata.provider_run_id` after
@@ -580,3 +584,22 @@ Pre-implementation brief:
   `IRunStateStore.ts`, `SnapshotProjector.ts`, `001_init.sql`,
   `003_outbox_shard_retry_and_ordering.sql`, `system-delivery-status.md`,
   `GAP_EXECUTION_PLANS.md`; no code changes in this session
+
+- `2026-03-16` `G7.2` `implementation - standalone projector runtime`
+  summary: delivered the standalone stale-snapshot catch-up worker without
+  closing G7; `listStaleSnapshotRuns?(batchSize)` added to the public
+  `IRunStateStore` contract and the engine-internal port; implemented
+  in `PostgresStateStoreAdapter`; `ProjectorWorkerRuntime` added to
+  `@dvt/delivery`; `apps/projector-worker` added as a thin composition root
+  with env validation, `/healthz`, and SIGINT/SIGTERM shutdown; status docs
+  synced back to `Partial` because `G7.3` provider run-id reconciliation still
+  remains open
+  validation: `pnpm --filter @dvt/contracts build` PASS;
+  `pnpm --filter @dvt/engine build` PASS;
+  `pnpm --filter @dvt/delivery test` PASS (`23/23`);
+  `pnpm --filter dvt-projector-worker typecheck` PASS;
+  `pnpm --filter dvt-projector-worker build` PASS;
+  `pnpm --filter dvt-projector-worker test` PASS (`2/2`);
+  `pnpm docs:sync` PASS;
+  `pnpm docs:quality:check` PASS;
+  `pnpm docs:canonical:check` PASS
