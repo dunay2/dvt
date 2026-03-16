@@ -6,6 +6,7 @@
  * @version 1.0.0
  * @date 2026-03-15
  */
+import { applyRunEvent } from '@dvt/run-domain';
 import type { PoolClient } from 'pg';
 
 import { quoteIdentifier } from './sqlUtils.js';
@@ -97,7 +98,7 @@ export class PostgresRunSnapshotStore {
         steps: {},
       };
       for (const row of eventsResult.rows) {
-        applySnapshotEvent(snap, row.payload);
+        applyRunEvent(snap, row.payload);
       }
 
       const seqResult = await client.query<MaxSeqRow>(
@@ -126,7 +127,7 @@ export class PostgresRunSnapshotStore {
 
     const snap = await this.getOrCreateSnapshotWithClient(client, runId, baseRunSeq);
     for (const e of appended) {
-      applySnapshotEvent(snap, e);
+      applyRunEvent(snap, e);
     }
     await this.persistWithClient(client, runId, snap, lastAppendedRunSeq);
   }
@@ -190,87 +191,4 @@ export class PostgresRunSnapshotStore {
       steps: {},
     };
   }
-}
-
-function applySnapshotEvent(snap: WorkflowSnapshot, event: EventEnvelope): void {
-  switch (event.eventType) {
-    case 'RunQueued':
-      return;
-    case 'RunStarted':
-      snap.status = 'RUNNING';
-      snap.startedAt = snap.startedAt ?? event.emittedAt;
-      return;
-    case 'RunPaused':
-      snap.status = 'PAUSED';
-      snap.paused = true;
-      return;
-    case 'RunResumed':
-      snap.status = 'RUNNING';
-      snap.paused = false;
-      return;
-    case 'RunCancelRequested':
-      snap.cancelling = true;
-      return;
-    case 'RunCancelled':
-      snap.status = 'CANCELLED';
-      snap.cancelling = false;
-      snap.completedAt = event.emittedAt;
-      return;
-    case 'RunCompleted':
-      snap.status = 'COMPLETED';
-      snap.completedAt = event.emittedAt;
-      return;
-    case 'RunFailed':
-      snap.status = 'FAILED';
-      snap.completedAt = event.emittedAt;
-      return;
-    case 'StepStarted': {
-      const stepId = (event as EventEnvelope & { stepId: string }).stepId;
-      const step = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      step.status = 'RUNNING';
-      step.startedAt = step.startedAt ?? event.emittedAt;
-      step.attempts += 1;
-      snap.steps[stepId] = step;
-      return;
-    }
-    case 'StepCompleted': {
-      const stepId = (event as EventEnvelope & { stepId: string }).stepId;
-      const step = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      step.status = 'COMPLETED';
-      step.completedAt = event.emittedAt;
-      snap.steps[stepId] = step;
-      const decision = extractGatewayDecision(event);
-      if (decision !== undefined) {
-        snap.gatewayDecisions ??= {};
-        snap.gatewayDecisions[stepId] = decision;
-      }
-      return;
-    }
-    case 'StepFailed': {
-      const stepId = (event as EventEnvelope & { stepId: string }).stepId;
-      const step = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      step.status = 'FAILED';
-      step.completedAt = event.emittedAt;
-      snap.steps[stepId] = step;
-      return;
-    }
-    case 'StepSkipped': {
-      const stepId = (event as EventEnvelope & { stepId: string }).stepId;
-      const step = snap.steps[stepId] ?? { status: 'PENDING', attempts: 0 };
-      step.status = 'SKIPPED';
-      step.completedAt = event.emittedAt;
-      snap.steps[stepId] = step;
-      return;
-    }
-    default:
-      return;
-  }
-}
-
-function extractGatewayDecision(event: EventEnvelope): boolean | undefined {
-  if (typeof event.payload !== 'object' || event.payload === null) {
-    return undefined;
-  }
-  const maybeDecision = (event.payload as Record<string, unknown>).gatewayDecision;
-  return typeof maybeDecision === 'boolean' ? maybeDecision : undefined;
 }

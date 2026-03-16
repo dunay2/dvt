@@ -46,6 +46,8 @@
       "@dvt/contracts/*": ["packages/@dvt/contracts/src/*"],
       "@dvt/delivery": ["packages/@dvt/delivery/src/index.ts"],
       "@dvt/delivery/*": ["packages/@dvt/delivery/src/*"],
+      "@dvt/run-domain": ["packages/@dvt/run-domain/src/index.ts"],
+      "@dvt/run-domain/*": ["packages/@dvt/run-domain/src/*"],
       "@dvt/adapter-postgres": ["packages/@dvt/adapter-postgres/src/index.ts"],
       "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
       "@dvt/adapter-temporal": ["packages/@dvt/adapter-temporal/src/index.ts"],
