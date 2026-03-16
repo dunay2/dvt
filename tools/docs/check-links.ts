@@ -77,7 +77,7 @@ function main(): void {
         report.warn(
           `${filePath}:${line}`,
           `Link uses renamed path: ${rawPath}`,
-          `Current name: ${KNOWN_RENAMES[targetBasename]}`,
+          `Current name: ${KNOWN_RENAMES[targetBasename]}`
         );
       }
 
@@ -88,7 +88,7 @@ function main(): void {
         report.error(
           `${filePath}:${line}`,
           `Broken link: ${rawPath}`,
-          `Resolved to: ${targetPath}`,
+          `Resolved to: ${targetPath}`
         );
         continue;
       }
@@ -107,7 +107,7 @@ function main(): void {
           report.warn(
             `${filePath}:${line}`,
             `Anchor #${anchor} not found in ${basename(targetPath)}`,
-            sample ? `Available: ${sample}` : 'No headings found',
+            sample ? `Available: ${sample}` : 'No headings found'
           );
         }
       }
@@ -121,10 +121,10 @@ function main(): void {
 function getChangedMarkdownFiles(): string[] {
   const base = process.env['GIT_BASE'] ?? 'origin/main';
   try {
-    const output = execSync(
-      `git diff --name-only --diff-filter=AM ${base} -- "*.md"`,
-      { cwd: REPO_ROOT, encoding: 'utf8' },
-    );
+    const output = execSync(`git diff --name-only --diff-filter=AM ${base} -- "*.md"`, {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    });
     return output
       .trim()
       .split('\n')

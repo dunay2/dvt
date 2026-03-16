@@ -69,14 +69,14 @@ export function extractAdrFields(content: string): Record<string, string> {
     const ALIASES: Record<string, string> = {
       status: 'Status',
       date: 'Date',
-      last_reviewed: 'Date',   // ADR-0033/0034 use last_reviewed instead of date
-      owner: 'Owners',         // singular → canonical plural form
+      last_reviewed: 'Date', // ADR-0033/0034 use last_reviewed instead of date
+      owner: 'Owners', // singular → canonical plural form
       owners: 'Owners',
       title: 'Title',
       arc_level: 'ARC Level',
     };
     for (const [k, v] of Object.entries(fm)) {
-      const canonical = ALIASES[k.toLowerCase()] ?? (k.charAt(0).toUpperCase() + k.slice(1));
+      const canonical = ALIASES[k.toLowerCase()] ?? k.charAt(0).toUpperCase() + k.slice(1);
       if (!(canonical in result)) {
         result[canonical] = Array.isArray(v)
           ? v.map(String).join(', ')
@@ -175,11 +175,11 @@ export function extractAnchors(content: string): Set<string> {
     const anchor = match[1]!
       .trim()
       .toLowerCase()
-      .replace(/[`*[\]()]/g, '')   // remove markdown formatting chars
-      .replace(/[^\w\s-]/g, '')     // remove remaining specials
-      .replace(/\s+/g, '-')         // spaces → hyphens
-      .replace(/-+/g, '-')          // collapse multiple hyphens
-      .replace(/^-|-$/g, '');       // trim leading/trailing hyphens
+      .replace(/[`*[\]()]/g, '') // remove markdown formatting chars
+      .replace(/[^\w\s-]/g, '') // remove remaining specials
+      .replace(/\s+/g, '-') // spaces → hyphens
+      .replace(/-+/g, '-') // collapse multiple hyphens
+      .replace(/^-|-$/g, ''); // trim leading/trailing hyphens
     if (anchor) anchors.add(anchor);
   }
 

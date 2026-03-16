@@ -79,7 +79,7 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
       report.warn(
         filePath,
         `ADR Status "${fields['Status']}" is not a standard value`,
-        `Expected one of: ${[...VALID_ADR_STATUSES].join(', ')}`,
+        `Expected one of: ${[...VALID_ADR_STATUSES].join(', ')}`
       );
     }
   }
@@ -135,7 +135,7 @@ function checkEvidenceFrontmatter(filePath: string, report: Report): void {
       report.warn(
         filePath,
         `Evidence doc status "${statusVal}" is not a standard value`,
-        `Expected one of: ${[...VALID_EVIDENCE_STATUSES].join(', ')}`,
+        `Expected one of: ${[...VALID_EVIDENCE_STATUSES].join(', ')}`
       );
     }
   }

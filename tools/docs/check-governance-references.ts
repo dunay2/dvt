@@ -122,7 +122,7 @@ function main(): void {
         report.error(
           canonicalPath,
           `References ADR that does not exist: ${ref}`,
-          `No file found matching ${ref}*.md in ${ADR_DIR}`,
+          `No file found matching ${ref}*.md in ${ADR_DIR}`
         );
       }
     }
@@ -131,10 +131,7 @@ function main(): void {
     const fileRefs = extractFileRefs(content, canonicalPath);
     for (const targetPath of fileRefs) {
       if (!existsSync(targetPath)) {
-        report.error(
-          canonicalPath,
-          `Link target not found: ${targetPath}`,
-        );
+        report.error(canonicalPath, `Link target not found: ${targetPath}`);
       }
     }
   }
@@ -150,10 +147,7 @@ function main(): void {
       const adrRefs = extractAdrRefs(content);
       for (const ref of adrRefs) {
         if (!adrInventory.has(ref)) {
-          report.warn(
-            filePath,
-            `Evidence doc references unknown ADR: ${ref}`,
-          );
+          report.warn(filePath, `Evidence doc references unknown ADR: ${ref}`);
         }
       }
 
@@ -166,10 +160,7 @@ function main(): void {
           for (const ref of codeRefs) {
             const refPath = join(REPO_ROOT, ref);
             if (!existsSync(refPath)) {
-              report.warn(
-                filePath,
-                `code_refs entry not found: ${ref}`,
-              );
+              report.warn(filePath, `code_refs entry not found: ${ref}`);
             }
           }
         }

@@ -54,9 +54,7 @@ export class Report {
     }
 
     const { errors, warnings } = this;
-    process.stderr.write(
-      `\n─── ${errors.length} error(s)  ${warnings.length} warning(s) ───\n`,
-    );
+    process.stderr.write(`\n─── ${errors.length} error(s)  ${warnings.length} warning(s) ───\n`);
   }
 
   toJSON(): { errors: number; warnings: number; issues: readonly Issue[] } {

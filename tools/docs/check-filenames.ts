@@ -51,11 +51,7 @@ function main(): void {
     // Rule 1: No spaces
     if (name.includes(' ')) {
       const suggested = name.replace(/ /g, '-');
-      report.error(
-        filePath,
-        'Filename contains spaces',
-        `Suggested rename: ${suggested}`,
-      );
+      report.error(filePath, 'Filename contains spaces', `Suggested rename: ${suggested}`);
     }
 
     // Rule 2: ADR files must match the canonical pattern
@@ -63,7 +59,7 @@ function main(): void {
       report.warn(
         filePath,
         'ADR filename does not match expected pattern (ADR-NNNN[-_]<slug>.md)',
-        name,
+        name
       );
     }
 
@@ -71,11 +67,7 @@ function main(): void {
     if (STRICT && !/^ADR-\d{4}/i.test(name) && !UPPERCASE_EXCEPTIONS.has(name)) {
       const hasIssue = /[A-Z]/.test(name) || (name.includes('_') && !/^ADR-/.test(name));
       if (hasIssue) {
-        report.warn(
-          filePath,
-          'Filename should be kebab-case (lowercase, hyphens only)',
-          name,
-        );
+        report.warn(filePath, 'Filename should be kebab-case (lowercase, hyphens only)', name);
       }
     }
   }

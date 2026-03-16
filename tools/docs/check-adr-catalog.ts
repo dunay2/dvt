@@ -19,12 +19,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import {
-  parseAdrFilename,
-  parseAdrIndex,
-  normalizeStatus,
-  isSpecialDir,
-} from './lib/adr.js';
+import { parseAdrFilename, parseAdrIndex, normalizeStatus, isSpecialDir } from './lib/adr.js';
 import { extractAdrFields, readIfExists } from './lib/markdown.js';
 import { Report } from './lib/report.js';
 
@@ -70,7 +65,9 @@ function main(): void {
 
   const allFiles = collectAdrFiles(ADR_DIR);
   const mainFiles = allFiles.filter((f) => !isSpecialDir(f.filePath));
-  const archivedFiles = allFiles.filter((f) => f.filePath.replace(/\\/g, '/').includes('/_archive/'));
+  const archivedFiles = allFiles.filter((f) =>
+    f.filePath.replace(/\\/g, '/').includes('/_archive/')
+  );
 
   // ── Rule 1: Unique ADR numbers ──────────────────────────────────────────
   // Language variants (e.g. ADR-0019-foo.en.md alongside ADR-0019-foo.md)
@@ -95,7 +92,7 @@ function main(): void {
       report.error(
         ADR_DIR,
         `Duplicate ADR number: ${key}`,
-        canonical.map((p) => basename(p)).join(', '),
+        canonical.map((p) => basename(p)).join(', ')
       );
     }
     // Note: an ADR that only exists as .en.md (no language-neutral counterpart)
@@ -103,10 +100,7 @@ function main(): void {
   }
 
   // ── Load index ──────────────────────────────────────────────────────────
-  const candidatePaths = [
-    join(ADR_DIR, 'index.md'),
-    join(ADR_DIR, 'ADR-Index.md'),
-  ];
+  const candidatePaths = [join(ADR_DIR, 'index.md'), join(ADR_DIR, 'ADR-Index.md')];
   const indexPath = candidatePaths.find(existsSync) ?? null;
 
   if (!indexPath) {
@@ -127,7 +121,7 @@ function main(): void {
       report.error(
         indexPath,
         `Index references missing file: ${entry.filename}`,
-        `ADR ${entry.num}`,
+        `ADR ${entry.num}`
       );
     } else {
       indexByNum.set(entry.num.toUpperCase(), { ...entry, resolvedPath: resolved });
@@ -163,7 +157,7 @@ function main(): void {
       report.error(
         entry.resolvedPath,
         `Status mismatch: file="${fileStatus}" index="${entry.status}"`,
-        key,
+        key
       );
     }
   }
@@ -174,11 +168,7 @@ function main(): void {
     if (!content) continue;
     const fields = extractAdrFields(content);
     if (fields['Status'] && normalizeStatus(fields['Status']) !== 'superseded') {
-      report.warn(
-        f.filePath,
-        `Archived ADR not marked Superseded`,
-        `Status: ${fields['Status']}`,
-      );
+      report.warn(f.filePath, `Archived ADR not marked Superseded`, `Status: ${fields['Status']}`);
     }
   }
 
