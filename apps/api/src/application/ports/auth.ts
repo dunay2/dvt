@@ -84,4 +84,5 @@ export interface IStartRunUseCase {
 export type StartRunFacadeResult =
   | { readonly kind: 'unauthenticated'; readonly code: AuthenticationFailureCode }
   | { readonly kind: 'unauthorized'; readonly reason: DeniedReason }
+  | { readonly kind: 'adapter_not_configured'; readonly adapter: string }
   | { readonly kind: 'accepted'; readonly result: StartRunResult };
