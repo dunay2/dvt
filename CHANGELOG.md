@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.2](https://github.com/dunay2/dvt/compare/v4.1.1...v4.1.2) (2026-03-16)
+
+
+### Bug Fixes
+
+* **adapters:** Harden outbox-worker cleanup error serialization ([#483](https://github.com/dunay2/dvt/issues/483)) ([d97f755](https://github.com/dunay2/dvt/commit/d97f755f08568fca0b469f9dcef0202b998d7a2a))
+
 ## [4.1.1](https://github.com/dunay2/dvt/compare/v4.1.0...v4.1.1) (2026-03-16)
 
 
