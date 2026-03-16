@@ -71,7 +71,7 @@ function toErrorLike(error: unknown): { message: string; name: string } {
     };
   }
 
-  return { message: String(error), name: typeof error };
+  return { message: stringifyUnknownError(error), name: 'UnknownError' };
 }
 
 function safeSerializeObject(value: object): string | null {
@@ -79,5 +79,21 @@ function safeSerializeObject(value: object): string | null {
     return JSON.stringify(value);
   } catch {
     return null;
+  }
+}
+
+function stringifyUnknownError(error: unknown): string {
+  switch (typeof error) {
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'undefined':
+      return String(error);
+    case 'symbol':
+      return error.description ?? error.toString();
+    case 'function':
+      return error.name ? `[function ${error.name}]` : '[function anonymous]';
+    default:
+      return 'UnknownErrorValue';
   }
 }

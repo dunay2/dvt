@@ -118,3 +118,29 @@ await test('stopRuntimeAndOperationalServer logs structured cleanup errors witho
     },
   ]);
 });
+
+await test('stopRuntimeAndOperationalServer logs primitive cleanup failures while handling a primary error', async () => {
+  const { logger, entries } = makeLogger();
+
+  await stopRuntimeAndOperationalServer({
+    runtime: {
+      stop: async () => {
+        throw false;
+      },
+    },
+    operationalServer: {
+      stop: async () => {},
+    },
+    logger,
+    primaryError: new Error('synthetic primary failure'),
+  });
+
+  assert.equal(entries.length, 1);
+  const cleanupErrors = entries[0]?.data.cleanupErrors;
+  assert.deepEqual(cleanupErrors, [
+    {
+      message: 'false',
+      name: 'UnknownError',
+    },
+  ]);
+});
