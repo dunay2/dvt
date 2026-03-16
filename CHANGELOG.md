@@ -6,6 +6,7 @@
 ### Bug Fixes
 
 * **adapters:** Harden outbox-worker cleanup error serialization ([#483](https://github.com/dunay2/dvt/issues/483)) ([d97f755](https://github.com/dunay2/dvt/commit/d97f755f08568fca0b469f9dcef0202b998d7a2a))
+* **ci:** Harden workspace prebuild chains ([#485](https://github.com/dunay2/dvt/issues/485)) ([91fc13a](https://github.com/dunay2/dvt/commit/91fc13ac2793257d33bdca8574e556fdebb1bbc0))
 
 ## [4.1.1](https://github.com/dunay2/dvt/compare/v4.1.0...v4.1.1) (2026-03-16)
 
