@@ -262,6 +262,51 @@ await test('startRunRoute passes normalized command and requested scope', async 
   });
 });
 
+await test('startRunRoute returns 422 when target adapter is not configured', async () => {
+  const reply = {
+    statusCode: 200,
+    payload: undefined as unknown,
+    code(status: number) {
+      this.statusCode = status;
+      return this;
+    },
+    send(payload: unknown) {
+      this.payload = payload;
+      return this;
+    },
+  };
+
+  const facade = {
+    async execute() {
+      return { kind: 'adapter_not_configured' as const, adapter: 'temporal' };
+    },
+  };
+
+  await startRunRoute(
+    {
+      id: 'req-adapter-missing',
+      headers: { authorization: 'Bearer token' },
+      body: {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        selection: ['model_a'],
+        planRef: VALID_PLAN_REF,
+        runId: 'run-adapter-missing',
+        targetAdapter: 'temporal',
+      },
+    } as never,
+    reply as never,
+    facade as never
+  );
+
+  assert.equal(reply.statusCode, 422);
+  assert.deepEqual(reply.payload, {
+    error: 'ADAPTER_NOT_CONFIGURED',
+    adapter: 'temporal',
+  });
+});
+
 await test('startRunRoute accepts lowercase bearer scheme', async () => {
   const reply = {
     statusCode: 200,
