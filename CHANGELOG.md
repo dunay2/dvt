@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/dunay2/dvt/compare/v4.1.0...v4.1.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* **api:** Map missing startRun adapter to 422 ([#480](https://github.com/dunay2/dvt/issues/480)) ([470d994](https://github.com/dunay2/dvt/commit/470d99468d117f7b9de335325cd6eea3f3a09c11))
+
 ## [4.1.0](https://github.com/dunay2/dvt/compare/v4.0.1...v4.1.0) (2026-03-15)
 
 
