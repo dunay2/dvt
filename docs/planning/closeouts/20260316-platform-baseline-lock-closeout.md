@@ -34,7 +34,8 @@ and package-specific runtime requirements.
 ### Options considered
 
 - Lock the platform baseline explicitly with `packageManager`, root engines,
-  CI pnpm version, and a minimal `.npmrc` documenting engine behavior.
+  a CI setup action that defers to `packageManager`, and a minimal `.npmrc`
+  documenting engine behavior.
   - Accepted. Smallest slice that turns implicit baseline into explicit contract.
 - Fix only the CI action and leave root manifest unchanged.
   - Rejected. That preserves ambiguity for local development.
@@ -51,7 +52,8 @@ Declare the actual baseline directly:
 
 - `packageManager: pnpm@10.28.0`
 - root Node floor `>=20.0.0`
-- CI setup action default pnpm `10`
+- CI setup action stops passing its own pnpm version and defers to
+  `packageManager`
 - minimal `.npmrc` documenting engine strictness
 - restore the repository lint baseline to the last known compatible ESLint 9
   line so the declared platform still installs with
@@ -83,8 +85,9 @@ leaving `M01` as a declared-but-uninstallable baseline.
   - the repo declares a platform contract explicitly
   - the root lockfile becomes installable again with `--frozen-lockfile`
 - Risks and mitigations:
-  - risk: hidden workflows assume pnpm 9
-  - mitigation: align only the default setup action used by workflows
+- risk: reusable workflows may still hardcode pnpm separately from the
+  repository contract
+  - mitigation: remove the duplicate pnpm version from the shared setup action
   - risk: raising Node floor breaks unsupported local environments
   - mitigation: Node 20 is already the CI default and Temporal worker already
     requires `>=20`
@@ -108,7 +111,7 @@ leaving `M01` as a declared-but-uninstallable baseline.
 | File                                                                  | Change                                                                           | Why                                                                              |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `package.json`                                                        | Added `packageManager`, raised engine floors, and restored `eslint` to `^9.39.4` | Lock the platform baseline and keep lint on the last known compatible major line |
-| `.github/actions/setup-node-pnpm/action.yml`                          | Changed default pnpm version from `9` to `10`                                    | Align reusable CI setup with the declared root baseline                          |
+| `.github/actions/setup-node-pnpm/action.yml`                          | Removed the duplicated pnpm version input                                        | Keep the reusable CI setup aligned with the single declared root baseline        |
 | `.npmrc`                                                              | Added explicit `engine-strict=false`                                             | Make engine behavior explicit instead of relying on local defaults               |
 | `pnpm-lock.yaml`                                                      | Regenerated from the aligned manifest baseline                                   | Remove manifest/lock drift so `--frozen-lockfile` works again                    |
 | `docs/planning/closeouts/20260316-platform-baseline-lock-closeout.md` | Recorded think-first, scope, validation, and evidence                            | Required closeout for `M01`                                                      |
