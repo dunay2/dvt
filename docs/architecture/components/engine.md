@@ -1,10 +1,8 @@
-﻿## @'
-
-title: @dvt/engine
+---
+title: '@dvt/engine'
 status: Draft
 owner: Execution Domain
-last_reviewed: 2026-03-15
-
+last_reviewed: 2026-03-16
 ---
 
 # @dvt/engine
@@ -13,13 +11,15 @@ last_reviewed: 2026-03-15
 
 ```mermaid
 flowchart LR
-  engine[dvt/engine]
-  temporal[dvt/adapter-temporal]
-  postgres[dvt/adapter-postgres]
-  delivery[dvt/delivery]
+  engine["@dvt/engine"]
+  temporal["@dvt/adapter-temporal"]
+  postgres["@dvt/adapter-postgres"]
+  delivery["@dvt/delivery"]
+  run_domain["@dvt/run-domain"]
   engine --> temporal
   engine --> postgres
   engine --> delivery
+  engine --> run_domain
 ```
 
 ## Location
@@ -32,85 +32,109 @@ flowchart LR
 
 ## Main Responsibilities
 
-- Orchestrate workflow execution and run lifecycle transitions.
-- Own the central run model through `RunAggregate`.
-- Coordinate adapters for provider execution and persistence.
-- Enforce execution invariants such as determinism, crash consistency, and access policy.
+- Orchestrate run lifecycle through `WorkflowEngine`.
+- Enforce execution invariants such as adapter registration, plan integrity,
+  access policy, crash consistency, and deterministic event emission.
+- Expose projected status reads through `SnapshotProjector` and the run-state
+  store boundary.
+- Coordinate provider adapters without delegating semantic ownership to them.
 
 ## Explanation
 
-`@dvt/engine` owns the lifecycle of workflow runs inside the execution domain.
-It is the orchestration boundary that turns a plan reference plus runtime context
-into canonical run events, persisted state, and provider interactions.
+`@dvt/engine` is the execution-domain orchestration boundary. The package does
+not currently expose a separate live aggregate-root class such as
+`RunAggregate`; instead, the current implementation is centered on:
 
-The component works with three main internal roles:
+- `WorkflowEngine` as the public application/service facade
+- `SnapshotProjector` as the engine-side projection helper
+- `@dvt/run-domain` as the canonical pure event-to-snapshot projector
+- `RunAccessPolicy` as the grouped policy boundary for auth, plan-ref checks,
+  and rate limiting
 
-- **RunAggregate**: central run model and event-sourced state authority.
-- **StepAggregate**: step-level execution state and dependency tracking.
-- **AdapterAggregate**: provider and persistence integration boundary.
+The package collaborates closely with:
 
-It collaborates closely with:
+- [adapter-temporal](adapter-temporal.md) for provider execution
+- [adapter-postgres](adapter-postgres.md) for durable state, read models, and
+  outbox persistence
+- [delivery](delivery.md) for worker/runtime ownership outside the engine
+- `@dvt/run-domain` for canonical projection rules shared with persistence
 
-- [adapter-temporal](adapter-temporal.md) for provider execution.
-- [adapter-postgres](adapter-postgres.md) for durable state and outbox persistence.
-- [delivery](delivery.md) for downstream publication of canonical events.
+## Current Internal Shape
 
-## RunAggregate
+### `WorkflowEngine`
 
-Represents the central run model and owns the canonical lifecycle state.
-Responsibilities include:
+Current facade and orchestration service. Responsibilities include:
 
-- managing workflow state transitions
-- tracking step execution progress
-- applying canonical events to the snapshot
+- `startRun`
+- `getRunStatus`
+- `signal`
+- `healthCheck`
+- intent-log-aware crash consistency
+- provider registration and capability checks
 
-## StepAggregate
+### `SnapshotProjector`
 
-Represents an individual workflow step. Responsibilities include:
+Engine-local helper for replaying events into a `WorkflowSnapshot` and deriving
+`RunStatusSnapshot`. It delegates mutation rules to `@dvt/run-domain` and keeps
+hash derivation local to the engine boundary.
 
-- defining step logic and parameters
-- linking steps through dependencies
-- reporting execution status back into the run model
+### `RunAccessPolicy`
 
-## AdapterAggregate
+Current grouped policy boundary that encapsulates:
 
-Represents integration with execution and storage adapters. Responsibilities include:
-
-- managing adapter selection and runtime calls
-- delegating provider-specific operations
-- reporting adapter outcomes back into canonical engine state
+- tenant access checks
+- plan reference validation
+- rate-limit validation
 
 ## Restrictions
 
-- Must comply with the engine contracts under `docs/architecture/engine/contracts/`.
-- Must keep execution semantics inside the execution domain boundary.
-- Must not let provider runtimes become the semantic source of truth.
+- Must comply with the engine contracts under
+  `docs/architecture/engine/contracts/`.
+- Must preserve DVT ownership of execution semantics.
+- Must not treat provider runtimes as the semantic source of truth.
+- Must keep default status reads on projected state per ADR-0015.
 
 ## Related Documentation
 
 - [Component Map](../component-map.md)
 - [Execution Domain](../domain-execution.md)
 - [Engine C4 Architecture](engine/c4-engine.md)
+- [Current Status](../system-delivery-status.md)
 
-## DDD Diagram
+## Current Structure Diagram
 
 ```mermaid
 classDiagram
   class WorkflowEngine {
     +startRun(planRef, context)
-    +signalRun(signalRequest)
     +getRunStatus(runId)
-    +cancelRun(runId)
+    +signal(runRef, request)
+    +healthCheck()
   }
-  class RunAggregate {
-    +applyEvent(event)
-    +toStatus()
+  class SnapshotProjector {
+    +applyRunEvent(snapshot, event)
+    +snapshotToStatus(snapshot)
+    +rebuild(runId, events)
   }
-  WorkflowEngine --> RunAggregate : orchestrates
-  WorkflowEngine --> AdapterAggregate : integrates
-  WorkflowEngine --> StepAggregate : tracks steps
-  AdapterAggregate <|-- TemporalAdapter
-  AdapterAggregate <|-- PostgresAdapter
+  class RunAccessPolicy {
+    +assertTenantAccess()
+    +validatePlanRef()
+    +checkRateLimit()
+  }
+  class IProviderAdapter {
+    +startRun()
+    +getRunStatus()
+    +signal()
+    +ping()
+  }
+  class RunDomain {
+    +applyRunEvent()
+  }
+
+  WorkflowEngine --> SnapshotProjector : uses
+  WorkflowEngine --> RunAccessPolicy : enforces
+  WorkflowEngine --> IProviderAdapter : coordinates
+  SnapshotProjector --> RunDomain : delegates projection rules
 ```
 
 ## Sequence Diagram: `startRun`
@@ -119,79 +143,56 @@ classDiagram
 sequenceDiagram
   participant App
   participant WorkflowEngine
-  participant AdapterAggregate
-  participant RunAggregate
+  participant Policy as RunAccessPolicy
+  participant Store as IRunStateStore
+  participant Adapter as IProviderAdapter
+
   App->>WorkflowEngine: startRun(planRef, context)
-  WorkflowEngine->>AdapterAggregate: validate and bootstrap
-  AdapterAggregate-->>WorkflowEngine: runRef
-  WorkflowEngine->>RunAggregate: apply RunQueued event
-  RunAggregate-->>WorkflowEngine: updated snapshot
+  WorkflowEngine->>Policy: validate preconditions
+  WorkflowEngine->>Store: create intent + bootstrapRunTx
+  WorkflowEngine->>Adapter: startRun(planRef, context)
+  Adapter-->>WorkflowEngine: EngineRunRef
+  WorkflowEngine->>Store: markDispatched / saveProviderRef
   WorkflowEngine-->>App: EngineRunRef
 ```
 
 ## Constraints and Invariants
 
-| Constraint / Invariant | Where Enforced                         | Description                                                                                       |
-| ---------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| PlanRef integrity      | WorkflowEngine, PlanIntegrityValidator | PlanRef must be valid and reference an existing plan, version, and hash.                          |
-| Adapter registration   | WorkflowEngine                         | Adapter must be registered and support the required capabilities.                                 |
-| Crash consistency      | WorkflowEngine, intent log             | `startRun` must preserve recovery semantics through the intent log.                               |
-| Event sourcing         | RunAggregate, WorkflowEngine           | All state transitions are represented as canonical events.                                        |
-| Access policy          | WorkflowEngine, RunAccessPolicy        | `tenantId`, `projectId`, `environmentId`, and permissions are validated before lifecycle changes. |
-| Determinism            | WorkflowEngine, RunAggregate           | The same input must produce the same state and hash.                                              |
-| Outbox rate limit      | WorkflowEngine                         | Event publication frequency remains bounded by configured limits.                                 |
-| Provider ref update    | WorkflowEngine                         | `providerRunId` is updated after bootstrap using fail-soft semantics.                             |
+| Constraint / Invariant | Where Enforced                                           | Description                                                                          |
+| ---------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| PlanRef integrity      | `WorkflowEngine`, `RunAccessPolicy`                      | `PlanRef` must be valid and reference the expected plan/version/hash.                |
+| Adapter registration   | `WorkflowEngine`                                         | Provider adapter must be registered before orchestration continues.                  |
+| Crash consistency      | `WorkflowEngine`, intent log, state store                | `startRun` preserves recovery semantics through pre-dispatch intent handling.        |
+| Event sourcing         | `WorkflowEngine`, `SnapshotProjector`, `@dvt/run-domain` | State is derived from canonical events and deterministic replay.                     |
+| Access policy          | `RunAccessPolicy`                                        | Tenant, project, environment, and rate-limit checks happen before lifecycle changes. |
+| Determinism            | `SnapshotProjector`, `@dvt/run-domain`                   | Same event stream produces the same logical state and hash.                          |
+| Read-model separation  | `WorkflowEngine`, state store                            | Default status reads use projected state rather than live provider lookup.           |
 
 ## Validation Examples
 
-- PlanRef integrity: validated in `startRun` and by `PlanIntegrityValidator`.
-- Adapter registration: `getAdapterOrThrow` fails when an adapter is not registered.
-- Crash consistency: the intent log (`markDispatched`, `markResolved`) protects recovery.
-- Event sourcing: `RunAggregate.applyEvent` updates the snapshot through canonical events.
-- Access policy: `RunAccessPolicy` validates tenant and permission preconditions.
-
-## Engine in Global Flow
-
-```mermaid
-sequenceDiagram
-  participant Planner
-  participant Engine
-  participant Adapter
-  participant Delivery
-  Planner->>Engine: startRun(planRef, context)
-  Engine->>Adapter: startRun(provider execution)
-  Adapter-->>Engine: runRef
-  Engine->>Delivery: publish RunStarted event
-  Delivery-->>Engine: confirm delivery
-  Engine->>Planner: EngineRunRef, status
-```
-
-- The engine receives the plan from Planner, validates it, and orchestrates execution.
-- It integrates adapters to execute the workflow in the provider runtime.
-- It publishes lifecycle events to Delivery for downstream traceability.
-- It returns canonical references and status to callers.
-
-## Main Methods
-
-- `startRun(planRef, context)`: start execution, validate inputs, integrate adapters, and apply events.
-- `signalRun(signalRequest)`: send control signals to an active run.
-- `getRunStatus(runId)`: return current run status from projected state.
-- `cancelRun(runId)`: orchestrate run cancellation and state updates.
+- Adapter registration: `WorkflowEngine` throws `AdapterNotRegisteredError`
+  when the target adapter is missing.
+- Crash consistency: intent log transitions (`markDispatched`,
+  `markResolved`) allow orphan reconciliation.
+- Event replay: `SnapshotProjector` and `@dvt/run-domain` reject invalid
+  terminal-state transitions.
+- Access policy: `RunAccessPolicy` validates start-run preconditions before
+  orchestration continues.
 
 ## Key Files and References
 
-- `packages/@dvt/engine/src/core/RunAggregate.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngine.ts`
-- `apps/api/src/application/services/engineStartRunUseCase.ts`
-- `packages/@dvt/engine/test/contracts/engine.test.ts`
-- `packages/@dvt/engine/src/adapters/`
+- `packages/@dvt/engine/src/core/SnapshotProjector.ts`
+- `packages/@dvt/engine/src/security/RunAccessPolicy.ts`
+- `packages/@dvt/run-domain/src/applyRunEvent.ts`
+- `packages/@dvt/engine/test/core/WorkflowEngine.test.ts`
+- `packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts`
 
 ## Functionalities
 
-- orchestration of workflow execution
-- state management and transitions via `RunAggregate`
-- adapter integration for provider execution
-- event-sourcing persistence
-- crash consistency through the intent log
-- integrity validation and access policy enforcement
-- determinism and traceability
+- run orchestration
+- deterministic replay and status projection
+- provider-adapter coordination
+- crash-consistent start-run intent handling
+- access policy enforcement
+- state-store boundary integration
