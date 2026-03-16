@@ -139,10 +139,28 @@ export interface WorkflowSnapshot {
   >;
 }
 
+export interface ProviderRefUpdate {
+  providerWorkflowId: string;
+  providerRunId: string;
+  providerNamespace?: string;
+  providerTaskQueue?: string;
+  providerConductorUrl?: string;
+}
+
 export interface IRunStateStore {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
+
+  /**
+   * Updates the provider-assigned references on an already-bootstrapped run.
+   *
+   * Called after `adapter.startRun()` returns a `firstExecutionRunId` that differs
+   * from the `estimateRunRef()` value written at bootstrap time.
+   * Optional - the engine call-site is fail-soft.
+   */
+  saveProviderRef?(tenantId: string, runId: string, update: ProviderRefUpdate): Promise<void>;
+
   listEvents(
     tenantId: string,
     runId: string,
