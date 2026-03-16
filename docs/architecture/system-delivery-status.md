@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-14
+last_reviewed: 2026-03-16
 ---
 
 # Current Status
@@ -44,7 +44,7 @@ Minimum tuple for this document:
 
 ## Snapshot
 
-- Review date: 2026-03-14
+- Review date: 2026-03-16
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
 - Active workspaces: 20
@@ -83,20 +83,20 @@ Minimum tuple for this document:
 
 ### Execution And Adapters
 
-| Area              | Packages                   | Status             | Notes                                                                                                                                    |
-| ----------------- | -------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Workflow engine   | `@dvt/engine`              | Closed for Phase 1 | Core engine, standalone projector worker, provider run-id reconciliation, and snapshot catch-up loop all delivered; G7 closed 2026-03-15 |
-| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately     |
-| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and treated as closed in current gap tracking                              |
-| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                            |
+| Area              | Packages                   | Status             | Notes                                                                                                                                                                                                                |
+| ----------------- | -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflow engine   | `@dvt/engine`              | Partial            | Core engine, in-process projector, and pre-bootstrap `estimateRunRef` path are delivered; standalone projector runtime landed, but provider run-id reconciliation for the pre-bootstrap path remains open under G7.3 |
+| Temporal adapter  | `@dvt/adapter-temporal`    | Closed for Phase 1 | Real adapter primitives, worker host, lookup, and time-skipping integration coverage exist; residual hardening is tracked separately                                                                                 |
+| Postgres adapter  | `@dvt/adapter-postgres`    | Closed for Phase 1 | State-store and outbox persistence implementation are present and treated as closed in current gap tracking                                                                                                          |
+| Mock/test adapter | `@dvt/engine` test surface | Implemented        | Exists as test-only support surface, not as a product runtime                                                                                                                                                        |
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                                          | Status             | Notes                                                                                                                                                                                                                                                                                                                                                         |
-| -------------- | ----------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                 |
-| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10                                                                                           |
-| Read models    | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | G7 closed 2026-03-15: `run_snapshots` numbered migration (`004`), `rebuildSnapshot` + `listStaleSnapshotRuns` + `saveProviderRef` on `IRunStateStore`, `ProjectorWorkerRuntime` in `@dvt/delivery`, `apps/projector-worker` standalone process, provider execution-ID reconciliation in engine pre-bootstrap path; 235/235 engine tests, 22/22 delivery tests |
+| Area           | Packages                                                          | Status             | Notes                                                                                                                                                                                                                                                                                          |
+| -------------- | ----------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                  |
+| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10                            |
+| Read models    | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Partial            | G7.1 and G7.2 are delivered: `run_snapshots` numbered migration (`004`), `rebuildSnapshot` + `listStaleSnapshotRuns` on `IRunStateStore`, `ProjectorWorkerRuntime` in `@dvt/delivery`, and `apps/projector-worker` standalone process. G7.3 provider execution-ID reconciliation is still open |
 
 ### Observability And Traceability
 
@@ -130,7 +130,7 @@ Minimum tuple for this document:
 | G4  | compiledCodeRef ownership                    | Closed        |
 | G5  | Independent outbox worker runtime            | Closed        |
 | G6  | OpenLineage mapping tests plus schema pin    | Closed        |
-| G7  | Standalone projector and read models         | Closed        |
+| G7  | Standalone projector and read models         | Partial       |
 | G8  | API auth hardening                           | Closed        |
 | G9  | StepTypeRegistry plus typed `stepTypeConfig` | Closed        |
 | G10 | `outbox_lineage` worker plus fail-open DLQ   | Closed        |

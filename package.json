@@ -1,6 +1,6 @@
 {
   "name": "dvt",
-  "version": "4.1.2",
+  "version": "4.2.0",
   "type": "module",
   "description": "DVT - Workflow Engine Documentation and Code",
   "main": "dist/index.js",
@@ -125,7 +125,7 @@
     "@vitest/ui": "3.2.4",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.29.1",

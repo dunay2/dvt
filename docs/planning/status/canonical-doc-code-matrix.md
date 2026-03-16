@@ -2,7 +2,7 @@
 title: Canonical Doc Code Matrix
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-03-16
 planning_type: status
 ---
 
@@ -44,6 +44,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | Postgres state store                           | `@dvt/adapter-postgres`, `@dvt/state-store`                                            | [Postgres State Store Adapter](../../architecture/engine/adapters/state-store/postgres/StateStoreAdapter.md)                                                                                                                       | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../gaps/G3-TASK-SPECIFICATION.md)                                                                                                               | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
 | Outbox worker runtime                          | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`                          | [G5 - Outbox Worker Consolidated Plan](../gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md), [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md), [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md) | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Read models and projector catch-up             | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres`, `@dvt/engine`       | [G7 - AI Execution Tracker](../gaps/G7-AI-EXECUTION-TRACKER.md), [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md), [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md)                                   | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
 | compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../gaps/G4-TASK-SPECIFICATION.md)                                                                                                             | [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)                                                                    |
 | OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                                                          | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                                                      | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
@@ -202,6 +203,45 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   `pnpm --filter dvt-outbox-worker test:arch`
   and
   `pnpm test:adapter-postgres`
+
+### Read models and projector catch-up
+
+- Canonical spec:
+  [G7 - AI Execution Tracker](../gaps/G7-AI-EXECUTION-TRACKER.md)
+  and
+  [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md)
+  and
+  [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md)
+- Current status source:
+  [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G7`)
+- Current posture:
+  G7 is **Partial**. G7.1 (`run_snapshots` formalization + `rebuildSnapshot`)
+  and G7.2 (standalone projector runtime) are delivered. G7.3 provider
+  run-id reconciliation remains open.
+- Primary code:
+  [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
+  and
+  [packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+  and
+  [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+  and
+  [packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts](../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
+  and
+  [apps/projector-worker/src/server.ts](../../../apps/projector-worker/src/server.ts)
+- Key tests:
+  [packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts](../../../packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts)
+  and
+  [apps/projector-worker/test/env.test.ts](../../../apps/projector-worker/test/env.test.ts)
+  and
+  [packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts)
+- Verification:
+  `pnpm --filter @dvt/delivery test`
+  and
+  `pnpm --filter dvt-projector-worker typecheck`
+  and
+  `pnpm --filter dvt-projector-worker build`
+  and
+  `pnpm --filter dvt-projector-worker test`
 
 ### compiledCodeRef ownership
 
