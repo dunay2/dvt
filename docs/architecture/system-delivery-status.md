@@ -158,27 +158,25 @@ For closure criteria, evidence, and exact verification commands, use
 - Planning and execution debt:
   [Planning](../planning/index.md)
 
-## System Element Diagrams (from Closeouts)
+## System Element Diagrams (from Current Code)
 
 ### Workflow Engine Relationships
 
-See [workflowengine-separation-closeout.md](../planning/closeouts/workflowengine-separation-closeout.md):
+Reflects the current merged implementation:
 
 ```mermaid
 classDiagram
-    WorkflowEngine <|-- StartRunCoordinator
-    WorkflowEngine <|-- RunStatusReader
-    WorkflowEngine <|-- RunSignalService
-    WorkflowEngine <|-- EngineHealthReporter
-    StartRunCoordinator --> IProviderAdapter
-    RunStatusReader --> IProviderAdapter
-    RunSignalService --> IProviderAdapter
-    EngineHealthReporter --> IProviderAdapter
+    WorkflowEngine --> IProviderAdapter
+    WorkflowEngine --> IRunStateStore
+    WorkflowEngine --> IStartRunIntentStore
+    WorkflowEngine --> RunAccessPolicy
+    WorkflowEngine --> SnapshotProjector
+    SnapshotProjector --> RunDomain
 ```
 
 ### Engine Domain Structure
 
-See [workflowengine-separation-closeout.md](../planning/closeouts/workflowengine-separation-closeout.md):
+Reflects the current merged implementation:
 
 ```mermaid
 classDiagram
@@ -188,17 +186,15 @@ classDiagram
         +signal()
         +healthCheck()
     }
-    class StartRunCoordinator {
-        +startRun()
+    class SnapshotProjector {
+        +applyRunEvent()
+        +snapshotToStatus()
+        +rebuild()
     }
-    class RunStatusReader {
-        +getRunStatus()
-    }
-    class RunSignalService {
-        +signal()
-    }
-    class EngineHealthReporter {
-        +pingAll()
+    class RunAccessPolicy {
+        +assertTenantAccess()
+        +validatePlanRef()
+        +checkRateLimit()
     }
     class IProviderAdapter {
         +startRun()
@@ -206,14 +202,13 @@ classDiagram
         +signal()
         +ping()
     }
-    WorkflowEngine <|-- StartRunCoordinator
-    WorkflowEngine <|-- RunStatusReader
-    WorkflowEngine <|-- RunSignalService
-    WorkflowEngine <|-- EngineHealthReporter
-    StartRunCoordinator --> IProviderAdapter
-    RunStatusReader --> IProviderAdapter
-    RunSignalService --> IProviderAdapter
-    EngineHealthReporter --> IProviderAdapter
+    class RunDomain {
+        +applyRunEvent()
+    }
+    WorkflowEngine --> SnapshotProjector
+    WorkflowEngine --> RunAccessPolicy
+    WorkflowEngine --> IProviderAdapter
+    SnapshotProjector --> RunDomain
 ```
 
 ### RunMetadata Field Relationships
