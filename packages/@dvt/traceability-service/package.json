@@ -9,6 +9,8 @@
     "dvt-trace": "dist/cli.js"
   },
   "scripts": {
+    "prebuild": "pnpm -C ../../.. --filter @dvt/contracts build",
+    "pretypecheck": "pnpm -C ../../.. --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",

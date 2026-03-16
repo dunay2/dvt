@@ -13,6 +13,7 @@
     }
   },
   "scripts": {
+    "prebuild": "pnpm --filter @dvt/contracts build",
     "pretest": "pnpm --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --config vitest.config.ts"
