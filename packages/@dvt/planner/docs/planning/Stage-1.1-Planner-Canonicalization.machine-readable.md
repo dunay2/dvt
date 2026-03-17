@@ -901,6 +901,63 @@ artifacts_to_update:
     - packages/@dvt/planner/docs/** triaged_as_promote_or_retain_local_or_archive
 ```
 
+### D-17 Artifact Mapping Table
+
+```yaml
+artifact_mapping_table:
+  - current_artifact: packages/@dvt/planner/src/domain/types.ts public shapes
+    problem: duplicate_public_contract_authority
+    target_owner: '@dvt/contracts'
+    action:
+      - remove
+      - replace_with_imports
+      - temporary_reexport_only_if_needed
+  - current_artifact: packages/@dvt/contracts/src/contracts/planner/**
+    problem: canonical_public_contract_must_be_single_source
+    target_owner: '@dvt/contracts'
+    action:
+      - absorb_public_planner_boundary_types
+      - absorb_compatibility_notes
+  - current_artifact: planner_local_imports_of_public_planner_contracts
+    problem: drift_toward_planner_local_contract_ownership
+    target_owner: '@dvt/planner consuming @dvt/contracts'
+    action:
+      - replace_internal_imports_to_consume_canonical_shared_contracts
+  - current_artifact: packages/@dvt/planner/docs/contracts/*.schema.json and related local schema docs
+    problem: informative_drift_risk_vs_canonical_executable_schemas
+    target_owner: '@dvt/contracts plus canonical docs surfaces'
+    action:
+      - promote
+      - reference_generated_canonical_artifacts
+      - archive_local_copies_when_obsolete
+  - current_artifact: packages/@dvt/planner/docs/adr/** local ADR-like notes affecting shared semantics
+    problem: governance_ambiguity
+    target_owner: canonical_repo_docs
+    action:
+      - rename_as_local_notes
+      - promote_to_docs_architecture_or_docs_contracts_or_docs_planning
+      - archive_when_superseded
+  - current_artifact: engine_side_validation_boundary_for_validatePlan_or_equivalent
+    problem: gate_remains_prose_without_canonical_surface
+    target_owner: canonical_engine_contracts_boundary
+    action:
+      - define_or_align_validation_contract_surface
+  - current_artifact: artifact_resolver_boundary_note_or_equivalent_planner_application_boundary_note
+    problem: manifestRef_resolution_remains_implementation_defined
+    target_owner: planner_boundary_docs_plus_shared_contract_authority
+    action:
+      - define_resolver_boundary
+      - define_failure_shape
+      - define_owner
+  - current_artifact: packages/@dvt/planner/docs/** mixed local docs
+    problem: mixed_canonical_vs_implementation_local_status
+    target_owner: canonical_repo_docs_or_retained_local_implementation_docs
+    action:
+      - classify_as_promote
+      - classify_as_retain_local
+      - classify_as_archive
+```
+
 ## D-18 Acceptance and Verification
 
 ```yaml

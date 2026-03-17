@@ -1197,6 +1197,22 @@ return engine.startRun(planRef, ctx);
   - retain-local
   - archive
 
+### Artifact mapping table
+
+The summary lists above are still too broad to execute directly. The following
+table is the bridge from policy to implementation slice.
+
+| Current artifact                                                                    | Problem                                                 | Target owner                                                                                 | Action                                                                    |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `packages/@dvt/planner/src/domain/types.ts` public shapes                           | duplicate public contract authority                     | `@dvt/contracts`                                                                             | remove, replace with imports, or temporary re-export from contracts       |
+| `packages/@dvt/contracts/src/contracts/planner/**`                                  | canonical public contract must become the single source | `@dvt/contracts`                                                                             | absorb public planner boundary types and compatibility notes              |
+| planner-local imports of public planner contracts                                   | drift toward planner-local contract ownership           | `@dvt/planner` consuming `@dvt/contracts`                                                    | replace internal imports to consume canonical shared contracts            |
+| `packages/@dvt/planner/docs/contracts/*.schema.json` and related local schema docs  | informative drift risk vs canonical executable schemas  | `@dvt/contracts` plus canonical docs surfaces                                                | promote, reference generated canonical artifacts, or archive local copies |
+| `packages/@dvt/planner/docs/adr/**` local ADR-like notes affecting shared semantics | governance ambiguity                                    | canonical repo docs under `docs/architecture/**`, `docs/contracts/**`, or `docs/planning/**` | rename as local notes, promote to canonical docs, or archive              |
+| engine-side validation boundary for `validatePlan` or equivalent                    | gate remains prose without canonical surface            | canonical engine/contracts boundary                                                          | define or align one validation contract surface                           |
+| artifact resolver boundary note or equivalent planner application-boundary note     | `manifestRef` resolution remains implementation-defined | planner boundary docs plus shared contract authority                                         | define resolver boundary, failure shape, and owner                        |
+| planner-local docs under `packages/@dvt/planner/docs/**`                            | mixed canonical vs implementation-local status          | canonical repo docs or retained local implementation docs                                    | classify each doc as promote, retain-local, or archive                    |
+
 ---
 
 ## 29. Recommended Output Artifacts For Stage 1.1
