@@ -144,7 +144,7 @@
   "diagramRefs": [
     {
       "id": "DG-01",
-      "title": "Component View",
+      "title": "Target-State Component View",
       "humanSection": "5",
       "diagramType": "mermaid-graph"
     },
@@ -156,7 +156,7 @@
     },
     {
       "id": "DG-03",
-      "title": "Sequence View",
+      "title": "Target-State Sequence View",
       "humanSection": "5",
       "diagramType": "mermaid-sequenceDiagram"
     }
@@ -227,9 +227,9 @@
     },
     {
       "id": "D-10",
-      "title": "stepId to nodeId Relationship",
+      "title": "stepId to nodeId Transitional Policy",
       "humanSectionRefs": ["18"],
-      "policyStatus": "selected",
+      "policyStatus": "selected_target_state_pending",
       "decisionClass": "boundary_rule"
     },
     {
@@ -257,21 +257,14 @@
   "illustrativeShapes": [
     {
       "id": "IS-01",
-      "title": "ArtifactResolverPort",
-      "humanSectionRefs": ["15"],
-      "status": "illustrative_until_canonized",
-      "ownerToCanonize": "@dvt/contracts and planner boundary docs"
-    },
-    {
-      "id": "IS-02",
-      "title": "ExecutabilityValidationResult",
-      "humanSectionRefs": ["17"],
+      "title": "ExecutionBindingVerificationResult",
+      "humanSectionRefs": ["16"],
       "status": "illustrative_until_canonized",
       "ownerToCanonize": "@dvt/contracts engine boundary"
     },
     {
-      "id": "IS-03",
-      "title": "IExecutabilityValidator",
+      "id": "IS-02",
+      "title": "ExecutabilityValidationResult Fields",
       "humanSectionRefs": ["17"],
       "status": "illustrative_until_canonized",
       "ownerToCanonize": "@dvt/contracts engine boundary"

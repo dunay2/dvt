@@ -25,7 +25,14 @@ Its goal is not to redesign the planner from zero. Its goal is to stop semantic 
 - migration path away from duplicated contract definitions
 - documentation placement at subsystem level instead of source-file level
 
-This proposal is intentionally narrow. It does not add new planner features.
+This proposal is intentionally narrow in **implementation and feature-delivery
+scope**. It does not add new planner features.
+
+That does **not** mean the proposal is policy-light. Stage 1.1 still makes real
+architectural decisions about extension boundaries, unknown step handling,
+`custom` passthrough governance, and ownership of future registry or validation
+surfaces. The narrowness claim applies to what the slice implements, not to
+whether it sets boundary policy.
 
 Structured artifact rule:
 
@@ -110,7 +117,12 @@ Stage 1.1 must remain compatible with:
 - OOP discipline: public contracts, application services, and domain objects
   must not collapse into untyped procedural glue
 
-### Component View
+### Target-State Component View
+
+This diagram is a **target-state boundary view**. It shows the intended
+planner-to-engine relationship once the executability boundary is canonized; it
+does **not** assert that the current repository wiring already exposes that
+exact interaction surface.
 
 ```mermaid
 graph LR
@@ -177,7 +189,12 @@ classDiagram
     StepDefinition --> ArtifactBinding
 ```
 
-### Sequence View
+### Target-State Sequence View
+
+This sequence is also **target-state**. It illustrates the intended validation
+flow once the planner-engine executability boundary and artifact resolver
+boundary have canonical contract surfaces. It is not evidence that the current
+planner implementation already calls the engine in this exact way.
 
 ```mermaid
 sequenceDiagram
@@ -562,22 +579,17 @@ specialized input modes.
 ### Minimum boundary port shape
 
 Stage 1.1 should stop treating the artifact resolver as a hand-wavy concept.
-The minimum boundary shape should look like:
+The planning doc must not become the most complete implementation-facing source
+for a non-canonical interface. Therefore Stage 1.1 does **not** publish a
+TypeScript interface here.
 
-```ts
-interface ArtifactResolverPort {
-  resolveManifest(
-    ref: ManifestRef
-  ): Promise<
-    | { ok: true; manifest: DbtManifestLike; digest: string }
-    | { ok: false; code: string; reason: string; retryable: boolean }
-  >;
-}
-```
+Instead, the minimum canonical contract content still required is:
 
-This shape is **illustrative until canonized**. It clarifies the minimum
-boundary expectation; it is not itself canonical merely because it appears in
-this proposal.
+- one request shape that identifies the artifact reference being resolved
+- one success shape that returns the resolved manifest payload plus integrity
+  material
+- one failure shape that returns structured rejection data
+- one owner for the boundary contract
 
 This does not require the exact names above to be frozen immediately, but it
 does require the repository to define:
@@ -713,37 +725,17 @@ automatic replanning already exists.
 ### Minimum Stage 1.1 contract shape
 
 The gate is not complete until the repository has a canonical validation result
-shape. The minimum acceptable form is:
+shape. The planning doc must not become the most complete source for a
+non-canonical validator interface. Therefore Stage 1.1 does **not** publish a
+TypeScript interface here.
 
-```ts
-type ExecutabilityValidationResult =
-  | { status: 'OK' }
-  | {
-      status: 'ERRORS';
-      errors: Array<{
-        capability: string;
-        reason: string;
-        hard: boolean;
-        adapter: string;
-      }>;
-    };
-```
+Instead, the minimum canonical contract content still required is:
 
-If the engine contract surface exposes the gate directly, the minimum interface
-should be equivalent to:
-
-```ts
-interface IExecutabilityValidator {
-  validatePlan(
-    plan: ExecutionPlanV2,
-    targetAdapter: string
-  ): Promise<ExecutabilityValidationResult>;
-}
-```
-
-These shapes are **illustrative until canonized**. They describe the minimum
-contract content the repository still needs; they do not become canonical only
-by appearing in this proposal.
+- one success state for executable plans
+- one structured error state for non-executable plans
+- machine-readable rejection fields for missing capability, rejecting adapter or
+  runtime, and hard-versus-degradable status
+- one owner for the validation boundary
 
 Stage 1.1 does not claim that this exact interface already exists in the active
 engine contract. It states that an equivalent canonical boundary is required if
@@ -780,23 +772,52 @@ That means:
 
 ---
 
-## 18. `stepId === nodeId` Decision
+## 18. `stepId === nodeId` Transitional Policy
 
-### Recommendation
+### Selected Decision
 
-Do **not** freeze `stepId === nodeId` as a permanent architectural invariant.
+Stage 1.1 adopts a **transitional policy**, not a permanent invariant:
 
-It can remain a temporary simplification in v2.3.x, but the architecture should assume future divergence because:
+- current implementation may continue using `stepId === nodeId` in the v2.3.x
+  line
+- the public contract must not freeze that equality as a permanent rule
+
+### Rationale
+
+The architecture should assume future divergence because:
 
 - one dbt node may expand into multiple executable steps
 - one technical step may not map 1:1 to a graph node
 - gateway and plugin-driven steps may introduce synthetic steps
 - future adapters may need internal technical steps not represented in UI nodes
 
-### Rule
+### Current operating rule
 
-- current implementation may preserve `stepId === nodeId` where valid
-- public contract must not require it permanently
+- planner may emit `stepId === nodeId` where the current compiler still produces
+  one executable step per selected node
+- tests may assert that equality only as a **current implementation property**
+  in the v2.3.x line
+- no public contract, compatibility promise, or external consumer guidance may
+  treat that equality as normative architecture
+
+### Migration trigger
+
+The transition away from `stepId === nodeId` becomes mandatory as soon as any
+of the following is introduced:
+
+- one selected node can expand into more than one executable step
+- synthetic technical or gateway steps are added to the plan
+- adapter-facing execution steps exist that do not map 1:1 to UI-visible nodes
+
+### Minimum follow-on expectation
+
+When that trigger is crossed, the repository must add:
+
+- a canonical identifier rule describing step identity independently from node
+  identity
+- contract and fixture updates proving the new relationship
+- tests that reject accidental reliance on `stepId === nodeId` as a universal
+  invariant
 
 ---
 
