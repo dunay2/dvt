@@ -645,7 +645,9 @@ not available.
 
 ### Selected Decision
 
-Stage 1.1 explicitly adopts a **two-step validity model**:
+Stage 1.1 explicitly adopts a **two-step validity model as target-state
+architecture**, not as a claim that the full engine-side contract is already
+canonized:
 
 1. **Planner validity**
    - planner proves the plan is structurally valid, deterministic, and
@@ -660,8 +662,8 @@ Stage 1.1 explicitly adopts a **two-step validity model**:
 - engine does **not** redesign the plan
 - engine validates executability against target adapter capabilities and emits a
   structured validation result
-- Stage 1.1 guarantees a **gate**, not a closed replanning loop
-- the minimum supported behavior is structured rejection
+- Stage 1.1 records the required **gate semantics**, not a shipped gate contract
+- the target-state minimum behavior is structured rejection
 
 ### Structured rejection contract
 
@@ -733,6 +735,14 @@ application/orchestration contract.
 If `validatePlan` or its equivalent is not already present in the canonical
 engine contract, this remains an explicit follow-on contract gap, not a shipped
 fact.
+
+That means:
+
+- Stage 1.1 may close the ownership and boundary-direction question
+- Stage 1.1 must **not** be described as execution-ready on the basis of this
+  section alone
+- the gate becomes operationally mandatory only once its canonical contract
+  surface exists
 
 ---
 
@@ -1138,8 +1148,13 @@ closed.
 | Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                   | generation or CI verification task                                  |
 | Named migration owners and dates      | Without them, migration remains paper planning                                   | assigned execution tracker entries                                  |
 
-These are not arguments against Stage 1.1. They are the explicit remaining
-obligations needed to execute it honestly.
+These do not block Stage 1.1 as an ownership-direction proposal.
+
+They do block:
+
+- execution-ready closure
+- any claim that the executability gate is already canonically operational
+- any claim that `manifestRef` resolution is already canonically closed
 
 ---
 
@@ -1257,7 +1272,10 @@ table is the bridge from policy to implementation slice.
 
 ## 29. Recommended Output Artifacts For Stage 1.1
 
-Stage 1.1 is not complete without these output artifacts:
+For clarity, Stage 1.1 now distinguishes between ownership-direction closure
+and execution-ready closure.
+
+Required for Stage 1.1 ownership-direction closure:
 
 1. **Canonical boundary note**
    - planner responsibilities
@@ -1288,33 +1306,40 @@ Stage 1.1 is not complete without these output artifacts:
    - execution-plan compatibility promise
    - engine-consumer expectation
 
-7. **Executability gate contract note**
+7. **Structured proposal manifest**
+   - real machine-readable artifact path
+   - schema path
+   - repository validation command
+
+Required later for execution-ready closure, but not for Stage 1.1 ownership
+acceptance by itself:
+
+1. **Executability gate contract note**
    - minimum rejection result shape
    - owner of the validation boundary
    - statement of whether `validatePlan` is canonical, pending, or renamed
 
-8. **Artifact resolution boundary note**
+2. **Artifact resolution boundary note**
    - resolver port or application-boundary equivalent
    - success/failure shape
    - tenant and integrity requirements
-
-9. **Structured proposal manifest**
-   - real machine-readable artifact path
-   - schema path
-   - repository validation command
 
 ---
 
 ## 30. Residual Non-Blocking Questions
 
-The critical questions are resolved in this document:
+The critical ownership questions are resolved in this document:
 
 - public owner of `ExecutionPlanV2`
 - public owner of `PlannerInputEnvelopeV2`
 - public owner of `IExecutionPlanner`
 - `compiledCodeRef` placement
-- planner-engine executability validation loop
 - canonical planner input strategy
+
+The following target-state boundary clarifications are directionally resolved,
+but not yet canonized enough to count as execution-ready closure:
+
+- planner-engine executability validation loop
 - minimum artifact resolver shape
 - minimum executability validation result shape
 
@@ -1331,7 +1356,8 @@ Residual questions that do **not** block Stage 1.1 ownership:
 
 ## 31. Acceptance Criteria
 
-Stage 1.1 is accepted only if all of the following are true:
+Stage 1.1 is accepted only as an ownership and boundary-direction proposal if
+all of the following are true:
 
 - there is one declared public owner for `ExecutionPlanV2`
 - there is one declared public owner for `PlannerInputEnvelopeV2`
@@ -1351,6 +1377,15 @@ Stage 1.1 is accepted only if all of the following are true:
 - explicit follow-on contract gaps are declared rather than implied away
 - the structured proposal manifest exists and validates against its schema
 
+This acceptance does **not** mean Stage 1.1 is execution-ready.
+
+Stage 1.1 must not be described as execution-ready while any of the following
+remain unresolved:
+
+- canonical executability validation contract surface
+- canonical `ArtifactResolverPort` or equivalent application-boundary contract
+- named execution owners and dates for those follow-on contracts
+
 ### Verification checklist
 
 - [ ] canonical contract owner note published
@@ -1358,8 +1393,8 @@ Stage 1.1 is accepted only if all of the following are true:
 - [ ] contract diffs enumerated
 - [ ] discriminated envelope rule documented
 - [ ] `compiledCodeRef` binding caveat documented
-- [ ] engine executability rejection contract documented
-- [ ] artifact resolver boundary documented
+- [ ] executability gate follow-on gap documented
+- [ ] artifact resolver follow-on gap documented
 - [ ] schema sync task defined
 - [ ] migration leads assigned
 - [ ] documentation triage inventory created
@@ -1369,19 +1404,19 @@ Stage 1.1 is accepted only if all of the following are true:
 Each verification item should be satisfied by an artifact type, not by informal
 assertion alone.
 
-| Deliverable                                        | Expected evidence form                                                             |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| canonical contract owner note published            | canonical doc path or accepted note path                                           |
-| planner-local duplicate public types frozen        | diff note, migration note, or PR-scoped change summary                             |
-| contract diffs enumerated                          | diff note or compatibility note path                                               |
-| discriminated envelope rule documented             | canonical contract doc path or schema path                                         |
-| `compiledCodeRef` binding caveat documented        | canonical doc path                                                                 |
-| engine executability rejection contract documented | canonical contract doc path or engine boundary path                                |
-| artifact resolver boundary documented              | boundary note path or contract path                                                |
-| schema sync task defined                           | CI check path, script path, or execution task reference                            |
-| migration leads assigned                           | issue tracker reference, plan item reference, or equivalent execution tracker path |
-| documentation triage inventory created             | inventory file path, review note path, or canonical planning artifact path         |
-| structured proposal manifest validates             | canonical planning artifact path, schema path, and CI check path                   |
+| Deliverable                                 | Expected evidence form                                                             |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| canonical contract owner note published     | canonical doc path or accepted note path                                           |
+| planner-local duplicate public types frozen | diff note, migration note, or PR-scoped change summary                             |
+| contract diffs enumerated                   | diff note or compatibility note path                                               |
+| discriminated envelope rule documented      | canonical contract doc path or schema path                                         |
+| `compiledCodeRef` binding caveat documented | canonical doc path                                                                 |
+| executability gate follow-on gap documented | gap note path, canonical planning doc path, or execution tracker reference         |
+| artifact resolver follow-on gap documented  | gap note path, boundary note path, or execution tracker reference                  |
+| schema sync task defined                    | CI check path, script path, or execution task reference                            |
+| migration leads assigned                    | issue tracker reference, plan item reference, or equivalent execution tracker path |
+| documentation triage inventory created      | inventory file path, review note path, or canonical planning artifact path         |
+| structured proposal manifest validates      | canonical planning artifact path, schema path, and CI check path                   |
 
 ---
 
@@ -1400,13 +1435,16 @@ assertion alone.
   - does not persist
   - does not own runtime enforcement
 - unknown `StepKind` target state is fail-closed
-- planner-engine capability validation is a mandatory second-step gate before run start
+- planner-engine capability validation is a target-state second-step gate, not a
+  claim of current execution-ready closure
 - `compiledCodeRef` is post-build optional enrichment and not part of hashed plan identity
 - `custom` passthrough is allowed only under namespaced, bounded, validated rules
 - docs should live outside source code but aligned to the planner subsystem
 - existing `packages/@dvt/planner/docs/**` content must be triaged, not ignored
 - unresolved boundary contracts must be written down as explicit gaps, not hidden
   behind prose
+- Stage 1.1 closes ownership direction first; execution-ready closure requires
+  follow-on contract canonization
 
 ### Short form
 
