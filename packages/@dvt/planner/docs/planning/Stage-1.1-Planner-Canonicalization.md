@@ -34,6 +34,8 @@ Structured artifact rule:
   lives at `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json`
 - if the structured artifact diverges, the human proposal wins until both
   artifacts are synchronized
+- the structured artifact is a structural governance index, not a policy
+  restatement surface
 - the structured artifact must not introduce new substantive decisions ahead of
   the human proposal
 - the legacy Markdown machine-readable companion is retired and must not be

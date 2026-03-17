@@ -167,156 +167,91 @@
       "title": "ExecutionPlanV2 Ownership",
       "humanSectionRefs": ["7"],
       "policyStatus": "selected",
-      "selectedOutcome": "@dvt/contracts owns the public shape; planner is semantic author",
-      "owners": ["@dvt/contracts", "@dvt/planner"],
-      "summary": [
-        "ExecutionPlanV2 public ownership belongs to @dvt/contracts.",
-        "Planner remains the semantic author and engine remains the consumer."
-      ]
+      "decisionClass": "canonical_ownership"
     },
     {
       "id": "D-02",
       "title": "PlannerInputEnvelopeV2 Ownership",
       "humanSectionRefs": ["8", "14"],
       "policyStatus": "selected",
-      "selectedOutcome": "@dvt/contracts owns the public boundary input envelope",
-      "owners": ["@dvt/contracts", "@dvt/planner"],
-      "summary": [
-        "One public input envelope exists.",
-        "Planner derives richer internal normalized representations but must not publish a second boundary contract."
-      ]
+      "decisionClass": "canonical_ownership"
     },
     {
       "id": "D-03",
       "title": "IExecutionPlanner Ownership",
       "humanSectionRefs": ["9"],
       "policyStatus": "selected",
-      "selectedOutcome": "@dvt/contracts owns the public planner interface",
-      "owners": ["@dvt/contracts", "@dvt/planner"],
-      "summary": [
-        "Planner implements the interface.",
-        "No second public interface definition is allowed."
-      ]
+      "decisionClass": "canonical_ownership"
     },
     {
       "id": "D-04",
       "title": "Planner Internal Types Boundary",
       "humanSectionRefs": ["10", "11"],
       "policyStatus": "selected",
-      "selectedOutcome": "packages/@dvt/planner/src/domain/types.ts remains internal-only",
-      "owners": ["@dvt/planner"],
-      "summary": [
-        "Public planner contracts must not be redefined in planner-local types.",
-        "Internal compiler and normalization shapes may remain local."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-05",
       "title": "Planner Purity Boundary",
       "humanSectionRefs": ["12", "13"],
       "policyStatus": "selected",
-      "selectedOutcome": "Planner compiles and declares policy, but does not execute or persist",
-      "owners": ["@dvt/planner", "@dvt/engine"],
-      "summary": [
-        "Planner defines what must hold.",
-        "Runtime decides how provider-specific enforcement happens."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-06",
       "title": "Input Envelope Strategy",
       "humanSectionRefs": ["14"],
       "policyStatus": "selected",
-      "selectedOutcome": "One stable envelope with exactly one authoritative graph source",
-      "owners": ["@dvt/contracts", "@dvt/planner"],
-      "summary": [
-        "Allowed graph sources are manifestRef, manifest, or nodes.",
-        "No-source and multi-source envelopes are rejected."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-07",
       "title": "manifestRef Resolution",
       "humanSectionRefs": ["15"],
       "policyStatus": "selected_with_gap",
-      "selectedOutcome": "manifestRef resolves through a port outside domain core",
-      "owners": ["@dvt/planner", "@dvt/contracts"],
-      "summary": [
-        "Domain core never performs storage or network IO.",
-        "The exact resolver boundary contract still needs canonization."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-08",
       "title": "compiledCodeRef Placement",
       "humanSectionRefs": ["16"],
       "policyStatus": "selected",
-      "selectedOutcome": "compiledCodeRef is post-build enrichment and not part of planId",
-      "owners": ["@dvt/contracts", "@dvt/planner"],
-      "summary": [
-        "compiledCodeRef does not affect inputHashSha256 or planId.",
-        "Execution reproducibility depends on immutable artifact binding outside the core plan hash."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-09",
       "title": "Executability Gate",
       "humanSectionRefs": ["17"],
       "policyStatus": "selected_with_gap",
-      "selectedOutcome": "Stage 1.1 requires a structured executability gate, not automatic replanning",
-      "owners": ["@dvt/engine", "@dvt/contracts"],
-      "summary": [
-        "Planner validity and engine executability validity are separate.",
-        "The canonical validation contract surface still needs to be written."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-10",
       "title": "stepId to nodeId Relationship",
       "humanSectionRefs": ["18"],
       "policyStatus": "selected",
-      "selectedOutcome": "Equality may hold today but is not a permanent invariant",
-      "owners": ["@dvt/planner", "@dvt/contracts"],
-      "summary": [
-        "Future step expansion can diverge from node identity.",
-        "Public contracts must not freeze 1:1 identity permanently."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-11",
       "title": "Unknown StepKind Policy",
       "humanSectionRefs": ["19"],
       "policyStatus": "selected_target_state_pending",
-      "selectedOutcome": "Target state is fail-closed, with a governed interim bridge rule",
-      "owners": ["@dvt/contracts", "@dvt/planner", "@dvt/engine"],
-      "summary": [
-        "Unknown StepKind may pass only through explicit allowlist or capability approval during the bridge state.",
-        "Warning-grade diagnostics are required until fail-closed becomes the implemented default."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-12",
       "title": "custom Passthrough Policy",
       "humanSectionRefs": ["20"],
       "policyStatus": "selected_with_gap",
-      "selectedOutcome": "custom is allowed only as a namespaced, bounded, governed extension surface",
-      "owners": ["@dvt/contracts", "@dvt/engine"],
-      "summary": [
-        "Namespace registration authority must live outside planner implementation.",
-        "Planner-local ad hoc registries must not become de facto canon."
-      ]
+      "decisionClass": "boundary_rule"
     },
     {
       "id": "D-13",
       "title": "Schema Authority and Documentation Placement",
       "humanSectionRefs": ["21", "22", "23", "24", "25", "28", "31"],
       "policyStatus": "proposed_plan",
-      "selectedOutcome": "Schemas live with contracts, docs move to repo-level surfaces, migration is evidence-backed",
-      "owners": ["Architecture", "@dvt/contracts", "@dvt/planner"],
-      "summary": [
-        "Planner-local schema docs are informative only.",
-        "Execution requires explicit artifact mapping, verification evidence, and migration ownership."
-      ]
+      "decisionClass": "documentation_policy"
     }
   ],
   "illustrativeShapes": [
