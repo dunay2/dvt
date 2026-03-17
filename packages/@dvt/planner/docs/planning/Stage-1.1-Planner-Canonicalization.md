@@ -545,6 +545,31 @@ adapter to dereference `manifestRef` before handing canonical input to the core.
 entry path. Raw `manifest` and expanded `nodes` remain transitional or
 specialized input modes.
 
+### Minimum boundary port shape
+
+Stage 1.1 should stop treating the artifact resolver as a hand-wavy concept.
+The minimum boundary shape should look like:
+
+```ts
+interface ArtifactResolverPort {
+  resolveManifest(
+    ref: ManifestRef
+  ): Promise<
+    | { ok: true; manifest: DbtManifestLike; digest: string }
+    | { ok: false; code: string; reason: string; retryable: boolean }
+  >;
+}
+```
+
+This does not require the exact names above to be frozen immediately, but it
+does require the repository to define:
+
+- one canonical resolver port or application-boundary equivalent
+- one structured failure shape
+- one owner for that boundary contract
+
+Without that, `manifestRef` remains implementation-defined.
+
 ---
 
 ## 16. `compiledCodeRef` Decision
@@ -631,6 +656,41 @@ The engine-side validation result must be machine-readable enough to answer:
 This allows future replanning or rerouting, but Stage 1.1 does not pretend that
 automatic replanning already exists.
 
+### Minimum Stage 1.1 contract shape
+
+The gate is not complete until the repository has a canonical validation result
+shape. The minimum acceptable form is:
+
+```ts
+type ExecutabilityValidationResult =
+  | { status: 'OK' }
+  | {
+      status: 'ERRORS';
+      errors: Array<{
+        capability: string;
+        reason: string;
+        hard: boolean;
+        adapter: string;
+      }>;
+    };
+```
+
+If the engine contract surface exposes the gate directly, the minimum interface
+should be equivalent to:
+
+```ts
+interface IExecutabilityValidator {
+  validatePlan(
+    plan: ExecutionPlanV2,
+    targetAdapter: string
+  ): Promise<ExecutabilityValidationResult>;
+}
+```
+
+Stage 1.1 does not claim that this exact interface already exists in the active
+engine contract. It states that an equivalent canonical boundary is required if
+the gate is to be more than prose.
+
 ### Source of truth
 
 The executability loop must align with the existing engine capability contract
@@ -645,6 +705,12 @@ surfaces:
 Automatic “planner retries with another plan” is **not** part of Stage 1.1.
 If adaptive replanning exists later, it belongs to an explicit higher
 application/orchestration contract.
+
+### Status note
+
+If `validatePlan` or its equivalent is not already present in the canonical
+engine contract, this remains an explicit follow-on contract gap, not a shipped
+fact.
 
 ---
 
@@ -753,6 +819,14 @@ Stage 1.1 fixes the boundary, not the full extension runtime:
 - unregistered namespaces are not silently promoted to canonical behavior
 - engine/runtime may apply additional capability and authorization gates
 
+This also means:
+
+- planner is not allowed to imply that unknown `custom` payloads are safe
+- engine/runtime must reject unsafe or unauthorized `custom` payloads before
+  execution
+- secret-bearing `custom` content is policy-invalid even if it is syntactically
+  well formed
+
 This is intentionally conservative. Unbounded opaque blobs are not an acceptable
 long-term model.
 
@@ -790,6 +864,16 @@ Planner-local schema docs may exist for explanation, but they are **never canoni
 Examples and explanatory schemas must not drift silently. The long-term target is
 generated or mechanically checked documentation sourced from canonical contract
 artifacts, not hand-maintained parallel examples.
+
+### Immediate implementation implication
+
+This proposal is not complete if “mechanically checked” remains only aspiration.
+The follow-on execution slice should add at least:
+
+- one schema generation or verification script in the contracts authority domain
+- one CI check proving docs/examples do not drift from canonical contract
+  artifacts
+- one documented owner for that generation or verification path
 
 ---
 
@@ -899,6 +983,10 @@ That documentation must not require living inside `src/` or inside package code 
 | Engine executability gate alignment | Engine owner              |
 | Documentation triage                | Architecture / Docs owner |
 
+These are still role-level assignments, not execution-ready staffing. Stage 1.1
+cannot be claimed as execution-ready until the work is assigned to named owners
+in the actual delivery system.
+
 ### Done gate for Stage 1.1 execution
 
 Stage 1.1 is not “done” because a document exists. It is done only when:
@@ -907,6 +995,7 @@ Stage 1.1 is not “done” because a document exists. It is done only when:
 - contract diffs are enumerated
 - migration steps are assigned
 - compatibility validation path is defined
+- named implementers and target dates exist outside this document
 
 ---
 
@@ -968,7 +1057,26 @@ Dates are tentative and must be assigned by the owning teams before execution.
 
 ---
 
-## 26. Concrete Examples
+## 26. Critical Follow-On Contract Gaps
+
+The proposal resolves ownership and boundary direction, but several follow-on
+contracts are still required before execution can be claimed as operationally
+closed.
+
+| Gap                                   | Why it matters                                                                   | Minimum required artifact                                           |
+| ------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape | canonical validation result shape and engine-boundary surface       |
+| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined              | canonical resolver port or equivalent application-boundary contract |
+| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy              | extension registration contract and validation ownership note       |
+| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                   | generation or CI verification task                                  |
+| Named migration owners and dates      | Without them, migration remains paper planning                                   | assigned execution tracker entries                                  |
+
+These are not arguments against Stage 1.1. They are the explicit remaining
+obligations needed to execute it honestly.
+
+---
+
+## 27. Concrete Examples
 
 ### Example A — canonical public input envelope shape
 
@@ -1021,12 +1129,13 @@ return engine.startRun(planRef, ctx);
 
 ---
 
-## 27. Artifacts To Update
+## 28. Artifacts To Update
 
 ### Code / contracts
 
 - `packages/@dvt/contracts/src/contracts/planner/**`
 - `packages/@dvt/contracts/src/contracts/IExecutionPlanner*`
+- canonical engine validation boundary for `validatePlan` or equivalent
 - `packages/@dvt/planner/src/domain/types.ts`
 - `packages/@dvt/planner/src/**` imports and re-exports
 - planner tests asserting public contract shape
@@ -1041,9 +1150,11 @@ return engine.startRun(planRef, ctx);
 - `docs/architecture/planner/planner-boundary.md`
 - `docs/architecture/planner/planner-versioning-compatibility.md`
 - `docs/architecture/planner/planner-migration-stage-1-1.md`
+- artifact resolver boundary note or equivalent planner application-boundary note
 - `docs/contracts/planner/ExecutionPlan.v2.md`
 - `docs/contracts/planner/PlannerInputEnvelope.v2.md`
 - `docs/contracts/planner/IExecutionPlanner.v2.md`
+- engine executability validation contract doc or equivalent canonical contract surface
 
 ### Governance notes
 
@@ -1054,7 +1165,7 @@ return engine.startRun(planRef, ctx);
 
 ---
 
-## 28. Recommended Output Artifacts For Stage 1.1
+## 29. Recommended Output Artifacts For Stage 1.1
 
 Stage 1.1 is not complete without these output artifacts:
 
@@ -1087,9 +1198,19 @@ Stage 1.1 is not complete without these output artifacts:
    - execution-plan compatibility promise
    - engine-consumer expectation
 
+7. **Executability gate contract note**
+   - minimum rejection result shape
+   - owner of the validation boundary
+   - statement of whether `validatePlan` is canonical, pending, or renamed
+
+8. **Artifact resolution boundary note**
+   - resolver port or application-boundary equivalent
+   - success/failure shape
+   - tenant and integrity requirements
+
 ---
 
-## 29. Residual Non-Blocking Questions
+## 30. Residual Non-Blocking Questions
 
 The critical questions are resolved in this document:
 
@@ -1099,6 +1220,8 @@ The critical questions are resolved in this document:
 - `compiledCodeRef` placement
 - planner-engine executability validation loop
 - canonical planner input strategy
+- minimum artifact resolver shape
+- minimum executability validation result shape
 
 Residual questions that do **not** block Stage 1.1 ownership:
 
@@ -1111,7 +1234,7 @@ Residual questions that do **not** block Stage 1.1 ownership:
 
 ---
 
-## 30. Acceptance Criteria
+## 31. Acceptance Criteria
 
 Stage 1.1 is accepted only if all of the following are true:
 
@@ -1130,6 +1253,7 @@ Stage 1.1 is accepted only if all of the following are true:
 - migration plan exists and is tied to concrete artifacts
 - tests and consumers have a non-breaking migration path
 - verifiable deliverables exist for each acceptance point
+- explicit follow-on contract gaps are declared rather than implied away
 
 ### Verification checklist
 
@@ -1139,12 +1263,14 @@ Stage 1.1 is accepted only if all of the following are true:
 - [ ] discriminated envelope rule documented
 - [ ] `compiledCodeRef` binding caveat documented
 - [ ] engine executability rejection contract documented
+- [ ] artifact resolver boundary documented
+- [ ] schema sync task defined
 - [ ] migration leads assigned
 - [ ] documentation triage inventory created
 
 ---
 
-## 31. Final Recommendations
+## 32. Final Recommendations
 
 ### Selected decisions
 
@@ -1164,6 +1290,8 @@ Stage 1.1 is accepted only if all of the following are true:
 - `custom` passthrough is allowed only under namespaced, bounded, validated rules
 - docs should live outside source code but aligned to the planner subsystem
 - existing `packages/@dvt/planner/docs/**` content must be triaged, not ignored
+- unresolved boundary contracts must be written down as explicit gaps, not hidden
+  behind prose
 
 ### Short form
 
@@ -1177,7 +1305,7 @@ Subsystem docs live with the subsystem, not inside source code.
 
 ---
 
-## 32. Implementation Order
+## 33. Implementation Order
 
 1. Approve ownership decisions
 2. Publish subsystem boundary and ownership docs
@@ -1189,7 +1317,7 @@ Subsystem docs live with the subsystem, not inside source code.
 
 ---
 
-## 33. Non-Goals
+## 34. Non-Goals
 
 This proposal does not:
 
