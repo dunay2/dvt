@@ -711,6 +711,13 @@ validation_ownership:
     - validates_custom_only_when_registered_namespace_or_schema_exists
   runtime:
     - may_apply_additional_capability_and_authorization_gates
+registration_authority:
+  canonical_owner_location:
+    - outside_@dvt/planner_implementation_package
+  governance_model:
+    - shared_contract_or_extension_registry_concern
+  disallowed_as_canonical:
+    - planner_local_ad_hoc_namespace_registry
 open_limit:
   - unregistered_namespaces_must_not_be_silently_promoted_to_canonical_behavior
 warning:

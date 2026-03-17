@@ -839,6 +839,20 @@ Stage 1.1 fixes the boundary, not the full extension runtime:
 - unregistered namespaces are not silently promoted to canonical behavior
 - engine/runtime may apply additional capability and authorization gates
 
+### Registration authority
+
+Namespace registration authority must live **outside** the planner
+implementation package and must be governed as a shared contract or extension
+registry concern.
+
+That means:
+
+- `@dvt/planner` must not become the de facto canonical registry owner by local
+  convenience
+- planner-local ad hoc namespace registries are not acceptable as repository
+  canon
+- the eventual registry model may be deferred, but the authority boundary is not
+
 This also means:
 
 - planner is not allowed to imply that unknown `custom` payloads are safe
