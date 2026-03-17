@@ -8,6 +8,17 @@ planning_type: proposal
 
 # Documentation Usability Change Plan
 
+## Proposal Set Context
+
+This document is part of the repository governance proposal set.
+
+- Set entry point: [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
+- Role in set: documentation governance and usability plan
+- Complementary proposals:
+  - [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md) is the diagnostic precursor
+  - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) defines the technical target model for packages and builds
+  - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md) defines enforcement strategy for reusable CI checks
+
 ## Execution Status
 
 Execution status on 2026-03-08:

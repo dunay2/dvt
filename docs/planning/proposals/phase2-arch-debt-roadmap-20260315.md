@@ -8,6 +8,17 @@ planning_type: proposal
 
 # Phase 2 Architectural Debt Roadmap
 
+## Proposal Set Context
+
+This document is part of the repository governance proposal set.
+
+- Set entry point: [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
+- Role in set: execution roadmap
+- Complementary proposals:
+  - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) defines target repository package policy
+  - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md) defines how enforcement and CI orchestration should converge
+  - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md) defines how documentation and traceability around these slices should stay discoverable
+
 This proposal groups the main post-Phase-1 architectural follow-ups into one
 execution roadmap. It is planning material only: no slice below is implied to
 be implemented by publication of this document.
