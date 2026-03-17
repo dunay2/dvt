@@ -1,25 +1,8 @@
 {
+  "extends": "../../tsconfig.app-node.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "baseUrl": "../..",
-    "paths": {
-      "@dvt/adapter-postgres": [
-        "packages/@dvt/adapter-postgres/dist/index.d.ts"
-      ],
-      "@dvt/delivery": ["packages/@dvt/delivery/dist/index.d.ts"],
-      "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"]
-    },
-    "types": ["node"],
     "outDir": "dist",
-    "rootDir": ".",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "rootDir": "."
   },
   "include": ["src/**/*.ts", "test/**/*.test.ts"]
 }

@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@dvt/adapter-postgres": [
+        "packages/@dvt/adapter-postgres/dist/index.d.ts"
+      ],
+      "@dvt/adapter-temporal": [
+        "packages/@dvt/adapter-temporal/dist/index.d.ts"
+      ],
+      "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/delivery": ["packages/@dvt/delivery/dist/index.d.ts"],
+      "@dvt/delivery/testing": ["packages/@dvt/delivery/dist/testing.d.ts"],
+      "@dvt/engine": ["packages/@dvt/engine/dist/index.d.ts"],
+      "@dvt/engine/*": ["packages/@dvt/engine/dist/*"],
+      "@dvt/engine/testing": ["packages/@dvt/engine/dist/testing.d.ts"],
+      "@dvt/observability": ["packages/@dvt/observability/dist/index.d.ts"],
+      "@dvt/observability-otel": [
+        "packages/@dvt/observability-otel/dist/index.d.ts"
+      ],
+      "@dvt/planner": ["packages/@dvt/planner/dist/index.d.ts"],
+      "@dvt/traceability-service": [
+        "packages/@dvt/traceability-service/dist/index.d.ts"
+      ]
+    },
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
+}
