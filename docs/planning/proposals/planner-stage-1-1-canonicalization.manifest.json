@@ -311,6 +311,16 @@
       ]
     },
     {
+      "id": "G-01.8",
+      "title": "Execution binding storage contract",
+      "severity": "high",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "state or engine boundary for associated binding material",
+        "canonical stored-plan versus stored-binding rule"
+      ]
+    },
+    {
       "id": "G-01.7",
       "title": "Declarative policy vocabulary",
       "severity": "high",

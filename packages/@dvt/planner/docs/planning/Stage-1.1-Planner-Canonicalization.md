@@ -725,6 +725,34 @@ exists.
 Without an equivalent canonical boundary, `execution-time binding checks`
 remains an underspecified dependency rather than an enforceable rule.
 
+### Persistence rule for enriched bindings
+
+Stage 1.1 also fixes the storage stance:
+
+- the canonical stored plan remains the logical plan core identified by
+  `planId`
+- `compiledCodeRef` enrichment must not create a second canonical plan form in
+  the state store
+- if binding data must survive between build and execution, it should be stored
+  as execution-binding material associated with the canonical plan, not as a new
+  canonical plan body
+
+That means the repository should converge toward:
+
+- one stored canonical plan core
+- zero or more associated execution-binding records or equivalent binding
+  surfaces
+
+This avoids three failure modes:
+
+- persisting only an enriched plan shape that differs from the hashed plan
+- re-enriching blindly on every execution with no stable stored binding
+  material
+- treating both the core plan and the enriched plan as co-canonical plan forms
+
+The follow-on contract still needed is the storage boundary for that binding
+material.
+
 ### Consequence
 
 This resolves the ownership question now. It is not deferred.
@@ -1251,6 +1279,7 @@ closed.
 | `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined                      | canonical resolver port or equivalent application-boundary contract |
 | `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                      | extension registration contract and validation ownership note       |
 | Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path             | binding verification result contract                                |
+| Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data              | state or engine boundary for associated binding material            |
 | Declarative policy vocabulary         | Without it, runtimes can reinterpret retry, timeout, and concurrency classes differently | canonical policy vocabulary or shared contract enum                 |
 | Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                           | generation or CI verification task                                  |
 | Named migration owners and dates      | Without them, migration remains paper planning                                           | assigned execution tracker entries                                  |
@@ -1302,6 +1331,9 @@ const enrichedPlan = await attachCompiledCodeRefs(plan, storage);
 
 Rule: `canonicalPlanJson` and `plan.metadata.planId` derive from core plan
 content, not from the later enrichment.
+
+If the enriched binding needs to persist, it should persist as associated
+execution-binding data, not as a second canonical plan body.
 
 ### Example C — executability validation loop
 
