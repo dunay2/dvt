@@ -576,6 +576,11 @@ authorities.
 Inside the planner boundary, every accepted input is normalized into one
 internal canonical model before graph build or hashing.
 
+For `manifestRef`, that means the logical hash basis is the **resolved canonical
+manifest content**, not the storage locator tuple. `uri` and declared artifact
+digest are resolver inputs and provenance material; they do not define
+`planId`.
+
 ---
 
 ## 15. `manifestRef` Resolution Contract
@@ -601,6 +606,21 @@ adapter to dereference `manifestRef` before handing canonical input to the core.
 - authorization and tenant scoping are enforced before dereference
 - resolution failures return a structured rejection; Stage 1.1 does not define
   retry policy for artifact resolution
+
+### Hashing rule for `manifestRef`
+
+When the public input uses `manifestRef`:
+
+- the application service or admission layer must resolve and integrity-check
+  the manifest **before** handing canonical input to the domain core
+- `inputHashSha256` and `planId` must be derived from the resolved canonical
+  manifest content plus the rest of the canonical planner input
+- `uri` changes alone must not change logical plan identity
+- two different valid references that resolve to identical canonical manifest
+  content must yield the same logical plan hash
+- if the declared `manifestRef.sha256` does not match the resolved content
+  digest, the request must be rejected before planning rather than hashed as a
+  distinct plan
 
 `manifestRef` is not a convenience hack. It is the canonical large-artifact
 entry path. Raw `manifest` and expanded `nodes` remain transitional or
