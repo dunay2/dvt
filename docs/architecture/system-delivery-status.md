@@ -213,7 +213,7 @@ classDiagram
 
 ### RunMetadata Field Relationships
 
-See [providerRunId-semantics-closeout.md](../planning/closeouts/providerRunId-semantics-closeout.md):
+See [G7-AI-EXECUTION-TRACKER.md](../planning/gaps/G7-AI-EXECUTION-TRACKER.md):
 
 ```mermaid
 classDiagram
@@ -228,7 +228,7 @@ classDiagram
 
 ### Reconciliation Flow
 
-See [providerRunId-semantics-closeout.md](../planning/closeouts/providerRunId-semantics-closeout.md):
+See [G7-AI-EXECUTION-TRACKER.md](../planning/gaps/G7-AI-EXECUTION-TRACKER.md):
 
 ```mermaid
 sequenceDiagram

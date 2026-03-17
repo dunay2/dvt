@@ -204,10 +204,15 @@ function extractAdrTitle(content, fileName) {
 
 function extractField(content, fieldName) {
   const bulletPattern = new RegExp(`^-\\s*\\*\\*${fieldName}\\*\\*:\\s*(.+)$`, 'im');
+  const plainBulletPattern = new RegExp(`^-\\s*${fieldName}:\\s*(.+)$`, 'im');
   const plainPattern = new RegExp(`^${fieldName}:\\s*(.+)$`, 'im');
   const bulletMatch = content.match(bulletPattern);
   if (bulletMatch) {
     return bulletMatch[1].trim();
+  }
+  const plainBulletMatch = content.match(plainBulletPattern);
+  if (plainBulletMatch) {
+    return plainBulletMatch[1].trim();
   }
   const plainMatch = content.match(plainPattern);
   if (plainMatch) {
@@ -275,7 +280,7 @@ function generateAdrLanding() {
     '## Related',
     '',
     '- [Full ADR catalog details](ADR-Index.md)',
-    '- [ADR implementation status](ADR-Implementation%20Status.md)',
+    '- [ADR implementation status](ADR-Implementation-Status.md)',
     '- [Draft ADRs](_drafts/index.md)',
     '- [Archived ADRs](_archive/index.md)',
     '',

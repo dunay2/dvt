@@ -1,9 +1,23 @@
 ---
 title: ED-20260314 - G9 Step Type Registry Closeout
 gap: G9
-status: Accepted
+status: accepted
 date: 2026-03-14
+owners: Planning / Contracts / Engine
+arc_level: ARC-1
+breaking: false
 author: AI-assisted delivery
+code_refs:
+  - packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts
+  - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts
+  - packages/@dvt/contracts/src/schemas.ts
+  - packages/@dvt/planner/src/domain/Planner.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+evidence:
+  - Built-in DBT step kinds validate through shared registry-backed schemas.
+  - Planner rejects invalid known step configs with INVALID_STEP_CONFIG.
+  - Temporal adapter consumes DBT config through the shared schema path.
+  - Contracts, planner, and adapter-temporal validation lanes passed.
 ---
 
 # ED-20260314 - G9 Step Type Registry Closeout
