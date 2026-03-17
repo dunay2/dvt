@@ -670,6 +670,16 @@ subject: unknown StepKind policy
 status: target_state_selected_migration_pending
 target_state: fail_closed_by_default
 current_state: implementation_not_yet_aligned
+interim_rule:
+  allowed_only_when:
+    - explicitly_allowlisted_by_environment_or_capability_configuration
+  required_runtime_behavior:
+    - emit_warning_grade_diagnostics
+  canonical_status:
+    - extension_remains_non_canonical_during_bridge_state
+  default_bridge_behavior:
+    - unknown_stepkind_not_treated_as_canonical_by_default
+    - absence_of_explicit_allowlist_or_capability_approval_results_in_rejection
 required_for_extension:
   - explicit_capability_declaration
   - schema_validation

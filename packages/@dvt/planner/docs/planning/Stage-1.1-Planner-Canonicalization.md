@@ -772,6 +772,22 @@ Any extension path must require:
 - namespace discipline
 - observability
 
+### Interim operating rule
+
+Until the target state lands, unknown `StepKind` may pass only when all of the
+following are true:
+
+- the kind is explicitly allowlisted by environment, capability configuration,
+  or equivalent governed runtime policy
+- the path emits warning-grade diagnostics
+- the extension remains non-canonical and subject to later rejection
+
+Default bridge behavior remains conservative:
+
+- unknown `StepKind` is not treated as canonical by default
+- absence of explicit allowlisting or capability approval should result in
+  rejection
+
 ### Migration note
 
 The current implementation is not yet there. This proposal treats fail-closed
