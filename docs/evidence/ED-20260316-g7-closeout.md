@@ -1,10 +1,23 @@
 ---
 title: ED-20260316 - G7 closeout
-status: Active
-owner: delivery
+status: accepted
+owners: delivery
 date: 2026-03-16
 gap: G7
 arc: ARC-1
+arc_level: ARC-1
+breaking: false
+code_refs:
+  - packages/@dvt/engine/src/core/WorkflowEngine.ts
+  - packages/@dvt/engine/src/ports/IRunStateStore.ts
+  - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+  - packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts
+  - apps/projector-worker/src/server.ts
+evidence:
+  - G7.1 delivered numbered migration 004 plus rebuildSnapshot support.
+  - G7.2 delivered standalone projector runtime support in delivery and apps/projector-worker.
+  - G7.3 delivered provider run-id reconciliation after pre-bootstrap start.
+  - Active status docs were synchronized to mark G7 as closed.
 ---
 
 # ED-20260316 - G7 closeout

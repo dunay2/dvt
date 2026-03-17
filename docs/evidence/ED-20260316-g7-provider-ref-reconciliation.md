@@ -1,10 +1,23 @@
 ---
 title: ED-20260316 - G7.3 provider run-id reconciliation
-status: Active
-owner: engine
+status: accepted
+owners: engine
 date: 2026-03-16
 gap: G7
 arc: ARC-1
+arc_level: ARC-1
+breaking: false
+code_refs:
+  - packages/@dvt/engine/src/core/WorkflowEngine.ts
+  - packages/@dvt/engine/src/ports/IRunStateStore.ts
+  - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+  - packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
+  - packages/@dvt/engine/src/state/InMemoryTxStore.ts
+  - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
+evidence:
+  - WorkflowEngine reconciles provider run-id after pre-bootstrap start when the returned provider ref differs from the estimate.
+  - The storage primitive is tenant-scoped through saveProviderRef.
+  - Persistence failure in the reconciliation path is fail-soft and logged instead of failing the live run.
 ---
 
 # ED-20260316 - G7.3 provider run-id reconciliation
