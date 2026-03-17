@@ -486,6 +486,9 @@ The plan may contain **normative declarative policy**, such as:
 - observability tags
 - execution intent metadata
 
+These policy classes are **not** adapter-local opaque strings. They belong to a
+canonical runtime-neutral vocabulary owned through shared contract governance.
+
 The runtime remains responsible for **provider-specific enforcement**, such as:
 
 - Temporal or Conductor retry knobs
@@ -495,6 +498,33 @@ The runtime remains responsible for **provider-specific enforcement**, such as:
 - lease duration
 - task registration details
 - runtime cancellation mechanics
+
+### Policy vocabulary rule
+
+Stage 1.1 fixes the architectural stance now:
+
+- retry, timeout, and concurrency classes must be drawn from a canonical shared
+  vocabulary
+- that vocabulary must define runtime-neutral semantics, not just labels
+- adapters may map canonical classes into provider-specific knobs, but they must
+  not reinterpret the class meaning
+- if a runtime cannot faithfully honor a canonical class, it must reject the
+  plan or return a structured degradation result rather than silently changing
+  semantics
+
+This means a policy class is a semantic contract reference, not a free-form
+string.
+
+For example:
+
+- retry semantics must be defined against one canonical attempt-counting rule
+  rather than provider-specific attempt numbering
+- timeout semantics must be defined against one canonical time-budget meaning
+- concurrency semantics must be defined against one canonical scope and limit
+  meaning
+
+Stage 1.1 fixes that stance now. The full vocabulary inventory and final enum or
+schema artifact remain a follow-on contract deliverable.
 
 ### Hard Rule
 
@@ -1195,14 +1225,15 @@ The proposal resolves ownership and boundary direction, but several follow-on
 contracts are still required before execution can be claimed as operationally
 closed.
 
-| Gap                                   | Why it matters                                                                   | Minimum required artifact                                           |
-| ------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape | canonical validation result shape and engine-boundary surface       |
-| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined              | canonical resolver port or equivalent application-boundary contract |
-| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy              | extension registration contract and validation ownership note       |
-| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path     | binding verification result contract                                |
-| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                   | generation or CI verification task                                  |
-| Named migration owners and dates      | Without them, migration remains paper planning                                   | assigned execution tracker entries                                  |
+| Gap                                   | Why it matters                                                                           | Minimum required artifact                                           |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape         | canonical validation result shape and engine-boundary surface       |
+| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined                      | canonical resolver port or equivalent application-boundary contract |
+| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                      | extension registration contract and validation ownership note       |
+| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path             | binding verification result contract                                |
+| Declarative policy vocabulary         | Without it, runtimes can reinterpret retry, timeout, and concurrency classes differently | canonical policy vocabulary or shared contract enum                 |
+| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                           | generation or CI verification task                                  |
+| Named migration owners and dates      | Without them, migration remains paper planning                                           | assigned execution tracker entries                                  |
 
 These do not block Stage 1.1 as an ownership-direction proposal.
 

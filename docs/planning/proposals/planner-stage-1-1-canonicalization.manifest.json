@@ -311,6 +311,16 @@
       ]
     },
     {
+      "id": "G-01.7",
+      "title": "Declarative policy vocabulary",
+      "severity": "high",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "canonical shared vocabulary for retry timeout and concurrency classes",
+        "adapter mapping and rejection or degradation rule"
+      ]
+    },
+    {
       "id": "G-01.4",
       "title": "Schema sync mechanism",
       "severity": "medium",
