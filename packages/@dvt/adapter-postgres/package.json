@@ -7,13 +7,14 @@
   "license": "MIT",
   "dependencies": {
     "@dvt/contracts": "workspace:*",
+    "@dvt/engine": "workspace:*",
     "@dvt/run-domain": "workspace:*",
     "pg": "^8.16.3"
   },
   "scripts": {
-    "prebuild": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/run-domain build && pnpm --filter @dvt/engine build",
-    "pretypecheck": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/run-domain build && pnpm --filter @dvt/engine build",
-    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/run-domain build",
+    "prebuild": "pnpm --filter \"@dvt/adapter-postgres^...\" build",
+    "pretypecheck": "pnpm --filter \"@dvt/adapter-postgres^...\" build",
+    "pretest": "pnpm --filter \"@dvt/adapter-postgres^...\" build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests --config vitest.config.ts"
