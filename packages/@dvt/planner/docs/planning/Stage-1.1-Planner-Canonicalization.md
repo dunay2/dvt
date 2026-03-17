@@ -27,6 +27,18 @@ Its goal is not to redesign the planner from zero. Its goal is to stop semantic 
 
 This proposal is intentionally narrow. It does not add new planner features.
 
+Structured artifact rule:
+
+- the human proposal is the policy authority for Stage 1.1
+- the repository-validated structured artifact for deterministic navigation
+  lives at `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json`
+- if the structured artifact diverges, the human proposal wins until both
+  artifacts are synchronized
+- the structured artifact must not introduce new substantive decisions ahead of
+  the human proposal
+- the legacy Markdown machine-readable companion is retired and must not be
+  revived as a second prose surface
+
 ---
 
 ## 2. Problem Statement
@@ -561,6 +573,10 @@ interface ArtifactResolverPort {
 }
 ```
 
+This shape is **illustrative until canonized**. It clarifies the minimum
+boundary expectation; it is not itself canonical merely because it appears in
+this proposal.
+
 This does not require the exact names above to be frozen immediately, but it
 does require the repository to define:
 
@@ -686,6 +702,10 @@ interface IExecutabilityValidator {
   ): Promise<ExecutabilityValidationResult>;
 }
 ```
+
+These shapes are **illustrative until canonized**. They describe the minimum
+contract content the repository still needs; they do not become canonical only
+by appearing in this proposal.
 
 Stage 1.1 does not claim that this exact interface already exists in the active
 engine contract. It states that an equivalent canonical boundary is required if
@@ -945,6 +965,17 @@ But documentation should **remain aligned to the subsystem** that owns the conce
 
 That means the correct target is **subsystem-scoped docs outside source code**, not code-adjacent drift and not a giant flat root doc pile.
 
+Stage 1.1 also needs to be explicit about the location transition:
+
+- current state: the primary working artifact for this slice still lives under
+  `packages/@dvt/planner/docs/planning/**`
+- current structured execution artifact: the machine-readable manifest now lives
+  under `docs/planning/proposals/`
+- target state: accepted subsystem governance should converge toward repo-level
+  docs under `docs/architecture/**`, `docs/contracts/**`, and `docs/planning/**`
+- this proposal must not normalize the current package-local location as the
+  final destination
+
 ### Recommended structure
 
 ```text
@@ -1184,11 +1215,18 @@ return engine.startRun(planRef, ctx);
 - `docs/architecture/planner/planner-boundary.md`
 - `docs/architecture/planner/planner-versioning-compatibility.md`
 - `docs/architecture/planner/planner-migration-stage-1-1.md`
+- `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json`
+- `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.schema.json`
 - artifact resolver boundary note or equivalent planner application-boundary note
 - `docs/contracts/planner/ExecutionPlan.v2.md`
 - `docs/contracts/planner/PlannerInputEnvelope.v2.md`
 - `docs/contracts/planner/IExecutionPlanner.v2.md`
 - engine executability validation contract doc or equivalent canonical contract surface
+
+### Validation / tooling
+
+- `tools/docs/validate-planner-stage-1-1-manifest.ts`
+- `package.json` docs governance script wiring
 
 ### Governance notes
 
@@ -1258,6 +1296,11 @@ Stage 1.1 is not complete without these output artifacts:
    - success/failure shape
    - tenant and integrity requirements
 
+9. **Structured proposal manifest**
+   - real machine-readable artifact path
+   - schema path
+   - repository validation command
+
 ---
 
 ## 30. Residual Non-Blocking Questions
@@ -1304,6 +1347,7 @@ Stage 1.1 is accepted only if all of the following are true:
 - tests and consumers have a non-breaking migration path
 - verifiable deliverables exist for each acceptance point
 - explicit follow-on contract gaps are declared rather than implied away
+- the structured proposal manifest exists and validates against its schema
 
 ### Verification checklist
 
@@ -1335,6 +1379,7 @@ assertion alone.
 | schema sync task defined                           | CI check path, script path, or execution task reference                            |
 | migration leads assigned                           | issue tracker reference, plan item reference, or equivalent execution tracker path |
 | documentation triage inventory created             | inventory file path, review note path, or canonical planning artifact path         |
+| structured proposal manifest validates             | canonical planning artifact path, schema path, and CI check path                   |
 
 ---
 

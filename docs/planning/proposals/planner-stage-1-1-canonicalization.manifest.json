@@ -1,0 +1,554 @@
+{
+  "$schema": "./planner-stage-1-1-canonicalization.manifest.schema.json",
+  "artifactId": "planner.stage-1-1.canonicalization.manifest",
+  "schemaVersion": 1,
+  "status": "proposed",
+  "lastReviewed": "2026-03-17",
+  "humanProposalPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
+  "structuredArtifactPath": "docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json",
+  "legacyMarkdownCompanionPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.machine-readable.md",
+  "legacyMarkdownCompanionStatus": "replaced_by_manifest",
+  "policyBoundary": {
+    "humanProposalIsPolicyAuthority": true,
+    "divergenceRule": "human_proposal_wins_until_synchronized",
+    "structuredArtifactMayIntroduceNewSubstantiveDecisions": false,
+    "structuredArtifactPurpose": [
+      "deterministic section lookup",
+      "deterministic decision extraction",
+      "deterministic gap extraction",
+      "deterministic artifact tracing",
+      "repository-validated machine navigation"
+    ]
+  },
+  "locationState": {
+    "currentPrimaryHumanArtifactPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
+    "currentStructuredArtifactPath": "docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json",
+    "targetPrimaryArtifactPaths": [
+      "docs/architecture/planner/**",
+      "docs/contracts/planner/**",
+      "docs/planning/proposals/**"
+    ]
+  },
+  "sourceBasis": {
+    "activeGovernance": [
+      "docs/planning/status/governance-document-rule-inventory.md",
+      "docs/guides/ai-work-protocol.md",
+      "docs/adr/ADR-0005-contract-formalization-tooling.md",
+      "docs/adr/ADR-0006-contract-tooling-governance.md"
+    ],
+    "designSources": [
+      "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
+      "docs/planning/proposals/principal-architecture-review-execution-plan-20260317.md",
+      "docs/planning/reviews/20260316-principal-architecture-review.md",
+      "docs/architecture/engine/contracts/engine/IWorkflowEngine.v2.0.md",
+      "docs/architecture/engine/contracts/capabilities/README.md"
+    ],
+    "historicalContext": ["docs/archive/DVT+_Architectural_Review_20260225.md"]
+  },
+  "sectionIndex": [
+    { "id": "S-01", "title": "Purpose", "humanSection": "1" },
+    { "id": "S-02", "title": "Problem Statement", "humanSection": "2" },
+    { "id": "S-03", "title": "Architectural Baseline", "humanSection": "3" },
+    { "id": "S-04", "title": "Decision Criteria", "humanSection": "4" },
+    {
+      "id": "S-05",
+      "title": "Architectural Style Constraints",
+      "humanSection": "5"
+    },
+    { "id": "S-06", "title": "Current Duplication", "humanSection": "6" },
+    { "id": "S-07", "title": "ExecutionPlanV2 Ownership", "humanSection": "7" },
+    {
+      "id": "S-08",
+      "title": "PlannerInputEnvelopeV2 Ownership",
+      "humanSection": "8"
+    },
+    {
+      "id": "S-09",
+      "title": "IExecutionPlanner Ownership",
+      "humanSection": "9"
+    },
+    {
+      "id": "S-10",
+      "title": "Planner Internal Types Boundary",
+      "humanSection": "10"
+    },
+    {
+      "id": "S-11",
+      "title": "Public vs Internal Planner Surfaces",
+      "humanSection": "11"
+    },
+    { "id": "S-12", "title": "Planner Purity Boundary", "humanSection": "12" },
+    {
+      "id": "S-13",
+      "title": "Policy vs Runtime Enforcement Split",
+      "humanSection": "13"
+    },
+    { "id": "S-14", "title": "Input Envelope Strategy", "humanSection": "14" },
+    {
+      "id": "S-15",
+      "title": "manifestRef Resolution Contract",
+      "humanSection": "15"
+    },
+    {
+      "id": "S-16",
+      "title": "compiledCodeRef Placement",
+      "humanSection": "16"
+    },
+    { "id": "S-17", "title": "Executability Gate", "humanSection": "17" },
+    {
+      "id": "S-18",
+      "title": "stepId to nodeId Relationship",
+      "humanSection": "18"
+    },
+    { "id": "S-19", "title": "Unknown StepKind Policy", "humanSection": "19" },
+    {
+      "id": "S-20",
+      "title": "custom Passthrough Policy",
+      "humanSection": "20"
+    },
+    { "id": "S-21", "title": "Schema Authority", "humanSection": "21" },
+    { "id": "S-22", "title": "ADR Policy", "humanSection": "22" },
+    {
+      "id": "S-23",
+      "title": "Documentation Placement Policy",
+      "humanSection": "23"
+    },
+    {
+      "id": "S-24",
+      "title": "Contract Evolution, Owners, and Delivery Gates",
+      "humanSection": "24"
+    },
+    { "id": "S-25", "title": "Migration Plan", "humanSection": "25" },
+    {
+      "id": "S-26",
+      "title": "Critical Follow-On Contract Gaps",
+      "humanSection": "26"
+    },
+    { "id": "S-27", "title": "Concrete Examples", "humanSection": "27" },
+    { "id": "S-28", "title": "Artifacts To Update", "humanSection": "28" },
+    {
+      "id": "S-29",
+      "title": "Recommended Output Artifacts",
+      "humanSection": "29"
+    },
+    {
+      "id": "S-30",
+      "title": "Residual Non-Blocking Questions",
+      "humanSection": "30"
+    },
+    { "id": "S-31", "title": "Acceptance Criteria", "humanSection": "31" },
+    { "id": "S-32", "title": "Final Recommendations", "humanSection": "32" },
+    { "id": "S-33", "title": "Implementation Order", "humanSection": "33" },
+    { "id": "S-34", "title": "Non-Goals", "humanSection": "34" }
+  ],
+  "diagramRefs": [
+    {
+      "id": "DG-01",
+      "title": "Component View",
+      "humanSection": "5",
+      "diagramType": "mermaid-graph"
+    },
+    {
+      "id": "DG-02",
+      "title": "Domain View",
+      "humanSection": "5",
+      "diagramType": "mermaid-classDiagram"
+    },
+    {
+      "id": "DG-03",
+      "title": "Sequence View",
+      "humanSection": "5",
+      "diagramType": "mermaid-sequenceDiagram"
+    }
+  ],
+  "decisionIndex": [
+    {
+      "id": "D-01",
+      "title": "ExecutionPlanV2 Ownership",
+      "humanSectionRefs": ["7"],
+      "policyStatus": "selected",
+      "selectedOutcome": "@dvt/contracts owns the public shape; planner is semantic author",
+      "owners": ["@dvt/contracts", "@dvt/planner"],
+      "summary": [
+        "ExecutionPlanV2 public ownership belongs to @dvt/contracts.",
+        "Planner remains the semantic author and engine remains the consumer."
+      ]
+    },
+    {
+      "id": "D-02",
+      "title": "PlannerInputEnvelopeV2 Ownership",
+      "humanSectionRefs": ["8", "14"],
+      "policyStatus": "selected",
+      "selectedOutcome": "@dvt/contracts owns the public boundary input envelope",
+      "owners": ["@dvt/contracts", "@dvt/planner"],
+      "summary": [
+        "One public input envelope exists.",
+        "Planner derives richer internal normalized representations but must not publish a second boundary contract."
+      ]
+    },
+    {
+      "id": "D-03",
+      "title": "IExecutionPlanner Ownership",
+      "humanSectionRefs": ["9"],
+      "policyStatus": "selected",
+      "selectedOutcome": "@dvt/contracts owns the public planner interface",
+      "owners": ["@dvt/contracts", "@dvt/planner"],
+      "summary": [
+        "Planner implements the interface.",
+        "No second public interface definition is allowed."
+      ]
+    },
+    {
+      "id": "D-04",
+      "title": "Planner Internal Types Boundary",
+      "humanSectionRefs": ["10", "11"],
+      "policyStatus": "selected",
+      "selectedOutcome": "packages/@dvt/planner/src/domain/types.ts remains internal-only",
+      "owners": ["@dvt/planner"],
+      "summary": [
+        "Public planner contracts must not be redefined in planner-local types.",
+        "Internal compiler and normalization shapes may remain local."
+      ]
+    },
+    {
+      "id": "D-05",
+      "title": "Planner Purity Boundary",
+      "humanSectionRefs": ["12", "13"],
+      "policyStatus": "selected",
+      "selectedOutcome": "Planner compiles and declares policy, but does not execute or persist",
+      "owners": ["@dvt/planner", "@dvt/engine"],
+      "summary": [
+        "Planner defines what must hold.",
+        "Runtime decides how provider-specific enforcement happens."
+      ]
+    },
+    {
+      "id": "D-06",
+      "title": "Input Envelope Strategy",
+      "humanSectionRefs": ["14"],
+      "policyStatus": "selected",
+      "selectedOutcome": "One stable envelope with exactly one authoritative graph source",
+      "owners": ["@dvt/contracts", "@dvt/planner"],
+      "summary": [
+        "Allowed graph sources are manifestRef, manifest, or nodes.",
+        "No-source and multi-source envelopes are rejected."
+      ]
+    },
+    {
+      "id": "D-07",
+      "title": "manifestRef Resolution",
+      "humanSectionRefs": ["15"],
+      "policyStatus": "selected_with_gap",
+      "selectedOutcome": "manifestRef resolves through a port outside domain core",
+      "owners": ["@dvt/planner", "@dvt/contracts"],
+      "summary": [
+        "Domain core never performs storage or network IO.",
+        "The exact resolver boundary contract still needs canonization."
+      ]
+    },
+    {
+      "id": "D-08",
+      "title": "compiledCodeRef Placement",
+      "humanSectionRefs": ["16"],
+      "policyStatus": "selected",
+      "selectedOutcome": "compiledCodeRef is post-build enrichment and not part of planId",
+      "owners": ["@dvt/contracts", "@dvt/planner"],
+      "summary": [
+        "compiledCodeRef does not affect inputHashSha256 or planId.",
+        "Execution reproducibility depends on immutable artifact binding outside the core plan hash."
+      ]
+    },
+    {
+      "id": "D-09",
+      "title": "Executability Gate",
+      "humanSectionRefs": ["17"],
+      "policyStatus": "selected_with_gap",
+      "selectedOutcome": "Stage 1.1 requires a structured executability gate, not automatic replanning",
+      "owners": ["@dvt/engine", "@dvt/contracts"],
+      "summary": [
+        "Planner validity and engine executability validity are separate.",
+        "The canonical validation contract surface still needs to be written."
+      ]
+    },
+    {
+      "id": "D-10",
+      "title": "stepId to nodeId Relationship",
+      "humanSectionRefs": ["18"],
+      "policyStatus": "selected",
+      "selectedOutcome": "Equality may hold today but is not a permanent invariant",
+      "owners": ["@dvt/planner", "@dvt/contracts"],
+      "summary": [
+        "Future step expansion can diverge from node identity.",
+        "Public contracts must not freeze 1:1 identity permanently."
+      ]
+    },
+    {
+      "id": "D-11",
+      "title": "Unknown StepKind Policy",
+      "humanSectionRefs": ["19"],
+      "policyStatus": "selected_target_state_pending",
+      "selectedOutcome": "Target state is fail-closed, with a governed interim bridge rule",
+      "owners": ["@dvt/contracts", "@dvt/planner", "@dvt/engine"],
+      "summary": [
+        "Unknown StepKind may pass only through explicit allowlist or capability approval during the bridge state.",
+        "Warning-grade diagnostics are required until fail-closed becomes the implemented default."
+      ]
+    },
+    {
+      "id": "D-12",
+      "title": "custom Passthrough Policy",
+      "humanSectionRefs": ["20"],
+      "policyStatus": "selected_with_gap",
+      "selectedOutcome": "custom is allowed only as a namespaced, bounded, governed extension surface",
+      "owners": ["@dvt/contracts", "@dvt/engine"],
+      "summary": [
+        "Namespace registration authority must live outside planner implementation.",
+        "Planner-local ad hoc registries must not become de facto canon."
+      ]
+    },
+    {
+      "id": "D-13",
+      "title": "Schema Authority and Documentation Placement",
+      "humanSectionRefs": ["21", "22", "23", "24", "25", "28", "31"],
+      "policyStatus": "proposed_plan",
+      "selectedOutcome": "Schemas live with contracts, docs move to repo-level surfaces, migration is evidence-backed",
+      "owners": ["Architecture", "@dvt/contracts", "@dvt/planner"],
+      "summary": [
+        "Planner-local schema docs are informative only.",
+        "Execution requires explicit artifact mapping, verification evidence, and migration ownership."
+      ]
+    }
+  ],
+  "illustrativeShapes": [
+    {
+      "id": "IS-01",
+      "title": "ArtifactResolverPort",
+      "humanSectionRefs": ["15"],
+      "status": "illustrative_until_canonized",
+      "ownerToCanonize": "@dvt/contracts and planner boundary docs"
+    },
+    {
+      "id": "IS-02",
+      "title": "ExecutabilityValidationResult",
+      "humanSectionRefs": ["17"],
+      "status": "illustrative_until_canonized",
+      "ownerToCanonize": "@dvt/contracts engine boundary"
+    },
+    {
+      "id": "IS-03",
+      "title": "IExecutabilityValidator",
+      "humanSectionRefs": ["17"],
+      "status": "illustrative_until_canonized",
+      "ownerToCanonize": "@dvt/contracts engine boundary"
+    }
+  ],
+  "gapRegister": [
+    {
+      "id": "G-01.1",
+      "title": "Executability validation contract",
+      "severity": "high",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "@dvt/contracts definition for validation result",
+        "@dvt/engine contract surface for validatePlan or equivalent"
+      ]
+    },
+    {
+      "id": "G-01.2",
+      "title": "Artifact resolver port interface",
+      "severity": "high",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "planner boundary contract or application service boundary doc"
+      ]
+    },
+    {
+      "id": "G-01.3",
+      "title": "custom namespace registration model",
+      "severity": "high",
+      "currentState": "underspecified",
+      "requiredArtifacts": [
+        "extension registration contract",
+        "planner and runtime validation split note"
+      ]
+    },
+    {
+      "id": "G-01.4",
+      "title": "Schema sync mechanism",
+      "severity": "medium",
+      "currentState": "intention_only",
+      "requiredArtifacts": ["generation or CI verification task"]
+    },
+    {
+      "id": "G-01.5",
+      "title": "Named delivery owners and dates",
+      "severity": "medium",
+      "currentState": "role_only",
+      "requiredArtifacts": ["assigned issues or execution plan"]
+    }
+  ],
+  "artifactMapping": [
+    {
+      "currentArtifact": "packages/@dvt/planner/src/domain/types.ts public shapes",
+      "problem": "duplicate public contract authority",
+      "targetOwner": "@dvt/contracts",
+      "actions": [
+        "remove local public definitions",
+        "replace with imports from @dvt/contracts",
+        "use temporary re-export only if required for migration"
+      ]
+    },
+    {
+      "currentArtifact": "packages/@dvt/contracts/src/contracts/planner/**",
+      "problem": "canonical public contract must become the single source",
+      "targetOwner": "@dvt/contracts",
+      "actions": [
+        "absorb public planner boundary types",
+        "absorb compatibility notes"
+      ]
+    },
+    {
+      "currentArtifact": "planner-local imports of public planner contracts",
+      "problem": "drift toward planner-local contract ownership",
+      "targetOwner": "@dvt/planner consuming @dvt/contracts",
+      "actions": [
+        "replace internal imports to consume canonical shared contracts"
+      ]
+    },
+    {
+      "currentArtifact": "packages/@dvt/planner/docs/contracts/*.schema.json and related local schema docs",
+      "problem": "informative drift risk versus canonical executable schemas",
+      "targetOwner": "@dvt/contracts plus canonical docs surfaces",
+      "actions": [
+        "promote where governance-level",
+        "reference generated canonical artifacts",
+        "archive local copies when obsolete"
+      ]
+    },
+    {
+      "currentArtifact": "packages/@dvt/planner/docs/adr/** local ADR-like notes affecting shared semantics",
+      "problem": "governance ambiguity",
+      "targetOwner": "canonical repo docs",
+      "actions": [
+        "rename as local notes when package-local",
+        "promote to docs/architecture or docs/contracts or docs/planning when shared",
+        "archive when superseded"
+      ]
+    },
+    {
+      "currentArtifact": "engine-side validation boundary for validatePlan or equivalent",
+      "problem": "executability gate remains prose without canonical surface",
+      "targetOwner": "canonical engine contracts boundary",
+      "actions": ["define or align one validation contract surface"]
+    },
+    {
+      "currentArtifact": "artifact resolver boundary note or equivalent planner application-boundary note",
+      "problem": "manifestRef resolution remains implementation-defined",
+      "targetOwner": "planner boundary docs plus shared contract authority",
+      "actions": [
+        "define resolver boundary",
+        "define failure shape",
+        "define owner"
+      ]
+    },
+    {
+      "currentArtifact": "packages/@dvt/planner/docs/** mixed local docs",
+      "problem": "mixed canonical versus implementation-local status",
+      "targetOwner": "canonical repo docs or retained local implementation docs",
+      "actions": [
+        "classify as promote",
+        "classify as retain-local",
+        "classify as archive"
+      ]
+    }
+  ],
+  "verificationDeliverables": [
+    {
+      "deliverable": "Canonical contract owner note published",
+      "verifierRole": "Architecture or contracts owner",
+      "expectedEvidenceTypes": ["canonical_doc_path", "accepted_note_path"]
+    },
+    {
+      "deliverable": "Planner-local duplicate public types frozen",
+      "verifierRole": "Planner owner",
+      "expectedEvidenceTypes": [
+        "diff_note",
+        "migration_note",
+        "pr_scoped_change_summary"
+      ]
+    },
+    {
+      "deliverable": "Contract diffs enumerated",
+      "verifierRole": "Contracts owner",
+      "expectedEvidenceTypes": ["diff_note", "compatibility_note_path"]
+    },
+    {
+      "deliverable": "Discriminated envelope rule documented",
+      "verifierRole": "Contracts owner",
+      "expectedEvidenceTypes": ["canonical_doc_path", "schema_path"]
+    },
+    {
+      "deliverable": "compiledCodeRef binding caveat documented",
+      "verifierRole": "Architecture",
+      "expectedEvidenceTypes": ["canonical_doc_path"]
+    },
+    {
+      "deliverable": "Engine executability rejection contract documented",
+      "verifierRole": "Engine owner",
+      "expectedEvidenceTypes": ["canonical_doc_path", "engine_boundary_path"]
+    },
+    {
+      "deliverable": "Artifact resolver boundary documented",
+      "verifierRole": "Architecture or contracts owner",
+      "expectedEvidenceTypes": ["boundary_note_path", "contract_path"]
+    },
+    {
+      "deliverable": "Schema sync task defined",
+      "verifierRole": "Docs owner or contracts owner",
+      "expectedEvidenceTypes": [
+        "ci_check_path",
+        "script_path",
+        "execution_task_reference"
+      ]
+    },
+    {
+      "deliverable": "Migration leads assigned",
+      "verifierRole": "Architecture",
+      "expectedEvidenceTypes": [
+        "issue_tracker_reference",
+        "plan_item_reference",
+        "execution_tracker_path"
+      ]
+    },
+    {
+      "deliverable": "Documentation triage inventory created",
+      "verifierRole": "Docs owner",
+      "expectedEvidenceTypes": [
+        "inventory_file_path",
+        "review_note_path",
+        "canonical_planning_artifact_path"
+      ]
+    }
+  ],
+  "machineReaderGuidance": {
+    "primaryUses": [
+      "deterministic navigation of the human proposal",
+      "decision extraction",
+      "gap extraction",
+      "artifact mapping lookup",
+      "verification deliverable lookup"
+    ],
+    "readHumanFor": [
+      "prose rationale",
+      "tradeoff explanation",
+      "architectural argumentation",
+      "diagrams and examples"
+    ],
+    "treatAsUnresolvedWhen": [
+      "a decision is marked selected_with_gap",
+      "a decision is marked selected_target_state_pending",
+      "an item appears in the gap register",
+      "an illustrative shape has not been canonized"
+    ]
+  }
+}
