@@ -744,13 +744,15 @@ It can remain a temporary simplification in v2.3.x, but the architecture should 
 
 #### Option C — allow unknown kinds only in dev/test
 
-### Weighted Matrix
+### Qualitative analysis
 
-| Option                                                         | Architectural coherence | Evolution / versioning | Runtime safety | Maintainability | Migration cost | Consumer compatibility | Weighted score |
-| -------------------------------------------------------------- | ----------------------: | ---------------------: | -------------: | --------------: | -------------: | ---------------------: | -------------: |
-| A — Fail-open by default                                       |                       2 |                      4 |              1 |               3 |              5 |                      4 |           2.75 |
-| **B — Fail-closed by default with explicit capability opt-in** |                   **5** |                  **4** |          **5** |           **4** |          **3** |                  **4** |       **4.35** |
-| C — Dev/test only soft-open                                    |                       4 |                      4 |              4 |               3 |              3 |                      3 |           3.75 |
+- Fail-open preserves extension flexibility, but it is the weakest option for a
+  governed multi-tenant system because it treats unknown behavior as acceptable
+  until runtime proves otherwise.
+- Dev/test soft-open is a useful migration or experimentation stance, but it is
+  not a durable default for a canonical production policy.
+- Fail-closed with explicit capability opt-in is the cleanest long-term model
+  because it makes extension explicit, reviewable, and enforceable.
 
 ### Selected Decision
 
@@ -788,13 +790,15 @@ behavior in Stage 1.1.
 
 #### Option C — no passthrough at all
 
-### Weighted Matrix
+### Qualitative analysis
 
-| Option                                     | Architectural coherence | Evolution / versioning | Runtime safety | Maintainability | Migration cost | Consumer compatibility | Weighted score |
-| ------------------------------------------ | ----------------------: | ---------------------: | -------------: | --------------: | -------------: | ---------------------: | -------------: |
-| A — Unrestricted passthrough               |                       2 |                      4 |              1 |               2 |              5 |                      4 |           2.55 |
-| **B — Namespaced and bounded passthrough** |                   **5** |                  **5** |          **4** |           **4** |          **3** |                  **4** |       **4.35** |
-| C — No passthrough                         |                       4 |                      3 |              5 |               3 |              2 |                      2 |           3.45 |
+- Unrestricted passthrough is operationally cheap, but it turns `custom` into a
+  semantic escape hatch and undermines governance.
+- A blanket ban would be cleaner from a control perspective, but it would also
+  remove a useful extension seam that the architecture may still need.
+- Namespaced and bounded passthrough is the best compromise because it keeps an
+  extension path while preserving reviewability, validation, and safety
+  boundaries.
 
 ### Selected Decision
 
