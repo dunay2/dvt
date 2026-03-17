@@ -168,6 +168,14 @@ pnpm --filter dvt-api build   # no test runner yet; build = type-check
 Run commands at the package level, not workspace-wide, unless the task crosses
 multiple packages — in that case run each affected package individually.
 
+Operational Git rule for the agent environment:
+
+- when a task requires `git commit`, run it with escalated execution directly
+- do not spend a first failing sandbox attempt on `git commit`, because this
+  environment does not reliably create `.git` lock files under sandboxed
+  execution
+- this rule does not relax hooks or validation expectations
+
 The mandatory closeout file format is defined in `AGENTS.md`. See
 [`docs/planning/closeouts/G7.1-closeout.md`](../planning/closeouts/G7.1-closeout.md) for a
 worked example.

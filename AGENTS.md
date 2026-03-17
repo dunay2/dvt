@@ -43,6 +43,22 @@ The agent MUST NOT:
 - present partial wiring, placeholders, or fake implementations as complete
   work
 
+## Git Commit Execution Rule
+
+For this repository's agent execution environment, `git commit` is a known
+permission-sensitive command because sandboxed execution does not reliably
+create `.git` lock files.
+
+Therefore the agent MUST:
+
+- run `git commit` with escalated execution directly when a commit is required
+- not waste a first sandboxed attempt on `git commit`
+- keep normal hook execution enabled unless the user explicitly requests
+  otherwise and the risk is stated first
+
+This is a repository operational rule for agent-driven execution. It does not
+change normal Git usage for human contributors outside the agent environment.
+
 ## No Debt And No Stub Policy
 
 By default, every task is expected to close without creating new debt.
