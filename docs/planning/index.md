@@ -49,6 +49,7 @@ Concept anchors for this page:
 - [G5 Outbox Worker Development Proposal](proposals/g5-outbox-worker-development-proposal-20260308.md)
 - [Package Module Build Policy v2](proposals/package-module-build-policy-v2-20260317.md)
 - [Phase 2 Architectural Debt Roadmap](proposals/phase2-arch-debt-roadmap-20260315.md)
+- [Principal Architecture Review Execution Plan](proposals/principal-architecture-review-execution-plan-20260317.md)
 - [Repository Governance Proposal Set 2026-03-17](proposals/repository-governance-proposal-set-20260317.md)
 
 ## Reviews
