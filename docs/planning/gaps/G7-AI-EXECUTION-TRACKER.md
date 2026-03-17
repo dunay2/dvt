@@ -47,12 +47,12 @@ Update this section before any substantial implementation turn.
 - `as_of`: `2026-03-16`
 - `gap`: `G7`
 - `epic`: `G7`
-- `current_focus`: `G7.3 - provider run-id reconciliation`
-- `state`: `Active`
-- `currently_working_on`: `G7.2 delivered and docs synced; next implementation slice is G7.3 provider run-id reconciliation in WorkflowEngine pre-bootstrap path`
-- `next_after_current`: `G7.4 evidence and final closeout`
-- `blocking_dependencies`: `none - G7.1 and G7.2 are closed; G7.3 is the remaining code slice`
-- `last_completed`: `G7.2 closed 2026-03-16 - listStaleSnapshotRuns on IRunStateStore (contracts + engine-internal), PostgresStateStoreAdapter stale-snapshot query, ProjectorWorkerRuntime in @dvt/delivery, apps/projector-worker composition root, /healthz endpoint, 23/23 delivery tests + 2/2 projector-worker tests pass`
+- `current_focus`: `G7 closed`
+- `state`: `Closed`
+- `currently_working_on`: `none`
+- `next_after_current`: `none`
+- `blocking_dependencies`: `none`
+- `last_completed`: `G7.3 and G7.4 closed 2026-03-16 - WorkflowEngine now reconciles the real provider run-id after pre-bootstrap start; evidence and status docs synced`
 
 ## Remaining G7 Roadmap
 
@@ -76,13 +76,13 @@ Update this section before any substantial implementation turn.
   (contracts + engine-internal); implemented in `PostgresStateStoreAdapter`;
   `ProjectorWorkerRuntime` added to `@dvt/delivery`; `apps/projector-worker`
   composition root added with env parsing, `/healthz`, and graceful shutdown
-- `Slice 3 / provider run-id reconciliation + closeout prep`
+- `Slice 3 / provider run-id reconciliation + closeout prep` - **Done** 2026-03-16
   scope: address the `providerRunId` approximation residual from the
   `estimateRunRef` path; update `run_metadata.provider_run_id` after
   `adapter.startRun()` returns the real `firstExecutionRunId`
   exit signal: `run_metadata.provider_run_id` reflects the actual Temporal
   execution id for all new runs
-- `Slice 4 / evidence + closeout`
+- `Slice 4 / evidence + closeout` - **Done** 2026-03-16
   scope: Evidence Doc, sync all status docs, mark `G7` Closed
   exit signal: `G7` row is Closed in all status docs; Evidence Doc committed
 

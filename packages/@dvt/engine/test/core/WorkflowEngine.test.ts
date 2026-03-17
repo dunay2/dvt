@@ -139,8 +139,9 @@ describe('WorkflowEngine (basic failure modes)', () => {
     adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
     requiredProviders?: EngineRunRef['provider'][];
     observability?: IObservability;
+    stateStore?: InMemoryTxStore;
   }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
-    const store = new InMemoryTxStore();
+    const store = input?.stateStore ?? new InMemoryTxStore();
     const intentStore = new InMemoryStartRunIntentStore();
 
     const engine = new WorkflowEngine({
@@ -358,6 +359,121 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(sawQueuedEventBeforeStart).toBe(true);
     const events = await store.listEvents('t', 'pre-bootstrap-1');
     expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
+  });
+
+  it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {
+    const savedRefs: Array<{ runId: string; update: unknown }> = [];
+    const store = new InMemoryTxStore();
+    const originalSaveProviderRef = store.saveProviderRef.bind(store);
+    store.saveProviderRef = async (_tenantId, runId, update) => {
+      savedRefs.push({ runId, update });
+      return originalSaveProviderRef(_tenantId, runId, update);
+    };
+
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+      async startRun(_planRef, ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: `actual-execution-id-for-${ctx.runId}`,
+        } as EngineRunRef;
+      },
+    });
+
+    const { engine } = createEngine({ adapters, stateStore: store });
+    await engine.startRun(makePlanRef(), makeContext('g7-reconcile-1'));
+
+    expect(savedRefs).toHaveLength(1);
+    expect(savedRefs[0]).toMatchObject({
+      runId: 'g7-reconcile-1',
+      update: {
+        providerWorkflowId: 'wf-g7-reconcile-1',
+        providerRunId: 'actual-execution-id-for-g7-reconcile-1',
+      },
+    });
+
+    const meta = await store.getRunMetadataByRunId('t', 'g7-reconcile-1');
+    expect(meta?.providerRunId).toBe('actual-execution-id-for-g7-reconcile-1');
+  });
+
+  it('does not call saveProviderRef when startRun returns the same runId as estimateRunRef', async () => {
+    const savedRefs: unknown[] = [];
+    const store = new InMemoryTxStore();
+    const originalSaveProviderRef = store.saveProviderRef.bind(store);
+    store.saveProviderRef = async (_tenantId, runId, update) => {
+      savedRefs.push({ runId, update });
+      return originalSaveProviderRef(_tenantId, runId, update);
+    };
+
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+      async startRun(_planRef, ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+    });
+
+    const { engine } = createEngine({ adapters, stateStore: store });
+    await engine.startRun(makePlanRef(), makeContext('g7-same-id-1'));
+
+    expect(savedRefs).toHaveLength(0);
+  });
+
+  it('continues startRun when saveProviderRef fails (fail-soft)', async () => {
+    const store = new InMemoryTxStore();
+    store.saveProviderRef = async () => {
+      throw new Error('metadata update failed');
+    };
+
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+      async startRun(_planRef, ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: `actual-execution-id-for-${ctx.runId}`,
+        } as EngineRunRef;
+      },
+    });
+
+    const { engine } = createEngine({ adapters, stateStore: store });
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('g7-fail-soft-1'))
+    ).resolves.toBeDefined();
   });
 
   it('keeps a pre-bootstrapped run pending when adapter.startRun fails before dispatch', async () => {

@@ -17,11 +17,11 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prebuild": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build && pnpm --filter @dvt/plan-interpreter build",
+    "prebuild": "pnpm --filter \"@dvt/adapter-temporal^...\" build",
     "postbuild": "echo '✅ Build complete'",
-    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/crypto build && pnpm --filter @dvt/plan-interpreter build && pnpm build",
+    "pretest": "pnpm --filter \"@dvt/adapter-temporal^...\" build",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts",
-    "pretest:integration": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/observability build && pnpm --filter @dvt/plan-interpreter build && pnpm build",
+    "pretest:integration": "pnpm --filter \"@dvt/adapter-temporal^...\" build && pnpm build",
     "test:integration": "vitest run ./test/",
     "test:integration:watch": "vitest watch ./test/",
     "ci:test:integration": "pnpm pretest:integration && pnpm test:integration"
