@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.2](https://github.com/dunay2/dvt/compare/v4.2.1...v4.2.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* **deps:** Make tslib explicit runtime helper ([#500](https://github.com/dunay2/dvt/issues/500)) ([a7e202a](https://github.com/dunay2/dvt/commit/a7e202a2ce193d9988876d383e6a43c6a49a3f5e))
+
 ## [4.2.1](https://github.com/dunay2/dvt/compare/v4.2.0...v4.2.1) (2026-03-16)
 
 
