@@ -629,6 +629,40 @@ depends on:
 Changing compiled code while preserving the same logical plan core is therefore
 not free. It is a new execution binding, even if it is not a new `planId`.
 
+### Execution binding integrity rule
+
+That binding change must not be treated as invisible at runtime.
+
+At minimum:
+
+- the engine must verify that each enriched `compiledCodeRef` still resolves to
+  the intended immutable artifact binding before execution
+- the engine must reject stale, missing, or digest-mismatched bindings rather
+  than silently running against them
+- the repository needs one canonical contract surface for reporting that
+  verification result
+
+The minimum target-state verification content should be equivalent to:
+
+```ts
+type ExecutionBindingVerificationResult =
+  | { status: 'OK'; bindingDigest: string }
+  | {
+      status: 'ERROR';
+      code: 'MISSING_BINDING' | 'STALE_BINDING' | 'DIGEST_MISMATCH';
+      stepId: string;
+      bindingDigest?: string;
+      reason: string;
+    };
+```
+
+This shape is **illustrative until canonized**. It exists to make the missing
+binding-integrity mechanism explicit, not to pretend the contract already
+exists.
+
+Without an equivalent canonical boundary, `execution-time binding checks`
+remains an underspecified dependency rather than an enforceable rule.
+
 ### Consequence
 
 This resolves the ownership question now. It is not deferred.
@@ -1145,6 +1179,7 @@ closed.
 | Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape | canonical validation result shape and engine-boundary surface       |
 | `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined              | canonical resolver port or equivalent application-boundary contract |
 | `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy              | extension registration contract and validation ownership note       |
+| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path     | binding verification result contract                                |
 | Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                   | generation or CI verification task                                  |
 | Named migration owners and dates      | Without them, migration remains paper planning                                   | assigned execution tracker entries                                  |
 
@@ -1393,6 +1428,7 @@ remain unresolved:
 - [ ] contract diffs enumerated
 - [ ] discriminated envelope rule documented
 - [ ] `compiledCodeRef` binding caveat documented
+- [ ] execution binding verification gap documented
 - [ ] executability gate follow-on gap documented
 - [ ] artifact resolver follow-on gap documented
 - [ ] schema sync task defined
@@ -1411,6 +1447,7 @@ assertion alone.
 | contract diffs enumerated                   | diff note or compatibility note path                                               |
 | discriminated envelope rule documented      | canonical contract doc path or schema path                                         |
 | `compiledCodeRef` binding caveat documented | canonical doc path                                                                 |
+| binding verification gap documented         | gap note path, canonical planning doc path, or execution tracker reference         |
 | executability gate follow-on gap documented | gap note path, canonical planning doc path, or execution tracker reference         |
 | artifact resolver follow-on gap documented  | gap note path, boundary note path, or execution tracker reference                  |
 | schema sync task defined                    | CI check path, script path, or execution task reference                            |

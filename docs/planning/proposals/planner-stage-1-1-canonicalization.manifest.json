@@ -308,6 +308,16 @@
       ]
     },
     {
+      "id": "G-01.6",
+      "title": "Execution binding verification contract",
+      "severity": "high",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "canonical engine or contracts surface for binding verification result",
+        "binding mismatch rejection path"
+      ]
+    },
+    {
       "id": "G-01.4",
       "title": "Schema sync mechanism",
       "severity": "medium",
