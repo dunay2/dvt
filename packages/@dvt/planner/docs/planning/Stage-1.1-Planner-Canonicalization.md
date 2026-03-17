@@ -1318,6 +1318,24 @@ Stage 1.1 is accepted only if all of the following are true:
 - [ ] migration leads assigned
 - [ ] documentation triage inventory created
 
+### Expected evidence form
+
+Each verification item should be satisfied by an artifact type, not by informal
+assertion alone.
+
+| Deliverable                                        | Expected evidence form                                                             |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| canonical contract owner note published            | canonical doc path or accepted note path                                           |
+| planner-local duplicate public types frozen        | diff note, migration note, or PR-scoped change summary                             |
+| contract diffs enumerated                          | diff note or compatibility note path                                               |
+| discriminated envelope rule documented             | canonical contract doc path or schema path                                         |
+| `compiledCodeRef` binding caveat documented        | canonical doc path                                                                 |
+| engine executability rejection contract documented | canonical contract doc path or engine boundary path                                |
+| artifact resolver boundary documented              | boundary note path or contract path                                                |
+| schema sync task defined                           | CI check path, script path, or execution task reference                            |
+| migration leads assigned                           | issue tracker reference, plan item reference, or equivalent execution tracker path |
+| documentation triage inventory created             | inventory file path, review note path, or canonical planning artifact path         |
+
 ---
 
 ## 32. Final Recommendations

@@ -983,20 +983,57 @@ acceptance_requirements:
 verification_deliverables:
   - deliverable: canonical_contract_owner_note_published
     verifier: architecture_or_contracts_owner
+    expected_evidence_type:
+      - canonical_doc_path
+      - accepted_note_path
   - deliverable: planner_local_duplicate_public_types_frozen
     verifier: planner_owner
+    expected_evidence_type:
+      - diff_note
+      - migration_note
+      - pr_scoped_change_summary
   - deliverable: contract_diffs_enumerated
     verifier: contracts_owner
+    expected_evidence_type:
+      - diff_note
+      - compatibility_note_path
   - deliverable: discriminated_envelope_rule_documented
     verifier: contracts_owner
+    expected_evidence_type:
+      - canonical_contract_doc_path
+      - schema_path
   - deliverable: compiledCodeRef_binding_caveat_documented
     verifier: architecture
+    expected_evidence_type:
+      - canonical_doc_path
   - deliverable: engine_executability_rejection_contract_documented
     verifier: engine_owner
+    expected_evidence_type:
+      - canonical_contract_doc_path
+      - engine_boundary_path
   - deliverable: migration_leads_assigned
     verifier: architecture
+    expected_evidence_type:
+      - issue_tracker_reference
+      - plan_item_reference
+      - execution_tracker_path
   - deliverable: documentation_triage_inventory_created
     verifier: docs_owner
+    expected_evidence_type:
+      - inventory_file_path
+      - review_note_path
+      - canonical_planning_artifact_path
+  - deliverable: artifact_resolver_boundary_documented
+    verifier: architecture_or_contracts_owner
+    expected_evidence_type:
+      - boundary_note_path
+      - contract_path
+  - deliverable: schema_sync_task_defined
+    verifier: docs_owner_or_contracts_owner
+    expected_evidence_type:
+      - ci_check_path
+      - script_path
+      - execution_task_reference
 verification_state:
   current_state: proposal_only
   unresolved_for_execution:
