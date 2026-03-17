@@ -8,6 +8,17 @@ planning_type: proposal
 
 # CI Workflow Deduplication Plan
 
+## Proposal Set Context
+
+This document is part of the repository governance proposal set.
+
+- Set entry point: [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
+- Role in set: enforcement and orchestration plan
+- Complementary proposals:
+  - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) defines the target technical package model
+  - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md) defines documentation governance expectations that CI should help enforce
+  - [Phase 2 Architectural Debt Roadmap](phase2-arch-debt-roadmap-20260315.md) defines execution slices that may later consume the CI improvements
+
 ## Goal
 
 Reduce duplicated logic across GitHub workflows and root scripts without weakening existing quality

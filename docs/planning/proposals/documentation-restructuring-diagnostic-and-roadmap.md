@@ -8,6 +8,17 @@ planning_type: proposal
 
 # Documentation Restructuring: Diagnostic And Roadmap
 
+## Proposal Set Context
+
+This document is part of the repository governance proposal set.
+
+- Set entry point: [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
+- Role in set: diagnostic precursor
+- Follow-on proposals:
+  - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md) translates this diagnostic into an operating model
+  - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) defines technical package/build policy for monorepo convergence
+  - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md) defines enforcement and CI consolidation work
+
 > Consolidated from the answers gathered during this planning cycle. The first part closes the operating decisions. The second part turns those decisions into an executable roadmap.
 
 ## Answered Questions And Consolidated Responses
