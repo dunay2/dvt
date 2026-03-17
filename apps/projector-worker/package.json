@@ -5,12 +5,12 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "prebuild": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/delivery build",
+    "prebuild": "pnpm --filter \"dvt-projector-worker^...\" build",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "pretypecheck": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/delivery build",
+    "pretypecheck": "pnpm --filter \"dvt-projector-worker^...\" build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "pretest": "pnpm --filter @dvt/contracts build && pnpm --filter @dvt/adapter-postgres build && pnpm --filter @dvt/delivery build",
+    "pretest": "pnpm --filter \"dvt-projector-worker^...\" build",
     "test": "node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
