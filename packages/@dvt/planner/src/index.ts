@@ -1,4 +1,5 @@
-export { Planner } from './domain/Planner.js';
+// PlannerFacade is the sole public entry point.
+// The domain Planner is intentionally not exported — use PlannerFacade.
 export { PlannerFacade, type PlannerFacadeOptions } from './application/PlannerFacade.js';
 
 // Canonical planner boundary types — authoritative source is @dvt/contracts.
