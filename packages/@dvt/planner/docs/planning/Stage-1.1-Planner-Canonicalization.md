@@ -231,6 +231,30 @@ The present duplication appears in at least these forms:
 - shared planner contract shapes such as `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`
 - planner-local documentation and JSON-schema material under `packages/@dvt/planner/docs/**`
 
+### Baseline snapshot as of 2026-03-18
+
+Stage 1.1 should not speak about "freeze authority" as if the repository were a
+blank slate. The baseline in the current tree is:
+
+| Surface                                                | Current repo state                                     | Evidence                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `ExecutionPlanV2` canonical contract                   | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`     |
+| `PlannerInputEnvelopeV2` canonical contract            | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`     |
+| `IExecutionPlanner` canonical contract                 | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts` |
+| planner-local public-like duplicates                   | still exist in planner domain types                    | `packages/@dvt/planner/src/domain/types.ts`                             |
+| planner-local contract wrapper for `IExecutionPlanner` | still exists and points at planner-local domain types  | `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v2.ts`   |
+| planner-local contract wrapper for plan/input types    | still exists and re-exports planner-local domain types | `packages/@dvt/planner/src/contracts/planner/ExecutionPlan.v2.ts`       |
+
+So the starting point is **partial migration, not zero migration**:
+
+- the contracts package already contains the intended public planner contract
+  family
+- planner still carries local duplicate or wrapper surfaces that can continue to
+  confuse authority
+- Phase 1 is therefore not "invent the first canonical home"; it is "freeze the
+  already-present contracts authority and stop planner-local surfaces from
+  competing with it"
+
 That duplication may have been acceptable during package-local exploration. It is no longer acceptable for a Stage 1.1 canonicalization slice.
 
 The rule going forward must be:
