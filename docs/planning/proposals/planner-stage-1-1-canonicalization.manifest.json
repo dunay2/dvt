@@ -3,7 +3,7 @@
   "artifactId": "planner.stage-1-1.canonicalization.manifest",
   "schemaVersion": 1,
   "status": "proposed",
-  "lastReviewed": "2026-03-17",
+  "lastReviewed": "2026-03-18",
   "humanProposalPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
   "structuredArtifactPath": "docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json",
   "legacyMarkdownCompanionPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.machine-readable.md",
@@ -355,10 +355,11 @@
       "id": "G-01.7",
       "title": "Declarative policy vocabulary",
       "severity": "high",
-      "currentState": "not_canonicalized",
+      "currentState": "partially_canonicalized_in_contracts",
       "requiredArtifacts": [
-        "canonical shared vocabulary types or schema for retry timeout and concurrency policies",
-        "adapter mapping table and structured unsupported-policy rejection or degradation rule"
+        "planner-boundary adoption of canonical RetryPolicy TimeoutPolicy and ConcurrencyPolicy",
+        "adapter mapping tables beyond Temporal reference implementation",
+        "structured unsupported-policy result integration with executability validation contract"
       ]
     },
     {

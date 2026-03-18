@@ -562,16 +562,12 @@ For example:
 - concurrency semantics must be defined against one canonical scope and limit
   meaning
 
-### Minimum canonical policy shape
+### Canonical policy vocabulary in contracts
 
-The minimum runtime-neutral vocabulary that must be canonized in
-`@dvt/contracts` is equivalent to:
+This slice now canonizes the runtime-neutral vocabulary in `@dvt/contracts` as:
 
 ```ts
-type RetryPolicy =
-  | { kind: 'none' }
-  | { kind: 'at-most-once' }
-  | { kind: 'at-most-N'; maxAttempts: number };
+type RetryPolicy = { kind: 'at-most-once' } | { kind: 'at-most-N'; maxAttempts: number };
 
 type TimeoutPolicy = { kind: 'unbounded' } | { kind: 'budget'; maxSeconds: number };
 
@@ -581,10 +577,26 @@ type ConcurrencyPolicy =
   | { kind: 'unbounded' };
 ```
 
-Stage 1.1 does not require that this exact spelling already exists today in
-contracts. It does require that the canonical contract surface converge toward a
-runtime-neutral enum or union vocabulary of this kind, rather than free text or
-adapter-local strings.
+The shared contract surface also now includes:
+
+- `PlannerPolicyClassSet` as the aggregate vocabulary holder
+- `AdapterPolicyMapper` as the required runtime mapping interface
+- `UnsupportedPlannerPolicyError` as the typed local failure until the full
+  executability result contract is canonized
+
+This slice closes the minimum design questions as follows:
+
+- scope: the value objects are reusable, but Stage 1.1 anchors them as
+  **plan-level** policy classes; this slice does not introduce step-level or
+  per-step-kind attachment
+- retry count semantics: `RetryPolicy.maxAttempts` counts **total attempts
+  including the initial execution**, and the shared contract validates an upper
+  bound of `20`
+- timeout semantics: `TimeoutPolicy` models one **end-to-end execution budget**
+  for a step; it does not split scheduling timeout from execution timeout in
+  this slice
+- concurrency semantics: `ConcurrencyPolicy` is **plan-wide**, not a per-kind
+  override matrix
 
 ### Adapter mapping rule
 
@@ -597,8 +609,18 @@ If a runtime cannot honor a canonical policy class, it must reject through the
 executability gate with a structured unsupported-policy result. Silent
 reinterpretation is out of contract.
 
-Stage 1.1 fixes that stance now. The full vocabulary inventory, final contract
-surface, and adapter mapping artifacts remain follow-on contract deliverables.
+This slice now makes that requirement concrete through
+`AdapterPolicyMapper<TRetry, TTimeout, TConcurrency>` in `@dvt/contracts`, and
+`@dvt/adapter-temporal` now contains a `TemporalPolicyMapper` as the reference
+implementation.
+
+The remaining follow-on is no longer "invent the vocabulary". It is:
+
+- migrate the public planner boundary away from legacy numeric
+  `PlannerPolicies` fields
+- add explicit mapping artifacts for non-Temporal adapters
+- fold unsupported-policy failures into the future executability result
+  contract
 
 ### Hard Rule
 
@@ -1534,19 +1556,19 @@ The proposal resolves ownership and boundary direction, but several follow-on
 contracts are still required before execution can be claimed as operationally
 closed.
 
-| Gap                                   | Why it matters                                                                           | Minimum required artifact                                           |
-| ------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape         | canonical validation result shape and engine-boundary surface       |
-| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined                      | canonical resolver port or equivalent application-boundary contract |
-| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                      | extension registration contract and validation ownership note       |
-| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path             | binding verification result contract                                |
-| Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data              | state or engine boundary for associated binding material            |
-| Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                   | admission or state boundary for validated-plan persistence/handoff  |
-| Input-path deprecation policy         | Without it, `manifest` and `nodes` can remain forever as undeclared compatibility debt   | canonical compatibility note with retention/deprecation rule        |
-| Unknown-kind allowlist authority      | Without it, unknown `StepKind` admission can drift into adapter-local governance         | canonical runtime-capability allowlist surface or shared contract   |
-| Declarative policy vocabulary         | Without it, runtimes can reinterpret retry, timeout, and concurrency classes differently | canonical policy vocabulary or shared contract enum                 |
-| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                           | generation or CI verification task                                  |
-| Named migration owners and dates      | Without them, migration remains paper planning                                           | assigned execution tracker entries                                  |
+| Gap                                   | Why it matters                                                                                       | Minimum required artifact                                           |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape                     | canonical validation result shape and engine-boundary surface       |
+| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined                                  | canonical resolver port or equivalent application-boundary contract |
+| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                                  | extension registration contract and validation ownership note       |
+| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path                         | binding verification result contract                                |
+| Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data                          | state or engine boundary for associated binding material            |
+| Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                               | admission or state boundary for validated-plan persistence/handoff  |
+| Input-path deprecation policy         | Without it, `manifest` and `nodes` can remain forever as undeclared compatibility debt               | canonical compatibility note with retention/deprecation rule        |
+| Unknown-kind allowlist authority      | Without it, unknown `StepKind` admission can drift into adapter-local governance                     | canonical runtime-capability allowlist surface or shared contract   |
+| Declarative policy vocabulary         | Without boundary adoption, legacy numeric planner policies and non-Temporal runtimes can still drift | planner-boundary migration plus additional adapter mapping tables   |
+| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                                       | generation or CI verification task                                  |
+| Named migration owners and dates      | Without them, migration remains paper planning                                                       | assigned execution tracker entries                                  |
 
 These do not block Stage 1.1 as an ownership-direction proposal.
 

@@ -31,6 +31,11 @@ export {
 // PR-2: WorkerHost
 export type { TemporalWorkerHostConfig } from './TemporalWorkerHost.js';
 export { TemporalWorkerHost } from './TemporalWorkerHost.js';
+export type {
+  TemporalActivityTimeoutConfig,
+  TemporalWorkerConcurrencyConfig,
+} from './TemporalPolicyMapper.js';
+export { TemporalPolicyMapper } from './TemporalPolicyMapper.js';
 
 // PR-2: Activities
 export type {

@@ -23,6 +23,24 @@ export type {
   PlannerPolicies,
   PlannerSelection,
 } from './contracts/planner/ExecutionPlan.v2.js';
+export {
+  ConcurrencyPolicySchema,
+  MAX_RETRY_POLICY_ATTEMPTS,
+  PlannerPolicyClassSetSchema,
+  RetryPolicySchema,
+  TimeoutPolicySchema,
+  UnsupportedPlannerPolicyError,
+} from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+export type {
+  AdapterPolicyMapper,
+  ConcurrencyPolicy,
+  PlannerPolicyCategory,
+  PlannerPolicyClassSet,
+  PlannerPolicyValue,
+  RetryPolicy,
+  TimeoutPolicy,
+  UnsupportedPlannerPolicyDetails,
+} from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
 export * from './contracts/lineage/ILineageSink.v1.js';
 export * from './errors.js';
