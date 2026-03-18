@@ -356,8 +356,8 @@
       "severity": "high",
       "currentState": "not_canonicalized",
       "requiredArtifacts": [
-        "canonical shared vocabulary for retry timeout and concurrency classes",
-        "adapter mapping and rejection or degradation rule"
+        "canonical shared vocabulary types or schema for retry timeout and concurrency policies",
+        "adapter mapping table and structured unsupported-policy rejection or degradation rule"
       ]
     },
     {

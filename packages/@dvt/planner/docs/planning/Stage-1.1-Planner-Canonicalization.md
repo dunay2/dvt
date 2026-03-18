@@ -552,8 +552,43 @@ For example:
 - concurrency semantics must be defined against one canonical scope and limit
   meaning
 
-Stage 1.1 fixes that stance now. The full vocabulary inventory and final enum or
-schema artifact remain a follow-on contract deliverable.
+### Minimum canonical policy shape
+
+The minimum runtime-neutral vocabulary that must be canonized in
+`@dvt/contracts` is equivalent to:
+
+```ts
+type RetryPolicy =
+  | { kind: 'none' }
+  | { kind: 'at-most-once' }
+  | { kind: 'at-most-N'; maxAttempts: number };
+
+type TimeoutPolicy = { kind: 'unbounded' } | { kind: 'budget'; maxSeconds: number };
+
+type ConcurrencyPolicy =
+  | { kind: 'sequential' }
+  | { kind: 'bounded'; maxParallel: number }
+  | { kind: 'unbounded' };
+```
+
+Stage 1.1 does not require that this exact spelling already exists today in
+contracts. It does require that the canonical contract surface converge toward a
+runtime-neutral enum or union vocabulary of this kind, rather than free text or
+adapter-local strings.
+
+### Adapter mapping rule
+
+Each adapter/runtime integration must publish one explicit mapping table from:
+
+- canonical planner policy class
+- to runtime enforcement shape
+
+If a runtime cannot honor a canonical policy class, it must reject through the
+executability gate with a structured unsupported-policy result. Silent
+reinterpretation is out of contract.
+
+Stage 1.1 fixes that stance now. The full vocabulary inventory, final contract
+surface, and adapter mapping artifacts remain follow-on contract deliverables.
 
 ### Hard Rule
 
