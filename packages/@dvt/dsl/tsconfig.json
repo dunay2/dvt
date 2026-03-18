@@ -1,14 +1,12 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../tsconfig.package-bundler.base.json",
   "compilerOptions": {
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src",
-    "baseUrl": ".",
-    "paths": {}
+    "rootDir": "src"
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "test"]
