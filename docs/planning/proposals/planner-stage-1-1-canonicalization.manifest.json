@@ -351,7 +351,8 @@
       "id": "G-01.11",
       "title": "Unknown-kind allowlist authority",
       "severity": "high",
-      "currentState": "not_canonicalized",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts",
       "requiredArtifacts": [
         "KnownStepKind contract or equivalent canonical contracts enum",
         "StepKindBridgeRegistry or equivalent central provisional-kind registry with owner and decision-date metadata"

@@ -67,6 +67,17 @@ export type {
   CustomPolicyValidationError,
   ICustomPolicyNamespaceRegistry,
 } from './contracts/planner/CustomPolicyNamespaceRegistry.v1.js';
+export {
+  KNOWN_STEP_KINDS,
+  STEP_KIND_BRIDGE_REGISTRY,
+  getBridgeEntry,
+  isBridgeRegisteredStepKind,
+  isKnownStepKind,
+} from './contracts/planner/StepKindRegistry.v1.js';
+export type {
+  KnownStepKind,
+  StepKindBridgeEntry,
+} from './contracts/planner/StepKindRegistry.v1.js';
 export * from './contracts/lineage/ILineageSink.v1.js';
 export * from './errors.js';
 export * from './ports/artifact-store.js';
