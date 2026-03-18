@@ -34,7 +34,8 @@
       "docs/planning/status/governance-document-rule-inventory.md",
       "docs/guides/ai-work-protocol.md",
       "docs/adr/ADR-0005-contract-formalization-tooling.md",
-      "docs/adr/ADR-0006-contract-tooling-governance.md"
+      "docs/adr/ADR-0006-contract-tooling-governance.md",
+      "docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md"
     ],
     "designSources": [
       "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
@@ -165,21 +166,21 @@
     {
       "id": "D-01",
       "title": "ExecutionPlanV2 Ownership",
-      "humanSectionRefs": ["7"],
+      "humanSectionRefs": ["7", "24"],
       "policyStatus": "selected",
       "decisionClass": "canonical_ownership"
     },
     {
       "id": "D-02",
       "title": "PlannerInputEnvelopeV2 Ownership",
-      "humanSectionRefs": ["8", "14"],
+      "humanSectionRefs": ["8", "14", "24"],
       "policyStatus": "selected",
       "decisionClass": "canonical_ownership"
     },
     {
       "id": "D-03",
       "title": "IExecutionPlanner Ownership",
-      "humanSectionRefs": ["9"],
+      "humanSectionRefs": ["9", "24"],
       "policyStatus": "selected",
       "decisionClass": "canonical_ownership"
     },

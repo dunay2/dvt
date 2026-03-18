@@ -2,7 +2,7 @@
 title: Stage 1.1 — Planner Contract, Canonical Ownership, and Documentation Placement
 status: Proposed
 owner: Architecture
-last_reviewed: 2026-03-17
+last_reviewed: 2026-03-18
 planning_type: proposal
 source:
   - docs/planning/proposals/principal-architecture-review-execution-plan-20260317.md
@@ -1383,6 +1383,26 @@ That documentation must not require living inside `src/` or inside package code 
   - migration path is documented
   - validation evidence is defined
 
+### Canonical protocol location
+
+The single protocol-of-record for changing those three public planner contracts
+is [ADR-0035 - Planner Public Contract Evolution
+Protocol](../../../../../docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md).
+
+This section is a proposal-local summary only. Contributors should not have to
+search across repo docs to answer "How do I propose a change to
+`ExecutionPlanV2`, `PlannerInputEnvelopeV2`, or `IExecutionPlanner`?"
+
+### Contracts owner review scope
+
+| Contracts owner reviews                                          | Contracts owner does not review                        |
+| ---------------------------------------------------------------- | ------------------------------------------------------ |
+| Whether existing imports or consumers break                      | Whether the planning decision is the right one         |
+| Whether the change requires a major version bump                 | Whether the field or concept should exist semantically |
+| Whether other `@dvt/contracts` consumers are impacted            | Whether the planner semantics are desirable            |
+| Whether compatibility notes or changelog updates are present     | Planner-domain design preference disputes              |
+| Whether schemas, fixtures, and package publication stay coherent | Planner implementation strategy choices                |
+
 ### Coordination rule
 
 This split is intentional:
@@ -1393,6 +1413,18 @@ This split is intentional:
 Stage 1.1 therefore does **not** turn the contracts owner into a design veto
 point for planning semantics. It turns that role into the gatekeeper for
 compatibility, schema discipline, and canonical publication.
+
+### Worked example
+
+If the planner needs to add a field `planVersion` to `ExecutionPlanV2`, the
+expected flow is:
+
+1. The planner owner opens or sponsors the PR in `@dvt/contracts`.
+2. The planner owner supplies the semantic rationale and linked planning source.
+3. The contracts owner reviews only for compatibility, versioning, package
+   coherence, and cross-consumer impact.
+4. If those checks pass, the contracts owner approves and the planner owner
+   remains the semantic authority for the change.
 
 ### Tentative delivery ownership
 

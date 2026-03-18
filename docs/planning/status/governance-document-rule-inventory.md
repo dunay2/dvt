@@ -105,6 +105,9 @@ Usage rules already declared in the ADR index:
 | `ADR-0030`  | Accepted   | Pre-dispatch intent log for `startRun` crash consistency                                                        | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md)                                 |
 | `ADR-0031`  | Accepted   | Storage adapter tenant isolation strategy                                                                       | [ADR-0031](../../adr/ADR-0031-adapter-tenant-isolation.md)                                |
 | `ADR-0032`  | Accepted   | `compiledCodeRef` ownership in `StepStarted` payloads                                                           | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md)                               |
+| `ADR-0033`  | Accepted   | Outbox worker sharding and fencing model                                                                        | [ADR-0033](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)                |
+| `ADR-0034`  | Accepted   | Bounded context boundaries and communication rules                                                              | [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)      |
+| `ADR-0035`  | Accepted   | Planner public contract evolution protocol and bounded review scope                                             | [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)              |
 
 ### Normative contract and execution documents
 
