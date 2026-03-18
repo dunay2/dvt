@@ -28,6 +28,7 @@ export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 export type { PlannerLimits } from './domain/limits.js';
 export type { PlannerMetrics } from './domain/metrics.js';
 
+export type { IArtifactResolver } from './ports/IArtifactResolver.js';
 export type { ICompiledCodeStorage } from './ports/ICompiledCodeStorage.js';
 export { computeSha256 } from './compiledCode/sha256.js';
 export {
