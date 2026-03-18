@@ -14,7 +14,7 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`
 - `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV2.schema.json`
-- `packages/@dvt/contracts/src/contracts/planner/PlannerPolicies.v2.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts`
 
 ## Related

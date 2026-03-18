@@ -11,6 +11,10 @@
 import { z, ZodError, type ZodType } from 'zod';
 
 import {
+  PlannerPolicyClassSetSchema,
+  type PlannerPolicyClassSetSchemaT,
+} from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
   DbtManifestRefSchema,
@@ -33,8 +37,6 @@ import {
   type PlannerEnvironmentContextSchemaT,
   PlannerInputEnvelopeV2Schema,
   type PlannerInputEnvelopeV2SchemaT,
-  PlannerPoliciesSchema,
-  type PlannerPoliciesSchemaT,
   PlannerSelectionSchema,
   type PlannerSelectionSchemaT,
   PlanCoreSchema,
@@ -209,8 +211,8 @@ export function parsePlannerSelection(input: unknown): PlannerSelectionSchemaT {
   return parseWithSchema(PlannerSelectionSchema, input);
 }
 
-export function parsePlannerPolicies(input: unknown): PlannerPoliciesSchemaT {
-  return parseWithSchema(PlannerPoliciesSchema, input);
+export function parsePlannerPolicyClassSet(input: unknown): PlannerPolicyClassSetSchemaT {
+  return parseWithSchema(PlannerPolicyClassSetSchema, input);
 }
 
 export function parsePlannerEnvironmentContext(input: unknown): PlannerEnvironmentContextSchemaT {

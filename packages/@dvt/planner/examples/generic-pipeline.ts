@@ -11,7 +11,6 @@ const genericStepFactory: StepFactory = (node: GraphNode, resolved: ResolvedPoli
     stepTypeConfig: {
       timeoutMs: resolved.stepTimeoutMs,
       retries: resolved.retries,
-      custom: resolved.custom,
     },
   };
 };
@@ -30,9 +29,8 @@ async function main(): Promise<void> {
     ],
     selection: { selectedNodeIds: ['load.warehouse'], includeUpstream: true },
     policies: {
-      stepTimeoutMs: 30_000,
-      retries: { maxAttempts: 2, backoffMs: 200 },
-      custom: { dataset: 'events', tenant: 'lab' },
+      retry: { kind: 'at-most-N', maxAttempts: 2 },
+      timeout: { kind: 'budget', maxSeconds: 30 },
     },
     observability: { tags: { tenant: 'lab' }, extra: { domain: 'generic-pipeline' } },
   };

@@ -12,10 +12,9 @@ async function main(): Promise<void> {
     ],
     selection: { selectedNodeIds: ['test.fct_orders_not_null'], includeUpstream: true },
     policies: {
-      stepTimeoutMs: 60_000,
-      retries: { maxAttempts: 3, backoffMs: 500 },
-      concurrency: { maxInFlight: 64 },
-      custom: { warehouse: 'WH_XS' },
+      retry: { kind: 'at-most-N', maxAttempts: 3 },
+      timeout: { kind: 'budget', maxSeconds: 60 },
+      concurrency: { kind: 'bounded', maxParallel: 64 },
     },
     observability: {
       tags: { tenant: 'acme', env: 'prod' },

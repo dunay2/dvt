@@ -79,6 +79,7 @@ export const PlannerPolicyClassSetSchema = z
   .strict();
 
 export type PlannerPolicyClassSet = z.infer<typeof PlannerPolicyClassSetSchema>;
+export type PlannerPolicyClassSetSchemaT = PlannerPolicyClassSet;
 
 export type PlannerPolicyCategory = 'retry' | 'timeout' | 'concurrency';
 

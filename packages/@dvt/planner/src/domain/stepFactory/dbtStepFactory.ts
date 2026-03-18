@@ -27,12 +27,19 @@ function kindForResourceType(resourceType: string): string {
 }
 
 function policyConfig(resolved: ResolvedPolicies): DbtStepTypeConfig {
-  return {
-    stepTimeoutMs: resolved.stepTimeoutMs,
-    retries: resolved.retries,
-    concurrency: resolved.concurrency,
-    custom: resolved.custom,
-  };
+  const config: DbtStepTypeConfig = {};
+
+  if (resolved.stepTimeoutMs !== undefined) {
+    config.stepTimeoutMs = resolved.stepTimeoutMs;
+  }
+  if (resolved.retries !== undefined) {
+    config.retries = resolved.retries;
+  }
+  if (resolved.concurrency !== undefined) {
+    config.concurrency = resolved.concurrency;
+  }
+
+  return config;
 }
 
 export const dbtStepFactory: StepFactory = (

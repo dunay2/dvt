@@ -2,6 +2,8 @@
  * ADR baseline: ADR-0002-plan-core-hash + ADR-0006-extensibility
  */
 
+import type { PlannerPolicyClassSet } from '@dvt/contracts';
+
 export type DbtManifestLike = Record<string, unknown>;
 
 // dbt defaults as string literals (backward compatible)
@@ -20,8 +22,7 @@ export interface GraphNode {
   dependsOn: readonly string[];
 }
 
-/** Known planner policies (resolved by core), plus passthrough for custom domains. */
-export interface PlannerPolicies {
+export interface ResolvedPolicies {
   stepTimeoutMs?: number;
   retries?: {
     maxAttempts: number;
@@ -30,20 +31,6 @@ export interface PlannerPolicies {
   concurrency?: {
     maxInFlight: number;
   };
-  /** Domain-specific blob that planner does not interpret. */
-  custom?: Record<string, unknown>;
-}
-
-export interface ResolvedPolicies {
-  stepTimeoutMs: number;
-  retries: {
-    maxAttempts: number;
-    backoffMs: number;
-  };
-  concurrency: {
-    maxInFlight: number;
-  };
-  custom: Record<string, unknown>;
 }
 
 export interface PlannerSelection {
@@ -92,7 +79,7 @@ export interface PlannerInputEnvelopeV2 {
   manifest?: DbtManifestLike;
   nodes?: readonly GraphNode[];
   selection: PlannerSelection;
-  policies?: PlannerPolicies;
+  policies?: PlannerPolicyClassSet;
   observability?: ExecutionPlanV2['observability'];
   // Volatile / orchestration metadata (excluded from inputHashSha256):
   requestedBy?: string;

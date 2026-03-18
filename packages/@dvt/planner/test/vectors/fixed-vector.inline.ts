@@ -7,8 +7,8 @@ export const FIXED_VECTOR: PlannerInputEnvelopeV2 = {
   ],
   selection: { selectedNodeIds: ['model.b'], includeUpstream: true },
   policies: {
-    stepTimeoutMs: 60_000,
-    retries: { maxAttempts: 3, backoffMs: 1_000 },
+    retry: { kind: 'at-most-N', maxAttempts: 3 },
+    timeout: { kind: 'budget', maxSeconds: 60 },
   },
   observability: { tags: { tenant: 'test' } },
   requestedBy: 'user',

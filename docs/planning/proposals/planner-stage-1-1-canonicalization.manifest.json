@@ -355,11 +355,11 @@
       "id": "G-01.7",
       "title": "Declarative policy vocabulary",
       "severity": "high",
-      "currentState": "partially_canonicalized_in_contracts",
+      "currentState": "planner_boundary_canonicalized_temporal_reference_only",
       "requiredArtifacts": [
-        "planner-boundary adoption of canonical RetryPolicy TimeoutPolicy and ConcurrencyPolicy",
         "adapter mapping tables beyond Temporal reference implementation",
-        "structured unsupported-policy result integration with executability validation contract"
+        "structured unsupported-policy result integration with executability validation contract",
+        "migration compatibility note for removed numeric planner policy fields"
       ]
     },
     {

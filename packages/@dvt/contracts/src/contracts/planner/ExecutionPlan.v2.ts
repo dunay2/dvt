@@ -9,6 +9,8 @@
  * @see specs/contracts/engine/ExecutionPlan.v1.schema.json — JSON Schema (draft 2020-12)
  */
 
+import type { PlannerPolicyClassSet } from './PlannerPolicyVocabulary.v2.js';
+
 export type StepKind = string;
 
 /**
@@ -22,7 +24,7 @@ export type DbtManifestLike = Record<string, unknown>;
  */
 export interface DbtManifestRef {
   uri: string;
-  sha256?: string;
+  sha256: string;
   artifactId?: string;
 }
 
@@ -40,20 +42,6 @@ export interface GraphNode {
   nodeId: string;
   resourceType: string;
   dependsOn: readonly string[];
-}
-
-/** Known planner policies + extension point for domain-specific policy blobs. */
-export interface PlannerPolicies {
-  stepTimeoutMs?: number;
-  retries?: {
-    maxAttempts: number;
-    backoffMs: number;
-  };
-  concurrency?: {
-    maxInFlight: number;
-  };
-  gatewayDslVersion?: string;
-  custom?: Record<string, unknown>;
 }
 
 export interface PlannerSelection {
@@ -116,7 +104,7 @@ export interface PlannerInputEnvelopeV2 {
   manifestRef?: DbtManifestRef;
   nodes: readonly GraphNode[];
   selection: PlannerSelection;
-  policies?: PlannerPolicies;
+  policies?: PlannerPolicyClassSet;
   environment?: PlannerEnvironmentContext;
   observability?: ExecutionPlanV2['observability'];
   requestedBy?: string;

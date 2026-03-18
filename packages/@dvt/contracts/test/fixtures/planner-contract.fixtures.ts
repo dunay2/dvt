@@ -41,17 +41,17 @@ export const VALID_PLANNER_INPUT_FIXTURE = {
     includeUpstream: true,
   },
   policies: {
-    stepTimeoutMs: 120000,
-    retries: {
+    retry: {
+      kind: 'at-most-N',
       maxAttempts: 3,
-      backoffMs: 1000,
+    },
+    timeout: {
+      kind: 'budget',
+      maxSeconds: 120,
     },
     concurrency: {
-      maxInFlight: 8,
-    },
-    gatewayDslVersion: '1.0',
-    custom: {
-      policyProfile: 'default',
+      kind: 'bounded',
+      maxParallel: 8,
     },
   },
   environment: {

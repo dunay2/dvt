@@ -583,6 +583,8 @@ The shared contract surface also now includes:
 - `AdapterPolicyMapper` as the required runtime mapping interface
 - `UnsupportedPlannerPolicyError` as the typed local failure until the full
   executability result contract is canonized
+- `PlannerInputEnvelopeV2.policies` as the public planner-boundary adoption
+  point for the canonical vocabulary
 
 This slice closes the minimum design questions as follows:
 
@@ -614,13 +616,15 @@ This slice now makes that requirement concrete through
 `@dvt/adapter-temporal` now contains a `TemporalPolicyMapper` as the reference
 implementation.
 
-The remaining follow-on is no longer "invent the vocabulary". It is:
+The remaining follow-on is no longer "invent the vocabulary" or "wire it into
+the public planner boundary". Those steps are now complete. The remaining work
+is:
 
-- migrate the public planner boundary away from legacy numeric
-  `PlannerPolicies` fields
 - add explicit mapping artifacts for non-Temporal adapters
 - fold unsupported-policy failures into the future executability result
   contract
+- complete migration notes for callers leaving removed numeric fields such as
+  `stepTimeoutMs` and `backoffMs`
 
 ### Hard Rule
 
@@ -1556,19 +1560,19 @@ The proposal resolves ownership and boundary direction, but several follow-on
 contracts are still required before execution can be claimed as operationally
 closed.
 
-| Gap                                   | Why it matters                                                                                       | Minimum required artifact                                           |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape                     | canonical validation result shape and engine-boundary surface       |
-| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined                                  | canonical resolver port or equivalent application-boundary contract |
-| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                                  | extension registration contract and validation ownership note       |
-| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path                         | binding verification result contract                                |
-| Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data                          | state or engine boundary for associated binding material            |
-| Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                               | admission or state boundary for validated-plan persistence/handoff  |
-| Input-path deprecation policy         | Without it, `manifest` and `nodes` can remain forever as undeclared compatibility debt               | canonical compatibility note with retention/deprecation rule        |
-| Unknown-kind allowlist authority      | Without it, unknown `StepKind` admission can drift into adapter-local governance                     | canonical runtime-capability allowlist surface or shared contract   |
-| Declarative policy vocabulary         | Without boundary adoption, legacy numeric planner policies and non-Temporal runtimes can still drift | planner-boundary migration plus additional adapter mapping tables   |
-| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                                       | generation or CI verification task                                  |
-| Named migration owners and dates      | Without them, migration remains paper planning                                                       | assigned execution tracker entries                                  |
+| Gap                                   | Why it matters                                                                                                                                       | Minimum required artifact                                               |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape                                                                     | canonical validation result shape and engine-boundary surface           |
+| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined                                                                                  | canonical resolver port or equivalent application-boundary contract     |
+| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                                                                                  | extension registration contract and validation ownership note           |
+| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path                                                                         | binding verification result contract                                    |
+| Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data                                                                          | state or engine boundary for associated binding material                |
+| Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                                                                               | admission or state boundary for validated-plan persistence/handoff      |
+| Input-path deprecation policy         | Without it, `manifest` and `nodes` can remain forever as undeclared compatibility debt                                                               | canonical compatibility note with retention/deprecation rule            |
+| Unknown-kind allowlist authority      | Without it, unknown `StepKind` admission can drift into adapter-local governance                                                                     | canonical runtime-capability allowlist surface or shared contract       |
+| Declarative policy vocabulary         | The planner boundary is now canonicalized, but non-Temporal runtimes can still drift without explicit adapter mappings and executability integration | additional adapter mapping tables plus executability result integration |
+| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                                                                                       | generation or CI verification task                                      |
+| Named migration owners and dates      | Without them, migration remains paper planning                                                                                                       | assigned execution tracker entries                                      |
 
 These do not block Stage 1.1 as an ownership-direction proposal.
 
@@ -1590,19 +1594,19 @@ type PlannerInputEnvelopeV2 =
       graphSource: 'manifestRef';
       manifestRef: { uri: string; sha256: string };
       selection: PlannerSelection;
-      policies?: PlannerPolicies;
+      policies?: PlannerPolicyClassSet;
     }
   | {
       graphSource: 'manifest';
       manifest: DbtManifestLike;
       selection: PlannerSelection;
-      policies?: PlannerPolicies;
+      policies?: PlannerPolicyClassSet;
     }
   | {
       graphSource: 'nodes';
       nodes: GraphNode[];
       selection: PlannerSelection;
-      policies?: PlannerPolicies;
+      policies?: PlannerPolicyClassSet;
     };
 ```
 

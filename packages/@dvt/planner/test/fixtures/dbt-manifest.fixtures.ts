@@ -51,16 +51,17 @@ function makeManifestEnvelope(size: 10 | 100 | 500): PlannerInputEnvelopeV2 {
       includeDownstream: false,
     },
     policies: {
-      stepTimeoutMs: 120_000,
-      retries: {
+      retry: {
+        kind: 'at-most-N',
         maxAttempts: 3,
-        backoffMs: 500,
+      },
+      timeout: {
+        kind: 'budget',
+        maxSeconds: 120,
       },
       concurrency: {
-        maxInFlight: 16,
-      },
-      custom: {
-        fixture: `dbt-manifest-${size}`,
+        kind: 'bounded',
+        maxParallel: 16,
       },
     },
     requestedBy: 'planner-fixture-suite',
