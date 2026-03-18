@@ -321,6 +321,16 @@
       ]
     },
     {
+      "id": "G-01.9",
+      "title": "Validation-to-start handoff contract",
+      "severity": "high",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "admission or state boundary for validated canonical plan persistence",
+        "fail-closed availability rule for executability-checked start"
+      ]
+    },
+    {
       "id": "G-01.7",
       "title": "Declarative policy vocabulary",
       "severity": "high",

@@ -196,6 +196,11 @@ flow once the planner-engine executability boundary and artifact resolver
 boundary have canonical contract surfaces. It is not evidence that the current
 planner implementation already calls the engine in this exact way.
 
+It also does **not** mean the planner domain core depends on the engine as an
+internal domain collaborator. The cross-context call shown here belongs in the
+application or admission orchestration layer that coordinates policy-authoring
+and capability validation across bounded contexts.
+
 ```mermaid
 sequenceDiagram
     participant Caller as Admission / Orchestrator
@@ -848,6 +853,56 @@ That means:
 - the gate becomes operationally mandatory only once its canonical contract
   surface exists
 
+### Cross-context justification
+
+The planner and engine remain separate bounded contexts:
+
+- planner is the policy author for plan semantics
+- engine is the capability authority for runtime executability
+- the dependency therefore belongs at the orchestration boundary, not in the
+  planner domain core
+
+Stage 1.1 allows that orchestration layer to call the engine because the
+question being answered is external to the planner core: "can this already
+authored plan execute on this target runtime?"
+
+### Validation-to-start handoff rule
+
+The target-state gate must not introduce a validation-to-start TOCTOU window.
+
+At minimum:
+
+- the object later passed to `startRun` must be either the same immutable
+  canonical plan payload that was validated or a stable persisted reference to
+  that exact payload
+- the repository must not persist an execution-accepted plan record before the
+  validation step succeeds
+- once validation succeeds, the canonical plan handoff to `startRun` must be
+  stored or otherwise frozen in a way that prevents silent re-derivation drift
+- a "validate in memory, then rebuild or mutate before start" flow is out of
+  contract
+
+Stage 1.1 does **not** claim that the repository already has the canonical
+transaction or storage contract needed for this handoff. It records the rule
+that such a contract is required before the gate can be treated as
+execution-ready.
+
+### Availability rule
+
+The target-state gate is **not** a best-effort check when execution-ready
+guarantees are required.
+
+Once the gate has a canonical contract surface:
+
+- engine unavailability at planning or admission time must fail closed for
+  flows that claim executability-checked start semantics
+- the orchestration layer may expose a separate mode that builds plans without
+  executability assurance, but it must not present that mode as equivalent to a
+  validated start path
+
+Until the canonical gate contract exists, this remains a target-state rule
+rather than a claim about shipped runtime behavior.
+
 ---
 
 ## 18. `stepId === nodeId` Transitional Policy
@@ -1280,6 +1335,7 @@ closed.
 | `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                      | extension registration contract and validation ownership note       |
 | Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path             | binding verification result contract                                |
 | Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data              | state or engine boundary for associated binding material            |
+| Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                   | admission or state boundary for validated-plan persistence/handoff  |
 | Declarative policy vocabulary         | Without it, runtimes can reinterpret retry, timeout, and concurrency classes differently | canonical policy vocabulary or shared contract enum                 |
 | Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                           | generation or CI verification task                                  |
 | Named migration owners and dates      | Without them, migration remains paper planning                                           | assigned execution tracker entries                                  |
@@ -1345,8 +1401,16 @@ if (validation.status === 'ERRORS') {
   return rejectWithStructuredReport(validation);
 }
 
+const planRef = await stateStore.storeValidatedCanonicalPlan(build.plan, {
+  targetAdapter,
+});
+
 return engine.startRun(planRef, ctx);
 ```
+
+Rule: `startRun` must consume the validated persisted reference or the same
+immutable canonical payload. A best-effort "validate, then later rebuild or
+mutate before start" flow is out of contract.
 
 ---
 
@@ -1458,7 +1522,12 @@ acceptance by itself:
    - owner of the validation boundary
    - statement of whether `validatePlan` is canonical, pending, or renamed
 
-2. **Artifact resolution boundary note**
+2. **Validation-to-start handoff note**
+   - what exact object is validated
+   - what exact object or reference is later passed to `startRun`
+   - where validated canonical plans are frozen or persisted
+
+3. **Artifact resolution boundary note**
    - resolver port or application-boundary equivalent
    - success/failure shape
    - tenant and integrity requirements
