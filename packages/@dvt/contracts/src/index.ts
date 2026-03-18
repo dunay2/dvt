@@ -42,6 +42,11 @@ export type {
   UnsupportedPlannerPolicyDetails,
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
+export type {
+  ExecutabilityRejectionCode,
+  ExecutabilityValidationResult,
+  IPlanExecutabilityValidator,
+} from './contracts/planner/PlanExecutabilityValidation.v1.js';
 export * from './contracts/lineage/ILineageSink.v1.js';
 export * from './errors.js';
 export * from './ports/artifact-store.js';
