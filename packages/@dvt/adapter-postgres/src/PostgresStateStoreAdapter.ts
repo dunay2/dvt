@@ -76,7 +76,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     this.schema = normalizeSchema(config.schema ?? 'dvt');
     this.now = config.now ?? (() => new Date().toISOString());
     this.statementTimeoutMs =
-      config.statementTimeoutMs ?? Number(process.env.DVT_PG_STATEMENT_TIMEOUT_MS ?? 0);
+      config.statementTimeoutMs ?? Number(process.env['DVT_PG_STATEMENT_TIMEOUT_MS'] ?? 0);
     this.outboxShardCount = normalizeOutboxShardCount(config.outboxShardCount);
 
     if (config.pool) {
@@ -86,11 +86,11 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       this.pool = new Pool({
         connectionString:
           config.connectionString ??
-          process.env.DVT_PG_URL ??
-          process.env.DATABASE_URL ??
+          process.env['DVT_PG_URL'] ??
+          process.env['DATABASE_URL'] ??
           'postgresql://dvt:dvt@localhost:5432/dvt',
         statement_timeout: this.statementTimeoutMs,
-        query_timeout: config.queryTimeoutMs ?? Number(process.env.DVT_PG_QUERY_TIMEOUT_MS ?? 0),
+        query_timeout: config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0),
       });
       this.ownsPool = true;
     }

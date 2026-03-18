@@ -1,4 +1,4 @@
-import adapterPostgres from '@dvt/adapter-postgres';
+import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { IEventBus, OutboxWorkerObserver } from '@dvt/contracts';
 
 import { HttpEventBus } from '../bus/HttpEventBus.js';
@@ -11,8 +11,6 @@ import {
   type OutboxWorkerRuntimeHooks,
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
-
-const { PostgresStateStoreAdapter } = adapterPostgres;
 
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;

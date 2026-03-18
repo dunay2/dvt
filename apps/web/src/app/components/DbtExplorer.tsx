@@ -56,7 +56,10 @@ export default function DbtExplorer({ nodes, onNodeDragStart }: DbtExplorerProps
       if (!groups[node.type]) {
         groups[node.type] = [];
       }
-      groups[node.type].push(node);
+      const bucket = groups[node.type];
+      if (bucket) {
+        bucket.push(node);
+      }
     });
 
     return groups;

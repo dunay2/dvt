@@ -10,12 +10,12 @@ import type {
   LogEntry,
   SpanOptions,
   SpanStatus,
-} from './contracts/IObservability';
+} from './contracts/IObservability.js';
 import type {
   Attributes,
   MetricLabels,
   ObservabilityContext,
-} from './contracts/ObservabilityContext';
+} from './contracts/ObservabilityContext.js';
 
 class NoopCounter implements ICounter {
   add(_value: number, _labels?: MetricLabels): void {}

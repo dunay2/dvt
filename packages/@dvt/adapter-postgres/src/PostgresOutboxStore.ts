@@ -213,15 +213,22 @@ export class PostgresOutboxStore implements IOutboxStorage {
         params
       );
 
-      return result.rows.map((row: OutboxRow) => ({
-        id: row.id,
-        createdAt: row.created_at,
-        idempotencyKey: row.idempotency_key,
-        payload: row.payload,
-        attempts: Number(row.attempts),
-        lastError: row.last_error ?? undefined,
-        nextAttemptAt: row.next_attempt_at ?? undefined,
-      }));
+      return result.rows.map((row: OutboxRow) => {
+        const record: OutboxRecord = {
+          id: row.id,
+          createdAt: row.created_at,
+          idempotencyKey: row.idempotency_key,
+          payload: row.payload,
+          attempts: Number(row.attempts),
+        };
+        if (row.last_error !== null) {
+          record.lastError = row.last_error;
+        }
+        if (row.next_attempt_at !== undefined && row.next_attempt_at !== null) {
+          record.nextAttemptAt = row.next_attempt_at;
+        }
+        return record;
+      });
     });
   }
 

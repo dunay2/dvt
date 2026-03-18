@@ -21,6 +21,8 @@ export class PlanValidationError extends Error {
     super(message);
     this.name = 'PlanValidationError';
     this.code = code;
-    this.detail = detail;
+    if (detail !== undefined) {
+      this.detail = detail;
+    }
   }
 }
