@@ -236,7 +236,7 @@
       "id": "D-11",
       "title": "Unknown StepKind Policy",
       "humanSectionRefs": ["19"],
-      "policyStatus": "selected_target_state_pending",
+      "policyStatus": "selected_with_gap",
       "decisionClass": "boundary_rule"
     },
     {
@@ -338,6 +338,16 @@
       "requiredArtifacts": [
         "canonical compatibility note for manifest and nodes retention or deprecation",
         "declared review or removal rule for compatibility-only graph sources"
+      ]
+    },
+    {
+      "id": "G-01.11",
+      "title": "Unknown-kind allowlist authority",
+      "severity": "high",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "canonical source of truth for bridge-period unknown StepKind allowlisting",
+        "shared runtime-capability or contracts surface consumed consistently across adapters"
       ]
     },
     {

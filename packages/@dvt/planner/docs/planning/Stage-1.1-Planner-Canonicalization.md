@@ -1015,10 +1015,28 @@ Any extension path must require:
 Until the target state lands, unknown `StepKind` may pass only when all of the
 following are true:
 
-- the kind is explicitly allowlisted by environment, capability configuration,
-  or equivalent governed runtime policy
+- the kind is explicitly allowlisted by one canonical runtime-capability
+  governance surface for the target environment
 - the path emits warning-grade diagnostics
 - the extension remains non-canonical and subject to later rejection
+
+### Allowlist authority rule
+
+That allowlist must not be treated as adapter-local folklore.
+
+- the repository needs one governed allowlist authority for bridge-period
+  unknown `StepKind` admission
+- if the bridge allowlist lives in runtime capability governance, all adapters
+  must consume that same governed surface rather than inventing separate local
+  lists
+- if the repository later promotes unknown-kind admission into shared contracts,
+  that promotion must replace the bridge allowlist rather than silently
+  coexist with it
+- "equivalent governed runtime policy" is not enough by itself; the repository
+  must name one canonical source of truth
+
+Until that source is canonized, Stage 1.1 can state the bridge stance but must
+still treat allowlist authority as an explicit follow-on gap.
 
 Default bridge behavior remains conservative:
 
@@ -1355,6 +1373,7 @@ closed.
 | Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data              | state or engine boundary for associated binding material            |
 | Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                   | admission or state boundary for validated-plan persistence/handoff  |
 | Input-path deprecation policy         | Without it, `manifest` and `nodes` can remain forever as undeclared compatibility debt   | canonical compatibility note with retention/deprecation rule        |
+| Unknown-kind allowlist authority      | Without it, unknown `StepKind` admission can drift into adapter-local governance         | canonical runtime-capability allowlist surface or shared contract   |
 | Declarative policy vocabulary         | Without it, runtimes can reinterpret retry, timeout, and concurrency classes differently | canonical policy vocabulary or shared contract enum                 |
 | Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                           | generation or CI verification task                                  |
 | Named migration owners and dates      | Without them, migration remains paper planning                                           | assigned execution tracker entries                                  |
