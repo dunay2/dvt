@@ -3,7 +3,7 @@
  *
  * ## Problem
  *
- * `StepKind = string` is maximally open: any string passes the type checker.
+ * `StepKind = string` is maximally open; arbitrary string values pass the type checker.
  * Without a governed allowlist, unknown step kinds can reach the engine
  * silently. There is no compile-time inventory of what the system considers
  * canonical, and no governed staging area for provisional kinds pending
