@@ -1,4 +1,5 @@
 export { Planner } from './domain/Planner.js';
+export { PlannerFacade, type PlannerFacadeOptions } from './application/PlannerFacade.js';
 
 // Canonical planner boundary types — authoritative source is @dvt/contracts.
 export type {

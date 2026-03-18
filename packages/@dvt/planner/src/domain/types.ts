@@ -55,7 +55,8 @@ export interface ResolvedPolicies {
  *
  * Intentionally differs from the public PlannerInputEnvelopeV2 in @dvt/contracts:
  * - `nodes` is optional here because the planner can derive nodes from `manifest`
- * - `manifestRef` and `environment` are not present (handled at the application boundary)
+ * - `manifestRef` is not present — the PlannerFacade resolves it to `manifest` before hand-off
+ * - `environment` is not present — stripped by PlannerFacade at the application boundary
  *
  * After InputEnvelopeValidator runs, the output is NormalizedPlannerInput where
  * `nodes` is always present.
