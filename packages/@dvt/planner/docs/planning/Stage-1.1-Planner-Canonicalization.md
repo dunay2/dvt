@@ -1288,6 +1288,16 @@ That documentation must not require living inside `src/` or inside package code 
 
 ### Minimum evolution rules
 
+- For `ExecutionPlanV2`, `PlannerInputEnvelopeV2`, and `IExecutionPlanner`, the
+  planner owner is the **semantic author** and must initiate any proposal that
+  changes planning meaning, planner boundary semantics, or planner-produced
+  behavior
+- The contracts owner is the **compatibility and package-coherence gate** for
+  those public types
+- The contracts owner reviews those changes for backward compatibility, package
+  coherence, schema alignment, and publication discipline
+- The contracts owner is **not** the semantic design arbiter for planning
+  behavior merely because the canonical type lives in `@dvt/contracts`
 - Breaking changes to public planner contracts require a new major line or a
   compatibility shim
 - Minor evolution requires:
@@ -1298,6 +1308,17 @@ That documentation must not require living inside `src/` or inside package code 
   - owner role is assigned
   - migration path is documented
   - validation evidence is defined
+
+### Coordination rule
+
+This split is intentional:
+
+- semantic change authority belongs to the planner owner
+- compatibility and package-governance authority belongs to the contracts owner
+
+Stage 1.1 therefore does **not** turn the contracts owner into a design veto
+point for planning semantics. It turns that role into the gatekeeper for
+compatibility, schema discipline, and canonical publication.
 
 ### Tentative delivery ownership
 
