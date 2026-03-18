@@ -302,17 +302,61 @@ M-05  Root tsconfig/refs       Low risk     After M-02 + M-03 complete
 
 ---
 
-## 5. Open Decisions
+## 5. Decisions
 
-The following decisions must be made by the team before executing the relevant
-slice.
+Decisions resolved 2026-03-18.
 
-| Decision                             | Required for | Options                                                                                                                        |
-| ------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| D-01 `@dvt/state-store` intent       | M-01         | (A) Fix tsconfig to ESM/Bundler to match `"type":"module"`. (B) Remove `"type":"module"` and keep CJS explicitly.              |
-| D-02 `@dvt/canonical` dual-mode      | M-03         | (A) Migrate to ESM-only. (B) Retain dual-mode CJS+ESM with documented policy.                                                  |
-| D-03 Apps test runner                | M-04         | (A) Migrate all apps to Vitest. (B) Declare `node --import tsx --test` as a documented exception for non-library entry points. |
-| D-04 `tsconfig.base.json` retirement | M-05         | (A) Deprecate after M-03. (B) Retain for any packages with permanent CJS requirements.                                         |
+### D-01 — `@dvt/state-store` intent
+
+**Decision: Option A — Migrate to ESM/Bundler.**
+
+Rationale: consistent with the Chain B/C target. Resolves the runtime
+`SyntaxError` without maintaining an isolated CJS package.
+
+Pre-condition before M-01: verify no consumer calls `require('@dvt/state-store')`.
+
+Action: change `tsconfig.json` to extend `tsconfig.package-bundler.base.json`.
+Adjust `exports` in `package.json` to canonical ESM shape.
+
+### D-02 — `@dvt/canonical` dual-mode
+
+**Decision: Option A — ESM-only, unless reverse dependency analysis reveals
+CJS consumers that cannot be migrated in the M-03 window.**
+
+Rationale: dual-mode exports without a documented policy are undeclared
+exceptions under Build Policy v2 and are not allowed.
+
+Action before M-03: run `pnpm list --depth=1 --filter=@dvt/canonical` to
+enumerate reverse dependencies. If all consumers are internal monorepo packages,
+migrate to ESM-only. If an external CJS consumer exists that cannot be migrated,
+document a dual-mode exception explicitly in `package.json` and Build Policy v2,
+and add tests for both formats.
+
+### D-03 — Apps test runner
+
+**Decision: Option A — Migrate all apps to Vitest.**
+
+Rationale: Vitest is the monorepo standard. Maintaining `node --import tsx --test`
+alongside Vitest creates inconsistency in reporting, watch mode, and CI
+integration. Migration cost is low.
+
+Action in M-04: for each affected app (api, outbox-worker, projector-worker),
+convert test files to Vitest APIs, add `vitest.config.ts`, and update the `test`
+script. Remove `tsx` test runner invocations.
+
+### D-04 — `tsconfig.base.json` retirement
+
+**Decision: Option A — Deprecate after M-03 completes.**
+
+Rationale: once all Chain A packages migrate to ESM/Bundler, `tsconfig.base.json`
+serves no active purpose. Retaining it risks future accidental re-adoption of
+CJS settings.
+
+Action post-M-03: audit for any remaining `extends: ../../tsconfig.base.json`
+references. If none remain, remove the file and update
+`governance-document-rule-inventory.md`. If a package requires CJS for a
+documented external reason, retain the file for that case only with an
+explanatory comment block.
 
 ---
 
