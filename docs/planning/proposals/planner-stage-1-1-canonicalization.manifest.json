@@ -326,7 +326,7 @@
       "severity": "high",
       "currentState": "not_canonicalized",
       "requiredArtifacts": [
-        "admission or state boundary for validated canonical plan persistence",
+        "admission or state boundary for persisted plan lifecycle states such as pending-validation valid and invalid",
         "fail-closed availability rule for executability-checked start"
       ]
     },

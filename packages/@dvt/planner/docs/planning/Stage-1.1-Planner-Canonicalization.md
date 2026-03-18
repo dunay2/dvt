@@ -207,6 +207,7 @@ sequenceDiagram
     participant App as Planner Application Service
     participant Resolver as Artifact Resolver Port
     participant Core as Planner Domain Core
+    participant Store as Plan State Store
     participant Engine as Engine Capability Gate
 
     Caller->>App: buildPlan(input envelope)
@@ -216,9 +217,18 @@ sequenceDiagram
     end
     App->>Core: build canonical plan input
     Core-->>App: plan + canonicalPlanJson
-    App->>Engine: validate executability(plan, targetAdapter)
-    Engine-->>App: validation report
-    App-->>Caller: plan accepted or rejected with structured report
+    App-->>Caller: built canonical plan
+    Caller->>Store: storePlan(plan, PENDING_VALIDATION)
+    Store-->>Caller: planRef
+    Caller->>Engine: validatePlan(planRef, targetAdapter)
+    Engine-->>Caller: validation report
+    alt validation OK
+        Caller->>Store: markValid(planRef)
+        Caller->>Engine: startRun(planRef, ctx)
+    else validation ERRORS
+        Caller->>Store: markInvalid(planRef, report)
+        Caller-->>Caller: rejectWithReport(report)
+    end
 ```
 
 ---
@@ -976,13 +986,14 @@ The target-state gate must not introduce a validation-to-start TOCTOU window.
 
 At minimum:
 
-- the object later passed to `startRun` must be either the same immutable
-  canonical plan payload that was validated or a stable persisted reference to
-  that exact payload
-- the repository must not persist an execution-accepted plan record before the
-  validation step succeeds
-- once validation succeeds, the canonical plan handoff to `startRun` must be
-  stored or otherwise frozen in a way that prevents silent re-derivation drift
+- the canonical plan must be persisted before executability validation as a
+  `PENDING_VALIDATION` or equivalent non-runnable state
+- the engine-side validation step should operate on the persisted plan
+  reference or an equivalent immutable stored-plan handle
+- a validation success must transition that stored plan reference into `VALID`
+  or equivalent runnable state before `startRun`
+- a validation failure must transition that stored plan reference into
+  `INVALID` or equivalent rejected state together with the structured report
 - a "validate in memory, then rebuild or mutate before start" flow is out of
   contract
 
@@ -1540,22 +1551,25 @@ execution-binding data, not as a second canonical plan body.
 
 ```ts
 const build = await planner.buildPlan(input);
-const validation = await engine.validatePlan(build.plan, targetAdapter);
+const planRef = await stateStore.storePlan(build.plan, {
+  status: 'PENDING_VALIDATION',
+});
+
+const validation = await engine.validatePlan(planRef, targetAdapter);
 
 if (validation.status === 'ERRORS') {
+  await stateStore.markInvalid(planRef, validation);
   return rejectWithStructuredReport(validation);
 }
 
-const planRef = await stateStore.storeValidatedCanonicalPlan(build.plan, {
-  targetAdapter,
-});
+await stateStore.markValid(planRef);
 
 return engine.startRun(planRef, ctx);
 ```
 
-Rule: `startRun` must consume the validated persisted reference or the same
-immutable canonical payload. A best-effort "validate, then later rebuild or
-mutate before start" flow is out of contract.
+Rule: the admission layer orchestrates persistence, validation, and state
+transition. `startRun` consumes only a `VALID` plan reference. A best-effort
+"validate, then later rebuild or mutate before start" flow is out of contract.
 
 ---
 
