@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../tsconfig.package-bundler.base.json",
   "compilerOptions": {
     "composite": true,
     "declaration": true,
@@ -7,8 +7,10 @@
     "sourceMap": true,
     "outDir": "dist",
     "rootDir": "src",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "exactOptionalPropertyTypes": false,
+    "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["src", "vitest.config.cjs"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist", "test"]
 }

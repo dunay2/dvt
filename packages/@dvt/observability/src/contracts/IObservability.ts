@@ -1,4 +1,4 @@
-import type { Attributes, MetricLabels, ObservabilityContext } from './ObservabilityContext';
+import type { Attributes, MetricLabels, ObservabilityContext } from './ObservabilityContext.js';
 
 export interface ICounter {
   add(value: number, labels?: MetricLabels): void;

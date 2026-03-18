@@ -1,68 +1,66 @@
 /**
  * ADR baseline: ADR-0006-extensibility (custom passthrough) + POLICY_CONFLICT semantics.
  */
-import { PlannerError, PlannerErrorCode } from './errors.js';
-import type { PlannerPolicies, ResolvedPolicies } from './types.js';
+import type { PlannerPolicyClassSet } from '@dvt/contracts';
 
-const DEFAULTS: ResolvedPolicies = {
-  stepTimeoutMs: 60_000,
-  retries: {
-    maxAttempts: 1,
-    backoffMs: 0,
-  },
-  concurrency: {
-    maxInFlight: 256,
-  },
-  custom: {},
+import { PlannerError, PlannerErrorCode } from './errors.js';
+import type { ResolvedPolicies } from './types.js';
+
+const DEFAULT_TIMEOUT_MS = 60_000;
+const DEFAULT_RETRIES: NonNullable<ResolvedPolicies['retries']> = {
+  maxAttempts: 1,
+  backoffMs: 0,
+};
+const DEFAULT_CONCURRENCY: NonNullable<ResolvedPolicies['concurrency']> = {
+  maxInFlight: 256,
 };
 
-export function resolvePolicies(policies?: PlannerPolicies): ResolvedPolicies {
-  if (policies === undefined) return DEFAULTS;
-
-  const timeout = policies.stepTimeoutMs ?? DEFAULTS.stepTimeoutMs;
-  if (!Number.isFinite(timeout) || timeout <= 0) {
-    throw new PlannerError(
-      PlannerErrorCode.INVALID_INPUT,
-      'policies.stepTimeoutMs must be a positive number.'
-    );
+export function resolvePolicies(policies?: PlannerPolicyClassSet): ResolvedPolicies {
+  if (policies === undefined) {
+    return {
+      stepTimeoutMs: DEFAULT_TIMEOUT_MS,
+      retries: DEFAULT_RETRIES,
+      concurrency: DEFAULT_CONCURRENCY,
+    };
   }
 
-  const retries = policies.retries ?? DEFAULTS.retries;
-  if (!Number.isFinite(retries.maxAttempts) || retries.maxAttempts < 1) {
-    throw new PlannerError(
-      PlannerErrorCode.INVALID_INPUT,
-      'policies.retries.maxAttempts must be >= 1.'
-    );
-  }
-  if (!Number.isFinite(retries.backoffMs) || retries.backoffMs < 0) {
-    throw new PlannerError(
-      PlannerErrorCode.INVALID_INPUT,
-      'policies.retries.backoffMs must be >= 0.'
-    );
+  let timeout: number | undefined = DEFAULT_TIMEOUT_MS;
+  if (policies.timeout?.kind === 'unbounded') {
+    timeout = undefined;
+  } else if (policies.timeout?.kind === 'budget') {
+    timeout = policies.timeout.maxSeconds * 1000;
   }
 
-  const conc = policies.concurrency ?? DEFAULTS.concurrency;
-  if (!Number.isFinite(conc.maxInFlight) || conc.maxInFlight < 1) {
-    throw new PlannerError(
-      PlannerErrorCode.INVALID_INPUT,
-      'policies.concurrency.maxInFlight must be >= 1.'
-    );
+  let retries: NonNullable<ResolvedPolicies['retries']> = DEFAULT_RETRIES;
+  if (policies.retry?.kind === 'at-most-once') {
+    retries = {
+      maxAttempts: 1,
+      backoffMs: 0,
+    };
+  } else if (policies.retry?.kind === 'at-most-N') {
+    retries = {
+      maxAttempts: policies.retry.maxAttempts,
+      backoffMs: 0,
+    };
+  }
+
+  let concurrency: ResolvedPolicies['concurrency'] = DEFAULT_CONCURRENCY;
+  if (policies.concurrency?.kind === 'sequential') {
+    concurrency = { maxInFlight: 1 };
+  } else if (policies.concurrency?.kind === 'bounded') {
+    concurrency = { maxInFlight: policies.concurrency.maxParallel };
+  } else if (policies.concurrency?.kind === 'unbounded') {
+    concurrency = undefined;
   }
 
   // Example of a policy conflict placeholder (kept for future expansion):
-  if (retries.maxAttempts > 1 && conc.maxInFlight <= 0) {
+  if (concurrency !== undefined && retries.maxAttempts > 1 && concurrency.maxInFlight <= 0) {
     throw new PlannerError(PlannerErrorCode.POLICY_CONFLICT, 'Invalid policy combination.');
   }
 
   return {
-    stepTimeoutMs: timeout,
-    retries: {
-      maxAttempts: retries.maxAttempts,
-      backoffMs: retries.backoffMs,
-    },
-    concurrency: {
-      maxInFlight: conc.maxInFlight,
-    },
-    custom: policies.custom ?? {},
+    ...(timeout !== undefined ? { stepTimeoutMs: timeout } : {}),
+    retries,
+    ...(concurrency !== undefined ? { concurrency } : {}),
   };
 }

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dvt:planner:PlannerPolicyClassSet:v2.3.1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "retry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "at-most-once" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "maxAttempts"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "at-most-N" },
+            "maxAttempts": { "type": "integer", "minimum": 2, "maximum": 20 }
+          }
+        }
+      ]
+    },
+    "timeout": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "unbounded" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "maxSeconds"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "budget" },
+            "maxSeconds": { "type": "integer", "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "concurrency": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "sequential" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "maxParallel"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "bounded" },
+            "maxParallel": { "type": "integer", "minimum": 2 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "unbounded" }
+          }
+        }
+      ]
+    }
+  }
+}

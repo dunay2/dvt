@@ -34,11 +34,21 @@ export async function verifyPlanOrThrow(params: {
   strictSameMinor?: boolean;
   supportedMinor?: number;
 }): Promise<void> {
-  verifyPlanVersionOrThrow({
+  const versionParams: {
+    planVersion: string;
+    supportedMajor: number;
+    strictSameMinor?: boolean;
+    supportedMinor?: number;
+  } = {
     planVersion: params.planVersion,
     supportedMajor: params.supportedMajor,
-    strictSameMinor: params.strictSameMinor,
-    supportedMinor: params.supportedMinor,
-  });
+  };
+  if (params.strictSameMinor !== undefined) {
+    versionParams.strictSameMinor = params.strictSameMinor;
+  }
+  if (params.supportedMinor !== undefined) {
+    versionParams.supportedMinor = params.supportedMinor;
+  }
+  verifyPlanVersionOrThrow(versionParams);
   await verifyPlanIdOrThrow({ canonicalPlanJson: params.canonicalPlanJson, planId: params.planId });
 }

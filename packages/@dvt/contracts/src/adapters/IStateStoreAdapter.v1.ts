@@ -7,7 +7,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { TenantId, IdempotencyKey } from '../types/contracts.js';
+import type { TenantId, IdempotencyKey } from '../types/contracts.js';
 
 export interface IStateStoreAdapter {
   read<T>(tenantId: TenantId, key: string): Promise<T | undefined>;

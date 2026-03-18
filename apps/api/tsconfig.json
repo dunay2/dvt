@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.app-node.base.json",
+  "extends": "../../tsconfig.node-runtime.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src"

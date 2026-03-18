@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "dvt:contracts:planner:PlannerInputEnvelopeV2:v2.3.1",
   "type": "object",
-  "required": ["nodes", "selection"],
+  "required": ["selection"],
   "additionalProperties": false,
   "properties": {
     "manifest": { "type": "object", "additionalProperties": true },
     "manifestRef": {
       "type": "object",
-      "required": ["uri"],
+      "required": ["uri", "sha256"],
       "additionalProperties": false,
       "properties": {
         "uri": { "type": "string" },
@@ -39,7 +39,9 @@
         "includeDownstream": { "type": "boolean" }
       }
     },
-    "policies": { "$ref": "dvt:contracts:planner:PlannerPolicies:v2.3.1" },
+    "policies": {
+      "$ref": "#/$defs/PlannerPolicyClassSet"
+    },
     "environment": {
       "type": "object",
       "additionalProperties": false,
@@ -55,31 +57,86 @@
     "requestedAtIso": { "type": "string" }
   },
   "$defs": {
-    "PlannerPolicies": {
-      "$id": "dvt:contracts:planner:PlannerPolicies:v2.3.1",
+    "PlannerPolicyClassSet": {
+      "$id": "dvt:contracts:planner:PlannerPolicyClassSet:v2.3.1",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "stepTimeoutMs": { "type": "number" },
-        "retries": {
-          "type": "object",
-          "required": ["maxAttempts", "backoffMs"],
-          "additionalProperties": false,
-          "properties": {
-            "maxAttempts": { "type": "number" },
-            "backoffMs": { "type": "number" }
-          }
+        "retry": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["kind"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "at-most-once" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["kind", "maxAttempts"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "at-most-N" },
+                "maxAttempts": {
+                  "type": "integer",
+                  "minimum": 2,
+                  "maximum": 20
+                }
+              }
+            }
+          ]
+        },
+        "timeout": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["kind"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "unbounded" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["kind", "maxSeconds"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "budget" },
+                "maxSeconds": { "type": "integer", "minimum": 1 }
+              }
+            }
+          ]
         },
         "concurrency": {
-          "type": "object",
-          "required": ["maxInFlight"],
-          "additionalProperties": false,
-          "properties": {
-            "maxInFlight": { "type": "number" }
-          }
-        },
-        "gatewayDslVersion": { "type": "string" },
-        "custom": { "type": "object", "additionalProperties": true }
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["kind"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "sequential" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["kind", "maxParallel"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "bounded" },
+                "maxParallel": { "type": "integer", "minimum": 2 }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["kind"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "unbounded" }
+              }
+            }
+          ]
+        }
       }
     }
   }

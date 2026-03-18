@@ -2,7 +2,7 @@
 title: Stage 1.1 — Planner Contract, Canonical Ownership, and Documentation Placement
 status: Proposed
 owner: Architecture
-last_reviewed: 2026-03-17
+last_reviewed: 2026-03-18
 planning_type: proposal
 source:
   - docs/planning/proposals/principal-architecture-review-execution-plan-20260317.md
@@ -25,7 +25,28 @@ Its goal is not to redesign the planner from zero. Its goal is to stop semantic 
 - migration path away from duplicated contract definitions
 - documentation placement at subsystem level instead of source-file level
 
-This proposal is intentionally narrow. It does not add new planner features.
+This proposal is intentionally narrow in **implementation and feature-delivery
+scope**. It does not add new planner features.
+
+That does **not** mean the proposal is policy-light. Stage 1.1 still makes real
+architectural decisions about extension boundaries, unknown step handling,
+`custom` passthrough governance, and ownership of future registry or validation
+surfaces. The narrowness claim applies to what the slice implements, not to
+whether it sets boundary policy.
+
+Structured artifact rule:
+
+- the human proposal is the policy authority for Stage 1.1
+- the repository-validated structured artifact for deterministic navigation
+  lives at `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json`
+- if the structured artifact diverges, the human proposal wins until both
+  artifacts are synchronized
+- the structured artifact is a structural governance index, not a policy
+  restatement surface
+- the structured artifact must not introduce new substantive decisions ahead of
+  the human proposal
+- the legacy Markdown machine-readable companion is retired and must not be
+  revived as a second prose surface
 
 ---
 
@@ -96,7 +117,12 @@ Stage 1.1 must remain compatible with:
 - OOP discipline: public contracts, application services, and domain objects
   must not collapse into untyped procedural glue
 
-### Component View
+### Target-State Component View
+
+This diagram is a **target-state boundary view**. It shows the intended
+planner-to-engine relationship once the executability boundary is canonized; it
+does **not** assert that the current repository wiring already exposes that
+exact interaction surface.
 
 ```mermaid
 graph LR
@@ -163,7 +189,17 @@ classDiagram
     StepDefinition --> ArtifactBinding
 ```
 
-### Sequence View
+### Target-State Sequence View
+
+This sequence is also **target-state**. It illustrates the intended validation
+flow once the planner-engine executability boundary and artifact resolver
+boundary have canonical contract surfaces. It is not evidence that the current
+planner implementation already calls the engine in this exact way.
+
+It also does **not** mean the planner domain core depends on the engine as an
+internal domain collaborator. The cross-context call shown here belongs in the
+application or admission orchestration layer that coordinates policy-authoring
+and capability validation across bounded contexts.
 
 ```mermaid
 sequenceDiagram
@@ -171,6 +207,7 @@ sequenceDiagram
     participant App as Planner Application Service
     participant Resolver as Artifact Resolver Port
     participant Core as Planner Domain Core
+    participant Store as Plan State Store
     participant Engine as Engine Capability Gate
 
     Caller->>App: buildPlan(input envelope)
@@ -180,9 +217,18 @@ sequenceDiagram
     end
     App->>Core: build canonical plan input
     Core-->>App: plan + canonicalPlanJson
-    App->>Engine: validate executability(plan, targetAdapter)
-    Engine-->>App: validation report
-    App-->>Caller: plan accepted or rejected with structured report
+    App-->>Caller: built canonical plan
+    Caller->>Store: storePlan(plan, PENDING_VALIDATION)
+    Store-->>Caller: planRef
+    Caller->>Engine: validatePlan(planRef, targetAdapter)
+    Engine-->>Caller: validation report
+    alt validation OK
+        Caller->>Store: markValid(planRef)
+        Caller->>Engine: startRun(planRef, ctx)
+    else validation ERRORS
+        Caller->>Store: markInvalid(planRef, report)
+        Caller-->>Caller: rejectWithReport(report)
+    end
 ```
 
 ---
@@ -194,6 +240,30 @@ The present duplication appears in at least these forms:
 - planner-local type shapes such as `packages/@dvt/planner/src/domain/types.ts`
 - shared planner contract shapes such as `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`
 - planner-local documentation and JSON-schema material under `packages/@dvt/planner/docs/**`
+
+### Baseline snapshot as of 2026-03-18
+
+Stage 1.1 should not speak about "freeze authority" as if the repository were a
+blank slate. The baseline in the current tree is:
+
+| Surface                                                | Current repo state                                     | Evidence                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `ExecutionPlanV2` canonical contract                   | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`     |
+| `PlannerInputEnvelopeV2` canonical contract            | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts`     |
+| `IExecutionPlanner` canonical contract                 | already exists under `@dvt/contracts`                  | `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v2.ts` |
+| planner-local public-like duplicates                   | still exist in planner domain types                    | `packages/@dvt/planner/src/domain/types.ts`                             |
+| planner-local contract wrapper for `IExecutionPlanner` | still exists and points at planner-local domain types  | `packages/@dvt/planner/src/contracts/planner/IExecutionPlanner.v2.ts`   |
+| planner-local contract wrapper for plan/input types    | still exists and re-exports planner-local domain types | `packages/@dvt/planner/src/contracts/planner/ExecutionPlan.v2.ts`       |
+
+So the starting point is **partial migration, not zero migration**:
+
+- the contracts package already contains the intended public planner contract
+  family
+- planner still carries local duplicate or wrapper surfaces that can continue to
+  confuse authority
+- Phase 1 is therefore not "invent the first canonical home"; it is "freeze the
+  already-present contracts authority and stop planner-local surfaces from
+  competing with it"
 
 That duplication may have been acceptable during package-local exploration. It is no longer acceptable for a Stage 1.1 canonicalization slice.
 
@@ -455,6 +525,9 @@ The plan may contain **normative declarative policy**, such as:
 - observability tags
 - execution intent metadata
 
+These policy classes are **not** adapter-local opaque strings. They belong to a
+canonical runtime-neutral vocabulary owned through shared contract governance.
+
 The runtime remains responsible for **provider-specific enforcement**, such as:
 
 - Temporal or Conductor retry knobs
@@ -464,6 +537,94 @@ The runtime remains responsible for **provider-specific enforcement**, such as:
 - lease duration
 - task registration details
 - runtime cancellation mechanics
+
+### Policy vocabulary rule
+
+Stage 1.1 fixes the architectural stance now:
+
+- retry, timeout, and concurrency classes must be drawn from a canonical shared
+  vocabulary
+- that vocabulary must define runtime-neutral semantics, not just labels
+- adapters may map canonical classes into provider-specific knobs, but they must
+  not reinterpret the class meaning
+- if a runtime cannot faithfully honor a canonical class, it must reject the
+  plan or return a structured degradation result rather than silently changing
+  semantics
+
+This means a policy class is a semantic contract reference, not a free-form
+string.
+
+For example:
+
+- retry semantics must be defined against one canonical attempt-counting rule
+  rather than provider-specific attempt numbering
+- timeout semantics must be defined against one canonical time-budget meaning
+- concurrency semantics must be defined against one canonical scope and limit
+  meaning
+
+### Canonical policy vocabulary in contracts
+
+This slice now canonizes the runtime-neutral vocabulary in `@dvt/contracts` as:
+
+```ts
+type RetryPolicy = { kind: 'at-most-once' } | { kind: 'at-most-N'; maxAttempts: number };
+
+type TimeoutPolicy = { kind: 'unbounded' } | { kind: 'budget'; maxSeconds: number };
+
+type ConcurrencyPolicy =
+  | { kind: 'sequential' }
+  | { kind: 'bounded'; maxParallel: number }
+  | { kind: 'unbounded' };
+```
+
+The shared contract surface also now includes:
+
+- `PlannerPolicyClassSet` as the aggregate vocabulary holder
+- `AdapterPolicyMapper` as the required runtime mapping interface
+- `UnsupportedPlannerPolicyError` as the typed local failure until the full
+  executability result contract is canonized
+- `PlannerInputEnvelopeV2.policies` as the public planner-boundary adoption
+  point for the canonical vocabulary
+
+This slice closes the minimum design questions as follows:
+
+- scope: the value objects are reusable, but Stage 1.1 anchors them as
+  **plan-level** policy classes; this slice does not introduce step-level or
+  per-step-kind attachment
+- retry count semantics: `RetryPolicy.maxAttempts` counts **total attempts
+  including the initial execution**, and the shared contract validates an upper
+  bound of `20`
+- timeout semantics: `TimeoutPolicy` models one **end-to-end execution budget**
+  for a step; it does not split scheduling timeout from execution timeout in
+  this slice
+- concurrency semantics: `ConcurrencyPolicy` is **plan-wide**, not a per-kind
+  override matrix
+
+### Adapter mapping rule
+
+Each adapter/runtime integration must publish one explicit mapping table from:
+
+- canonical planner policy class
+- to runtime enforcement shape
+
+If a runtime cannot honor a canonical policy class, it must reject through the
+executability gate with a structured unsupported-policy result. Silent
+reinterpretation is out of contract.
+
+This slice now makes that requirement concrete through
+`AdapterPolicyMapper<TRetry, TTimeout, TConcurrency>` in `@dvt/contracts`, and
+`@dvt/adapter-temporal` now contains a `TemporalPolicyMapper` as the reference
+implementation.
+
+The remaining follow-on is no longer "invent the vocabulary" or "wire it into
+the public planner boundary". Those steps are now complete. The remaining work
+is:
+
+- add explicit mapping artifacts for non-Temporal adapters
+- fold unsupported-policy failures into the future executability result
+  contract
+- complete migration notes for callers leaving removed numeric fields such as
+  `stepTimeoutMs` and `backoffMs`
 
 ### Hard Rule
 
@@ -512,8 +673,30 @@ The planner must reject envelopes that provide:
 planning. `manifest` and `nodes` are compatibility paths, not equal-precedence
 authorities.
 
+### Lifecycle rule
+
+Stage 1.1 does **not** grant permanent first-class status to all three graph
+sources.
+
+- `manifestRef` is the canonical forward-looking graph source
+- `manifest` and `nodes` are compatibility-only input modes in the current line
+- new planner capabilities or policy semantics must be defined against
+  `manifestRef` first, not invented separately for compatibility paths
+- support for `manifest` and `nodes` must be justified in the canonical
+  compatibility note rather than assumed to live forever by default
+- removing either compatibility path requires an explicit deprecation or
+  retention note in canonical compatibility governance
+
+That means Stage 1.1 treats `manifest` and `nodes` as transitional or
+specialized modes, not as permanently equal citizens of the public boundary.
+
 Inside the planner boundary, every accepted input is normalized into one
 internal canonical model before graph build or hashing.
+
+For `manifestRef`, that means the logical hash basis is the **resolved canonical
+manifest content**, not the storage locator tuple. `uri` and declared artifact
+digest are resolver inputs and provenance material; they do not define
+`planId`.
 
 ---
 
@@ -541,9 +724,49 @@ adapter to dereference `manifestRef` before handing canonical input to the core.
 - resolution failures return a structured rejection; Stage 1.1 does not define
   retry policy for artifact resolution
 
+### Hashing rule for `manifestRef`
+
+When the public input uses `manifestRef`:
+
+- the application service or admission layer must resolve and integrity-check
+  the manifest **before** handing canonical input to the domain core
+- `inputHashSha256` and `planId` must be derived from the resolved canonical
+  manifest content plus the rest of the canonical planner input
+- `uri` changes alone must not change logical plan identity
+- two different valid references that resolve to identical canonical manifest
+  content must yield the same logical plan hash
+- if the declared `manifestRef.sha256` does not match the resolved content
+  digest, the request must be rejected before planning rather than hashed as a
+  distinct plan
+
 `manifestRef` is not a convenience hack. It is the canonical large-artifact
 entry path. Raw `manifest` and expanded `nodes` remain transitional or
-specialized input modes.
+specialized input modes and do not receive permanent first-class status from
+Stage 1.1.
+
+### Minimum boundary port shape
+
+Stage 1.1 should stop treating the artifact resolver as a hand-wavy concept.
+The planning doc must not become the most complete implementation-facing source
+for a non-canonical interface. Therefore Stage 1.1 does **not** publish a
+TypeScript interface here.
+
+Instead, the minimum canonical contract content still required is:
+
+- one request shape that identifies the artifact reference being resolved
+- one success shape that returns the resolved manifest payload plus integrity
+  material
+- one failure shape that returns structured rejection data
+- one owner for the boundary contract
+
+This does not require the exact names above to be frozen immediately, but it
+does require the repository to define:
+
+- one canonical resolver port or application-boundary equivalent
+- one structured failure shape
+- one owner for that boundary contract
+
+Without that, `manifestRef` remains implementation-defined.
 
 ---
 
@@ -586,6 +809,95 @@ depends on:
 Changing compiled code while preserving the same logical plan core is therefore
 not free. It is a new execution binding, even if it is not a new `planId`.
 
+### Execution binding integrity rule
+
+That binding change must not be treated as invisible at runtime.
+
+At minimum:
+
+- the engine must verify that each enriched `compiledCodeRef` still resolves to
+  the intended immutable artifact binding before execution
+- the engine must reject stale, missing, or digest-mismatched bindings rather
+  than silently running against them
+- the repository needs one canonical contract surface for reporting that
+  verification result
+
+The minimum target-state verification content should be equivalent to:
+
+```ts
+type ExecutionBindingVerificationResult =
+  | { status: 'OK'; bindingDigest: string }
+  | {
+      status: 'ERROR';
+      code: 'MISSING_BINDING' | 'STALE_BINDING' | 'DIGEST_MISMATCH';
+      stepId: string;
+      bindingDigest?: string;
+      reason: string;
+    };
+```
+
+This shape is **illustrative until canonized**. It exists to make the missing
+binding-integrity mechanism explicit, not to pretend the contract already
+exists.
+
+Without an equivalent canonical boundary, `execution-time binding checks`
+remains an underspecified dependency rather than an enforceable rule.
+
+### Persistence rule for enriched bindings
+
+Stage 1.1 also fixes the storage stance:
+
+- the canonical stored plan remains the logical plan core identified by
+  `planId`
+- `compiledCodeRef` enrichment must not create a second canonical plan form in
+  the state store
+- if binding data must survive between build and execution, it should be stored
+  as execution-binding material associated with the canonical plan, not as a new
+  canonical plan body
+
+That means the repository should converge toward:
+
+- one stored canonical plan core
+- zero or more associated execution-binding records or equivalent binding
+  surfaces
+
+This avoids three failure modes:
+
+- persisting only an enriched plan shape that differs from the hashed plan
+- re-enriching blindly on every execution with no stable stored binding
+  material
+- treating both the core plan and the enriched plan as co-canonical plan forms
+
+The minimum target-state storage contract should be equivalent to:
+
+```ts
+type PlanBindingRecord = {
+  planId: string;
+  bindings: Array<{
+    stepId: string;
+    compiledCodeRef: string;
+    bindingDigest?: string;
+  }>;
+};
+```
+
+This shape is **illustrative until canonized**. It exists to make the storage
+split explicit:
+
+- the state store persists the core plan identified by `planId`
+- binding records persist artifact bindings separately from the hashed plan body
+- the engine reads the binding record at execution time and verifies each
+  binding against current immutable artifact state
+- a different binding record may exist for the same `planId` without implying a
+  new logical plan identity
+
+If artifact content does not match the stored binding digest or equivalent
+integrity material, the engine must reject rather than silently executing
+against drifted artifacts.
+
+The follow-on contract still needed is the storage boundary for that binding
+material.
+
 ### Consequence
 
 This resolves the ownership question now. It is not deferred.
@@ -602,7 +914,9 @@ not available.
 
 ### Selected Decision
 
-Stage 1.1 explicitly adopts a **two-step validity model**:
+Stage 1.1 explicitly adopts a **two-step validity model as target-state
+architecture**, not as a claim that the full engine-side contract is already
+canonized:
 
 1. **Planner validity**
    - planner proves the plan is structurally valid, deterministic, and
@@ -617,8 +931,8 @@ Stage 1.1 explicitly adopts a **two-step validity model**:
 - engine does **not** redesign the plan
 - engine validates executability against target adapter capabilities and emits a
   structured validation result
-- Stage 1.1 guarantees a **gate**, not a closed replanning loop
-- the minimum supported behavior is structured rejection
+- Stage 1.1 records the required **gate semantics**, not a shipped gate contract
+- the target-state minimum behavior is structured rejection
 
 ### Structured rejection contract
 
@@ -630,6 +944,25 @@ The engine-side validation result must be machine-readable enough to answer:
 
 This allows future replanning or rerouting, but Stage 1.1 does not pretend that
 automatic replanning already exists.
+
+### Minimum Stage 1.1 contract shape
+
+The gate is not complete until the repository has a canonical validation result
+shape. The planning doc must not become the most complete source for a
+non-canonical validator interface. Therefore Stage 1.1 does **not** publish a
+TypeScript interface here.
+
+Instead, the minimum canonical contract content still required is:
+
+- one success state for executable plans
+- one structured error state for non-executable plans
+- machine-readable rejection fields for missing capability, rejecting adapter or
+  runtime, and hard-versus-degradable status
+- one owner for the validation boundary
+
+Stage 1.1 does not claim that this exact interface already exists in the active
+engine contract. It states that an equivalent canonical boundary is required if
+the gate is to be more than prose.
 
 ### Source of truth
 
@@ -646,25 +979,119 @@ Automatic “planner retries with another plan” is **not** part of Stage 1.1.
 If adaptive replanning exists later, it belongs to an explicit higher
 application/orchestration contract.
 
+### Status note
+
+If `validatePlan` or its equivalent is not already present in the canonical
+engine contract, this remains an explicit follow-on contract gap, not a shipped
+fact.
+
+That means:
+
+- Stage 1.1 may close the ownership and boundary-direction question
+- Stage 1.1 must **not** be described as execution-ready on the basis of this
+  section alone
+- the gate becomes operationally mandatory only once its canonical contract
+  surface exists
+
+### Cross-context justification
+
+The planner and engine remain separate bounded contexts:
+
+- planner is the policy author for plan semantics
+- engine is the capability authority for runtime executability
+- the dependency therefore belongs at the orchestration boundary, not in the
+  planner domain core
+
+Stage 1.1 allows that orchestration layer to call the engine because the
+question being answered is external to the planner core: "can this already
+authored plan execute on this target runtime?"
+
+### Validation-to-start handoff rule
+
+The target-state gate must not introduce a validation-to-start TOCTOU window.
+
+At minimum:
+
+- the canonical plan must be persisted before executability validation as a
+  `PENDING_VALIDATION` or equivalent non-runnable state
+- the engine-side validation step should operate on the persisted plan
+  reference or an equivalent immutable stored-plan handle
+- a validation success must transition that stored plan reference into `VALID`
+  or equivalent runnable state before `startRun`
+- a validation failure must transition that stored plan reference into
+  `INVALID` or equivalent rejected state together with the structured report
+- a "validate in memory, then rebuild or mutate before start" flow is out of
+  contract
+
+Stage 1.1 does **not** claim that the repository already has the canonical
+transaction or storage contract needed for this handoff. It records the rule
+that such a contract is required before the gate can be treated as
+execution-ready.
+
+### Availability rule
+
+The target-state gate is **not** a best-effort check when execution-ready
+guarantees are required.
+
+Once the gate has a canonical contract surface:
+
+- engine unavailability at planning or admission time must fail closed for
+  flows that claim executability-checked start semantics
+- the orchestration layer may expose a separate mode that builds plans without
+  executability assurance, but it must not present that mode as equivalent to a
+  validated start path
+
+Until the canonical gate contract exists, this remains a target-state rule
+rather than a claim about shipped runtime behavior.
+
 ---
 
-## 18. `stepId === nodeId` Decision
+## 18. `stepId === nodeId` Transitional Policy
 
-### Recommendation
+### Selected Decision
 
-Do **not** freeze `stepId === nodeId` as a permanent architectural invariant.
+Stage 1.1 adopts a **transitional policy**, not a permanent invariant:
 
-It can remain a temporary simplification in v2.3.x, but the architecture should assume future divergence because:
+- current implementation may continue using `stepId === nodeId` in the v2.3.x
+  line
+- the public contract must not freeze that equality as a permanent rule
+
+### Rationale
+
+The architecture should assume future divergence because:
 
 - one dbt node may expand into multiple executable steps
 - one technical step may not map 1:1 to a graph node
 - gateway and plugin-driven steps may introduce synthetic steps
 - future adapters may need internal technical steps not represented in UI nodes
 
-### Rule
+### Current operating rule
 
-- current implementation may preserve `stepId === nodeId` where valid
-- public contract must not require it permanently
+- planner may emit `stepId === nodeId` where the current compiler still produces
+  one executable step per selected node
+- tests may assert that equality only as a **current implementation property**
+  in the v2.3.x line
+- no public contract, compatibility promise, or external consumer guidance may
+  treat that equality as normative architecture
+
+### Migration trigger
+
+The transition away from `stepId === nodeId` becomes mandatory as soon as any
+of the following is introduced:
+
+- one selected node can expand into more than one executable step
+- synthetic technical or gateway steps are added to the plan
+- adapter-facing execution steps exist that do not map 1:1 to UI-visible nodes
+
+### Minimum follow-on expectation
+
+When that trigger is crossed, the repository must add:
+
+- a canonical identifier rule describing step identity independently from node
+  identity
+- contract and fixture updates proving the new relationship
+- tests that reject accidental reliance on `stepId === nodeId` as a universal
+  invariant
 
 ---
 
@@ -678,13 +1105,15 @@ It can remain a temporary simplification in v2.3.x, but the architecture should 
 
 #### Option C — allow unknown kinds only in dev/test
 
-### Weighted Matrix
+### Qualitative analysis
 
-| Option                                                         | Architectural coherence | Evolution / versioning | Runtime safety | Maintainability | Migration cost | Consumer compatibility | Weighted score |
-| -------------------------------------------------------------- | ----------------------: | ---------------------: | -------------: | --------------: | -------------: | ---------------------: | -------------: |
-| A — Fail-open by default                                       |                       2 |                      4 |              1 |               3 |              5 |                      4 |           2.75 |
-| **B — Fail-closed by default with explicit capability opt-in** |                   **5** |                  **4** |          **5** |           **4** |          **3** |                  **4** |       **4.35** |
-| C — Dev/test only soft-open                                    |                       4 |                      4 |              4 |               3 |              3 |                      3 |           3.75 |
+- Fail-open preserves extension flexibility, but it is the weakest option for a
+  governed multi-tenant system because it treats unknown behavior as acceptable
+  until runtime proves otherwise.
+- Dev/test soft-open is a useful migration or experimentation stance, but it is
+  not a durable default for a canonical production policy.
+- Fail-closed with explicit capability opt-in is the cleanest long-term model
+  because it makes extension explicit, reviewable, and enforceable.
 
 ### Selected Decision
 
@@ -704,6 +1133,41 @@ Any extension path must require:
 - namespace discipline
 - observability
 
+### Interim operating rule
+
+Until the target state lands, unknown `StepKind` may pass only when all of the
+following are true:
+
+- the kind appears in one canonical bridge registry under `@dvt/contracts`
+- the path emits warning-grade diagnostics
+- the extension remains non-canonical and subject to later rejection
+
+### Allowlist authority rule
+
+That allowlist must not be treated as adapter-local folklore or runtime-local
+configuration.
+
+- the long-term canonical source of truth is a normative `KnownStepKind` enum or
+  equivalent shared contract in `@dvt/contracts`
+- adding a fully known `StepKind` to the system requires a contracts change, not
+  a runtime-only allowlist update
+- during the bridge period, provisional kinds must live in a central
+  `StepKindBridgeRegistry` or equivalent governed contract artifact under
+  `@dvt/contracts`
+- each bridge entry must carry explicit owner and decision-date metadata
+- adapters may consume that central registry, but they must not invent separate
+  local allowlists
+
+This bridge registry is not a free runtime escape hatch. It is a visible,
+compile-time governed inventory of provisional kinds pending promotion to
+`KnownStepKind` or rejection.
+
+Default bridge behavior remains conservative:
+
+- unknown `StepKind` is not treated as canonical by default
+- absence from `KnownStepKind` and absence from `StepKindBridgeRegistry` should
+  result in rejection
+
 ### Migration note
 
 The current implementation is not yet there. This proposal treats fail-closed
@@ -722,13 +1186,15 @@ behavior in Stage 1.1.
 
 #### Option C — no passthrough at all
 
-### Weighted Matrix
+### Qualitative analysis
 
-| Option                                     | Architectural coherence | Evolution / versioning | Runtime safety | Maintainability | Migration cost | Consumer compatibility | Weighted score |
-| ------------------------------------------ | ----------------------: | ---------------------: | -------------: | --------------: | -------------: | ---------------------: | -------------: |
-| A — Unrestricted passthrough               |                       2 |                      4 |              1 |               2 |              5 |                      4 |           2.55 |
-| **B — Namespaced and bounded passthrough** |                   **5** |                  **5** |          **4** |           **4** |          **3** |                  **4** |       **4.35** |
-| C — No passthrough                         |                       4 |                      3 |              5 |               3 |              2 |                      2 |           3.45 |
+- Unrestricted passthrough is operationally cheap, but it turns `custom` into a
+  semantic escape hatch and undermines governance.
+- A blanket ban would be cleaner from a control perspective, but it would also
+  remove a useful extension seam that the architecture may still need.
+- Namespaced and bounded passthrough is the best compromise because it keeps an
+  extension path while preserving reviewability, validation, and safety
+  boundaries.
 
 ### Selected Decision
 
@@ -752,6 +1218,28 @@ Stage 1.1 fixes the boundary, not the full extension runtime:
 - planner validates `custom` only when a registered namespace/schema exists
 - unregistered namespaces are not silently promoted to canonical behavior
 - engine/runtime may apply additional capability and authorization gates
+
+### Registration authority
+
+Namespace registration authority must live **outside** the planner
+implementation package and must be governed as a shared contract or extension
+registry concern.
+
+That means:
+
+- `@dvt/planner` must not become the de facto canonical registry owner by local
+  convenience
+- planner-local ad hoc namespace registries are not acceptable as repository
+  canon
+- the eventual registry model may be deferred, but the authority boundary is not
+
+This also means:
+
+- planner is not allowed to imply that unknown `custom` payloads are safe
+- engine/runtime must reject unsafe or unauthorized `custom` payloads before
+  execution
+- secret-bearing `custom` content is policy-invalid even if it is syntactically
+  well formed
 
 This is intentionally conservative. Unbounded opaque blobs are not an acceptable
 long-term model.
@@ -791,6 +1279,16 @@ Examples and explanatory schemas must not drift silently. The long-term target i
 generated or mechanically checked documentation sourced from canonical contract
 artifacts, not hand-maintained parallel examples.
 
+### Immediate implementation implication
+
+This proposal is not complete if “mechanically checked” remains only aspiration.
+The follow-on execution slice should add at least:
+
+- one schema generation or verification script in the contracts authority domain
+- one CI check proving docs/examples do not drift from canonical contract
+  artifacts
+- one documented owner for that generation or verification path
+
 ---
 
 ## 22. ADR Policy — Local planner ADRs vs canonical repo governance
@@ -826,6 +1324,17 @@ Documentation should **not** live mixed into source files as the primary system 
 But documentation should **remain aligned to the subsystem** that owns the concern.
 
 That means the correct target is **subsystem-scoped docs outside source code**, not code-adjacent drift and not a giant flat root doc pile.
+
+Stage 1.1 also needs to be explicit about the location transition:
+
+- current state: the primary working artifact for this slice still lives under
+  `packages/@dvt/planner/docs/planning/**`
+- current structured execution artifact: the machine-readable manifest now lives
+  under `docs/planning/proposals/`
+- target state: accepted subsystem governance should converge toward repo-level
+  docs under `docs/architecture/**`, `docs/contracts/**`, and `docs/planning/**`
+- this proposal must not normalize the current package-local location as the
+  final destination
 
 ### Recommended structure
 
@@ -879,6 +1388,16 @@ That documentation must not require living inside `src/` or inside package code 
 
 ### Minimum evolution rules
 
+- For `ExecutionPlanV2`, `PlannerInputEnvelopeV2`, and `IExecutionPlanner`, the
+  planner owner is the **semantic author** and must initiate any proposal that
+  changes planning meaning, planner boundary semantics, or planner-produced
+  behavior
+- The contracts owner is the **compatibility and package-coherence gate** for
+  those public types
+- The contracts owner reviews those changes for backward compatibility, package
+  coherence, schema alignment, and publication discipline
+- The contracts owner is **not** the semantic design arbiter for planning
+  behavior merely because the canonical type lives in `@dvt/contracts`
 - Breaking changes to public planner contracts require a new major line or a
   compatibility shim
 - Minor evolution requires:
@@ -890,6 +1409,49 @@ That documentation must not require living inside `src/` or inside package code 
   - migration path is documented
   - validation evidence is defined
 
+### Canonical protocol location
+
+The single protocol-of-record for changing those three public planner contracts
+is [ADR-0035 - Planner Public Contract Evolution
+Protocol](../../../../../docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md).
+
+This section is a proposal-local summary only. Contributors should not have to
+search across repo docs to answer "How do I propose a change to
+`ExecutionPlanV2`, `PlannerInputEnvelopeV2`, or `IExecutionPlanner`?"
+
+### Contracts owner review scope
+
+| Contracts owner reviews                                          | Contracts owner does not review                        |
+| ---------------------------------------------------------------- | ------------------------------------------------------ |
+| Whether existing imports or consumers break                      | Whether the planning decision is the right one         |
+| Whether the change requires a major version bump                 | Whether the field or concept should exist semantically |
+| Whether other `@dvt/contracts` consumers are impacted            | Whether the planner semantics are desirable            |
+| Whether compatibility notes or changelog updates are present     | Planner-domain design preference disputes              |
+| Whether schemas, fixtures, and package publication stay coherent | Planner implementation strategy choices                |
+
+### Coordination rule
+
+This split is intentional:
+
+- semantic change authority belongs to the planner owner
+- compatibility and package-governance authority belongs to the contracts owner
+
+Stage 1.1 therefore does **not** turn the contracts owner into a design veto
+point for planning semantics. It turns that role into the gatekeeper for
+compatibility, schema discipline, and canonical publication.
+
+### Worked example
+
+If the planner needs to add a field `planVersion` to `ExecutionPlanV2`, the
+expected flow is:
+
+1. The planner owner opens or sponsors the PR in `@dvt/contracts`.
+2. The planner owner supplies the semantic rationale and linked planning source.
+3. The contracts owner reviews only for compatibility, versioning, package
+   coherence, and cross-consumer impact.
+4. If those checks pass, the contracts owner approves and the planner owner
+   remains the semantic authority for the change.
+
 ### Tentative delivery ownership
 
 | Migration track                     | Suggested lead            |
@@ -899,6 +1461,10 @@ That documentation must not require living inside `src/` or inside package code 
 | Engine executability gate alignment | Engine owner              |
 | Documentation triage                | Architecture / Docs owner |
 
+These are still role-level assignments, not execution-ready staffing. Stage 1.1
+cannot be claimed as execution-ready until the work is assigned to named owners
+in the actual delivery system.
+
 ### Done gate for Stage 1.1 execution
 
 Stage 1.1 is not “done” because a document exists. It is done only when:
@@ -907,6 +1473,7 @@ Stage 1.1 is not “done” because a document exists. It is done only when:
 - contract diffs are enumerated
 - migration steps are assigned
 - compatibility validation path is defined
+- named implementers and target dates exist outside this document
 
 ---
 
@@ -915,6 +1482,25 @@ Stage 1.1 is not “done” because a document exists. It is done only when:
 ### Goal
 
 Remove duplicated public contract authority without breaking tests and consumers.
+
+### Baseline inventory prerequisite
+
+Before executing Phase 1, the team must publish a baseline inventory, for
+example at:
+
+- `docs/planning/migration/stage-1-1-baseline-snapshot.md`
+
+That inventory must enumerate exactly:
+
+- which `ExecutionPlanV2`, `PlannerInputEnvelopeV2`, and `IExecutionPlanner`
+  types exist today under `@dvt/contracts/src/contracts/planner/`
+- which equivalent shapes exist under
+  `@dvt/planner/src/domain/types.ts` and planner-local contract wrappers
+- whether each pair is identical, divergent, or a subset/superset relationship
+
+Phase 1 must not start from assumption alone. Without this inventory, a
+declaration that planner-local equivalents are non-authoritative can break
+consumers if the shapes have already drifted.
 
 ### Migration Phases
 
@@ -968,7 +1554,37 @@ Dates are tentative and must be assigned by the owning teams before execution.
 
 ---
 
-## 26. Concrete Examples
+## 26. Critical Follow-On Contract Gaps
+
+The proposal resolves ownership and boundary direction, but several follow-on
+contracts are still required before execution can be claimed as operationally
+closed.
+
+| Gap                                   | Why it matters                                                                                                                                       | Minimum required artifact                                               |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Executability validation contract     | Without it, the gate is prose and each engine can invent its own rejection shape                                                                     | canonical validation result shape and engine-boundary surface           |
+| `ArtifactResolverPort` contract       | Without it, `manifestRef` resolution remains implementation-defined                                                                                  | canonical resolver port or equivalent application-boundary contract     |
+| `custom` namespace registration model | Without it, planner/runtime validation responsibility remains fuzzy                                                                                  | extension registration contract and validation ownership note           |
+| Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path                                                                         | binding verification result contract                                    |
+| Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data                                                                          | state or engine boundary for associated binding material                |
+| Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                                                                               | admission or state boundary for validated-plan persistence/handoff      |
+| Input-path deprecation policy         | Without it, `manifest` and `nodes` can remain forever as undeclared compatibility debt                                                               | canonical compatibility note with retention/deprecation rule            |
+| Unknown-kind allowlist authority      | Without it, unknown `StepKind` admission can drift into adapter-local governance                                                                     | canonical runtime-capability allowlist surface or shared contract       |
+| Declarative policy vocabulary         | The planner boundary is now canonicalized, but non-Temporal runtimes can still drift without explicit adapter mappings and executability integration | additional adapter mapping tables plus executability result integration |
+| Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                                                                                       | generation or CI verification task                                      |
+| Named migration owners and dates      | Without them, migration remains paper planning                                                                                                       | assigned execution tracker entries                                      |
+
+These do not block Stage 1.1 as an ownership-direction proposal.
+
+They do block:
+
+- execution-ready closure
+- any claim that the executability gate is already canonically operational
+- any claim that `manifestRef` resolution is already canonically closed
+
+---
+
+## 27. Concrete Examples
 
 ### Example A — canonical public input envelope shape
 
@@ -978,19 +1594,19 @@ type PlannerInputEnvelopeV2 =
       graphSource: 'manifestRef';
       manifestRef: { uri: string; sha256: string };
       selection: PlannerSelection;
-      policies?: PlannerPolicies;
+      policies?: PlannerPolicyClassSet;
     }
   | {
       graphSource: 'manifest';
       manifest: DbtManifestLike;
       selection: PlannerSelection;
-      policies?: PlannerPolicies;
+      policies?: PlannerPolicyClassSet;
     }
   | {
       graphSource: 'nodes';
       nodes: GraphNode[];
       selection: PlannerSelection;
-      policies?: PlannerPolicies;
+      policies?: PlannerPolicyClassSet;
     };
 ```
 
@@ -1006,27 +1622,42 @@ const enrichedPlan = await attachCompiledCodeRefs(plan, storage);
 Rule: `canonicalPlanJson` and `plan.metadata.planId` derive from core plan
 content, not from the later enrichment.
 
+If the enriched binding needs to persist, it should persist as associated
+execution-binding data, not as a second canonical plan body.
+
 ### Example C — executability validation loop
 
 ```ts
 const build = await planner.buildPlan(input);
-const validation = await engine.validatePlan(build.plan, targetAdapter);
+const planRef = await stateStore.storePlan(build.plan, {
+  status: 'PENDING_VALIDATION',
+});
+
+const validation = await engine.validatePlan(planRef, targetAdapter);
 
 if (validation.status === 'ERRORS') {
+  await stateStore.markInvalid(planRef, validation);
   return rejectWithStructuredReport(validation);
 }
+
+await stateStore.markValid(planRef);
 
 return engine.startRun(planRef, ctx);
 ```
 
+Rule: the admission layer orchestrates persistence, validation, and state
+transition. `startRun` consumes only a `VALID` plan reference. A best-effort
+"validate, then later rebuild or mutate before start" flow is out of contract.
+
 ---
 
-## 27. Artifacts To Update
+## 28. Artifacts To Update
 
 ### Code / contracts
 
 - `packages/@dvt/contracts/src/contracts/planner/**`
 - `packages/@dvt/contracts/src/contracts/IExecutionPlanner*`
+- canonical engine validation boundary for `validatePlan` or equivalent
 - `packages/@dvt/planner/src/domain/types.ts`
 - `packages/@dvt/planner/src/**` imports and re-exports
 - planner tests asserting public contract shape
@@ -1041,9 +1672,18 @@ return engine.startRun(planRef, ctx);
 - `docs/architecture/planner/planner-boundary.md`
 - `docs/architecture/planner/planner-versioning-compatibility.md`
 - `docs/architecture/planner/planner-migration-stage-1-1.md`
+- `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json`
+- `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.schema.json`
+- artifact resolver boundary note or equivalent planner application-boundary note
 - `docs/contracts/planner/ExecutionPlan.v2.md`
 - `docs/contracts/planner/PlannerInputEnvelope.v2.md`
 - `docs/contracts/planner/IExecutionPlanner.v2.md`
+- engine executability validation contract doc or equivalent canonical contract surface
+
+### Validation / tooling
+
+- `tools/docs/validate-planner-stage-1-1-manifest.ts`
+- `package.json` docs governance script wiring
 
 ### Governance notes
 
@@ -1052,11 +1692,30 @@ return engine.startRun(planRef, ctx);
   - retain-local
   - archive
 
+### Artifact mapping table
+
+The summary lists above are still too broad to execute directly. The following
+table is the bridge from policy to implementation slice.
+
+| Current artifact                                                                    | Problem                                                 | Target owner                                                                                 | Action                                                                    |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `packages/@dvt/planner/src/domain/types.ts` public shapes                           | duplicate public contract authority                     | `@dvt/contracts`                                                                             | remove, replace with imports, or temporary re-export from contracts       |
+| `packages/@dvt/contracts/src/contracts/planner/**`                                  | canonical public contract must become the single source | `@dvt/contracts`                                                                             | absorb public planner boundary types and compatibility notes              |
+| planner-local imports of public planner contracts                                   | drift toward planner-local contract ownership           | `@dvt/planner` consuming `@dvt/contracts`                                                    | replace internal imports to consume canonical shared contracts            |
+| `packages/@dvt/planner/docs/contracts/*.schema.json` and related local schema docs  | informative drift risk vs canonical executable schemas  | `@dvt/contracts` plus canonical docs surfaces                                                | promote, reference generated canonical artifacts, or archive local copies |
+| `packages/@dvt/planner/docs/adr/**` local ADR-like notes affecting shared semantics | governance ambiguity                                    | canonical repo docs under `docs/architecture/**`, `docs/contracts/**`, or `docs/planning/**` | rename as local notes, promote to canonical docs, or archive              |
+| engine-side validation boundary for `validatePlan` or equivalent                    | gate remains prose without canonical surface            | canonical engine/contracts boundary                                                          | define or align one validation contract surface                           |
+| artifact resolver boundary note or equivalent planner application-boundary note     | `manifestRef` resolution remains implementation-defined | planner boundary docs plus shared contract authority                                         | define resolver boundary, failure shape, and owner                        |
+| planner-local docs under `packages/@dvt/planner/docs/**`                            | mixed canonical vs implementation-local status          | canonical repo docs or retained local implementation docs                                    | classify each doc as promote, retain-local, or archive                    |
+
 ---
 
-## 28. Recommended Output Artifacts For Stage 1.1
+## 29. Recommended Output Artifacts For Stage 1.1
 
-Stage 1.1 is not complete without these output artifacts:
+For clarity, Stage 1.1 now distinguishes between ownership-direction closure
+and execution-ready closure.
+
+Required for Stage 1.1 ownership-direction closure:
 
 1. **Canonical boundary note**
    - planner responsibilities
@@ -1087,33 +1746,63 @@ Stage 1.1 is not complete without these output artifacts:
    - execution-plan compatibility promise
    - engine-consumer expectation
 
+7. **Structured proposal manifest**
+   - real machine-readable artifact path
+   - schema path
+   - repository validation command
+
+Required later for execution-ready closure, but not for Stage 1.1 ownership
+acceptance by itself:
+
+1. **Executability gate contract note**
+   - minimum rejection result shape
+   - owner of the validation boundary
+   - statement of whether `validatePlan` is canonical, pending, or renamed
+
+2. **Validation-to-start handoff note**
+   - what exact object is validated
+   - what exact object or reference is later passed to `startRun`
+   - where validated canonical plans are frozen or persisted
+
+3. **Artifact resolution boundary note**
+   - resolver port or application-boundary equivalent
+   - success/failure shape
+   - tenant and integrity requirements
+
 ---
 
-## 29. Residual Non-Blocking Questions
+## 30. Residual Non-Blocking Questions
 
-The critical questions are resolved in this document:
+The critical ownership questions are resolved in this document:
 
 - public owner of `ExecutionPlanV2`
 - public owner of `PlannerInputEnvelopeV2`
 - public owner of `IExecutionPlanner`
 - `compiledCodeRef` placement
-- planner-engine executability validation loop
 - canonical planner input strategy
+
+The following target-state boundary clarifications are directionally resolved,
+but not yet canonized enough to count as execution-ready closure:
+
+- planner-engine executability validation loop
+- minimum artifact resolver shape
+- minimum executability validation result shape
 
 Residual questions that do **not** block Stage 1.1 ownership:
 
 1. Should public planner diagnostics remain planner-local until a second
    consumer exists?
-2. Should compatibility policy prefer “current + previous minor” or explicit
-   translator layers after the first major?
+2. What deprecation or retention window governs compatibility-only graph
+   sources such as `manifest` and `nodes`?
 3. Which generator pipeline should materialize canonical JSON schemas from the
    shared contract source?
 
 ---
 
-## 30. Acceptance Criteria
+## 31. Acceptance Criteria
 
-Stage 1.1 is accepted only if all of the following are true:
+Stage 1.1 is accepted only as an ownership and boundary-direction proposal if
+all of the following are true:
 
 - there is one declared public owner for `ExecutionPlanV2`
 - there is one declared public owner for `PlannerInputEnvelopeV2`
@@ -1130,6 +1819,17 @@ Stage 1.1 is accepted only if all of the following are true:
 - migration plan exists and is tied to concrete artifacts
 - tests and consumers have a non-breaking migration path
 - verifiable deliverables exist for each acceptance point
+- explicit follow-on contract gaps are declared rather than implied away
+- the structured proposal manifest exists and validates against its schema
+
+This acceptance does **not** mean Stage 1.1 is execution-ready.
+
+Stage 1.1 must not be described as execution-ready while any of the following
+remain unresolved:
+
+- canonical executability validation contract surface
+- canonical `ArtifactResolverPort` or equivalent application-boundary contract
+- named execution owners and dates for those follow-on contracts
 
 ### Verification checklist
 
@@ -1138,13 +1838,36 @@ Stage 1.1 is accepted only if all of the following are true:
 - [ ] contract diffs enumerated
 - [ ] discriminated envelope rule documented
 - [ ] `compiledCodeRef` binding caveat documented
-- [ ] engine executability rejection contract documented
+- [ ] execution binding verification gap documented
+- [ ] executability gate follow-on gap documented
+- [ ] artifact resolver follow-on gap documented
+- [ ] schema sync task defined
 - [ ] migration leads assigned
 - [ ] documentation triage inventory created
 
+### Expected evidence form
+
+Each verification item should be satisfied by an artifact type, not by informal
+assertion alone.
+
+| Deliverable                                 | Expected evidence form                                                             |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| canonical contract owner note published     | canonical doc path or accepted note path                                           |
+| planner-local duplicate public types frozen | diff note, migration note, or PR-scoped change summary                             |
+| contract diffs enumerated                   | diff note or compatibility note path                                               |
+| discriminated envelope rule documented      | canonical contract doc path or schema path                                         |
+| `compiledCodeRef` binding caveat documented | canonical doc path                                                                 |
+| binding verification gap documented         | gap note path, canonical planning doc path, or execution tracker reference         |
+| executability gate follow-on gap documented | gap note path, canonical planning doc path, or execution tracker reference         |
+| artifact resolver follow-on gap documented  | gap note path, boundary note path, or execution tracker reference                  |
+| schema sync task defined                    | CI check path, script path, or execution task reference                            |
+| migration leads assigned                    | issue tracker reference, plan item reference, or equivalent execution tracker path |
+| documentation triage inventory created      | inventory file path, review note path, or canonical planning artifact path         |
+| structured proposal manifest validates      | canonical planning artifact path, schema path, and CI check path                   |
+
 ---
 
-## 31. Final Recommendations
+## 32. Final Recommendations
 
 ### Selected decisions
 
@@ -1159,11 +1882,16 @@ Stage 1.1 is accepted only if all of the following are true:
   - does not persist
   - does not own runtime enforcement
 - unknown `StepKind` target state is fail-closed
-- planner-engine capability validation is a mandatory second-step gate before run start
+- planner-engine capability validation is a target-state second-step gate, not a
+  claim of current execution-ready closure
 - `compiledCodeRef` is post-build optional enrichment and not part of hashed plan identity
 - `custom` passthrough is allowed only under namespaced, bounded, validated rules
 - docs should live outside source code but aligned to the planner subsystem
 - existing `packages/@dvt/planner/docs/**` content must be triaged, not ignored
+- unresolved boundary contracts must be written down as explicit gaps, not hidden
+  behind prose
+- Stage 1.1 closes ownership direction first; execution-ready closure requires
+  follow-on contract canonization
 
 ### Short form
 
@@ -1177,7 +1905,7 @@ Subsystem docs live with the subsystem, not inside source code.
 
 ---
 
-## 32. Implementation Order
+## 33. Implementation Order
 
 1. Approve ownership decisions
 2. Publish subsystem boundary and ownership docs
@@ -1189,7 +1917,7 @@ Subsystem docs live with the subsystem, not inside source code.
 
 ---
 
-## 33. Non-Goals
+## 34. Non-Goals
 
 This proposal does not:
 

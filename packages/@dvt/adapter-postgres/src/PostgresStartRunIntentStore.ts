@@ -135,12 +135,12 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
       this.pool = new Pool({
         connectionString:
           config.connectionString ??
-          process.env.DVT_PG_URL ??
-          process.env.DATABASE_URL ??
+          process.env['DVT_PG_URL'] ??
+          process.env['DATABASE_URL'] ??
           'postgresql://dvt:dvt@localhost:5432/dvt',
         statement_timeout:
-          config.statementTimeoutMs ?? Number(process.env.DVT_PG_STATEMENT_TIMEOUT_MS ?? 0),
-        query_timeout: config.queryTimeoutMs ?? Number(process.env.DVT_PG_QUERY_TIMEOUT_MS ?? 0),
+          config.statementTimeoutMs ?? Number(process.env['DVT_PG_STATEMENT_TIMEOUT_MS'] ?? 0),
+        query_timeout: config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0),
       });
       this.ownsPool = true;
     }
@@ -413,7 +413,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
 }
 
 function toPersistedIntentState(row: IntentRow): PersistedIntentState {
-  return {
+  const state: PersistedIntentState = {
     identity: {
       intentId: row.intent_id,
       tenantId: row.tenant_id,
@@ -421,25 +421,31 @@ function toPersistedIntentState(row: IntentRow): PersistedIntentState {
     },
     provider: row.provider,
     status: row.status,
-    engineRunRef: row.engine_run_ref ?? undefined,
     timestamps: {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     },
   };
+  if (row.engine_run_ref !== null) {
+    state.engineRunRef = row.engine_run_ref;
+  }
+  return state;
 }
 
 function toIntent(state: PersistedIntentState): StartRunIntent {
-  return {
+  const intent: StartRunIntent = {
     intentId: state.identity.intentId,
     tenantId: state.identity.tenantId,
     runId: state.identity.runId,
     provider: state.provider,
     status: state.status,
-    engineRunRef: state.engineRunRef,
     createdAt: state.timestamps.createdAt,
     updatedAt: state.timestamps.updatedAt,
   };
+  if (state.engineRunRef !== undefined) {
+    intent.engineRunRef = state.engineRunRef;
+  }
+  return intent;
 }
 
 function isActiveIntentConflict(error: unknown): boolean {

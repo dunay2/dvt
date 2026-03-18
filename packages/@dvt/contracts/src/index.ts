@@ -9,6 +9,7 @@ export * from './adapters/IProviderAdapter.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/IStartRunIntentStore.v1.js';
 export * from './contracts/engine/StartRunIntentPolicy.v1.js';
+export { GRAPH_SOURCE_COMPATIBILITY_POLICY } from './contracts/planner/ExecutionPlan.v2.js';
 export type {
   DbtManifestLike,
   DbtManifestRef,
@@ -20,10 +21,70 @@ export type {
   PlannerEnvironmentContext,
   PlannerInputEnvelope,
   PlannerInputEnvelopeV2,
-  PlannerPolicies,
   PlannerSelection,
+  StepKind,
 } from './contracts/planner/ExecutionPlan.v2.js';
+export {
+  ConcurrencyPolicySchema,
+  MAX_RETRY_POLICY_ATTEMPTS,
+  PlannerPolicyClassSetSchema,
+  RetryPolicySchema,
+  TimeoutPolicySchema,
+  UnsupportedPlannerPolicyError,
+  policyErrorToExecutabilityResult,
+} from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+export type {
+  AdapterPolicyMapper,
+  ConcurrencyPolicy,
+  PlannerPolicyCategory,
+  PlannerPolicyClassSet,
+  PlannerPolicyValue,
+  RetryPolicy,
+  TimeoutPolicy,
+  UnsupportedPlannerPolicyDetails,
+} from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+export { TEMPORAL_POLICY_MAPPING_TABLE } from './contracts/planner/PolicyMappingTable.v1.js';
+export type {
+  AdapterPolicyMappingTable,
+  PolicyMappingEntry,
+} from './contracts/planner/PolicyMappingTable.v1.js';
 export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
+export type {
+  ExecutabilityRejectionCode,
+  ExecutabilityValidationResult,
+  IPlanExecutabilityValidator,
+} from './contracts/planner/PlanExecutabilityValidation.v1.js';
+export type {
+  BindingRejectionCode,
+  ExecutionBindingVerificationResult,
+  IExecutionBindingVerifier,
+  PlanBindingRecord,
+  StepBindingEntry,
+} from './contracts/planner/ExecutionBindingVerification.v1.js';
+export type {
+  IPlanValidationLifecycleStore,
+  PlanValidationRecord,
+  PlanValidationState,
+} from './contracts/planner/PlanValidationLifecycle.v1.js';
+export type {
+  CustomPolicyMap,
+  CustomPolicyNamespaceEntry,
+  CustomPolicyRejectionCode,
+  CustomPolicySchemaValidator,
+  CustomPolicyValidationError,
+  ICustomPolicyNamespaceRegistry,
+} from './contracts/planner/CustomPolicyNamespaceRegistry.v1.js';
+export {
+  KNOWN_STEP_KINDS,
+  STEP_KIND_BRIDGE_REGISTRY,
+  getBridgeEntry,
+  isBridgeRegisteredStepKind,
+  isKnownStepKind,
+} from './contracts/planner/StepKindRegistry.v1.js';
+export type {
+  KnownStepKind,
+  StepKindBridgeEntry,
+} from './contracts/planner/StepKindRegistry.v1.js';
 export * from './contracts/lineage/ILineageSink.v1.js';
 export * from './errors.js';
 export * from './ports/artifact-store.js';

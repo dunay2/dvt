@@ -33,6 +33,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0032   | compiledCodeRef Ownership: Reference in StepStarted Payload                                     | Accepted                 | 2026-03-04                       | [ADR-0032-compiledcoderef-ownership.md](ADR-0032-compiledcoderef-ownership.md)                                                             |
 | ADR-0033   | Outbox Worker Sharding And Fencing Model                                                        | Accepted                 | 2026-03-12                       | [ADR-0033-outbox-worker-sharding-and-fencing-model.md](ADR-0033-outbox-worker-sharding-and-fencing-model.md)                               |
 | ADR-0034   | Bounded Context Boundaries And Communication Rules                                              | Accepted                 | 2026-03-13                       | [ADR-0034-bounded-context-boundaries-and-communication-rules.md](ADR-0034-bounded-context-boundaries-and-communication-rules.md)           |
+| ADR-0035   | Planner Public Contract Evolution Protocol                                                      | Accepted                 | 2026-03-18                       | [ADR-0035-planner-public-contract-evolution-protocol.md](ADR-0035-planner-public-contract-evolution-protocol.md)                           |
 
 ## Usage rules
 
@@ -43,6 +44,6 @@ Canonical catalog of ADRs in this repository.
 ## Related
 
 - [ADR landing page](index.md)
-- [ADR implementation status](ADR-Implementation%20Status.md)
+- [ADR implementation status](ADR-Implementation-Status.md)
 
-_Last updated: 2026-03-12_
+_Last updated: 2026-03-18_

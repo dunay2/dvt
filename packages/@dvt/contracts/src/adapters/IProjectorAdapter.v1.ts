@@ -7,7 +7,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { TenantId, RunId, StepId, EventId } from '../types/contracts.js';
+import type { TenantId, RunId, StepId, EventId } from '../types/contracts.js';
 
 export interface ProjectedState {
   tenantId: TenantId;

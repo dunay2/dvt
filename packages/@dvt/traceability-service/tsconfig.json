@@ -1,19 +1,12 @@
 {
+  "extends": "../../../tsconfig.package-bundler.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "Bundler",
     "outDir": "dist",
     "rootDir": "src",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "paths": {
+      "@dvt/contracts": ["packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/contracts/*": ["packages/@dvt/contracts/dist/*"]
+    }
   },
   "include": ["src/**/*.ts"]
 }

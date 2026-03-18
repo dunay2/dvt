@@ -166,10 +166,9 @@ export const useAppStore = create<AppState>((set) => ({
   closeTab: (tabId) =>
     set((state) => {
       const newTabs = state.activeTabs.filter((t) => t.id !== tabId);
+      const nextActiveTab = newTabs.at(-1);
       const newActiveId =
-        state.activeTabId === tabId && newTabs.length > 0
-          ? newTabs[newTabs.length - 1].id
-          : state.activeTabId;
+        state.activeTabId === tabId && nextActiveTab ? nextActiveTab.id : state.activeTabId;
       return { activeTabs: newTabs, activeTabId: newActiveId };
     }),
 

@@ -21,7 +21,7 @@ describe('determinism', () => {
         { nodeId: 'model.b', resourceType: 'model', dependsOn: ['model.a'] },
       ],
       selection: { selectedNodeIds: ['model.b'], includeUpstream: true },
-      policies: { custom: { x: 1 } },
+      policies: { retry: { kind: 'at-most-once' } },
       observability: { tags: { t: '1' }, extra: { y: 'z' } },
       requestedBy: 'u1',
       requestId: 'r1',
@@ -81,7 +81,7 @@ describe('determinism', () => {
       return;
     }
 
-    const expectedPlanId = '1909a49188a9b6653954d4158f77c1bba9475ce4ade76ec3db80480fef944659';
+    const expectedPlanId = '0479dbb6f36694f78c48532d3b33bec40d4eae446b81650249c4a97a4ffb7a25';
     expect(plan.metadata.planId).toBe(expectedPlanId);
   });
 });

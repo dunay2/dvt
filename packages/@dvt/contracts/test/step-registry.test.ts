@@ -8,7 +8,7 @@ import {
   DBT_TEST,
   DbtStepTypeConfigSchema,
   StepTypeRegistry,
-} from '../src/step-registry/StepTypeRegistry.ts';
+} from '../src/step-registry/StepTypeRegistry.js';
 
 // ── DbtStepTypeConfigSchema ───────────────────────────────────────────────────
 

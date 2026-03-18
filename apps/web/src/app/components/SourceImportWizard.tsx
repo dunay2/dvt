@@ -104,7 +104,10 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     ];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1]);
+      const nextStep = steps[currentIndex + 1];
+      if (nextStep) {
+        setCurrentStep(nextStep);
+      }
     }
   };
 
@@ -119,7 +122,10 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     ];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1]);
+      const previousStep = steps[currentIndex - 1];
+      if (previousStep) {
+        setCurrentStep(previousStep);
+      }
     }
   };
 
@@ -232,7 +238,10 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
             if (!acc[table.schema]) {
               acc[table.schema] = [];
             }
-            acc[table.schema].push(table);
+            const bucket = acc[table.schema];
+            if (bucket) {
+              bucket.push(table);
+            }
             return acc;
           },
           {} as Record<string, TableInfo[]>

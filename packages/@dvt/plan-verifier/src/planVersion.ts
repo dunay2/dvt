@@ -30,7 +30,7 @@ export function parsePlanVersionOrThrow(raw: string): ParsedPlanVersion {
       `planVersion '${raw}' contains non-numeric parts.`
     );
   }
-  return { raw, major, minor, patch };
+  return patch === undefined ? { raw, major, minor } : { raw, major, minor, patch };
 }
 
 /**

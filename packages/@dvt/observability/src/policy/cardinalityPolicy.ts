@@ -1,4 +1,4 @@
-import type { MetricLabels } from '../contracts/ObservabilityContext';
+import type { MetricLabels } from '../contracts/ObservabilityContext.js';
 
 export interface CardinalityPolicy {
   readonly forbiddenLabelKeys: ReadonlySet<string>;

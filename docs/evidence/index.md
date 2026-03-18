@@ -22,6 +22,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260315 - PostgresStateStoreAdapter Phase 1 Items 5-7](ED-20260315-adapter-postgres-phase1-items5-7.md)
 - [ED-20260316 - G7 closeout](ED-20260316-g7-closeout.md)
 - [ED-20260316 - G7.3 provider run-id reconciliation](ED-20260316-g7-provider-ref-reconciliation.md)
+- [ED-20260318 — Stage 1.1 Planner Canonicalization: Boundary Contract Slices](ED-20260318-stage-1-1-planner-canonicalization-boundary-contracts.md)
 - [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
 - [Evidence Doc: G3 IntentStore Postgres + Reconciler Worker](ED-20260304-g3-intentstore-postgres-reconciler.md)
 - [Evidence Doc: G5 canary local-docker](ED-20260312-g5-canary-local-docker.md)
