@@ -30,6 +30,7 @@ export {
   RetryPolicySchema,
   TimeoutPolicySchema,
   UnsupportedPlannerPolicyError,
+  policyErrorToExecutabilityResult,
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 export type {
   AdapterPolicyMapper,
@@ -41,6 +42,11 @@ export type {
   TimeoutPolicy,
   UnsupportedPlannerPolicyDetails,
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+export { TEMPORAL_POLICY_MAPPING_TABLE } from './contracts/planner/PolicyMappingTable.v1.js';
+export type {
+  AdapterPolicyMappingTable,
+  PolicyMappingEntry,
+} from './contracts/planner/PolicyMappingTable.v1.js';
 export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v2.js';
 export type {
   ExecutabilityRejectionCode,

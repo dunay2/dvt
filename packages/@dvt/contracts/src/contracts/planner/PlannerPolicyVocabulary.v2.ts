@@ -1,5 +1,39 @@
 import { z } from 'zod';
 
+import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
+
+// ── Migration compatibility note ──────────────────────────────────────────────
+//
+// Stage 1.1 (Slice 2, commit 76ea442) removed the old raw-numeric PlannerPolicies
+// type from the public planner boundary. Callers that previously passed:
+//
+//   policies: { stepTimeoutMs: 60_000, maxRetries: 3, backoffMs: 1_000 }
+//
+// must migrate to the canonical class vocabulary:
+//
+//   policies: {
+//     timeout:     { kind: 'budget',     maxSeconds: 60 },
+//     retry:       { kind: 'at-most-N',  maxAttempts: 4 },  // 1 initial + 3 retries
+//     concurrency: { kind: 'bounded',    maxParallel: N },   // if applicable
+//   }
+//
+// Notes:
+//  - `stepTimeoutMs` maps to `timeout.kind='budget', maxSeconds = stepTimeoutMs / 1000`.
+//  - `maxRetries` maps to `retry.kind='at-most-N', maxAttempts = maxRetries + 1`
+//    (canonical maxAttempts counts total attempts including the first execution).
+//  - `backoffMs` has no direct mapping — the adapter owns backoff strategy.
+//    `at-most-N` uses the adapter's default backoff (exponential for Temporal).
+//  - `maxInFlight` / numeric concurrency maps to `concurrency.kind='bounded',
+//    maxParallel = maxInFlight`.
+//  - Omitting a class means no constraint is applied for that dimension.
+//
+// The removed schema artifacts are:
+//  - PlannerPoliciesSchema (use PlannerPolicyClassSetSchema)
+//  - parsePlannerPolicies  (use parsePlannerPolicyClassSet from validation.ts)
+//  - PlannerPolicies.v2.schema.json (replaced by PlannerPolicyClassSet.v2.schema.json)
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Canonical retry vocabulary for planner-authored runtime-neutral policy.
  *
@@ -96,8 +130,12 @@ export interface UnsupportedPlannerPolicyDetails<
 
 /**
  * Typed failure for adapters that cannot faithfully honor a canonical planner
- * policy. This is the local typed error until the full executability result
- * contract is canonized.
+ * policy.
+ *
+ * Throw this from `AdapterPolicyMapper` method implementations when a canonical
+ * policy class cannot be mapped to a runtime enforcement shape. The executability
+ * gate converts it to `ExecutabilityValidationResult { code: 'POLICY_UNSUPPORTED' }`
+ * via `policyErrorToExecutabilityResult`.
  */
 export class UnsupportedPlannerPolicyError<
   TPolicy extends PlannerPolicyValue = PlannerPolicyValue,
@@ -120,4 +158,49 @@ export interface AdapterPolicyMapper<TRetry, TTimeout, TConcurrency> {
   mapRetry(policy: RetryPolicy): TRetry;
   mapTimeout(policy: TimeoutPolicy): TTimeout;
   mapConcurrency(policy: ConcurrencyPolicy): TConcurrency;
+}
+
+// ── Executability result integration ─────────────────────────────────────────
+
+/**
+ * Converts an `UnsupportedPlannerPolicyError` thrown by an adapter's policy
+ * mapper into the canonical `ExecutabilityValidationResult` with
+ * `code: 'POLICY_UNSUPPORTED'`.
+ *
+ * ### Usage
+ *
+ * Adapters that implement `AdapterPolicyMapper` should catch
+ * `UnsupportedPlannerPolicyError` in their `IPlanExecutabilityValidator`
+ * implementation and delegate to this function rather than constructing the
+ * result shape manually:
+ *
+ * ```ts
+ * try {
+ *   mapper.mapRetry(plan.policies.retry);
+ * } catch (err) {
+ *   if (err instanceof UnsupportedPlannerPolicyError) {
+ *     return policyErrorToExecutabilityResult(err, planRef.planId, adapterId);
+ *   }
+ *   throw err;
+ * }
+ * ```
+ *
+ * @param err       - The caught `UnsupportedPlannerPolicyError`.
+ * @param planId    - Canonical plan identifier from the `PlanRef`.
+ * @param adapterId - Target adapter identifier (e.g. `'temporal'`).
+ */
+export function policyErrorToExecutabilityResult(
+  err: UnsupportedPlannerPolicyError,
+  planId: string,
+  adapterId: string
+): ExecutabilityValidationResult & { status: 'ERROR' } {
+  return {
+    status: 'ERROR',
+    planId,
+    adapterId,
+    code: 'POLICY_UNSUPPORTED',
+    degradable: false,
+    reason: err.message,
+    cause: `${err.details.policyType}:${err.details.policy.kind}`,
+  };
 }

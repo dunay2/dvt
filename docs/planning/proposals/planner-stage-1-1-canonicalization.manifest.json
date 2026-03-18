@@ -362,7 +362,11 @@
       "id": "G-01.7",
       "title": "Declarative policy vocabulary",
       "severity": "high",
-      "currentState": "planner_boundary_canonicalized_temporal_reference_only",
+      "currentState": "canonicalized",
+      "closedBy": [
+        "packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts"
+      ],
       "requiredArtifacts": [
         "adapter mapping tables beyond Temporal reference implementation",
         "structured unsupported-policy result integration with executability validation contract",
