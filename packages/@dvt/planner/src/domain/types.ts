@@ -1,27 +1,44 @@
 /**
  * ADR baseline: ADR-0002-plan-core-hash + ADR-0006-extensibility
+ *
+ * Canonical contract types are re-exported from @dvt/contracts so that
+ * internal domain files get the authoritative definition without importing
+ * directly from the contracts package at every call site.
+ *
+ * Only planner-internal types (ResolvedPolicies, PlannerInputEnvelopeV2
+ * pre-normalization form, NormalizedPlannerInput) are defined locally.
  */
 
-import type { PlannerPolicyClassSet } from '@dvt/contracts';
+import type {
+  DbtManifestLike,
+  ExecutionPlanV2,
+  GraphNode,
+  PlannerPolicyClassSet,
+  PlannerSelection,
+} from '@dvt/contracts';
 
-export type DbtManifestLike = Record<string, unknown>;
+// Canonical types — re-exported from @dvt/contracts (single source of truth).
+export type {
+  DbtManifestLike,
+  ExecutionPlanV2,
+  ExecutionStepV2,
+  GraphNode,
+  PlanCore,
+  PlannerSelection,
+  StepKind,
+} from '@dvt/contracts';
 
-// dbt defaults as string literals (backward compatible)
+// dbt step-kind constants (planner-local; not part of the public contract vocabulary).
 export const DBT_MODEL = 'DBT_MODEL';
 export const DBT_TEST = 'DBT_TEST';
 export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
 
-export type StepKind = string;
-
-export interface GraphNode {
-  /** Stable node identifier (content-addressable at graph level). */
-  nodeId: string;
-  /** Domain classification (dbt: model/test/snapshot; other domains free-form). */
-  resourceType: string;
-  /** Node dependency ids. Must reference existing nodeIds. */
-  dependsOn: readonly string[];
-}
-
+/**
+ * Planner-internal resolved policy state.
+ *
+ * Derived from PlannerPolicyClassSet by resolvePolicies().
+ * backoffMs is always 0 at the planner boundary — the adapter owns backoff strategy.
+ */
 export interface ResolvedPolicies {
   stepTimeoutMs?: number;
   retries?: {
@@ -33,55 +50,23 @@ export interface ResolvedPolicies {
   };
 }
 
-export interface PlannerSelection {
-  selectedNodeIds: readonly string[];
-  includeUpstream?: boolean;
-  includeDownstream?: boolean;
-}
-
-export interface ExecutionStepV2 {
-  /** MUST be stable. In v2.3.x: stepId === nodeId (no prefixes). */
-  stepId: string;
-  /** Extensible kind (string). dbt uses DBT_* constants. */
-  kind: StepKind;
-  /** Deterministically sorted dependency stepIds. */
-  dependsOn: readonly string[];
-  /** Optional domain-specific config for the step type. */
-  stepTypeConfig?: Record<string, unknown>;
-}
-
-export interface PlanCore {
-  metadata: {
-    planVersion: '2.3';
-    inputHashSha256: string;
-  };
-  steps: readonly ExecutionStepV2[];
-}
-
-export interface ExecutionPlanV2 extends PlanCore {
-  metadata: PlanCore['metadata'] & {
-    planId: string;
-    createdAtIso: string;
-  };
-  /**
-   * Observability is post-hash (must not affect planId).
-   * Use for correlation tags, tenant info, user info, etc.
-   */
-  observability?: {
-    tags?: Record<string, string>;
-    extra?: Record<string, unknown>;
-    [k: string]: unknown;
-  };
-}
-
+/**
+ * Planner-internal raw input envelope (pre-normalization).
+ *
+ * Intentionally differs from the public PlannerInputEnvelopeV2 in @dvt/contracts:
+ * - `nodes` is optional here because the planner can derive nodes from `manifest`
+ * - `manifestRef` and `environment` are not present (handled at the application boundary)
+ *
+ * After InputEnvelopeValidator runs, the output is NormalizedPlannerInput where
+ * `nodes` is always present.
+ */
 export interface PlannerInputEnvelopeV2 {
-  /** Optional dbt manifest payload; if provided and `nodes` is omitted, nodes are derived from manifest. */
   manifest?: DbtManifestLike;
   nodes?: readonly GraphNode[];
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
   observability?: ExecutionPlanV2['observability'];
-  // Volatile / orchestration metadata (excluded from inputHashSha256):
+  // Volatile orchestration metadata — excluded from inputHashSha256.
   requestedBy?: string;
   requestId?: string;
   requestedAtIso?: string;
