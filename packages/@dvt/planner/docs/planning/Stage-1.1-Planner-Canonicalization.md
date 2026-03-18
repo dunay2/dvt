@@ -578,6 +578,23 @@ The planner must reject envelopes that provide:
 planning. `manifest` and `nodes` are compatibility paths, not equal-precedence
 authorities.
 
+### Lifecycle rule
+
+Stage 1.1 does **not** grant permanent first-class status to all three graph
+sources.
+
+- `manifestRef` is the canonical forward-looking graph source
+- `manifest` and `nodes` are compatibility-only input modes in the current line
+- new planner capabilities or policy semantics must be defined against
+  `manifestRef` first, not invented separately for compatibility paths
+- support for `manifest` and `nodes` must be justified in the canonical
+  compatibility note rather than assumed to live forever by default
+- removing either compatibility path requires an explicit deprecation or
+  retention note in canonical compatibility governance
+
+That means Stage 1.1 treats `manifest` and `nodes` as transitional or
+specialized modes, not as permanently equal citizens of the public boundary.
+
 Inside the planner boundary, every accepted input is normalized into one
 internal canonical model before graph build or hashing.
 
@@ -629,7 +646,8 @@ When the public input uses `manifestRef`:
 
 `manifestRef` is not a convenience hack. It is the canonical large-artifact
 entry path. Raw `manifest` and expanded `nodes` remain transitional or
-specialized input modes.
+specialized input modes and do not receive permanent first-class status from
+Stage 1.1.
 
 ### Minimum boundary port shape
 
@@ -1336,6 +1354,7 @@ closed.
 | Execution binding verification        | Without it, stale `compiledCodeRef` bindings lack a canonical rejection path             | binding verification result contract                                |
 | Execution binding storage contract    | Without it, the repository cannot say what stored form carries binding data              | state or engine boundary for associated binding material            |
 | Validation-to-start handoff contract  | Without it, executability validation and `startRun` admit a TOCTOU gap                   | admission or state boundary for validated-plan persistence/handoff  |
+| Input-path deprecation policy         | Without it, `manifest` and `nodes` can remain forever as undeclared compatibility debt   | canonical compatibility note with retention/deprecation rule        |
 | Declarative policy vocabulary         | Without it, runtimes can reinterpret retry, timeout, and concurrency classes differently | canonical policy vocabulary or shared contract enum                 |
 | Schema sync mechanism                 | Without it, public docs and examples will drift from contracts                           | generation or CI verification task                                  |
 | Named migration owners and dates      | Without them, migration remains paper planning                                           | assigned execution tracker entries                                  |
@@ -1555,8 +1574,8 @@ Residual questions that do **not** block Stage 1.1 ownership:
 
 1. Should public planner diagnostics remain planner-local until a second
    consumer exists?
-2. Should compatibility policy prefer “current + previous minor” or explicit
-   translator layers after the first major?
+2. What deprecation or retention window governs compatibility-only graph
+   sources such as `manifest` and `nodes`?
 3. Which generator pipeline should materialize canonical JSON schemas from the
    shared contract source?
 

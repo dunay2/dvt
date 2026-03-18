@@ -201,7 +201,7 @@
       "id": "D-06",
       "title": "Input Envelope Strategy",
       "humanSectionRefs": ["14"],
-      "policyStatus": "selected",
+      "policyStatus": "selected_with_gap",
       "decisionClass": "boundary_rule"
     },
     {
@@ -328,6 +328,16 @@
       "requiredArtifacts": [
         "admission or state boundary for validated canonical plan persistence",
         "fail-closed availability rule for executability-checked start"
+      ]
+    },
+    {
+      "id": "G-01.10",
+      "title": "Input-path deprecation policy",
+      "severity": "medium",
+      "currentState": "not_canonicalized",
+      "requiredArtifacts": [
+        "canonical compatibility note for manifest and nodes retention or deprecation",
+        "declared review or removal rule for compatibility-only graph sources"
       ]
     },
     {
