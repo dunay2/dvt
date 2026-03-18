@@ -68,7 +68,26 @@
       "Bash(pnpm --filter @dvt/planner exec vitest run --reporter=verbose)",
       "Bash(pnpm --filter @dvt/planner exec vitest run test/unit/step-registry-integration.test.ts --reporter=verbose)",
       "Bash(pnpm --filter @dvt/planner exec tsc --noEmit)",
-      "Bash(pnpm --filter @dvt/contracts test)"
+      "Bash(pnpm --filter @dvt/contracts test)",
+      "Bash(ls tsconfig*.json)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''vitest:'''', d.get\\(''''devDependencies'''',{}\\).get\\(''''vitest'''',''''absent''''\\)\\); print\\(''''typescript:'''', d.get\\(''''devDependencies'''',{}\\).get\\(''''typescript'''',''''absent''''\\)\\)\")",
+      "Bash(for pkg:*)",
+      "Bash(do echo:*)",
+      "Read(//f/segundodvt/dvt/packages/@dvt/$pkg/**)",
+      "Bash(pnpm --filter @dvt/planner build)",
+      "Bash(pnpm --filter @dvt/plan-verifier build)",
+      "Bash(pnpm --filter @dvt/traceability-service build)",
+      "Bash(pnpm --filter @dvt/engine build)",
+      "Bash(pnpm --filter @dvt/delivery build)",
+      "Bash(pnpm --filter @dvt/run-domain build)",
+      "Bash(pnpm --filter dvt-projector-worker build)",
+      "Bash(pnpm --filter dvt-lineage-worker build)",
+      "Bash(pnpm --filter dvt-lineage-worker test)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''composite:'''', d.get\\(''''compilerOptions'''',{}\\).get\\(''''composite''''\\)\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''scripts'''',{}\\), indent=2\\)\\)\")",
+      "Bash(pnpm --filter dvt-projector-worker exec tsc -p test/tsconfig.json --noEmit)",
+      "Bash(pnpm --filter dvt-projector-worker typecheck)",
+      "Bash(pnpm --filter dvt-projector-worker exec tsc -p tsconfig.json --noEmit)"
     ]
   }
 }

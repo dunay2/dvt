@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.node-runtime.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": "src"
   },
-  "include": ["src/**/*.ts", "test/**/*.test.ts"]
+  "include": ["src/**/*.ts"]
 }
