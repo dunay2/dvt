@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "pretypecheck": "pnpm --filter \"dvt-projector-worker^...\" build",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
     "pretest": "pnpm --filter \"dvt-projector-worker^...\" build",
     "test": "node --import tsx --test test/**/*.test.ts"
   },
