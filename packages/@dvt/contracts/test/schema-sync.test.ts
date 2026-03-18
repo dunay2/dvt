@@ -37,7 +37,10 @@ const validateEnvelope = new Ajv({ strict: false }).compile(envelopeSchemaJson);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function zodValid(schema: { safeParse: (v: unknown) => { success: boolean } }, input: unknown) {
+function zodValid(
+  schema: { safeParse: (v: unknown) => { success: boolean } },
+  input: unknown
+): boolean {
   return schema.safeParse(input).success;
 }
 
