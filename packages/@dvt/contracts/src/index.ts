@@ -47,6 +47,13 @@ export type {
   ExecutabilityValidationResult,
   IPlanExecutabilityValidator,
 } from './contracts/planner/PlanExecutabilityValidation.v1.js';
+export type {
+  BindingRejectionCode,
+  ExecutionBindingVerificationResult,
+  IExecutionBindingVerifier,
+  PlanBindingRecord,
+  StepBindingEntry,
+} from './contracts/planner/ExecutionBindingVerification.v1.js';
 export * from './contracts/lineage/ILineageSink.v1.js';
 export * from './errors.js';
 export * from './ports/artifact-store.js';
