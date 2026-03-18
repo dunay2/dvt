@@ -15,7 +15,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -b tsconfig.json --force",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "schema:verify": "vitest run --passWithNoTests test/schema-sync.test.ts"
   },
   "devDependencies": {
     "typescript": "5.9.3",

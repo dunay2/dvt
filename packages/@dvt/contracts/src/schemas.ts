@@ -328,7 +328,7 @@ export const PlannerInputEnvelopeV2Schema = z
   .object({
     manifest: z.record(z.string(), z.unknown()).optional(),
     manifestRef: DbtManifestRefSchema.optional(),
-    nodes: z.array(GraphNodeSchema),
+    nodes: z.array(GraphNodeSchema).optional(),
     selection: PlannerSelectionSchema,
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),

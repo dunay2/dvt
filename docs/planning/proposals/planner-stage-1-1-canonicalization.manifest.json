@@ -378,7 +378,8 @@
       "id": "G-01.4",
       "title": "Schema sync mechanism",
       "severity": "medium",
-      "currentState": "intention_only",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/test/schema-sync.test.ts",
       "requiredArtifacts": ["generation or CI verification task"]
     },
     {
