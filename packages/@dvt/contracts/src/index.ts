@@ -21,6 +21,7 @@ export type {
   PlannerInputEnvelope,
   PlannerInputEnvelopeV2,
   PlannerSelection,
+  StepKind,
 } from './contracts/planner/ExecutionPlan.v2.js';
 export {
   ConcurrencyPolicySchema,
