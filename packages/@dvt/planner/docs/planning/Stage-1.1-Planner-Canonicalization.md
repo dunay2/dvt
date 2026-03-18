@@ -1112,34 +1112,35 @@ Any extension path must require:
 Until the target state lands, unknown `StepKind` may pass only when all of the
 following are true:
 
-- the kind is explicitly allowlisted by one canonical runtime-capability
-  governance surface for the target environment
+- the kind appears in one canonical bridge registry under `@dvt/contracts`
 - the path emits warning-grade diagnostics
 - the extension remains non-canonical and subject to later rejection
 
 ### Allowlist authority rule
 
-That allowlist must not be treated as adapter-local folklore.
+That allowlist must not be treated as adapter-local folklore or runtime-local
+configuration.
 
-- the repository needs one governed allowlist authority for bridge-period
-  unknown `StepKind` admission
-- if the bridge allowlist lives in runtime capability governance, all adapters
-  must consume that same governed surface rather than inventing separate local
-  lists
-- if the repository later promotes unknown-kind admission into shared contracts,
-  that promotion must replace the bridge allowlist rather than silently
-  coexist with it
-- "equivalent governed runtime policy" is not enough by itself; the repository
-  must name one canonical source of truth
+- the long-term canonical source of truth is a normative `KnownStepKind` enum or
+  equivalent shared contract in `@dvt/contracts`
+- adding a fully known `StepKind` to the system requires a contracts change, not
+  a runtime-only allowlist update
+- during the bridge period, provisional kinds must live in a central
+  `StepKindBridgeRegistry` or equivalent governed contract artifact under
+  `@dvt/contracts`
+- each bridge entry must carry explicit owner and decision-date metadata
+- adapters may consume that central registry, but they must not invent separate
+  local allowlists
 
-Until that source is canonized, Stage 1.1 can state the bridge stance but must
-still treat allowlist authority as an explicit follow-on gap.
+This bridge registry is not a free runtime escape hatch. It is a visible,
+compile-time governed inventory of provisional kinds pending promotion to
+`KnownStepKind` or rejection.
 
 Default bridge behavior remains conservative:
 
 - unknown `StepKind` is not treated as canonical by default
-- absence of explicit allowlisting or capability approval should result in
-  rejection
+- absence from `KnownStepKind` and absence from `StepKindBridgeRegistry` should
+  result in rejection
 
 ### Migration note
 
@@ -1423,6 +1424,25 @@ Stage 1.1 is not “done” because a document exists. It is done only when:
 ### Goal
 
 Remove duplicated public contract authority without breaking tests and consumers.
+
+### Baseline inventory prerequisite
+
+Before executing Phase 1, the team must publish a baseline inventory, for
+example at:
+
+- `docs/planning/migration/stage-1-1-baseline-snapshot.md`
+
+That inventory must enumerate exactly:
+
+- which `ExecutionPlanV2`, `PlannerInputEnvelopeV2`, and `IExecutionPlanner`
+  types exist today under `@dvt/contracts/src/contracts/planner/`
+- which equivalent shapes exist under
+  `@dvt/planner/src/domain/types.ts` and planner-local contract wrappers
+- whether each pair is identical, divergent, or a subset/superset relationship
+
+Phase 1 must not start from assumption alone. Without this inventory, a
+declaration that planner-local equivalents are non-authoritative can break
+consumers if the shapes have already drifted.
 
 ### Migration Phases
 

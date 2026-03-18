@@ -346,8 +346,8 @@
       "severity": "high",
       "currentState": "not_canonicalized",
       "requiredArtifacts": [
-        "canonical source of truth for bridge-period unknown StepKind allowlisting",
-        "shared runtime-capability or contracts surface consumed consistently across adapters"
+        "KnownStepKind contract or equivalent canonical contracts enum",
+        "StepKindBridgeRegistry or equivalent central provisional-kind registry with owner and decision-date metadata"
       ]
     },
     {
