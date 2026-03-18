@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseRunEventRecord, parseRunEventWrite } from '../src/validation';
+import { parseRunEventRecord, parseRunEventWrite } from '../src/validation.js';
 
 import {
   STEP_STARTED_WITHOUT_COMPILED_CODE_REF_RECORD_FIXTURE,

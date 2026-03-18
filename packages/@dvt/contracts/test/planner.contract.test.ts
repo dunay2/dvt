@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 import {
   type PlannerBuildResultV2,
   type PlannerInputEnvelopeV2,
-} from '../src/contracts/planner/ExecutionPlan.v2.ts';
-import { type IPlanner } from '../src/contracts/planner/IExecutionPlanner.v2.ts';
+} from '../src/contracts/planner/ExecutionPlan.v2.js';
+import { type IPlanner } from '../src/contracts/planner/IExecutionPlanner.v2.js';
 import {
   ExecutionPlanV2Schema,
   PlannerBuildResultV2Schema,
   PlannerInputEnvelopeV2Schema,
   type PlannerInputEnvelopeV2SchemaT,
-} from '../src/schemas.ts';
+} from '../src/schemas.js';
 
 import {
   INVALID_PLANNER_INPUT_FIXTURE,

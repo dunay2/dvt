@@ -6,7 +6,7 @@ import {
   PlannerPolicyClassSetSchema,
   RetryPolicySchema,
   TimeoutPolicySchema,
-} from '../src/index.ts';
+} from '../src/index.js';
 
 describe('contracts: planner policy vocabulary', () => {
   it('exports retry policy schema from @dvt/contracts root barrel', () => {

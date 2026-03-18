@@ -7,7 +7,7 @@ import {
   parseRunContext,
   parseSignalRequest,
   toValidationErrorResponse,
-} from '../src/validation';
+} from '../src/validation.js';
 
 describe('contracts: validation helpers', () => {
   it('parses PlanRef with valid input', () => {

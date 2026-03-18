@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AuthorizationError } from '../src/errors';
+import { AuthorizationError } from '../src/errors.js';
 
 describe('contracts: AuthorizationError', () => {
   it('exports class with name and code', () => {
