@@ -316,8 +316,8 @@
       "severity": "high",
       "currentState": "not_canonicalized",
       "requiredArtifacts": [
-        "state or engine boundary for associated binding material",
-        "canonical stored-plan versus stored-binding rule"
+        "state or engine boundary for PlanBindingRecord or equivalent associated binding material",
+        "canonical stored-plan versus stored-binding rule and digest-verification path"
       ]
     },
     {

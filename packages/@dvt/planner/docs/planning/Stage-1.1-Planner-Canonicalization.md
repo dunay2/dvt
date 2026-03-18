@@ -832,6 +832,33 @@ This avoids three failure modes:
   material
 - treating both the core plan and the enriched plan as co-canonical plan forms
 
+The minimum target-state storage contract should be equivalent to:
+
+```ts
+type PlanBindingRecord = {
+  planId: string;
+  bindings: Array<{
+    stepId: string;
+    compiledCodeRef: string;
+    bindingDigest?: string;
+  }>;
+};
+```
+
+This shape is **illustrative until canonized**. It exists to make the storage
+split explicit:
+
+- the state store persists the core plan identified by `planId`
+- binding records persist artifact bindings separately from the hashed plan body
+- the engine reads the binding record at execution time and verifies each
+  binding against current immutable artifact state
+- a different binding record may exist for the same `planId` without implying a
+  new logical plan identity
+
+If artifact content does not match the stored binding digest or equivalent
+integrity material, the engine must reject rather than silently executing
+against drifted artifacts.
+
 The follow-on contract still needed is the storage boundary for that binding
 material.
 
