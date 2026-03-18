@@ -9,6 +9,7 @@ export * from './adapters/IProviderAdapter.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/IStartRunIntentStore.v1.js';
 export * from './contracts/engine/StartRunIntentPolicy.v1.js';
+export { GRAPH_SOURCE_COMPATIBILITY_POLICY } from './contracts/planner/ExecutionPlan.v2.js';
 export type {
   DbtManifestLike,
   DbtManifestRef,

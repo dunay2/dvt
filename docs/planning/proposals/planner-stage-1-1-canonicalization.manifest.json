@@ -341,7 +341,8 @@
       "id": "G-01.10",
       "title": "Input-path deprecation policy",
       "severity": "medium",
-      "currentState": "not_canonicalized",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts GRAPH_SOURCE_COMPATIBILITY_POLICY",
       "requiredArtifacts": [
         "canonical compatibility note for manifest and nodes retention or deprecation",
         "declared review or removal rule for compatibility-only graph sources"
