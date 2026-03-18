@@ -276,7 +276,8 @@
       "id": "G-01.1",
       "title": "Executability validation contract",
       "severity": "high",
-      "currentState": "not_canonicalized",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
       "requiredArtifacts": [
         "@dvt/contracts definition for validation result",
         "@dvt/engine contract surface for validatePlan or equivalent"
@@ -286,7 +287,8 @@
       "id": "G-01.2",
       "title": "Artifact resolver port interface",
       "severity": "high",
-      "currentState": "not_canonicalized",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/planner/src/ports/IArtifactResolver.ts",
       "requiredArtifacts": [
         "planner boundary contract or application service boundary doc"
       ]
@@ -295,7 +297,8 @@
       "id": "G-01.3",
       "title": "custom namespace registration model",
       "severity": "high",
-      "currentState": "underspecified",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts",
       "requiredArtifacts": [
         "extension registration contract",
         "planner and runtime validation split note"
@@ -305,7 +308,8 @@
       "id": "G-01.6",
       "title": "Execution binding verification contract",
       "severity": "high",
-      "currentState": "not_canonicalized",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts",
       "requiredArtifacts": [
         "canonical engine or contracts surface for binding verification result",
         "binding mismatch rejection path"
@@ -315,7 +319,8 @@
       "id": "G-01.8",
       "title": "Execution binding storage contract",
       "severity": "high",
-      "currentState": "not_canonicalized",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts",
       "requiredArtifacts": [
         "state or engine boundary for PlanBindingRecord or equivalent associated binding material",
         "canonical stored-plan versus stored-binding rule and digest-verification path"
@@ -325,7 +330,8 @@
       "id": "G-01.9",
       "title": "Validation-to-start handoff contract",
       "severity": "high",
-      "currentState": "not_canonicalized",
+      "currentState": "canonicalized",
+      "closedBy": "packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts",
       "requiredArtifacts": [
         "admission or state boundary for persisted plan lifecycle states such as pending-validation valid and invalid",
         "fail-closed availability rule for executability-checked start"

@@ -59,6 +59,14 @@ export type {
   PlanValidationRecord,
   PlanValidationState,
 } from './contracts/planner/PlanValidationLifecycle.v1.js';
+export type {
+  CustomPolicyMap,
+  CustomPolicyNamespaceEntry,
+  CustomPolicyRejectionCode,
+  CustomPolicySchemaValidator,
+  CustomPolicyValidationError,
+  ICustomPolicyNamespaceRegistry,
+} from './contracts/planner/CustomPolicyNamespaceRegistry.v1.js';
 export * from './contracts/lineage/ILineageSink.v1.js';
 export * from './errors.js';
 export * from './ports/artifact-store.js';
