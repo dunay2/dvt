@@ -44,6 +44,6 @@ Canonical catalog of ADRs in this repository.
 ## Related
 
 - [ADR landing page](index.md)
-- [ADR implementation status](ADR-Implementation%20Status.md)
+- [ADR implementation status](ADR-Implementation-Status.md)
 
 _Last updated: 2026-03-18_
