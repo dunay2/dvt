@@ -5,8 +5,8 @@ import type { IListRunsUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
-import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { mapRuntimeDomainError } from './authErrorMapper.js';
+import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 
 const MAX_LIST_LIMIT = 100;
 

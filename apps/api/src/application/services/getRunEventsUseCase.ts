@@ -15,7 +15,10 @@ export class GetRunEventsUseCase implements IGetRunEventsUseCase {
     query: GetRunEventsQuery,
     context: AuthorizedQueryExecutionContext
   ): Promise<GetRunEventsResult> {
-    const metadata = await this.stateStore.getRunMetadataByRunId(context.scope.tenantId.value, query.runId);
+    const metadata = await this.stateStore.getRunMetadataByRunId(
+      context.scope.tenantId.value,
+      query.runId
+    );
     if (!metadata) {
       throw new RunMetadataNotFoundError(query.runId);
     }
@@ -27,7 +30,10 @@ export class GetRunEventsUseCase implements IGetRunEventsUseCase {
 
     return {
       items,
-      nextCursor: query.limit !== undefined && items.length === query.limit ? (items.at(-1)?.runSeq ?? null) : null,
+      nextCursor:
+        query.limit !== undefined && items.length === query.limit
+          ? (items.at(-1)?.runSeq ?? null)
+          : null,
     };
   }
 }

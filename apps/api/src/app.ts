@@ -123,10 +123,16 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       authenticator: protectedModule.authenticator,
       authorizer: protectedModule.authorizer,
     };
-    const getRunStatusUseCase = new GetRunStatusUseCase(protectedModule.engine, protectedModule.stateStore);
+    const getRunStatusUseCase = new GetRunStatusUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore
+    );
     const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore);
     const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore);
-    const signalRunUseCase = new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore);
+    const signalRunUseCase = new SignalRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore
+    );
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       '/runs/start',

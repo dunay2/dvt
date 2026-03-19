@@ -48,10 +48,17 @@ describe('SignalRunUseCase', () => {
       },
     };
 
-    const useCase = new SignalRunUseCase(engine as never, stateStore as never, () => '2026-03-19T00:00:00.000Z');
+    const useCase = new SignalRunUseCase(
+      engine as never,
+      stateStore as never,
+      () => '2026-03-19T00:00:00.000Z'
+    );
 
     await expect(
-      useCase.execute({ runId: 'run-1', signalType: 'CANCEL', reason: 'operator request' }, commandContext)
+      useCase.execute(
+        { runId: 'run-1', signalType: 'CANCEL', reason: 'operator request' },
+        commandContext
+      )
     ).resolves.toEqual({ runId: 'run-1', signalType: 'CANCEL', accepted: true });
     expect(capturedRequest).toEqual({
       signalId: 'req-1:run-1:CANCEL',

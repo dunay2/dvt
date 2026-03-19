@@ -2,20 +2,46 @@
 
 import { getRunEventsRoute } from '../../../src/entrypoints/http/getRunEventsRoute.js';
 
-function createReply() {
+function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
   };
 }
 
-function createDeps() {
+function createDeps(): {
+  authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
+  authorizer: { authorize: ReturnType<typeof vi.fn> };
+  useCase: { execute: ReturnType<typeof vi.fn> };
+} {
   return {
     authenticator: {
-      authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: { principalId: 'u', subjectId: 'u', issuer: 'i', audience: 'a', principalType: 'user', expiresAt: new Date('2030-01-01T00:00:00Z'), rawScopes: [], assertedTenantIds: ['tenant-a'], assertedProjectIds: [] } }),
+      authenticateBearerToken: vi.fn().mockResolvedValue({
+        ok: true,
+        principal: {
+          principalId: 'u',
+          subjectId: 'u',
+          issuer: 'i',
+          audience: 'a',
+          principalType: 'user',
+          expiresAt: new Date('2030-01-01T00:00:00Z'),
+          rawScopes: [],
+          assertedTenantIds: ['tenant-a'],
+          assertedProjectIds: [],
+        },
+      }),
     },
     authorizer: {
-      authorize: vi.fn().mockResolvedValue({ ok: true, context: { principal: {}, scope: { tenantId: { value: 'tenant-a' } }, action: { kind: 'query', name: 'run:logs:view' }, requestId: 'req-1', authorizedAt: new Date('2026-03-19T00:00:00Z') } }),
+      authorize: vi.fn().mockResolvedValue({
+        ok: true,
+        context: {
+          principal: {},
+          scope: { tenantId: { value: 'tenant-a' } },
+          action: { kind: 'query', name: 'run:logs:view' },
+          requestId: 'req-1',
+          authorizedAt: new Date('2026-03-19T00:00:00Z'),
+        },
+      }),
     },
     useCase: {
       execute: vi.fn().mockResolvedValue({ items: [{ runSeq: 1 }], nextCursor: 1 }),
@@ -29,12 +55,20 @@ describe('getRunEventsRoute', () => {
     const reply = createReply();
 
     await getRunEventsRoute(
-      { id: 'req-1', headers: {}, params: { runId: 'run-1' }, query: { tenantId: 'tenant-a', afterSeq: '0', limit: '10' } } as never,
+      {
+        id: 'req-1',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: 'tenant-a', afterSeq: '0', limit: '10' },
+      } as never,
       reply as never,
       deps as never
     );
 
-    expect(deps.useCase.execute).toHaveBeenCalledWith({ runId: 'run-1', afterSeq: 0, limit: 10 }, expect.anything());
+    expect(deps.useCase.execute).toHaveBeenCalledWith(
+      { runId: 'run-1', afterSeq: 0, limit: 10 },
+      expect.anything()
+    );
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -71,7 +105,12 @@ describe('getRunEventsRoute', () => {
     const reply = createReply();
 
     await getRunEventsRoute(
-      { id: 'req-4', headers: {}, params: { runId: 'run-1' }, query: { tenantId: 'tenant-a', afterSeq: 'abc' } } as never,
+      {
+        id: 'req-4',
+        headers: {},
+        params: { runId: 'run-1' },
+        query: { tenantId: 'tenant-a', afterSeq: 'abc' },
+      } as never,
       reply as never,
       deps as never
     );

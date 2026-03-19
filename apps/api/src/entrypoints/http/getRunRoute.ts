@@ -5,8 +5,8 @@ import type { IGetRunStatusUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { TenantId } from '../../domain/auth/types.js';
 
-import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { mapRuntimeDomainError } from './authErrorMapper.js';
+import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 
 function extractBearerToken(authorizationHeader: string | undefined): string | undefined {
   const match = authorizationHeader?.match(/^Bearer\s+(.+)$/i);
@@ -22,7 +22,10 @@ function parseEnriched(value: string | undefined): { ok: true; value: boolean } 
 }
 
 export async function getRunRoute(
-  request: FastifyRequest<{ Params: { runId?: string }; Querystring: { tenantId?: string; enriched?: string } }>,
+  request: FastifyRequest<{
+    Params: { runId?: string };
+    Querystring: { tenantId?: string; enriched?: string };
+  }>,
   reply: FastifyReply,
   deps: {
     authenticator: IAuthenticator;
@@ -64,10 +67,7 @@ export async function getRunRoute(
   }
 
   try {
-    const result = await deps.useCase.execute(
-      { runId, enriched: enriched.value },
-      auth.context
-    );
+    const result = await deps.useCase.execute({ runId, enriched: enriched.value }, auth.context);
     reply.code(200).send(result);
   } catch (error) {
     const mapped = mapRuntimeDomainError(error);

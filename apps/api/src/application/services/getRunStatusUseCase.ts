@@ -20,7 +20,10 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     query: GetRunStatusQuery,
     context: AuthorizedQueryExecutionContext
   ): Promise<GetRunStatusResult> {
-    const metadata = await this.stateStore.getRunMetadataByRunId(context.scope.tenantId.value, query.runId);
+    const metadata = await this.stateStore.getRunMetadataByRunId(
+      context.scope.tenantId.value,
+      query.runId
+    );
     if (!metadata) {
       throw new RunMetadataNotFoundError(query.runId);
     }

@@ -1,6 +1,6 @@
-﻿import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
-import type { AuthorizedExecutionContext, IAuthenticator } from '../../application/ports/auth.js';
+﻿import type { AuthorizedExecutionContext, IAuthenticator } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
+import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
 
 import {
   mapAuthenticationFailure,

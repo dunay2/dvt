@@ -14,7 +14,13 @@ function createReply(): RouteReply {
   };
 }
 
-function createDeps(result = { runId: 'run-1', tenantId: 'tenant-a', status: 'RUNNING', enriched: false }) {
+function createDeps(
+  result = { runId: 'run-1', tenantId: 'tenant-a', status: 'RUNNING', enriched: false }
+): {
+  authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
+  authorizer: { authorize: ReturnType<typeof vi.fn> };
+  useCase: { execute: ReturnType<typeof vi.fn> };
+} {
   return {
     authenticator: {
       authenticateBearerToken: vi.fn().mockResolvedValue({
@@ -66,12 +72,20 @@ describe('getRunRoute', () => {
       deps as never
     );
 
-    expect(deps.useCase.execute).toHaveBeenCalledWith({ runId: 'run-1', enriched: false }, expect.anything());
+    expect(deps.useCase.execute).toHaveBeenCalledWith(
+      { runId: 'run-1', enriched: false },
+      expect.anything()
+    );
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
   it('passes enriched=true explicitly to the use case', async () => {
-    const deps = createDeps({ runId: 'run-1', tenantId: 'tenant-a', status: 'RUNNING', enriched: true });
+    const deps = createDeps({
+      runId: 'run-1',
+      tenantId: 'tenant-a',
+      status: 'RUNNING',
+      enriched: true,
+    });
     const reply = createReply();
 
     await getRunRoute(
@@ -85,7 +99,10 @@ describe('getRunRoute', () => {
       deps as never
     );
 
-    expect(deps.useCase.execute).toHaveBeenCalledWith({ runId: 'run-1', enriched: true }, expect.anything());
+    expect(deps.useCase.execute).toHaveBeenCalledWith(
+      { runId: 'run-1', enriched: true },
+      expect.anything()
+    );
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -136,6 +153,9 @@ describe('getRunRoute', () => {
 
     expect(deps.useCase.execute).not.toHaveBeenCalled();
     expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: 'BAD_REQUEST', code: 'INVALID_ENRICHED_FLAG' });
+    expect(reply.send).toHaveBeenCalledWith({
+      error: 'BAD_REQUEST',
+      code: 'INVALID_ENRICHED_FLAG',
+    });
   });
 });

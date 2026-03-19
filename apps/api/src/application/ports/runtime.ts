@@ -1,7 +1,8 @@
 ﻿import type { EventEnvelope, RunStatusSnapshot } from '@dvt/contracts';
 
-import type { AuthorizedCommandExecutionContext, AuthorizedExecutionContext } from './auth.js';
 import type { AuthorizationAction } from '../../domain/auth/types.js';
+
+import type { AuthorizedCommandExecutionContext, AuthorizedExecutionContext } from './auth.js';
 
 export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<
   Extract<AuthorizationAction, { readonly kind: 'query' }>

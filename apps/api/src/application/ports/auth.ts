@@ -61,7 +61,9 @@ export interface StartRunCommand {
   readonly selection: ReadonlyArray<string>;
 }
 
-export interface AuthorizedExecutionContext<TAction extends AuthorizationAction = AuthorizationAction> {
+export interface AuthorizedExecutionContext<
+  TAction extends AuthorizationAction = AuthorizationAction,
+> {
   readonly principal: AuthenticatedPrincipal;
   readonly scope: ExecutionScope;
   readonly action: TAction;

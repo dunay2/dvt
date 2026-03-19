@@ -2,20 +2,46 @@
 
 import { signalRunRoute } from '../../../src/entrypoints/http/signalRunRoute.js';
 
-function createReply() {
+function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
   };
 }
 
-function createDeps() {
+function createDeps(): {
+  authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
+  authorizer: { authorize: ReturnType<typeof vi.fn> };
+  useCase: { execute: ReturnType<typeof vi.fn> };
+} {
   return {
     authenticator: {
-      authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: { principalId: 'u', subjectId: 'u', issuer: 'i', audience: 'a', principalType: 'user', expiresAt: new Date('2030-01-01T00:00:00Z'), rawScopes: [], assertedTenantIds: ['tenant-a'], assertedProjectIds: [] } }),
+      authenticateBearerToken: vi.fn().mockResolvedValue({
+        ok: true,
+        principal: {
+          principalId: 'u',
+          subjectId: 'u',
+          issuer: 'i',
+          audience: 'a',
+          principalType: 'user',
+          expiresAt: new Date('2030-01-01T00:00:00Z'),
+          rawScopes: [],
+          assertedTenantIds: ['tenant-a'],
+          assertedProjectIds: [],
+        },
+      }),
     },
     authorizer: {
-      authorize: vi.fn().mockResolvedValue({ ok: true, context: { principal: {}, scope: { tenantId: { value: 'tenant-a' } }, action: { kind: 'command', name: 'run:signal' }, requestId: 'req-1', authorizedAt: new Date('2026-03-19T00:00:00Z') } }),
+      authorize: vi.fn().mockResolvedValue({
+        ok: true,
+        context: {
+          principal: {},
+          scope: { tenantId: { value: 'tenant-a' } },
+          action: { kind: 'command', name: 'run:signal' },
+          requestId: 'req-1',
+          authorizedAt: new Date('2026-03-19T00:00:00Z'),
+        },
+      }),
     },
     useCase: {
       execute: vi.fn().mockResolvedValue({ runId: 'run-1', signalType: 'CANCEL', accepted: true }),
@@ -29,12 +55,20 @@ describe('signalRunRoute', () => {
     const reply = createReply();
 
     await signalRunRoute(
-      { id: 'req-1', headers: {}, params: { runId: 'run-1' }, body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator cancel' } } as never,
+      {
+        id: 'req-1',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator cancel' },
+      } as never,
       reply as never,
       deps as never
     );
 
-    expect(deps.useCase.execute).toHaveBeenCalledWith({ runId: 'run-1', signalType: 'CANCEL', reason: 'operator cancel' }, expect.anything());
+    expect(deps.useCase.execute).toHaveBeenCalledWith(
+      { runId: 'run-1', signalType: 'CANCEL', reason: 'operator cancel' },
+      expect.anything()
+    );
     expect(reply.code).toHaveBeenCalledWith(202);
   });
 
@@ -43,7 +77,12 @@ describe('signalRunRoute', () => {
     const reply = createReply();
 
     await signalRunRoute(
-      { id: 'req-2', headers: {}, params: { runId: 'run-1' }, body: { tenantId: 'tenant-a', signalType: 'MAKE_IT_GO_FASTER' } } as never,
+      {
+        id: 'req-2',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', signalType: 'MAKE_IT_GO_FASTER' },
+      } as never,
       reply as never,
       deps as never
     );
@@ -57,7 +96,12 @@ describe('signalRunRoute', () => {
     const reply = createReply();
 
     await signalRunRoute(
-      { id: 'req-3', headers: {}, params: { runId: 'run-1' }, body: { signalType: 'CANCEL' } } as never,
+      {
+        id: 'req-3',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { signalType: 'CANCEL' },
+      } as never,
       reply as never,
       deps as never
     );

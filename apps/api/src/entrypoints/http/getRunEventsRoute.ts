@@ -5,8 +5,8 @@ import type { IGetRunEventsUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { TenantId } from '../../domain/auth/types.js';
 
-import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { mapRuntimeDomainError } from './authErrorMapper.js';
+import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 
 const MAX_EVENTS_LIMIT = 500;
 

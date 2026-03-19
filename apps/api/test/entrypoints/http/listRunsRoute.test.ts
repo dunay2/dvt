@@ -2,23 +2,64 @@
 
 import { listRunsRoute } from '../../../src/entrypoints/http/listRunsRoute.js';
 
-function createReply() {
+function createReply(): { code: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
   return {
     code: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
   };
 }
 
-function createDeps() {
+function createDeps(): {
+  authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
+  authorizer: { authorize: ReturnType<typeof vi.fn> };
+  useCase: { execute: ReturnType<typeof vi.fn> };
+} {
   return {
     authenticator: {
-      authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: { principalId: 'u', subjectId: 'u', issuer: 'i', audience: 'a', principalType: 'user', expiresAt: new Date('2030-01-01T00:00:00Z'), rawScopes: [], assertedTenantIds: ['tenant-a'], assertedProjectIds: [] } }),
+      authenticateBearerToken: vi.fn().mockResolvedValue({
+        ok: true,
+        principal: {
+          principalId: 'u',
+          subjectId: 'u',
+          issuer: 'i',
+          audience: 'a',
+          principalType: 'user',
+          expiresAt: new Date('2030-01-01T00:00:00Z'),
+          rawScopes: [],
+          assertedTenantIds: ['tenant-a'],
+          assertedProjectIds: [],
+        },
+      }),
     },
     authorizer: {
-      authorize: vi.fn().mockResolvedValue({ ok: true, context: { principal: {}, scope: { tenantId: { value: 'tenant-a' } }, action: { kind: 'query', name: 'run:list' }, requestId: 'req-1', authorizedAt: new Date('2026-03-19T00:00:00Z') } }),
+      authorize: vi.fn().mockResolvedValue({
+        ok: true,
+        context: {
+          principal: {},
+          scope: { tenantId: { value: 'tenant-a' } },
+          action: { kind: 'query', name: 'run:list' },
+          requestId: 'req-1',
+          authorizedAt: new Date('2026-03-19T00:00:00Z'),
+        },
+      }),
     },
     useCase: {
-      execute: vi.fn().mockResolvedValue({ items: [{ runId: 'run-1', tenantId: 'tenant-a', projectId: 'proj-1', environmentId: 'env-1', planId: 'plan-1', planVersion: '2.3', logicalAttemptId: 1, provider: 'mock', status: 'FAILED' }], nextCursor: null }),
+      execute: vi.fn().mockResolvedValue({
+        items: [
+          {
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '2.3',
+            logicalAttemptId: 1,
+            provider: 'mock',
+            status: 'FAILED',
+          },
+        ],
+        nextCursor: null,
+      }),
     },
   };
 }
