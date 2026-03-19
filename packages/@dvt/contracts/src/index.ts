@@ -39,6 +39,7 @@ export type {
   PlannerPolicyCategory,
   PlannerPolicyClassSet,
   PlannerPolicyValue,
+  ResolvedPolicies,
   RetryPolicy,
   TimeoutPolicy,
   UnsupportedPlannerPolicyDetails,
