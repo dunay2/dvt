@@ -11,7 +11,14 @@ const VALID_PLAN_REF = {
 };
 
 describe('startRunRoute', () => {
-  function createReply() {
+  function createReply(): {
+    statusCode: number;
+    payload: unknown;
+    headers: Record<string, string>;
+    code(status: number): unknown;
+    header(name: string, value: string): unknown;
+    send(payload: unknown): unknown;
+  } {
     return {
       statusCode: 200,
       payload: undefined as unknown,

@@ -1,10 +1,10 @@
+import type { AdmissionTelemetry } from '../ports/AdmissionTelemetry.js';
 import type {
   AuthorizedCommandExecutionContext,
   IStartRunUseCase,
   StartRunCommand,
   StartRunResult,
 } from '../ports/auth.js';
-import type { AdmissionTelemetry } from '../ports/AdmissionTelemetry.js';
 import type { DuplicateRunProbe } from '../ports/DuplicateRunProbe.js';
 import type { AdmissionMode } from '../ports/IAdmissionMode.js';
 
@@ -83,8 +83,7 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
               tenantId,
               runId: command.runId,
               mode: this.deps.mode,
-              decision:
-                reject.kind === 'tenant_backpressure' ? 'reject_tenant' : 'reject_system',
+              decision: reject.kind === 'tenant_backpressure' ? 'reject_tenant' : 'reject_system',
               retryAfterSeconds: reject.retryAfterSeconds,
               code: reject.code,
             });
