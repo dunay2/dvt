@@ -1,10 +1,18 @@
-import type { ISpan } from '@dvt/observability';
+﻿import type { ISpan } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
+import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
+import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
+import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
+import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
+import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
+import { getRunRoute } from './entrypoints/http/getRunRoute.js';
+import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
+import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
 import { registerOperationalHooks } from './modules/registerOperationalHooks.js';
@@ -107,14 +115,41 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
   app.get('/', async () => ({ service: env.SERVICE_NAME, ok: true }));
 
-  // Protected runtime routes — wired only when OIDC is fully configured
   if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) {
     const protectedModule = await buildProtectedRuntimeModule(app, env, observability);
     registerOperationalHooks(app, protectedModule);
 
+    const runtimeAuth = {
+      authenticator: protectedModule.authenticator,
+      authorizer: protectedModule.authorizer,
+    };
+    const getRunStatusUseCase = new GetRunStatusUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore
+    );
+    const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore);
+    const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore);
+    const signalRunUseCase = new SignalRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore
+    );
+
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       '/runs/start',
       async (request, reply) => startRunRoute(request as never, reply, protectedModule.facade)
+    );
+
+    app.get('/runs', async (request, reply) =>
+      listRunsRoute(request as never, reply, { ...runtimeAuth, useCase: listRunsUseCase })
+    );
+    app.get('/runs/:runId', async (request, reply) =>
+      getRunRoute(request as never, reply, { ...runtimeAuth, useCase: getRunStatusUseCase })
+    );
+    app.get('/runs/:runId/events', async (request, reply) =>
+      getRunEventsRoute(request as never, reply, { ...runtimeAuth, useCase: getRunEventsUseCase })
+    );
+    app.post('/runs/:runId/signal', async (request, reply) =>
+      signalRunRoute(request as never, reply, { ...runtimeAuth, useCase: signalRunUseCase })
     );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {
@@ -122,7 +157,9 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
     }
 
-    app.log.info('protected runtime routes registered: POST /runs/start');
+    app.log.info(
+      'protected runtime routes registered: POST /runs/start, GET /runs, GET /runs/:runId, GET /runs/:runId/events, POST /runs/:runId/signal'
+    );
   } else {
     app.log.warn(
       'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) — protected runtime endpoints are disabled'

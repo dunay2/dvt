@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "@dvt/delivery",
   "version": "0.1.0",
   "private": true,
@@ -24,7 +24,7 @@
     "prebuild": "pnpm --filter @dvt/contracts build",
     "pretest": "pnpm --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
-    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/delivery/test/OutboxWorker.test.ts packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts"
+    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/delivery/test/OutboxWorker.test.ts packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts packages/@dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts"
   },
   "dependencies": {
     "@dvt/contracts": "workspace:*"

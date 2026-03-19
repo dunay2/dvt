@@ -1,4 +1,4 @@
-export type PrincipalType = 'user' | 'service';
+﻿export type PrincipalType = 'user' | 'service';
 
 export type IdentifierParseFailureCode =
   | 'INVALID_TENANT_ID'
@@ -82,7 +82,10 @@ export class EnvironmentId {
 }
 
 export type AuthorizationAction =
-  | { readonly kind: 'command'; readonly name: 'run:start' | 'run:cancel' | 'run:retry' }
+  | {
+      readonly kind: 'command';
+      readonly name: 'run:start' | 'run:cancel' | 'run:retry' | 'run:signal';
+    }
   | { readonly kind: 'query'; readonly name: 'run:view' | 'run:list' | 'run:logs:view' };
 
 export interface RequestedScope {

@@ -1,4 +1,4 @@
-import type { IObservability } from '@dvt/observability';
+﻿import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
@@ -91,6 +91,9 @@ export async function buildProtectedRuntimeModule(
 
   return {
     facade,
+    authenticator,
+    authorizer: commandAuthorizer,
+    engine,
     adapters,
     stateStore,
     migrate: async () => {

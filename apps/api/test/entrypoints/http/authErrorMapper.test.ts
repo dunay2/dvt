@@ -1,6 +1,10 @@
+﻿import { RunMetadataNotFoundError, SignalNotImplementedError } from '@dvt/engine';
 import { describe, it, expect } from 'vitest';
 
-import { mapStartRunFacadeResult } from '../../../src/entrypoints/http/authErrorMapper.js';
+import {
+  mapRuntimeDomainError,
+  mapStartRunFacadeResult,
+} from '../../../src/entrypoints/http/authErrorMapper.js';
 
 describe('mapStartRunFacadeResult', () => {
   it('unauthenticated -> 401', () => {
@@ -34,5 +38,20 @@ describe('mapStartRunFacadeResult', () => {
     });
     expect(result.status).toBe(202);
     expect(result.body).toEqual({ runId: 'r-abc', accepted: true });
+  });
+});
+
+describe('mapRuntimeDomainError', () => {
+  it('maps run metadata not found to 404', () => {
+    const result = mapRuntimeDomainError(new RunMetadataNotFoundError('run-1'));
+    expect(result).toEqual({ status: 404, body: { error: 'NOT_FOUND', code: 'RUN_NOT_FOUND' } });
+  });
+
+  it('maps unsupported phase-2 signals to 422', () => {
+    const result = mapRuntimeDomainError(new SignalNotImplementedError('RETRY_RUN'));
+    expect(result).toEqual({
+      status: 422,
+      body: { error: 'UNPROCESSABLE_ENTITY', code: 'SIGNAL_NOT_IMPLEMENTED' },
+    });
   });
 });

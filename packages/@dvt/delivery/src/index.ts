@@ -1,4 +1,4 @@
-export type {
+﻿export type {
   DeadLetterRecord,
   IEventBus,
   IOutboxStorage,
@@ -15,3 +15,4 @@ export * from './application/OutboxWorkerRuntime.js';
 export * from './application/ProjectorWorkerRuntime.js';
 export * from './application/LineageOutboxObserver.js';
 export * from './application/LineageWorkerRuntime.js';
+export * from './backpressure/StartRunAdmissionGuard.js';
