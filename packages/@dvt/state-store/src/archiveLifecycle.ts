@@ -17,6 +17,11 @@ export interface ArchiveDeleteEligibilityInput {
   readonly deletionGraceDays: number;
 }
 
+export interface ParsedArchiveUnitKey {
+  readonly tenantBucket: string;
+  readonly persistedAtDay: string;
+}
+
 const CRC32_TABLE = buildCrc32Table();
 
 export function deriveTenantBucket(tenantId: string, archiveBucketCount: number): string {
@@ -40,6 +45,25 @@ export function buildArchiveUnitKey(parts: ArchiveUnitKeyParts): string {
   }
 
   return `${tenantBucket}_${persistedAtDay}`;
+}
+
+export function parseArchiveUnitKey(archiveUnitKey: string): ParsedArchiveUnitKey {
+  const trimmed = archiveUnitKey.trim();
+  const match = /^(tb\d{2,})_(\d{4}_\d{2}_\d{2})$/.exec(trimmed);
+
+  if (!match) {
+    throw new Error('ARCHIVE_UNIT_KEY_INVALID');
+  }
+
+  const [, tenantBucket, persistedAtDay] = match;
+  if (!tenantBucket || !persistedAtDay) {
+    throw new Error('ARCHIVE_UNIT_KEY_INVALID');
+  }
+
+  return {
+    tenantBucket,
+    persistedAtDay: validateCalendarDay(persistedAtDay, persistedAtDay.replaceAll('_', '-')),
+  };
 }
 
 export function calculateDeleteAfterIso(input: ArchiveDeleteEligibilityInput): string {

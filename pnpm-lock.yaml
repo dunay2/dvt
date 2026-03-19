@@ -721,6 +721,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../canonical
     devDependencies:
       typescript:
         specifier: 5.9.3

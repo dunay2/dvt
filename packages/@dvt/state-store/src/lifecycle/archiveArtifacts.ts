@@ -1,0 +1,173 @@
+/**
+ * @file packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts
+ * @baseline ADR-0004: Event Sourcing Strategy (ordered authoritative history)
+ * @baseline ADR-0037: Run Event Lifecycle Archival, Verification, and Restore Model
+ * @decision PR1 archive artifacts use one deterministic JCS + SHA-256 checksum rule
+ * @consequence Exporters, verifiers, and snapshot pinning share one canonical artifact surface
+ */
+import type { EventEnvelope, RunStatus, WorkflowSnapshot } from '@dvt/contracts';
+import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+
+import { parseArchiveUnitKey } from '../archiveLifecycle.js';
+
+export type TerminalRunStatus = Extract<RunStatus, 'COMPLETED' | 'FAILED' | 'CANCELLED'>;
+
+export interface ArchiveManifestBuildInput {
+  readonly archiveUnitKey: string;
+  readonly tenantBucket: string;
+  readonly objectKey: string;
+  readonly exportedAtIso: string;
+  readonly events: readonly EventEnvelope[];
+}
+
+export interface ArchiveUnitManifest {
+  readonly archiveUnitKey: string;
+  readonly tenantBucket: string;
+  readonly tenantIds: readonly string[];
+  readonly rowCount: number;
+  readonly minRunSeq: number;
+  readonly maxRunSeq: number;
+  readonly checksumSha256: string;
+  readonly objectKey: string;
+  readonly exportedAt: string;
+}
+
+export interface ArchiveManifestBuildResult {
+  readonly manifest: ArchiveUnitManifest;
+  readonly canonicalManifestJson: string;
+  readonly manifestSha256: string;
+}
+
+export interface PinnedTerminalSnapshotBuildInput {
+  readonly snapshot: WorkflowSnapshot;
+  readonly events: readonly EventEnvelope[];
+}
+
+export interface PinnedTerminalSnapshot {
+  readonly runId: string;
+  readonly status: TerminalRunStatus;
+  readonly lastRunSeq: number;
+  readonly eventChecksumSha256: string;
+  readonly snapshot: WorkflowSnapshot;
+}
+
+const TERMINAL_STATUSES: readonly TerminalRunStatus[] = ['COMPLETED', 'FAILED', 'CANCELLED'];
+
+export function calculateArchiveEventChecksum(events: readonly EventEnvelope[]): string {
+  if (events.length === 0) {
+    throw new Error('ARCHIVE_EVENTS_REQUIRED');
+  }
+
+  let rollingDigest = sha256Hex('');
+
+  for (const event of events) {
+    rollingDigest = sha256Hex(`${rollingDigest}\n${jcsCanonicalize(event)}`);
+  }
+
+  return rollingDigest;
+}
+
+export function buildArchiveUnitManifest(
+  input: ArchiveManifestBuildInput
+): ArchiveManifestBuildResult {
+  const parsedKey = parseArchiveUnitKey(input.archiveUnitKey);
+  const tenantBucket = input.tenantBucket.trim();
+  const objectKey = input.objectKey.trim();
+  const exportedAt = parseIsoUtc(input.exportedAtIso, 'ARCHIVE_EXPORTED_AT_INVALID');
+  const events = input.events;
+
+  if (tenantBucket !== parsedKey.tenantBucket) {
+    throw new Error('ARCHIVE_TENANT_BUCKET_MISMATCH');
+  }
+  if (!objectKey) {
+    throw new Error('ARCHIVE_OBJECT_KEY_REQUIRED');
+  }
+  if (events.length === 0) {
+    throw new Error('ARCHIVE_EVENTS_REQUIRED');
+  }
+
+  const tenantIds = new Set<string>();
+  let minRunSeq = Number.POSITIVE_INFINITY;
+  let maxRunSeq = Number.NEGATIVE_INFINITY;
+
+  for (const event of events) {
+    const tenantId = event.tenantId.trim();
+    if (!tenantId) {
+      throw new Error('ARCHIVE_EVENT_TENANT_ID_INVALID');
+    }
+    if (!Number.isInteger(event.runSeq) || event.runSeq <= 0) {
+      throw new Error('ARCHIVE_EVENT_RUN_SEQ_INVALID');
+    }
+    if (normalizeEventPersistedAtDay(event.persistedAt) !== parsedKey.persistedAtDay) {
+      throw new Error('ARCHIVE_EVENT_DAY_MISMATCH');
+    }
+
+    tenantIds.add(tenantId);
+    minRunSeq = Math.min(minRunSeq, event.runSeq);
+    maxRunSeq = Math.max(maxRunSeq, event.runSeq);
+  }
+
+  const manifest: ArchiveUnitManifest = {
+    archiveUnitKey: input.archiveUnitKey.trim(),
+    tenantBucket,
+    tenantIds: Array.from(tenantIds).sort(),
+    rowCount: events.length,
+    minRunSeq,
+    maxRunSeq,
+    checksumSha256: calculateArchiveEventChecksum(events),
+    objectKey,
+    exportedAt: exportedAt.toISOString(),
+  };
+
+  const canonicalManifestJson = jcsCanonicalize(manifest);
+  return {
+    manifest,
+    canonicalManifestJson,
+    manifestSha256: sha256Hex(canonicalManifestJson),
+  };
+}
+
+export function buildPinnedTerminalSnapshot(
+  input: PinnedTerminalSnapshotBuildInput
+): PinnedTerminalSnapshot {
+  const { snapshot, events } = input;
+
+  if (!TERMINAL_STATUSES.includes(snapshot.status as TerminalRunStatus)) {
+    throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_STATUS_INVALID');
+  }
+  if (events.length === 0) {
+    throw new Error('ARCHIVE_EVENTS_REQUIRED');
+  }
+
+  let previousRunSeq = 0;
+  for (const event of events) {
+    if (event.runId !== snapshot.runId) {
+      throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_RUN_ID_MISMATCH');
+    }
+    if (!Number.isInteger(event.runSeq) || event.runSeq <= previousRunSeq) {
+      throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_RUN_SEQ_INVALID');
+    }
+    previousRunSeq = event.runSeq;
+  }
+
+  return {
+    runId: snapshot.runId,
+    status: snapshot.status as TerminalRunStatus,
+    lastRunSeq: previousRunSeq,
+    eventChecksumSha256: calculateArchiveEventChecksum(events),
+    snapshot,
+  };
+}
+
+function normalizeEventPersistedAtDay(value: string): string {
+  const parsed = parseIsoUtc(value, 'ARCHIVE_EVENT_PERSISTED_AT_INVALID');
+  return parsed.toISOString().slice(0, 10).replaceAll('-', '_');
+}
+
+function parseIsoUtc(value: string, errorCode: string): Date {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error(errorCode);
+  }
+  return parsed;
+}
