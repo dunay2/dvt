@@ -1,11 +1,6 @@
-import type { CompiledCodeRef } from '@dvt/contracts';
+import type { CompiledCodeRef, ExecutionPlanV2, ExecutionStepV2 } from '@dvt/contracts';
+import { KNOWN_STEP_KINDS } from '@dvt/contracts';
 
-import {
-  DBT_MODEL,
-  DBT_TEST,
-  type ExecutionPlanV2,
-  type ExecutionStepV2,
-} from '../domain/types.js';
 import type { ICompiledCodeStorage } from '../ports/ICompiledCodeStorage.js';
 
 import { computeSha256 } from './sha256.js';
@@ -28,7 +23,7 @@ export interface AttachCompiledCodeRefsOptions {
 }
 
 function canAttach(step: ExecutionStepV2): boolean {
-  return step.kind === DBT_MODEL || step.kind === DBT_TEST;
+  return step.kind === KNOWN_STEP_KINDS.DBT_MODEL || step.kind === KNOWN_STEP_KINDS.DBT_TEST;
 }
 
 /**

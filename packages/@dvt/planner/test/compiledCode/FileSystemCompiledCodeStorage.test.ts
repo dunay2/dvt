@@ -1,6 +1,5 @@
+import { FileSystemCompiledCodeStorage } from '@dvt/artifacts';
 import { describe, expect, it } from 'vitest';
-
-import { FileSystemCompiledCodeStorage } from '../../src/compiledCode/adapters/FileSystemCompiledCodeStorage.js';
 
 describe('FileSystemCompiledCodeStorage', () => {
   it('throws in production', () => {

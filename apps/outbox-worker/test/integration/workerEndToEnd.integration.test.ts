@@ -16,9 +16,9 @@
  * Run with a real database:
  *   DATABASE_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-outbox-worker test
  */
-import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import test from 'node:test';
+
+import { describe, it, expect, afterAll } from 'vitest';
 
 import { acquirePgPool, closePgPool } from '../../src/db/pool.js';
 import type { PgPoolLease } from '../../src/db/pool.js';
@@ -87,7 +87,7 @@ async function waitForDelivery(
 // Cleanup: drain all pooled connections after the suite.
 // ---------------------------------------------------------------------------
 
-test.after(async () => {
+afterAll(async () => {
   await closePgPool();
 });
 
@@ -95,63 +95,60 @@ test.after(async () => {
 // Tests
 // ---------------------------------------------------------------------------
 
-await test(
-  'worker delivers a real outbox record end-to-end against PostgreSQL',
-  { skip: skipReason },
-  async () => {
-    assert.ok(DATABASE_URL, 'DATABASE_URL must be set');
+describe('worker E2E integration', () => {
+  it.skipIf(Boolean(skipReason))(
+    'worker delivers a real outbox record end-to-end against PostgreSQL',
+    async () => {
+      expect(DATABASE_URL).toBeTruthy();
 
-    const env = makeEnv(DATABASE_URL);
+      const env = makeEnv(DATABASE_URL!);
 
-    // Acquire a pool lease for test-side queries (insert + verify).
-    // This shares the same underlying pg.Pool as the runtime, which is safe
-    // because both hold separate leases and the pool is not closed until
-    // all leases are released.
-    const testLease = acquirePgPool({ connectionString: DATABASE_URL });
+      // Acquire a pool lease for test-side queries (insert + verify).
+      // This shares the same underlying pg.Pool as the runtime, which is safe
+      // because both hold separate leases and the pool is not closed until
+      // all leases are released.
+      const testLease = acquirePgPool({ connectionString: DATABASE_URL! });
 
-    const recordId = randomUUID();
-    const runId = `e2e-${randomUUID()}`;
+      const recordId = randomUUID();
+      const runId = `e2e-${randomUUID()}`;
 
-    // createOutboxWorkerRuntime runs migrations before returning, so the
-    // schema and outbox table are guaranteed to exist after this call.
-    const runtime = await createOutboxWorkerRuntime(env, SILENT_LOGGER);
+      // createOutboxWorkerRuntime runs migrations before returning, so the
+      // schema and outbox table are guaranteed to exist after this call.
+      const runtime = await createOutboxWorkerRuntime(env, SILENT_LOGGER);
 
-    try {
-      await testLease.pool.query(
-        `INSERT INTO "${TEST_SCHEMA}".outbox
+      try {
+        await testLease.pool.query(
+          `INSERT INTO "${TEST_SCHEMA}".outbox
            (id, run_id, shard_id, run_seq, idempotency_key, payload, created_at)
          VALUES ($1, $2, 0, 1, $3, $4::jsonb, now())`,
-        [
-          recordId,
-          runId,
-          `${runId}:TestEvent:1`,
-          JSON.stringify({ eventType: 'TestEvent', e2e: true }),
-        ]
-      );
+          [
+            recordId,
+            runId,
+            `${runId}:TestEvent:1`,
+            JSON.stringify({ eventType: 'TestEvent', e2e: true }),
+          ]
+        );
 
-      const ac = new globalThis.AbortController();
-      void runtime.start(ac.signal);
+        const ac = new globalThis.AbortController();
+        void runtime.start(ac.signal);
 
-      const deliveredAt = await waitForDelivery(testLease, TEST_SCHEMA, recordId, 5_000);
-      ac.abort();
+        const deliveredAt = await waitForDelivery(testLease, TEST_SCHEMA, recordId, 5_000);
+        ac.abort();
 
-      assert.notEqual(
-        deliveredAt,
-        null,
-        'outbox record must be delivered within 5 s of the worker starting'
-      );
+        expect(deliveredAt).not.toBe(null);
 
-      // Confirm the record was delivered on the first attempt without error.
-      const { rows } = await testLease.pool.query<{
-        attempts: number;
-        last_error: string | null;
-      }>(`SELECT attempts, last_error FROM "${TEST_SCHEMA}".outbox WHERE id = $1`, [recordId]);
+        // Confirm the record was delivered on the first attempt without error.
+        const { rows } = await testLease.pool.query<{
+          attempts: number;
+          last_error: string | null;
+        }>(`SELECT attempts, last_error FROM "${TEST_SCHEMA}".outbox WHERE id = $1`, [recordId]);
 
-      assert.equal(rows[0]?.last_error, null, 'delivered record must have no last_error');
-      assert.equal(rows[0]?.attempts, 0, 'record must be delivered on the first attempt');
-    } finally {
-      await runtime.stop();
-      await testLease.release();
+        expect(rows[0]?.last_error).toBe(null);
+        expect(rows[0]?.attempts).toBe(0);
+      } finally {
+        await runtime.stop();
+        await testLease.release();
+      }
     }
-  }
-);
+  );
+});

@@ -1,352 +1,323 @@
-import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import test from 'node:test';
+
+import { describe, it, expect } from 'vitest';
 
 import { isActiveEnv, loadEnv, type ActiveEnv, type Env } from '../../src/plugins/env.js';
 
 function assertActiveEnv(env: Env): asserts env is ActiveEnv {
   if (!isActiveEnv(env)) {
-    assert.fail('expected an active outbox worker environment');
+    expect.fail('expected an active outbox worker environment');
   }
 }
 
-await test('loadEnv applies active worker defaults when ownership mode is explicit', () => {
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+describe('loadEnv', () => {
+  it('applies active worker defaults when ownership mode is explicit', () => {
+    const env = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+    });
+
+    assertActiveEnv(env);
+    expect(env.DVT_PG_SCHEMA).toBe('dvt');
+    expect(env.DVT_OUTBOX_SHARD_COUNT).toBe(1);
+    expect(env.DVT_OUTBOX_OWNED_SHARD_IDS).toEqual([0]);
+    expect(env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS).toBe(1000);
+    expect(env.DVT_OUTBOX_WORKER_BATCH_SIZE).toBe(100);
+    expect(env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS).toBe(5000);
+    expect(env.DVT_OUTBOX_WORKER_STOP_ON_ERROR).toBe(false);
+    expect(env.DVT_OUTBOX_WORKER_RUN_MIGRATIONS).toBe(false);
+    expect(env.DVT_OUTBOX_OWNERSHIP_MODE).toBe('active');
+    expect(env.DVT_OUTBOX_EVENT_BUS_MODE).toBe('http');
+    if (env.DVT_OUTBOX_EVENT_BUS_MODE !== 'http') {
+      expect.fail('expected http event bus mode');
+    }
+    expect(env.DVT_OUTBOX_HTTP_TARGET_URL).toBe('http://localhost:8080/outbox/events');
+    expect(env.DVT_OUTBOX_HTTP_TIMEOUT_MS).toBe(10000);
+    expect(env.DVT_OUTBOX_ADMIN_HOST).toBe('0.0.0.0');
+    expect(env.DVT_OUTBOX_ADMIN_PORT).toBe(9464);
+    expect(env.SERVICE_NAME).toBe('dvt-outbox-worker');
   });
 
-  assertActiveEnv(env);
-  assert.equal(env.DVT_PG_SCHEMA, 'dvt');
-  assert.equal(env.DVT_OUTBOX_SHARD_COUNT, 1);
-  assert.deepEqual(env.DVT_OUTBOX_OWNED_SHARD_IDS, [0]);
-  assert.equal(env.DVT_OUTBOX_WORKER_POLL_INTERVAL_MS, 1000);
-  assert.equal(env.DVT_OUTBOX_WORKER_BATCH_SIZE, 100);
-  assert.equal(env.DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS, 5000);
-  assert.equal(env.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
-  assert.equal(env.DVT_OUTBOX_WORKER_RUN_MIGRATIONS, false);
-  assert.equal(env.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
-  assert.equal(env.DVT_OUTBOX_EVENT_BUS_MODE, 'http');
-  assert.equal(env.DVT_OUTBOX_HTTP_TARGET_URL, 'http://localhost:8080/outbox/events');
-  assert.equal(env.DVT_OUTBOX_HTTP_TIMEOUT_MS, 10000);
-  assert.equal(env.DVT_OUTBOX_ADMIN_HOST, '0.0.0.0');
-  assert.equal(env.DVT_OUTBOX_ADMIN_PORT, 9464);
-  assert.equal(env.SERVICE_NAME, 'dvt-outbox-worker');
-});
+  it('applies passive worker defaults without runtime dependencies', () => {
+    const env = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
+    });
 
-await test('loadEnv applies passive worker defaults without runtime dependencies', () => {
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
+    expect(env.DVT_OUTBOX_OWNERSHIP_MODE).toBe('passive');
+    expect(env.DVT_OUTBOX_ADMIN_HOST).toBe('0.0.0.0');
+    expect(env.DVT_OUTBOX_ADMIN_PORT).toBe(9464);
+    expect(env.SERVICE_NAME).toBe('dvt-outbox-worker');
   });
 
-  assert.equal(env.DVT_OUTBOX_OWNERSHIP_MODE, 'passive');
-  assert.equal(env.DVT_OUTBOX_ADMIN_HOST, '0.0.0.0');
-  assert.equal(env.DVT_OUTBOX_ADMIN_PORT, 9464);
-  assert.equal(env.SERVICE_NAME, 'dvt-outbox-worker');
-});
-
-await test('loadEnv fails fast when ownership mode is missing', () => {
-  assert.throws(
-    () =>
+  it('fails fast when ownership mode is missing', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
-      }),
-    /DVT_OUTBOX_OWNERSHIP_MODE/
-  );
-});
+      })
+    ).toThrow(/DVT_OUTBOX_OWNERSHIP_MODE/);
+  });
 
-await test('loadEnv fails fast when active mode is missing DATABASE_URL', () => {
-  assert.throws(
-    () =>
+  it('fails fast when active mode is missing DATABASE_URL', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-      }),
-    /DATABASE_URL/
-  );
-});
+      })
+    ).toThrow(/DATABASE_URL/);
+  });
 
-await test('loadEnv fails fast when active mode uses an empty DATABASE_URL', () => {
-  assert.throws(
-    () =>
+  it('fails fast when active mode uses an empty DATABASE_URL', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: '',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-      }),
-    /DATABASE_URL/
-  );
+      })
+    ).toThrow(/DATABASE_URL/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: '   ',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-      }),
-    /DATABASE_URL/
-  );
-});
+      })
+    ).toThrow(/DATABASE_URL/);
+  });
 
-await test('loadEnv fails fast when active http mode is selected without target url', () => {
-  assert.throws(
-    () =>
+  it('fails fast when active http mode is selected without target url', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-      }),
-    /DVT_OUTBOX_HTTP_TARGET_URL/
-  );
-});
+      })
+    ).toThrow(/DVT_OUTBOX_HTTP_TARGET_URL/);
+  });
 
-await test('loadEnv fails fast when active http mode uses an empty target url', () => {
-  assert.throws(
-    () =>
+  it('fails fast when active http mode uses an empty target url', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: '',
-      }),
-    /DVT_OUTBOX_HTTP_TARGET_URL/
-  );
-});
+      })
+    ).toThrow(/DVT_OUTBOX_HTTP_TARGET_URL/);
+  });
 
-await test('loadEnv fails fast when active http mode target url is not a valid http endpoint', () => {
-  assert.throws(
-    () =>
+  it('fails fast when active http mode target url is not a valid http endpoint', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'not-a-url',
-      }),
-    /DVT_OUTBOX_HTTP_TARGET_URL/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_HTTP_TARGET_URL/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'ftp://localhost:8080/outbox/events',
-      }),
-    /DVT_OUTBOX_HTTP_TARGET_URL/
-  );
-});
-
-await test('loadEnv allows active log mode without target url', () => {
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-  });
-
-  assertActiveEnv(env);
-  assert.equal(env.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
-});
-
-await test('loadEnv accepts explicit shard ownership for active workers', () => {
-  const env = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
-    DVT_OUTBOX_SHARD_COUNT: '4',
-    DVT_OUTBOX_OWNED_SHARD_IDS: '3,1',
-  });
-
-  assertActiveEnv(env);
-  assert.equal(env.DVT_OUTBOX_SHARD_COUNT, 4);
-  assert.deepEqual(env.DVT_OUTBOX_OWNED_SHARD_IDS, [1, 3]);
-});
-
-await test('loadEnv parses string booleans for stop-on-error explicitly', () => {
-  const falseEnv = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-    DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'false',
-  });
-  const zeroEnv = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-    DVT_OUTBOX_WORKER_STOP_ON_ERROR: '0',
-  });
-  const trueEnv = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-    DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'true',
-  });
-  const migrateEnv = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-    DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
-  });
-
-  assertActiveEnv(falseEnv);
-  assertActiveEnv(zeroEnv);
-  assertActiveEnv(trueEnv);
-  assertActiveEnv(migrateEnv);
-  assert.equal(falseEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
-  assert.equal(zeroEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, false);
-  assert.equal(trueEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR, true);
-  assert.equal(migrateEnv.DVT_OUTBOX_WORKER_RUN_MIGRATIONS, true);
-});
-
-await test('loadEnv accepts explicit ownership modes for canary control', () => {
-  const activeEnv = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
-    DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
-    DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
-  });
-  const passiveEnv = loadEnv({
-    NODE_ENV: 'test',
-    DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
-  });
-
-  assertActiveEnv(activeEnv);
-  assert.equal(isActiveEnv(passiveEnv), false);
-  assert.equal(activeEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
-  assert.equal(passiveEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'passive');
-});
-
-await test('loadEnv stays aligned with the checked-in example environment', () => {
-  const file = readFileSync(new globalThis.URL('../../.env.example', import.meta.url), 'utf8');
-  const input = Object.fromEntries(
-    file
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0 && !line.startsWith('#'))
-      .map((line) => {
-        const separator = line.indexOf('=');
-        return [line.slice(0, separator), line.slice(separator + 1)];
       })
-  );
+    ).toThrow(/DVT_OUTBOX_HTTP_TARGET_URL/);
+  });
 
-  const env = loadEnv(input);
-  assertActiveEnv(env);
-  assert.equal(env.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
-});
+  it('allows active log mode without target url', () => {
+    const env = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+    });
 
-await test('loadEnv rejects ambiguous boolean strings for worker flags', () => {
-  assert.throws(
-    () =>
+    assertActiveEnv(env);
+    expect(env.DVT_OUTBOX_EVENT_BUS_MODE).toBe('log');
+  });
+
+  it('accepts explicit shard ownership for active workers', () => {
+    const env = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_OUTBOX_SHARD_COUNT: '4',
+      DVT_OUTBOX_OWNED_SHARD_IDS: '3,1',
+    });
+
+    assertActiveEnv(env);
+    expect(env.DVT_OUTBOX_SHARD_COUNT).toBe(4);
+    expect(env.DVT_OUTBOX_OWNED_SHARD_IDS).toEqual([1, 3]);
+  });
+
+  it('parses string booleans for stop-on-error explicitly', () => {
+    const falseEnv = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'false',
+    });
+    const zeroEnv = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      DVT_OUTBOX_WORKER_STOP_ON_ERROR: '0',
+    });
+    const trueEnv = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'true',
+    });
+    const migrateEnv = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+    });
+
+    assertActiveEnv(falseEnv);
+    assertActiveEnv(zeroEnv);
+    assertActiveEnv(trueEnv);
+    assertActiveEnv(migrateEnv);
+    expect(falseEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR).toBe(false);
+    expect(zeroEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR).toBe(false);
+    expect(trueEnv.DVT_OUTBOX_WORKER_STOP_ON_ERROR).toBe(true);
+    expect(migrateEnv.DVT_OUTBOX_WORKER_RUN_MIGRATIONS).toBe(true);
+  });
+
+  it('accepts explicit ownership modes for canary control', () => {
+    const activeEnv = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+    });
+    const passiveEnv = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
+    });
+
+    assertActiveEnv(activeEnv);
+    expect(isActiveEnv(passiveEnv)).toBe(false);
+    expect(activeEnv.DVT_OUTBOX_OWNERSHIP_MODE).toBe('active');
+    expect(passiveEnv.DVT_OUTBOX_OWNERSHIP_MODE).toBe('passive');
+  });
+
+  it('stays aligned with the checked-in example environment', () => {
+    const file = readFileSync(new globalThis.URL('../../.env.example', import.meta.url), 'utf8');
+    const input = Object.fromEntries(
+      file
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0 && !line.startsWith('#'))
+        .map((line) => {
+          const separator = line.indexOf('=');
+          return [line.slice(0, separator), line.slice(separator + 1)];
+        })
+    );
+
+    const env = loadEnv(input);
+    assertActiveEnv(env);
+    expect(env.DVT_OUTBOX_OWNERSHIP_MODE).toBe('active');
+  });
+
+  it('rejects ambiguous boolean strings for worker flags', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
         DVT_OUTBOX_WORKER_STOP_ON_ERROR: 'yes',
-      }),
-    /DVT_OUTBOX_WORKER_STOP_ON_ERROR/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_WORKER_STOP_ON_ERROR/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
         DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'enabled',
-      }),
-    /DVT_OUTBOX_WORKER_RUN_MIGRATIONS/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_WORKER_RUN_MIGRATIONS/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
         DVT_OUTBOX_OWNERSHIP_MODE: 'leader',
-      }),
-    /DVT_OUTBOX_OWNERSHIP_MODE/
-  );
-});
+      })
+    ).toThrow(/DVT_OUTBOX_OWNERSHIP_MODE/);
+  });
 
-await test('loadEnv rejects invalid worker timing and admin port values', () => {
-  assert.throws(
-    () =>
+  it('rejects invalid worker timing and admin port values', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
         DVT_OUTBOX_WORKER_POLL_INTERVAL_MS: '0',
-      }),
-    /DVT_OUTBOX_WORKER_POLL_INTERVAL_MS/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_WORKER_POLL_INTERVAL_MS/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
         DVT_OUTBOX_WORKER_BATCH_SIZE: '-1',
-      }),
-    /DVT_OUTBOX_WORKER_BATCH_SIZE/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_WORKER_BATCH_SIZE/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
         DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: '0',
-      }),
-    /DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
         DVT_OUTBOX_ADMIN_PORT: '70000',
-      }),
-    /DVT_OUTBOX_ADMIN_PORT/
-  );
-});
+      })
+    ).toThrow(/DVT_OUTBOX_ADMIN_PORT/);
+  });
 
-await test('loadEnv rejects ambiguous shard ownership configuration', () => {
-  assert.throws(
-    () =>
+  it('rejects ambiguous shard ownership configuration', () => {
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
         DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
         DVT_OUTBOX_SHARD_COUNT: '2',
-      }),
-    /DVT_OUTBOX_OWNED_SHARD_IDS/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
@@ -354,12 +325,10 @@ await test('loadEnv rejects ambiguous shard ownership configuration', () => {
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
         DVT_OUTBOX_SHARD_COUNT: '4',
         DVT_OUTBOX_OWNED_SHARD_IDS: '1,1',
-      }),
-    /DVT_OUTBOX_OWNED_SHARD_IDS/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
 
-  assert.throws(
-    () =>
+    expect(() =>
       loadEnv({
         NODE_ENV: 'test',
         DVT_OUTBOX_OWNERSHIP_MODE: 'active',
@@ -367,7 +336,7 @@ await test('loadEnv rejects ambiguous shard ownership configuration', () => {
         DVT_OUTBOX_EVENT_BUS_MODE: 'log',
         DVT_OUTBOX_SHARD_COUNT: '4',
         DVT_OUTBOX_OWNED_SHARD_IDS: '4',
-      }),
-    /DVT_OUTBOX_OWNED_SHARD_IDS/
-  );
+      })
+    ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
+  });
 });

@@ -16,12 +16,11 @@
  * adapter) and OutboxWorker directly so the proof stays at the
  * storage/worker boundary and does not require a live database.
  */
-import assert from 'node:assert/strict';
-import test from 'node:test';
 
 import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 import { OutboxWorker } from '@dvt/delivery';
 import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/delivery/testing';
+import { describe, it, expect } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -130,248 +129,231 @@ const RUN_ID_CANDIDATES = [
 // Tests
 // ---------------------------------------------------------------------------
 
-await test('shard routing is deterministic: same runId always maps to the same shard', async () => {
-  const shardCount = 4;
-  const runId = 'run-alpha';
+describe('concurrentWorkerOrdering', () => {
+  it('shard routing is deterministic: same runId always maps to the same shard', async () => {
+    const shardCount = 4;
+    const runId = 'run-alpha';
 
-  // Discover the shard on a fresh storage twice — must be identical.
-  const firstShard = await discoverShard(runId, shardCount);
-  const secondShard = await discoverShard(runId, shardCount);
+    // Discover the shard on a fresh storage twice — must be identical.
+    const firstShard = await discoverShard(runId, shardCount);
+    const secondShard = await discoverShard(runId, shardCount);
 
-  assert.equal(firstShard, secondShard);
+    expect(firstShard).toBe(secondShard);
 
-  // Enqueue multiple events for the same runId and verify they all land in
-  // the same shard bucket.
-  const storage = new InMemoryOutboxStorage({ shardCount });
-  await storage.enqueueTx(runId, makeRunEvents(runId, [1, 2, 3]));
+    // Enqueue multiple events for the same runId and verify they all land in
+    // the same shard bucket.
+    const storage = new InMemoryOutboxStorage({ shardCount });
+    await storage.enqueueTx(runId, makeRunEvents(runId, [1, 2, 3]));
 
-  // The owning shard returns the head event (runSeq 1).
-  const ownedBatch = await storage.listPendingForClaim(10, { shardIds: [firstShard] });
-  assert.ok(ownedBatch.length > 0, 'owning shard returns at least one record');
-  for (const record of ownedBatch) {
-    assert.equal(record.payload.runId, runId, 'owning shard only returns records for this runId');
-  }
+    // The owning shard returns the head event (runSeq 1).
+    const ownedBatch = await storage.listPendingForClaim(10, { shardIds: [firstShard] });
+    expect(ownedBatch.length > 0).toBe(true);
+    for (const record of ownedBatch) {
+      expect(record.payload.runId).toBe(runId);
+    }
 
-  // Every other shard returns nothing for this runId.
-  for (let shard = 0; shard < shardCount; shard++) {
-    if (shard === firstShard) continue;
-    const nonOwnerBatch = await storage.listPendingForClaim(10, { shardIds: [shard] });
-    const runsInBatch = new Set(nonOwnerBatch.map((r) => r.payload.runId));
-    assert.equal(
-      runsInBatch.has(runId),
-      false,
-      `non-owning shard ${shard} must not return records for runId`
-    );
-  }
-});
-
-await test('a worker only claims records for its owned shards and ignores the rest', async () => {
-  const shardCount = 2;
-  const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
-  const shard0RunId = requireRunIdForShard(shardMap, 0);
-  const shard1RunId = requireRunIdForShard(shardMap, 1);
-
-  const storage = new InMemoryOutboxStorage({ shardCount });
-  await storage.enqueueTx(shard0RunId, makeRunEvents(shard0RunId, [1]));
-  await storage.enqueueTx(shard1RunId, makeRunEvents(shard1RunId, [1]));
-
-  const workerABatch = await storage.listPendingForClaim(10, { shardIds: [0] });
-  const workerBBatch = await storage.listPendingForClaim(10, { shardIds: [1] });
-
-  const workerARunIds = new Set(workerABatch.map((r) => r.payload.runId));
-  const workerBRunIds = new Set(workerBBatch.map((r) => r.payload.runId));
-
-  assert.ok(workerARunIds.has(shard0RunId), 'Worker A claims shard-0 runId');
-  assert.equal(workerARunIds.has(shard1RunId), false, 'Worker A does not claim shard-1 runId');
-
-  assert.ok(workerBRunIds.has(shard1RunId), 'Worker B claims shard-1 runId');
-  assert.equal(workerBRunIds.has(shard0RunId), false, 'Worker B does not claim shard-0 runId');
-});
-
-await test('two workers with disjoint shards never claim the same outbox record', async () => {
-  const shardCount = 4;
-
-  // Distribute enough runIds to cover all 4 shards.
-  const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
-
-  const storage = new InMemoryOutboxStorage({ shardCount });
-
-  // Enqueue events for one runId per shard.
-  for (const runId of shardMap.values()) {
-    await storage.enqueueTx(runId, makeRunEvents(runId, [1, 2]));
-  }
-
-  // Worker A owns shards 0,1 — Worker B owns shards 2,3.
-  const workerABus = new InMemoryEventBus();
-  const workerBBus = new InMemoryEventBus();
-
-  const workerA = new OutboxWorker(storage, workerABus, {
-    batchSize: 100,
-    claimSelection: { shardIds: [0, 1] },
-  });
-  const workerB = new OutboxWorker(storage, workerBBus, {
-    batchSize: 100,
-    claimSelection: { shardIds: [2, 3] },
+    // Every other shard returns nothing for this runId.
+    for (let shard = 0; shard < shardCount; shard++) {
+      if (shard === firstShard) continue;
+      const nonOwnerBatch = await storage.listPendingForClaim(10, { shardIds: [shard] });
+      const runsInBatch = new Set(nonOwnerBatch.map((r) => r.payload.runId));
+      expect(runsInBatch.has(runId)).toBe(false);
+    }
   });
 
-  // Run one tick each — sequential but representative of concurrent ownership.
-  await workerA.tick();
-  await workerB.tick();
+  it('a worker only claims records for its owned shards and ignores the rest', async () => {
+    const shardCount = 2;
+    const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
+    const shard0RunId = requireRunIdForShard(shardMap, 0);
+    const shard1RunId = requireRunIdForShard(shardMap, 1);
 
-  const deliveredByA = new Set(workerABus.published.map((e) => `${e.runId}:${e.runSeq}`));
-  const deliveredByB = new Set(workerBBus.published.map((e) => `${e.runId}:${e.runSeq}`));
+    const storage = new InMemoryOutboxStorage({ shardCount });
+    await storage.enqueueTx(shard0RunId, makeRunEvents(shard0RunId, [1]));
+    await storage.enqueueTx(shard1RunId, makeRunEvents(shard1RunId, [1]));
 
-  // The intersection must be empty — no event delivered by both workers.
-  const overlap = [...deliveredByA].filter((key) => deliveredByB.has(key));
-  assert.deepEqual(overlap, [], 'no event is delivered by both workers');
+    const workerABatch = await storage.listPendingForClaim(10, { shardIds: [0] });
+    const workerBBatch = await storage.listPendingForClaim(10, { shardIds: [1] });
 
-  // Sanity: both workers delivered something (non-empty coverage).
-  assert.ok(deliveredByA.size > 0, 'Worker A must deliver at least one event');
-  assert.ok(deliveredByB.size > 0, 'Worker B must deliver at least one event');
-});
+    const workerARunIds = new Set(workerABatch.map((r) => r.payload.runId));
+    const workerBRunIds = new Set(workerBBatch.map((r) => r.payload.runId));
 
-await test('owning worker processes events for a runId in strictly increasing runSeq order', async () => {
-  const shardCount = 2;
-  const runId = 'run-alpha';
-  const ownerShard = await discoverShard(runId, shardCount);
-  const otherShards = [0, 1].filter((s) => s !== ownerShard);
+    expect(workerARunIds.has(shard0RunId)).toBe(true);
+    expect(workerARunIds.has(shard1RunId)).toBe(false);
 
-  const storage = new InMemoryOutboxStorage({ shardCount });
-  const bus = new InMemoryEventBus();
-
-  // Enqueue three events out of natural insertion order to confirm the
-  // head-of-line constraint enforces delivery by runSeq, not arrival order.
-  await storage.enqueueTx(runId, makeRunEvents(runId, [3, 1, 2]));
-
-  const worker = new OutboxWorker(storage, bus, {
-    batchSize: 1,
-    claimSelection: { shardIds: [ownerShard] },
+    expect(workerBRunIds.has(shard1RunId)).toBe(true);
+    expect(workerBRunIds.has(shard0RunId)).toBe(false);
   });
 
-  // Three ticks — one event per tick due to batchSize=1 and head-of-line.
-  await worker.tick();
-  await worker.tick();
-  await worker.tick();
+  it('two workers with disjoint shards never claim the same outbox record', async () => {
+    const shardCount = 4;
 
-  const published = bus.published;
-  assert.equal(published.length, 3, 'all three events delivered');
+    // Distribute enough runIds to cover all 4 shards.
+    const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
 
-  const deliveredRunSeqs = published.map((e) => e.runSeq);
-  assert.deepEqual(
-    deliveredRunSeqs,
-    [1, 2, 3],
-    'events delivered in strictly increasing runSeq order'
-  );
+    const storage = new InMemoryOutboxStorage({ shardCount });
 
-  // Non-owning worker gets nothing for this runId regardless of how many ticks.
-  const nonOwnerBus = new InMemoryEventBus();
-  const nonOwnerWorker = new OutboxWorker(storage, nonOwnerBus, {
-    batchSize: 100,
-    claimSelection: { shardIds: otherShards },
-  });
-  await nonOwnerWorker.tick();
+    // Enqueue events for one runId per shard.
+    for (const runId of shardMap.values()) {
+      await storage.enqueueTx(runId, makeRunEvents(runId, [1, 2]));
+    }
 
-  assert.equal(
-    nonOwnerBus.published.length,
-    0,
-    'non-owning worker delivers nothing for this runId'
-  );
-});
+    // Worker A owns shards 0,1 — Worker B owns shards 2,3.
+    const workerABus = new InMemoryEventBus();
+    const workerBBus = new InMemoryEventBus();
 
-await test('non-owning worker cannot advance a runId stream mid-sequence', async () => {
-  const shardCount = 2;
-  const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
-  const shard0RunId = requireRunIdForShard(shardMap, 0);
-  const shard1RunId = requireRunIdForShard(shardMap, 1);
+    const workerA = new OutboxWorker(storage, workerABus, {
+      batchSize: 100,
+      claimSelection: { shardIds: [0, 1] },
+    });
+    const workerB = new OutboxWorker(storage, workerBBus, {
+      batchSize: 100,
+      claimSelection: { shardIds: [2, 3] },
+    });
 
-  const storage = new InMemoryOutboxStorage({ shardCount });
-
-  // Enqueue a 3-event stream for shard-0 runId.
-  await storage.enqueueTx(shard0RunId, makeRunEvents(shard0RunId, [1, 2, 3]));
-  // Enqueue a separate event for shard-1 so Worker B has something to do.
-  await storage.enqueueTx(shard1RunId, makeRunEvents(shard1RunId, [1]));
-
-  const workerABus = new InMemoryEventBus();
-  const workerBBus = new InMemoryEventBus();
-
-  const workerA = new OutboxWorker(storage, workerABus, {
-    batchSize: 100,
-    claimSelection: { shardIds: [0] },
-  });
-  const workerB = new OutboxWorker(storage, workerBBus, {
-    batchSize: 100,
-    claimSelection: { shardIds: [1] },
-  });
-
-  // Worker B ticks first — it must not see or advance the shard-0 stream.
-  await workerB.tick();
-  const workerBEvents = workerBBus.published.map((e) => e.runId);
-  assert.equal(
-    workerBEvents.includes(shard0RunId),
-    false,
-    'Worker B cannot pick up shard-0 events even when Worker A has not started'
-  );
-
-  // Worker A then delivers the full stream in order.
-  await workerA.tick();
-  const workerARunSeqs = workerABus.published
-    .filter((e) => e.runId === shard0RunId)
-    .map((e) => e.runSeq);
-
-  // Head-of-line: only runSeq=1 per tick (batchSize=100 but head-of-line
-  // allows only one event per runId per tick in InMemoryOutboxStorage).
-  // The first tick delivers runSeq=1. Subsequent ticks deliver 2 and 3.
-  assert.ok(workerARunSeqs.includes(1), 'Worker A delivers runSeq=1 first');
-  assert.ok(
-    workerARunSeqs.every((seq, idx) => idx === 0 || seq > (workerARunSeqs[idx - 1] ?? -1)),
-    'Worker A delivers events in non-decreasing runSeq order'
-  );
-});
-
-await test('all events are delivered exactly once across two concurrent workers on disjoint shards', async () => {
-  const shardCount = 2;
-  const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
-  const shard0RunId = requireRunIdForShard(shardMap, 0);
-  const shard1RunId = requireRunIdForShard(shardMap, 1);
-
-  const storage = new InMemoryOutboxStorage({ shardCount });
-  const totalRunSeqs = [1, 2, 3];
-
-  await storage.enqueueTx(shard0RunId, makeRunEvents(shard0RunId, totalRunSeqs));
-  await storage.enqueueTx(shard1RunId, makeRunEvents(shard1RunId, totalRunSeqs));
-
-  const workerABus = new InMemoryEventBus();
-  const workerBBus = new InMemoryEventBus();
-
-  const workerA = new OutboxWorker(storage, workerABus, {
-    batchSize: 100,
-    claimSelection: { shardIds: [0] },
-  });
-  const workerB = new OutboxWorker(storage, workerBBus, {
-    batchSize: 100,
-    claimSelection: { shardIds: [1] },
-  });
-
-  // Run enough ticks to drain all events (head-of-line delivers one per runId
-  // per tick, so 3 runSeqs × 1 runId per worker = 3 ticks).
-  for (const _runSeq of totalRunSeqs) {
+    // Run one tick each — sequential but representative of concurrent ownership.
     await workerA.tick();
     await workerB.tick();
-  }
 
-  const allDeliveredKeys = [
-    ...workerABus.published.map((e) => `${e.runId}:${e.runSeq}`),
-    ...workerBBus.published.map((e) => `${e.runId}:${e.runSeq}`),
-  ];
+    const deliveredByA = new Set(workerABus.published.map((e) => `${e.runId}:${e.runSeq}`));
+    const deliveredByB = new Set(workerBBus.published.map((e) => `${e.runId}:${e.runSeq}`));
 
-  const expectedKeys = [
-    ...totalRunSeqs.map((seq) => `${shard0RunId}:${seq}`),
-    ...totalRunSeqs.map((seq) => `${shard1RunId}:${seq}`),
-  ].sort((left, right) => left.localeCompare(right));
+    // The intersection must be empty — no event delivered by both workers.
+    const overlap = [...deliveredByA].filter((key) => deliveredByB.has(key));
+    expect(overlap).toEqual([]);
 
-  assert.deepEqual(
-    [...new Set(allDeliveredKeys)].sort((left, right) => left.localeCompare(right)),
-    expectedKeys,
-    'every event is delivered exactly once across both workers'
-  );
+    // Sanity: both workers delivered something (non-empty coverage).
+    expect(deliveredByA.size > 0).toBe(true);
+    expect(deliveredByB.size > 0).toBe(true);
+  });
+
+  it('owning worker processes events for a runId in strictly increasing runSeq order', async () => {
+    const shardCount = 2;
+    const runId = 'run-alpha';
+    const ownerShard = await discoverShard(runId, shardCount);
+    const otherShards = [0, 1].filter((s) => s !== ownerShard);
+
+    const storage = new InMemoryOutboxStorage({ shardCount });
+    const bus = new InMemoryEventBus();
+
+    // Enqueue three events out of natural insertion order to confirm the
+    // head-of-line constraint enforces delivery by runSeq, not arrival order.
+    await storage.enqueueTx(runId, makeRunEvents(runId, [3, 1, 2]));
+
+    const worker = new OutboxWorker(storage, bus, {
+      batchSize: 1,
+      claimSelection: { shardIds: [ownerShard] },
+    });
+
+    // Three ticks — one event per tick due to batchSize=1 and head-of-line.
+    await worker.tick();
+    await worker.tick();
+    await worker.tick();
+
+    const published = bus.published;
+    expect(published.length).toBe(3);
+
+    const deliveredRunSeqs = published.map((e) => e.runSeq);
+    expect(deliveredRunSeqs).toEqual([1, 2, 3]);
+
+    // Non-owning worker gets nothing for this runId regardless of how many ticks.
+    const nonOwnerBus = new InMemoryEventBus();
+    const nonOwnerWorker = new OutboxWorker(storage, nonOwnerBus, {
+      batchSize: 100,
+      claimSelection: { shardIds: otherShards },
+    });
+    await nonOwnerWorker.tick();
+
+    expect(nonOwnerBus.published.length).toBe(0);
+  });
+
+  it('non-owning worker cannot advance a runId stream mid-sequence', async () => {
+    const shardCount = 2;
+    const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
+    const shard0RunId = requireRunIdForShard(shardMap, 0);
+    const shard1RunId = requireRunIdForShard(shardMap, 1);
+
+    const storage = new InMemoryOutboxStorage({ shardCount });
+
+    // Enqueue a 3-event stream for shard-0 runId.
+    await storage.enqueueTx(shard0RunId, makeRunEvents(shard0RunId, [1, 2, 3]));
+    // Enqueue a separate event for shard-1 so Worker B has something to do.
+    await storage.enqueueTx(shard1RunId, makeRunEvents(shard1RunId, [1]));
+
+    const workerABus = new InMemoryEventBus();
+    const workerBBus = new InMemoryEventBus();
+
+    const workerA = new OutboxWorker(storage, workerABus, {
+      batchSize: 100,
+      claimSelection: { shardIds: [0] },
+    });
+    const workerB = new OutboxWorker(storage, workerBBus, {
+      batchSize: 100,
+      claimSelection: { shardIds: [1] },
+    });
+
+    // Worker B ticks first — it must not see or advance the shard-0 stream.
+    await workerB.tick();
+    const workerBEvents = workerBBus.published.map((e) => e.runId);
+    expect(workerBEvents.includes(shard0RunId)).toBe(false);
+
+    // Worker A then delivers the full stream in order.
+    await workerA.tick();
+    const workerARunSeqs = workerABus.published
+      .filter((e) => e.runId === shard0RunId)
+      .map((e) => e.runSeq);
+
+    // Head-of-line: only runSeq=1 per tick (batchSize=100 but head-of-line
+    // allows only one event per runId per tick in InMemoryOutboxStorage).
+    // The first tick delivers runSeq=1. Subsequent ticks deliver 2 and 3.
+    expect(workerARunSeqs.includes(1)).toBe(true);
+    expect(
+      workerARunSeqs.every((seq, idx) => idx === 0 || seq > (workerARunSeqs[idx - 1] ?? -1))
+    ).toBe(true);
+  });
+
+  it('all events are delivered exactly once across two concurrent workers on disjoint shards', async () => {
+    const shardCount = 2;
+    const shardMap = await findRunIdPerShard(shardCount, RUN_ID_CANDIDATES);
+    const shard0RunId = requireRunIdForShard(shardMap, 0);
+    const shard1RunId = requireRunIdForShard(shardMap, 1);
+
+    const storage = new InMemoryOutboxStorage({ shardCount });
+    const totalRunSeqs = [1, 2, 3];
+
+    await storage.enqueueTx(shard0RunId, makeRunEvents(shard0RunId, totalRunSeqs));
+    await storage.enqueueTx(shard1RunId, makeRunEvents(shard1RunId, totalRunSeqs));
+
+    const workerABus = new InMemoryEventBus();
+    const workerBBus = new InMemoryEventBus();
+
+    const workerA = new OutboxWorker(storage, workerABus, {
+      batchSize: 100,
+      claimSelection: { shardIds: [0] },
+    });
+    const workerB = new OutboxWorker(storage, workerBBus, {
+      batchSize: 100,
+      claimSelection: { shardIds: [1] },
+    });
+
+    // Run enough ticks to drain all events (head-of-line delivers one per runId
+    // per tick, so 3 runSeqs × 1 runId per worker = 3 ticks).
+    for (const _runSeq of totalRunSeqs) {
+      await workerA.tick();
+      await workerB.tick();
+    }
+
+    const allDeliveredKeys = [
+      ...workerABus.published.map((e) => `${e.runId}:${e.runSeq}`),
+      ...workerBBus.published.map((e) => `${e.runId}:${e.runSeq}`),
+    ];
+
+    const expectedKeys = [
+      ...totalRunSeqs.map((seq) => `${shard0RunId}:${seq}`),
+      ...totalRunSeqs.map((seq) => `${shard1RunId}:${seq}`),
+    ].sort((left, right) => left.localeCompare(right));
+
+    expect([...new Set(allDeliveredKeys)].sort((left, right) => left.localeCompare(right))).toEqual(
+      expectedKeys
+    );
+  });
 });

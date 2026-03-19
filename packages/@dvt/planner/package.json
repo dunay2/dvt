@@ -28,7 +28,7 @@
     "test:slow": "vitest run -c vitest.config.ts --dir test/slow"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.868.0",
+    "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
     "json-canonicalize": "^1.0.6"
   },

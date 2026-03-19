@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import type { Env } from '../../src/plugins/env.js';
 import { buildObservability } from '../../src/plugins/observability.js';
@@ -33,23 +32,26 @@ function baseEnv(overrides?: Partial<Env>): Env {
     OTEL_SERVICE_NAME: undefined,
     OTEL_RESOURCE_ATTRIBUTES: undefined,
     OIDC_ALGORITHMS: 'RS256',
+    DVT_ADMIN_ROUTES_ENABLED: false,
     ...overrides,
   };
 }
 
-await test('buildObservability returns no-op implementation when OBS_ENABLED=false', () => {
-  const obs = buildObservability(baseEnv({ OBS_ENABLED: false }));
-  assert.equal(typeof obs.withContext, 'function');
-  assert.doesNotThrow(() => obs.metrics.counter('test.counter').add(1));
-});
+describe('buildObservability', () => {
+  it('returns no-op implementation when OBS_ENABLED=false', () => {
+    const obs = buildObservability(baseEnv({ OBS_ENABLED: false }));
+    expect(typeof obs.withContext).toBe('function');
+    expect(() => obs.metrics.counter('test.counter').add(1)).not.toThrow();
+  });
 
-await test('buildObservability returns OTel implementation when OBS_ENABLED=true', () => {
-  const obs = buildObservability(
-    baseEnv({
-      OBS_ENABLED: true,
-      OTEL_SERVICE_NAME: 'my-service',
-    })
-  );
-  assert.equal(typeof obs.withContext, 'function');
-  assert.equal(typeof obs.traces.startSpan, 'function');
+  it('returns OTel implementation when OBS_ENABLED=true', () => {
+    const obs = buildObservability(
+      baseEnv({
+        OBS_ENABLED: true,
+        OTEL_SERVICE_NAME: 'my-service',
+      })
+    );
+    expect(typeof obs.withContext).toBe('function');
+    expect(typeof obs.traces.startSpan).toBe('function');
+  });
 });

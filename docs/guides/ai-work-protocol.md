@@ -148,6 +148,8 @@ Before closing the work, verify all acceptance criteria:
 - [ ] tests pass in every touched package (happy path AND negative paths)
 - [ ] at least one negative-path test added if the slice introduces new behavior
 - [ ] lint and typecheck green in every touched package
+- [ ] `pnpm verify:prepush` green before the slice is presented as ready, unless
+      the user explicitly limits validation and that limit is reported
 - [ ] no behavior changed outside the scope declared in Phase 2
 - [ ] no `as any`, magic values, or unjustified type assertions introduced
 - [ ] run the required checks (canonical commands below)
@@ -167,6 +169,14 @@ pnpm --filter dvt-api build   # no test runner yet; build = type-check
 
 Run commands at the package level, not workspace-wide, unless the task crosses
 multiple packages — in that case run each affected package individually.
+
+Sandbox execution rule for validation commands:
+
+- if a `vitest`, `vite`, or `esbuild`-backed command fails with `spawn EPERM`
+  under sandboxed execution, re-run that command with escalated execution
+  before classifying the result as a real failure
+- record both the sandbox failure and the escalated rerun outcome in the
+  closeout when this happens
 
 Operational Git rule for the agent environment:
 

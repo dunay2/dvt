@@ -1,7 +1,5 @@
-import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
-import test from 'node:test';
 
 import type { PlanRef, RunContext } from '@dvt/contracts';
 import {
@@ -18,6 +16,7 @@ import {
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade, type ExecutionPlanV2 } from '@dvt/planner';
+import { describe, it, expect } from 'vitest';
 
 function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
   return {
@@ -161,178 +160,180 @@ function makeStepEvent(
   };
 }
 
-await test('planner -> engine: full lifecycle with 3-step DAG', async () => {
-  const planner = new PlannerFacade();
-  const { plan: plannerPlan } = await planner.buildPlan({
-    nodes: [
-      { nodeId: 'staging.orders', resourceType: 'model', dependsOn: [] },
-      { nodeId: 'mart.revenue', resourceType: 'model', dependsOn: ['staging.orders'] },
-      { nodeId: 'test.revenue_not_null', resourceType: 'test', dependsOn: ['mart.revenue'] },
-    ],
-    selection: {
-      selectedNodeIds: ['test.revenue_not_null'],
-      includeUpstream: true,
-    },
-  });
+describe('planner -> engine contract', () => {
+  it('full lifecycle with 3-step DAG', async () => {
+    const planner = new PlannerFacade();
+    const { plan: plannerPlan } = await planner.buildPlan({
+      nodes: [
+        { nodeId: 'staging.orders', resourceType: 'model', dependsOn: [] },
+        { nodeId: 'mart.revenue', resourceType: 'model', dependsOn: ['staging.orders'] },
+        { nodeId: 'test.revenue_not_null', resourceType: 'test', dependsOn: ['mart.revenue'] },
+      ],
+      selection: {
+        selectedNodeIds: ['test.revenue_not_null'],
+        includeUpstream: true,
+      },
+    });
 
-  assert.match(plannerPlan.metadata.planId, /^[a-f0-9]{64}$/);
-  assert.equal(plannerPlan.metadata.planVersion, '2.3');
-  assert.equal(plannerPlan.steps.length, 3);
+    expect(plannerPlan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
+    expect(plannerPlan.metadata.planVersion).toBe('2.3');
+    expect(plannerPlan.steps.length).toBe(3);
 
-  const stepIds = plannerPlan.steps.map((step) => step.stepId);
-  const indexOf = (stepId: string): number => stepIds.indexOf(stepId);
-  assert.ok(indexOf('staging.orders') < indexOf('mart.revenue'));
-  assert.ok(indexOf('mart.revenue') < indexOf('test.revenue_not_null'));
+    const stepIds = plannerPlan.steps.map((step) => step.stepId);
+    const indexOf = (stepId: string): number => stepIds.indexOf(stepId);
+    expect(indexOf('staging.orders') < indexOf('mart.revenue')).toBe(true);
+    expect(indexOf('mart.revenue') < indexOf('test.revenue_not_null')).toBe(true);
 
-  const enginePlan = plannerOutputToEnginePlan(plannerPlan);
-  assert.equal(enginePlan.metadata.schemaVersion, 'v1.2');
-  assert.equal(enginePlan.metadata.contractVersion, '1.0.0');
-  assert.equal(enginePlan.metadata.planId, plannerPlan.metadata.planId);
+    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+    expect(enginePlan.metadata.schemaVersion).toBe('v1.2');
+    expect(enginePlan.metadata.contractVersion).toBe('1.0.0');
+    expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
 
-  const planRef = makePlanRefFromEnginePlan(
-    'https://plans.example.com/revenue-dag.json',
-    enginePlan
-  );
-  const runId = 'integration-run-1';
-  const runContext = makeRunContext(runId);
+    const planRef = makePlanRefFromEnginePlan(
+      'https://plans.example.com/revenue-dag.json',
+      enginePlan
+    );
+    const runId = 'integration-run-1';
+    const runContext = makeRunContext(runId);
 
-  const { engine, store, clock, idempotency } = createStack(enginePlan);
-  const runRef = await engine.startRun(planRef, runContext);
+    const { engine, store, clock, idempotency } = createStack(enginePlan);
+    const runRef = await engine.startRun(planRef, runContext);
 
-  const afterStart = await engine.getRunStatus(runRef);
-  assert.equal(afterStart.status, 'PENDING');
+    const afterStart = await engine.getRunStatus(runRef);
+    expect(afterStart.status).toBe('PENDING');
 
-  const initialEvents = await store.listEvents('test-tenant', runId);
-  assert.equal(initialEvents.length, 1);
-  assert.equal(initialEvents[0]?.eventType, 'RunQueued');
+    const initialEvents = await store.listEvents('test-tenant', runId);
+    expect(initialEvents.length).toBe(1);
+    expect(initialEvents[0]?.eventType).toBe('RunQueued');
 
-  const eventMeta = {
-    runId,
-    planId: enginePlan.metadata.planId,
-    planVersion: enginePlan.metadata.planVersion,
-  };
+    const eventMeta = {
+      runId,
+      planId: enginePlan.metadata.planId,
+      planVersion: enginePlan.metadata.planVersion,
+    };
 
-  await store.appendAndEnqueueTx(runId, [
-    makeRunEvent(idempotency, clock, eventMeta, 'RunStarted'),
-  ]);
-
-  const afterRunStarted = await engine.getRunStatus(runRef);
-  assert.equal(afterRunStarted.status, 'RUNNING');
-
-  for (const step of plannerPlan.steps) {
     await store.appendAndEnqueueTx(runId, [
-      makeStepEvent(idempotency, clock, eventMeta, step.stepId, 'StepStarted'),
+      makeRunEvent(idempotency, clock, eventMeta, 'RunStarted'),
     ]);
-    await store.appendAndEnqueueTx(runId, [
-      makeStepEvent(idempotency, clock, eventMeta, step.stepId, 'StepCompleted'),
-    ]);
-  }
 
-  await store.appendAndEnqueueTx(runId, [
-    makeRunEvent(idempotency, clock, eventMeta, 'RunCompleted'),
-  ]);
+    const afterRunStarted = await engine.getRunStatus(runRef);
+    expect(afterRunStarted.status).toBe('RUNNING');
 
-  const finalSnapshot = await engine.getRunStatus(runRef);
-  assert.equal(finalSnapshot.status, 'COMPLETED');
-  assert.match(finalSnapshot.hash, /^[a-f0-9]{64}$/);
-
-  const persistedSnapshot = await store.getSnapshot('test-tenant', runId);
-  assert.ok(persistedSnapshot);
-  assert.equal(persistedSnapshot.status, 'COMPLETED');
-
-  for (const step of plannerPlan.steps) {
-    assert.equal(persistedSnapshot.steps[step.stepId]?.status, 'COMPLETED');
-    assert.equal(persistedSnapshot.steps[step.stepId]?.attempts, 1);
-  }
-
-  const allEvents = await store.listEvents('test-tenant', runId);
-  assert.equal(allEvents.length, 9);
-});
-
-await test('planner planId is deterministic for identical input', async () => {
-  const planner = new PlannerFacade();
-  const input = {
-    nodes: [
-      { nodeId: 'a', resourceType: 'model', dependsOn: [] as readonly string[] },
-      { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] as readonly string[] },
-    ],
-    selection: { selectedNodeIds: ['b'], includeUpstream: true },
-  };
-
-  const { plan: plan1 } = await planner.buildPlan(input);
-  const { plan: plan2 } = await planner.buildPlan(input);
-
-  assert.equal(plan1.metadata.planId, plan2.metadata.planId);
-  assert.equal(plan1.metadata.inputHashSha256, plan2.metadata.inputHashSha256);
-});
-
-await test('planner step fields remain compatible with engine step consumption', async () => {
-  const planner = new PlannerFacade();
-  const { plan } = await planner.buildPlan({
-    nodes: [
-      { nodeId: 'step-a', resourceType: 'model', dependsOn: [] },
-      { nodeId: 'step-b', resourceType: 'test', dependsOn: ['step-a'] },
-    ],
-    selection: { selectedNodeIds: ['step-b'], includeUpstream: true },
-  });
-
-  for (const step of plan.steps) {
-    assert.equal(typeof step.stepId, 'string');
-    assert.equal(typeof step.kind, 'string');
-    assert.equal(Array.isArray(step.dependsOn), true);
-    for (const dependency of step.dependsOn) {
-      assert.equal(typeof dependency, 'string');
+    for (const step of plannerPlan.steps) {
+      await store.appendAndEnqueueTx(runId, [
+        makeStepEvent(idempotency, clock, eventMeta, step.stepId, 'StepStarted'),
+      ]);
+      await store.appendAndEnqueueTx(runId, [
+        makeStepEvent(idempotency, clock, eventMeta, step.stepId, 'StepCompleted'),
+      ]);
     }
-  }
 
-  const enginePlan = plannerOutputToEnginePlan(plan);
-  const store = new InMemoryTxStore();
-  const projector = new SnapshotProjector();
-  const mock = new MockAdapter({
-    stateStore: store,
-    projector,
-    planFetcher: { fetch: async () => enginePlan },
+    await store.appendAndEnqueueTx(runId, [
+      makeRunEvent(idempotency, clock, eventMeta, 'RunCompleted'),
+    ]);
+
+    const finalSnapshot = await engine.getRunStatus(runRef);
+    expect(finalSnapshot.status).toBe('COMPLETED');
+    expect(finalSnapshot.hash).toMatch(/^[a-f0-9]{64}$/);
+
+    const persistedSnapshot = await store.getSnapshot('test-tenant', runId);
+    expect(persistedSnapshot).toBeTruthy();
+    expect(persistedSnapshot!.status).toBe('COMPLETED');
+
+    for (const step of plannerPlan.steps) {
+      expect(persistedSnapshot!.steps[step.stepId]?.status).toBe('COMPLETED');
+      expect(persistedSnapshot!.steps[step.stepId]?.attempts).toBe(1);
+    }
+
+    const allEvents = await store.listEvents('test-tenant', runId);
+    expect(allEvents.length).toBe(9);
   });
 
-  const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
-  const runRef = await mock.startRun(planRef, makeRunContext('compat-run'));
-  assert.equal(runRef.provider, 'mock');
-});
+  it('planner planId is deterministic for identical input', async () => {
+    const planner = new PlannerFacade();
+    const input = {
+      nodes: [
+        { nodeId: 'a', resourceType: 'model', dependsOn: [] as readonly string[] },
+        { nodeId: 'b', resourceType: 'model', dependsOn: ['a'] as readonly string[] },
+      ],
+      selection: { selectedNodeIds: ['b'], includeUpstream: true },
+    };
 
-await test('bridge preserves planner planId and step order', async () => {
-  const planner = new PlannerFacade();
-  const { plan: plannerPlan } = await planner.buildPlan({
-    nodes: [
-      { nodeId: 'x', resourceType: 'model', dependsOn: [] },
-      { nodeId: 'y', resourceType: 'model', dependsOn: ['x'] },
-      { nodeId: 'z', resourceType: 'model', dependsOn: ['x', 'y'] },
-    ],
-    selection: { selectedNodeIds: ['z'], includeUpstream: true },
+    const { plan: plan1 } = await planner.buildPlan(input);
+    const { plan: plan2 } = await planner.buildPlan(input);
+
+    expect(plan1.metadata.planId).toBe(plan2.metadata.planId);
+    expect(plan1.metadata.inputHashSha256).toBe(plan2.metadata.inputHashSha256);
   });
 
-  const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+  it('planner step fields remain compatible with engine step consumption', async () => {
+    const planner = new PlannerFacade();
+    const { plan } = await planner.buildPlan({
+      nodes: [
+        { nodeId: 'step-a', resourceType: 'model', dependsOn: [] },
+        { nodeId: 'step-b', resourceType: 'test', dependsOn: ['step-a'] },
+      ],
+      selection: { selectedNodeIds: ['step-b'], includeUpstream: true },
+    });
 
-  assert.equal(enginePlan.metadata.planId, plannerPlan.metadata.planId);
-  assert.equal(enginePlan.steps.length, plannerPlan.steps.length);
+    for (const step of plan.steps) {
+      expect(typeof step.stepId).toBe('string');
+      expect(typeof step.kind).toBe('string');
+      expect(Array.isArray(step.dependsOn)).toBe(true);
+      for (const dependency of step.dependsOn) {
+        expect(typeof dependency).toBe('string');
+      }
+    }
 
-  for (let index = 0; index < plannerPlan.steps.length; index += 1) {
-    assert.equal(enginePlan.steps[index]?.stepId, plannerPlan.steps[index]?.stepId);
-    assert.equal(enginePlan.steps[index]?.kind, plannerPlan.steps[index]?.kind);
-  }
-});
+    const enginePlan = plannerOutputToEnginePlan(plan);
+    const store = new InMemoryTxStore();
+    const projector = new SnapshotProjector();
+    const mock = new MockAdapter({
+      stateStore: store,
+      projector,
+      planFetcher: { fetch: async () => enginePlan },
+    });
 
-await test('planner output still documents current schema drift against engine metadata', async () => {
-  const planner = new PlannerFacade();
-  const { plan } = await planner.buildPlan({
-    nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],
-    selection: { selectedNodeIds: ['solo'] },
+    const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
+    const runRef = await mock.startRun(planRef, makeRunContext('compat-run'));
+    expect(runRef.provider).toBe('mock');
   });
 
-  const metadata = plan.metadata as Record<string, unknown>;
-  assert.equal(metadata['schemaVersion'], undefined);
-  assert.equal(metadata['contractVersion'], undefined);
-  assert.notEqual(metadata['planId'], undefined);
-  assert.notEqual(metadata['planVersion'], undefined);
-  assert.notEqual(metadata['inputHashSha256'], undefined);
-  assert.notEqual(metadata['createdAtIso'], undefined);
+  it('bridge preserves planner planId and step order', async () => {
+    const planner = new PlannerFacade();
+    const { plan: plannerPlan } = await planner.buildPlan({
+      nodes: [
+        { nodeId: 'x', resourceType: 'model', dependsOn: [] },
+        { nodeId: 'y', resourceType: 'model', dependsOn: ['x'] },
+        { nodeId: 'z', resourceType: 'model', dependsOn: ['x', 'y'] },
+      ],
+      selection: { selectedNodeIds: ['z'], includeUpstream: true },
+    });
+
+    const enginePlan = plannerOutputToEnginePlan(plannerPlan);
+
+    expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
+    expect(enginePlan.steps.length).toBe(plannerPlan.steps.length);
+
+    for (let index = 0; index < plannerPlan.steps.length; index += 1) {
+      expect(enginePlan.steps[index]?.stepId).toBe(plannerPlan.steps[index]?.stepId);
+      expect(enginePlan.steps[index]?.kind).toBe(plannerPlan.steps[index]?.kind);
+    }
+  });
+
+  it('planner output still documents current schema drift against engine metadata', async () => {
+    const planner = new PlannerFacade();
+    const { plan } = await planner.buildPlan({
+      nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],
+      selection: { selectedNodeIds: ['solo'] },
+    });
+
+    const metadata = plan.metadata as Record<string, unknown>;
+    expect(metadata['schemaVersion']).toBe(undefined);
+    expect(metadata['contractVersion']).toBe(undefined);
+    expect(metadata['planId']).not.toBe(undefined);
+    expect(metadata['planVersion']).not.toBe(undefined);
+    expect(metadata['inputHashSha256']).not.toBe(undefined);
+    expect(metadata['createdAtIso']).not.toBe(undefined);
+  });
 });

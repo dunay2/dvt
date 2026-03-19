@@ -1,6 +1,5 @@
+import { computeSha256 } from '@dvt/artifacts';
 import { describe, expect, it } from 'vitest';
-
-import { computeSha256 } from '../../src/compiledCode/sha256.js';
 
 describe('computeSha256', () => {
   it('is deterministic for equal input', () => {

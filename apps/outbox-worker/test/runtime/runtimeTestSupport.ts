@@ -1,4 +1,3 @@
-import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import type {
@@ -7,6 +6,7 @@ import type {
   OutboxRecord,
 } from '@dvt/contracts';
 import { InMemoryEventBus } from '@dvt/delivery/testing';
+import { it } from 'vitest';
 
 import {
   OutboxWorkerRuntime,
@@ -319,11 +319,11 @@ export class AbortDuringListenerRegistrationSignal {
   }
 }
 
-export async function runtimeTest(
+export function runtimeTest(
   scenario: RuntimeTestScenario,
   implementation: () => Promise<void> | void
-): Promise<void> {
-  await test(scenario.title, implementation);
+): void {
+  it(scenario.title, implementation);
 }
 
 export function createSyntheticError(failure: SyntheticFailure): Error {

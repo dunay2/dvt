@@ -11,7 +11,7 @@
     "pretypecheck": "pnpm --filter \"dvt-projector-worker^...\" build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
     "pretest": "pnpm --filter \"dvt-projector-worker^...\" build",
-    "test": "node --import tsx --test test/**/*.test.ts"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@dvt/adapter-postgres": "workspace:*",
@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "3.2.4"
   }
 }

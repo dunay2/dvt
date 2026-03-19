@@ -59,6 +59,34 @@ Therefore the agent MUST:
 This is a repository operational rule for agent-driven execution. It does not
 change normal Git usage for human contributors outside the agent environment.
 
+## Sandboxed Validation Execution Rule
+
+For this repository's agent execution environment, commands that load
+`vitest`, `vite`, or `esbuild` may fail under sandboxed execution with
+`spawn EPERM` even when the code is correct.
+
+Therefore the agent MUST:
+
+- treat `spawn EPERM` from `vitest`/`vite`/`esbuild` as an environment signal
+  first, not as a code failure
+- rerun the affected validation command with escalated execution directly when
+  that failure occurs
+- report the escalated rerun result as the real validation outcome
+- not present sandbox-only `spawn EPERM` output as a product defect unless the
+  escalated rerun confirms it
+
+## Required End-Of-Task Validation
+
+For code, config, test, CI, or documentation changes, the agent MUST finish by
+running the relevant validation commands for the touched scope and MUST include
+the lint/pre-push gate in that closeout baseline.
+
+At minimum, this means:
+
+- package-level tests, lint, and type-check commands for the changed scope
+- `pnpm verify:prepush` before claiming the slice is ready, unless the user
+  explicitly limits validation and that limit is reported
+
 ## No Debt And No Stub Policy
 
 By default, every task is expected to close without creating new debt.

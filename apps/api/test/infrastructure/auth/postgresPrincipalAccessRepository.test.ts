@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import { PostgresPrincipalAccessRepository } from '../../../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
 
@@ -7,22 +6,23 @@ function normalizeSql(sql: string): string {
   return sql.replace(/\s+/g, ' ').trim();
 }
 
-await test('PostgresPrincipalAccessRepository creates the schema before the grants table', async () => {
-  const queries: string[] = [];
-  const pool = {
-    async query(sql: string) {
-      queries.push(sql);
-      return { rows: [] };
-    },
-  };
+describe('PostgresPrincipalAccessRepository', () => {
+  it('creates the schema before the grants table', async () => {
+    const queries: string[] = [];
+    const pool = {
+      async query(sql: string) {
+        queries.push(sql);
+        return { rows: [] };
+      },
+    };
 
-  const repository = new PostgresPrincipalAccessRepository(pool as never, 'authz');
-  await repository.migrate();
+    const repository = new PostgresPrincipalAccessRepository(pool as never, 'authz');
+    await repository.migrate();
 
-  assert.equal(queries.length, 2);
-  assert.match(normalizeSql(queries[0]!), /^CREATE SCHEMA IF NOT EXISTS authz;$/i);
-  assert.match(
-    normalizeSql(queries[1]!),
-    /^CREATE TABLE IF NOT EXISTS authz\.principal_grants \(/i
-  );
+    expect(queries.length).toBe(2);
+    expect(normalizeSql(queries[0]!)).toMatch(/^CREATE SCHEMA IF NOT EXISTS authz;$/i);
+    expect(normalizeSql(queries[1]!)).toMatch(
+      /^CREATE TABLE IF NOT EXISTS authz\.principal_grants \(/i
+    );
+  });
 });

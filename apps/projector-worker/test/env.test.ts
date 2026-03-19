@@ -1,18 +1,19 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import { loadEnv } from '../src/env.js';
 
-await test('loadEnv throws when DATABASE_URL is missing', async () => {
-  assert.throws(() => loadEnv({}), /DATABASE_URL/);
-});
+describe('loadEnv', () => {
+  it('throws when DATABASE_URL is missing', () => {
+    expect(() => loadEnv({})).toThrow(/DATABASE_URL/);
+  });
 
-await test('loadEnv applies defaults for projector worker env vars', async () => {
-  const env = loadEnv({ DATABASE_URL: 'postgres://localhost/dvt' });
+  it('applies defaults for projector worker env vars', () => {
+    const env = loadEnv({ DATABASE_URL: 'postgres://localhost/dvt' });
 
-  assert.equal(env.DVT_PROJECTOR_BATCH_SIZE, 50);
-  assert.equal(env.DVT_PROJECTOR_POLL_INTERVAL_MS, 5000);
-  assert.equal(env.DVT_PROJECTOR_ERROR_BACKOFF_MS, 10000);
-  assert.equal(env.DVT_PROJECTOR_ADMIN_PORT, 9465);
-  assert.equal(env.SERVICE_NAME, 'dvt-projector-worker');
+    expect(env.DVT_PROJECTOR_BATCH_SIZE).toBe(50);
+    expect(env.DVT_PROJECTOR_POLL_INTERVAL_MS).toBe(5000);
+    expect(env.DVT_PROJECTOR_ERROR_BACKOFF_MS).toBe(10000);
+    expect(env.DVT_PROJECTOR_ADMIN_PORT).toBe(9465);
+    expect(env.SERVICE_NAME).toBe('dvt-projector-worker');
+  });
 });
