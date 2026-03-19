@@ -10,6 +10,7 @@
  */
 
 import type { PlannerPolicyClassSet } from './PlannerPolicyVocabulary.v2.js';
+import type { SupportedPlanVersion } from './PlanVersion.v1.js';
 
 export type StepKind = string;
 
@@ -72,25 +73,34 @@ export interface ExecutionStepV2 {
   stepTypeConfig?: Record<string, unknown>;
 }
 
-export interface PlanCore {
+export type VersionedPlanCore<TVersion extends SupportedPlanVersion> = {
   metadata: {
-    planVersion: '2.3';
+    planVersion: TVersion;
     inputHashSha256: string;
   };
   steps: readonly ExecutionStepV2[];
-}
+};
 
-export interface ExecutionPlanV2 extends PlanCore {
-  metadata: PlanCore['metadata'] & {
-    planId: string;
-    createdAtIso: string;
+export type PlanCore = {
+  [TVersion in SupportedPlanVersion]: VersionedPlanCore<TVersion>;
+}[SupportedPlanVersion];
+
+export type VersionedExecutionPlanV2<TVersion extends SupportedPlanVersion> =
+  VersionedPlanCore<TVersion> & {
+    metadata: VersionedPlanCore<TVersion>['metadata'] & {
+      planId: string;
+      createdAtIso: string;
+    };
+    observability?: {
+      tags?: Record<string, string>;
+      extra?: Record<string, unknown>;
+      [k: string]: unknown;
+    };
   };
-  observability?: {
-    tags?: Record<string, string>;
-    extra?: Record<string, unknown>;
-    [k: string]: unknown;
-  };
-}
+
+export type ExecutionPlanV2 = {
+  [TVersion in SupportedPlanVersion]: VersionedExecutionPlanV2<TVersion>;
+}[SupportedPlanVersion];
 
 // ── Graph-source compatibility policy ────────────────────────────────────────
 

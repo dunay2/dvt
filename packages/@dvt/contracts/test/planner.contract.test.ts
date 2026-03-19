@@ -5,6 +5,7 @@ import {
   type PlannerInputEnvelopeV2,
 } from '../src/contracts/planner/ExecutionPlan.v2.js';
 import { type IPlanner } from '../src/contracts/planner/IExecutionPlanner.v2.js';
+import { CURRENT_EXECUTION_PLAN_VERSION } from '../src/index.js';
 import {
   ExecutionPlanV2Schema,
   PlannerBuildResultV2Schema,
@@ -37,7 +38,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
       VALID_PLANNER_INPUT_FIXTURE as unknown as PlannerInputEnvelopeV2
     );
 
-    expect(result.plan.metadata.planVersion).toBe('2.3');
+    expect(result.plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
     expect(result.plan.steps.length).toBeGreaterThan(0);
   });
 
@@ -54,9 +55,9 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(result.success).toBe(false);
   });
 
-  it('valida schema de ExecutionPlanV2 versionado (2.3)', () => {
+  it('valida schema de ExecutionPlanV2 versionado', () => {
     const plan = ExecutionPlanV2Schema.parse(VALID_EXECUTION_PLAN_V2_FIXTURE);
-    expect(plan.metadata.planVersion).toBe('2.3');
+    expect(plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
     expect(plan.steps.map((s) => s.stepId)).toEqual([
       'model.analytics.customers',
@@ -66,6 +67,6 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
 
   it('valida schema de PlannerBuildResultV2 con canonicalPlanJson', () => {
     const result = PlannerBuildResultV2Schema.parse(VALID_PLANNER_BUILD_RESULT_V2_FIXTURE);
-    expect(result.canonicalPlanJson).toContain('"planVersion":"2.3"');
+    expect(result.canonicalPlanJson).toContain(`"planVersion":"${CURRENT_EXECUTION_PLAN_VERSION}"`);
   });
 });

@@ -1,0 +1,30 @@
+/**
+ * Governed ExecutionPlan version vocabulary.
+ *
+ * New plan versions extend this registry instead of replacing inline string
+ * literals across the contract surface.
+ */
+
+export const CURRENT_EXECUTION_PLAN_VERSION = '2.3' as const;
+
+export const SUPPORTED_EXECUTION_PLAN_VERSIONS = [CURRENT_EXECUTION_PLAN_VERSION] as const;
+
+export type SupportedPlanVersion = (typeof SUPPORTED_EXECUTION_PLAN_VERSIONS)[number];
+
+export interface ExecutionPlanVersionDescriptor {
+  readonly status: 'current';
+  readonly family: 'ExecutionPlanV2';
+  readonly notes: string;
+}
+
+export const EXECUTION_PLAN_VERSION_REGISTRY = {
+  '2.3': {
+    status: 'current',
+    family: 'ExecutionPlanV2',
+    notes: 'Current planner-emitted version for the canonical ExecutionPlanV2 surface.',
+  },
+} as const satisfies Record<SupportedPlanVersion, ExecutionPlanVersionDescriptor>;
+
+export function isSupportedExecutionPlanVersion(value: string): value is SupportedPlanVersion {
+  return value in EXECUTION_PLAN_VERSION_REGISTRY;
+}

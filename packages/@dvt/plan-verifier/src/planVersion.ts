@@ -7,6 +7,38 @@ export type ParsedPlanVersion = {
   patch?: number;
 };
 
+export const PLAN_RUNTIME_COMPATIBILITY_MATRIX = {
+  planner: {
+    acceptedPlanVersions: ['2.3'],
+  },
+  engine: {
+    acceptedPlanVersions: ['2.3'],
+  },
+  'adapter-temporal': {
+    acceptedPlanVersions: ['2.3'],
+  },
+} as const;
+
+export type PlanRuntime = keyof typeof PLAN_RUNTIME_COMPATIBILITY_MATRIX;
+
+export function getSupportedPlanVersionsForRuntime(runtime: PlanRuntime): readonly string[] {
+  return PLAN_RUNTIME_COMPATIBILITY_MATRIX[runtime].acceptedPlanVersions;
+}
+
+type RuntimeCompatibilityParams = {
+  planVersion: string;
+  runtime: PlanRuntime;
+};
+
+type LegacyCompatibilityParams = {
+  planVersion: string;
+  supportedMajor: number;
+  strictSameMinor?: boolean;
+  supportedMinor?: number;
+};
+
+export type VerifyPlanVersionParams = LegacyCompatibilityParams | RuntimeCompatibilityParams;
+
 const RE = /^(\d+)\.(\d+)(?:\.(\d+))?$/;
 
 export function parsePlanVersionOrThrow(raw: string): ParsedPlanVersion {
@@ -34,17 +66,33 @@ export function parsePlanVersionOrThrow(raw: string): ParsedPlanVersion {
 }
 
 /**
- * Compatibility gate (Phase 1):
+ * Compatibility gate (legacy):
  * - must match MAJOR
  * Optional strictSameMinor:
- * - must also match MINOR (for strict minor mode operations)
+ * - must also match MINOR
+ *
+ * Compatibility gate (current):
+ * - runtime support is governed by PLAN_RUNTIME_COMPATIBILITY_MATRIX.
  */
-export function verifyPlanVersionOrThrow(params: {
-  planVersion: string;
-  supportedMajor: number;
-  strictSameMinor?: boolean;
-  supportedMinor?: number;
-}): void {
+export function verifyPlanVersionAgainstRuntimeOrThrow(params: RuntimeCompatibilityParams): void {
+  const supported = getSupportedPlanVersionsForRuntime(params.runtime);
+  if (!supported.includes(params.planVersion)) {
+    throw new PlanVerifierError(
+      'UNSUPPORTED_PLAN_VERSION',
+      `Unsupported planVersion '${params.planVersion}' for runtime '${params.runtime}'. Supported versions: ${supported.join(', ')}.`
+    );
+  }
+}
+
+export function verifyPlanVersionOrThrow(params: VerifyPlanVersionParams): void {
+  if ('runtime' in params) {
+    verifyPlanVersionAgainstRuntimeOrThrow(params);
+    return;
+  }
+  verifyPlanVersionOrThrowLegacy(params);
+}
+
+function verifyPlanVersionOrThrowLegacy(params: LegacyCompatibilityParams): void {
   const v = parsePlanVersionOrThrow(params.planVersion);
   if (v.major !== params.supportedMajor) {
     throw new PlanVerifierError(

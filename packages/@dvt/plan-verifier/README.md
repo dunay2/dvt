@@ -7,7 +7,7 @@ Shared, deterministic plan verification helpers.
 This package provides _enforcement_ primitives adapters MUST share:
 
 - Verify `planId` matches `sha256(canonicalPlanJson)` (canonical JSON already produced by the planner).
-- Verify planner `planVersion` compatibility (major-gated, optional strict-minor).
+- Verify planner `planVersion` compatibility using an explicit runtime compatibility matrix.
 - Provide consistent error codes across adapters (Temporal, Conductor, BullMQ, etc.).
 
 ## Non-goals
@@ -21,6 +21,13 @@ This package provides _enforcement_ primitives adapters MUST share:
 `verifyPlanOrThrow()` validates version first, then hashes the canonical JSON. This avoids
 hashing work when a plan is clearly incompatible. If you want combined diagnostics, call
 `verifyPlanVersionOrThrow()` and `verifyPlanIdOrThrow()` separately and aggregate errors.
+
+Preferred mode:
+
+- `verifyPlanVersionOrThrow({ planVersion, runtime })`
+
+Compatibility is looked up in `PLAN_RUNTIME_COMPATIBILITY_MATRIX`. Legacy
+major/minor gating remains available for older call sites.
 
 ## References
 

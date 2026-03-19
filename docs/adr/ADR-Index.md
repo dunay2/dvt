@@ -34,6 +34,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0033   | Outbox Worker Sharding And Fencing Model                                                        | Accepted                 | 2026-03-12                       | [ADR-0033-outbox-worker-sharding-and-fencing-model.md](ADR-0033-outbox-worker-sharding-and-fencing-model.md)                               |
 | ADR-0034   | Bounded Context Boundaries And Communication Rules                                              | Accepted                 | 2026-03-13                       | [ADR-0034-bounded-context-boundaries-and-communication-rules.md](ADR-0034-bounded-context-boundaries-and-communication-rules.md)           |
 | ADR-0035   | Planner Public Contract Evolution Protocol                                                      | Accepted                 | 2026-03-18                       | [ADR-0035-planner-public-contract-evolution-protocol.md](ADR-0035-planner-public-contract-evolution-protocol.md)                           |
+| ADR-0036   | ExecutionPlan planVersion registry and runtime compatibility matrix                             | Accepted                 | 2026-03-19                       | [ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md](ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)   |
 
 ## Usage rules
 
@@ -46,4 +47,4 @@ Canonical catalog of ADRs in this repository.
 - [ADR landing page](index.md)
 - [ADR implementation status](ADR-Implementation-Status.md)
 
-_Last updated: 2026-03-18_
+_Last updated: 2026-03-19_
