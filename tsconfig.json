@@ -52,6 +52,8 @@
       "@dvt/adapter-postgres/*": ["packages/@dvt/adapter-postgres/src/*"],
       "@dvt/adapter-temporal": ["packages/@dvt/adapter-temporal/src/index.ts"],
       "@dvt/adapter-temporal/*": ["packages/@dvt/adapter-temporal/src/*"],
+      "@dvt/artifacts": ["packages/@dvt/artifacts/src/index.ts"],
+      "@dvt/artifacts/*": ["packages/@dvt/artifacts/src/*"],
       "@dvt/observability": ["packages/@dvt/observability/src/index.ts"],
       "@dvt/observability/*": ["packages/@dvt/observability/src/*"],
       "@dvt/observability-otel": [
