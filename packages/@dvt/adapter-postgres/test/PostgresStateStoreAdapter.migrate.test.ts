@@ -108,4 +108,23 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(client.queries.at(-1)?.sql).toBe('COMMIT');
     expect(client.releaseCalls).toBe(1);
   });
+
+  it('creates the archive catalog tables and indexes required for Gap 5 P1', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((entry) => entry.sql).join('\n');
+
+    expect(executedSql).toContain('run_event_archive_units');
+    expect(executedSql).toContain('run_event_archive_batches');
+    expect(executedSql).toContain('run_event_archive_units_state_day_idx');
+    expect(executedSql).toContain('run_event_archive_batches_unit_status_idx');
+  });
 });

@@ -33,13 +33,24 @@ Concept anchors for this page:
 
 ## Document Classification
 
-| Document                                            | Classification              | Use it for                                 |
-| --------------------------------------------------- | --------------------------- | ------------------------------------------ |
-| `docs/planning/roadmap/index.md`                    | Canonical roadmap of record | Repository-wide planning entry point       |
-| `docs/architecture/system-delivery-status.md`       | Status board                | What is true now in implementation         |
-| `docs/planning/status/*`                            | Generated or curated status | Measured status and traceability artifacts |
-| `docs/planning/gaps/*`                              | Execution-gap tracking      | Concrete delivery gaps and work breakdown  |
-| `docs/architecture/engine/roadmap/engine-phases.md` | Subsystem roadmap           | Engine-specific phase planning             |
+- `docs/planning/roadmap/index.md`
+  Classification: canonical roadmap of record
+  Use it for: repository-wide planning entry point
+- `docs/planning/roadmap/gap-5-executive-delivery-roadmap-20260319.md`
+  Classification: subsystem roadmap
+  Use it for: Gap 5 delivery sequencing and execution gates
+- `docs/architecture/system-delivery-status.md`
+  Classification: status board
+  Use it for: what is true now in implementation
+- `docs/planning/status/*`
+  Classification: generated or curated status
+  Use it for: measured status and traceability artifacts
+- `docs/planning/gaps/*`
+  Classification: execution-gap tracking
+  Use it for: concrete delivery gaps and work breakdown
+- `docs/architecture/engine/roadmap/engine-phases.md`
+  Classification: subsystem roadmap
+  Use it for: engine-specific phase planning
 
 ## Operating Rules
 
@@ -59,6 +70,10 @@ Repository-wide planning should currently be read in this order:
 2. [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md)
 3. [Planning Status](../status/index.md)
 4. Relevant proposals under [Planning Proposals](../proposals/index.md)
+
+Current subsystem roadmaps worth consulting:
+
+- [Gap 5 Executive Delivery Roadmap](gap-5-executive-delivery-roadmap-20260319.md)
 
 ## Maintenance Rule
 
