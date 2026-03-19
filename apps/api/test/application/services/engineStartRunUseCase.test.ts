@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import type {
   AuthorizedCommandExecutionContext,
@@ -49,45 +48,49 @@ function mkCommand(): StartRunCommand {
   };
 }
 
-await test('EngineStartRunUseCase calls engine.startRun with plan ref and run context', async () => {
-  let capturedPlanRef: unknown;
-  let capturedRunContext: unknown;
+describe('EngineStartRunUseCase', () => {
+  it('calls engine.startRun with plan ref and run context', async () => {
+    let capturedPlanRef: unknown;
+    let capturedRunContext: unknown;
 
-  const fakeEngine = {
-    async startRun(planRef: unknown, runContext: unknown) {
-      capturedPlanRef = planRef;
-      capturedRunContext = runContext;
-      return {
-        provider: 'mock' as const,
-        tenantId: 'tenant-1',
-        workflowId: 'wf-1',
-        runId: 'run-test-1',
-      };
-    },
-  };
+    const fakeEngine = {
+      async startRun(planRef: unknown, runContext: unknown) {
+        capturedPlanRef = planRef;
+        capturedRunContext = runContext;
+        return {
+          provider: 'mock' as const,
+          tenantId: 'tenant-1',
+          workflowId: 'wf-1',
+          runId: 'run-test-1',
+        };
+      },
+    };
 
-  const useCase = new EngineStartRunUseCase(fakeEngine as never);
-  const result = await useCase.execute(mkCommand(), mkContext());
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    const result = await useCase.execute(mkCommand(), mkContext());
 
-  assert.deepEqual(result, { runId: 'run-test-1', accepted: true });
-  assert.deepEqual(capturedPlanRef, PLAN_REF);
-  assert.deepEqual(capturedRunContext, {
-    tenantId: 'tenant-1',
-    projectId: 'proj-1',
-    environmentId: 'env-1',
-    runId: 'run-test-1',
-    targetAdapter: 'mock',
-    logicalAttemptId: 1,
+    expect(result).toEqual({ runId: 'run-test-1', accepted: true });
+    expect(capturedPlanRef).toEqual(PLAN_REF);
+    expect(capturedRunContext).toEqual({
+      tenantId: 'tenant-1',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-test-1',
+      targetAdapter: 'mock',
+      logicalAttemptId: 1,
+    });
   });
-});
 
-await test('EngineStartRunUseCase propagates engine errors', async () => {
-  const fakeEngine = {
-    async startRun() {
-      throw new Error('engine unavailable');
-    },
-  };
+  it('propagates engine errors', async () => {
+    const fakeEngine = {
+      async startRun() {
+        throw new Error('engine unavailable');
+      },
+    };
 
-  const useCase = new EngineStartRunUseCase(fakeEngine as never);
-  await assert.rejects(() => useCase.execute(mkCommand(), mkContext()), /engine unavailable/);
+    const useCase = new EngineStartRunUseCase(fakeEngine as never);
+    await expect(() => useCase.execute(mkCommand(), mkContext())).rejects.toThrow(
+      /engine unavailable/
+    );
+  });
 });

@@ -266,7 +266,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Current status source:
   [Gap Execution Plans](../gaps/GAP_EXECUTION_PLANS.md) (`G4`)
 - Primary code:
-  [packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts](../../../packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts),
+  [packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts](../../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts),
   [packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts),
   [packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
 - Key tests:

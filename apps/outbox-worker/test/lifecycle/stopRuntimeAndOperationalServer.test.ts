@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import { stopRuntimeAndOperationalServer } from '../../src/lifecycle/stopRuntimeAndOperationalServer.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
@@ -22,37 +21,37 @@ function makeLogger(): {
   };
 }
 
-await test('stopRuntimeAndOperationalServer still stops the admin server after runtime stop fails', async () => {
-  const calls: string[] = [];
-  const { logger, entries } = makeLogger();
+describe('stopRuntimeAndOperationalServer', () => {
+  it('still stops the admin server after runtime stop fails', async () => {
+    const calls: string[] = [];
+    const { logger, entries } = makeLogger();
 
-  await stopRuntimeAndOperationalServer({
-    runtime: {
-      stop: async () => {
-        calls.push('runtime.stop');
-        throw new Error('synthetic runtime stop failure');
+    await stopRuntimeAndOperationalServer({
+      runtime: {
+        stop: async () => {
+          calls.push('runtime.stop');
+          throw new Error('synthetic runtime stop failure');
+        },
       },
-    },
-    operationalServer: {
-      stop: async () => {
-        calls.push('operationalServer.stop');
+      operationalServer: {
+        stop: async () => {
+          calls.push('operationalServer.stop');
+        },
       },
-    },
-    logger,
-    primaryError: new Error('synthetic tick failure'),
+      logger,
+      primaryError: new Error('synthetic tick failure'),
+    });
+
+    expect(calls).toEqual(['runtime.stop', 'operationalServer.stop']);
+    expect(entries.length).toBe(1);
+    expect(entries[0]?.msg).toBe('outbox worker cleanup failed while handling a primary failure');
   });
 
-  assert.deepEqual(calls, ['runtime.stop', 'operationalServer.stop']);
-  assert.equal(entries.length, 1);
-  assert.equal(entries[0]?.msg, 'outbox worker cleanup failed while handling a primary failure');
-});
+  it('surfaces cleanup failures when there is no primary error', async () => {
+    const calls: string[] = [];
+    const { logger } = makeLogger();
 
-await test('stopRuntimeAndOperationalServer surfaces cleanup failures when there is no primary error', async () => {
-  const calls: string[] = [];
-  const { logger } = makeLogger();
-
-  await assert.rejects(
-    () =>
+    await expect(() =>
       stopRuntimeAndOperationalServer({
         runtime: {
           stop: async () => {
@@ -68,79 +67,79 @@ await test('stopRuntimeAndOperationalServer surfaces cleanup failures when there
         },
         logger,
         primaryError: null,
-      }),
-    AggregateError
-  );
+      })
+    ).rejects.toThrow(AggregateError);
 
-  assert.deepEqual(calls, ['runtime.stop', 'operationalServer.stop']);
-});
-
-await test('stopRuntimeAndOperationalServer skips runtime cleanup when no runtime owner was started', async () => {
-  const calls: string[] = [];
-  const { logger } = makeLogger();
-
-  await stopRuntimeAndOperationalServer({
-    runtime: null,
-    operationalServer: {
-      stop: async () => {
-        calls.push('operationalServer.stop');
-      },
-    },
-    logger,
-    primaryError: null,
+    expect(calls).toEqual(['runtime.stop', 'operationalServer.stop']);
   });
 
-  assert.deepEqual(calls, ['operationalServer.stop']);
-});
+  it('skips runtime cleanup when no runtime owner was started', async () => {
+    const calls: string[] = [];
+    const { logger } = makeLogger();
 
-await test('stopRuntimeAndOperationalServer logs structured cleanup errors without object stringification', async () => {
-  const { logger, entries } = makeLogger();
-
-  await stopRuntimeAndOperationalServer({
-    runtime: {
-      stop: async () => {
-        throw { code: 'RUNTIME_STOP_FAILED', retryable: false };
+    await stopRuntimeAndOperationalServer({
+      runtime: null,
+      operationalServer: {
+        stop: async () => {
+          calls.push('operationalServer.stop');
+        },
       },
-    },
-    operationalServer: {
-      stop: async () => {},
-    },
-    logger,
-    primaryError: new Error('synthetic primary failure'),
+      logger,
+      primaryError: null,
+    });
+
+    expect(calls).toEqual(['operationalServer.stop']);
   });
 
-  assert.equal(entries.length, 1);
-  const cleanupErrors = entries[0]?.data.cleanupErrors;
-  assert.deepEqual(cleanupErrors, [
-    {
-      message: '{"code":"RUNTIME_STOP_FAILED","retryable":false}',
-      name: 'UnknownError',
-    },
-  ]);
-});
+  it('logs structured cleanup errors without object stringification', async () => {
+    const { logger, entries } = makeLogger();
 
-await test('stopRuntimeAndOperationalServer logs primitive cleanup failures while handling a primary error', async () => {
-  const { logger, entries } = makeLogger();
-
-  await stopRuntimeAndOperationalServer({
-    runtime: {
-      stop: async () => {
-        throw false;
+    await stopRuntimeAndOperationalServer({
+      runtime: {
+        stop: async () => {
+          throw { code: 'RUNTIME_STOP_FAILED', retryable: false };
+        },
       },
-    },
-    operationalServer: {
-      stop: async () => {},
-    },
-    logger,
-    primaryError: new Error('synthetic primary failure'),
+      operationalServer: {
+        stop: async () => {},
+      },
+      logger,
+      primaryError: new Error('synthetic primary failure'),
+    });
+
+    expect(entries.length).toBe(1);
+    const cleanupErrors = entries[0]?.data.cleanupErrors;
+    expect(cleanupErrors).toEqual([
+      {
+        message: '{"code":"RUNTIME_STOP_FAILED","retryable":false}',
+        name: 'UnknownError',
+      },
+    ]);
   });
 
-  assert.equal(entries.length, 1);
-  const cleanupErrors = entries[0]?.data.cleanupErrors;
-  assert.deepEqual(cleanupErrors, [
-    {
-      message: 'false',
-      name: 'UnknownError',
-    },
-  ]);
+  it('logs primitive cleanup failures while handling a primary error', async () => {
+    const { logger, entries } = makeLogger();
+
+    await stopRuntimeAndOperationalServer({
+      runtime: {
+        stop: async () => {
+          throw false;
+        },
+      },
+      operationalServer: {
+        stop: async () => {},
+      },
+      logger,
+      primaryError: new Error('synthetic primary failure'),
+    });
+
+    expect(entries.length).toBe(1);
+    const cleanupErrors = entries[0]?.data.cleanupErrors;
+    expect(cleanupErrors).toEqual([
+      {
+        message: 'false',
+        name: 'UnknownError',
+      },
+    ]);
+  });
 });

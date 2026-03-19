@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import type { EventEnvelope as RunEventPersisted, OutboxRecord } from '@dvt/contracts';
 
@@ -64,314 +63,316 @@ function makeRecord(
   };
 }
 
-await test('OutboxWorkerMonitor tracks runtime state, metrics, and delivery transitions', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
+describe('OutboxWorkerMonitor', () => {
+  it('tracks runtime state, metrics, and delivery transitions', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger, entries } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
+
+    monitor.onStarted();
+    monitor.onBatchClaimed([makeRecord('1')]);
+    monitor.onRecordDelivered(makeRecord('1'));
+    monitor.onRecordFailed(makeRecord('2', '2026-03-08T00:00:00.000Z', 1), 'transient', 'retry');
+    monitor.onTick({
+      claimedCount: 2,
+      deliveredCount: 1,
+      retriedCount: 1,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: 2_500,
+      retryBacklogActive: true,
+    });
+
+    const ready = monitor.getHealthSnapshot();
+    expect(ready.ready).toBe(false);
+    expect(ready.state).toBe('failing');
+    expect(ready.lastErrorMessage).toBe('transient');
+
+    monitor.onError(new Error('downstream broke'));
+    const failing = monitor.getHealthSnapshot();
+    expect(failing.ready).toBe(false);
+    expect(failing.state).toBe('failing');
+    expect(failing.lastErrorMessage).toBe('downstream broke');
+
+    monitor.onStopped();
+    const stopped = monitor.getHealthSnapshot();
+    expect(stopped.ok).toBe(false);
+    expect(stopped.state).toBe('stopped');
+
+    const metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_outbox_claimed_records_total 2/);
+    expect(metrics).toMatch(/dvt_outbox_retried_records_total 1/);
+    expect(metrics).toMatch(/dvt_outbox_oldest_claimed_lag_seconds 2.5/);
+    expect(metrics).toMatch(/dvt_outbox_runtime_state\{state="stopped"\} 1/);
+
+    expect(entries.some((entry) => entry.msg === 'outbox records claimed')).toBe(true);
+    expect(entries.some((entry) => entry.msg === 'outbox record delivered')).toBe(true);
+    expect(entries.some((entry) => entry.msg === 'outbox record scheduled for retry')).toBe(true);
   });
 
-  monitor.onStarted();
-  monitor.onBatchClaimed([makeRecord('1')]);
-  monitor.onRecordDelivered(makeRecord('1'));
-  monitor.onRecordFailed(makeRecord('2', '2026-03-08T00:00:00.000Z', 1), 'transient', 'retry');
-  monitor.onTick({
-    claimedCount: 2,
-    deliveredCount: 1,
-    retriedCount: 1,
-    deadLetteredCount: 0,
-    oldestClaimedAgeMs: 2_500,
-    retryBacklogActive: true,
+  it('logs the oldest claimed record across the full batch', () => {
+    const clock = { nowMs: Date.parse('2026-03-08T00:00:10.000Z') };
+    const { logger, entries } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
+
+    monitor.onBatchClaimed([
+      makeRecord('newer', '2026-03-08T00:00:09.000Z'),
+      makeRecord('older-retry', '2026-03-08T00:00:00.000Z', 1),
+    ]);
+
+    const claimedLog = entries.find((entry) => entry.msg === 'outbox records claimed');
+    expect(claimedLog).toBeTruthy();
+    expect(claimedLog!.data.oldestCreatedAt).toBe('2026-03-08T00:00:00.000Z');
+    expect(claimedLog!.data.oldestLagSeconds).toBe(10);
   });
 
-  const ready = monitor.getHealthSnapshot();
-  assert.equal(ready.ready, false);
-  assert.equal(ready.state, 'failing');
-  assert.equal(ready.lastErrorMessage, 'transient');
+  it('marks readiness false when a tick only retries records', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
 
-  monitor.onError(new Error('downstream broke'));
-  const failing = monitor.getHealthSnapshot();
-  assert.equal(failing.ready, false);
-  assert.equal(failing.state, 'failing');
-  assert.equal(failing.lastErrorMessage, 'downstream broke');
+    monitor.onStarted();
+    monitor.onRecordFailed(
+      makeRecord('1', '2026-03-08T00:00:00.000Z', 0),
+      'downstream unavailable',
+      'retry'
+    );
+    monitor.onTick({
+      claimedCount: 1,
+      deliveredCount: 0,
+      retriedCount: 1,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: 5_000,
+      retryBacklogActive: true,
+    });
 
-  monitor.onStopped();
-  const stopped = monitor.getHealthSnapshot();
-  assert.equal(stopped.ok, false);
-  assert.equal(stopped.state, 'stopped');
+    const snapshot = monitor.getHealthSnapshot();
+    expect(snapshot.ready).toBe(false);
+    expect(snapshot.state).toBe('failing');
+    expect(snapshot.lastErrorMessage).toBe('downstream unavailable');
 
-  const metrics = monitor.renderMetrics();
-  assert.match(metrics, /dvt_outbox_claimed_records_total 2/);
-  assert.match(metrics, /dvt_outbox_retried_records_total 1/);
-  assert.match(metrics, /dvt_outbox_oldest_claimed_lag_seconds 2.5/);
-  assert.match(metrics, /dvt_outbox_runtime_state\{state="stopped"\} 1/);
+    monitor.onTick({
+      claimedCount: 0,
+      deliveredCount: 0,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: null,
+      retryBacklogActive: true,
+    });
 
-  assert.ok(entries.some((entry) => entry.msg === 'outbox records claimed'));
-  assert.ok(entries.some((entry) => entry.msg === 'outbox record delivered'));
-  assert.ok(entries.some((entry) => entry.msg === 'outbox record scheduled for retry'));
-});
+    const stillFailing = monitor.getHealthSnapshot();
+    expect(stillFailing.ready).toBe(false);
+    expect(stillFailing.state).toBe('failing');
+    expect(stillFailing.lastErrorMessage).toBe('downstream unavailable');
 
-await test('OutboxWorkerMonitor logs the oldest claimed record across the full batch', () => {
-  const clock = { nowMs: Date.parse('2026-03-08T00:00:10.000Z') };
-  const { logger, entries } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
+    monitor.onTick({
+      claimedCount: 0,
+      deliveredCount: 0,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: null,
+      retryBacklogActive: false,
+    });
+
+    const recovered = monitor.getHealthSnapshot();
+    expect(recovered.ready).toBe(true);
+    expect(recovered.state).toBe('idle');
+    expect(recovered.lastErrorMessage).toBe(null);
   });
 
-  monitor.onBatchClaimed([
-    makeRecord('newer', '2026-03-08T00:00:09.000Z'),
-    makeRecord('older-retry', '2026-03-08T00:00:00.000Z', 1),
-  ]);
+  it('clears runtime errors after a healthy recovery tick', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
 
-  const claimedLog = entries.find((entry) => entry.msg === 'outbox records claimed');
-  assert.ok(claimedLog);
-  assert.equal(claimedLog.data.oldestCreatedAt, '2026-03-08T00:00:00.000Z');
-  assert.equal(claimedLog.data.oldestLagSeconds, 10);
-});
+    monitor.onStarted();
+    monitor.onError(new Error('transient runtime failure'));
 
-await test('OutboxWorkerMonitor marks readiness false when a tick only retries records', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
+    const failing = monitor.getHealthSnapshot();
+    expect(failing.ready).toBe(false);
+    expect(failing.state).toBe('failing');
+    expect(failing.lastErrorMessage).toBe('transient runtime failure');
+
+    clock.nowMs += 1_000;
+    monitor.onTick({
+      claimedCount: 1,
+      deliveredCount: 1,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: 3_000,
+      retryBacklogActive: false,
+    });
+
+    const recovered = monitor.getHealthSnapshot();
+    expect(recovered.ready).toBe(true);
+    expect(recovered.state).toBe('draining');
+    expect(recovered.lastErrorMessage).toBe(null);
+    expect(recovered.lastTickAt).toBeTruthy();
   });
 
-  monitor.onStarted();
-  monitor.onRecordFailed(
-    makeRecord('1', '2026-03-08T00:00:00.000Z', 0),
-    'downstream unavailable',
-    'retry'
-  );
-  monitor.onTick({
-    claimedCount: 1,
-    deliveredCount: 0,
-    retriedCount: 1,
-    deadLetteredCount: 0,
-    oldestClaimedAgeMs: 5_000,
-    retryBacklogActive: true,
+  it('withdraws readiness when the last completed tick becomes stale', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+      readyStaleAfterMs: 5_000,
+    });
+
+    monitor.onStarted();
+    monitor.onTick({
+      claimedCount: 0,
+      deliveredCount: 0,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: null,
+      retryBacklogActive: false,
+    });
+
+    expect(monitor.getHealthSnapshot().ready).toBe(true);
+
+    clock.nowMs += 5_001;
+
+    const snapshot = monitor.getHealthSnapshot();
+    expect(snapshot.ok).toBe(true);
+    expect(snapshot.state).toBe('idle');
+    expect(snapshot.ready).toBe(false);
+    expect(snapshot.tickFresh).toBe(false);
+
+    const metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_outbox_runtime_tick_fresh 0/);
   });
 
-  const snapshot = monitor.getHealthSnapshot();
-  assert.equal(snapshot.ready, false);
-  assert.equal(snapshot.state, 'failing');
-  assert.equal(snapshot.lastErrorMessage, 'downstream unavailable');
+  it('exposes stopping as alive but not ready', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+      readyStaleAfterMs: 5_000,
+    });
 
-  monitor.onTick({
-    claimedCount: 0,
-    deliveredCount: 0,
-    retriedCount: 0,
-    deadLetteredCount: 0,
-    oldestClaimedAgeMs: null,
-    retryBacklogActive: true,
+    monitor.onStarted();
+    monitor.onTick({
+      claimedCount: 1,
+      deliveredCount: 1,
+      retriedCount: 0,
+      deadLetteredCount: 0,
+      oldestClaimedAgeMs: 1_000,
+      retryBacklogActive: false,
+    });
+    monitor.onStopping();
+
+    const snapshot = monitor.getHealthSnapshot();
+    expect(snapshot.ok).toBe(true);
+    expect(snapshot.ready).toBe(false);
+    expect(snapshot.state).toBe('stopping');
+    expect(snapshot.tickFresh).toBe(true);
+
+    const metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_outbox_runtime_ready 0/);
+    expect(metrics).toMatch(/dvt_outbox_runtime_state\{state="stopping"\} 1/);
   });
 
-  const stillFailing = monitor.getHealthSnapshot();
-  assert.equal(stillFailing.ready, false);
-  assert.equal(stillFailing.state, 'failing');
-  assert.equal(stillFailing.lastErrorMessage, 'downstream unavailable');
+  it('renders structured object failures without default object stringification', () => {
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => 1_741_392_000_000,
+    });
 
-  monitor.onTick({
-    claimedCount: 0,
-    deliveredCount: 0,
-    retriedCount: 0,
-    deadLetteredCount: 0,
-    oldestClaimedAgeMs: null,
-    retryBacklogActive: false,
+    monitor.onError({ code: 'DOWNSTREAM_TIMEOUT', retryable: true });
+
+    const snapshot = monitor.getHealthSnapshot();
+    expect(snapshot.state).toBe('failing');
+    expect(snapshot.lastErrorMessage).toBe('{"code":"DOWNSTREAM_TIMEOUT","retryable":true}');
   });
 
-  const recovered = monitor.getHealthSnapshot();
-  assert.equal(recovered.ready, true);
-  assert.equal(recovered.state, 'idle');
-  assert.equal(recovered.lastErrorMessage, null);
-});
+  it('exposes passive ownership as non-ready but healthy', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
 
-await test('OutboxWorkerMonitor clears runtime errors after a healthy recovery tick', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
+    monitor.enterPassiveMode();
+
+    const snapshot = monitor.getHealthSnapshot();
+    expect(snapshot.ok).toBe(true);
+    expect(snapshot.ready).toBe(false);
+    expect(snapshot.state).toBe('passive');
+
+    const metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_outbox_runtime_ready 0/);
+    expect(metrics).toMatch(/dvt_outbox_runtime_state\{state="passive"\} 1/);
   });
 
-  monitor.onStarted();
-  monitor.onError(new Error('transient runtime failure'));
+  it('exposes effective owner state in snapshot and metrics', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
 
-  const failing = monitor.getHealthSnapshot();
-  assert.equal(failing.ready, false);
-  assert.equal(failing.state, 'failing');
-  assert.equal(failing.lastErrorMessage, 'transient runtime failure');
+    expect(monitor.getHealthSnapshot().owner).toBe(false);
 
-  clock.nowMs += 1_000;
-  monitor.onTick({
-    claimedCount: 1,
-    deliveredCount: 1,
-    retriedCount: 0,
-    deadLetteredCount: 0,
-    oldestClaimedAgeMs: 3_000,
-    retryBacklogActive: false,
+    monitor.onOwnershipAcquired();
+
+    const ownedSnapshot = monitor.getHealthSnapshot();
+    expect(ownedSnapshot.state).toBe('starting');
+    expect(ownedSnapshot.ready).toBe(false);
+    expect(ownedSnapshot.owner).toBe(true);
+
+    const ownedMetrics = monitor.renderMetrics();
+    expect(ownedMetrics).toMatch(/dvt_outbox_runtime_owner 1/);
+
+    monitor.enterPassiveMode();
+
+    const passiveSnapshot = monitor.getHealthSnapshot();
+    expect(passiveSnapshot.state).toBe('passive');
+    expect(passiveSnapshot.owner).toBe(false);
+
+    const passiveMetrics = monitor.renderMetrics();
+    expect(passiveMetrics).toMatch(/dvt_outbox_runtime_owner 0/);
   });
 
-  const recovered = monitor.getHealthSnapshot();
-  assert.equal(recovered.ready, true);
-  assert.equal(recovered.state, 'draining');
-  assert.equal(recovered.lastErrorMessage, null);
-  assert.ok(recovered.lastTickAt);
-});
+  it('keeps process start timestamp unset until runtime startup', () => {
+    const clock = { nowMs: 1_741_392_000_000 };
+    const { logger } = makeLogger();
+    const monitor = new OutboxWorkerMonitor({
+      serviceName: 'dvt-outbox-worker',
+      logger,
+      nowMs: () => clock.nowMs,
+    });
 
-await test('OutboxWorkerMonitor withdraws readiness when the last completed tick becomes stale', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
-    readyStaleAfterMs: 5_000,
+    const beforeStartMetrics = monitor.renderMetrics();
+    expect(beforeStartMetrics).toMatch(/dvt_outbox_process_start_timestamp_seconds 0/);
+
+    monitor.onStarted();
+
+    const afterStartMetrics = monitor.renderMetrics();
+    expect(afterStartMetrics).toMatch(/dvt_outbox_process_start_timestamp_seconds 1741392000/);
   });
-
-  monitor.onStarted();
-  monitor.onTick({
-    claimedCount: 0,
-    deliveredCount: 0,
-    retriedCount: 0,
-    deadLetteredCount: 0,
-    oldestClaimedAgeMs: null,
-    retryBacklogActive: false,
-  });
-
-  assert.equal(monitor.getHealthSnapshot().ready, true);
-
-  clock.nowMs += 5_001;
-
-  const snapshot = monitor.getHealthSnapshot();
-  assert.equal(snapshot.ok, true);
-  assert.equal(snapshot.state, 'idle');
-  assert.equal(snapshot.ready, false);
-  assert.equal(snapshot.tickFresh, false);
-
-  const metrics = monitor.renderMetrics();
-  assert.match(metrics, /dvt_outbox_runtime_tick_fresh 0/);
-});
-
-await test('OutboxWorkerMonitor exposes stopping as alive but not ready', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
-    readyStaleAfterMs: 5_000,
-  });
-
-  monitor.onStarted();
-  monitor.onTick({
-    claimedCount: 1,
-    deliveredCount: 1,
-    retriedCount: 0,
-    deadLetteredCount: 0,
-    oldestClaimedAgeMs: 1_000,
-    retryBacklogActive: false,
-  });
-  monitor.onStopping();
-
-  const snapshot = monitor.getHealthSnapshot();
-  assert.equal(snapshot.ok, true);
-  assert.equal(snapshot.ready, false);
-  assert.equal(snapshot.state, 'stopping');
-  assert.equal(snapshot.tickFresh, true);
-
-  const metrics = monitor.renderMetrics();
-  assert.match(metrics, /dvt_outbox_runtime_ready 0/);
-  assert.match(metrics, /dvt_outbox_runtime_state\{state="stopping"\} 1/);
-});
-
-await test('OutboxWorkerMonitor renders structured object failures without default object stringification', () => {
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => 1_741_392_000_000,
-  });
-
-  monitor.onError({ code: 'DOWNSTREAM_TIMEOUT', retryable: true });
-
-  const snapshot = monitor.getHealthSnapshot();
-  assert.equal(snapshot.state, 'failing');
-  assert.equal(snapshot.lastErrorMessage, '{"code":"DOWNSTREAM_TIMEOUT","retryable":true}');
-});
-
-await test('OutboxWorkerMonitor exposes passive ownership as non-ready but healthy', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
-  });
-
-  monitor.enterPassiveMode();
-
-  const snapshot = monitor.getHealthSnapshot();
-  assert.equal(snapshot.ok, true);
-  assert.equal(snapshot.ready, false);
-  assert.equal(snapshot.state, 'passive');
-
-  const metrics = monitor.renderMetrics();
-  assert.match(metrics, /dvt_outbox_runtime_ready 0/);
-  assert.match(metrics, /dvt_outbox_runtime_state\{state="passive"\} 1/);
-});
-
-await test('OutboxWorkerMonitor exposes effective owner state in snapshot and metrics', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
-  });
-
-  assert.equal(monitor.getHealthSnapshot().owner, false);
-
-  monitor.onOwnershipAcquired();
-
-  const ownedSnapshot = monitor.getHealthSnapshot();
-  assert.equal(ownedSnapshot.state, 'starting');
-  assert.equal(ownedSnapshot.ready, false);
-  assert.equal(ownedSnapshot.owner, true);
-
-  const ownedMetrics = monitor.renderMetrics();
-  assert.match(ownedMetrics, /dvt_outbox_runtime_owner 1/);
-
-  monitor.enterPassiveMode();
-
-  const passiveSnapshot = monitor.getHealthSnapshot();
-  assert.equal(passiveSnapshot.state, 'passive');
-  assert.equal(passiveSnapshot.owner, false);
-
-  const passiveMetrics = monitor.renderMetrics();
-  assert.match(passiveMetrics, /dvt_outbox_runtime_owner 0/);
-});
-
-await test('OutboxWorkerMonitor keeps process start timestamp unset until runtime startup', () => {
-  const clock = { nowMs: 1_741_392_000_000 };
-  const { logger } = makeLogger();
-  const monitor = new OutboxWorkerMonitor({
-    serviceName: 'dvt-outbox-worker',
-    logger,
-    nowMs: () => clock.nowMs,
-  });
-
-  const beforeStartMetrics = monitor.renderMetrics();
-  assert.match(beforeStartMetrics, /dvt_outbox_process_start_timestamp_seconds 0/);
-
-  monitor.onStarted();
-
-  const afterStartMetrics = monitor.renderMetrics();
-  assert.match(afterStartMetrics, /dvt_outbox_process_start_timestamp_seconds 1741392000/);
 });

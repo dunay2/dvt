@@ -38,22 +38,20 @@ export type {
 // Backward-compatible alias — deprecated, migrate to ExecutionPlanV2 from @dvt/contracts.
 export type { ExecutionPlanV2 as ExecutionPlan } from '@dvt/contracts';
 
-// ── Artifact concern — to be extracted (Slice 3 Phase 3) ─────────────────────
+// ── Artifact concern — transitional compatibility bridge (Slice 4) ────────────
 //
-// The following exports belong to the artifact bounded context, not to the
-// planner boundary. They remain here during the transition period while a
-// dedicated artifact owner package is established (ADR-0034).
+// These symbols have moved to @dvt/artifacts (ADR-0034, Slice 4).
+// Re-exports here are a migration bridge for downstream consumers.
 //
 // DO NOT add new artifact exports here.
+// DO NOT import artifact storage from @dvt/planner in new code — use @dvt/artifacts directly.
+// Removal criteria: remove this section once all downstream imports point to @dvt/artifacts.
 //
-export type { ICompiledCodeStorage } from './ports/ICompiledCodeStorage.js';
-export { computeSha256 } from './compiledCode/sha256.js';
-export {
-  attachCompiledCodeRefs,
-  type AttachCompiledCodeRefsOptions,
-} from './compiledCode/attachCompiledCodeRefs.js';
-export { S3CompiledCodeStorage } from './compiledCode/adapters/S3CompiledCodeStorage.js';
-export { MinioCompiledCodeStorage } from './compiledCode/adapters/MinioCompiledCodeStorage.js';
-export { FileSystemCompiledCodeStorage } from './compiledCode/adapters/FileSystemCompiledCodeStorage.js';
-export { InMemoryCompiledCodeStorage } from './compiledCode/adapters/InMemoryCompiledCodeStorage.js';
-export { NoopCompiledCodeStorage } from './compiledCode/adapters/NoopCompiledCodeStorage.js';
+export type { ICompiledCodeStorage } from '@dvt/artifacts';
+export { computeSha256 } from '@dvt/artifacts';
+export { attachCompiledCodeRefs, type AttachCompiledCodeRefsOptions } from '@dvt/artifacts';
+export { S3CompiledCodeStorage } from '@dvt/artifacts';
+export { MinioCompiledCodeStorage } from '@dvt/artifacts';
+export { FileSystemCompiledCodeStorage } from '@dvt/artifacts';
+export { InMemoryCompiledCodeStorage } from '@dvt/artifacts';
+export { NoopCompiledCodeStorage } from '@dvt/artifacts';

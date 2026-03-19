@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import type { WorkflowEngine, WorkflowEngineDeps } from '@dvt/engine';
 
@@ -22,13 +21,15 @@ function makeDeps(): WorkflowEngineDeps {
   };
 }
 
-await test('createWorkflowEngine delegates construction to the provided engine constructor', () => {
-  const deps = makeDeps();
-  const engine = createWorkflowEngine(
-    deps,
-    FakeWorkflowEngine as unknown as new (deps: WorkflowEngineDeps) => WorkflowEngine
-  ) as unknown as FakeWorkflowEngine;
+describe('createWorkflowEngine', () => {
+  it('delegates construction to the provided engine constructor', () => {
+    const deps = makeDeps();
+    const engine = createWorkflowEngine(
+      deps,
+      FakeWorkflowEngine as unknown as new (deps: WorkflowEngineDeps) => WorkflowEngine
+    ) as unknown as FakeWorkflowEngine;
 
-  assert.ok(engine instanceof FakeWorkflowEngine);
-  assert.equal(engine.deps, deps);
+    expect(engine instanceof FakeWorkflowEngine).toBe(true);
+    expect(engine.deps).toBe(deps);
+  });
 });

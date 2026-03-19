@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import { AdapterNotRegisteredError } from '@dvt/engine';
 
@@ -53,76 +52,78 @@ const INPUT = {
   },
 };
 
-await test('StartRunAuthorizedFacade returns accepted when auth and use case succeed', async () => {
-  const facade = new StartRunAuthorizedFacade(
-    {
-      async authenticateBearerToken() {
-        return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
-      },
-    } as never,
-    {
-      async authorize() {
-        return { ok: true as const, context: AUTHORIZED_CONTEXT };
-      },
-    } as never,
-    {
-      async execute() {
-        return { runId: 'run-1', accepted: true };
-      },
-    } as never
-  );
+describe('StartRunAuthorizedFacade', () => {
+  it('returns accepted when auth and use case succeed', async () => {
+    const facade = new StartRunAuthorizedFacade(
+      {
+        async authenticateBearerToken() {
+          return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
+        },
+      } as never,
+      {
+        async authorize() {
+          return { ok: true as const, context: AUTHORIZED_CONTEXT };
+        },
+      } as never,
+      {
+        async execute() {
+          return { runId: 'run-1', accepted: true };
+        },
+      } as never
+    );
 
-  const result = await facade.execute(INPUT);
-  assert.deepEqual(result, {
-    kind: 'accepted',
-    result: { runId: 'run-1', accepted: true },
+    const result = await facade.execute(INPUT);
+    expect(result).toEqual({
+      kind: 'accepted',
+      result: { runId: 'run-1', accepted: true },
+    });
   });
-});
 
-await test('StartRunAuthorizedFacade maps AdapterNotRegisteredError to adapter_not_configured', async () => {
-  const facade = new StartRunAuthorizedFacade(
-    {
-      async authenticateBearerToken() {
-        return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
-      },
-    } as never,
-    {
-      async authorize() {
-        return { ok: true as const, context: AUTHORIZED_CONTEXT };
-      },
-    } as never,
-    {
-      async execute() {
-        throw new AdapterNotRegisteredError('temporal');
-      },
-    } as never
-  );
+  it('maps AdapterNotRegisteredError to adapter_not_configured', async () => {
+    const facade = new StartRunAuthorizedFacade(
+      {
+        async authenticateBearerToken() {
+          return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
+        },
+      } as never,
+      {
+        async authorize() {
+          return { ok: true as const, context: AUTHORIZED_CONTEXT };
+        },
+      } as never,
+      {
+        async execute() {
+          throw new AdapterNotRegisteredError('temporal');
+        },
+      } as never
+    );
 
-  const result = await facade.execute(INPUT);
-  assert.deepEqual(result, {
-    kind: 'adapter_not_configured',
-    adapter: 'temporal',
+    const result = await facade.execute(INPUT);
+    expect(result).toEqual({
+      kind: 'adapter_not_configured',
+      adapter: 'temporal',
+    });
   });
-});
 
-await test('StartRunAuthorizedFacade rethrows unrelated use case errors', async () => {
-  const facade = new StartRunAuthorizedFacade(
-    {
-      async authenticateBearerToken() {
-        return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
-      },
-    } as never,
-    {
-      async authorize() {
-        return { ok: true as const, context: AUTHORIZED_CONTEXT };
-      },
-    } as never,
-    {
-      async execute() {
-        throw new Error('engine unavailable');
-      },
-    } as never
-  );
+  it('rethrows unrelated use case errors', async () => {
+    const facade = new StartRunAuthorizedFacade(
+      {
+        async authenticateBearerToken() {
+          return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
+        },
+      } as never,
+      {
+        async authorize() {
+          return { ok: true as const, context: AUTHORIZED_CONTEXT };
+        },
+      } as never,
+      {
+        async execute() {
+          throw new Error('engine unavailable');
+        },
+      } as never
+    );
 
-  await assert.rejects(() => facade.execute(INPUT), /engine unavailable/);
+    await expect(() => facade.execute(INPUT)).rejects.toThrow(/engine unavailable/);
+  });
 });

@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { it } from 'vitest';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import type {
@@ -319,11 +319,11 @@ export class AbortDuringListenerRegistrationSignal {
   }
 }
 
-export async function runtimeTest(
+export function runtimeTest(
   scenario: RuntimeTestScenario,
   implementation: () => Promise<void> | void
-): Promise<void> {
-  await test(scenario.title, implementation);
+): void {
+  it(scenario.title, implementation);
 }
 
 export function createSyntheticError(failure: SyntheticFailure): Error {

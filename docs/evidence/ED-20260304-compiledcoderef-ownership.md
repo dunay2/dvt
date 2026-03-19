@@ -10,7 +10,7 @@ code_refs:
   - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
   - packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts
   - packages/@dvt/contracts/test/fixtures/run-event-compiled-code-ref.fixtures.ts
-  - packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts
+  - packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts
   - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
   - packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts
   - packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts
@@ -39,7 +39,7 @@ evidence:
     - packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts
   code:
     - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
-    - packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts
+    - packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts
     - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
     - packages/@dvt/contracts/test/fixtures/run-event-compiled-code-ref.fixtures.ts
     - packages/@dvt/traceability-service/src/lineage/contracts.ts

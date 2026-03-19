@@ -1,6 +1,5 @@
+import { InMemoryCompiledCodeStorage } from '@dvt/artifacts';
 import { describe, expect, it } from 'vitest';
-
-import { InMemoryCompiledCodeStorage } from '../../src/compiledCode/adapters/InMemoryCompiledCodeStorage.js';
 
 describe('InMemoryCompiledCodeStorage', () => {
   it('stores uploaded blob by sha256 key', async () => {

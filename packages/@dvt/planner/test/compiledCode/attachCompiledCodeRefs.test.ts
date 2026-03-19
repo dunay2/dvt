@@ -1,9 +1,10 @@
+import {
+  attachCompiledCodeRefs,
+  InMemoryCompiledCodeStorage,
+  type ICompiledCodeStorage,
+} from '@dvt/artifacts';
+import { KNOWN_STEP_KINDS, type ExecutionPlanV2 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
-
-import { InMemoryCompiledCodeStorage } from '../../src/compiledCode/adapters/InMemoryCompiledCodeStorage.js';
-import { attachCompiledCodeRefs } from '../../src/compiledCode/attachCompiledCodeRefs.js';
-import { DBT_MODEL, DBT_SNAPSHOT, DBT_TEST, type ExecutionPlanV2 } from '../../src/domain/types.js';
-import type { ICompiledCodeStorage } from '../../src/ports/ICompiledCodeStorage.js';
 
 const TENANT = 'test-tenant';
 
@@ -16,9 +17,13 @@ function buildPlan(): ExecutionPlanV2 {
       createdAtIso: '2026-03-05T00:00:00.000Z',
     },
     steps: [
-      { stepId: 'model.analytics.orders', kind: DBT_MODEL, dependsOn: [] },
-      { stepId: 'test.analytics.orders_not_null', kind: DBT_TEST, dependsOn: [] },
-      { stepId: 'snapshot.analytics.orders', kind: DBT_SNAPSHOT, dependsOn: [] },
+      { stepId: 'model.analytics.orders', kind: KNOWN_STEP_KINDS.DBT_MODEL, dependsOn: [] },
+      { stepId: 'test.analytics.orders_not_null', kind: KNOWN_STEP_KINDS.DBT_TEST, dependsOn: [] },
+      {
+        stepId: 'snapshot.analytics.orders',
+        kind: KNOWN_STEP_KINDS.DBT_SNAPSHOT,
+        dependsOn: [],
+      },
     ],
   };
 }

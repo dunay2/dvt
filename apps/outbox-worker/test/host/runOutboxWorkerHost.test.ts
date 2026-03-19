@@ -1,10 +1,9 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { describe, it, expect } from 'vitest';
 
 import { runOutboxWorkerHost } from '../../src/host/runOutboxWorkerHost.js';
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
-import { loadEnv, type ActiveEnv } from '../../src/plugins/env.js';
+import { isActiveEnv, loadEnv, type ActiveEnv } from '../../src/plugins/env.js';
 import type { CreateOutboxWorkerRuntimeOptions } from '../../src/runtime/createOutboxWorkerRuntime.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
 
@@ -105,7 +104,10 @@ interface DeferredBootstrapScenario {
 
 function loadActiveTestEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): ActiveEnv {
   const env = loadEnv({ ...ACTIVE_ENV_INPUT, ...overrides });
-  assert.equal(env.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
+  expect(env.DVT_OUTBOX_OWNERSHIP_MODE).toBe('active');
+  if (!isActiveEnv(env)) {
+    throw new Error('expected active outbox env');
+  }
   return env;
 }
 
@@ -279,7 +281,7 @@ async function assertHostRejects(
   expectedError: Error,
   overrides: HostRunOverrides
 ): Promise<void> {
-  await assert.rejects(() => runHostWithFixture(fixture, overrides), expectedError);
+  await expect(() => runHostWithFixture(fixture, overrides)).rejects.toThrow(expectedError.message);
 }
 
 function hasLogEntry(
@@ -290,15 +292,14 @@ function hasLogEntry(
 }
 
 function assertBootstrappedLog(entries: readonly LogEntry[], expected = true): void {
-  assert.equal(
-    hasLogEntry(entries, (entry) => entry.msg === 'outbox worker bootstrapped'),
-    expected
-  );
+  expect(
+    hasLogEntry(entries, (entry) => entry.msg === 'outbox worker bootstrapped')
+  ).toBe(expected);
 }
 
 function assertPassiveOperationalLifecycle(fixture: HostFixture): void {
-  assert.deepEqual(fixture.calls, ['operational.start', 'operational.stop']);
-  assert.equal(fixture.monitor.getHealthSnapshot().state, 'passive');
+  expect(fixture.calls).toEqual(['operational.start', 'operational.stop']);
+  expect(fixture.monitor.getHealthSnapshot().state).toBe('passive');
 }
 
 async function assertResolvesPromptly(promise: Promise<unknown>, timeoutMs = 100): Promise<void> {
@@ -307,7 +308,7 @@ async function assertResolvesPromptly(promise: Promise<unknown>, timeoutMs = 100
     sleep(timeoutMs).then(() => 'timed-out'),
   ]);
 
-  assert.equal(result, 'resolved');
+  expect(result).toBe('resolved');
 }
 
 async function assertOwnedRuntimeLifecycle(
@@ -330,7 +331,7 @@ async function assertOwnedRuntimeLifecycle(
     await runHostWithFixture(fixture, hostOverrides);
   }
 
-  assert.deepEqual(fixture.calls, [
+  expect(fixture.calls).toEqual([
     'operational.start',
     'ownership.acquire',
     'runtime.factory',
@@ -351,9 +352,9 @@ async function assertHostFailureScenario(options: {
   expectBootstrappedLog: boolean;
 }): Promise<void> {
   await assertHostRejects(options.fixture, options.expectedError, options.overrides);
-  assert.deepEqual(options.fixture.calls, options.expectedCalls);
+  expect(options.fixture.calls).toEqual(options.expectedCalls);
   assertBootstrappedLog(options.fixture.entries, options.expectBootstrappedLog);
-  assert.equal(options.fixture.monitor.getHealthSnapshot().state, 'starting');
+  expect(options.fixture.monitor.getHealthSnapshot().state).toBe('starting');
 }
 
 async function startDeferredBootstrapScenario(): Promise<DeferredBootstrapScenario> {
@@ -401,380 +402,396 @@ async function assertRuntimeFailureAfterBootstrap(options: {
   });
 }
 
-await test('runOutboxWorkerHost keeps passive mode observable without creating the runtime', async () => {
-  const fixture = createPassiveHostFixture();
-  fixture.shutdown.abort();
+describe('runOutboxWorkerHost', () => {
+  it('keeps passive mode observable without creating the runtime', async () => {
+    const fixture = createPassiveHostFixture();
+    fixture.shutdown.abort();
 
-  await runHostWithFixture(fixture, {
-    createRuntime: createUnexpectedRuntimeFactory(
-      fixture.calls,
-      'runtime should not be created in passive mode'
-    ),
-  });
-
-  const snapshot = fixture.monitor.getHealthSnapshot();
-  assertPassiveOperationalLifecycle(fixture);
-  assert.equal(snapshot.state, 'passive');
-  assert.equal(snapshot.ok, true);
-  assert.equal(snapshot.ready, false);
-  assertBootstrappedLog(fixture.entries);
-});
-
-await test('runOutboxWorkerHost creates and starts the runtime when ownership mode is active', async () => {
-  const fixture = createActiveHostFixture();
-  let receivedObserver: CreateOutboxWorkerRuntimeOptions['observer'];
-  let receivedHooks: CreateOutboxWorkerRuntimeOptions['hooks'];
-  let receivedShutdownSignal: CreateOutboxWorkerRuntimeOptions['shutdownSignal'];
-  let receivedSignal: globalThis.AbortSignal | null = null;
-
-  await runHostWithFixture(fixture, {
-    createRuntime: createRuntimeFactory(fixture.calls, {
-      onCreate: ({ runtimeEnv, runtimeLogger, runtimeOptions }) => {
-        receivedObserver = runtimeOptions.observer;
-        receivedHooks = runtimeOptions.hooks;
-        receivedShutdownSignal = runtimeOptions.shutdownSignal;
-        assert.equal(runtimeEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
-        assert.equal(runtimeEnv.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
-        assert.equal(runtimeLogger, fixture.logger);
-      },
-      start: async (signal?: globalThis.AbortSignal) => {
-        receivedSignal = signal ?? null;
-      },
-    }),
-  });
-
-  assert.deepEqual(fixture.calls, [
-    'operational.start',
-    'runtime.factory',
-    'runtime.start',
-    'runtime.stop',
-    'operational.stop',
-  ]);
-  assert.notEqual(receivedSignal, null);
-  assert.notEqual(receivedSignal, fixture.shutdown.signal);
-  assert.equal(receivedObserver, fixture.monitor);
-  assert.equal(receivedHooks, fixture.monitor);
-  assert.equal(receivedShutdownSignal, receivedSignal);
-  assertBootstrappedLog(fixture.entries);
-});
-
-await test('runOutboxWorkerHost stays passive when active ownership is unavailable', async () => {
-  const fixture = createActiveHostFixture();
-
-  const hostPromise = runHostWithFixture(fixture, {
-    ownershipGate: createOwnershipGate(fixture.calls, { available: false }),
-    createRuntime: createUnexpectedRuntimeFactory(
-      fixture.calls,
-      'runtime should not be created when ownership is unavailable'
-    ),
-  });
-
-  await waitFor(() => fixture.calls.includes('ownership.acquire'));
-  const passiveSnapshot = fixture.monitor.getHealthSnapshot();
-  assert.equal(passiveSnapshot.state, 'passive');
-  assert.equal(passiveSnapshot.ready, false);
-  assert.equal(passiveSnapshot.owner, false);
-
-  fixture.shutdown.abort();
-  await hostPromise;
-
-  assert.deepEqual(fixture.calls, ['operational.start', 'ownership.acquire', 'operational.stop']);
-  assert.equal(
-    hasLogEntry(
-      fixture.entries,
-      (entry) =>
-        entry.level === 'warn' &&
-        entry.msg === 'outbox ownership unavailable; entering passive mode'
-    ),
-    true
-  );
-});
-
-await test('runOutboxWorkerHost releases acquired ownership after cleanup', async () => {
-  await assertOwnedRuntimeLifecycle();
-});
-
-await test('runOutboxWorkerHost stops the active runtime when ownership is lost after startup', async () => {
-  const fixture = createActiveHostFixture({
-    nowMs: () => TEST_NOW_MS,
-    readyStaleAfterMs: 60_000,
-  });
-  let ownershipLossProbeInstalled = false;
-  let runtimeAbortObserved = false;
-  let releaseRuntimeStart: () => void = () => {
-    throw new Error('expected runtime abort after ownership loss');
-  };
-  let rejectOwnershipLoss: (error: Error) => void = () => {
-    throw new Error('expected ownership-loss probe to be installed');
-  };
-
-  const hostPromise = runHostWithFixture(fixture, {
-    ownershipGate: createOwnershipGate(fixture.calls, {
-      waitForLoss: () =>
-        new Promise<void>((_resolve, reject) => {
-          ownershipLossProbeInstalled = true;
-          rejectOwnershipLoss = (error) => {
-            reject(error);
-          };
-        }),
-    }),
-    createRuntime: createRuntimeFactory(fixture.calls, {
-      start: async (signal?: globalThis.AbortSignal) => {
-        fixture.monitor.onStarted();
-        fixture.monitor.onTick({
-          claimedCount: 1,
-          deliveredCount: 1,
-          retriedCount: 0,
-          deadLetteredCount: 0,
-          oldestClaimedAgeMs: 1_000,
-          retryBacklogActive: false,
-        });
-
-        await new Promise<void>((resolve) => {
-          signal?.addEventListener(
-            'abort',
-            () => {
-              runtimeAbortObserved = true;
-              releaseRuntimeStart = resolve;
-            },
-            { once: true }
-          );
-        });
-      },
-    }),
-  });
-
-  await waitFor(() => fixture.calls.includes('runtime.start'));
-  assert.equal(fixture.monitor.getHealthSnapshot().ready, true);
-
-  assert.equal(ownershipLossProbeInstalled, true);
-  rejectOwnershipLoss(new Error('synthetic ownership session loss'));
-
-  await waitFor(() => runtimeAbortObserved);
-
-  const ownershipLost = fixture.monitor.getHealthSnapshot();
-  assert.equal(ownershipLost.ok, true);
-  assert.equal(ownershipLost.ready, false);
-  assert.equal(ownershipLost.state, 'failing');
-  assert.equal(ownershipLost.owner, false);
-  assert.equal(ownershipLost.lastErrorMessage, 'synthetic ownership session loss');
-
-  releaseRuntimeStart();
-
-  await assert.rejects(hostPromise, /synthetic ownership session loss/);
-  assert.deepEqual(fixture.calls, [
-    'operational.start',
-    'ownership.acquire',
-    'runtime.factory',
-    'runtime.start',
-    'runtime.stop',
-    'operational.stop',
-    'ownership.release',
-  ]);
-  assert.equal(
-    hasLogEntry(
-      fixture.entries,
-      (entry) => entry.level === 'error' && entry.msg === 'outbox ownership lost; stopping host'
-    ),
-    true
-  );
-});
-
-await test('runOutboxWorkerHost releases ownership before surfacing cleanup failures', async () => {
-  const cleanupError = new Error('synthetic admin stop failure');
-  await assertOwnedRuntimeLifecycle({
-    stopError: cleanupError,
-    expectedError: cleanupError,
-  });
-});
-
-await test('runOutboxWorkerHost skips active ownership acquisition and runtime bootstrap when shutdown was already requested', async () => {
-  const fixture = createActiveHostFixture();
-  fixture.shutdown.abort();
-
-  await runHostWithFixture(fixture, {
-    ownershipGate: {
-      acquire: async () => {
-        fixture.calls.push('ownership.acquire');
-        throw new Error('ownership should not be acquired when shutdown is already requested');
-      },
-    },
-    createRuntime: createUnexpectedRuntimeFactory(
-      fixture.calls,
-      'runtime should not be created when shutdown is already requested'
-    ),
-  });
-
-  assert.deepEqual(fixture.calls, ['operational.start', 'operational.stop']);
-  assertBootstrappedLog(fixture.entries);
-});
-
-await test('runOutboxWorkerHost exits promptly when shutdown lands during active runtime bootstrap', async () => {
-  const scenario = await startDeferredBootstrapScenario();
-  scenario.fixture.shutdown.abort();
-
-  await assertResolvesPromptly(scenario.hostPromise);
-  assert.deepEqual(scenario.fixture.calls, [
-    'operational.start',
-    'runtime.factory',
-    'operational.stop',
-  ]);
-
-  scenario.resolveRuntime({
-    start: async () => {
-      scenario.fixture.calls.push('runtime.start');
-    },
-    stop: async () => {
-      scenario.fixture.calls.push('runtime.stop');
-    },
-  });
-
-  await waitFor(() => scenario.fixture.calls.includes('runtime.stop'));
-  assert.deepEqual(scenario.fixture.calls, [
-    'operational.start',
-    'runtime.factory',
-    'operational.stop',
-    'runtime.stop',
-  ]);
-});
-
-await test('runOutboxWorkerHost logs a warning if late runtime cleanup fails after shutdown during bootstrap', async () => {
-  const scenario = await startDeferredBootstrapScenario();
-  scenario.fixture.shutdown.abort();
-  await scenario.hostPromise;
-
-  scenario.resolveRuntime({
-    start: async () => {
-      scenario.fixture.calls.push('runtime.start');
-    },
-    stop: async () => {
-      scenario.fixture.calls.push('runtime.stop');
-      throw new Error('synthetic late cleanup failure');
-    },
-  });
-
-  await waitFor(() =>
-    hasLogEntry(
-      scenario.fixture.entries,
-      (entry) =>
-        entry.level === 'warn' &&
-        entry.msg === 'outbox runtime cleanup failed after shutdown during bootstrap'
-    )
-  );
-
-  assert.deepEqual(scenario.fixture.calls, [
-    'operational.start',
-    'runtime.factory',
-    'operational.stop',
-    'runtime.stop',
-  ]);
-  assert.equal(scenario.fixture.calls.includes('runtime.start'), false);
-});
-
-await test('runOutboxWorkerHost withdraws readiness immediately when shutdown lands during active runtime drain', async () => {
-  const clock = { nowMs: TEST_NOW_MS };
-  const fixture = createActiveHostFixture({
-    nowMs: () => clock.nowMs,
-    readyStaleAfterMs: 60_000,
-  });
-  let releaseRuntimeStart: (() => void) | null = null;
-
-  const hostPromise = runHostWithFixture(fixture, {
-    createRuntime: createRuntimeFactory(fixture.calls, {
-      start: async (signal?: globalThis.AbortSignal) => {
-        fixture.monitor.onStarted();
-        fixture.monitor.onTick({
-          claimedCount: 1,
-          deliveredCount: 1,
-          retriedCount: 0,
-          deadLetteredCount: 0,
-          oldestClaimedAgeMs: 1_000,
-          retryBacklogActive: false,
-        });
-
-        await new Promise<void>((resolve) => {
-          signal?.addEventListener(
-            'abort',
-            () => {
-              releaseRuntimeStart = resolve;
-            },
-            { once: true }
-          );
-        });
-      },
-    }),
-  });
-
-  await waitFor(() => fixture.calls.includes('runtime.start'));
-  assert.equal(fixture.monitor.getHealthSnapshot().ready, true);
-
-  fixture.shutdown.abort();
-  await waitFor(() => releaseRuntimeStart !== null);
-
-  const stopping = fixture.monitor.getHealthSnapshot();
-  assert.equal(stopping.ok, true);
-  assert.equal(stopping.ready, false);
-  assert.equal(stopping.state, 'stopping');
-
-  assert.notEqual(
-    releaseRuntimeStart,
-    null,
-    'expected runtime start release after shutdown during active runtime drain'
-  );
-  const releasePendingRuntimeStart = releaseRuntimeStart!;
-  releasePendingRuntimeStart();
-  await hostPromise;
-
-  assert.deepEqual(fixture.calls, [
-    'operational.start',
-    'runtime.factory',
-    'runtime.start',
-    'runtime.stop',
-    'operational.stop',
-  ]);
-});
-
-await test('runOutboxWorkerHost does not miss an abort that lands during passive listener registration', async () => {
-  const fixture = createPassiveHostFixture();
-
-  await assertResolvesPromptly(
-    runHostWithFixture(fixture, {
-      shutdownSignal:
-        new AbortDuringListenerRegistrationSignal() as unknown as globalThis.AbortSignal,
+    await runHostWithFixture(fixture, {
       createRuntime: createUnexpectedRuntimeFactory(
         fixture.calls,
         'runtime should not be created in passive mode'
       ),
-    })
-  );
+    });
 
-  assertPassiveOperationalLifecycle(fixture);
-});
-
-await test('runOutboxWorkerHost rethrows operational server start failures and does not bootstrap the runtime', async () => {
-  const startupError = new Error('synthetic admin start failure');
-  const fixture = createActiveHostFixture({ startError: startupError });
-
-  await assertHostFailureScenario({
-    expectedError: startupError,
-    fixture,
-    overrides: {
-      createRuntime: async () => {
-        fixture.calls.push('runtime.factory');
-        throw new Error('runtime factory should not run after admin start failure');
-      },
-    },
-    expectedCalls: ['operational.start', 'operational.stop'],
-    expectBootstrappedLog: false,
+    const snapshot = fixture.monitor.getHealthSnapshot();
+    assertPassiveOperationalLifecycle(fixture);
+    expect(snapshot.state).toBe('passive');
+    expect(snapshot.ok).toBe(true);
+    expect(snapshot.ready).toBe(false);
+    assertBootstrappedLog(fixture.entries);
   });
-});
 
-await test('runOutboxWorkerHost rethrows runtime factory failures after stopping the admin server', async () => {
-  const runtimeFactoryError = new Error('synthetic runtime factory failure');
-  await assertRuntimeFailureAfterBootstrap({
-    expectedError: runtimeFactoryError,
-    buildCreateRuntime: (calls) => createThrowingRuntimeFactory(calls, runtimeFactoryError),
-    expectedCalls: ['operational.start', 'runtime.factory', 'operational.stop'],
+  it('creates and starts the runtime when ownership mode is active', async () => {
+    const fixture = createActiveHostFixture();
+    let receivedObserver: CreateOutboxWorkerRuntimeOptions['observer'];
+    let receivedHooks: CreateOutboxWorkerRuntimeOptions['hooks'];
+    let receivedShutdownSignal: CreateOutboxWorkerRuntimeOptions['shutdownSignal'];
+    let receivedSignal: globalThis.AbortSignal | null = null;
+
+    await runHostWithFixture(fixture, {
+      createRuntime: createRuntimeFactory(fixture.calls, {
+        onCreate: ({ runtimeEnv, runtimeLogger, runtimeOptions }) => {
+          receivedObserver = runtimeOptions.observer;
+          receivedHooks = runtimeOptions.hooks;
+          receivedShutdownSignal = runtimeOptions.shutdownSignal;
+          expect(runtimeEnv.DVT_OUTBOX_OWNERSHIP_MODE).toBe('active');
+          expect(runtimeEnv.DVT_OUTBOX_EVENT_BUS_MODE).toBe('log');
+          expect(runtimeLogger).toBe(fixture.logger);
+        },
+        start: async (signal?: globalThis.AbortSignal) => {
+          receivedSignal = signal ?? null;
+        },
+      }),
+    });
+
+    expect(fixture.calls).toEqual([
+      'operational.start',
+      'runtime.factory',
+      'runtime.start',
+      'runtime.stop',
+      'operational.stop',
+    ]);
+    expect(receivedSignal).not.toBe(null);
+    expect(receivedSignal).not.toBe(fixture.shutdown.signal);
+    expect(receivedObserver).toBe(fixture.monitor);
+    expect(receivedHooks).toBe(fixture.monitor);
+    expect(receivedShutdownSignal).toBe(receivedSignal);
+    assertBootstrappedLog(fixture.entries);
+  });
+
+  it('stays passive when active ownership is unavailable', async () => {
+    const fixture = createActiveHostFixture();
+
+    const hostPromise = runHostWithFixture(fixture, {
+      ownershipGate: createOwnershipGate(fixture.calls, { available: false }),
+      createRuntime: createUnexpectedRuntimeFactory(
+        fixture.calls,
+        'runtime should not be created when ownership is unavailable'
+      ),
+    });
+
+    await waitFor(() => fixture.calls.includes('ownership.acquire'));
+    const passiveSnapshot = fixture.monitor.getHealthSnapshot();
+    expect(passiveSnapshot.state).toBe('passive');
+    expect(passiveSnapshot.ready).toBe(false);
+    expect(passiveSnapshot.owner).toBe(false);
+
+    fixture.shutdown.abort();
+    await hostPromise;
+
+    expect(fixture.calls).toEqual(['operational.start', 'ownership.acquire', 'operational.stop']);
+    expect(
+      hasLogEntry(
+        fixture.entries,
+        (entry) =>
+          entry.level === 'warn' &&
+          entry.msg === 'outbox ownership unavailable; entering passive mode'
+      )
+    ).toBe(true);
+  });
+
+  it('releases acquired ownership after cleanup', async () => {
+    await assertOwnedRuntimeLifecycle();
+  });
+
+  it('stops the active runtime when ownership is lost after startup', async () => {
+    const fixture = createActiveHostFixture({
+      nowMs: () => TEST_NOW_MS,
+      readyStaleAfterMs: 60_000,
+    });
+    let ownershipLossProbeInstalled = false;
+    let runtimeAbortObserved = false;
+    let releaseRuntimeStart: () => void = () => {
+      throw new Error('expected runtime abort after ownership loss');
+    };
+    let rejectOwnershipLoss: (error: Error) => void = () => {
+      throw new Error('expected ownership-loss probe to be installed');
+    };
+
+    const hostPromise = runHostWithFixture(fixture, {
+      ownershipGate: createOwnershipGate(fixture.calls, {
+        waitForLoss: () =>
+          new Promise<void>((_resolve, reject) => {
+            ownershipLossProbeInstalled = true;
+            rejectOwnershipLoss = (error) => {
+              reject(error);
+            };
+          }),
+      }),
+      createRuntime: createRuntimeFactory(fixture.calls, {
+        start: async (signal?: globalThis.AbortSignal) => {
+          fixture.monitor.onStarted();
+          fixture.monitor.onTick({
+            claimedCount: 1,
+            deliveredCount: 1,
+            retriedCount: 0,
+            deadLetteredCount: 0,
+            oldestClaimedAgeMs: 1_000,
+            retryBacklogActive: false,
+          });
+
+          await new Promise<void>((resolve) => {
+            signal?.addEventListener(
+              'abort',
+              () => {
+                runtimeAbortObserved = true;
+                releaseRuntimeStart = resolve;
+              },
+              { once: true }
+            );
+          });
+        },
+      }),
+    });
+
+    await waitFor(() => fixture.calls.includes('runtime.start'));
+    expect(fixture.monitor.getHealthSnapshot().ready).toBe(true);
+
+    expect(ownershipLossProbeInstalled).toBe(true);
+    rejectOwnershipLoss(new Error('synthetic ownership session loss'));
+
+    await waitFor(() => runtimeAbortObserved);
+
+    const ownershipLost = fixture.monitor.getHealthSnapshot();
+    expect(ownershipLost.ok).toBe(true);
+    expect(ownershipLost.ready).toBe(false);
+    expect(ownershipLost.state).toBe('failing');
+    expect(ownershipLost.owner).toBe(false);
+    expect(ownershipLost.lastErrorMessage).toBe('synthetic ownership session loss');
+
+    releaseRuntimeStart();
+
+    await expect(hostPromise).rejects.toThrow(/synthetic ownership session loss/);
+    expect(fixture.calls).toEqual([
+      'operational.start',
+      'ownership.acquire',
+      'runtime.factory',
+      'runtime.start',
+      'runtime.stop',
+      'operational.stop',
+      'ownership.release',
+    ]);
+    expect(
+      hasLogEntry(
+        fixture.entries,
+        (entry) => entry.level === 'error' && entry.msg === 'outbox ownership lost; stopping host'
+      )
+    ).toBe(true);
+  });
+
+  it('releases ownership before surfacing cleanup failures', async () => {
+    const cleanupError = new Error('synthetic admin stop failure');
+    await assertOwnedRuntimeLifecycle({
+      stopError: cleanupError,
+      expectedError: cleanupError,
+    });
+  });
+
+  it('skips active ownership acquisition and runtime bootstrap when shutdown was already requested', async () => {
+    const fixture = createActiveHostFixture();
+    fixture.shutdown.abort();
+
+    await runHostWithFixture(fixture, {
+      ownershipGate: {
+        acquire: async () => {
+          fixture.calls.push('ownership.acquire');
+          throw new Error('ownership should not be acquired when shutdown is already requested');
+        },
+      },
+      createRuntime: createUnexpectedRuntimeFactory(
+        fixture.calls,
+        'runtime should not be created when shutdown is already requested'
+      ),
+    });
+
+    expect(fixture.calls).toEqual(['operational.start', 'operational.stop']);
+    assertBootstrappedLog(fixture.entries);
+  });
+
+  it('exits promptly when shutdown lands during active runtime bootstrap', async () => {
+    const scenario = await startDeferredBootstrapScenario();
+    scenario.fixture.shutdown.abort();
+
+    await assertResolvesPromptly(scenario.hostPromise);
+    expect(scenario.fixture.calls).toEqual([
+      'operational.start',
+      'runtime.factory',
+      'operational.stop',
+    ]);
+
+    scenario.resolveRuntime({
+      start: async () => {
+        scenario.fixture.calls.push('runtime.start');
+      },
+      stop: async () => {
+        scenario.fixture.calls.push('runtime.stop');
+      },
+    });
+
+    await waitFor(() => scenario.fixture.calls.includes('runtime.stop'));
+    expect(scenario.fixture.calls).toEqual([
+      'operational.start',
+      'runtime.factory',
+      'operational.stop',
+      'runtime.stop',
+    ]);
+  });
+
+  it('logs a warning if late runtime cleanup fails after shutdown during bootstrap', async () => {
+    const scenario = await startDeferredBootstrapScenario();
+    scenario.fixture.shutdown.abort();
+    await scenario.hostPromise;
+
+    scenario.resolveRuntime({
+      start: async () => {
+        scenario.fixture.calls.push('runtime.start');
+      },
+      stop: async () => {
+        scenario.fixture.calls.push('runtime.stop');
+        throw new Error('synthetic late cleanup failure');
+      },
+    });
+
+    await waitFor(() =>
+      hasLogEntry(
+        scenario.fixture.entries,
+        (entry) =>
+          entry.level === 'warn' &&
+          entry.msg === 'outbox runtime cleanup failed after shutdown during bootstrap'
+      )
+    );
+
+    expect(scenario.fixture.calls).toEqual([
+      'operational.start',
+      'runtime.factory',
+      'operational.stop',
+      'runtime.stop',
+    ]);
+    expect(scenario.fixture.calls.includes('runtime.start')).toBe(false);
+  });
+
+  it('withdraws readiness immediately when shutdown lands during active runtime drain', async () => {
+    const clock = { nowMs: TEST_NOW_MS };
+    const fixture = createActiveHostFixture({
+      nowMs: () => clock.nowMs,
+      readyStaleAfterMs: 60_000,
+    });
+    let releaseRuntimeStart: (() => void) | null = null;
+
+    const hostPromise = runHostWithFixture(fixture, {
+      createRuntime: createRuntimeFactory(fixture.calls, {
+        start: async (signal?: globalThis.AbortSignal) => {
+          fixture.monitor.onStarted();
+          fixture.monitor.onTick({
+            claimedCount: 1,
+            deliveredCount: 1,
+            retriedCount: 0,
+            deadLetteredCount: 0,
+            oldestClaimedAgeMs: 1_000,
+            retryBacklogActive: false,
+          });
+
+          await new Promise<void>((resolve) => {
+            signal?.addEventListener(
+              'abort',
+              () => {
+                releaseRuntimeStart = resolve;
+              },
+              { once: true }
+            );
+          });
+        },
+      }),
+    });
+
+    await waitFor(() => fixture.calls.includes('runtime.start'));
+    expect(fixture.monitor.getHealthSnapshot().ready).toBe(true);
+
+    fixture.shutdown.abort();
+    await waitFor(() => releaseRuntimeStart !== null);
+
+    const stopping = fixture.monitor.getHealthSnapshot();
+    expect(stopping.ok).toBe(true);
+    expect(stopping.ready).toBe(false);
+    expect(stopping.state).toBe('stopping');
+
+    expect(releaseRuntimeStart).not.toBe(null);
+    const releasePendingRuntimeStart = releaseRuntimeStart!;
+    releasePendingRuntimeStart();
+    await hostPromise;
+
+    expect(fixture.calls).toEqual([
+      'operational.start',
+      'runtime.factory',
+      'runtime.start',
+      'runtime.stop',
+      'operational.stop',
+    ]);
+  });
+
+  it('does not miss an abort that lands during passive listener registration', async () => {
+    const fixture = createPassiveHostFixture();
+
+    await assertResolvesPromptly(
+      runHostWithFixture(fixture, {
+        shutdownSignal:
+          new AbortDuringListenerRegistrationSignal() as unknown as globalThis.AbortSignal,
+        createRuntime: createUnexpectedRuntimeFactory(
+          fixture.calls,
+          'runtime should not be created in passive mode'
+        ),
+      })
+    );
+
+    assertPassiveOperationalLifecycle(fixture);
+  });
+
+  it('rethrows operational server start failures and does not bootstrap the runtime', async () => {
+    const startupError = new Error('synthetic admin start failure');
+    const fixture = createActiveHostFixture({ startError: startupError });
+
+    await assertHostFailureScenario({
+      expectedError: startupError,
+      fixture,
+      overrides: {
+        createRuntime: async () => {
+          fixture.calls.push('runtime.factory');
+          throw new Error('runtime factory should not run after admin start failure');
+        },
+      },
+      expectedCalls: ['operational.start', 'operational.stop'],
+      expectBootstrappedLog: false,
+    });
+  });
+
+  it('rethrows runtime factory failures after stopping the admin server', async () => {
+    const runtimeFactoryError = new Error('synthetic runtime factory failure');
+    await assertRuntimeFailureAfterBootstrap({
+      expectedError: runtimeFactoryError,
+      buildCreateRuntime: (calls) => createThrowingRuntimeFactory(calls, runtimeFactoryError),
+      expectedCalls: ['operational.start', 'runtime.factory', 'operational.stop'],
+    });
+  });
+
+  it('rethrows runtime start failures after cleanup', async () => {
+    const runtimeStartError = new Error('synthetic runtime start failure');
+    await assertRuntimeFailureAfterBootstrap({
+      expectedError: runtimeStartError,
+      buildCreateRuntime: (calls) =>
+        createRuntimeFactory(calls, {
+          start: async () => {
+            throw runtimeStartError;
+          },
+        }),
+      expectedCalls: [
+        'operational.start',
+        'runtime.factory',
+        'runtime.start',
+        'runtime.stop',
+        'operational.stop',
+      ],
+    });
   });
 });
 
@@ -788,23 +805,3 @@ async function waitFor(predicate: () => boolean, timeoutMs = 100): Promise<void>
     await sleep(10);
   }
 }
-
-await test('runOutboxWorkerHost rethrows runtime start failures after cleanup', async () => {
-  const runtimeStartError = new Error('synthetic runtime start failure');
-  await assertRuntimeFailureAfterBootstrap({
-    expectedError: runtimeStartError,
-    buildCreateRuntime: (calls) =>
-      createRuntimeFactory(calls, {
-        start: async () => {
-          throw runtimeStartError;
-        },
-      }),
-    expectedCalls: [
-      'operational.start',
-      'runtime.factory',
-      'runtime.start',
-      'runtime.stop',
-      'operational.stop',
-    ],
-  });
-});

@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { describe, it, expect } from 'vitest';
 
 import { createPgShardOwnershipGate } from '../../src/ownership/PgShardOwnershipGate.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';
@@ -14,10 +13,10 @@ class RecordingOwnershipClient {
     private readonly heartbeatOutcomes: Array<true | Error> = []
   ) {}
 
-  async query(
+  async query<T>(
     sql: string,
     params?: unknown[]
-  ): Promise<{ rows: Array<{ acquired: boolean }>; rowCount: number }> {
+  ): Promise<{ rows: T[]; rowCount: number }> {
     if (params === undefined) {
       this.queries.push({ sql });
     } else {
@@ -29,7 +28,7 @@ class RecordingOwnershipClient {
       if (heartbeatOutcome instanceof Error) {
         throw heartbeatOutcome;
       }
-      return { rows: [{ acquired: true }], rowCount: 1 };
+      return { rows: [{ acquired: true }] as T[], rowCount: 1 };
     }
 
     const lockIndex =
@@ -43,7 +42,7 @@ class RecordingOwnershipClient {
       throw outcome;
     }
 
-    return { rows: [{ acquired: outcome }], rowCount: 1 };
+    return { rows: [{ acquired: outcome }] as T[], rowCount: 1 };
   }
 
   release(destroy?: boolean): void {
@@ -124,117 +123,116 @@ function createGateHarness(options: {
   };
 }
 
-await test('PgShardOwnershipGate acquires all configured shard locks on one dedicated session', async () => {
-  const harness = createGateHarness({
-    shardIds: [3, 1],
-    lockOutcomes: [true, true],
+describe('PgShardOwnershipGate', () => {
+  it('acquires all configured shard locks on one dedicated session', async () => {
+    const harness = createGateHarness({
+      shardIds: [3, 1],
+      lockOutcomes: [true, true],
+    });
+
+    const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
+
+    expect(lease).not.toBe(null);
+    expect(harness.acquirePoolLeaseCalls).toBe(1);
+    expect(harness.connectCalls).toBe(1);
+    expect(harness.releaseLeaseCalls).toBe(0);
+    expect(harness.client.queries.length).toBe(2);
+    expect(harness.client.queries[0]?.sql ?? '').toMatch(/pg_try_advisory_lock/);
+    expect(harness.client.queries.map((entry) => entry.params?.[0])).toEqual([
+      'dvt:outbox-shard:1',
+      'dvt:outbox-shard:3',
+    ]);
+
+    await lease?.release();
+    await lease?.release();
+
+    expect(harness.client.releaseCalls).toEqual([true]);
+    expect(harness.releaseLeaseCalls).toBe(1);
   });
 
-  const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
+  it('releases the session and returns null when any shard lock is unavailable', async () => {
+    const harness = createGateHarness({
+      shardIds: [0, 1],
+      lockOutcomes: [true, false],
+    });
 
-  assert.notEqual(lease, null);
-  assert.equal(harness.acquirePoolLeaseCalls, 1);
-  assert.equal(harness.connectCalls, 1);
-  assert.equal(harness.releaseLeaseCalls, 0);
-  assert.equal(harness.client.queries.length, 2);
-  assert.match(harness.client.queries[0]?.sql ?? '', /pg_try_advisory_lock/);
-  assert.deepEqual(
-    harness.client.queries.map((entry) => entry.params?.[0]),
-    ['dvt:outbox-shard:1', 'dvt:outbox-shard:3']
-  );
+    const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
 
-  await lease?.release();
-  await lease?.release();
-
-  assert.deepEqual(harness.client.releaseCalls, [true]);
-  assert.equal(harness.releaseLeaseCalls, 1);
-});
-
-await test('PgShardOwnershipGate releases the session and returns null when any shard lock is unavailable', async () => {
-  const harness = createGateHarness({
-    shardIds: [0, 1],
-    lockOutcomes: [true, false],
+    expect(lease).toBe(null);
+    expect(harness.acquirePoolLeaseCalls).toBe(1);
+    expect(harness.connectCalls).toBe(1);
+    expect(harness.client.releaseCalls).toEqual([true]);
+    expect(harness.releaseLeaseCalls).toBe(1);
   });
 
-  const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
+  it('skips acquisition when shutdown was already requested', async () => {
+    const harness = createGateHarness({
+      shardIds: [0],
+    });
+    const shutdown = new globalThis.AbortController();
+    shutdown.abort();
 
-  assert.equal(lease, null);
-  assert.equal(harness.acquirePoolLeaseCalls, 1);
-  assert.equal(harness.connectCalls, 1);
-  assert.deepEqual(harness.client.releaseCalls, [true]);
-  assert.equal(harness.releaseLeaseCalls, 1);
-});
+    const lease = await harness.gate.acquire(shutdown.signal);
 
-await test('PgShardOwnershipGate skips acquisition when shutdown was already requested', async () => {
-  const harness = createGateHarness({
-    shardIds: [0],
-  });
-  const shutdown = new globalThis.AbortController();
-  shutdown.abort();
-
-  const lease = await harness.gate.acquire(shutdown.signal);
-
-  assert.equal(lease, null);
-  assert.equal(harness.acquirePoolLeaseCalls, 0);
-  assert.equal(harness.connectCalls, 0);
-  assert.equal(harness.releaseLeaseCalls, 0);
-});
-
-await test('PgShardOwnershipGate cleans up the dedicated session when lock acquisition throws', async () => {
-  const harness = createGateHarness({
-    shardIds: [0, 1],
-    lockOutcomes: [true, true],
-    failAfterLockIndex: 1,
+    expect(lease).toBe(null);
+    expect(harness.acquirePoolLeaseCalls).toBe(0);
+    expect(harness.connectCalls).toBe(0);
+    expect(harness.releaseLeaseCalls).toBe(0);
   });
 
-  await assert.rejects(
-    () => harness.gate.acquire(new globalThis.AbortController().signal),
-    /synthetic lock query failure/
-  );
+  it('cleans up the dedicated session when lock acquisition throws', async () => {
+    const harness = createGateHarness({
+      shardIds: [0, 1],
+      lockOutcomes: [true, true],
+      failAfterLockIndex: 1,
+    });
 
-  assert.equal(harness.acquirePoolLeaseCalls, 1);
-  assert.equal(harness.connectCalls, 1);
-  assert.deepEqual(harness.client.releaseCalls, [true]);
-  assert.equal(harness.releaseLeaseCalls, 1);
-});
+    await expect(() =>
+      harness.gate.acquire(new globalThis.AbortController().signal)
+    ).rejects.toThrow(/synthetic lock query failure/);
 
-await test('PgShardOwnershipGate reports ownership loss when the dedicated session heartbeat fails', async () => {
-  const harness = createGateHarness({
-    shardIds: [0],
-    heartbeatOutcomes: [new Error('synthetic heartbeat failure')],
-    heartbeatIntervalMs: 1,
+    expect(harness.acquirePoolLeaseCalls).toBe(1);
+    expect(harness.connectCalls).toBe(1);
+    expect(harness.client.releaseCalls).toEqual([true]);
+    expect(harness.releaseLeaseCalls).toBe(1);
   });
 
-  const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
+  it('reports ownership loss when the dedicated session heartbeat fails', async () => {
+    const harness = createGateHarness({
+      shardIds: [0],
+      heartbeatOutcomes: [new Error('synthetic heartbeat failure')],
+      heartbeatIntervalMs: 1,
+    });
 
-  assert.notEqual(lease, null);
-  await assert.rejects(() => lease?.waitForLoss?.() ?? Promise.resolve(), /OUTBOX_OWNERSHIP_LOST/);
-  assert.deepEqual(harness.client.releaseCalls, [true]);
-  assert.equal(harness.releaseLeaseCalls, 1);
-});
+    const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
 
-await test('PgShardOwnershipGate rejects empty shard id configuration', async () => {
-  assert.throws(
-    () =>
+    expect(lease).not.toBe(null);
+    await expect(() => lease?.waitForLoss?.() ?? Promise.resolve()).rejects.toThrow(
+      /OUTBOX_OWNERSHIP_LOST/
+    );
+    expect(harness.client.releaseCalls).toEqual([true]);
+    expect(harness.releaseLeaseCalls).toBe(1);
+  });
+
+  it('rejects empty shard id configuration', () => {
+    expect(() =>
       createPgShardOwnershipGate({
         connectionString: 'postgresql://user:pass@localhost:5432/dvt',
         schema: 'dvt',
         shardIds: [],
         logger: makeLogger(),
-      }),
-    /requires at least one shard id/
-  );
-});
+      })
+    ).toThrow(/requires at least one shard id/);
+  });
 
-await test('PgShardOwnershipGate rejects negative shard id configuration', async () => {
-  assert.throws(
-    () =>
+  it('rejects negative shard id configuration', () => {
+    expect(() =>
       createPgShardOwnershipGate({
         connectionString: 'postgresql://user:pass@localhost:5432/dvt',
         schema: 'dvt',
         shardIds: [-1],
         logger: makeLogger(),
-      }),
-    /non-negative integers/
-  );
+      })
+    ).toThrow(/non-negative integers/);
+  });
 });
