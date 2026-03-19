@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+﻿import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
@@ -27,6 +27,9 @@ describe('modules', () => {
 
     registerOperationalHooks(fakeApp, {
       facade: {} as never,
+      authenticator: {} as never,
+      authorizer: {} as never,
+      engine: {} as never,
       adapters: new Map(),
       stateStore: {} as never,
       async migrate() {

@@ -1,4 +1,4 @@
-import type { IAuthorizationPolicy } from '../../domain/auth/policy.js';
+﻿import type { IAuthorizationPolicy } from '../../domain/auth/policy.js';
 import type {
   AuthenticatedPrincipal,
   AuthorizationAction,
@@ -6,7 +6,7 @@ import type {
   RequestedScope,
 } from '../../domain/auth/types.js';
 import type {
-  AuthorizedCommandExecutionContext,
+  AuthorizedExecutionContext,
   IAuthAuditPort,
   IPrincipalAccessRepository,
 } from '../ports/auth.js';
@@ -19,14 +19,14 @@ export class AuthorizeCommandScopeService {
     private readonly clock: () => Date
   ) {}
 
-  public async authorize(
+  public async authorize<TAction extends AuthorizationAction>(
     principal: AuthenticatedPrincipal,
     requestedScope: RequestedScope & {
-      readonly action: Extract<AuthorizationAction, { kind: 'command' }>;
+      readonly action: TAction;
     },
     requestId: string
   ): Promise<
-    | { readonly ok: true; readonly context: AuthorizedCommandExecutionContext }
+    | { readonly ok: true; readonly context: AuthorizedExecutionContext<TAction> }
     | { readonly ok: false; readonly reason: DeniedReason }
   > {
     const effectiveAccess = await this.accessRepository.loadEffectiveAccess({
@@ -63,7 +63,7 @@ export class AuthorizeCommandScopeService {
       return { ok: false, reason: outcome.reason };
     }
 
-    const context: AuthorizedCommandExecutionContext = {
+    const context: AuthorizedExecutionContext<TAction> = {
       principal,
       scope: outcome.approvedScope,
       action: requestedScope.action,

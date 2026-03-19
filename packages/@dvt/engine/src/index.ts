@@ -1,7 +1,7 @@
-/**
+﻿/**
  * @file packages/@dvt/engine/src/index.ts
  * @baseline ADR-0003: Execution Model Sovereignty
- * @decision Decision — Expose a stable public surface of the engine for orchestration decoupled from the runtime
+ * @decision Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime
  * @consequence Consumers integrate engine contracts/ports without depending on internal implementations
  * @version 1.0.0
  * @date 2026-02-21
@@ -12,6 +12,7 @@ export * from './contracts/runEvents.js';
 export * from './contracts/executionPlan.js';
 export * from './contracts/errors.js';
 export * from './contracts/engine/index.js';
+export * from './contracts/PlanVersionPolicy.js';
 
 export * from './core/WorkflowEngine.js';
 export * from './core/SnapshotProjector.js';

@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AuthenticatedPrincipal,
   AuthorizationAction,
   DeniedReason,
@@ -61,13 +61,17 @@ export interface StartRunCommand {
   readonly selection: ReadonlyArray<string>;
 }
 
-export interface AuthorizedCommandExecutionContext {
+export interface AuthorizedExecutionContext<TAction extends AuthorizationAction = AuthorizationAction> {
   readonly principal: AuthenticatedPrincipal;
   readonly scope: ExecutionScope;
-  readonly action: Extract<AuthorizationAction, { kind: 'command' }>;
+  readonly action: TAction;
   readonly requestId: string;
   readonly authorizedAt: Date;
 }
+
+export type AuthorizedCommandExecutionContext = AuthorizedExecutionContext<
+  Extract<AuthorizationAction, { readonly kind: 'command' }>
+>;
 
 export interface StartRunResult {
   readonly runId: string;
