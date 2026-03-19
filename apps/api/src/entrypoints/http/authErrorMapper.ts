@@ -93,10 +93,7 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     return { status: 403, body: { error: 'FORBIDDEN', code: 'TENANT_ACCESS_DENIED' } };
   }
 
-  if (
-    error instanceof RunAlreadyExistsError ||
-    getErrorCode(error) === 'INTENT_ACTIVE_CONFLICT'
-  ) {
+  if (error instanceof RunAlreadyExistsError || getErrorCode(error) === 'INTENT_ACTIVE_CONFLICT') {
     return { status: 409, body: { error: 'CONFLICT', code: 'RUN_ALREADY_EXISTS' } };
   }
 
