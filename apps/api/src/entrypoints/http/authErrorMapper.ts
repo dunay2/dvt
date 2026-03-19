@@ -1,6 +1,8 @@
-﻿import {
+import {
   AdapterNotRegisteredError,
   AuthorizationError,
+  OutboxRateLimitExceededError,
+  RunAlreadyExistsError,
   RunMetadataNotFoundError,
   SignalNotImplementedError,
 } from '@dvt/engine';
@@ -12,8 +14,9 @@ import type {
 import type { DeniedReason } from '../../domain/auth/types.js';
 
 export interface HttpResponseModel {
-  readonly status: 200 | 202 | 400 | 401 | 403 | 404 | 422;
+  readonly status: 200 | 202 | 400 | 401 | 403 | 404 | 409 | 422 | 429 | 503;
   readonly body: Readonly<Record<string, unknown>>;
+  readonly headers?: Readonly<Record<string, string>>;
 }
 
 export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpResponseModel {
@@ -30,7 +33,37 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
     case 'accepted':
       return {
         status: 202,
-        body: { runId: result.result.runId, accepted: result.result.accepted },
+        body: { runId: result.runId, accepted: result.accepted },
+      };
+    case 'duplicate':
+      return {
+        status: 202,
+        body: {
+          runId: result.runId,
+          accepted: result.accepted,
+          duplicate: true,
+          duplicateOf: result.duplicateOf,
+        },
+      };
+    case 'tenant_backpressure':
+      return {
+        status: 429,
+        headers: { 'retry-after': String(result.retryAfterSeconds) },
+        body: { error: 'TOO_MANY_REQUESTS', code: result.code },
+      };
+    case 'system_backpressure':
+      return {
+        status: 503,
+        headers: { 'retry-after': String(result.retryAfterSeconds) },
+        body: { error: 'SERVICE_UNAVAILABLE', code: result.code },
+      };
+    case 'rate_limited':
+      return {
+        status: 429,
+        ...(result.retryAfterSeconds !== undefined
+          ? { headers: { 'retry-after': String(result.retryAfterSeconds) } }
+          : {}),
+        body: { error: 'TOO_MANY_REQUESTS', code: result.code },
       };
   }
 }
@@ -60,5 +93,22 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     return { status: 403, body: { error: 'FORBIDDEN', code: 'TENANT_ACCESS_DENIED' } };
   }
 
+  if (error instanceof RunAlreadyExistsError || getErrorCode(error) === 'INTENT_ACTIVE_CONFLICT') {
+    return { status: 409, body: { error: 'CONFLICT', code: 'RUN_ALREADY_EXISTS' } };
+  }
+
+  if (error instanceof OutboxRateLimitExceededError) {
+    return { status: 429, body: { error: 'TOO_MANY_REQUESTS', code: error.code } };
+  }
+
   return null;
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (!(error instanceof Error)) {
+    return undefined;
+  }
+
+  const code = (error as Error & { code?: unknown }).code;
+  return typeof code === 'string' ? code : undefined;
 }

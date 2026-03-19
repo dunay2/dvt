@@ -227,5 +227,10 @@ export async function startRunRoute(
   });
 
   const mapped = mapStartRunFacadeResult(facadeResult);
+  if (mapped.headers) {
+    for (const [name, value] of Object.entries(mapped.headers)) {
+      reply.header(name, value);
+    }
+  }
   reply.code(mapped.status).send(mapped.body);
 }

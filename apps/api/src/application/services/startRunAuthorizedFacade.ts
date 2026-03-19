@@ -40,14 +40,60 @@ export class StartRunAuthorizedFacade {
     }
 
     try {
-      const result = await this.useCase.execute(input.command, authorization.context);
-      return { kind: 'accepted', result };
+      return await this.useCase.execute(input.command, authorization.context);
     } catch (error) {
       if (error instanceof AdapterNotRegisteredError) {
         return { kind: 'adapter_not_configured', adapter: input.command.targetAdapter };
       }
 
+      const duplicate = toDuplicateResult(error, input.command.runId);
+      if (duplicate !== null) {
+        return duplicate;
+      }
+
+      const rateLimited = toRateLimitedResult(error);
+      if (rateLimited !== null) {
+        return rateLimited;
+      }
+
       throw error;
     }
   }
+}
+
+function toDuplicateResult(
+  error: unknown,
+  runId: string
+): Extract<StartRunFacadeResult, { readonly kind: 'duplicate' }> | null {
+  if (!(error instanceof Error)) {
+    return null;
+  }
+
+  const code = (error as Error & { code?: unknown }).code;
+  if (code === 'RUN_ALREADY_EXISTS') {
+    return { kind: 'duplicate', runId, accepted: true, duplicateOf: 'run' };
+  }
+  if (code === 'INTENT_ACTIVE_CONFLICT') {
+    return { kind: 'duplicate', runId, accepted: true, duplicateOf: 'intent' };
+  }
+  return null;
+}
+
+function toRateLimitedResult(
+  error: unknown
+): Extract<StartRunFacadeResult, { readonly kind: 'rate_limited' }> | null {
+  if (!(error instanceof Error)) {
+    return null;
+  }
+
+  const code = (error as Error & { code?: unknown }).code;
+  if (code !== 'OUTBOX_RATE_LIMIT_EXCEEDED') {
+    return null;
+  }
+
+  return {
+    kind: 'rate_limited',
+    accepted: false,
+    code: 'OUTBOX_RATE_LIMIT_EXCEEDED',
+  };
 }
