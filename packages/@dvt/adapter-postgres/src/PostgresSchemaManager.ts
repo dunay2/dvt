@@ -134,6 +134,8 @@ export class PostgresSchemaManager {
     await this.ensureOutboxDeadLetterTable(client);
     await this.ensureLineageOutboxTable(client);
     await this.ensureLineageDeadLetterTable(client);
+    await this.ensureRunEventArchiveUnitsTable(client);
+    await this.ensureRunEventArchiveBatchesTable(client);
   }
 
   private async ensureRunMetadataTable(client: PoolClient): Promise<void> {
@@ -250,6 +252,45 @@ export class PostgresSchemaManager {
         payload JSONB NOT NULL,
         last_error TEXT NOT NULL,
         dead_lettered_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+  }
+
+  private async ensureRunEventArchiveUnitsTable(client: PoolClient): Promise<void> {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_event_archive_units (
+        archive_unit_key TEXT PRIMARY KEY,
+        tenant_bucket TEXT NOT NULL,
+        persisted_at_day DATE NOT NULL,
+        state TEXT NOT NULL,
+        tenant_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+        tenant_count INTEGER NOT NULL DEFAULT 0,
+        row_count BIGINT NOT NULL DEFAULT 0,
+        min_run_seq INTEGER,
+        max_run_seq INTEGER,
+        object_key TEXT,
+        checksum_sha256 TEXT,
+        exported_at TIMESTAMPTZ,
+        verified_at TIMESTAMPTZ,
+        delete_after TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+  }
+
+  private async ensureRunEventArchiveBatchesTable(client: PoolClient): Promise<void> {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.run_event_archive_batches (
+        batch_id TEXT PRIMARY KEY,
+        archive_unit_key TEXT NOT NULL REFERENCES ${quoteIdentifier(this.schema)}.run_event_archive_units (archive_unit_key)
+          ON DELETE CASCADE,
+        started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        completed_at TIMESTAMPTZ,
+        status TEXT NOT NULL,
+        row_count BIGINT,
+        checksum_sha256 TEXT,
+        error TEXT
       )
     `);
   }
@@ -383,6 +424,22 @@ export class PostgresSchemaManager {
     await client.query(`
       CREATE INDEX IF NOT EXISTS lineage_dead_letter_run_id_idx
       ON ${quoteIdentifier(this.schema)}.lineage_dead_letter (run_id)
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS run_event_archive_units_state_day_idx
+      ON ${quoteIdentifier(this.schema)}.run_event_archive_units (state, persisted_at_day)
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS run_event_archive_units_delete_after_idx
+      ON ${quoteIdentifier(this.schema)}.run_event_archive_units (delete_after)
+      WHERE delete_after IS NOT NULL
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS run_event_archive_batches_unit_status_idx
+      ON ${quoteIdentifier(this.schema)}.run_event_archive_batches (archive_unit_key, status)
     `);
   }
 }
