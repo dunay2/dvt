@@ -3,7 +3,10 @@ import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
 import { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
+import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
+import { NoopAdmissionTelemetry } from '../application/services/NoopAdmissionTelemetry.js';
+import { NoopDuplicateRunProbe } from '../application/services/NoopDuplicateRunProbe.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
 import { getPgPool } from '../db/pool.js';
@@ -86,7 +89,18 @@ export async function buildProtectedRuntimeModule(
   const facade = new StartRunAuthorizedFacade(
     authenticator,
     commandAuthorizer,
-    new EngineStartRunUseCase(engine)
+    new BackpressureAwareStartRunUseCase({
+      duplicateProbe: new NoopDuplicateRunProbe(),
+      admissionGuard: {
+        async assertAdmissible() {
+          return undefined;
+        },
+      },
+      telemetry: new NoopAdmissionTelemetry(),
+      mode: 'off',
+      retryAfterSeconds: 30,
+      delegate: new EngineStartRunUseCase(engine),
+    })
   );
 
   return {

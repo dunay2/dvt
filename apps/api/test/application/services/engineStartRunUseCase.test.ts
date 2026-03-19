@@ -69,7 +69,7 @@ describe('EngineStartRunUseCase', () => {
     const useCase = new EngineStartRunUseCase(fakeEngine as never);
     const result = await useCase.execute(mkCommand(), mkContext());
 
-    expect(result).toEqual({ runId: 'run-test-1', accepted: true });
+    expect(result).toEqual({ kind: 'accepted', runId: 'run-test-1', accepted: true });
     expect(capturedPlanRef).toEqual(PLAN_REF);
     expect(capturedRunContext).toEqual({
       tenantId: 'tenant-1',

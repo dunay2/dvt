@@ -1,4 +1,4 @@
-import { AdapterNotRegisteredError } from '@dvt/engine';
+import { AdapterNotRegisteredError, RunAlreadyExistsError } from '@dvt/engine';
 import { describe, it, expect } from 'vitest';
 
 import { StartRunAuthorizedFacade } from '../../../src/application/services/startRunAuthorizedFacade.js';
@@ -66,7 +66,7 @@ describe('StartRunAuthorizedFacade', () => {
       } as never,
       {
         async execute() {
-          return { runId: 'run-1', accepted: true };
+          return { kind: 'accepted' as const, runId: 'run-1', accepted: true };
         },
       } as never
     );
@@ -74,7 +74,41 @@ describe('StartRunAuthorizedFacade', () => {
     const result = await facade.execute(INPUT);
     expect(result).toEqual({
       kind: 'accepted',
-      result: { runId: 'run-1', accepted: true },
+      runId: 'run-1',
+      accepted: true,
+    });
+  });
+
+  it('preserves duplicate result from the use case', async () => {
+    const facade = new StartRunAuthorizedFacade(
+      {
+        async authenticateBearerToken() {
+          return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
+        },
+      } as never,
+      {
+        async authorize() {
+          return { ok: true as const, context: AUTHORIZED_CONTEXT };
+        },
+      } as never,
+      {
+        async execute() {
+          return {
+            kind: 'duplicate' as const,
+            runId: 'run-1',
+            accepted: true,
+            duplicateOf: 'intent' as const,
+          };
+        },
+      } as never
+    );
+
+    const result = await facade.execute(INPUT);
+    expect(result).toEqual({
+      kind: 'duplicate',
+      runId: 'run-1',
+      accepted: true,
+      duplicateOf: 'intent',
     });
   });
 
@@ -101,6 +135,34 @@ describe('StartRunAuthorizedFacade', () => {
     expect(result).toEqual({
       kind: 'adapter_not_configured',
       adapter: 'temporal',
+    });
+  });
+
+  it('maps engine duplicate errors to duplicate facade result', async () => {
+    const facade = new StartRunAuthorizedFacade(
+      {
+        async authenticateBearerToken() {
+          return { ok: true as const, principal: AUTHENTICATED_PRINCIPAL };
+        },
+      } as never,
+      {
+        async authorize() {
+          return { ok: true as const, context: AUTHORIZED_CONTEXT };
+        },
+      } as never,
+      {
+        async execute() {
+          throw new RunAlreadyExistsError('run-1');
+        },
+      } as never
+    );
+
+    const result = await facade.execute(INPUT);
+    expect(result).toEqual({
+      kind: 'duplicate',
+      runId: 'run-1',
+      accepted: true,
+      duplicateOf: 'run',
     });
   });
 

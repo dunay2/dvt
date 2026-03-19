@@ -11,12 +11,17 @@ const VALID_PLAN_REF = {
 };
 
 describe('startRunRoute', () => {
-  it('returns 400 on malformed tenantId', async () => {
-    const reply = {
+  function createReply() {
+    return {
       statusCode: 200,
       payload: undefined as unknown,
+      headers: {} as Record<string, string>,
       code(status: number) {
         this.statusCode = status;
+        return this;
+      },
+      header(name: string, value: string) {
+        this.headers[name] = value;
         return this;
       },
       send(payload: unknown) {
@@ -24,6 +29,10 @@ describe('startRunRoute', () => {
         return this;
       },
     };
+  }
+
+  it('returns 400 on malformed tenantId', async () => {
+    const reply = createReply();
 
     const facade = {
       async execute() {
@@ -51,18 +60,7 @@ describe('startRunRoute', () => {
   });
 
   it('returns 400 when body is missing', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     const facade = {
       async execute() {
@@ -85,18 +83,7 @@ describe('startRunRoute', () => {
   });
 
   it('returns 400 on non-string selection items', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     const facade = {
       async execute() {
@@ -124,18 +111,7 @@ describe('startRunRoute', () => {
   });
 
   it('returns 400 on blank runId', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     const facade = {
       async execute() {
@@ -166,18 +142,7 @@ describe('startRunRoute', () => {
   });
 
   it('returns 400 on blank planRef fields', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     const facade = {
       async execute() {
@@ -211,24 +176,13 @@ describe('startRunRoute', () => {
   });
 
   it('passes normalized command and requested scope', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     let received: Record<string, unknown> | undefined;
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, result: { runId: 'r1', accepted: true } };
+        return { kind: 'accepted' as const, runId: 'r1', accepted: true };
       },
     };
 
@@ -263,18 +217,7 @@ describe('startRunRoute', () => {
   });
 
   it('returns 422 when target adapter is not configured', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     const facade = {
       async execute() {
@@ -308,24 +251,13 @@ describe('startRunRoute', () => {
   });
 
   it('accepts lowercase bearer scheme', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     let received: Record<string, unknown> | undefined;
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, result: { runId: 'r2', accepted: true } };
+        return { kind: 'accepted' as const, runId: 'r2', accepted: true };
       },
     };
 
@@ -353,24 +285,13 @@ describe('startRunRoute', () => {
   });
 
   it('normalizes trim-sensitive fields', async () => {
-    const reply = {
-      statusCode: 200,
-      payload: undefined as unknown,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
+    const reply = createReply();
 
     let received: Record<string, unknown> | undefined;
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return { kind: 'accepted' as const, result: { runId: 'r3', accepted: true } };
+        return { kind: 'accepted' as const, runId: 'r3', accepted: true };
       },
     };
 
@@ -411,6 +332,127 @@ describe('startRunRoute', () => {
       runId: 'run-with-spaces',
       targetAdapter: 'mock',
       selection: ['model_a'],
+    });
+  });
+
+  it('returns 202 for duplicate idempotent retry', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return {
+          kind: 'duplicate' as const,
+          runId: 'run-dup',
+          accepted: true,
+          duplicateOf: 'intent' as const,
+        };
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-dup',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-dup',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(202);
+    expect(reply.payload).toEqual({
+      runId: 'run-dup',
+      accepted: true,
+      duplicate: true,
+      duplicateOf: 'intent',
+    });
+  });
+
+  it('returns 429 with Retry-After for tenant backpressure', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return {
+          kind: 'tenant_backpressure' as const,
+          accepted: false,
+          code: 'TENANT_BACKPRESSURE' as const,
+          retryAfterSeconds: 30,
+        };
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-bp-tenant',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-bp-tenant',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(429);
+    expect(reply.headers).toEqual({ 'retry-after': '30' });
+    expect(reply.payload).toEqual({
+      error: 'TOO_MANY_REQUESTS',
+      code: 'TENANT_BACKPRESSURE',
+    });
+  });
+
+  it('returns 503 with Retry-After for system backpressure', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        return {
+          kind: 'system_backpressure' as const,
+          accepted: false,
+          code: 'SYSTEM_BACKPRESSURE' as const,
+          retryAfterSeconds: 45,
+        };
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-bp-system',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          runId: 'run-bp-system',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(503);
+    expect(reply.headers).toEqual({ 'retry-after': '45' });
+    expect(reply.payload).toEqual({
+      error: 'SERVICE_UNAVAILABLE',
+      code: 'SYSTEM_BACKPRESSURE',
     });
   });
 });

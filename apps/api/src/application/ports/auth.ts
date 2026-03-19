@@ -75,10 +75,46 @@ export type AuthorizedCommandExecutionContext = AuthorizedExecutionContext<
   Extract<AuthorizationAction, { readonly kind: 'command' }>
 >;
 
-export interface StartRunResult {
+export interface StartRunAcceptedResult {
+  readonly kind: 'accepted';
   readonly runId: string;
-  readonly accepted: boolean;
+  readonly accepted: true;
 }
+
+export interface StartRunDuplicateResult {
+  readonly kind: 'duplicate';
+  readonly runId: string;
+  readonly accepted: true;
+  readonly duplicateOf: 'run' | 'intent';
+}
+
+export interface StartRunTenantBackpressureResult {
+  readonly kind: 'tenant_backpressure';
+  readonly accepted: false;
+  readonly code: 'TENANT_BACKPRESSURE';
+  readonly retryAfterSeconds: number;
+}
+
+export interface StartRunSystemBackpressureResult {
+  readonly kind: 'system_backpressure';
+  readonly accepted: false;
+  readonly code: 'SYSTEM_BACKPRESSURE' | 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE';
+  readonly retryAfterSeconds: number;
+}
+
+export interface StartRunRateLimitedResult {
+  readonly kind: 'rate_limited';
+  readonly accepted: false;
+  readonly code: 'OUTBOX_RATE_LIMIT_EXCEEDED';
+  readonly retryAfterSeconds?: number;
+}
+
+export type StartRunResult =
+  | StartRunAcceptedResult
+  | StartRunDuplicateResult
+  | StartRunTenantBackpressureResult
+  | StartRunSystemBackpressureResult
+  | StartRunRateLimitedResult;
 
 export interface IStartRunUseCase {
   execute(
@@ -91,4 +127,8 @@ export type StartRunFacadeResult =
   | { readonly kind: 'unauthenticated'; readonly code: AuthenticationFailureCode }
   | { readonly kind: 'unauthorized'; readonly reason: DeniedReason }
   | { readonly kind: 'adapter_not_configured'; readonly adapter: string }
-  | { readonly kind: 'accepted'; readonly result: StartRunResult };
+  | StartRunAcceptedResult
+  | StartRunDuplicateResult
+  | StartRunTenantBackpressureResult
+  | StartRunSystemBackpressureResult
+  | StartRunRateLimitedResult;

@@ -40,6 +40,6 @@ export class EngineStartRunUseCase implements IStartRunUseCase {
       }
     );
 
-    return { runId: ref.runId, accepted: true };
+    return { kind: 'accepted', runId: ref.runId, accepted: true };
   }
 }

@@ -1,4 +1,9 @@
-﻿import { RunMetadataNotFoundError, SignalNotImplementedError } from '@dvt/engine';
+import {
+  OutboxRateLimitExceededError,
+  RunAlreadyExistsError,
+  RunMetadataNotFoundError,
+  SignalNotImplementedError,
+} from '@dvt/engine';
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -34,10 +39,57 @@ describe('mapStartRunFacadeResult', () => {
   it('accepted -> 202 with runId', () => {
     const result = mapStartRunFacadeResult({
       kind: 'accepted',
-      result: { runId: 'r-abc', accepted: true },
+      runId: 'r-abc',
+      accepted: true,
     });
     expect(result.status).toBe(202);
     expect(result.body).toEqual({ runId: 'r-abc', accepted: true });
+  });
+
+  it('duplicate -> 202 with duplicate marker', () => {
+    const result = mapStartRunFacadeResult({
+      kind: 'duplicate',
+      runId: 'r-dup',
+      accepted: true,
+      duplicateOf: 'intent',
+    });
+    expect(result.status).toBe(202);
+    expect(result.body).toEqual({
+      runId: 'r-dup',
+      accepted: true,
+      duplicate: true,
+      duplicateOf: 'intent',
+    });
+  });
+
+  it('tenant_backpressure -> 429 with Retry-After', () => {
+    const result = mapStartRunFacadeResult({
+      kind: 'tenant_backpressure',
+      accepted: false,
+      code: 'TENANT_BACKPRESSURE',
+      retryAfterSeconds: 30,
+    });
+    expect(result.status).toBe(429);
+    expect(result.headers).toEqual({ 'retry-after': '30' });
+    expect(result.body).toEqual({
+      error: 'TOO_MANY_REQUESTS',
+      code: 'TENANT_BACKPRESSURE',
+    });
+  });
+
+  it('system_backpressure -> 503 with Retry-After', () => {
+    const result = mapStartRunFacadeResult({
+      kind: 'system_backpressure',
+      accepted: false,
+      code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
+      retryAfterSeconds: 45,
+    });
+    expect(result.status).toBe(503);
+    expect(result.headers).toEqual({ 'retry-after': '45' });
+    expect(result.body).toEqual({
+      error: 'SERVICE_UNAVAILABLE',
+      code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
+    });
   });
 });
 
@@ -52,6 +104,22 @@ describe('mapRuntimeDomainError', () => {
     expect(result).toEqual({
       status: 422,
       body: { error: 'UNPROCESSABLE_ENTITY', code: 'SIGNAL_NOT_IMPLEMENTED' },
+    });
+  });
+
+  it('maps duplicate engine errors to 409 conflict', () => {
+    const result = mapRuntimeDomainError(new RunAlreadyExistsError('run-dup'));
+    expect(result).toEqual({
+      status: 409,
+      body: { error: 'CONFLICT', code: 'RUN_ALREADY_EXISTS' },
+    });
+  });
+
+  it('maps outbox rate limit errors to 429', () => {
+    const result = mapRuntimeDomainError(new OutboxRateLimitExceededError('tenant-a'));
+    expect(result).toEqual({
+      status: 429,
+      body: { error: 'TOO_MANY_REQUESTS', code: 'OUTBOX_RATE_LIMIT_EXCEEDED' },
     });
   });
 });
