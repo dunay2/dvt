@@ -1,4 +1,3 @@
-import { describe, expect } from 'vitest';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import type {
@@ -8,6 +7,7 @@ import type {
   OutboxTickResult,
 } from '@dvt/contracts';
 import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/delivery/testing';
+import { describe, expect } from 'vitest';
 
 import {
   OutboxWorkerRuntime,
@@ -407,60 +407,54 @@ describe('OutboxWorkerRuntime', () => {
     }
   );
 
-  runtimeTest(
-    runtimeScenarios.runtimeTreatsHookFailuresAsBestEffortAndKeepsDraining,
-    async () => {
-      const hooks: OutboxWorkerRuntimeHooks = {
-        onStarted() {
-          throw createSyntheticError(runtimeFailures.hookStarted);
-        },
-        onTick() {
-          throw createSyntheticError(runtimeFailures.hookTick);
-        },
-        onStopped() {
-          throw createSyntheticError(runtimeFailures.hookStopped);
-        },
-      };
-      const { storage, bus, runtime, getWarnCount } = createMemoryRuntime({
-        pollIntervalMs: 60_000,
-        errorBackoffMs: 25,
-        hooks,
-      });
+  runtimeTest(runtimeScenarios.runtimeTreatsHookFailuresAsBestEffortAndKeepsDraining, async () => {
+    const hooks: OutboxWorkerRuntimeHooks = {
+      onStarted() {
+        throw createSyntheticError(runtimeFailures.hookStarted);
+      },
+      onTick() {
+        throw createSyntheticError(runtimeFailures.hookTick);
+      },
+      onStopped() {
+        throw createSyntheticError(runtimeFailures.hookStopped);
+      },
+    };
+    const { storage, bus, runtime, getWarnCount } = createMemoryRuntime({
+      pollIntervalMs: 60_000,
+      errorBackoffMs: 25,
+      hooks,
+    });
 
-      await enqueuePendingEvents(storage, 1);
+    await enqueuePendingEvents(storage, 1);
 
-      const loop = runtime.start();
-      await waitForCondition(() => bus.published.length === 1);
-      await runtime.stop();
-      await loop;
+    const loop = runtime.start();
+    await waitForCondition(() => bus.published.length === 1);
+    await runtime.stop();
+    await loop;
 
-      expect((await storage.listPending(10)).length).toBe(0);
-      expect(getWarnCount()).toBe(3);
-    }
-  );
+    expect((await storage.listPending(10)).length).toBe(0);
+    expect(getWarnCount()).toBe(3);
+  });
 
-  runtimeTest(
-    runtimeScenarios.runtimeStartIsIdempotentAndReusesTheSameLoopPromise,
-    async () => {
-      const { storage, bus, runtime } = createMemoryRuntime({
-        pollIntervalMs: 60_000,
-        errorBackoffMs: 25,
-      });
+  runtimeTest(runtimeScenarios.runtimeStartIsIdempotentAndReusesTheSameLoopPromise, async () => {
+    const { storage, bus, runtime } = createMemoryRuntime({
+      pollIntervalMs: 60_000,
+      errorBackoffMs: 25,
+    });
 
-      await enqueuePendingEvents(storage, 1);
+    await enqueuePendingEvents(storage, 1);
 
-      const firstStart = runtime.start();
-      const secondStart = runtime.start();
+    const firstStart = runtime.start();
+    const secondStart = runtime.start();
 
-      expect(firstStart).toBe(secondStart);
+    expect(firstStart).toBe(secondStart);
 
-      await waitForCondition(() => bus.published.length === 1);
-      await runtime.stop();
-      await firstStart;
+    await waitForCondition(() => bus.published.length === 1);
+    await runtime.stop();
+    await firstStart;
 
-      expect((await storage.listPending(10)).length).toBe(0);
-    }
-  );
+    expect((await storage.listPending(10)).length).toBe(0);
+  });
 
   runtimeTest(
     runtimeScenarios.runtimeDoesNotStartTheLoopWhenTheProvidedSignalIsAlreadyAborted,

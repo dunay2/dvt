@@ -16,11 +16,11 @@
  * adapter) and OutboxWorker directly so the proof stays at the
  * storage/worker boundary and does not require a live database.
  */
-import { describe, it, expect } from 'vitest';
 
 import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 import { OutboxWorker } from '@dvt/delivery';
 import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/delivery/testing';
+import { describe, it, expect } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -352,8 +352,8 @@ describe('concurrentWorkerOrdering', () => {
       ...totalRunSeqs.map((seq) => `${shard1RunId}:${seq}`),
     ].sort((left, right) => left.localeCompare(right));
 
-    expect(
-      [...new Set(allDeliveredKeys)].sort((left, right) => left.localeCompare(right))
-    ).toEqual(expectedKeys);
+    expect([...new Set(allDeliveredKeys)].sort((left, right) => left.localeCompare(right))).toEqual(
+      expectedKeys
+    );
   });
 });

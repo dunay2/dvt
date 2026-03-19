@@ -13,10 +13,7 @@ class RecordingOwnershipClient {
     private readonly heartbeatOutcomes: Array<true | Error> = []
   ) {}
 
-  async query<T>(
-    sql: string,
-    params?: unknown[]
-  ): Promise<{ rows: T[]; rowCount: number }> {
+  async query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[]; rowCount: number }> {
     if (params === undefined) {
       this.queries.push({ sql });
     } else {

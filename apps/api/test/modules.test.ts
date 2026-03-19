@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest';
-
 import type { FastifyInstance } from 'fastify';
+import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
 import { buildProviderAdapters } from '../src/modules/buildProviderAdapters.js';
@@ -91,8 +90,6 @@ describe('modules', () => {
     expect(result.adapters.size).toBe(1);
     expect(result.adapters.has('mock')).toBe(true);
 
-    await expect(async () => {
-      await result.close();
-    }).not.toThrow();
+    await expect(result.close()).resolves.toBeUndefined();
   });
 });

@@ -17,6 +17,7 @@
  *   DATABASE_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-outbox-worker test
  */
 import { randomUUID } from 'node:crypto';
+
 import { describe, it, expect, afterAll } from 'vitest';
 
 import { acquirePgPool, closePgPool } from '../../src/db/pool.js';

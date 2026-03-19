@@ -130,3 +130,10 @@ These files are intended to become the canonical source of truth for:
   [`ADR-0001`](../adr/ADR-0001-temporal-integration-test-policy.md).
 - The GitHub workflows remain the authoritative merge gates even when the same command is runnable
   locally.
+- In the agent sandbox used for this repository, `vitest`/`vite`/`esbuild`
+  commands may fail with `spawn EPERM`; when that happens, re-run the same
+  validation command with escalated execution before treating it as a real code
+  failure.
+- For slices that change code, config, tests, CI, or docs, include
+  `pnpm verify:prepush` in the end-of-task validation baseline before claiming
+  the work is ready.

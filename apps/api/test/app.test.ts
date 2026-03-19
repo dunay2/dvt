@@ -1,4 +1,5 @@
 import process from 'node:process';
+
 import { describe, it, expect } from 'vitest';
 
 import { buildApp } from '../src/app.js';

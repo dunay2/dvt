@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest';
-
 import type { Pool } from 'pg';
+import { describe, it, expect } from 'vitest';
 
 import { acquirePgPool, closePgPool, getPgPool } from '../../src/db/pool.js';
 

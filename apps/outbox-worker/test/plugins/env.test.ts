@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+
 import { describe, it, expect } from 'vitest';
 
 import { isActiveEnv, loadEnv, type ActiveEnv, type Env } from '../../src/plugins/env.js';

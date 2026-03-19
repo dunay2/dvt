@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest';
-
 import type { EventEnvelope as RunEventPersisted, OutboxRecord } from '@dvt/contracts';
+import { describe, it, expect } from 'vitest';
 
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
 import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRuntime.js';

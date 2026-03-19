@@ -1,6 +1,5 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
-import { describe, it, expect } from 'vitest';
 
 import type { PlanRef, RunContext } from '@dvt/contracts';
 import {
@@ -17,6 +16,7 @@ import {
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade, type ExecutionPlanV2 } from '@dvt/planner';
+import { describe, it, expect } from 'vitest';
 
 function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
   return {

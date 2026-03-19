@@ -1,6 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { describe, it, expect } from 'vitest';
 
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import {
@@ -8,6 +7,7 @@ import {
   type EventEnvelope as RunEventPersisted,
   type OutboxRecord,
 } from '@dvt/contracts';
+import { describe, it, expect } from 'vitest';
 
 import { closePgPool } from '../../src/db/pool.js';
 import { runOutboxWorkerHost } from '../../src/host/runOutboxWorkerHost.js';
@@ -95,7 +95,9 @@ describe('standalone canary acceptance', () => {
           );
           const activeMetrics = await waitFor(async () => {
             const response = await fetchText(`${activeHost.baseUrl}/metrics`);
-            return /dvt_outbox_delivered_records_total 1/.test(response.body) ? response : undefined;
+            return /dvt_outbox_delivered_records_total 1/.test(response.body)
+              ? response
+              : undefined;
           });
 
           expect(activeReady.body.ready).toBe(true);
@@ -289,12 +291,18 @@ describe('standalone canary acceptance', () => {
             expect(deliveredRequests.map((request) => request.events[0]?.runSeq)).toEqual([
               1, 1, 2, 3,
             ]);
-            expect(
-              deliveredRequests.map((request) => request.events[0]?.eventId)
-            ).toEqual(['evt-canary-1', 'evt-canary-1', 'evt-canary-2', 'evt-canary-3']);
-            expect(
-              deliveredRequests.map((request) => request.events[0]?.idempotencyKey)
-            ).toEqual(['key-canary-1', 'key-canary-1', 'key-canary-2', 'key-canary-3']);
+            expect(deliveredRequests.map((request) => request.events[0]?.eventId)).toEqual([
+              'evt-canary-1',
+              'evt-canary-1',
+              'evt-canary-2',
+              'evt-canary-3',
+            ]);
+            expect(deliveredRequests.map((request) => request.events[0]?.idempotencyKey)).toEqual([
+              'key-canary-1',
+              'key-canary-1',
+              'key-canary-2',
+              'key-canary-3',
+            ]);
             expect(deliveredMetrics.body).toMatch(/dvt_outbox_retried_records_total 1/);
             expect(deliveredMetrics.body).toMatch(/dvt_outbox_delivered_records_total 3/);
           } finally {
@@ -347,12 +355,16 @@ describe('standalone canary acceptance', () => {
                 : undefined;
             });
 
-            expect(
-              deliveredRequests.map((request) => request.events[0]?.eventId)
-            ).toEqual(['evt-canary-1', 'evt-canary-1', 'evt-canary-2']);
-            expect(
-              deliveredRequests.map((request) => request.events[0]?.idempotencyKey)
-            ).toEqual(['key-canary-1', 'key-canary-1', 'key-canary-2']);
+            expect(deliveredRequests.map((request) => request.events[0]?.eventId)).toEqual([
+              'evt-canary-1',
+              'evt-canary-1',
+              'evt-canary-2',
+            ]);
+            expect(deliveredRequests.map((request) => request.events[0]?.idempotencyKey)).toEqual([
+              'key-canary-1',
+              'key-canary-1',
+              'key-canary-2',
+            ]);
             expect(appliedEffects.map((event) => event.eventId)).toEqual([
               'evt-canary-1',
               'evt-canary-2',

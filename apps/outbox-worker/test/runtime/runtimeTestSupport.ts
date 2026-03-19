@@ -1,4 +1,3 @@
-import { it } from 'vitest';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import type {
@@ -7,6 +6,7 @@ import type {
   OutboxRecord,
 } from '@dvt/contracts';
 import { InMemoryEventBus } from '@dvt/delivery/testing';
+import { it } from 'vitest';
 
 import {
   OutboxWorkerRuntime,

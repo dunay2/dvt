@@ -1,4 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises';
+
 import { describe, it, expect } from 'vitest';
 
 import { runOutboxWorkerHost } from '../../src/host/runOutboxWorkerHost.js';
@@ -292,9 +293,9 @@ function hasLogEntry(
 }
 
 function assertBootstrappedLog(entries: readonly LogEntry[], expected = true): void {
-  expect(
-    hasLogEntry(entries, (entry) => entry.msg === 'outbox worker bootstrapped')
-  ).toBe(expected);
+  expect(hasLogEntry(entries, (entry) => entry.msg === 'outbox worker bootstrapped')).toBe(
+    expected
+  );
 }
 
 function assertPassiveOperationalLifecycle(fixture: HostFixture): void {

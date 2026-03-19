@@ -62,7 +62,9 @@ describe('AuthorizeCommandScopeService', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.context.scope.tenantId.value).toBe('t1');
-      expect('requestedScope' in (result.context as unknown as Record<string, unknown>)).toBe(false);
+      expect('requestedScope' in (result.context as unknown as Record<string, unknown>)).toBe(
+        false
+      );
     }
 
     expect(auditEvents.length).toBe(1);

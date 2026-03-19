@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest';
-
 import { AdapterNotRegisteredError } from '@dvt/engine';
+import { describe, it, expect } from 'vitest';
 
 import { StartRunAuthorizedFacade } from '../../../src/application/services/startRunAuthorizedFacade.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';

@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 import type { Pool } from 'pg';
+import { describe, it, expect } from 'vitest';
 
 import { closePgPool, getPgPool } from '../../src/db/pool.js';
 import { isActiveEnv, loadEnv, type ActiveEnv } from '../../src/plugins/env.js';
@@ -342,7 +342,8 @@ describe('createOutboxWorkerRuntime', () => {
 
     const originalEnd = pool.end;
     const originalMigrate = PostgresStateStoreAdapter.prototype.migrate;
-    const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
+    const originalAbortPendingOperations =
+      PostgresStateStoreAdapter.prototype.abortPendingOperations;
 
     pool.end = async function end(): Promise<void> {
       endCalls += 1;
@@ -401,7 +402,8 @@ describe('createOutboxWorkerRuntime', () => {
 
     const originalEnd = pool.end;
     const originalMigrate = PostgresStateStoreAdapter.prototype.migrate;
-    const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
+    const originalAbortPendingOperations =
+      PostgresStateStoreAdapter.prototype.abortPendingOperations;
 
     pool.end = async function end(): Promise<void> {
       endCalls += 1;
@@ -538,7 +540,8 @@ describe('createOutboxWorkerRuntime', () => {
     const originalConnect = pool.connect;
     const originalListPending = PostgresStateStoreAdapter.prototype.listPending;
     const originalListPendingForClaim = PostgresStateStoreAdapter.prototype.listPendingForClaim;
-    const originalAbortPendingOperations = PostgresStateStoreAdapter.prototype.abortPendingOperations;
+    const originalAbortPendingOperations =
+      PostgresStateStoreAdapter.prototype.abortPendingOperations;
 
     globalThis.fetch = (async (_url, init) => {
       fetchStarted = true;

@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
-import { describe, it, expect } from 'vitest';
 
 import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { describe, it, expect } from 'vitest';
 
 import { HttpEventBus } from '../../src/bus/HttpEventBus.js';
 

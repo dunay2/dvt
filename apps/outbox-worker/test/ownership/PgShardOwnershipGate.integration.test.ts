@@ -98,29 +98,26 @@ describe('PgShardOwnershipGate integration', () => {
     }
   );
 
-  it.skipIf(Boolean(skipReason))(
-    'second gate can acquire after first gate releases',
-    async () => {
-      expect(DATABASE_URL).toBeTruthy();
+  it.skipIf(Boolean(skipReason))('second gate can acquire after first gate releases', async () => {
+    expect(DATABASE_URL).toBeTruthy();
 
-      const gate1 = makeGate(DATABASE_URL!);
-      const gate2 = makeGate(DATABASE_URL!);
-      const signal = new globalThis.AbortController().signal;
+    const gate1 = makeGate(DATABASE_URL!);
+    const gate2 = makeGate(DATABASE_URL!);
+    const signal = new globalThis.AbortController().signal;
 
-      const lease1 = await gate1.acquire(signal);
-      expect(lease1).not.toBe(null);
+    const lease1 = await gate1.acquire(signal);
+    expect(lease1).not.toBe(null);
 
-      // Release gate1 — this destroys the underlying session, which releases the
-      // PostgreSQL advisory lock bound to that connection.
-      await lease1?.release();
+    // Release gate1 — this destroys the underlying session, which releases the
+    // PostgreSQL advisory lock bound to that connection.
+    await lease1?.release();
 
-      // gate2 now competes on an uncontested shard — it must succeed.
-      const lease2 = await gate2.acquire(signal);
-      try {
-        expect(lease2).not.toBe(null);
-      } finally {
-        await lease2?.release();
-      }
+    // gate2 now competes on an uncontested shard — it must succeed.
+    const lease2 = await gate2.acquire(signal);
+    try {
+      expect(lease2).not.toBe(null);
+    } finally {
+      await lease2?.release();
     }
-  );
+  });
 });

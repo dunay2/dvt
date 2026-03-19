@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest';
-
 import type { WorkflowEngine, WorkflowEngineDeps } from '@dvt/engine';
+import { describe, it, expect } from 'vitest';
 
 import { createWorkflowEngine } from '../../../src/application/services/WorkflowEngineFactory.js';
 
