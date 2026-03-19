@@ -5,8 +5,9 @@
  * internal domain files get the authoritative definition without importing
  * directly from the contracts package at every call site.
  *
- * Only planner-internal types (ResolvedPolicies, PlannerInputEnvelopeV2
- * pre-normalization form, NormalizedPlannerInput) are defined locally.
+ * Only planner-internal types (PlannerInputEnvelopeV2 pre-normalization form,
+ * NormalizedPlannerInput) are defined locally. ResolvedPolicies is now a
+ * boundary type in @dvt/contracts — re-exported here for internal use.
  */
 
 import type {
@@ -25,6 +26,7 @@ export type {
   GraphNode,
   PlanCore,
   PlannerSelection,
+  ResolvedPolicies,
   StepKind,
 } from '@dvt/contracts';
 
@@ -32,23 +34,6 @@ export type {
 export const DBT_MODEL = 'DBT_MODEL';
 export const DBT_TEST = 'DBT_TEST';
 export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
-
-/**
- * Planner-internal resolved policy state.
- *
- * Derived from PlannerPolicyClassSet by resolvePolicies().
- * backoffMs is always 0 at the planner boundary — the adapter owns backoff strategy.
- */
-export interface ResolvedPolicies {
-  stepTimeoutMs?: number;
-  retries?: {
-    maxAttempts: number;
-    backoffMs: number;
-  };
-  concurrency?: {
-    maxInFlight: number;
-  };
-}
 
 /**
  * Planner-internal raw input envelope (pre-normalization).

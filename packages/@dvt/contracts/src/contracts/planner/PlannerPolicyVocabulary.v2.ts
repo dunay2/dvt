@@ -160,6 +160,27 @@ export interface AdapterPolicyMapper<TRetry, TTimeout, TConcurrency> {
   mapConcurrency(policy: ConcurrencyPolicy): TConcurrency;
 }
 
+// ── Resolved policy seam ─────────────────────────────────────────────────────
+
+/**
+ * Resolved policy state for a single step, produced by the planner after
+ * mapping `PlannerPolicyClassSet` to runtime-neutral execution parameters.
+ *
+ * This is the type consumed by `StepFactory` implementers. It represents
+ * what the planner has decided — not what the adapter will enforce. The
+ * adapter owns backoff strategy; `backoffMs` is always 0 at this boundary.
+ */
+export interface ResolvedPolicies {
+  stepTimeoutMs?: number;
+  retries?: {
+    maxAttempts: number;
+    backoffMs: number;
+  };
+  concurrency?: {
+    maxInFlight: number;
+  };
+}
+
 // ── Executability result integration ─────────────────────────────────────────
 
 /**

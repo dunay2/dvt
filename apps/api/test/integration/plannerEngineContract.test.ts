@@ -16,9 +16,8 @@ import {
   type RunEventInput,
 } from '@dvt/engine';
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
-import type { IObservability } from '@dvt/observability';
-import observabilityPkg from '@dvt/observability';
-import { Planner, type ExecutionPlanV2 } from '@dvt/planner';
+import { createNoopObservability } from '@dvt/observability';
+import { PlannerFacade, type ExecutionPlanV2 } from '@dvt/planner';
 
 function plannerOutputToEnginePlan(plannerPlan: ExecutionPlanV2): ExecutionPlan {
   return {
@@ -79,9 +78,6 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
   const clock = new SequenceClock('2026-03-01T00:00:00.000Z');
-  const { createNoopObservability } = observabilityPkg as {
-    createNoopObservability: () => IObservability;
-  };
 
   const mockAdapter = new MockAdapter({
     stateStore: store,
@@ -166,7 +162,7 @@ function makeStepEvent(
 }
 
 await test('planner -> engine: full lifecycle with 3-step DAG', async () => {
-  const planner = new Planner();
+  const planner = new PlannerFacade();
   const { plan: plannerPlan } = await planner.buildPlan({
     nodes: [
       { nodeId: 'staging.orders', resourceType: 'model', dependsOn: [] },
@@ -254,7 +250,7 @@ await test('planner -> engine: full lifecycle with 3-step DAG', async () => {
 });
 
 await test('planner planId is deterministic for identical input', async () => {
-  const planner = new Planner();
+  const planner = new PlannerFacade();
   const input = {
     nodes: [
       { nodeId: 'a', resourceType: 'model', dependsOn: [] as readonly string[] },
@@ -271,7 +267,7 @@ await test('planner planId is deterministic for identical input', async () => {
 });
 
 await test('planner step fields remain compatible with engine step consumption', async () => {
-  const planner = new Planner();
+  const planner = new PlannerFacade();
   const { plan } = await planner.buildPlan({
     nodes: [
       { nodeId: 'step-a', resourceType: 'model', dependsOn: [] },
@@ -304,7 +300,7 @@ await test('planner step fields remain compatible with engine step consumption',
 });
 
 await test('bridge preserves planner planId and step order', async () => {
-  const planner = new Planner();
+  const planner = new PlannerFacade();
   const { plan: plannerPlan } = await planner.buildPlan({
     nodes: [
       { nodeId: 'x', resourceType: 'model', dependsOn: [] },
@@ -326,7 +322,7 @@ await test('bridge preserves planner planId and step order', async () => {
 });
 
 await test('planner output still documents current schema drift against engine metadata', async () => {
-  const planner = new Planner();
+  const planner = new PlannerFacade();
   const { plan } = await planner.buildPlan({
     nodes: [{ nodeId: 'solo', resourceType: 'model', dependsOn: [] }],
     selection: { selectedNodeIds: ['solo'] },

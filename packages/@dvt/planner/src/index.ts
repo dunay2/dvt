@@ -1,8 +1,25 @@
-// PlannerFacade is the sole public entry point.
+// ── Stable public boundary ────────────────────────────────────────────────────
+//
+// PlannerFacade is the sole public entry point for the planner bounded context.
 // The domain Planner is intentionally not exported — use PlannerFacade.
+//
+// Governing: ADR-0034, ADR-0035, planner-slice3-physical-reorganization-plan.md
+//
 export { PlannerFacade, type PlannerFacadeOptions } from './application/PlannerFacade.js';
 
-// Canonical planner boundary types — authoritative source is @dvt/contracts.
+export type { StepFactory } from './domain/stepFactory/StepFactory.js';
+export type { PlannerLimits } from './domain/limits.js';
+export type { IArtifactResolver } from './ports/IArtifactResolver.js';
+export { PlannerError, PlannerErrorCode } from './domain/errors.js';
+
+// ── Transitional contract re-exports ─────────────────────────────────────────
+//
+// These types are planner boundary contracts. Their canonical import home is
+// @dvt/contracts. Re-exports here are compatibility aliases while downstream
+// consumers migrate to the canonical path.
+//
+// DO NOT add new contract re-exports here. Import from @dvt/contracts directly.
+//
 export type {
   DbtManifestLike,
   ExecutionPlanV2,
@@ -14,23 +31,21 @@ export type {
   PlannerBuildResultV2,
   PlannerInputEnvelopeV2,
   PlannerSelection,
+  ResolvedPolicies,
   StepKind,
 } from '@dvt/contracts';
 
-// Backward-compatible alias for consumers that imported ExecutionPlan from @dvt/planner.
+// Backward-compatible alias — deprecated, migrate to ExecutionPlanV2 from @dvt/contracts.
 export type { ExecutionPlanV2 as ExecutionPlan } from '@dvt/contracts';
 
-// Planner-internal type: exposed because StepFactory implementers need it.
-export type { ResolvedPolicies } from './domain/types.js';
-
-export type { StepFactory } from './domain/stepFactory/StepFactory.js';
-
-export { PlannerError, PlannerErrorCode } from './domain/errors.js';
-
-export type { PlannerLimits } from './domain/limits.js';
-export type { PlannerMetrics } from './domain/metrics.js';
-
-export type { IArtifactResolver } from './ports/IArtifactResolver.js';
+// ── Artifact concern — to be extracted (Slice 3 Phase 3) ─────────────────────
+//
+// The following exports belong to the artifact bounded context, not to the
+// planner boundary. They remain here during the transition period while a
+// dedicated artifact owner package is established (ADR-0034).
+//
+// DO NOT add new artifact exports here.
+//
 export type { ICompiledCodeStorage } from './ports/ICompiledCodeStorage.js';
 export { computeSha256 } from './compiledCode/sha256.js';
 export {
