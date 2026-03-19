@@ -16,10 +16,15 @@
  */
 import { z } from 'zod';
 
+import type { ExecutionPlanV2, PlanCore } from './contracts/planner/ExecutionPlan.v2.js';
 import {
   PlannerPolicyClassSetSchema,
   type PlannerPolicyClassSetSchemaT,
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+import {
+  CURRENT_EXECUTION_PLAN_VERSION,
+  SUPPORTED_EXECUTION_PLAN_VERSIONS,
+} from './contracts/planner/PlanVersion.v1.js';
 
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
@@ -247,6 +252,8 @@ export const ExecuteStepResultSchema = z.object({
 
 const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 
+export const PlanVersionSchema = z.enum(SUPPORTED_EXECUTION_PLAN_VERSIONS);
+
 export const PlannerSelectionSchema = z
   .object({
     selectedNodeIds: z.array(z.string().min(1)),
@@ -294,11 +301,18 @@ export const ExecutionStepV2Schema = z
   })
   .strict();
 
-export const PlanCoreSchema = z
+const ExecutionPlanObservabilitySchema = z
+  .object({
+    tags: z.record(z.string(), z.string()).optional(),
+    extra: z.record(z.string(), z.unknown()).optional(),
+  })
+  .catchall(z.unknown())
+  .optional();
+const CurrentPlanCoreSchema = z
   .object({
     metadata: z
       .object({
-        planVersion: z.literal('2.3'),
+        planVersion: z.literal(CURRENT_EXECUTION_PLAN_VERSION),
         inputHashSha256: HexSha256Schema,
       })
       .strict(),
@@ -306,23 +320,29 @@ export const PlanCoreSchema = z
   })
   .strict();
 
-export const ExecutionPlanV2Schema = PlanCoreSchema.extend({
+const CurrentExecutionPlanV2Schema = CurrentPlanCoreSchema.extend({
   metadata: z
     .object({
-      planVersion: z.literal('2.3'),
+      planVersion: z.literal(CURRENT_EXECUTION_PLAN_VERSION),
       inputHashSha256: HexSha256Schema,
       planId: HexSha256Schema,
       createdAtIso: z.string().min(1),
     })
     .strict(),
-  observability: z
-    .object({
-      tags: z.record(z.string(), z.string()).optional(),
-      extra: z.record(z.string(), z.unknown()).optional(),
-    })
-    .catchall(z.unknown())
-    .optional(),
+  observability: ExecutionPlanObservabilitySchema,
 }).strict();
+
+export const PLAN_CORE_VERSIONED_SCHEMAS = {
+  [CURRENT_EXECUTION_PLAN_VERSION]: CurrentPlanCoreSchema,
+} as const;
+
+export const EXECUTION_PLAN_VERSIONED_SCHEMAS = {
+  [CURRENT_EXECUTION_PLAN_VERSION]: CurrentExecutionPlanV2Schema,
+} as const;
+
+export const PlanCoreSchema = CurrentPlanCoreSchema as z.ZodType<PlanCore>;
+
+export const ExecutionPlanV2Schema = CurrentExecutionPlanV2Schema as z.ZodType<ExecutionPlanV2>;
 
 export const PlannerInputEnvelopeV2Schema = z
   .object({
@@ -332,7 +352,7 @@ export const PlannerInputEnvelopeV2Schema = z
     selection: PlannerSelectionSchema,
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),
-    observability: ExecutionPlanV2Schema.shape.observability,
+    observability: ExecutionPlanObservabilitySchema,
     requestedBy: z.string().min(1).optional(),
     requestId: z.string().min(1).optional(),
     requestedAtIso: z.string().min(1).optional(),

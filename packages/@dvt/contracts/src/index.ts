@@ -10,6 +10,13 @@ export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/IStartRunIntentStore.v1.js';
 export * from './contracts/engine/StartRunIntentPolicy.v1.js';
 export { GRAPH_SOURCE_COMPATIBILITY_POLICY } from './contracts/planner/ExecutionPlan.v2.js';
+export {
+  CURRENT_EXECUTION_PLAN_VERSION,
+  EXECUTION_PLAN_VERSION_REGISTRY,
+  isSupportedExecutionPlanVersion,
+  SUPPORTED_EXECUTION_PLAN_VERSIONS,
+} from './contracts/planner/PlanVersion.v1.js';
+export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
 export type {
   DbtManifestLike,
   DbtManifestRef,
@@ -23,6 +30,8 @@ export type {
   PlannerInputEnvelopeV2,
   PlannerSelection,
   StepKind,
+  VersionedExecutionPlanV2,
+  VersionedPlanCore,
 } from './contracts/planner/ExecutionPlan.v2.js';
 export {
   ConcurrencyPolicySchema,

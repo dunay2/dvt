@@ -1,3 +1,5 @@
+import { CURRENT_EXECUTION_PLAN_VERSION } from '../../src/index.js';
+
 /**
  * Fixtures mínimos para validar el contrato normativo del planner (GAP-P0-02).
  */
@@ -78,7 +80,7 @@ export const VALID_PLANNER_INPUT_FIXTURE = {
 
 export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
   metadata: {
-    planVersion: '2.3',
+    planVersion: CURRENT_EXECUTION_PLAN_VERSION,
     inputHashSha256: HEX_64_A,
     planId: HEX_64_B,
     createdAtIso: '2026-02-26T22:01:00.000Z',
@@ -112,7 +114,7 @@ export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
   plan: VALID_EXECUTION_PLAN_V2_FIXTURE,
   canonicalPlanJson: JSON.stringify({
     metadata: {
-      planVersion: '2.3',
+      planVersion: CURRENT_EXECUTION_PLAN_VERSION,
       inputHashSha256: HEX_64_A,
     },
     steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
