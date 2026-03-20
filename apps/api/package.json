@@ -12,6 +12,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
     "pretest": "pnpm --filter \"dvt-api^...\" build",
     "test": "vitest run --config vitest.config.ts",
+    "pretest:integration": "pnpm --filter \"dvt-api^...\" build && pnpm build",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:arch": "depcruise src --config .dependency-cruiser.cjs"
   },
   "dependencies": {

@@ -2,7 +2,7 @@
 title: Canonical Doc Code Matrix
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-16
+last_reviewed: 2026-03-20
 planning_type: status
 ---
 
@@ -364,22 +364,40 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`G8`)
+- Current posture:
+  G8 is **Closed** and the protected runtime command/query surface now has a
+  dedicated OIDC plus PostgreSQL integration lane.
 - Primary code:
   [apps/api/src/app.ts](../../../apps/api/src/app.ts),
   [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),
   [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts),
+  [apps/api/src/entrypoints/http/listRunsRoute.ts](../../../apps/api/src/entrypoints/http/listRunsRoute.ts),
+  [apps/api/src/entrypoints/http/getRunRoute.ts](../../../apps/api/src/entrypoints/http/getRunRoute.ts),
+  [apps/api/src/entrypoints/http/getRunEventsRoute.ts](../../../apps/api/src/entrypoints/http/getRunEventsRoute.ts),
+  [apps/api/src/entrypoints/http/signalRunRoute.ts](../../../apps/api/src/entrypoints/http/signalRunRoute.ts),
+  [apps/api/src/infrastructure/auth/oidcAuthenticator.ts](../../../apps/api/src/infrastructure/auth/oidcAuthenticator.ts),
+  [apps/api/src/infrastructure/auth/jwksJwtVerifier.ts](../../../apps/api/src/infrastructure/auth/jwksJwtVerifier.ts),
   [apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts](../../../apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts)
 - Key tests:
   [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
   [apps/api/test/application/services/WorkflowEngineFactory.test.ts](../../../apps/api/test/application/services/WorkflowEngineFactory.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.test.ts),
-  [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts)
+  [apps/api/test/entrypoints/http/listRunsRoute.test.ts](../../../apps/api/test/entrypoints/http/listRunsRoute.test.ts),
+  [apps/api/test/entrypoints/http/getRunRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/getRunEventsRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunEventsRoute.test.ts),
+  [apps/api/test/entrypoints/http/signalRunRoute.test.ts](../../../apps/api/test/entrypoints/http/signalRunRoute.test.ts),
+  [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts),
+  [apps/api/test/integration/protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts)
+- Evidence:
+  [ED-20260320 - API runtime query integration](../../evidence/ED-20260320-api-runtime-query-integration.md)
 - Risk:
   [R-20260308 API auth runtime integration coverage](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
 - Verification:
   `pnpm --filter dvt-api typecheck`
   and
   `pnpm --filter dvt-api test`
+  and
+  `pnpm --filter dvt-api test:integration`
 
 ### Web frontend shell and client routing
 
