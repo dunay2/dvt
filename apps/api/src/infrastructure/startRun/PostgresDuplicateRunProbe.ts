@@ -1,6 +1,9 @@
 import type { Pool } from 'pg';
 
-import type { DuplicateRunProbe, DuplicateRunProbeResult } from '../../application/ports/DuplicateRunProbe.js';
+import type {
+  DuplicateRunProbe,
+  DuplicateRunProbeResult,
+} from '../../application/ports/DuplicateRunProbe.js';
 
 interface DuplicateMatchRow {
   kind: DuplicateRunProbeResult['kind'];
@@ -49,7 +52,7 @@ export class PostgresDuplicateRunProbe implements DuplicateRunProbe {
       `,
       values: [tenantId, runId],
       ...(this.deps.queryTimeoutMs && this.deps.queryTimeoutMs > 0
-        ? { signal: AbortSignal.timeout(this.deps.queryTimeoutMs) }
+        ? { signal: globalThis.AbortSignal.timeout(this.deps.queryTimeoutMs) }
         : {}),
     });
 

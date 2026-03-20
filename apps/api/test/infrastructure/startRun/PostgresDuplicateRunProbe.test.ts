@@ -6,7 +6,7 @@ class RecordingPool {
   public readonly queries: Array<{
     readonly text: string;
     readonly values: unknown[] | undefined;
-    readonly signal?: AbortSignal;
+    readonly signal?: unknown;
   }> = [];
 
   public constructor(private readonly rows: unknown[]) {}
@@ -14,7 +14,7 @@ class RecordingPool {
   public async query<T>(input: {
     text: string;
     values?: unknown[];
-    signal?: AbortSignal;
+    signal?: unknown;
   }): Promise<{ rows: T[] }> {
     this.queries.push(input);
     return { rows: this.rows as T[] };

@@ -1,5 +1,5 @@
-import type { BackpressureSnapshot, BackpressureStore } from '@dvt/delivery';
 import type { PostgresBackpressureSnapshotReader } from '@dvt/adapter-postgres';
+import type { BackpressureSnapshot, BackpressureStore } from '@dvt/delivery';
 
 export class RawSqlBackpressureStore implements BackpressureStore {
   public constructor(
