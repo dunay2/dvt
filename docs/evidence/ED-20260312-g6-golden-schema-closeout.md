@@ -150,6 +150,6 @@ pnpm --filter @dvt/traceability-service test:lineage:schema
 ## Traceability
 
 - Gap: G6 — OpenLineage mapping tests CI + schema pin
-- Tracker: [G6-AI-EXECUTION-TRACKER.md](../planning/gaps/G6-AI-EXECUTION-TRACKER.md)
+- Historical tracker: [G6-AI-EXECUTION-TRACKER.md](../archive/planning/gaps/G6-AI-EXECUTION-TRACKER.md)
 - Plan: [GAP_EXECUTION_PLANS.md](../planning/gaps/GAP_EXECUTION_PLANS.md)
 - Prior evidence: [ED-20260308 G6 US-G6.1](ED-20260308-g6-us-g6-1-facet-contract-surface.md), [ED-20260308 G6 US-G6.2](ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md)

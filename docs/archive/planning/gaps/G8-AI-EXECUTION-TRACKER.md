@@ -1,19 +1,22 @@
 ---
 title: G8 - AI Execution Tracker
-status: Active
+status: Archived
 owner: Delivery / Engineering
-last_reviewed: 2026-03-14
+last_reviewed: 2026-03-20
 planning_type: execution-plan
 ---
 
 # G8 - AI Execution Tracker
 
+Historical planning artifact retained for reference. `G8` is closed; active
+status lives in [Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md).
+
 Operational tracker for AI-assisted execution of the remaining `G8` work.
 
 ## Authority Rule
 
-- Canonical spec: [G8 Real Auth Final Spec](G8-REAL-AUTH-FINAL-SPEC.md)
-- Active status doc: [DVT+ - Gap Execution Plans](GAP_EXECUTION_PLANS.md)
+- Canonical spec: [G8 Real Auth Final Spec](../../../planning/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
+- Active status doc: [DVT+ - Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md)
 
 This file is not a second source of truth. Its job is narrower:
 
@@ -53,7 +56,7 @@ Update this section before any substantial implementation turn.
 3. Keep the current stage tied to one task at a time.
 4. Record the touched-files plan before implementation for the active stage.
 5. After each validation batch, append an execution-log entry with exact commands and pass/fail state.
-6. When a stage closes, sync this tracker, [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md), and affected status docs in the same change.
+6. When a stage closes, sync this tracker, [GAP_EXECUTION_PLANS.md](../../../planning/gaps/GAP_EXECUTION_PLANS.md), and affected status docs in the same change.
 
 ## Stage Detail
 

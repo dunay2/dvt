@@ -66,7 +66,6 @@ Concept anchors for this page:
 - [Planner Target State And Hardening Roadmap](proposals/planner-target-state-roadmap-20260320.md)
 - [Principal Architecture Review Execution Plan](proposals/principal-architecture-review-execution-plan-20260317.md)
 - [Repository Governance Proposal Set 2026-03-17](proposals/repository-governance-proposal-set-20260317.md)
-- [TS + ESM Monorepo — Audit and Migration Execution Plan](proposals/ts-esm-monorepo-audit-and-migration-20260318.md)
 
 ## Reviews
 

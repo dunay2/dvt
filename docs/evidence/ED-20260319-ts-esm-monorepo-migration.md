@@ -36,8 +36,9 @@ compatibility:
 
 ### Summary
 
-Slices M-01 through M-04 of the TS + ESM monorepo audit
-(`ts-esm-monorepo-audit-and-migration-20260318.md`) are now implemented.
+Slices M-01 through M-04 of the archived
+[TS + ESM monorepo audit](../archive/planning/proposals/ts-esm-monorepo-audit-and-migration-20260318.md)
+are now implemented.
 
 All 27 flagged issues (F-01 through F-27) are resolved or classified as
 intentionally deferred (M-05 — root project references, optional).

@@ -19,7 +19,7 @@ Related proposal set:
 
 - [Repository Governance Proposal Set](./repository-governance-proposal-set-20260317.md)
 - [Package / Module / Build Policy v2](./package-module-build-policy-v2-20260317.md)
-- [TS + ESM Monorepo Audit And Migration Execution Plan](./ts-esm-monorepo-audit-and-migration-20260318.md)
+- [TS + ESM Monorepo Audit And Migration Execution Plan](../../archive/planning/proposals/ts-esm-monorepo-audit-and-migration-20260318.md)
 
 ## Goal
 

@@ -54,7 +54,7 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
    - `InMemoryCompiledCodeStorage`
    - `NoopCompiledCodeStorage`
 3. `attachCompiledCodeRefs()` implemented and exported.
-   - [`packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts)
+   - [`packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts)
 4. Supporting tests exist for adapters and enrichment.
    - [`packages/@dvt/planner/test/compiledCode`](../../../packages/@dvt/planner/test/compiledCode)
 
@@ -74,7 +74,7 @@ Attach `compiledCodeRef` to execution flow to enable traceability/lineage withou
 3. Added unit tests for valid/invalid/absent patterns.
    - [`packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts)
 4. Added QA architecture review for static-noise reduction aligned with SOLID/DDD/Hexagonal principles.
-   - [`G4-T4-3-QA-ARCH-REVIEW.md`](G4-T4-3-QA-ARCH-REVIEW.md)
+   - [`docs/archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md`](../../archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md)
 
 ### Validation Notes
 
