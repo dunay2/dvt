@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.3.0](https://github.com/dunay2/dvt/compare/v4.2.2...v4.3.0) (2026-03-20)
+
+
+### Features
+
+* **adapters:** Pin archived terminal snapshots ([#525](https://github.com/dunay2/dvt/issues/525)) ([ef9efcf](https://github.com/dunay2/dvt/commit/ef9efcf30dd02bb3022ab9111dc5e174f1aaef6c))
+* **api:** Add raw SQL admission snapshot source ([#524](https://github.com/dunay2/dvt/issues/524)) ([6190a41](https://github.com/dunay2/dvt/commit/6190a415dacf462e7742832d8945fdedd7fe6a30))
+* **api:** Add runtime query routes and execution guards ([#517](https://github.com/dunay2/dvt/issues/517)) ([699ca7c](https://github.com/dunay2/dvt/commit/699ca7cbdfbb23d89b71373d134a9fa51bcbdb55))
+* **api:** Add startRun admission foundation ([#522](https://github.com/dunay2/dvt/issues/522)) ([1c52118](https://github.com/dunay2/dvt/commit/1c52118ae16e42211650023367e6e4c0f00853cd))
+* **contracts:** Complete planner Stage 1.1 boundary canonization ([#511](https://github.com/dunay2/dvt/issues/511)) ([e3c8e24](https://github.com/dunay2/dvt/commit/e3c8e243ff9f0c3b1268e7de38c8f41bec89a5aa))
+* **contracts:** Govern execution plan versioning ([#518](https://github.com/dunay2/dvt/issues/518)) ([90f445c](https://github.com/dunay2/dvt/commit/90f445c45f52c712e2e9fe8715ff4df4a8424889))
+* **state-store:** Add archive artifact helpers ([#523](https://github.com/dunay2/dvt/issues/523)) ([065ac4d](https://github.com/dunay2/dvt/commit/065ac4d090d71ba2e07b652a3a61b1d9b1254fff))
+
+
+### Bug Fixes
+
+* **state-store:** Harden archive lifecycle helper validation ([#521](https://github.com/dunay2/dvt/issues/521)) ([1d5fa74](https://github.com/dunay2/dvt/commit/1d5fa746bf04f2585e1a6317273661c77e69060e))
+
 ## [4.2.2](https://github.com/dunay2/dvt/compare/v4.2.1...v4.2.2) (2026-03-17)
 
 
