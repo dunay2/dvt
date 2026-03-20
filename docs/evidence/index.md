@@ -25,6 +25,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260316 - G7 closeout](ED-20260316-g7-closeout.md)
 - [ED-20260316 - G7.3 provider run-id reconciliation](ED-20260316-g7-provider-ref-reconciliation.md)
 - [ED-20260318 — Stage 1.1 Planner Canonicalization: Boundary Contract Slices](ED-20260318-stage-1-1-planner-canonicalization-boundary-contracts.md)
+- [ED-20260320 - API runtime query integration](ED-20260320-api-runtime-query-integration.md)
 - [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
 - [Evidence Doc: G3 IntentStore Postgres + Reconciler Worker](ED-20260304-g3-intentstore-postgres-reconciler.md)
 - [Evidence Doc: G5 canary local-docker](ED-20260312-g5-canary-local-docker.md)

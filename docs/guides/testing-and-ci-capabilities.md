@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-03-07
+last_reviewed: 2026-03-20
 ---
 
 # Testing and CI Capabilities
@@ -36,6 +36,8 @@ canonical command and source file for each one.
 | Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                        | [`package.json`](../../package.json)                                               |
 | Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |
 | Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |
+| API package tests                  | `pnpm --filter dvt-api test`                                               | `apps/api`                           | [`apps/api/package.json`](../../apps/api/package.json)                             |
+| API protected runtime integration  | `pnpm --filter dvt-api test:integration`                                   | `apps/api` OIDC + PostgreSQL runtime | [`apps/api/package.json`](../../apps/api/package.json)                             |
 | PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                                               | `@dvt/adapter-postgres`              | [`package.json`](../../package.json)                                               |
 | Temporal adapter unit tests        | `pnpm test:adapter-temporal`                                               | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                               |
 | Temporal adapter runtime closure   | `pnpm test:adapter-temporal` then `pnpm test:adapter-temporal:integration` | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                               |
@@ -130,6 +132,9 @@ These files are intended to become the canonical source of truth for:
   [`ADR-0001`](../adr/ADR-0001-temporal-integration-test-policy.md).
 - The GitHub workflows remain the authoritative merge gates even when the same command is runnable
   locally.
+- `pnpm --filter dvt-api test:integration` skips cleanly when `DATABASE_URL` or
+  `DVT_PG_URL` is absent; when configured it exercises the real API protected
+  runtime with JWKS-backed OIDC verification plus PostgreSQL authorization data.
 - In the agent sandbox used for this repository, `vitest`/`vite`/`esbuild`
   commands may fail with `spawn EPERM`; when that happens, re-run the same
   validation command with escalated execution before treating it as a real code

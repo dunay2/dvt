@@ -1,24 +1,14 @@
 ---
-title: DVT+ — Top 5 Architectural Gaps
-status: Draft
-owner: docs
-last_reviewed: 2026-03-19
+title: DVT+ - Top 5 Architectural Gaps (Corrected)
+status: Active
+owner: Architecture
+last_reviewed: 2026-03-20
 planning_type: proposal
 ---
 
----
+# DVT+ - Top 5 Architectural Gaps
 
-title: DVT+ — Top 5 Architectural Gaps (Corrected)
-status: Active
-owner: Architecture
-date: 2026-03-19
-supersedes: dvt_top_5_gaps.md (external draft)
-
----
-
-# DVT+ — Top 5 Architectural Gaps
-
-**Repository:** `f:/segundodvt/dvt`
+**Repository:** `c:/dvt`
 **Primary review source:** [`docs/reviews/DVT+_Architectural_Review_20260319.md`](./DVT+_Architectural_Review_20260319.md)
 **Gap register:** [`docs/reviews/prioritized-gaps-20260319.md`](./prioritized-gaps-20260319.md)
 **Delivery status:** [`docs/architecture/system-delivery-status.md`](../architecture/system-delivery-status.md)
@@ -29,17 +19,30 @@ supersedes: dvt_top_5_gaps.md (external draft)
 
 These are the 5 most critical currently open gaps based on the current repo state, the architectural review of 2026-03-19, and the gap register.
 
-| #   | Gap                                                                             | Why it matters                                                                                                                 | Fix direction                                                                                                  |
-| --- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| 1   | Query side of the API is absent                                                 | `POST /runs` exists; `GET /runs`, `GET /runs/:id`, and `POST /runs/:id/signal` do not — the CQRS read side is missing          | Build the query slice following the existing `StartRunAuthorizedFacade` pattern                                |
-| 2   | Business-level recovery flow is undefined                                       | Technical retries exist at the Temporal level; operator-grade recovery with lineage and deterministic plan generation does not | Introduce a `RecoverRunUseCase` that generates a new plan from failed steps and creates a derived run          |
-| 3   | `planVersion` is a string literal type — version evolution is a breaking change | Any plan version bump requires a contracts package major version bump and big-bang cutover                                     | Replace the string literal with a discriminated union, add a runtime compatibility matrix, and write the ADR   |
-| 4   | Outbox and event pipeline have no backpressure controls                         | Under burst load, outbox lag grows unboundedly and snapshot staleness is invisible                                             | Add backpressure policy and admission control as infrastructure and API-layer concerns — not inside the engine |
-| 5   | Event log has no retention, archival, or lifecycle model                        | Append-only state without lifecycle management becomes an operational liability at Phase 3 scale                               | Define hot/warm/cold tiers with archival to S3; do not compact or mutate the event log                         |
+<!-- markdownlint-disable MD060 -->
+
+| #   | Gap                                                                             | Why it matters                                                                                                                                                   | Fix direction                                                                                                  |
+| --- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1   | API query-side claim is no longer current                                       | `apps/api` already ships `GET /runs`, `GET /runs/:id`, `GET /runs/:id/events`, and `POST /runs/:id/signal`; the real API gap was integration proof and doc drift | Treat the API query slice as delivered, and track residual hardening through status, evidence, and risk docs   |
+| 2   | Business-level recovery flow is undefined                                       | Technical retries exist at the Temporal level; operator-grade recovery with lineage and deterministic plan generation does not                                   | Introduce a `RecoverRunUseCase` that generates a new plan from failed steps and creates a derived run          |
+| 3   | `planVersion` is a string literal type — version evolution is a breaking change | Any plan version bump requires a contracts package major version bump and big-bang cutover                                                                       | Replace the string literal with a discriminated union, add a runtime compatibility matrix, and write the ADR   |
+| 4   | Outbox and event pipeline have no backpressure controls                         | Under burst load, outbox lag grows unboundedly and snapshot staleness is invisible                                                                               | Add backpressure policy and admission control as infrastructure and API-layer concerns — not inside the engine |
+| 5   | Event log has no retention, archival, or lifecycle model                        | Append-only state without lifecycle management becomes an operational liability at Phase 3 scale                                                                 | Define hot/warm/cold tiers with archival to S3; do not compact or mutate the event log                         |
+
+<!-- markdownlint-enable MD060 -->
 
 ---
 
-## 1. Query side of the API is absent
+## 1. API query-side correction and remaining concern
+
+Update 2026-03-20: the original claim in this section is superseded by shipped
+code. `apps/api/src/app.ts` already registers `POST /runs/start`, `GET /runs`,
+`GET /runs/:runId`, `GET /runs/:runId/events`, and
+`POST /runs/:runId/signal`. Dedicated route tests exist, and the remaining API
+hardening item was the executable OIDC plus PostgreSQL lane now provided by
+`apps/api/test/integration/protectedRuntime.integration.test.ts` and
+`pnpm --filter dvt-api test:integration`. Treat the legacy text below as
+historical review context, not current delivery status.
 
 ### Accurate problem statement
 
