@@ -63,6 +63,7 @@ Concept anchors for this page:
 - [Gap 5 Sequence And Module Design](proposals/gap-5-sequence-and-module-design-20260319.md)
 - [Package Module Build Policy v2](proposals/package-module-build-policy-v2-20260317.md)
 - [Phase 2 Architectural Debt Roadmap](proposals/phase2-arch-debt-roadmap-20260315.md)
+- [Planner Target State And Hardening Roadmap](proposals/planner-target-state-roadmap-20260320.md)
 - [Principal Architecture Review Execution Plan](proposals/principal-architecture-review-execution-plan-20260317.md)
 - [Repository Governance Proposal Set 2026-03-17](proposals/repository-governance-proposal-set-20260317.md)
 - [TS + ESM Monorepo — Audit and Migration Execution Plan](proposals/ts-esm-monorepo-audit-and-migration-20260318.md)
@@ -92,6 +93,8 @@ Concept anchors for this page:
 - [Generated Code State](status/generated-code-state.md)
 - [Generated Spec Traceability](status/generated-spec-traceability.md)
 - [Governance Document And Rule Inventory](status/governance-document-rule-inventory.md)
+- [Planner Current State Assessment](status/planner-current-state-assessment-20260320.md)
+- [Planner Local Doc Triage](status/planner-local-doc-triage-20260320.md)
 - [Release Please Continuous Mode Status](status/release-please-continuous.md)
 
 ## Reference

@@ -39,6 +39,9 @@ Concept anchors for this page:
 - `docs/planning/roadmap/gap-5-executive-delivery-roadmap-20260319.md`
   Classification: subsystem roadmap
   Use it for: Gap 5 delivery sequencing and execution gates
+- `docs/planning/proposals/planner-target-state-roadmap-20260320.md`
+  Classification: subsystem roadmap proposal
+  Use it for: planner target-state closure sequencing after the current-state assessment baseline
 - `docs/architecture/system-delivery-status.md`
   Classification: status board
   Use it for: what is true now in implementation
@@ -74,6 +77,7 @@ Repository-wide planning should currently be read in this order:
 Current subsystem roadmaps worth consulting:
 
 - [Gap 5 Executive Delivery Roadmap](gap-5-executive-delivery-roadmap-20260319.md)
+- [Planner Target State And Hardening Roadmap](../proposals/planner-target-state-roadmap-20260320.md)
 
 ## Maintenance Rule
 
