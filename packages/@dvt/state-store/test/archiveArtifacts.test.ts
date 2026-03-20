@@ -2,6 +2,7 @@ import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildArchivedTerminalSnapshot,
   buildArchiveUnitManifest,
   buildPinnedTerminalSnapshot,
   calculateArchiveEventChecksum,
@@ -155,6 +156,43 @@ describe('archiveArtifacts', () => {
     });
   });
 
+  it('builds an archived terminal snapshot record for persistence', () => {
+    const snapshot: WorkflowSnapshot = {
+      runId: 'run-terminal',
+      status: 'COMPLETED',
+      startedAt: '2026-03-19T00:00:00.000Z',
+      completedAt: '2026-03-19T01:00:00.000Z',
+      paused: false,
+      cancelling: false,
+      gatewayDecisions: {},
+      steps: {},
+    };
+    const events = [
+      makeEvent({ runId: 'run-terminal', runSeq: 1 }),
+      makeEvent({ runId: 'run-terminal', runSeq: 2 }),
+    ] satisfies readonly EventEnvelope[];
+
+    const pinned = buildPinnedTerminalSnapshot({ snapshot, events });
+
+    expect(
+      buildArchivedTerminalSnapshot({
+        tenantId: ' tenant-a ',
+        archiveUnitKey: 'tb07_2026_03_19',
+        archivedAtIso: '2026-03-20T00:00:00.000Z',
+        pinned,
+      })
+    ).toEqual({
+      tenantId: 'tenant-a',
+      archiveUnitKey: 'tb07_2026_03_19',
+      archivedAt: '2026-03-20T00:00:00.000Z',
+      runId: 'run-terminal',
+      status: 'COMPLETED',
+      lastRunSeq: 2,
+      eventChecksumSha256: calculateArchiveEventChecksum(events),
+      snapshot,
+    });
+  });
+
   it('rejects pinned snapshots for non-terminal runs', () => {
     const snapshot: WorkflowSnapshot = {
       runId: 'run-non-terminal',
@@ -218,6 +256,59 @@ describe('archiveArtifacts', () => {
         ],
       })
     ).toThrow(/ARCHIVE_TERMINAL_SNAPSHOT_RUN_SEQ_INVALID/);
+  });
+
+  it('rejects archived terminal snapshots without a tenant id', () => {
+    const pinned = buildPinnedTerminalSnapshot({
+      snapshot: {
+        runId: 'run-terminal',
+        status: 'FAILED',
+        startedAt: '2026-03-19T00:00:00.000Z',
+        completedAt: '2026-03-19T00:10:00.000Z',
+        paused: false,
+        cancelling: false,
+        gatewayDecisions: {},
+        steps: {},
+      },
+      events: [makeEvent({ runId: 'run-terminal', runSeq: 1 })],
+    });
+
+    expect(() =>
+      buildArchivedTerminalSnapshot({
+        tenantId: '   ',
+        archiveUnitKey: 'tb07_2026_03_19',
+        archivedAtIso: '2026-03-20T00:00:00.000Z',
+        pinned,
+      })
+    ).toThrow(/ARCHIVE_TERMINAL_SNAPSHOT_TENANT_ID_REQUIRED/);
+  });
+
+  it('rejects archived terminal snapshots with malformed checksums', () => {
+    const pinned = buildPinnedTerminalSnapshot({
+      snapshot: {
+        runId: 'run-terminal',
+        status: 'CANCELLED',
+        startedAt: '2026-03-19T00:00:00.000Z',
+        completedAt: '2026-03-19T00:10:00.000Z',
+        paused: false,
+        cancelling: false,
+        gatewayDecisions: {},
+        steps: {},
+      },
+      events: [makeEvent({ runId: 'run-terminal', runSeq: 1 })],
+    });
+
+    expect(() =>
+      buildArchivedTerminalSnapshot({
+        tenantId: 'tenant-a',
+        archiveUnitKey: 'tb07_2026_03_19',
+        archivedAtIso: '2026-03-20T00:00:00.000Z',
+        pinned: {
+          ...pinned,
+          eventChecksumSha256: 'not-a-sha256',
+        },
+      })
+    ).toThrow(/ARCHIVE_TERMINAL_SNAPSHOT_CHECKSUM_INVALID/);
   });
 });
 

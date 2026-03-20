@@ -138,16 +138,16 @@ Suggested minimum:
 
 ## Checklist
 
-| Item                                  | Status  | Notes |
-| ------------------------------------- | ------- | ----- |
-| Archive unit schema defined           | pending |       |
-| Catalog tables defined                | pending |       |
-| Exporter implemented                  | pending |       |
-| Manifest generated                    | pending |       |
-| Async verifier implemented            | pending |       |
-| Terminal snapshot pinning implemented | pending |       |
-| Metrics emitted                       | pending |       |
-| Docs and evidence updated             | pending |       |
+| Item                                  | Status  | Notes               |
+| ------------------------------------- | ------- | ------------------- |
+| Archive unit schema defined           | done    | delivered in `main` |
+| Catalog tables defined                | done    | delivered in `main` |
+| Exporter implemented                  | pending |                     |
+| Manifest generated                    | done    | delivered in `main` |
+| Async verifier implemented            | pending |                     |
+| Terminal snapshot pinning implemented | done    | delivered in `main` |
+| Metrics emitted                       | pending |                     |
+| Docs and evidence updated             | done    | closeouts recorded  |
 
 ## PR Resolution Table
 

@@ -1,12 +1,20 @@
 /**
  * @file packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
+ * @baseline ADR-0037: Run Event Lifecycle Archival, Verification, and Restore Model
  * @decision Run snapshot persistence extracted from PostgresStateStoreAdapter
+ * @decision Terminal archive pinning metadata lives on run_snapshots as warm derived state
  * @consequence Single-responsibility class for run_snapshots table operations
  * @version 1.0.0
  * @date 2026-03-15
  */
 import { applyRunEvent } from '@dvt/run-domain';
+import {
+  buildArchivedTerminalSnapshot,
+  type ArchivedTerminalSnapshot,
+  type TerminalRunStatus,
+  type TerminalSnapshotPinStore,
+} from '@dvt/state-store';
 import type { PoolClient } from 'pg';
 
 import { quoteIdentifier } from './sqlUtils.js';
@@ -18,6 +26,13 @@ import type { EventEnvelope, RunId, WorkflowSnapshot } from './types.js';
 
 interface SnapshotRow {
   snapshot: WorkflowSnapshot;
+}
+
+interface PinnedSnapshotRow extends SnapshotRow {
+  last_run_seq: number | string;
+  archive_unit_key: string | null;
+  event_checksum_sha256: string | null;
+  archived_at: Date | string | null;
 }
 
 interface EventPayloadRow {
@@ -32,7 +47,7 @@ interface MaxSeqRow {
 // PostgresRunSnapshotStore
 // ---------------------------------------------------------------------------
 
-export class PostgresRunSnapshotStore {
+export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
   constructor(
     private readonly schema: string,
     private readonly now: () => string,
@@ -53,6 +68,101 @@ export class PostgresRunSnapshotStore {
       )
     );
     return result.rows[0]?.snapshot ?? null;
+  }
+
+  async pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<void> {
+    const record = buildArchivedTerminalSnapshot({
+      tenantId: snapshot.tenantId,
+      archiveUnitKey: snapshot.archiveUnitKey,
+      archivedAtIso: snapshot.archivedAt,
+      pinned: snapshot,
+    });
+
+    await this.withTransaction(async (client) => {
+      await this.requireRunOwnership(client, record.tenantId, record.runId);
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (
+            run_id,
+            snapshot,
+            last_run_seq,
+            updated_at,
+            archive_unit_key,
+            event_checksum_sha256,
+            archived_at
+          )
+          VALUES ($1, $2::jsonb, $3, $4::timestamptz, $5, $6, $7::timestamptz)
+          ON CONFLICT (run_id) DO UPDATE SET
+            snapshot = EXCLUDED.snapshot,
+            last_run_seq = EXCLUDED.last_run_seq,
+            updated_at = EXCLUDED.updated_at,
+            archive_unit_key = EXCLUDED.archive_unit_key,
+            event_checksum_sha256 = EXCLUDED.event_checksum_sha256,
+            archived_at = EXCLUDED.archived_at
+        `,
+        [
+          record.runId,
+          JSON.stringify(record.snapshot),
+          record.lastRunSeq,
+          this.now(),
+          record.archiveUnitKey,
+          record.eventChecksumSha256,
+          record.archivedAt,
+        ]
+      );
+    });
+  }
+
+  async getPinnedTerminalSnapshot(
+    tenantId: string,
+    runId: RunId
+  ): Promise<ArchivedTerminalSnapshot | null> {
+    const result = await this.withClient((client) =>
+      client.query<PinnedSnapshotRow>(
+        `
+          SELECT
+            s.snapshot,
+            s.last_run_seq,
+            s.archive_unit_key,
+            s.event_checksum_sha256,
+            s.archived_at
+          FROM ${quoteIdentifier(this.schema)}.run_snapshots s
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
+          WHERE m.tenant_id = $1
+            AND s.run_id = $2
+            AND s.archive_unit_key IS NOT NULL
+        `,
+        [tenantId, runId]
+      )
+    );
+
+    const row = result.rows[0];
+    if (
+      !row ||
+      row.archive_unit_key === null ||
+      row.event_checksum_sha256 === null ||
+      row.archived_at === null
+    ) {
+      return null;
+    }
+
+    const status = row.snapshot.status;
+    if (!isTerminalRunStatus(status)) {
+      throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_STATUS_INVALID');
+    }
+
+    return buildArchivedTerminalSnapshot({
+      tenantId,
+      archiveUnitKey: row.archive_unit_key,
+      archivedAtIso: new Date(row.archived_at).toISOString(),
+      pinned: {
+        runId,
+        status,
+        lastRunSeq: Number(row.last_run_seq),
+        eventChecksumSha256: row.event_checksum_sha256,
+        snapshot: row.snapshot,
+      },
+    });
   }
 
   /**
@@ -191,4 +301,27 @@ export class PostgresRunSnapshotStore {
       steps: {},
     };
   }
+
+  private async requireRunOwnership(
+    client: PoolClient,
+    tenantId: string,
+    runId: string
+  ): Promise<void> {
+    const metaResult = await client.query<{ run_id: string }>(
+      `
+        SELECT run_id
+        FROM ${quoteIdentifier(this.schema)}.run_metadata
+        WHERE tenant_id = $1 AND run_id = $2
+        LIMIT 1
+      `,
+      [tenantId, runId]
+    );
+    if (!metaResult.rows[0]) {
+      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    }
+  }
+}
+
+function isTerminalRunStatus(status: string): status is TerminalRunStatus {
+  return status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
 }

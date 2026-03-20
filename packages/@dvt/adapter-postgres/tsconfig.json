@@ -13,7 +13,9 @@
       "@dvt/run-domain": ["packages/@dvt/run-domain/dist/index.d.ts"],
       "@dvt/run-domain/*": ["packages/@dvt/run-domain/dist/*"],
       "@dvt/engine": ["packages/@dvt/engine/dist/index.d.ts"],
-      "@dvt/engine/*": ["packages/@dvt/engine/dist/*"]
+      "@dvt/engine/*": ["packages/@dvt/engine/dist/*"],
+      "@dvt/state-store": ["packages/@dvt/state-store/dist/index.d.ts"],
+      "@dvt/state-store/*": ["packages/@dvt/state-store/dist/*"]
     }
   },
   "include": ["src"],
