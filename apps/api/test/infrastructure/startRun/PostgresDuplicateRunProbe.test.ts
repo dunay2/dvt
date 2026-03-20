@@ -16,7 +16,11 @@ class RecordingPool {
     values?: unknown[];
     signal?: unknown;
   }): Promise<{ rows: T[] }> {
-    this.queries.push(input);
+    this.queries.push({
+      text: input.text,
+      values: input.values,
+      signal: input.signal,
+    });
     return { rows: this.rows as T[] };
   }
 }

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
-import type { Env } from '../../src/plugins/env.js';
 import { buildObservability } from '../../src/plugins/observability.js';
 
-function baseEnv(overrides?: Partial<Env>): Env {
+type ObservabilityEnv = Parameters<typeof buildObservability>[0];
+
+function baseEnv(overrides?: Partial<ObservabilityEnv>): ObservabilityEnv {
   return {
     NODE_ENV: 'test',
     PORT: 3000,
@@ -14,6 +15,12 @@ function baseEnv(overrides?: Partial<Env>): Env {
     DVT_PG_SCHEMA: 'dvt',
     DVT_PG_STATEMENT_TIMEOUT_MS: 0,
     DVT_PG_QUERY_TIMEOUT_MS: 0,
+    DVT_START_RUN_BACKPRESSURE_MODE: 'off',
+    DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT: 100,
+    DVT_START_RUN_MAX_OUTBOX_LAG_MS: 300000,
+    DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS: 604800000,
+    DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS: 1000,
+    DVT_START_RUN_RETRY_AFTER_SECONDS: 30,
     DVT_OUTBOX_SHARD_COUNT: 1,
     DVT_INTENT_RECONCILER_ENABLED: false,
     DVT_INTENT_RECONCILER_INTERVAL_MS: 30000,
