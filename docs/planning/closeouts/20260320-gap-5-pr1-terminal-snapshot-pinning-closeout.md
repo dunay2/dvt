@@ -95,6 +95,7 @@ write path instead of a placeholder.
   - `packages/@dvt/adapter-postgres/test/*`
   - `packages/@dvt/adapter-postgres/package.json`
   - `packages/@dvt/adapter-postgres/tsconfig.json`
+  - `tsconfig.json`
   - `pnpm-lock.yaml`
   - `docs/planning/proposals/gap-5-pr1-minimal-usable-archival-20260319.md`
   - `docs/planning/closeouts/20260320-gap-5-pr1-terminal-snapshot-pinning-closeout.md`
@@ -186,6 +187,9 @@ write path instead of a placeholder.
 - `packages/@dvt/adapter-postgres/tsconfig.json`
   Added path mapping for `@dvt/state-store` so build resolution matches the
   workspace dependency edge.
+- `tsconfig.json`
+  Added the root workspace path mapping for `@dvt/state-store` so the shared
+  ESLint/TypeScript resolver used in CI can resolve the new package import.
 - `pnpm-lock.yaml`
   Recorded the new workspace dependency edge after `pnpm install`.
 - `docs/planning/proposals/gap-5-pr1-minimal-usable-archival-20260319.md`
@@ -221,6 +225,8 @@ write path instead of a placeholder.
 - `pnpm exec eslint packages/@dvt/state-store/src/index.ts packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts packages/@dvt/state-store/test/archiveArtifacts.test.ts packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts packages/@dvt/adapter-postgres/src/index.ts packages/@dvt/adapter-postgres/src/types.ts packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts`
   - Passed
 - `pnpm exec prettier --check packages/@dvt/adapter-postgres/package.json packages/@dvt/adapter-postgres/tsconfig.json packages/@dvt/state-store/src/index.ts packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts packages/@dvt/state-store/test/archiveArtifacts.test.ts packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts packages/@dvt/adapter-postgres/src/index.ts packages/@dvt/adapter-postgres/src/types.ts packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts docs/planning/proposals/gap-5-pr1-minimal-usable-archival-20260319.md docs/planning/closeouts/20260320-gap-5-pr1-terminal-snapshot-pinning-closeout.md pnpm-lock.yaml`
+  - Passed
+- `pnpm exec prettier --check tsconfig.json`
   - Passed
 - `pnpm exec markdownlint-cli2 docs/planning/proposals/gap-5-pr1-minimal-usable-archival-20260319.md docs/planning/closeouts/20260320-gap-5-pr1-terminal-snapshot-pinning-closeout.md --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
   - Passed
