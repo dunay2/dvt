@@ -42,7 +42,7 @@ flowchart TD
     S07["S07\nOpenLineage Job Naming Fix"]
     S08["S08\nPlan Storage ADR + PostgresPlanStore"]
     S09["S09\nRetry Ownership ADR"]
-    S10["S10\ndbt Manifest Typed Input"]
+    S10["S10\nTyped Graph-Source Boundary"]
     S11["S11\nILineageSink.jobFacets Tighten"]
 
     S01 --> S02
@@ -65,19 +65,19 @@ flowchart TD
 
 ## Slice Catalog
 
-| Slice | Problem                                                        | Main paths                                                                             | Size | Risk   |
-| ----- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---- | ------ |
-| `S01` | stale public contract surfaces and dead architecture artifacts | `@dvt/contracts`, `@dvt/engine`                                                        | S    | Low    |
-| `S02` | `IRunStateStore` mixes write, read, and maintenance roles      | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`, `@dvt/delivery`, `apps/api`  | M    | Medium |
-| `S03` | `WorkflowEngine` still owns too much start-run orchestration   | `@dvt/engine`                                                                          | M    | Medium |
-| `S04` | provider ref reconciliation is fail-soft but under-modeled     | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`                               | M    | Medium |
-| `S05` | event payload shape lacks explicit versioning                  | `@dvt/contracts`, `@dvt/engine`, adapters, projectors                                  | M    | Medium |
-| `S06` | schema migrations have no applied-version table                | `@dvt/adapter-postgres`                                                                | S    | Low    |
-| `S07` | lineage job naming and sink shape need tightening              | `@dvt/traceability-service`, lineage workers                                           | S    | Low    |
-| `S08` | plan storage is implicit and provider-side only                | `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, planner/api wiring | L    | High   |
-| `S09` | retry ownership rules are implicit across layers               | ADR/doc layer, engine, adapters                                                        | S    | Medium |
-| `S10` | dbt manifest inputs stay too weakly typed at the boundary      | planner/contracts                                                                      | S    | Low    |
-| `S11` | lineage sink facets are looser than the runtime now expects    | contracts + traceability                                                               | S    | Low    |
+| Slice | Problem                                                                              | Main paths                                                                             | Size | Risk   |
+| ----- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ---- | ------ |
+| `S01` | stale public contract surfaces and dead architecture artifacts                       | `@dvt/contracts`, `@dvt/engine`                                                        | S    | Low    |
+| `S02` | `IRunStateStore` mixes write, read, and maintenance roles                            | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`, `@dvt/delivery`, `apps/api`  | M    | Medium |
+| `S03` | `WorkflowEngine` still owns too much start-run orchestration                         | `@dvt/engine`                                                                          | M    | Medium |
+| `S04` | provider ref reconciliation is fail-soft but under-modeled                           | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`                               | M    | Medium |
+| `S05` | event payload shape lacks explicit versioning                                        | `@dvt/contracts`, `@dvt/engine`, adapters, projectors                                  | M    | Medium |
+| `S06` | schema migrations have no applied-version table                                      | `@dvt/adapter-postgres`                                                                | S    | Low    |
+| `S07` | lineage job naming and sink shape need tightening                                    | `@dvt/traceability-service`, lineage workers                                           | S    | Low    |
+| `S08` | plan storage is implicit and provider-side only                                      | `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, planner/api wiring | L    | High   |
+| `S09` | retry ownership rules are implicit across layers                                     | ADR/doc layer, engine, adapters                                                        | S    | Medium |
+| `S10` | planner graph-source ingestion is still DBT-centric and weakly typed at the boundary | planner/contracts                                                                      | S    | Low    |
+| `S11` | lineage sink facets are looser than the runtime now expects                          | contracts + traceability                                                               | S    | Low    |
 
 ## Slice Summaries
 
@@ -158,10 +158,12 @@ execution. This slice likely needs an ADR because it changes storage ownership.
 State explicitly where retry policy is owned across planner, engine, and
 provider layers. The goal is to stop implicit overlap.
 
-### S10: dbt Manifest Typed Input
+### S10: Typed Graph-Source Boundary
 
-Reduce `Record<string, unknown>` escape hatches around dbt manifest-derived
-inputs so invalid configs are rejected earlier.
+Replace the DBT-centric `Record<string, unknown>` admission shape with a typed
+graph-source boundary. The planner core should depend on a generic normalized
+graph-source shape or graph-derivation interface, while DBT remains one
+implementation behind that seam rather than the semantic public boundary.
 
 ### S11: `ILineageSink.jobFacets` Tighten
 

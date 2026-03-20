@@ -87,7 +87,7 @@ The target planner subsystem is:
 - contract-canonical at the shared-kernel boundary;
 - pure and deterministic in its compilation core;
 - explicit about plan storage and validation lifecycle;
-- typed at the manifest boundary;
+- typed at the graph-source boundary rather than hard-coding one manifest shape;
 - fail-closed for unsupported kinds and unregistered custom policy namespaces;
 - integrated with runtime validation before execution starts;
 - usable for business recovery and replanning flows.
@@ -168,17 +168,17 @@ sequenceDiagram
 
 ## Delta From Current State
 
-| Target area                           | Current status                    | Target status                                                 |
-| ------------------------------------- | --------------------------------- | ------------------------------------------------------------- |
-| Public contract ownership             | Closed enough                     | Keep as-is; no ownership rework                               |
-| Typed manifest boundary               | Open                              | Accept typed manifest input or typed normalized source        |
-| `planVersion` governance              | Partial                           | One aligned registry plus emitted version plus runtime matrix |
-| Plan storage and validation lifecycle | Contract-only                     | Real runtime implementation                                   |
-| Unknown kind handling                 | Governed but fail-open in planner | Fail-closed by default                                        |
-| `custom` namespace governance         | Contract-only                     | Planner-enforced registration and validation                  |
-| Recovery / replanning                 | Proposal-only                     | Operator-grade derived-run flow                               |
-| DSL governance                        | Package exists, no accepted spec  | Accepted spec or explicit de-scope                            |
-| Planner docs placement                | Split                             | Repo-level subsystem docs become primary                      |
+| Target area                           | Current status                    | Target status                                                    |
+| ------------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| Public contract ownership             | Closed enough                     | Keep as-is; no ownership rework                                  |
+| Typed graph-source boundary           | Open                              | Accept a typed graph-source interface or typed normalized source |
+| `planVersion` governance              | Partial                           | One aligned registry plus emitted version plus runtime matrix    |
+| Plan storage and validation lifecycle | Contract-only                     | Real runtime implementation                                      |
+| Unknown kind handling                 | Governed but fail-open in planner | Fail-closed by default                                           |
+| `custom` namespace governance         | Contract-only                     | Planner-enforced registration and validation                     |
+| Recovery / replanning                 | Proposal-only                     | Operator-grade derived-run flow                                  |
+| DSL governance                        | Package exists, no accepted spec  | Accepted spec or explicit de-scope                               |
+| Planner docs placement                | Split                             | Repo-level subsystem docs become primary                         |
 
 ## Roadmap Slices
 
@@ -194,17 +194,28 @@ Why first:
 
 - it prevents the next implementation slices from inheriting stale assumptions
 
-### R2. Typed Manifest Boundary (`S10`)
+### R2. Typed Graph-Source Boundary (`S10`, redefined)
 
 Goal:
 
-- replace the weak `DbtManifestLike = Record<string, unknown>` admission surface
-  with a typed manifest boundary or typed normalized ingestion path
+- replace the weak DBT-specific admission surface with a typed graph-source
+  boundary that keeps the planner core generic
+
+Must include:
+
+- a public boundary interface for graph-source ingestion or graph derivation
+- planner core consumption of a normalized graph-source shape or `GraphNode[]`
+- DBT support moved behind one implementation of that interface rather than
+  treated as the semantic public boundary
+- preservation of `manifestRef` as the canonical production path without making
+  DBT artifact structure the long-term public planner contract
 
 Why next:
 
 - it is already identified in the Phase 2 roadmap as a small, low-risk slice
 - it improves correctness at the earliest public boundary
+- it removes an architectural contradiction: "generic core + dbt extension"
+  cannot stay true while DBT remains the planner's public typed boundary
 
 ### R3. Unified `planVersion` Closure
 
@@ -254,7 +265,7 @@ Goal:
 
 Dependencies:
 
-- R2 typed manifest or typed normalized boundary
+- R2 typed graph-source or typed normalized boundary
 - R4 plan storage and validation lifecycle runtime
 - retry-authority governance must remain consistent with ADR-0016 unless a new
   ADR changes it
@@ -296,7 +307,7 @@ the "partial without timing" problem from the planner roadmap.
 | Slice | Proposed owner                                  | Target date  | Notes                                                                                  |
 | ----- | ----------------------------------------------- | ------------ | -------------------------------------------------------------------------------------- |
 | `R1`  | Architecture / Planner / Docs                   | `2026-03-20` | Current branch scope: quantified status baseline, local-doc triage, system-status link |
-| `R2`  | Architecture / Planner / Contracts              | `2026-03-27` | Typed manifest boundary (`S10`)                                                        |
+| `R2`  | Architecture / Planner / Contracts              | `2026-03-27` | Typed graph-source boundary (`S10`, redefined)                                         |
 | `R7`  | Architecture / Planner / DSL / Engine           | `2026-04-03` | Close governance debt around `@dvt/dsl` and `@dvt/plan-interpreter`                    |
 | `R3`  | Architecture / Planner / Contracts / Engine     | `2026-04-10` | Unify emitted `planVersion`, registry, and runtime matrix                              |
 | `R4`  | Architecture / Planner / API / State / Engine   | `2026-04-24` | Persisted plan store plus validation lifecycle runtime                                 |
@@ -308,7 +319,7 @@ the "partial without timing" problem from the planner roadmap.
 ```mermaid
 flowchart TD
     R1[R1 Doc triage and status baseline]
-    R2[R2 Typed manifest boundary]
+    R2[R2 Typed graph-source boundary]
     R3[R3 planVersion closure]
     R4[R4 Plan storage and validation lifecycle runtime]
     R5[R5 Unknown kind and custom enforcement]
@@ -341,7 +352,7 @@ The roadmap must **not** do any of the following:
 The planner bounded context should only be described as operationally closed
 when all of the following are true:
 
-- typed manifest boundary exists
+- typed graph-source boundary exists
 - planner-emitted plan version comes from the governed registry
 - validated persisted plan lifecycle is implemented
 - unknown-kind and custom-policy enforcement are fail-closed by default
