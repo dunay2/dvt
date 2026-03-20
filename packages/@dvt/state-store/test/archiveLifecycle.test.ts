@@ -4,6 +4,7 @@ import {
   buildArchiveUnitKey,
   calculateDeleteAfterIso,
   deriveTenantBucket,
+  parseArchiveUnitKey,
 } from '../src/archiveLifecycle.js';
 
 describe('archiveLifecycle', () => {
@@ -53,6 +54,13 @@ describe('archiveLifecycle', () => {
     ).toBe('tb07_2026_03_20');
   });
 
+  it('parses a canonical archive unit key', () => {
+    expect(parseArchiveUnitKey('tb07_2026_03_19')).toEqual({
+      tenantBucket: 'tb07',
+      persistedAtDay: '2026_03_19',
+    });
+  });
+
   it('rejects malformed archive unit key parts', () => {
     expect(() =>
       buildArchiveUnitKey({
@@ -88,6 +96,8 @@ describe('archiveLifecycle', () => {
         persistedAtDay: '2026-03-19Tnot-a-timestamp',
       })
     ).toThrow(/ARCHIVE_PERSISTED_AT_DAY_INVALID/);
+
+    expect(() => parseArchiveUnitKey('tb07-2026-03-19')).toThrow(/ARCHIVE_UNIT_KEY_INVALID/);
   });
 
   it('calculates delete-after from verified-at and grace days', () => {
