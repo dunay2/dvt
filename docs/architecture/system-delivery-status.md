@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-16
+last_reviewed: 2026-03-20
 ---
 
 # Current Status
@@ -23,6 +23,8 @@ Use this page together with:
   shared across planning, architecture, contracts, and code
 - [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
   for the curated topic -> doc -> code -> test -> command mapping
+- [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md)
+  for the quantified planner-specific baseline and component scorecard
 - [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) for the
   active gap-by-gap delivery posture
 - [Generated Code State](../planning/status/generated-code-state.md) for the
@@ -57,7 +59,7 @@ Minimum tuple for this document:
 | Area                       | Current posture    | What is true now                                                                                                                                                                                   | Primary status source                                                                                                                        |
 | -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Entry layer                | Partial            | `apps/api` auth hardening closed (G8): OIDC auth, tenant policy, arch rules, and engine-backed StartRun all closed; web has no automated tests                                                     | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened                                          | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
+| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; quantified planner baseline is linked, but lifecycle and productization remain open                                                   | [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md)                                          |
 | Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; delivery runtime ownership is now extracted into `@dvt/delivery`, while scheduler and further hardening remain gap-driven          | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
 | Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open       | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
 | Observability              | Partial            | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                       | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
@@ -74,12 +76,12 @@ Minimum tuple for this document:
 
 ### Planning And Interpretation
 
-| Area                | Packages                | Status      | Notes                                                                                                           |
-| ------------------- | ----------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
-| Planning core       | `@dvt/planner`          | Partial     | Registry/schema hardening and planner validation closed under G9; broader planning-layer hardening remains open |
-| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer          |
-| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page                       |
-| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                              |
+| Area                | Packages                | Status      | Notes                                                                                                  |
+| ------------------- | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------ |
+| Planning core       | `@dvt/planner`          | Partial     | Assessment-linked partial: `70%` average; compile core `94%`, validation/storage `50%`, recovery `17%` |
+| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer |
+| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page              |
+| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                     |
 
 ### Execution And Adapters
 

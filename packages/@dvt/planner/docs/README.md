@@ -2,6 +2,19 @@
 
 A pure deterministic planner that compiles a dependency graph into an immutable, content-addressed execution plan.
 
+## Reading rule
+
+Canonical planner status, roadmap, and public contract guidance now live in the
+repository docs, not in this package-local folder.
+
+- `../../../../docs/planning/status/planner-current-state-assessment-20260320.md`
+- `../../../../docs/planning/status/planner-local-doc-triage-20260320.md`
+- `../../../../docs/planning/proposals/planner-target-state-roadmap-20260320.md`
+- `../../../../docs/contracts/planner/index.md`
+
+This folder is implementation-local. It must not be treated as the canonical
+planner status, roadmap, or shared-contract authority surface.
+
 ## Determinism guarantees
 
 - Canonicalization: RFC 8785 JCS
