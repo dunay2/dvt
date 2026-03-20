@@ -26,8 +26,13 @@ export type {
 } from './types.js';
 export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
 export type { PostgresStartRunIntentStoreConfig } from './PostgresStartRunIntentStore.js';
+export type {
+  PostgresBackpressureSnapshot,
+  PostgresBackpressureSnapshotReaderConfig,
+} from './PostgresBackpressureSnapshotReader.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
+export { PostgresBackpressureSnapshotReader } from './PostgresBackpressureSnapshotReader.js';
 export { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 export { PostgresRunEventStore } from './PostgresRunEventStore.js';
 export { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';

@@ -20,4 +20,15 @@ describe('loadEnv', () => {
     expect(loadEnv({ DVT_VERSION_ENABLED: 'junk' }).DVT_VERSION_ENABLED).toBe(false);
     expect(loadEnv({}).DVT_DB_READY_ENABLED).toBe(false);
   });
+
+  it('provides conservative defaults for start-run backpressure controls', async () => {
+    const env = loadEnv({});
+
+    expect(env.DVT_START_RUN_BACKPRESSURE_MODE).toBe('off');
+    expect(env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT).toBe(100);
+    expect(env.DVT_START_RUN_MAX_OUTBOX_LAG_MS).toBe(300000);
+    expect(env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS).toBe(604800000);
+    expect(env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS).toBe(1000);
+    expect(env.DVT_START_RUN_RETRY_AFTER_SECONDS).toBe(30);
+  });
 });
