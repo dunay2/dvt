@@ -32,6 +32,7 @@ Draft proposals and candidate changes. Non-normative.
 - [Gap 5 Sequence And Module Design](gap-5-sequence-and-module-design-20260319.md)
 - [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md)
 - [Phase 2 Architectural Debt Roadmap](phase2-arch-debt-roadmap-20260315.md)
+- [Planner Target State And Hardening Roadmap](planner-target-state-roadmap-20260320.md)
 - [Principal Architecture Review Execution Plan](principal-architecture-review-execution-plan-20260317.md)
 - [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
 - [TS + ESM Monorepo — Audit and Migration Execution Plan](ts-esm-monorepo-audit-and-migration-20260318.md)
