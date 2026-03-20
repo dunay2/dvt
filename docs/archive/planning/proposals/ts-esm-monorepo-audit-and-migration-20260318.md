@@ -1,18 +1,23 @@
 ---
-title: TS + ESM Monorepo — Audit and Migration Execution Plan
-status: Implemented
+title: TS + ESM Monorepo â€” Audit and Migration Execution Plan
+status: Archived
 owner: Core Architecture
-last_reviewed: 2026-03-19
+last_reviewed: 2026-03-20
 planning_type: proposal
 ---
 
-# TS + ESM Monorepo — Audit and Migration Execution Plan
+# TS + ESM Monorepo â€” Audit and Migration Execution Plan
+
+Historical implemented proposal retained for reference. Active policy lives in
+[Package Module Build Policy v2](../../../planning/proposals/package-module-build-policy-v2-20260317.md),
+and closure evidence lives in
+[ED-20260319 - TS + ESM Monorepo Migration](../../../evidence/ED-20260319-ts-esm-monorepo-migration.md).
 
 ## Governing Sources
 
-- [Package Module Build Policy v2](package-module-build-policy-v2-20260317.md) — target model
-- [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md) — proposal context
-- AGENTS.md — agent operational rules
+- [Package Module Build Policy v2](../../../planning/proposals/package-module-build-policy-v2-20260317.md) - target model
+- [Repository Governance Proposal Set 2026-03-17](../../../planning/proposals/repository-governance-proposal-set-20260317.md) - proposal context
+- AGENTS.md â€” agent operational rules
 - Root `tsconfig.json`, `tsconfig.base.json`, `tsconfig.package-bundler.base.json`, `tsconfig.app-node.base.json`
 
 ## Purpose
@@ -29,18 +34,18 @@ It implements it.
 
 ---
 
-## 1. Module Strategy Fragmentation — Current State
+## 1. Module Strategy Fragmentation â€” Current State
 
 Three distinct module resolution strategies coexist in the monorepo.
 
-| Chain                        | Base config                          | `module`   | `moduleResolution` | `target` | Workspaces                                                                                                                                   |
-| ---------------------------- | ------------------------------------ | ---------- | ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| A — CJS legacy               | `tsconfig.base.json`                 | `commonjs` | `node`             | `ES2021` | adapter-postgres, adapter-temporal, canonical, cli, dsl, observability, observability-otel, plan-interpreter, planner-contracts, state-store |
-| B — ESM/Bundler (shared)     | `tsconfig.package-bundler.base.json` | `ES2022`   | `Bundler`          | `ES2022` | engine, delivery, run-domain                                                                                                                 |
-| C — ESM/Bundler (standalone) | none / base+override                 | `ES2022`   | `Bundler`          | `ES2022` | contracts, planner, plan-verifier, traceability-service                                                                                      |
-| D — NodeNext (apps)          | `tsconfig.app-node.base.json`        | `NodeNext` | `NodeNext`         | `ES2022` | api, lineage-worker, outbox-worker, projector-worker                                                                                         |
-| E — ESNext/Bundler (web)     | `tsconfig.base.json` + overrides     | `ESNext`   | `Bundler`          | `ES2022` | web                                                                                                                                          |
-| F — Root type-check          | `tsconfig.json`                      | `commonjs` | `node`             | `ES2022` | root tsc only                                                                                                                                |
+| Chain                          | Base config                          | `module`   | `moduleResolution` | `target` | Workspaces                                                                                                                                   |
+| ------------------------------ | ------------------------------------ | ---------- | ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| A â€” CJS legacy               | `tsconfig.base.json`                 | `commonjs` | `node`             | `ES2021` | adapter-postgres, adapter-temporal, canonical, cli, dsl, observability, observability-otel, plan-interpreter, planner-contracts, state-store |
+| B â€” ESM/Bundler (shared)     | `tsconfig.package-bundler.base.json` | `ES2022`   | `Bundler`          | `ES2022` | engine, delivery, run-domain                                                                                                                 |
+| C â€” ESM/Bundler (standalone) | none / base+override                 | `ES2022`   | `Bundler`          | `ES2022` | contracts, planner, plan-verifier, traceability-service                                                                                      |
+| D â€” NodeNext (apps)          | `tsconfig.app-node.base.json`        | `NodeNext` | `NodeNext`         | `ES2022` | api, lineage-worker, outbox-worker, projector-worker                                                                                         |
+| E â€” ESNext/Bundler (web)     | `tsconfig.base.json` + overrides     | `ESNext`   | `Bundler`          | `ES2022` | web                                                                                                                                          |
+| F â€” Root type-check          | `tsconfig.json`                      | `commonjs` | `node`             | `ES2022` | root tsc only                                                                                                                                |
 
 The target model defined in Build Policy v2 is **Chain B/C** (ESM/Bundler) for
 library packages and **Chain D** (NodeNext) for Node.js app entrypoints.
@@ -79,8 +84,8 @@ artifact), **structural** (build integrity or policy deviation), **minor**
 | F-13 | `@dvt/observability-otel`            | No `"type"` field. Dual exports. Inherits CJS.                                                                                                                             |
 | F-14 | `@dvt/plan-interpreter`              | No `"type"` field. No `exports` map. Inherits CJS.                                                                                                                         |
 | F-15 | `@dvt/planner-contracts`             | No `"type"` field. Dual exports. Inherits CJS.                                                                                                                             |
-| F-16 | `@dvt/planner`                       | No `composite: true`. `vitest: "^1.6.0"` in devDependencies — semver incompatible with monorepo pin 3.2.4; only resolves via root `pnpm.overrides`.                        |
-| F-17 | `@dvt/plan-verifier`                 | Same composite and vitest issues as F-16. `typescript: "^5.4.0"` — outdated range.                                                                                         |
+| F-16 | `@dvt/planner`                       | No `composite: true`. `vitest: "^1.6.0"` in devDependencies â€” semver incompatible with monorepo pin 3.2.4; only resolves via root `pnpm.overrides`.                      |
+| F-17 | `@dvt/plan-verifier`                 | Same composite and vitest issues as F-16. `typescript: "^5.4.0"` â€” outdated range.                                                                                       |
 | F-18 | `@dvt/traceability-service`          | No `composite: true`. No `exports` field. `vitest` absent from devDependencies. Standalone tsconfig not aligned with shared bases.                                         |
 | F-22 | `tsconfig.package-bundler.base.json` | Includes `"DOM"` in `lib`. This base is used exclusively by Node.js packages (engine, delivery, run-domain).                                                               |
 | F-23 | `tsconfig.base.json`                 | Alias `@dvt/crypto` is absent in `tsconfig.base.json`. Packages that extend the base cannot resolve `@dvt/crypto` via paths. Only the root `tsconfig.json` has this alias. |
@@ -105,14 +110,14 @@ Migration follows the three-group order established in Build Policy v2:
 
 1. Critical bug fixes (no module format change)
 2. Structural cleanup for packages already on ESM/Bundler
-3. Semantic migration for Chain A packages (CJS → ESM)
+3. Semantic migration for Chain A packages (CJS â†’ ESM)
 4. Apps and workers cleanup
 
 Each slice must not be merged without running the validation commands listed.
 
 ---
 
-### Slice M-01 — Critical Fixes
+### Slice M-01 â€” Critical Fixes
 
 **Scope:** Fix active breakage. No module format change. No semantic change.
 
@@ -142,7 +147,7 @@ pnpm --filter @dvt/plan-interpreter test
 
 ---
 
-### Slice M-02 — Cohort 1 Structural Cleanup
+### Slice M-02 â€” Cohort 1 Structural Cleanup
 
 **Scope:** Packages already on ESM/Bundler (Chain B and C). Fix structural
 issues without changing module format.
@@ -156,7 +161,7 @@ issues without changing module format.
 | `@dvt/traceability-service`          | Add `composite: true`. Add `exports` field to package.json. Add `vitest` to devDependencies or remove and rely on root. |
 | `tsconfig.package-bundler.base.json` | Remove `"DOM"` from `lib`. Replace with `["ES2022"]`.                                                                   |
 | `tsconfig.base.json`                 | Add `@dvt/crypto` path alias (mirrors root tsconfig.json mapping).                                                      |
-| `@dvt/engine`, `@dvt/delivery`       | Remove stale `@types/node: 25.5.0` from devDependencies — rely on root pin.                                             |
+| `@dvt/engine`, `@dvt/delivery`       | Remove stale `@types/node: 25.5.0` from devDependencies â€” rely on root pin.                                           |
 
 **Risk:** Low. No module format or export interface changes.
 
@@ -176,11 +181,11 @@ pnpm type-check
 
 ---
 
-### Slice M-03 — Chain A Semantic Migration (CJS → ESM)
+### Slice M-03 â€” Chain A Semantic Migration (CJS â†’ ESM)
 
 **Scope:** Migrate Chain A packages from `module: commonjs` to `module: ES2022`
 
-- `moduleResolution: Bundler`. This is a **semantic module format change** — it
+- `moduleResolution: Bundler`. This is a **semantic module format change** â€” it
   must not be merged as a "cleanup".
 
 **Pre-condition:** Verify that no package currently requires these packages via
@@ -244,7 +249,7 @@ pnpm test
 
 ---
 
-### Slice M-04 — Apps and Workers Cleanup
+### Slice M-04 â€” Apps and Workers Cleanup
 
 **Scope:** Fix minor issues in the `apps/*` layer without changing the NodeNext
 strategy.
@@ -272,7 +277,7 @@ pnpm --filter @dvt/web build
 
 ---
 
-### Slice M-05 — Root tsconfig and Project References (optional, post-M-03)
+### Slice M-05 â€” Root tsconfig and Project References (optional, post-M-03)
 
 **Scope:** After Chain A migration completes, evaluate whether to introduce
 TypeScript project references for incremental build support.
@@ -295,7 +300,7 @@ and consistent `outDir`/`declaration` settings.
 ```
 M-01  Critical fixes           Low risk     Required before merging any other slice
 M-02  Cohort 1 structural      Low risk     Can run in parallel with M-01 for different packages
-M-03  Chain A CJS → ESM        HIGH risk    Requires pre-condition check + post-merge regression
+M-03  Chain A CJS â†’ ESM        HIGH risk    Requires pre-condition check + post-merge regression
 M-04  Apps cleanup             Low/medium   Can run independently after M-01
 M-05  Root tsconfig/refs       Low risk     After M-02 + M-03 complete
 ```
@@ -306,9 +311,9 @@ M-05  Root tsconfig/refs       Low risk     After M-02 + M-03 complete
 
 Decisions resolved 2026-03-18.
 
-### D-01 — `@dvt/state-store` intent
+### D-01 â€” `@dvt/state-store` intent
 
-**Decision: Option A — Migrate to ESM/Bundler.**
+**Decision: Option A â€” Migrate to ESM/Bundler.**
 
 Rationale: consistent with the Chain B/C target. Resolves the runtime
 `SyntaxError` without maintaining an isolated CJS package.
@@ -318,9 +323,9 @@ Pre-condition before M-01: verify no consumer calls `require('@dvt/state-store')
 Action: change `tsconfig.json` to extend `tsconfig.package-bundler.base.json`.
 Adjust `exports` in `package.json` to canonical ESM shape.
 
-### D-02 — `@dvt/canonical` dual-mode
+### D-02 â€” `@dvt/canonical` dual-mode
 
-**Decision: Option A — ESM-only, unless reverse dependency analysis reveals
+**Decision: Option A â€” ESM-only, unless reverse dependency analysis reveals
 CJS consumers that cannot be migrated in the M-03 window.**
 
 Rationale: dual-mode exports without a documented policy are undeclared
@@ -332,9 +337,9 @@ migrate to ESM-only. If an external CJS consumer exists that cannot be migrated,
 document a dual-mode exception explicitly in `package.json` and Build Policy v2,
 and add tests for both formats.
 
-### D-03 — Apps test runner
+### D-03 â€” Apps test runner
 
-**Decision: Option A — Migrate all apps to Vitest.**
+**Decision: Option A â€” Migrate all apps to Vitest.**
 
 Rationale: Vitest is the monorepo standard. Maintaining `node --import tsx --test`
 alongside Vitest creates inconsistency in reporting, watch mode, and CI
@@ -344,9 +349,9 @@ Action in M-04: for each affected app (api, outbox-worker, projector-worker),
 convert test files to Vitest APIs, add `vitest.config.ts`, and update the `test`
 script. Remove `tsx` test runner invocations.
 
-### D-04 — `tsconfig.base.json` retirement
+### D-04 â€” `tsconfig.base.json` retirement
 
-**Decision: Option A — Deprecate after M-03 completes.**
+**Decision: Option A â€” Deprecate after M-03 completes.**
 
 Rationale: once all Chain A packages migrate to ESM/Bundler, `tsconfig.base.json`
 serves no active purpose. Retaining it risks future accidental re-adoption of
@@ -362,8 +367,8 @@ explanatory comment block.
 
 ## 6. Relationship to Existing Proposals
 
-| Document                                                                                 | Relationship                                                                              |
-| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [package-module-build-policy-v2-20260317.md](package-module-build-policy-v2-20260317.md) | Defines the target model. This document implements it.                                    |
-| [phase2-arch-debt-roadmap-20260315.md](phase2-arch-debt-roadmap-20260315.md)             | Architectural debt context. M-03 is a significant debt slice.                             |
-| [ci-workflow-deduplication-plan-20260307.md](ci-workflow-deduplication-plan-20260307.md) | CI enforcement is a post-migration gate. M-05 aligns with its project references section. |
+| Document                                                                                                             | Relationship                                                                              |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [package-module-build-policy-v2-20260317.md](../../../planning/proposals/package-module-build-policy-v2-20260317.md) | Defines the target model. This document implements it.                                    |
+| [phase2-arch-debt-roadmap-20260315.md](../../../planning/proposals/phase2-arch-debt-roadmap-20260315.md)             | Architectural debt context. M-03 is a significant debt slice.                             |
+| [ci-workflow-deduplication-plan-20260307.md](../../../planning/proposals/ci-workflow-deduplication-plan-20260307.md) | CI enforcement is a post-migration gate. M-05 aligns with its project references section. |

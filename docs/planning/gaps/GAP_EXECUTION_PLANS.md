@@ -69,7 +69,7 @@ Minimum tuple for this document:
    - Evidence: [`docs/evidence/ED-20260304-g3-intentstore-postgres-reconciler.md`](../../evidence/ED-20260304-g3-intentstore-postgres-reconciler.md)
 3. `G4` compiledCodeRef ownership is implemented end-to-end at package scope and documented as closed.
    - Contracts fixtures and validation tests: [`packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts`](../../../packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts)
-   - Planner enrichment: [`packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts)
+   - Planner enrichment: [`packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts`](../../../packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts)
    - Temporal propagation: [`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`](../../../packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts)
    - Traceability resolver/mapper: [`packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`](../../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
 4. `G5` extracted the delivery worker and standalone host into their canonical package homes.
@@ -149,7 +149,7 @@ Minimum tuple for this document:
 - Traceability tuple:
   - `canonical_spec`: [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](G4-TASK-SPECIFICATION.md)
   - `status_doc`: [GAP_EXECUTION_PLANS.md](GAP_EXECUTION_PLANS.md)
-  - `code_paths`: `packages/@dvt/planner/src/compiledCode/attachCompiledCodeRefs.ts`, `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`
+  - `code_paths`: `packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts`, `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`, `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`
   - `test_paths`: `packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts`, `packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts`, `packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts`, `packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts`, `packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts`
   - `verification_cmd`: `pnpm --filter @dvt/contracts test`, `pnpm --filter @dvt/planner test`, `pnpm --filter @dvt/adapter-temporal test`, `pnpm --filter @dvt/traceability-service test`
   - `evidence_or_risk`: [ED-20260304 - compiledCodeRef ownership](../../evidence/ED-20260304-compiledcoderef-ownership.md)
@@ -163,7 +163,7 @@ Minimum tuple for this document:
 | T4-4 | traceability reader/cache/SqlJobFacet             | Done in code + tests                        |
 
 - Task spec: [`G4-TASK-SPECIFICATION.md`](G4-TASK-SPECIFICATION.md)
-- QA architecture review: [`G4-T4-3-QA-ARCH-REVIEW.md`](G4-T4-3-QA-ARCH-REVIEW.md)
+- Historical QA architecture review: [`docs/archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md`](../../archive/planning/gaps/G4-T4-3-QA-ARCH-REVIEW.md)
 
 ### G5 - Outbox worker independiente
 
@@ -341,7 +341,7 @@ ALWAYS AS (snapshot->>'status') STORED` column + B-tree index added;
 - Status: Closed
 - Closed: 2026-03-15
 - Evidence: [`docs/evidence/ED-20260315-g10-closeout.md`](../../evidence/ED-20260315-g10-closeout.md)
-- Active tracker: [G10 - AI Execution Tracker](G10-AI-EXECUTION-TRACKER.md)
+- Historical tracker: [G10 - AI Execution Tracker](../../archive/planning/gaps/G10-AI-EXECUTION-TRACKER.md)
 - Delivered:
   - `ILineageSink` and `ILineageOutboxStore` contract interfaces in `@dvt/contracts`
   - `lineage_outbox` + `lineage_dead_letter` tables as migration `005`

@@ -1,12 +1,15 @@
 ---
 title: G4 T4-3 - QA Architecture Review
-status: Final
+status: Archived
 owner: adapter-temporal
-last_reviewed: 2026-03-07
+last_reviewed: 2026-03-20
 planning_type: analysis
 ---
 
 # G4 T4-3 - QA Architecture Review
+
+Historical QA review retained for reference. `G4` is closed; active status
+lives in [Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md).
 
 ## Objective
 
