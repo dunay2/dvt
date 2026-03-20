@@ -19,6 +19,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@dvt/crypto": "workspace:*",
     "@dvt/contracts": "workspace:*"
   },
   "devDependencies": {
