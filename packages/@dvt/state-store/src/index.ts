@@ -12,14 +12,18 @@ export {
   parseArchiveUnitKey,
 } from './archiveLifecycle.js';
 export type {
+  ArchivedTerminalSnapshot,
+  ArchivedTerminalSnapshotBuildInput,
   ArchiveManifestBuildInput,
   ArchiveManifestBuildResult,
   ArchiveUnitManifest,
   PinnedTerminalSnapshot,
   PinnedTerminalSnapshotBuildInput,
   TerminalRunStatus,
+  TerminalSnapshotPinStore,
 } from './lifecycle/archiveArtifacts.js';
 export {
+  buildArchivedTerminalSnapshot,
   buildArchiveUnitManifest,
   buildPinnedTerminalSnapshot,
   calculateArchiveEventChecksum,

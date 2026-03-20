@@ -11,6 +11,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import type { ArchivedTerminalSnapshot } from '@dvt/state-store';
 import { Pool, type PoolClient } from 'pg';
 
 import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
@@ -312,6 +313,19 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     this.ready();
     return this.snapshotStore.getSnapshot(tenantId, runId);
+  }
+
+  async pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<void> {
+    this.ready();
+    return this.snapshotStore.pinTerminalSnapshot(snapshot);
+  }
+
+  async getPinnedTerminalSnapshot(
+    tenantId: string,
+    runId: RunId
+  ): Promise<ArchivedTerminalSnapshot | null> {
+    this.ready();
+    return this.snapshotStore.getPinnedTerminalSnapshot(tenantId, runId);
   }
 
   /**

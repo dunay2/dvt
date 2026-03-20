@@ -208,6 +208,9 @@ export class PostgresSchemaManager {
         snapshot JSONB NOT NULL,
         snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED,
         last_run_seq INTEGER NOT NULL,
+        archive_unit_key TEXT,
+        event_checksum_sha256 TEXT,
+        archived_at TIMESTAMPTZ,
         updated_at TIMESTAMPTZ NOT NULL
       )
     `);
@@ -350,6 +353,21 @@ export class PostgresSchemaManager {
       ALTER TABLE ${quoteIdentifier(this.schema)}.run_snapshots
       ADD COLUMN IF NOT EXISTS snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED
     `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_snapshots
+      ADD COLUMN IF NOT EXISTS archive_unit_key TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_snapshots
+      ADD COLUMN IF NOT EXISTS event_checksum_sha256 TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE ${quoteIdentifier(this.schema)}.run_snapshots
+      ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ
+    `);
   }
 
   private async ensureCompatibilityCleanup(client: PoolClient): Promise<void> {
@@ -407,6 +425,12 @@ export class PostgresSchemaManager {
     await client.query(`
       CREATE INDEX IF NOT EXISTS run_snapshots_snapshot_status_idx
       ON ${quoteIdentifier(this.schema)}.run_snapshots (snapshot_status)
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS run_snapshots_archive_unit_key_idx
+      ON ${quoteIdentifier(this.schema)}.run_snapshots (archive_unit_key)
+      WHERE archive_unit_key IS NOT NULL
     `);
 
     // Migration 005: lineage outbox indexes.

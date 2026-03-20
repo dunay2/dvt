@@ -9,6 +9,7 @@
  */
 export type {
   AppendResult,
+  ArchivedTerminalSnapshot,
   DeadLetterRecord,
   EventEnvelope,
   EventType,
@@ -22,6 +23,7 @@ export type {
   RunBootstrapInput,
   RunMetadata,
   RunStateCommandPort,
+  TerminalSnapshotPinStore,
   WorkflowSnapshot,
 } from './types.js';
 export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';

@@ -109,7 +109,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(client.releaseCalls).toBe(1);
   });
 
-  it('creates the archive catalog tables and indexes required for Gap 5 P1', async () => {
+  it('creates the archive catalog tables and warm snapshot pinning indexes required for Gap 5 P1', async () => {
     const client = new RecordingMigrationClient();
     const adapter = new PostgresStateStoreAdapter({
       pool: {
@@ -126,5 +126,9 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain('run_event_archive_batches');
     expect(executedSql).toContain('run_event_archive_units_state_day_idx');
     expect(executedSql).toContain('run_event_archive_batches_unit_status_idx');
+    expect(executedSql).toContain('archive_unit_key TEXT');
+    expect(executedSql).toContain('event_checksum_sha256 TEXT');
+    expect(executedSql).toContain('archived_at TIMESTAMPTZ');
+    expect(executedSql).toContain('run_snapshots_archive_unit_key_idx');
   });
 });

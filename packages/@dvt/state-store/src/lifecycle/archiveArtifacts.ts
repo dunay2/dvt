@@ -51,6 +51,27 @@ export interface PinnedTerminalSnapshot {
   readonly snapshot: WorkflowSnapshot;
 }
 
+export interface ArchivedTerminalSnapshotBuildInput {
+  readonly tenantId: string;
+  readonly archiveUnitKey: string;
+  readonly archivedAtIso: string;
+  readonly pinned: PinnedTerminalSnapshot;
+}
+
+export interface ArchivedTerminalSnapshot extends PinnedTerminalSnapshot {
+  readonly tenantId: string;
+  readonly archiveUnitKey: string;
+  readonly archivedAt: string;
+}
+
+export interface TerminalSnapshotPinStore {
+  pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<void>;
+  getPinnedTerminalSnapshot(
+    tenantId: string,
+    runId: string
+  ): Promise<ArchivedTerminalSnapshot | null>;
+}
+
 const TERMINAL_STATUSES: readonly TerminalRunStatus[] = ['COMPLETED', 'FAILED', 'CANCELLED'];
 
 export function calculateArchiveEventChecksum(events: readonly EventEnvelope[]): string {
@@ -156,6 +177,43 @@ export function buildPinnedTerminalSnapshot(
     lastRunSeq: previousRunSeq,
     eventChecksumSha256: calculateArchiveEventChecksum(events),
     snapshot,
+  };
+}
+
+export function buildArchivedTerminalSnapshot(
+  input: ArchivedTerminalSnapshotBuildInput
+): ArchivedTerminalSnapshot {
+  const tenantId = input.tenantId.trim();
+  const archiveUnitKey = input.archiveUnitKey.trim();
+  const archivedAt = parseIsoUtc(
+    input.archivedAtIso,
+    'ARCHIVE_TERMINAL_SNAPSHOT_ARCHIVED_AT_INVALID'
+  );
+  const pinned = input.pinned;
+
+  if (!tenantId) {
+    throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_TENANT_ID_REQUIRED');
+  }
+  parseArchiveUnitKey(archiveUnitKey);
+
+  if (!Number.isInteger(pinned.lastRunSeq) || pinned.lastRunSeq <= 0) {
+    throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_LAST_RUN_SEQ_INVALID');
+  }
+  if (!/^[a-f0-9]{64}$/.test(pinned.eventChecksumSha256)) {
+    throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_CHECKSUM_INVALID');
+  }
+  if (pinned.snapshot.runId !== pinned.runId) {
+    throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_RUN_ID_MISMATCH');
+  }
+  if (pinned.snapshot.status !== pinned.status) {
+    throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_STATUS_MISMATCH');
+  }
+
+  return {
+    tenantId,
+    archiveUnitKey,
+    archivedAt: archivedAt.toISOString(),
+    ...pinned,
   };
 }
 
