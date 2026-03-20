@@ -1,4 +1,5 @@
-﻿import type { IObservability } from '@dvt/observability';
+import { StartRunAdmissionGuard } from '@dvt/delivery';
+import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
@@ -6,7 +7,6 @@ import { AuthorizeCommandScopeService } from '../application/services/authorizeC
 import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
 import { NoopAdmissionTelemetry } from '../application/services/NoopAdmissionTelemetry.js';
-import { NoopDuplicateRunProbe } from '../application/services/NoopDuplicateRunProbe.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
 import { getPgPool } from '../db/pool.js';
@@ -15,6 +15,8 @@ import { StructuredAuditLogger } from '../infrastructure/audit/structuredAuditLo
 import { JwksJwtVerifier } from '../infrastructure/auth/jwksJwtVerifier.js';
 import { OidcAuthenticator } from '../infrastructure/auth/oidcAuthenticator.js';
 import { PostgresPrincipalAccessRepository } from '../infrastructure/auth/postgresPrincipalAccessRepository.js';
+import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
+import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
@@ -39,12 +41,47 @@ export async function buildProtectedRuntimeModule(
     import('@dvt/adapter-postgres'),
     import('@dvt/engine'),
   ]);
-  const { PostgresStateStoreAdapter, PostgresStartRunIntentStore } = adapterMod;
+  const {
+    PostgresBackpressureSnapshotReader,
+    PostgresStateStoreAdapter,
+    PostgresStartRunIntentStore,
+  } = adapterMod;
   const { AllowAllAuthorizer, SnapshotProjector } = engineMod;
 
-  const stateStore = new PostgresStateStoreAdapter({ connectionString: databaseUrl });
-  const intentStore = new PostgresStartRunIntentStore({ connectionString: databaseUrl });
+  const stateStore = new PostgresStateStoreAdapter({
+    connectionString: databaseUrl,
+    schema: env.DVT_PG_SCHEMA,
+    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
+  const intentStore = new PostgresStartRunIntentStore({
+    connectionString: databaseUrl,
+    schema: env.DVT_PG_SCHEMA,
+    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
   const projector = new SnapshotProjector();
+
+  const duplicateProbe = new PostgresDuplicateRunProbe({
+    pool,
+    schema: env.DVT_PG_SCHEMA,
+    queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
+  });
+  const backpressureReader = new PostgresBackpressureSnapshotReader({
+    pool,
+    schema: env.DVT_PG_SCHEMA,
+    now: () => new Date().toISOString(),
+    queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
+    stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
+    localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
+  });
+  const admissionGuard = new StartRunAdmissionGuard({
+    backpressureStore: new RawSqlBackpressureStore(backpressureReader),
+    policy: {
+      maxPendingEventsPerTenant: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
+      maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
+    },
+  });
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore,
@@ -90,15 +127,11 @@ export async function buildProtectedRuntimeModule(
     authenticator,
     commandAuthorizer,
     new BackpressureAwareStartRunUseCase({
-      duplicateProbe: new NoopDuplicateRunProbe(),
-      admissionGuard: {
-        async assertAdmissible() {
-          return undefined;
-        },
-      },
+      duplicateProbe,
+      admissionGuard,
       telemetry: new NoopAdmissionTelemetry(),
-      mode: 'off',
-      retryAfterSeconds: 30,
+      mode: env.DVT_START_RUN_BACKPRESSURE_MODE,
+      retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
       delegate: new EngineStartRunUseCase(engine),
     })
   );
