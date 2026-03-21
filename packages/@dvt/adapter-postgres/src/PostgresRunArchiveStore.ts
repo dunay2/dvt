@@ -88,7 +88,6 @@ export class PostgresRunArchiveStore
 {
   constructor(
     private readonly schema: string,
-    private readonly now: () => string,
     private readonly withTransaction: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>,
     private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>,
     private readonly snapshotStore: TerminalSnapshotPinStore
