@@ -1,11 +1,13 @@
-import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import { PostgresDeliveryBufferPurgeStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import type { IEventBus, OutboxWorkerObserver } from '@dvt/contracts';
+import { DeliveryBufferPurger } from '@dvt/state-store';
 
 import { HttpEventBus } from '../bus/HttpEventBus.js';
 import { LoggingEventBus } from '../bus/LoggingEventBus.js';
 import { acquirePgPool } from '../db/pool.js';
 import type { ActiveEnv } from '../plugins/env.js';
 
+import { DeliveryBufferPurgeRuntime } from './DeliveryBufferPurgeRuntime.js';
 import {
   OutboxWorkerRuntime,
   type OutboxWorkerRuntimeHooks,
@@ -76,13 +78,23 @@ export async function createOutboxWorkerRuntime(
       ...(options.observer ? { observer: options.observer } : {}),
       ...(options.hooks ? { hooks: options.hooks } : {}),
     });
+
+    const purgeRuntime = env.DVT_PURGE_ENABLED
+      ? buildPurgeRuntime(env, poolLease.pool, logger)
+      : null;
+
     let stopPromise: Promise<void> | null = null;
 
     return {
-      start: (signal?: globalThis.AbortSignal) => runtime.start(signal),
+      start: (signal?: globalThis.AbortSignal) => {
+        const starts: Promise<void>[] = [runtime.start(signal)];
+        if (purgeRuntime) starts.push(purgeRuntime.start(signal));
+        return Promise.all(starts).then(() => {});
+      },
       stop: () =>
         (stopPromise ??= stopRuntimeResources({
           runtime,
+          purgeRuntime,
           stateStore,
           poolLease,
         })),
@@ -184,8 +196,25 @@ async function safelyReleaseStartupResources(
   }
 }
 
+function buildPurgeRuntime(
+  env: ActiveEnv,
+  pool: { query: (...args: unknown[]) => Promise<unknown> },
+  logger: OutboxWorkerRuntimeLogger
+): DeliveryBufferPurgeRuntime {
+  const purgeStore = new PostgresDeliveryBufferPurgeStore(env.DVT_PG_SCHEMA, pool as never);
+  const purger = new DeliveryBufferPurger({ store: purgeStore });
+  const policy = {
+    deliveredOutboxRetentionDays: env.DVT_PURGE_DELIVERED_OUTBOX_RETENTION_DAYS,
+    outboxDeadLetterRetentionDays: env.DVT_PURGE_OUTBOX_DEAD_LETTER_RETENTION_DAYS,
+    lineageDeadLetterRetentionDays: env.DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS,
+    maxRowsPerRun: env.DVT_PURGE_MAX_ROWS_PER_RUN,
+  };
+  return new DeliveryBufferPurgeRuntime(() => purger.purge(policy), env.DVT_PURGE_INTERVAL_MS, logger);
+}
+
 async function stopRuntimeResources(deps: {
   runtime: Pick<RuntimeHandle, 'stop'>;
+  purgeRuntime: DeliveryBufferPurgeRuntime | null;
   stateStore: ClosableStateStore;
   poolLease: { release(): Promise<void> };
 }): Promise<void> {
@@ -195,6 +224,14 @@ async function stopRuntimeResources(deps: {
     await deps.runtime.stop();
   } catch (error) {
     firstError ??= error;
+  }
+
+  if (deps.purgeRuntime) {
+    try {
+      await deps.purgeRuntime.stop();
+    } catch (error) {
+      firstError ??= error;
+    }
   }
 
   try {
