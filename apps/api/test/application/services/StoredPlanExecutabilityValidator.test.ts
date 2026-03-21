@@ -52,6 +52,48 @@ describe('StoredPlanExecutabilityValidator', () => {
     });
   });
 
+  it('rejects when the plan requires capabilities but the adapter does not declare any', async () => {
+    const validator = new StoredPlanExecutabilityValidator({
+      fetcher: {
+        fetchForValidation: vi.fn(async () =>
+          executablePlanBytes({ requiresCapabilities: ['workflow.pause'] })
+        ),
+      },
+      adapters: new Map([
+        [
+          'mock',
+          {
+            provider: 'mock',
+            async startRun() {
+              throw new Error('not used');
+            },
+            async cancelRun() {
+              throw new Error('not used');
+            },
+            async getRunStatus() {
+              throw new Error('not used');
+            },
+            async signal() {
+              throw new Error('not used');
+            },
+          } as IProviderAdapter,
+        ],
+      ]),
+    });
+
+    const result = await validator.validatePlan(PLAN_REF, 'mock');
+
+    expect(result).toEqual({
+      status: 'ERROR',
+      planId: 'plan-1',
+      adapterId: 'mock',
+      code: 'REJECTED',
+      degradable: false,
+      reason: 'Adapter does not declare capabilities required for executability validation',
+      cause: 'capabilities',
+    });
+  });
+
   it('rejects when the persisted executable plan metadata no longer matches the ref', async () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
@@ -112,9 +154,9 @@ function executablePlanBytes(
         planVersion: overrides?.planVersion ?? '2.3',
         schemaVersion: overrides?.schemaVersion ?? 'v1.2',
         contractVersion: '1.0.0',
-        ...(overrides?.requiresCapabilities !== undefined
-          ? { requiresCapabilities: overrides.requiresCapabilities }
-          : {}),
+        ...(overrides?.requiresCapabilities === undefined
+          ? {}
+          : { requiresCapabilities: overrides.requiresCapabilities }),
       },
       steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
     }),

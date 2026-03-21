@@ -36,6 +36,9 @@ type StoredPlanRow = {
   plan_sha256: string;
   schema_version: string;
   size_bytes: number;
+  requires_capabilities?: unknown;
+  canonical_plan_json?: string;
+  executable_plan_json?: string;
   validation_state: 'PENDING_VALIDATION' | 'VALID' | 'INVALID';
   stored_at_iso: string;
   updated_at_iso: string;
@@ -114,13 +117,13 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
       planVersion: buildResult.plan.metadata.planVersion,
       schemaVersion: executable.schemaVersion,
       executableBytes,
-      ...(executable.requiresCapabilities !== undefined
-        ? { requiresCapabilities: executable.requiresCapabilities }
-        : {}),
+      ...(executable.requiresCapabilities === undefined
+        ? {}
+        : { requiresCapabilities: executable.requiresCapabilities }),
     });
 
-    await this.withTransaction(async (client) => {
-      await client.query(
+    return this.withTransaction(async (client) => {
+      const insertResult = await client.query<StoredPlanRow>(
         `
           INSERT INTO ${quoteIdentifier(this.schema)}.stored_plans (
             plan_id,
@@ -140,6 +143,20 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
             $1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, 'PENDING_VALIDATION', NULL, NOW(), NOW()
           )
           ON CONFLICT (plan_id) DO NOTHING
+          RETURNING
+            plan_id,
+            plan_version,
+            plan_uri,
+            plan_sha256,
+            schema_version,
+            size_bytes,
+            requires_capabilities,
+            canonical_plan_json,
+            executable_plan_json,
+            validation_state,
+            stored_at::text AS stored_at_iso,
+            updated_at::text AS updated_at_iso,
+            rejection_report_json
         `,
         [
           planId,
@@ -153,9 +170,27 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
           executable.text,
         ]
       );
-    });
 
-    return planRef;
+      const persisted =
+        insertResult.rows[0] ?? (await this.readStoredPlanRowForUpdate(client, planId));
+      if (!persisted) {
+        throw new Error(`PLAN_STORE_PERSIST_FAILED: ${planId}`);
+      }
+
+      assertStoredPlanMatchesRequest(persisted, {
+        planRef,
+        canonicalPlanJson: buildResult.canonicalPlanJson,
+        executablePlanJson: executable.text,
+      });
+
+      if (persisted.validation_state !== 'PENDING_VALIDATION') {
+        throw new Error(
+          `PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED: ${planId}:${persisted.validation_state}`
+        );
+      }
+
+      return buildPlanRefFromStoredRow(persisted);
+    });
   }
 
   public async markValid(planRef: PlanRefSchemaT): Promise<void> {
@@ -252,6 +287,35 @@ export class PostgresPlanStore implements IPlanValidationLifecycleStore, IPlanFe
     return Buffer.from(row.executable_plan_json, 'utf8');
   }
 
+  private async readStoredPlanRowForUpdate(
+    client: PoolClient,
+    planId: string
+  ): Promise<StoredPlanRow | undefined> {
+    const result = await client.query<StoredPlanRow>(
+      `
+        SELECT
+          plan_id,
+          plan_version,
+          plan_uri,
+          plan_sha256,
+          schema_version,
+          size_bytes,
+          requires_capabilities,
+          canonical_plan_json,
+          executable_plan_json,
+          validation_state,
+          stored_at::text AS stored_at_iso,
+          updated_at::text AS updated_at_iso,
+          rejection_report_json
+        FROM ${quoteIdentifier(this.schema)}.stored_plans
+        WHERE plan_id = $1
+        FOR UPDATE
+      `,
+      [planId]
+    );
+    return result.rows[0];
+  }
+
   private async transition(
     planId: string,
     expectedState: 'PENDING_VALIDATION',
@@ -346,4 +410,63 @@ function buildPlanRef(input: {
       ? { requiresCapabilities: [...input.requiresCapabilities] }
       : {}),
   };
+}
+
+function buildPlanRefFromStoredRow(row: StoredPlanRow): PlanRefSchemaT {
+  const requiresCapabilities = normalizeRequiresCapabilities(row.requires_capabilities);
+  return {
+    uri: row.plan_uri,
+    sha256: row.plan_sha256,
+    schemaVersion: row.schema_version,
+    planId: row.plan_id,
+    planVersion: row.plan_version,
+    sizeBytes: row.size_bytes,
+    ...(requiresCapabilities.length > 0 ? { requiresCapabilities } : {}),
+  };
+}
+
+function assertStoredPlanMatchesRequest(
+  row: StoredPlanRow,
+  expected: {
+    planRef: PlanRefSchemaT;
+    canonicalPlanJson: string;
+    executablePlanJson: string;
+  }
+): void {
+  const mismatches: string[] = [];
+
+  if (row.plan_version !== expected.planRef.planVersion) mismatches.push('plan_version');
+  if (row.plan_uri !== expected.planRef.uri) mismatches.push('plan_uri');
+  if (row.plan_sha256 !== expected.planRef.sha256) mismatches.push('plan_sha256');
+  if (row.schema_version !== expected.planRef.schemaVersion) mismatches.push('schema_version');
+  if (row.size_bytes !== expected.planRef.sizeBytes) mismatches.push('size_bytes');
+
+  const actualCapabilities = normalizeRequiresCapabilities(row.requires_capabilities);
+  const expectedCapabilities = [...(expected.planRef.requiresCapabilities ?? [])].sort(
+    (left, right) => left.localeCompare(right)
+  );
+  if (JSON.stringify(actualCapabilities) !== JSON.stringify(expectedCapabilities)) {
+    mismatches.push('requires_capabilities');
+  }
+
+  if (row.canonical_plan_json !== expected.canonicalPlanJson)
+    mismatches.push('canonical_plan_json');
+  if (row.executable_plan_json !== expected.executablePlanJson)
+    mismatches.push('executable_plan_json');
+
+  if (mismatches.length > 0) {
+    throw new Error(`PLAN_STORE_CONFLICT: ${expected.planRef.planId}:${mismatches.join(',')}`);
+  }
+}
+
+function normalizeRequiresCapabilities(value: unknown): string[] {
+  if (value === null || value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
+    throw new Error('PLAN_STORE_ROW_INVALID: requires_capabilities');
+  }
+
+  return [...value].sort((left, right) => left.localeCompare(right));
 }
