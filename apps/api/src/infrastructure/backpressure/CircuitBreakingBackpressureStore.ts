@@ -81,7 +81,10 @@ export class CircuitBreakingBackpressureStore implements BackpressureSnapshotEnv
   ): Promise<BackpressureSnapshotEnvelope> {
     try {
       const fallback = await this.deps.fallbackStore.read(tenantId);
-      if (fallback && this.nowEpochMs() - fallback.capturedAtEpochMs <= this.deps.snapshotMaxAgeMs) {
+      if (
+        fallback &&
+        this.nowEpochMs() - fallback.capturedAtEpochMs <= this.deps.snapshotMaxAgeMs
+      ) {
         return {
           snapshot: fallback.snapshot,
           capturedAtEpochMs: fallback.capturedAtEpochMs,

@@ -1,10 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-import type {
-  BackpressureSnapshotEnvelope,
-  PersistedBackpressureFallbackStore,
-} from './types.js';
+import type { BackpressureSnapshotEnvelope, PersistedBackpressureFallbackStore } from './types.js';
 
 type PersistedData = {
   readonly version: 1;
@@ -85,9 +82,7 @@ function isMissingFileError(error: unknown): boolean {
   );
 }
 
-function isBackpressureSnapshot(
-  value: unknown
-): value is BackpressureSnapshotEnvelope['snapshot'] {
+function isBackpressureSnapshot(value: unknown): value is BackpressureSnapshotEnvelope['snapshot'] {
   return (
     typeof value === 'object' &&
     value !== null &&

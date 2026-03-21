@@ -13,9 +13,7 @@ export class RawSqlBackpressureStore implements BackpressureSnapshotEnvelopeStor
     return (await this.getTenantSnapshotEnvelope(tenantId)).snapshot;
   }
 
-  public async getTenantSnapshotEnvelope(
-    tenantId: string
-  ): Promise<BackpressureSnapshotEnvelope> {
+  public async getTenantSnapshotEnvelope(tenantId: string): Promise<BackpressureSnapshotEnvelope> {
     const snapshot = await this.reader.getTenantSnapshot(tenantId);
     return {
       snapshot: {

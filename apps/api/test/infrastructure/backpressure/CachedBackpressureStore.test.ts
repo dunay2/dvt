@@ -44,16 +44,14 @@ describe('CachedBackpressureStore', () => {
   it('does not cache fallback snapshots', async () => {
     const delegate = {
       getTenantSnapshot: vi.fn(),
-      getTenantSnapshotEnvelope: vi
-        .fn()
-        .mockResolvedValue({
-          snapshot: {
-            pendingEventsPerTenant: 1,
-            outboxOldestAgeMs: 10_000,
-          },
-          capturedAtEpochMs: 500,
-          source: 'fallback' as const,
-        }),
+      getTenantSnapshotEnvelope: vi.fn().mockResolvedValue({
+        snapshot: {
+          pendingEventsPerTenant: 1,
+          outboxOldestAgeMs: 10_000,
+        },
+        capturedAtEpochMs: 500,
+        source: 'fallback' as const,
+      }),
     };
     const store = new CachedBackpressureStore({
       delegate,

@@ -92,8 +92,7 @@ export async function buildProtectedRuntimeModule(
     failureThreshold: 5,
     openDurationMs: 30_000,
     snapshotMaxAgeMs:
-      env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS +
-      env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
+      env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS + env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
   });
   const backpressureStore = new CachedBackpressureStore({
     delegate: resilientBackpressureStore,
