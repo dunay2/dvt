@@ -8,36 +8,21 @@ export const HEX_64_A = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 export const HEX_64_B = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
 
 export const VALID_PLANNER_INPUT_FIXTURE = {
-  manifest: {
-    metadata: {
-      project_name: 'analytics',
-    },
-    nodes: {
-      'model.analytics.customers': {
-        resource_type: 'model',
+  graphSource: {
+    kind: 'normalized-graph-v1',
+    nodes: [
+      {
+        nodeId: 'model.analytics.customers',
+        resourceType: 'model',
+        dependsOn: [],
       },
-      'model.analytics.orders': {
-        resource_type: 'model',
+      {
+        nodeId: 'model.analytics.orders',
+        resourceType: 'model',
+        dependsOn: ['model.analytics.customers'],
       },
-    },
+    ],
   },
-  manifestRef: {
-    uri: 's3://acme-dbt-artifacts/prod/manifest.json',
-    sha256: HEX_64_A,
-    artifactId: 'manifest-prod-20260226',
-  },
-  nodes: [
-    {
-      nodeId: 'model.analytics.customers',
-      resourceType: 'model',
-      dependsOn: [],
-    },
-    {
-      nodeId: 'model.analytics.orders',
-      resourceType: 'model',
-      dependsOn: ['model.analytics.customers'],
-    },
-  ],
   selection: {
     selectedNodeIds: ['model.analytics.orders'],
     includeUpstream: true,
@@ -76,6 +61,21 @@ export const VALID_PLANNER_INPUT_FIXTURE = {
   requestedBy: 'ci-bot',
   requestId: 'req-20260226-0001',
   requestedAtIso: '2026-02-26T22:00:00.000Z',
+};
+
+export const NO_SOURCE_PLANNER_INPUT_FIXTURE = {
+  selection: {
+    selectedNodeIds: ['model.analytics.orders'],
+  },
+};
+
+export const MULTI_SOURCE_PLANNER_INPUT_FIXTURE = {
+  ...VALID_PLANNER_INPUT_FIXTURE,
+  manifestRef: {
+    uri: 's3://acme-dbt-artifacts/prod/manifest.json',
+    sha256: HEX_64_A,
+    artifactId: 'manifest-prod-20260226',
+  },
 };
 
 export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
@@ -124,7 +124,7 @@ export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
 export const INVALID_PLANNER_INPUT_FIXTURE = {
   ...VALID_PLANNER_INPUT_FIXTURE,
   manifestRef: {
-    ...VALID_PLANNER_INPUT_FIXTURE.manifestRef,
+    uri: 's3://acme-dbt-artifacts/prod/manifest.json',
     sha256: 'not-a-sha256',
   },
 };

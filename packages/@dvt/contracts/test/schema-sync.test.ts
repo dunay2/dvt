@@ -136,6 +136,14 @@ const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }
     valid: true,
   },
   {
+    label: 'graphSource + selection',
+    input: {
+      graphSource: { kind: 'normalized-graph-v1', nodes: BASE_NODES },
+      selection: BASE_SELECTION,
+    },
+    valid: true,
+  },
+  {
     label: 'manifestRef + selection',
     input: {
       manifestRef: {
@@ -163,7 +171,28 @@ const ENVELOPE_FIXTURES: Array<{ label: string; input: unknown; valid: boolean }
   {
     label: 'selection only (no graph source)',
     input: { selection: BASE_SELECTION },
-    valid: true, // Type-level: selection is the only required field; one-active-source is enforced by planner logic
+    valid: false,
+  },
+  {
+    label: 'graphSource + nodes',
+    input: {
+      graphSource: { kind: 'normalized-graph-v1', nodes: BASE_NODES },
+      nodes: BASE_NODES,
+      selection: BASE_SELECTION,
+    },
+    valid: false,
+  },
+  {
+    label: 'manifestRef + graphSource',
+    input: {
+      manifestRef: {
+        uri: 's3://bucket/manifest.json',
+        sha256: 'a'.repeat(64),
+      },
+      graphSource: { kind: 'normalized-graph-v1', nodes: BASE_NODES },
+      selection: BASE_SELECTION,
+    },
+    valid: false,
   },
 
   // Invalid cases

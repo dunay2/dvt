@@ -17,19 +17,19 @@ export class InputEnvelopeValidator {
       throw new PlannerError(PlannerErrorCode.INVALID_INPUT, 'input must be an object.');
     }
 
-    const activeSources = [input.manifest, input.nodes].filter((v) => v !== undefined).length;
+    const activeSources = [input.graphSource, input.nodes].filter((v) => v !== undefined).length;
 
     if (activeSources > 1) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
-        'One-active-source rule violation: at most one of manifest or nodes may be provided.'
+        'One-active-source rule violation: at most one of graphSource or nodes may be provided.'
       );
     }
 
     if (activeSources === 0) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
-        'No graph source provided: exactly one of manifest or nodes is required.'
+        'No graph source provided: exactly one of graphSource or nodes is required.'
       );
     }
   }

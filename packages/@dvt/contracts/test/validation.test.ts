@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   ContractValidationError,
   parseExecuteStepRequest,
+  parsePlannerGraphSourceV1,
+  parsePlannerInputEnvelopeV2,
   parsePlanRef,
   parseRunContext,
   parseSignalRequest,
@@ -65,5 +67,39 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(ctx.targetAdapter).toBe('temporal');
+  });
+
+  it('throws ContractValidationError for malformed planner graph source', () => {
+    expect(() =>
+      parsePlannerGraphSourceV1({
+        kind: 'legacy-graph',
+        nodes: [],
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('throws ContractValidationError when planner input has no active source', () => {
+    expect(() =>
+      parsePlannerInputEnvelopeV2({
+        selection: {
+          selectedNodeIds: ['model.analytics.orders'],
+        },
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('throws ContractValidationError when planner input has more than one active source', () => {
+    expect(() =>
+      parsePlannerInputEnvelopeV2({
+        graphSource: {
+          kind: 'normalized-graph-v1',
+          nodes: [],
+        },
+        nodes: [],
+        selection: {
+          selectedNodeIds: ['model.analytics.orders'],
+        },
+      })
+    ).toThrow(ContractValidationError);
   });
 });

@@ -11,9 +11,9 @@
  */
 
 import type {
-  DbtManifestLike,
   ExecutionPlanV2,
   GraphNode,
+  PlannerGraphSourceV1,
   PlannerPolicyClassSet,
   PlannerSelection,
 } from '@dvt/contracts';
@@ -25,6 +25,7 @@ export type {
   ExecutionStepV2,
   GraphNode,
   PlanCore,
+  PlannerGraphSourceV1,
   PlannerSelection,
   ResolvedPolicies,
   StepKind,
@@ -39,15 +40,15 @@ export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
  * Planner-internal raw input envelope (pre-normalization).
  *
  * Intentionally differs from the public PlannerInputEnvelopeV2 in @dvt/contracts:
- * - `nodes` is optional here because the planner can derive nodes from `manifest`
- * - `manifestRef` is not present — the PlannerFacade resolves it to `manifest` before hand-off
- * - `environment` is not present — stripped by PlannerFacade at the application boundary
+ * - `graphSource` is optional because direct `nodes` remains a compatibility path
+ * - `manifestRef` and `manifest` are not present - the PlannerFacade resolves or normalizes them before hand-off
+ * - `environment` is not present - stripped by PlannerFacade at the application boundary
  *
  * After InputEnvelopeValidator runs, the output is NormalizedPlannerInput where
  * `nodes` is always present.
  */
 export interface PlannerInputEnvelopeV2 {
-  manifest?: DbtManifestLike;
+  graphSource?: PlannerGraphSourceV1;
   nodes?: readonly GraphNode[];
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
