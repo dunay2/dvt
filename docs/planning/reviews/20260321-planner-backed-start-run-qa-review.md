@@ -12,7 +12,7 @@ planning_type: review
 - Reviewed commit on `main`: `f9602845`
 - Review type: QA compliance review against normative contracts and runtime behavior
 - Reviewer stance: hard QA / specification compliance review
-- Verdict: **Partially compliant after remediation patches; remaining gaps are now concentrated in lifecycle reuse semantics and missing Temporal proof**
+- Verdict: **Partially compliant after remediation patches; remaining gaps are now concentrated in lifecycle reuse semantics and protected-runtime Temporal proof**
 
 ## 1. Governing sources used
 
@@ -44,7 +44,7 @@ The slice is stronger now, but the remediation also exposed new lifecycle invari
 
 1. the persisted validation lifecycle is not adapter-scoped even though executability validation is adapter-specific;
 2. strict `PENDING_VALIDATION -> VALID` semantics make concurrent duplicate admissions of the same canonical plan a race-prone path unless the contract explicitly defines single-owner behavior;
-3. the API still lacks end-to-end proof that planner-backed stored plans execute correctly on the Temporal path.
+3. the protected API still lacks a live PostgreSQL + OIDC + Temporal end-to-end proof even though the Temporal runtime path is now directly evidenced.
 
 ## 3. What is correct
 
@@ -212,7 +212,7 @@ That may be acceptable if the contract intends a single validation owner per can
 
 ---
 
-### 4.5. Major — the API admits `dvt-plan` for execution while runtime support is only demonstrated for the mock path, not end-to-end for Temporal
+### 4.5. Medium — Temporal runtime support for planner-backed `dvt-plan://postgres` refs is now evidenced, but protected-runtime proof is still incomplete
 
 #### Why this matters
 
@@ -225,15 +225,16 @@ That is a strong product claim: planner-backed stored plans are not just buildab
 - [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts) allows `dvt-plan` in `planRefAllowedSchemes`.
 - The same module wires `StoredPlanExecutabilityValidator` against the adapter map for admission-time acceptance.
 - The protected integration test only proves the path for `targetAdapter: 'mock'`.
-- A codebase search shows explicit byte-integrity execution wiring in Temporal activities, but no explicit `dvt-plan://postgres/...` support surfaced in the Temporal-side sources reviewed for this slice.
+- [packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts](../../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) now executes a planner-backed `dvt-plan://postgres/...` ref through the Temporal runtime and asserts that the fetch path receives that stored-plan reference.
+- [packages/@dvt/adapter-temporal/src/activities/stepActivities.ts](../../../packages/@dvt/adapter-temporal/src/activities/stepActivities.ts) remains the integrity-enforcing execution boundary that fetches bytes and validates the plan against the ref.
 
 #### QA interpretation
 
-This is not a proven runtime defect yet, but it is a **missing conformance proof** for a path the API appears to advertise. At minimum, the slice lacks the end-to-end evidence required to claim planner-backed stored-plan execution is adapter-complete.
+The missing proof is narrower now. Runtime support for stored-plan refs on Temporal is evidenced directly, so the remaining gap is the absence of a protected API lane that exercises real admission, persistence, validation, and Temporal dispatch together in one executable environment.
 
 #### Severity
 
-**Major**
+**Medium**
 
 ---
 
@@ -273,12 +274,12 @@ The current test set now covers:
 
 It still does not demonstrate:
 
-1. planner-backed execution for `targetAdapter: 'temporal'`,
+1. protected-runtime planner-backed execution for `targetAdapter: 'temporal'` in one live API lane,
 2. accepted behavior for concurrent duplicate admissions of the same canonical plan.
 
 #### Why this matters
 
-The most severe original evidence gaps were closed, but the adapter-complete and concurrency-complete story is still unproven.
+The most severe original evidence gaps were closed, but the protected-runtime Temporal lane and the concurrency-complete story are still unproven.
 
 #### Severity
 

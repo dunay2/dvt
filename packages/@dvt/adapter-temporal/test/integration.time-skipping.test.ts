@@ -632,9 +632,15 @@ class TestIntegrity {
 // Factories
 // ============================================================================
 
-function createPlanRef(planId: string, planBytes: Uint8Array): PlanRef {
+function createPlanRef(
+  planId: string,
+  planBytes: Uint8Array,
+  options?: {
+    uri?: string;
+  }
+): PlanRef {
   return {
-    uri: `memory://plans/${planId}.json`,
+    uri: options?.uri ?? `memory://plans/${planId}.json`,
     sha256: sha256Hex(planBytes),
     schemaVersion: 'v1.2',
     planId,
@@ -656,7 +662,10 @@ function createRunContext(runId: RunId): RunContext {
 function createActivityDeps(
   store: TestStateStore,
   _outbox: TestOutbox,
-  planBytes: Uint8Array
+  planBytes: Uint8Array,
+  options?: {
+    onFetch?: (planRef: PlanRef) => void;
+  }
 ): ActivityDeps {
   const runStateCommandPort: RunStateCommandPort = {
     bootstrapRun: (input) => store.bootstrapRunTx(input),
@@ -668,7 +677,10 @@ function createActivityDeps(
     clock: new TestClock(),
     idempotency: new TestIdempotency(),
     fetcher: {
-      fetch: async () => planBytes,
+      fetch: async (planRef) => {
+        options?.onFetch?.(planRef);
+        return planBytes;
+      },
     },
     integrity: new TestIntegrity(),
   };
@@ -880,6 +892,72 @@ describe('temporal integration (time-skipping)', () => {
         expect(['PENDING', 'CANCELLED', 'COMPLETED', 'FAILED']).toContain(afterCancel);
       } finally {
         // Teardown (ADR-0001 Section 3: single teardown owner)
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
+  it(
+    'executes a planner-backed dvt-plan postgres ref through the Temporal runtime',
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
+
+      const store = new TestStateStore();
+      const outbox = new TestOutbox();
+      const projector = new TestProjector();
+      const plan = mkLinearThreeStepPlan();
+      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
+
+      const fetchedPlanRefs: PlanRef[] = [];
+      const planRef = createPlanRef('it-plan-linear-3', planBytes, {
+        uri: 'dvt-plan://postgres/it-plan-linear-3',
+      });
+      const ctx = createRunContext(RunId.of('run-it-stored-plan-temporal'));
+
+      const temporalConfig = loadTemporalAdapterConfig({
+        TEMPORAL_NAMESPACE: 'default',
+        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-stored-plan',
+        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      });
+
+      const worker = new TemporalWorkerHost({
+        temporalConfig: {
+          ...temporalConfig,
+          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
+        },
+        workflowsPath: WORKFLOW_PATH,
+        activityDeps: createActivityDeps(store, outbox, planBytes, {
+          onFetch(planRefFromFetch) {
+            fetchedPlanRefs.push(planRefFromFetch);
+          },
+        }),
+      });
+
+      await worker.start(env.nativeConnection);
+
+      const adapter = new TemporalAdapter({
+        workflowClient: env.client.workflow,
+        config: temporalConfig,
+        stateStore: store,
+        projector,
+      });
+
+      try {
+        await adapter.startRun(planRef, ctx);
+
+        await waitForCondition(
+          () => store.listRunEvents(RunId.of(ctx.runId)),
+          (events) => events.some((event) => event.eventType === 'RunCompleted'),
+          { timeoutMs: 30_000 }
+        );
+
+        expect(fetchedPlanRefs).toContainEqual(planRef);
+        expect((await store.listRunEvents(RunId.of(ctx.runId))).at(-1)?.eventType).toBe(
+          'RunCompleted'
+        );
+      } finally {
         await worker.shutdown();
         await env.teardown();
       }
