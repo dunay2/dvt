@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.5.0](https://github.com/dunay2/dvt/compare/v4.4.0...v4.5.0) (2026-03-21)
+
+
+### Features
+
+* **api:** Add planner-backed stored plan start flow ([#533](https://github.com/dunay2/dvt/issues/533)) ([f960284](https://github.com/dunay2/dvt/commit/f9602845365aa0e33012bfecdfcf15b7fb12b825))
+
 ## [4.4.0](https://github.com/dunay2/dvt/compare/v4.3.0...v4.4.0) (2026-03-21)
 
 
