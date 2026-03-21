@@ -72,7 +72,7 @@ flowchart TD
 | `S03` | `WorkflowEngine` still owns too much start-run orchestration                         | `@dvt/engine`                                                                          | M    | Medium |
 | `S04` | provider ref reconciliation is fail-soft but under-modeled                           | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`                               | M    | Medium |
 | `S05` | event payload shape lacks explicit versioning                                        | `@dvt/contracts`, `@dvt/engine`, adapters, projectors                                  | M    | Medium |
-| `S06` | schema migrations have no applied-version table                                      | `@dvt/adapter-postgres`                                                                | S    | Low    |
+| `S06` | schema migrations have no applied-version table — **closed 2026-03-21**              | `@dvt/adapter-postgres`                                                                | S    | Low    |
 | `S07` | lineage job naming and sink shape need tightening                                    | `@dvt/traceability-service`, lineage workers                                           | S    | Low    |
 | `S08` | plan storage is implicit and provider-side only                                      | `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, planner/api wiring | L    | High   |
 | `S09` | retry ownership rules are implicit across layers                                     | ADR/doc layer, engine, adapters                                                        | S    | Medium |
