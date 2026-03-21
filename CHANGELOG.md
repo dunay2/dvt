@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.6.0](https://github.com/dunay2/dvt/compare/v4.5.0...v4.6.0) (2026-03-21)
+
+
+### Features
+
+* **state-store:** Archive export, verifier, Postgres adapter, and test coverage ([#535](https://github.com/dunay2/dvt/issues/535)) ([bac3b4c](https://github.com/dunay2/dvt/commit/bac3b4c9bbc79c035284045b75f5ab782c8510cb))
+* **state-store:** G5-PR2 — Deferred deletion and restore ([#536](https://github.com/dunay2/dvt/issues/536)) ([91fa3a0](https://github.com/dunay2/dvt/commit/91fa3a0eb21e41fe2f7d5691fde62e2490928f2c))
+
+
+### Bug Fixes
+
+* **api:** Harden planner-backed startRun validation and evidence ([#541](https://github.com/dunay2/dvt/issues/541)) ([6ffc260](https://github.com/dunay2/dvt/commit/6ffc260e7e60f38ae373117f1efe85cd97f6b635))
+
 ## [4.5.0](https://github.com/dunay2/dvt/compare/v4.4.0...v4.5.0) (2026-03-21)
 
 
