@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.7.0](https://github.com/dunay2/dvt/compare/v4.6.0...v4.7.0) (2026-03-21)
+
+
+### Features
+
+* **adapters:** S06 + S01 — Migration version table and dead contract cleanup ([#538](https://github.com/dunay2/dvt/issues/538)) ([7c63073](https://github.com/dunay2/dvt/commit/7c63073e64163a9a1962d218c9c034664c5d9831))
+* **state-store:** G5-PR3 — Delivery buffer retention and purge ([#540](https://github.com/dunay2/dvt/issues/540)) ([709782b](https://github.com/dunay2/dvt/commit/709782bae3e8a4abba0e9666bad18ed82e6ea4ce))
+
 ## [4.6.0](https://github.com/dunay2/dvt/compare/v4.5.0...v4.6.0) (2026-03-21)
 
 
