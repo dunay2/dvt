@@ -7,7 +7,7 @@ const validator = new InputEnvelopeValidator();
 
 const BASE_SELECTION = { selectedNodeIds: ['model.a'] };
 const BASE_NODES = [{ nodeId: 'model.a', resourceType: 'model', dependsOn: [] }];
-const BASE_MANIFEST = { nodes: {} };
+const BASE_GRAPH_SOURCE = { kind: 'normalized-graph-v1' as const, nodes: BASE_NODES };
 
 describe('InputEnvelopeValidator — one-active-source rule', () => {
   it('accepts nodes as sole graph source', () => {
@@ -16,15 +16,19 @@ describe('InputEnvelopeValidator — one-active-source rule', () => {
     ).not.toThrow();
   });
 
-  it('accepts manifest as sole graph source', () => {
+  it('accepts graphSource as sole graph source', () => {
     expect(() =>
-      validator.validate({ manifest: BASE_MANIFEST, selection: BASE_SELECTION })
+      validator.validate({ graphSource: BASE_GRAPH_SOURCE, selection: BASE_SELECTION })
     ).not.toThrow();
   });
 
-  it('rejects dual-source: manifest + nodes', () => {
+  it('rejects dual-source: graphSource + nodes', () => {
     expect(() =>
-      validator.validate({ manifest: BASE_MANIFEST, nodes: BASE_NODES, selection: BASE_SELECTION })
+      validator.validate({
+        graphSource: BASE_GRAPH_SOURCE,
+        nodes: BASE_NODES,
+        selection: BASE_SELECTION,
+      })
     ).toThrow(
       expect.objectContaining({
         code: PlannerErrorCode.INVALID_INPUT,

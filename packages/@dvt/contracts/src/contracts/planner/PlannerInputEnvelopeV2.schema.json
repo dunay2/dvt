@@ -3,8 +3,35 @@
   "$id": "dvt:contracts:planner:PlannerInputEnvelopeV2:v2.3.1",
   "type": "object",
   "required": ["selection"],
+  "oneOf": [
+    { "required": ["graphSource"] },
+    { "required": ["manifest"] },
+    { "required": ["manifestRef"] },
+    { "required": ["nodes"] }
+  ],
   "additionalProperties": false,
   "properties": {
+    "graphSource": {
+      "type": "object",
+      "required": ["kind", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "normalized-graph-v1" },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["nodeId", "resourceType", "dependsOn"],
+            "additionalProperties": false,
+            "properties": {
+              "nodeId": { "type": "string" },
+              "resourceType": { "type": "string" },
+              "dependsOn": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
     "manifest": { "type": "object", "additionalProperties": true },
     "manifestRef": {
       "type": "object",

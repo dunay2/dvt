@@ -45,6 +45,20 @@ export interface GraphNode {
   dependsOn: readonly string[];
 }
 
+/**
+ * Canonical typed inline graph-source boundary for planner ingestion.
+ *
+ * This keeps the public planner edge generic while allowing callers to pass
+ * a fully normalized dependency graph without exposing DBT artifact structure
+ * as the long-term semantic contract.
+ */
+export const PLANNER_GRAPH_SOURCE_KIND = 'normalized-graph-v1' as const;
+
+export interface PlannerGraphSourceV1 {
+  kind: typeof PLANNER_GRAPH_SOURCE_KIND;
+  nodes: readonly GraphNode[];
+}
+
 export interface PlannerSelection {
   selectedNodeIds: readonly string[];
   includeUpstream?: boolean;
@@ -144,6 +158,7 @@ export type ExecutionPlanV2 = {
  */
 export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
   canonicalSource: 'manifestRef' as const,
+  preferredInlineSource: 'graphSource' as const,
   compatibilityPaths: ['manifest', 'nodes'] as const,
   retentionJustification:
     'Required for migration and interop with callers that pre-date manifestRef support.',
@@ -160,7 +175,7 @@ export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
  *
  * ## One-active-source rule
  *
- * Exactly **one** of `manifestRef`, `manifest`, or `nodes` may be active in a
+ * Exactly **one** of `manifestRef`, `graphSource`, `manifest`, or `nodes` may be active in a
  * single request. The planner MUST reject envelopes with:
  * - no graph source provided
  * - more than one graph source provided
@@ -170,6 +185,8 @@ export const GRAPH_SOURCE_COMPATIBILITY_POLICY = {
  *
  * - `manifestRef` is the **canonical production path** — immutable, integrity-
  *   verified, preferred for all new callers.
+ * - `graphSource` is the **canonical typed inline path** - preferred over raw
+ *   manifest payloads when the caller already has a normalized graph.
  * - `manifest` and `nodes` are **compatibility-only** paths retained for
  *   migration. They do not have permanent equal-citizen status. See
  *   `GRAPH_SOURCE_COMPATIBILITY_POLICY` for the removal rule.
@@ -182,9 +199,19 @@ export interface PlannerInputEnvelopeV2 {
    * Immutable reference to a manifest artifact stored out-of-band.
    *
    * **Canonical production path.** Preferred for all new callers.
-   * When provided, `manifest` and `nodes` MUST NOT also be provided.
+   * When provided, `graphSource`, `manifest`, and `nodes` MUST NOT also be provided.
    */
   manifestRef?: DbtManifestRef;
+
+  /**
+   * Typed inline graph source.
+   *
+   * Preferred for callers that already hold a normalized graph in memory and
+   * do not need artifact resolution.
+   *
+   * When provided, `manifestRef`, `manifest`, and `nodes` MUST NOT also be provided.
+   */
+  graphSource?: PlannerGraphSourceV1;
 
   /**
    * Raw dbt manifest payload passed inline.
@@ -193,7 +220,7 @@ export interface PlannerInputEnvelopeV2 {
    * `manifestRef`. Subject to deprecation review. New callers SHOULD use
    * `manifestRef` instead.
    *
-   * When provided, `manifestRef` and `nodes` MUST NOT also be provided.
+   * When provided, `manifestRef`, `graphSource`, and `nodes` MUST NOT also be provided.
    */
   manifest?: DbtManifestLike;
 
@@ -204,7 +231,7 @@ export interface PlannerInputEnvelopeV2 {
    * before planning. Subject to deprecation review. New callers SHOULD use
    * `manifestRef` instead.
    *
-   * When provided, `manifestRef` and `manifest` MUST NOT also be provided.
+   * When provided, `manifestRef`, `graphSource`, and `manifest` MUST NOT also be provided.
    */
   nodes?: readonly GraphNode[];
 

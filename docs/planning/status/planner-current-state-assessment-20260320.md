@@ -127,8 +127,6 @@ topo/depth -> resolve policies -> build steps -> assemble canonical plan`) is
 
 What is _not_ closed:
 
-- a generic typed graph-source boundary at the public planner edge (`S10`,
-  redefined from the earlier DBT-centric framing);
 - explicit persisted plan storage and validation lifecycle implementation
   (`S08` plus runtime handoff);
 - planner-side enforcement of `custom` namespace registration;
@@ -142,7 +140,7 @@ What is _not_ closed:
 | Component                                 | Score | Checkpoints | Current truth                                                                            | Main open items                                                 |
 | ----------------------------------------- | ----- | ----------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | Contract and governance surface           | `92%` | `5.5 / 6`   | Public contracts are canonicalized; local-doc triage and owner/date assignment now exist | Stage 1.1 is still package-local rather than repo-local         |
-| Application boundary and artifact ingress | `75%` | `4.5 / 6`   | `PlannerFacade` plus `manifestRef` port are real                                         | typed graph-source boundary, default resolver composition       |
+| Application boundary and artifact ingress | `83%` | `5 / 6`     | `PlannerFacade`, `manifestRef` ingress, and typed `graphSource` normalization are real   | default resolver composition, compatibility-path retirement     |
 | Deterministic compilation core            | `94%` | `7.5 / 8`   | Core planning pipeline is implemented and well tested                                    | volatile plan metadata still mixed into assembly                |
 | Step semantics and type governance        | `71%` | `5 / 7`     | Policy vocabulary and `IStepTypeRegistry` are real                                       | fail-closed unknown kinds, `custom` enforcement                 |
 | Compiled artifact binding and enrichment  | `70%` | `3.5 / 5`   | `compiledCodeRef` enrichment exists and is governed                                      | runtime binding lifecycle not fully closed                      |
@@ -152,7 +150,7 @@ What is _not_ closed:
 | Gateway DSL satellite                     | `75%` | `3 / 4`     | deterministic parser/evaluator exists and is consumed                                    | no accepted repository-wide DSL spec                            |
 | Productization and recovery integration   | `17%` | `1 / 6`     | planner-engine bridge tests exist                                                        | no recovery flow, no persisted plan product surface             |
 
-Equal-weight average across those components: `70%`.
+Equal-weight average across those components: `71%`.
 
 That average is less important than the shape of the profile:
 
@@ -165,9 +163,11 @@ That average is less important than the shape of the profile:
 
 - `PlannerFacade` is the sole public planner entrypoint, and the domain
   `Planner` is intentionally not exported.
-- `manifestRef` is the canonical graph source; `manifest` and `nodes` remain
-  compatibility paths with a declared removal rule.
-- `IArtifactResolver` exists as the planner application-boundary port.
+- `manifestRef` is the canonical production graph source; `graphSource` is the
+  canonical typed inline path; `manifest` and `nodes` remain compatibility
+  paths with a declared removal rule.
+- `IArtifactResolver` exists as the planner application-boundary port and now
+  resolves typed graph sources for the domain boundary.
 - The core domain pipeline is split into dedicated collaborators:
   `InputEnvelopeValidator`, `ManifestGraphDeriver`, `GraphBuilder`,
   `NodeSelector`, `PlanAssembler`, `resolvePolicies`, and `StepFactory`.
@@ -186,9 +186,9 @@ That average is less important than the shape of the profile:
 
 ## What Is Still Open
 
-- `DbtManifestLike` is still `Record<string, unknown>` at the public boundary,
-  which means DBT artifact shape is still exposed where a generic graph-source
-  interface should exist.
+- `graphSource` now exists as the typed boundary, but raw `manifest` remains a
+  compatibility input at the public contract edge until callers migrate off the
+  DBT-shaped path.
 - `PlanAssembler` still emits `planVersion: '2.3'` inline instead of consuming
   the governed registry directly.
 - Planner output still requires a planner-to-engine bridge that adds
@@ -261,7 +261,7 @@ classDiagram
 
     class IArtifactResolver {
       <<interface>>
-      +resolveManifest(ref)
+      +resolveGraphSource(ref)
     }
 
     class Planner {
@@ -303,9 +303,9 @@ classDiagram
     class ExecutionPlanV2
 
     PlannerFacade --> IArtifactResolver
+    PlannerFacade --> ManifestGraphDeriver
     PlannerFacade --> Planner
     Planner --> InputEnvelopeValidator
-    Planner --> ManifestGraphDeriver
     Planner --> GraphBuilder
     Planner --> NodeSelector
     Planner --> PlanAssembler
@@ -330,14 +330,16 @@ sequenceDiagram
 
     Caller->>Facade: buildPlan(input)
     alt input.manifestRef is present
-        Facade->>Resolver: resolveManifest(manifestRef)
-        Resolver-->>Facade: manifest payload
+        Facade->>Resolver: resolveGraphSource(manifestRef)
+        Resolver-->>Facade: typed graphSource
+    else input.manifest is present
+        Facade->>Deriver: derive nodes from manifest
+        Deriver-->>Facade: typed graphSource
     end
     Facade->>Core: buildPlan(domainInput)
     Core->>Validator: validate(input)
-    alt input contains manifest
-        Core->>Deriver: derive nodes from manifest
-        Deriver-->>Core: graph nodes
+    alt input contains graphSource
+        Core->>Core: use graphSource.nodes
     end
     Core->>Graph: build validated graph
     Graph-->>Core: nodesById + dependentsById
@@ -356,9 +358,9 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> InputEnvelope
-    InputEnvelope --> ManifestResolved: optional PlannerFacade + IArtifactResolver
-    InputEnvelope --> DomainValidation: direct nodes or manifest path
-    ManifestResolved --> DomainValidation
+    InputEnvelope --> GraphSourceResolved: optional PlannerFacade + IArtifactResolver
+    InputEnvelope --> DomainValidation: direct graphSource, nodes, or manifest compatibility path
+    GraphSourceResolved --> DomainValidation
     DomainValidation --> CanonicalPlanBuilt
     CanonicalPlanBuilt --> CompiledCodeEnrichment: optional attachCompiledCodeRefs
     CanonicalPlanBuilt --> PlannerEngineBridge: current integration path
@@ -395,24 +397,24 @@ Partial:
 - canonical planner status and architecture material is still split between
   repo-level docs and `packages/@dvt/planner/docs/**`
 
-### 2. Application Boundary And Artifact Ingress - `75%`
+### 2. Application Boundary And Artifact Ingress - `83%`
 
 Implemented:
 
 - `PlannerFacade` implements the public `IPlanner` contract
 - `IArtifactResolver` exists and is only used at the application boundary
 - the one-active-source rule is enforced at the public boundary
+- `graphSource` now exists as the canonical typed inline boundary
+- raw `manifest` compatibility input is normalized in `PlannerFacade`, so the
+  domain planner only consumes `graphSource` or `nodes`
 - `environment` is accepted then stripped before domain hand-off
 
 Partial:
 
 - resolver composition is caller-owned; the repository does not yet present one
   default production-grade planner ingestion assembly
-
-Open:
-
-- the public graph-source boundary is still DBT-centric and weakly typed
-  (`S10`, redefined)
+- raw `manifest` and direct `nodes` remain published compatibility inputs while
+  downstream callers migrate to `manifestRef` / `graphSource`
 
 ### 3. Deterministic Compilation Core - `94%`
 
@@ -583,31 +585,31 @@ planning debt.
 
 ### SOLID Review
 
-| Principle | Rating   | Evidence                                                                                                            | Planner-specific gap                                                                                                                |
-| --------- | -------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| SRP       | Strong   | `InputEnvelopeValidator`, `ManifestGraphDeriver`, `GraphBuilder`, `NodeSelector`, `PlanAssembler` are each narrow   | `Planner` is still the orchestration center and `PlanAssembler` still mixes canonical assembly with volatile metadata               |
-| OCP       | Moderate | `StepFactory`, `IStepTypeRegistry`, and policy vocabulary create extension seams                                    | manifest parsing and default `dbtStepFactory` remain DBT-centric and are not yet hidden behind a first-class graph-source interface |
-| LSP       | Strong   | no inheritance-heavy design; substitution is interface-based (`IPlanner`, `IArtifactResolver`, `IStepTypeRegistry`) | none significant in the current tree                                                                                                |
-| ISP       | Strong   | interfaces are small and bounded                                                                                    | the lifecycle surface is still spread across several contract files                                                                 |
-| DIP       | Moderate | application boundary depends on `IArtifactResolver`; planner depends on `IStepTypeRegistry` abstraction             | `Planner` still constructs several concrete collaborators internally and `PlanAssembler` uses `new Date()` directly                 |
+| Principle | Rating   | Evidence                                                                                                            | Planner-specific gap                                                                                                   |
+| --------- | -------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| SRP       | Strong   | `InputEnvelopeValidator`, `ManifestGraphDeriver`, `GraphBuilder`, `NodeSelector`, `PlanAssembler` are each narrow   | `Planner` is still the orchestration center and `PlanAssembler` still mixes canonical assembly with volatile metadata  |
+| OCP       | Moderate | `StepFactory`, `IStepTypeRegistry`, and policy vocabulary create extension seams                                    | default `dbtStepFactory` remains DBT-centric and raw `manifest` compatibility still lives in the facade migration path |
+| LSP       | Strong   | no inheritance-heavy design; substitution is interface-based (`IPlanner`, `IArtifactResolver`, `IStepTypeRegistry`) | none significant in the current tree                                                                                   |
+| ISP       | Strong   | interfaces are small and bounded                                                                                    | the lifecycle surface is still spread across several contract files                                                    |
+| DIP       | Moderate | application boundary depends on `IArtifactResolver`; planner depends on `IStepTypeRegistry` abstraction             | `Planner` still constructs several concrete collaborators internally and `PlanAssembler` uses `new Date()` directly    |
 
 ### Hexagonal Architecture Review
 
-| Area                | Rating             | Evidence                                                                                        | Gap                                                                          |
-| ------------------- | ------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Boundary separation | Strong             | `PlannerFacade` owns ingestion concerns; domain planner stays IO-free                           | public graph-source boundary remains DBT-centric instead of interface-driven |
-| Port usage          | Strong             | `IArtifactResolver` is a real incoming port; `IStepTypeRegistry` is a contract-owned dependency | no default repository composition for the artifact resolver path             |
-| Pure domain core    | Moderate-to-strong | core pipeline is deterministic and side-effect free in the happy path                           | timestamps and observability layering are still emitted from `PlanAssembler` |
-| Runtime handoff     | Moderate           | contracts for validation lifecycle exist                                                        | plan storage and validated-start runtime are not implemented                 |
+| Area                | Rating             | Evidence                                                                                                            | Gap                                                                                            |
+| ------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Boundary separation | Strong             | `PlannerFacade` owns ingestion concerns; domain planner stays IO-free and now consumes typed `graphSource` or nodes | raw `manifest` compatibility input is still published and resolver composition is caller-owned |
+| Port usage          | Strong             | `IArtifactResolver` is a real incoming port; `IStepTypeRegistry` is a contract-owned dependency                     | no default repository composition for the artifact resolver path                               |
+| Pure domain core    | Moderate-to-strong | core pipeline is deterministic and side-effect free in the happy path                                               | timestamps and observability layering are still emitted from `PlanAssembler`                   |
+| Runtime handoff     | Moderate           | contracts for validation lifecycle exist                                                                            | plan storage and validated-start runtime are not implemented                                   |
 
 ### DDD Review
 
-| Area                                  | Rating             | Evidence                                                                                               | Gap                                                                              |
-| ------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Bounded context clarity               | Strong             | planner, engine, state, and adapters are explicitly separated in governance and code                   | planner-local docs still blur canonical vs local status                          |
-| Ubiquitous language                   | Moderate-to-strong | `plan`, `selection`, `manifestRef`, `compiledCodeRef`, `planVersion`, `PlanCore` are consistently used | the planner-to-engine bridge still reveals metadata drift                        |
-| Domain services and value objects     | Strong             | command objects and pure services are present across the pipeline                                      | `PlanCore` is not yet backed by an explicit aggregate lifecycle outside assembly |
-| Context map to other bounded contexts | Moderate           | contracts exist for executability validation, binding verification, and plan lifecycle                 | runtime implementations lag behind the context map                               |
+| Area                                  | Rating             | Evidence                                                                                                                  | Gap                                                                              |
+| ------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Bounded context clarity               | Strong             | planner, engine, state, and adapters are explicitly separated in governance and code                                      | planner-local docs still blur canonical vs local status                          |
+| Ubiquitous language                   | Moderate-to-strong | `plan`, `selection`, `manifestRef`, `graphSource`, `compiledCodeRef`, `planVersion`, and `PlanCore` are consistently used | the planner-to-engine bridge still reveals metadata drift                        |
+| Domain services and value objects     | Strong             | command objects and pure services are present across the pipeline                                                         | `PlanCore` is not yet backed by an explicit aggregate lifecycle outside assembly |
+| Context map to other bounded contexts | Moderate           | contracts exist for executability validation, binding verification, and plan lifecycle                                    | runtime implementations lag behind the context map                               |
 
 ## Bottom Line
 

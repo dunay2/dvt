@@ -35,15 +35,18 @@ function makeManifestNodes(count: number): ManifestNodeRecord {
 }
 
 function makeManifestEnvelope(size: 10 | 100 | 500): PlannerInputEnvelopeV2 {
-  const nodes = makeManifestNodes(size);
+  const manifestNodes = makeManifestNodes(size);
   const leaf = `model.analytics.n${(size - 1).toString().padStart(3, '0')}`;
+  const graphNodes = Object.entries(manifestNodes).map(([nodeId, node]) => ({
+    nodeId,
+    resourceType: node.resource_type,
+    dependsOn: [...node.depends_on.nodes],
+  }));
 
   return {
-    manifest: {
-      metadata: {
-        project_name: 'analytics',
-      },
-      nodes,
+    graphSource: {
+      kind: 'normalized-graph-v1',
+      nodes: graphNodes,
     },
     selection: {
       selectedNodeIds: [leaf],
