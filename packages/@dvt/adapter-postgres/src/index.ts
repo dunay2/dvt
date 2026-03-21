@@ -51,3 +51,4 @@ export {
 } from '@dvt/contracts';
 export { PostgresRunStateCommandPortBridge } from './runStateCommandPortBridge.js';
 export { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
+export { PostgresRunArchiveStore } from './PostgresRunArchiveStore.js';

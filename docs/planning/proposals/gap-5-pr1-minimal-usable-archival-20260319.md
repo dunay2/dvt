@@ -138,19 +138,21 @@ Suggested minimum:
 
 ## Checklist
 
-| Item                                  | Status  | Notes               |
-| ------------------------------------- | ------- | ------------------- |
-| Archive unit schema defined           | done    | delivered in `main` |
-| Catalog tables defined                | done    | delivered in `main` |
-| Exporter implemented                  | pending |                     |
-| Manifest generated                    | done    | delivered in `main` |
-| Async verifier implemented            | pending |                     |
-| Terminal snapshot pinning implemented | done    | delivered in `main` |
-| Metrics emitted                       | pending |                     |
-| Docs and evidence updated             | done    | closeouts recorded  |
+| Item                                  | Status | Notes                                                                                       |
+| ------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| Archive unit schema defined           | done   | delivered in `main`                                                                         |
+| Catalog tables defined                | done   | delivered in `main`                                                                         |
+| Exporter implemented                  | done   | `ObjectStorageRunArchiveExporter` + `FileSystemArchiveObjectStore` / `S3ArchiveObjectStore` |
+| Manifest generated                    | done   | delivered in `main`                                                                         |
+| Async verifier implemented            | done   | `RunArchiveVerifier` + verify path in exporter                                              |
+| Terminal snapshot pinning implemented | done   | delivered in `main`, wired through `RunArchiveCoordinator`                                  |
+| Metrics emitted                       | done   | all 6 metrics wired in coordinator and verifier                                             |
+| `PostgresRunArchiveStore` implemented | done   | full Postgres adapter, exported from `@dvt/adapter-postgres`                                |
+| Tests written                         | done   | 54 unit tests across 6 test files in `@dvt/state-store`                                     |
+| Docs and evidence updated             | done   | closeout `20260321-gap-5-pr1-export-verifier-closeout.md`                                   |
 
 ## PR Resolution Table
 
-| PR ID    | Planned status | Actual PR | Resolution | Notes                   |
-| -------- | -------------- | --------- | ---------- | ----------------------- |
-| `G5-PR1` | proposed       | pending   | open       | minimal usable archival |
+| PR ID    | Planned status | Actual PR | Resolution | Notes                                                          |
+| -------- | -------------- | --------- | ---------- | -------------------------------------------------------------- |
+| `G5-PR1` | proposed       | pending   | closed     | minimal usable archival — all deliverables complete 2026-03-21 |
