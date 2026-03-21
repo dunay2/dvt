@@ -214,6 +214,9 @@ importers:
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../../packages/@dvt/delivery
+      '@dvt/state-store':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/state-store
       pg:
         specifier: ^8.12.0
         version: 8.18.0

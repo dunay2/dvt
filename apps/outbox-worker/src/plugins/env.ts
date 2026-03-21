@@ -53,6 +53,12 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
   DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: z.coerce.number().int().positive().default(5000),
   DVT_OUTBOX_WORKER_STOP_ON_ERROR: envBoolean.default(false),
   DVT_OUTBOX_WORKER_RUN_MIGRATIONS: envBoolean.default(false),
+  DVT_PURGE_ENABLED: envBoolean.default(false),
+  DVT_PURGE_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
+  DVT_PURGE_DELIVERED_OUTBOX_RETENTION_DAYS: z.coerce.number().int().positive().default(7),
+  DVT_PURGE_OUTBOX_DEAD_LETTER_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
+  DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
+  DVT_PURGE_MAX_ROWS_PER_RUN: z.coerce.number().int().positive().default(5_000),
   DVT_OUTBOX_HTTP_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
   DVT_OUTBOX_HTTP_BEARER_TOKEN: z.string().optional(),
 });
