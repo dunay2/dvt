@@ -27,6 +27,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260318 — Stage 1.1 Planner Canonicalization: Boundary Contract Slices](ED-20260318-stage-1-1-planner-canonicalization-boundary-contracts.md)
 - [ED-20260320 - API runtime query integration](ED-20260320-api-runtime-query-integration.md)
 - [ED-20260320 - Planner R2 typed graph-source boundary](ED-20260320-planner-r2-typed-graph-source-boundary.md)
+- [ED-20260321 - Planner-backed startRun QA rationale and discoveries](ED-20260321-planner-start-run-qa-rationale.md)
 - [Evidence Doc: Execution core assessment and vertical closure status](ED-20260311-execution-core-assessment.md)
 - [Evidence Doc: G3 IntentStore Postgres + Reconciler Worker](ED-20260304-g3-intentstore-postgres-reconciler.md)
 - [Evidence Doc: G5 canary local-docker](ED-20260312-g5-canary-local-docker.md)
