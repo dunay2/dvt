@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-20
+last_reviewed: 2026-03-21
 ---
 
 # Current Status
@@ -47,7 +47,7 @@ Minimum tuple for this document:
 
 ## Snapshot
 
-- Review date: 2026-03-20
+- Review date: 2026-03-21
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
 - Active workspaces: 23
@@ -95,11 +95,12 @@ Minimum tuple for this document:
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                                          | Status             | Notes                                                                                                                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                       |
-| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10 |
-| Read models    | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | G7 is closed: `run_snapshots` migration `004`, `rebuildSnapshot`, `listStaleSnapshotRuns`, `ProjectorWorkerRuntime`, `apps/projector-worker`, and provider execution-ID reconciliation are delivered                                                                |
+| Area              | Packages                                                          | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store       | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                                                             |
+| Outbox runtime    | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10; purge runtime (`DeliveryBufferPurgeRuntime`) added to `dvt-outbox-worker` 2026-03-21, gated by `DVT_PURGE_ENABLED` (default `false`) |
+| Archive lifecycle | `@dvt/state-store`, `@dvt/adapter-postgres`, `dvt-outbox-worker`  | Partial            | G5-PR1 (archive export + verifier, migration 007, `RunArchiveCoordinator`, `PostgresRunArchiveStore`) and G5-PR3 (delivery buffer retention, migration 009, `DeliveryBufferPurger`, `PostgresDeliveryBufferPurgeStore`, purge runtime wiring) are closed 2026-03-21; G5-PR2 (deferred deletion and restore) and G5-PR4 (redaction ADR) remain open                                                        |
+| Read models       | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | G7 is closed: `run_snapshots` migration `004`, `rebuildSnapshot`, `listStaleSnapshotRuns`, `ProjectorWorkerRuntime`, `apps/projector-worker`, and provider execution-ID reconciliation are delivered                                                                                                                                                                                                      |
 
 ### Observability And Traceability
 
@@ -140,6 +141,24 @@ Minimum tuple for this document:
 
 For closure criteria, evidence, and exact verification commands, use
 [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md).
+
+## Phase 2 Slice Debt
+
+| Slice | Title                                | Status                    |
+| ----- | ------------------------------------ | ------------------------- |
+| S01   | Contract And Dead Code Cleanup       | Closed 2026-03-21         |
+| S06   | Migration Version Table              | Closed 2026-03-21         |
+| S10   | Typed Graph-Source Boundary          | Closed 2026-03-20         |
+| S02   | IRunStateStore Split                 | Open (unblocked by S01)   |
+| S03   | StartRunCoordinator Extraction       | Open (unblocked by S01)   |
+| S05   | EventEnvelope.payloadVersion         | Open (unblocked by S01)   |
+| S07   | OpenLineage Job Naming Fix           | Open                      |
+| S09   | Retry Ownership ADR                  | Open                      |
+| S04   | ProviderRefUpdated Event             | Open (blocked by S02+S05) |
+| S08   | Plan Storage ADR + PostgresPlanStore | Open (blocked by S09)     |
+| S11   | ILineageSink.jobFacets Tighten       | Open (blocked by S07)     |
+
+See [Phase 2 Architectural Debt Roadmap](../planning/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
 
 ## Reading Order
 

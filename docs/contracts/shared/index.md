@@ -11,11 +11,7 @@ Cross-cutting types and shared validation contracts.
 
 ## Normative Sources (`@dvt/contracts`)
 
-- `packages/@dvt/contracts/src/adapters/IOutboxStorageAdapter.v1.ts`
-- `packages/@dvt/contracts/src/adapters/IProjectorAdapter.v1.ts`
 - `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`
-- `packages/@dvt/contracts/src/adapters/IStateStoreAdapter.v1.ts`
-- `packages/@dvt/contracts/src/adapters/IWorkflowEngineAdapter.v1.ts`
 - `packages/@dvt/contracts/src/planner-input.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/types/artifacts.ts`

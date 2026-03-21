@@ -84,17 +84,18 @@ blocks: []
 
 ## Checklist
 
-| Item                                 | Status | Notes                                                                                                                 |
-| ------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------- |
-| Delivered outbox purge implemented   | done   | `DeliveryBufferPurger.purge` → `IDeliveryBufferPurgeStore.purgeDeliveredOutbox` (delivered_at IS NOT NULL)            |
-| Outbox dead-letter purge implemented | done   | `purgeOutboxDeadLetter` — range DELETE with LIMIT via CTE                                                             |
-| Lineage purge implemented            | done   | `purgeLineageDeadLetter`; `lineage_outbox` rows are hard-deleted on delivery — no purge required for that table       |
-| Batch cleanup scheduling implemented | done   | `maxRowsPerRun` cap on every purge call; coordinator is fail-soft per buffer                                          |
-| Metrics and alerts added             | done   | `dvt.outbox.retained_rows`, `dvt.outbox.purged_rows_total`, `dvt.outbox.purge_failures_total`, `dvt.dead_letter.*`    |
-| Retention config documented          | done   | `DEFAULT_DELIVERY_BUFFER_RETENTION` exported; evidence doc `20260321-gap-5-pr3-delivery-buffer-retention-closeout.md` |
+| Item                                        | Status | Notes                                                                                                                                                |
+| ------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Delivered outbox purge implemented          | done   | `DeliveryBufferPurger.purge` → `IDeliveryBufferPurgeStore.purgeDeliveredOutbox` (delivered_at IS NOT NULL)                                           |
+| Outbox dead-letter purge implemented        | done   | `purgeOutboxDeadLetter` — range DELETE with LIMIT via CTE                                                                                            |
+| Lineage purge implemented                   | done   | `purgeLineageDeadLetter`; `lineage_outbox` rows are hard-deleted on delivery — no purge required for that table                                      |
+| Batch cleanup scheduling implemented        | done   | `maxRowsPerRun` cap on every purge call; coordinator is fail-soft per buffer                                                                         |
+| Metrics and alerts added                    | done   | `dvt.outbox.retained_rows`, `dvt.outbox.purged_rows_total`, `dvt.outbox.purge_failures_total`, `dvt.dead_letter.*`                                   |
+| Retention config documented                 | done   | `DEFAULT_DELIVERY_BUFFER_RETENTION` exported; evidence doc `20260321-gap-5-pr3-delivery-buffer-retention-closeout.md`                                |
+| Runtime scheduling wired into outbox-worker | done   | `DeliveryBufferPurgeRuntime` in `apps/outbox-worker`, gated by `DVT_PURGE_ENABLED` (default `false`); wired into `createOutboxWorkerRuntime` PR #540 |
 
 ## PR Resolution Table
 
-| PR ID    | Planned status | Actual PR | Resolution | Notes                                                   |
-| -------- | -------------- | --------- | ---------- | ------------------------------------------------------- |
-| `G5-PR3` | proposed       | pending   | closed     | delivery-buffer retention — all deliverables 2026-03-21 |
+| PR ID    | Planned status | Actual PR | Resolution | Notes                                                                                      |
+| -------- | -------------- | --------- | ---------- | ------------------------------------------------------------------------------------------ |
+| `G5-PR3` | proposed       | #540      | closed     | delivery-buffer retention — all deliverables 2026-03-21; runtime wiring added same session |
