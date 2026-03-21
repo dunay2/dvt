@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.4.0](https://github.com/dunay2/dvt/compare/v4.3.0...v4.4.0) (2026-03-21)
+
+
+### Features
+
+* **api:** Add backpressure resilience envelope ([#532](https://github.com/dunay2/dvt/issues/532)) ([f0b1577](https://github.com/dunay2/dvt/commit/f0b157705450f9cb7593edc86314da6774ed46be))
+
+
+### Bug Fixes
+
+* **contracts:** Harden planner boundary validation ([#530](https://github.com/dunay2/dvt/issues/530)) ([a6f8e22](https://github.com/dunay2/dvt/commit/a6f8e2240f6a104e501e8990adddf9f819f0be8c))
+
 ## [4.3.0](https://github.com/dunay2/dvt/compare/v4.2.2...v4.3.0) (2026-03-20)
 
 
