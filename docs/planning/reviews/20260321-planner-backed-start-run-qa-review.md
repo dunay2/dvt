@@ -43,7 +43,7 @@ Those items were re-reviewed and patched in the current remediation pass.
 The slice is stronger now, but the remediation also exposed new lifecycle invariants that were not explicit in the first pass:
 
 1. the persisted validation lifecycle is not adapter-scoped even though executability validation is adapter-specific;
-2. strict `PENDING_VALIDATION -> VALID` semantics make concurrent duplicate admissions of the same canonical plan a race-prone path unless the contract explicitly defines single-owner behavior;
+2. strict `PENDING_VALIDATION -> VALID` semantics currently behave as a single-winner, fail-closed path for duplicate admissions of the same canonical plan, but the contract still does not say whether that is the intended semantic;
 3. the protected API still lacks a live PostgreSQL + OIDC + Temporal end-to-end proof even though the Temporal runtime path is now directly evidenced.
 
 ## 3. What is correct
@@ -189,26 +189,30 @@ This is now a **newly identified invariant**, not a silent runtime defect. The i
 
 ---
 
-### 4.4. Major — concurrent duplicate admission of the same canonical plan remains unproven
+### 4.4. Medium — concurrent duplicate admission is now evidenced as single-winner and fail-closed, but the contract intent remains unspecified
 
 #### Why this matters
 
-The store now tolerates an identical duplicate `storePlan()` only while the row remains `PENDING_VALIDATION`. But the lifecycle still requires `markValid()` / `markInvalid()` to throw on non-`PENDING_VALIDATION` states.
+The store now tolerates an identical duplicate `storePlan()` only while the row remains `PENDING_VALIDATION`. The lifecycle still requires `markValid()` / `markInvalid()` to throw on non-`PENDING_VALIDATION` states.
 
-That means two concurrent admissions of the same plan can still race:
+The new test evidence shows the currently implemented behavior is:
 
 1. both observe the same persisted pending plan,
-2. both validate,
-3. one transitions to `VALID`,
-4. the second caller hits an invalid transition.
+2. both may validate against the same `PlanRef`,
+3. one caller transitions the row to `VALID`,
+4. the second caller receives `PLAN_VALIDATION_STATE_INVALID_TRANSITION`.
+
+#### Evidence
+
+- [packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts](../../../packages/@dvt/adapter-postgres/test/PostgresPlanStore.test.ts) now proves that duplicate pending admission returns the same `PlanRef`, only one `markValid()` succeeds, and the second transition attempt is rejected.
 
 #### QA interpretation
 
-That may be acceptable if the contract intends a single validation owner per canonical plan, but the slice does not currently prove or document that concurrency rule.
+This is no longer an evidence gap in the implementation. It is now a contract-definition gap: the system behaves as single-winner and fail-closed, but the planner lifecycle documents do not yet say whether callers should rely on that outcome, retry around it, or treat it as contention that needs a higher-layer coordinator.
 
 #### Severity
 
-**Major**
+**Medium**
 
 ---
 
@@ -275,11 +279,11 @@ The current test set now covers:
 It still does not demonstrate:
 
 1. protected-runtime planner-backed execution for `targetAdapter: 'temporal'` in one live API lane,
-2. accepted behavior for concurrent duplicate admissions of the same canonical plan.
+2. contract-level intent for duplicate admission contention across multiple callers or adapters.
 
 #### Why this matters
 
-The most severe original evidence gaps were closed, but the protected-runtime Temporal lane and the concurrency-complete story are still unproven.
+The most severe original evidence gaps were closed, but the protected-runtime Temporal lane and the contract-complete concurrency story are still unproven.
 
 #### Severity
 

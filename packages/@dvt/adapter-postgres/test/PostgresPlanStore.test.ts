@@ -189,6 +189,25 @@ describeIfPg('PostgresPlanStore integration (real PostgreSQL)', () => {
       );
     }));
 
+  test('allows duplicate pending admission but only one caller can claim the validation transition', () =>
+    withStore(async (store) => {
+      const first = await store.storePlan(makeBuildResult('plan-r4-8'));
+      const second = await store.storePlan(makeBuildResult('plan-r4-8'));
+
+      expect(second).toEqual(first);
+
+      await store.markValid(first);
+
+      await expect(store.markValid(second)).rejects.toThrow(
+        'PLAN_VALIDATION_STATE_INVALID_TRANSITION'
+      );
+
+      expect(await store.getValidationRecord('plan-r4-8')).toMatchObject({
+        planId: 'plan-r4-8',
+        state: 'VALID',
+      });
+    }));
+
   test('rejects invalid lifecycle transitions', () =>
     withStore(async (store) => {
       const planRef = await store.storePlan(makeBuildResult('plan-r4-4'));
