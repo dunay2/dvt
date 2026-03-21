@@ -2,17 +2,24 @@ import { randomUUID } from 'node:crypto';
 
 import {
   buildArchiveUnitKey,
+  calculateDeleteAfterIso,
   deriveTenantBucket,
   parseArchiveUnitKey,
+  type ArchiveBatchDroppedRecord,
   type ArchiveBatchExportedRecord,
   type ArchiveBatchFailureRecord,
   type ArchiveBatchRecord,
   type ArchiveBatchVerifiedRecord,
   type ArchiveUnitTerminalSnapshotCandidate,
   type ArchivedTerminalSnapshot,
+  type DeleteEligibleArchiveUnit,
   type EligibleArchiveUnit,
+  type IRunArchiveDeleteStore,
+  type IRunArchiveRestoreStore,
   type IRunArchiveStore,
   type PendingArchiveVerification,
+  type RestoreLogRecord,
+  type RunArchiveDeletionPolicy,
   type RunEventRetentionPolicy,
   type TerminalSnapshotPinStore,
 } from '@dvt/state-store';
@@ -76,7 +83,9 @@ const BLOCKED_ELIGIBLE_STATES = new Set([
   'DROPPED_FROM_HOT',
 ]);
 
-export class PostgresRunArchiveStore implements IRunArchiveStore {
+export class PostgresRunArchiveStore
+  implements IRunArchiveStore, IRunArchiveDeleteStore, IRunArchiveRestoreStore
+{
   constructor(
     private readonly schema: string,
     private readonly now: () => string,
@@ -515,6 +524,315 @@ export class PostgresRunArchiveStore implements IRunArchiveStore {
         `,
         [record.batchId, record.archiveUnitKey, record.failedAtIso, record.error]
       );
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // IRunArchiveDeleteStore
+  // ---------------------------------------------------------------------------
+
+  async markDeleteEligibleUnits(
+    policy: RunArchiveDeletionPolicy,
+    nowIso: string
+  ): Promise<readonly DeleteEligibleArchiveUnit[]> {
+    return this.withTransaction(async (client) => {
+      const result = await client.query<{
+        archive_unit_key: string;
+        tenant_bucket: string;
+        tenant_ids: unknown;
+        row_count: number | string;
+        object_key: string;
+        verified_at: Date | string;
+      }>(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_units
+          SET
+            state      = 'DELETE_ELIGIBLE',
+            delete_after = verified_at + ($1 || ' days')::interval,
+            updated_at = $2::timestamptz
+          WHERE state = 'VERIFIED'
+          RETURNING archive_unit_key, tenant_bucket, tenant_ids, row_count, object_key, verified_at
+        `,
+        [policy.deletionGraceDays, nowIso]
+      );
+
+      return result.rows.map((row) => {
+        const verifiedAtIso = new Date(row.verified_at).toISOString();
+        return {
+          archiveUnitKey: row.archive_unit_key,
+          tenantBucket: row.tenant_bucket,
+          tenantIds: parseTenantIds(row.tenant_ids),
+          rowCount: Number(row.row_count),
+          objectKey: row.object_key ?? '',
+          verifiedAtIso,
+          deleteAfterIso: calculateDeleteAfterIso({
+            verifiedAtIso,
+            deletionGraceDays: policy.deletionGraceDays,
+          }),
+          state: 'DELETE_ELIGIBLE' as const,
+        };
+      });
+    });
+  }
+
+  async listDueForDrop(
+    policy: RunArchiveDeletionPolicy,
+    nowIso: string
+  ): Promise<readonly DeleteEligibleArchiveUnit[]> {
+    return this.withClient(async (client) => {
+      const result = await client.query<{
+        archive_unit_key: string;
+        tenant_bucket: string;
+        tenant_ids: unknown;
+        row_count: number | string;
+        object_key: string | null;
+        verified_at: Date | string | null;
+        delete_after: Date | string | null;
+      }>(
+        `
+          SELECT archive_unit_key, tenant_bucket, tenant_ids, row_count, object_key, verified_at, delete_after
+          FROM ${quoteIdentifier(this.schema)}.run_event_archive_units
+          WHERE state = 'DELETE_ELIGIBLE'
+            AND delete_after IS NOT NULL
+            AND delete_after <= $1::timestamptz
+          ORDER BY delete_after ASC
+          LIMIT $2
+        `,
+        [nowIso, Math.max(1, policy.maxUnitsPerRun)]
+      );
+
+      return result.rows.map((row) => ({
+        archiveUnitKey: row.archive_unit_key,
+        tenantBucket: row.tenant_bucket,
+        tenantIds: parseTenantIds(row.tenant_ids),
+        rowCount: Number(row.row_count),
+        objectKey: row.object_key ?? '',
+        verifiedAtIso: row.verified_at ? new Date(row.verified_at).toISOString() : '',
+        deleteAfterIso: row.delete_after ? new Date(row.delete_after).toISOString() : '',
+        state: 'DELETE_ELIGIBLE' as const,
+      }));
+    });
+  }
+
+  async dropHotArchiveUnit(
+    archiveUnitKey: string,
+    droppedAtIso: string
+  ): Promise<{ rowsDeleted: number }> {
+    return this.withTransaction(async (client) => {
+      const unit = await requireArchiveUnit(client, this.schema, archiveUnitKey);
+      if (unit.state !== 'DELETE_ELIGIBLE') {
+        throw new Error(
+          `ARCHIVE_UNIT_NOT_DELETE_ELIGIBLE: ${archiveUnitKey} is in state ${unit.state}`
+        );
+      }
+
+      const tenantIds = parseTenantIds(unit.tenant_ids);
+      const persistedAtDay = candidateDayFromKey(archiveUnitKey);
+
+      const deleteResult = await client.query(
+        `
+          DELETE FROM ${quoteIdentifier(this.schema)}.run_events
+          WHERE to_char(timezone('UTC', persisted_at)::date, 'YYYY-MM-DD') = $1
+            AND tenant_id = ANY($2::text[])
+        `,
+        [persistedAtDay, tenantIds]
+      );
+
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_units
+          SET
+            state      = 'DROPPED_FROM_HOT',
+            updated_at = $2::timestamptz
+          WHERE archive_unit_key = $1
+        `,
+        [archiveUnitKey, droppedAtIso]
+      );
+
+      return { rowsDeleted: deleteResult.rowCount ?? 0 };
+    });
+  }
+
+  async markArchiveBatchDropped(record: ArchiveBatchDroppedRecord): Promise<void> {
+    return this.withTransaction(async (client) => {
+      const batchId = record.batchId;
+      const existing = await client.query<{ batch_id: string }>(
+        `
+          SELECT batch_id FROM ${quoteIdentifier(this.schema)}.run_event_archive_batches
+          WHERE batch_id = $1 AND archive_unit_key = $2
+          LIMIT 1
+        `,
+        [batchId, record.archiveUnitKey]
+      );
+
+      if (existing.rows[0]) {
+        // Update existing batch row if it was created earlier
+        await client.query(
+          `
+            UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_batches
+            SET
+              status       = 'DROPPED',
+              completed_at = $3::timestamptz,
+              row_count    = $4
+            WHERE batch_id = $1 AND archive_unit_key = $2
+          `,
+          [batchId, record.archiveUnitKey, record.droppedAtIso, record.rowsDeleted]
+        );
+      } else {
+        // Insert a synthetic batch record for drop-only batches
+        await client.query(
+          `
+            INSERT INTO ${quoteIdentifier(this.schema)}.run_event_archive_batches
+              (batch_id, archive_unit_key, started_at, completed_at, status, row_count)
+            VALUES ($1, $2, $3::timestamptz, $3::timestamptz, 'DROPPED', $4)
+          `,
+          [batchId, record.archiveUnitKey, record.droppedAtIso, record.rowsDeleted]
+        );
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // IRunArchiveRestoreStore
+  // ---------------------------------------------------------------------------
+
+  async startRestoreLog(input: Omit<RestoreLogRecord, 'status'>): Promise<RestoreLogRecord> {
+    return this.withTransaction(async (client) => {
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
+            (restore_id, archive_unit_key, run_id, target_schema, requester_id, reason, status, started_at)
+          VALUES ($1, $2, $3, $4, $5, $6, 'STARTED', $7::timestamptz)
+        `,
+        [
+          input.restoreId,
+          input.archiveUnitKey ?? null,
+          input.runId ?? null,
+          input.targetSchema,
+          input.requesterId,
+          input.reason,
+          input.startedAt,
+        ]
+      );
+
+      return { ...input, status: 'STARTED' as const };
+    });
+  }
+
+  async markRestoreCompleted(
+    restoreId: string,
+    rowsRestored: number,
+    completedAtIso: string
+  ): Promise<void> {
+    return this.withTransaction(async (client) => {
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
+          SET
+            status        = 'COMPLETED',
+            rows_restored = $2,
+            completed_at  = $3::timestamptz
+          WHERE restore_id = $1
+        `,
+        [restoreId, rowsRestored, completedAtIso]
+      );
+    });
+  }
+
+  async markRestoreFailed(restoreId: string, error: string, failedAtIso: string): Promise<void> {
+    return this.withTransaction(async (client) => {
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
+          SET
+            status       = 'FAILED',
+            error        = $2,
+            completed_at = $3::timestamptz
+          WHERE restore_id = $1
+        `,
+        [restoreId, error, failedAtIso]
+      );
+    });
+  }
+
+  async writeRestoredEvents(
+    events: readonly EventEnvelope[],
+    targetSchema: string
+  ): Promise<number> {
+    if (events.length === 0) {
+      return 0;
+    }
+    return this.withTransaction(async (client) => {
+      // Ensure the target schema's run_events table exists.
+      // In production the target schema is a temporary schema pre-created by ops.
+      // We use a simple row-by-row insert here; bulk copy is a future optimisation.
+      let inserted = 0;
+      for (const event of events) {
+        await client.query(
+          `
+            INSERT INTO ${quoteIdentifier(targetSchema)}.run_events
+              (event_id, event_type, run_id, tenant_id, project_id, environment_id,
+               plan_id, plan_version, engine_attempt_id, logical_attempt_id,
+               idempotency_key, run_seq, emitted_at, persisted_at, payload)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::timestamptz,$14::timestamptz,$15::jsonb)
+            ON CONFLICT (idempotency_key) DO NOTHING
+          `,
+          [
+            event.eventId,
+            event.eventType,
+            event.runId,
+            event.tenantId,
+            event.projectId,
+            event.environmentId,
+            event.planId,
+            event.planVersion,
+            event.engineAttemptId,
+            event.logicalAttemptId,
+            event.idempotencyKey,
+            event.runSeq,
+            event.emittedAt,
+            event.persistedAt,
+            JSON.stringify(event),
+          ]
+        );
+        inserted++;
+      }
+      return inserted;
+    });
+  }
+
+  async getExportedBatchForUnit(
+    archiveUnitKey: string
+  ): Promise<{ batchId: string; objectKey: string; tenantBucket: string } | null> {
+    return this.withClient(async (client) => {
+      const result = await client.query<{
+        batch_id: string;
+        object_key: string;
+        tenant_bucket: string;
+      }>(
+        `
+          SELECT b.batch_id, u.object_key, u.tenant_bucket
+          FROM ${quoteIdentifier(this.schema)}.run_event_archive_batches b
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_event_archive_units u
+            ON u.archive_unit_key = b.archive_unit_key
+          WHERE b.archive_unit_key = $1
+            AND b.status = 'EXPORTED'
+            AND u.object_key IS NOT NULL
+          ORDER BY b.started_at DESC
+          LIMIT 1
+        `,
+        [archiveUnitKey]
+      );
+
+      const row = result.rows[0];
+      if (!row || !row.object_key) {
+        return null;
+      }
+      return {
+        batchId: row.batch_id,
+        objectKey: row.object_key,
+        tenantBucket: row.tenant_bucket,
+      };
     });
   }
 }

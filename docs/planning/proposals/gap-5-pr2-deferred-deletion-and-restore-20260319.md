@@ -88,18 +88,18 @@ blocks:
 
 ## Checklist
 
-| Item                               | Status  | Notes |
-| ---------------------------------- | ------- | ----- |
-| Delete grace model implemented     | pending |       |
-| Drop worker implemented            | pending |       |
-| Single-run restore implemented     | pending |       |
-| Single-unit restore implemented    | pending |       |
-| Leadership/fencing implemented     | pending |       |
-| Retry/resume semantics implemented | pending |       |
-| Operator docs updated              | pending |       |
+| Item                               | Status | Notes                                                                                  |
+| ---------------------------------- | ------ | -------------------------------------------------------------------------------------- |
+| Delete grace model implemented     | done   | `markDeleteEligibleUnits` + `listDueForDrop` in `IRunArchiveDeleteStore`               |
+| Drop worker implemented            | done   | `RunArchiveDeleter.dropEligibleUnits` — lease-guarded, fail-soft per unit              |
+| Single-run restore implemented     | done   | `RunArchiveRestorer.restoreRun` — reads NDJSON, filters runId, writes to temp schema   |
+| Single-unit restore implemented    | done   | `RunArchiveRestorer.restoreArchiveUnit` — restores all events in unit                  |
+| Leadership/fencing implemented     | done   | `PostgresArchiveLeaseStore` — upsert-based acquire, `assertLeaseHeld` before each drop |
+| Retry/resume semantics implemented | done   | `markArchiveBatchDropped` upserts drop record; `DROPPED_FROM_HOT` guards re-drop       |
+| Operator docs updated              | done   | evidence doc `20260321-gap-5-pr2-deferred-deletion-restore-closeout.md`                |
 
 ## PR Resolution Table
 
-| PR ID    | Planned status | Actual PR | Resolution | Notes                         |
-| -------- | -------------- | --------- | ---------- | ----------------------------- |
-| `G5-PR2` | proposed       | pending   | open       | deferred deletion and restore |
+| PR ID    | Planned status | Actual PR | Resolution | Notes                                                       |
+| -------- | -------------- | --------- | ---------- | ----------------------------------------------------------- |
+| `G5-PR2` | proposed       | pending   | closed     | deferred deletion and restore — all deliverables 2026-03-21 |
