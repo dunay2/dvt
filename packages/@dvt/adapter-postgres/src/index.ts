@@ -51,3 +51,4 @@ export { PostgresRunStateCommandPortBridge } from './runStateCommandPortBridge.j
 export { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
 export { PostgresRunArchiveStore } from './PostgresRunArchiveStore.js';
 export { PostgresArchiveLeaseStore } from './PostgresArchiveLeaseStore.js';
+export { PostgresDeliveryBufferPurgeStore } from './PostgresDeliveryBufferPurgeStore.js';

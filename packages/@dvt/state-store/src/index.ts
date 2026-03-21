@@ -78,6 +78,20 @@ export {
   S3ArchiveObjectStore,
   type S3ArchiveObjectStoreOptions,
 } from './lifecycle/adapters/S3ArchiveObjectStore.js';
+export type {
+  BufferPurgeResult,
+  DeliveryBufferPurgeTelemetry,
+  DeliveryBufferPurgeMetrics,
+  DeliveryBufferPurgeLogger,
+  DeliveryBufferRetentionPolicy,
+  IDeliveryBufferPurgeStore,
+} from './lifecycle/deliveryBufferRuntime.js';
+export {
+  DEFAULT_DELIVERY_BUFFER_RETENTION,
+  createNoopDeliveryBufferPurgeTelemetry,
+  subtractDaysFromIso,
+} from './lifecycle/deliveryBufferRuntime.js';
+export { DeliveryBufferPurger } from './lifecycle/DeliveryBufferPurger.js';
 export { InMemoryRunStateCommandPort } from './inMemoryRunStateCommandPort.js';
 export type {
   AppendResult,
