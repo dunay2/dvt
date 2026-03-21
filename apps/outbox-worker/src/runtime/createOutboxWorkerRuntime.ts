@@ -209,7 +209,11 @@ function buildPurgeRuntime(
     lineageDeadLetterRetentionDays: env.DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS,
     maxRowsPerRun: env.DVT_PURGE_MAX_ROWS_PER_RUN,
   };
-  return new DeliveryBufferPurgeRuntime(() => purger.purge(policy), env.DVT_PURGE_INTERVAL_MS, logger);
+  return new DeliveryBufferPurgeRuntime(
+    () => purger.purge(policy),
+    env.DVT_PURGE_INTERVAL_MS,
+    logger
+  );
 }
 
 async function stopRuntimeResources(deps: {
