@@ -129,6 +129,7 @@ export class PostgresSchemaManager {
     await client.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(this.schema)}`);
     await this.ensureRunMetadataTable(client);
     await this.ensureRunEventsTable(client);
+    await this.ensureStoredPlansTable(client);
     await this.ensureOutboxTable(client);
     await this.ensureRunSnapshotsTable(client);
     await this.ensureOutboxDeadLetterTable(client);
@@ -197,6 +198,26 @@ export class PostgresSchemaManager {
         claimed_at TIMESTAMPTZ,
         next_attempt_at TIMESTAMPTZ,
         delivered_at TIMESTAMPTZ
+      )
+    `);
+  }
+
+  private async ensureStoredPlansTable(client: PoolClient): Promise<void> {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ${quoteIdentifier(this.schema)}.stored_plans (
+        plan_id TEXT PRIMARY KEY,
+        plan_version TEXT NOT NULL,
+        plan_uri TEXT NOT NULL UNIQUE,
+        plan_sha256 TEXT NOT NULL,
+        schema_version TEXT NOT NULL,
+        size_bytes INTEGER NOT NULL,
+        requires_capabilities JSONB,
+        canonical_plan_json TEXT NOT NULL,
+        executable_plan_json TEXT NOT NULL,
+        validation_state TEXT NOT NULL,
+        rejection_report_json JSONB,
+        stored_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
   }
@@ -398,6 +419,11 @@ export class PostgresSchemaManager {
   // ---------------------------------------------------------------------------
 
   private async ensureIndexes(client: PoolClient): Promise<void> {
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS stored_plans_validation_state_idx
+      ON ${quoteIdentifier(this.schema)}.stored_plans (validation_state, updated_at DESC)
+    `);
+
     await client.query(`
       CREATE INDEX IF NOT EXISTS outbox_pending_idx
       ON ${quoteIdentifier(this.schema)}.outbox (shard_id, next_attempt_at, created_at, claimed_at)

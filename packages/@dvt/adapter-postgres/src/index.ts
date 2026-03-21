@@ -27,6 +27,7 @@ export type {
   WorkflowSnapshot,
 } from './types.js';
 export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
+export type { ExecutablePlanArtifact, PostgresPlanStoreConfig } from './PostgresPlanStore.js';
 export type { PostgresStartRunIntentStoreConfig } from './PostgresStartRunIntentStore.js';
 export type {
   PostgresBackpressureSnapshot,
@@ -34,6 +35,7 @@ export type {
 } from './PostgresBackpressureSnapshotReader.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
+export { PostgresPlanStore } from './PostgresPlanStore.js';
 export { PostgresBackpressureSnapshotReader } from './PostgresBackpressureSnapshotReader.js';
 export { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 export { PostgresRunEventStore } from './PostgresRunEventStore.js';

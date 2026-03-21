@@ -1,3 +1,4 @@
+import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { StartRunCommand, StartRunPlanRef } from '../../application/ports/auth.js';
@@ -134,11 +135,6 @@ function parseStartRunCommand(
     return { ok: false, code: 'INVALID_SELECTION' };
   }
 
-  const planRef = parsePlanRef(record.planRef);
-  if (!planRef.ok) {
-    return { ok: false, code: planRef.code };
-  }
-
   const runId = asNonEmptyTrimmedStringOrUndefined(record.runId);
   if (!runId) {
     return { ok: false, code: 'INVALID_RUN_ID' };
@@ -149,14 +145,164 @@ function parseStartRunCommand(
     return { ok: false, code: 'INVALID_TARGET_ADAPTER' };
   }
 
+  const plannerSourceCount = countPlannerSources(record);
+  const hasPlanRef = record.planRef !== undefined;
+  if (hasPlanRef && plannerSourceCount > 0) {
+    return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
+  }
+  if (!hasPlanRef && plannerSourceCount !== 1) {
+    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
+  }
+
+  if (hasPlanRef) {
+    const planRef = parsePlanRef(record.planRef);
+    if (!planRef.ok) {
+      return { ok: false, code: planRef.code };
+    }
+
+    return {
+      ok: true,
+      value: {
+        planRef: planRef.value,
+        runId,
+        targetAdapter: targetAdapter.value,
+        selection: selection.value,
+      },
+    };
+  }
+
+  const plannerInput = parsePlannerInput(record, selection.value);
+  if (!plannerInput.ok) {
+    return { ok: false, code: plannerInput.code };
+  }
+
   return {
     ok: true,
     value: {
-      planRef: planRef.value,
       runId,
       targetAdapter: targetAdapter.value,
       selection: selection.value,
+      ...(plannerInput.value.graphSource !== undefined
+        ? { graphSource: plannerInput.value.graphSource }
+        : {}),
+      ...(plannerInput.value.manifestRef !== undefined
+        ? { manifestRef: plannerInput.value.manifestRef }
+        : {}),
+      ...(plannerInput.value.manifest !== undefined ? { manifest: plannerInput.value.manifest } : {}),
+      ...(plannerInput.value.nodes !== undefined ? { nodes: plannerInput.value.nodes } : {}),
+      ...(plannerInput.value.policies !== undefined
+        ? { policies: plannerInput.value.policies }
+        : {}),
+      ...(plannerInput.value.environment !== undefined
+        ? { environment: plannerInput.value.environment }
+        : {}),
+      ...(plannerInput.value.observability !== undefined
+        ? { observability: plannerInput.value.observability }
+        : {}),
     },
+  };
+}
+
+function countPlannerSources(record: Record<string, unknown>): number {
+  return ['graphSource', 'manifestRef', 'manifest', 'nodes'].filter(
+    (key) => record[key] !== undefined
+  ).length;
+}
+
+function parsePlannerInput(
+  record: Record<string, unknown>,
+  selection: ReadonlyArray<string>
+): ParseStartRunFieldResult<
+  Pick<
+    StartRunCommand,
+    'graphSource' | 'manifestRef' | 'manifest' | 'nodes' | 'policies' | 'environment' | 'observability'
+  >
+> {
+  try {
+    const parsed = parsePlannerInputEnvelopeV2({
+      ...(record.graphSource !== undefined ? { graphSource: record.graphSource } : {}),
+      ...(record.manifestRef !== undefined ? { manifestRef: record.manifestRef } : {}),
+      ...(record.manifest !== undefined ? { manifest: record.manifest } : {}),
+      ...(record.nodes !== undefined ? { nodes: record.nodes } : {}),
+      ...(record.policies !== undefined ? { policies: record.policies } : {}),
+      ...(record.environment !== undefined ? { environment: record.environment } : {}),
+      ...(record.observability !== undefined ? { observability: record.observability } : {}),
+      selection: { selectedNodeIds: selection },
+    });
+
+    return {
+      ok: true,
+      value: toPlannerCommandFields(parsed),
+    };
+  } catch {
+    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
+  }
+}
+
+function toPlannerCommandFields(
+  parsed: ReturnType<typeof parsePlannerInputEnvelopeV2>
+): Pick<
+  StartRunCommand,
+  'graphSource' | 'manifestRef' | 'manifest' | 'nodes' | 'policies' | 'environment' | 'observability'
+> {
+  return {
+    ...(parsed.graphSource !== undefined
+      ? {
+          graphSource: {
+            kind: parsed.graphSource.kind,
+            nodes: parsed.graphSource.nodes.map((node) => ({
+              nodeId: node.nodeId,
+              resourceType: node.resourceType,
+              dependsOn: [...node.dependsOn],
+            })),
+          },
+        }
+      : {}),
+    ...(parsed.manifestRef !== undefined
+      ? {
+          manifestRef: {
+            uri: parsed.manifestRef.uri,
+            sha256: parsed.manifestRef.sha256,
+            ...(parsed.manifestRef.artifactId !== undefined
+              ? { artifactId: parsed.manifestRef.artifactId }
+              : {}),
+          },
+        }
+      : {}),
+    ...(parsed.manifest !== undefined ? { manifest: parsed.manifest } : {}),
+    ...(parsed.nodes !== undefined
+      ? {
+          nodes: parsed.nodes.map((node) => ({
+            nodeId: node.nodeId,
+            resourceType: node.resourceType,
+            dependsOn: [...node.dependsOn],
+          })),
+        }
+      : {}),
+    ...(parsed.policies !== undefined ? { policies: parsed.policies } : {}),
+    ...(parsed.environment !== undefined
+      ? {
+          environment: {
+            ...(parsed.environment.environmentId !== undefined
+              ? { environmentId: parsed.environment.environmentId }
+              : {}),
+            ...(parsed.environment.targetProfile !== undefined
+              ? { targetProfile: parsed.environment.targetProfile }
+              : {}),
+            ...(parsed.environment.vars !== undefined ? { vars: parsed.environment.vars } : {}),
+          },
+        }
+      : {}),
+    ...(parsed.observability !== undefined
+      ? {
+          observability: {
+            ...(parsed.observability.tags !== undefined ? { tags: parsed.observability.tags } : {}),
+            ...(parsed.observability.extra !== undefined
+              ? { extra: parsed.observability.extra }
+              : {}),
+          },
+        }
+      : {}),
   };
 }
 

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { StartRunAdmissionGuard } from '@dvt/delivery';
 import type { IObservability } from '@dvt/observability';
+import { PlannerFacade } from '@dvt/planner';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
@@ -10,7 +11,11 @@ import { AuthorizeCommandScopeService } from '../application/services/authorizeC
 import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
 import { NoopAdmissionTelemetry } from '../application/services/NoopAdmissionTelemetry.js';
+import { PlannerBackedStartRunUseCase } from '../application/services/PlannerBackedStartRunUseCase.js';
+import { bridgePlannerBuildToExecutablePlan } from '../application/services/plannerExecutionPlanBridge.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
+import { StoredExecutablePlanResolver } from '../application/services/StoredExecutablePlanResolver.js';
+import { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
 import { getPgPool } from '../db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from '../domain/auth/policy.js';
@@ -53,6 +58,7 @@ export async function buildProtectedRuntimeModule(
   ]);
   const {
     PostgresBackpressureSnapshotReader,
+    PostgresPlanStore,
     PostgresStateStoreAdapter,
     PostgresStartRunIntentStore,
   } = adapterMod;
@@ -69,6 +75,22 @@ export async function buildProtectedRuntimeModule(
     schema: env.DVT_PG_SCHEMA,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
+  const planStore = new PostgresPlanStore({
+    pool,
+    schema: env.DVT_PG_SCHEMA,
+    statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+    toExecutablePlan: (buildResult) => {
+      const plan = bridgePlannerBuildToExecutablePlan(buildResult);
+      return {
+        schemaVersion: plan.metadata.schemaVersion,
+        text: JSON.stringify(plan),
+        ...(plan.metadata.requiresCapabilities !== undefined
+          ? { requiresCapabilities: plan.metadata.requiresCapabilities }
+          : {}),
+      };
+    },
   });
   const projector = new SnapshotProjector();
 
@@ -105,11 +127,15 @@ export async function buildProtectedRuntimeModule(
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,
     },
   });
+  const executablePlanResolver = new StoredExecutablePlanResolver({
+    fetcher: planStore,
+  });
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore,
     projector,
     observability,
+    planFetcher: executablePlanResolver,
   });
 
   if (env.TEMPORAL_ADDRESS) {
@@ -119,7 +145,7 @@ export async function buildProtectedRuntimeModule(
   const engine = buildWorkflowEngine({
     security: {
       authorizer: new AllowAllAuthorizer(),
-      planRefAllowedSchemes: ['https', 's3', 'gs', 'azure'],
+      planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
     },
     persistence: { stateStore, intentStore },
     runtime: { adapters },
@@ -155,7 +181,15 @@ export async function buildProtectedRuntimeModule(
       telemetry: new NoopAdmissionTelemetry(),
       mode: env.DVT_START_RUN_BACKPRESSURE_MODE,
       retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
-      delegate: new EngineStartRunUseCase(engine),
+      delegate: new PlannerBackedStartRunUseCase({
+        planner: new PlannerFacade(),
+        planStore,
+        validator: new StoredPlanExecutabilityValidator({
+          fetcher: planStore,
+          adapters,
+        }),
+        delegate: new EngineStartRunUseCase(engine),
+      }),
     })
   );
 
@@ -170,9 +204,11 @@ export async function buildProtectedRuntimeModule(
       await accessRepo.migrate();
       await stateStore.migrate();
       await intentStore.migrate();
+      await planStore.migrate();
     },
     close: async () => {
       await closeAdapters();
+      await planStore.close();
       await stateStore.close();
       await intentStore.close();
       await pool.end();

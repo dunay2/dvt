@@ -205,6 +205,70 @@ describeIfPg('protected runtime integration', () => {
     expect(eventTypes(eventsResponse.json())).toEqual(['RunQueued', 'RunCancelRequested']);
   });
 
+  it('persists and validates a planner-backed run before execution starts', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+    const runId = 'api-integration-run-graph-1';
+
+    const startResponse = await app!.inject({
+      method: 'POST',
+      url: '/runs/start',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        selection: ['model.orders'],
+        graphSource: {
+          kind: 'normalized-graph-v1',
+          nodes: [{ nodeId: 'model.orders', resourceType: 'model', dependsOn: [] }],
+        },
+        runId,
+        targetAdapter: 'mock',
+      },
+    });
+    expect(startResponse.statusCode).toBe(202);
+    expect(startResponse.json()).toEqual({ runId, accepted: true });
+
+    const storedPlan = await adminClient!.query<{
+      plan_id: string;
+      plan_uri: string;
+      validation_state: string;
+    }>(
+      `SELECT plan_id, plan_uri, validation_state
+         FROM ${quoteIdentifier(SCHEMA)}.stored_plans
+         ORDER BY stored_at DESC
+         LIMIT 1`
+    );
+    expect(storedPlan.rows[0]).toMatchObject({
+      validation_state: 'VALID',
+    });
+    expect(storedPlan.rows[0]?.plan_uri).toMatch(/^dvt-plan:\/\/postgres\//);
+
+    const listResponse = await app!.inject({
+      method: 'GET',
+      url: `/runs?tenantId=${TENANT_ID}&projectId=${PROJECT_ID}&environmentId=${ENVIRONMENT_ID}&limit=10`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(listResponse.statusCode).toBe(200);
+    expect(listResponse.json()).toMatchObject({
+      items: expect.arrayContaining([
+        expect.objectContaining({
+          runId,
+          planId: storedPlan.rows[0]?.plan_id,
+          provider: 'mock',
+          status: 'PENDING',
+        }),
+      ]),
+    });
+  });
+
   it('rejects a token whose asserted tenant conflicts with the requested tenant scope', async () => {
     expect(app).toBeTruthy();
 

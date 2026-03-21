@@ -65,6 +65,16 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           : {}),
         body: { error: 'TOO_MANY_REQUESTS', code: result.code },
       };
+    case 'plan_rejected':
+      return {
+        status: 422,
+        body: {
+          error: 'PLAN_REJECTED',
+          code: result.code,
+          reason: result.reason,
+          ...(result.cause !== undefined ? { cause: result.cause } : {}),
+        },
+      };
   }
 }
 

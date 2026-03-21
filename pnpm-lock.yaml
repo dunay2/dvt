@@ -110,6 +110,9 @@ importers:
       '@dvt/adapter-temporal':
         specifier: workspace:*
         version: link:../../packages/@dvt/adapter-temporal
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/contracts
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../../packages/@dvt/delivery
