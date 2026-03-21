@@ -29,6 +29,7 @@ export {
   calculateArchiveEventChecksum,
 } from './lifecycle/archiveArtifacts.js';
 export type {
+  ArchiveBatchDroppedRecord,
   ArchiveBatchExportedRecord,
   ArchiveBatchFailureRecord,
   ArchiveBatchRecord,
@@ -36,17 +37,27 @@ export type {
   ArchiveBatchVerifiedRecord,
   ArchiveExportRequest,
   ArchiveExportedUnit,
+  ArchiveLease,
   ArchiveLifecycleLogger,
   ArchiveLifecycleMetrics,
   ArchiveLifecycleTelemetry,
   ArchiveObjectWriteResult,
+  ArchiveRestoreResult,
+  ArchiveRunRestoreRequest,
+  ArchiveUnitRestoreRequest,
   ArchiveUnitTerminalSnapshotCandidate,
   ArchiveVerificationRequest,
+  DeleteEligibleArchiveUnit,
   EligibleArchiveUnit,
+  IArchiveLeaseStore,
   IArchiveObjectStore,
+  IRunArchiveDeleteStore,
   IRunArchiveExporter,
+  IRunArchiveRestoreStore,
   IRunArchiveStore,
   PendingArchiveVerification,
+  RestoreLogRecord,
+  RunArchiveDeletionPolicy,
   RunEventRetentionPolicy,
 } from './lifecycle/archiveRuntime.js';
 export {
@@ -57,6 +68,8 @@ export {
 export { ObjectStorageRunArchiveExporter } from './lifecycle/ObjectStorageRunArchiveExporter.js';
 export { RunArchiveCoordinator } from './lifecycle/RunArchiveCoordinator.js';
 export { RunArchiveVerifier } from './lifecycle/RunArchiveVerifier.js';
+export { RunArchiveDeleter } from './lifecycle/RunArchiveDeleter.js';
+export { RunArchiveRestorer } from './lifecycle/RunArchiveRestorer.js';
 export {
   FileSystemArchiveObjectStore,
   type FileSystemArchiveObjectStoreOptions,
