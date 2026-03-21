@@ -28,6 +28,7 @@ export type {
   IExecutionPlanner,
   IPlanner,
   PlanCore,
+  PlannerGraphSourceV1,
   PlannerBuildResultV2,
   PlannerInputEnvelopeV2,
   PlannerSelection,

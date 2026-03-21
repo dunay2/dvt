@@ -149,8 +149,8 @@ sequenceDiagram
 
     Caller->>Planner: buildPlan(input)
     alt input uses manifestRef
-        Planner->>Resolver: resolveManifest(ref)
-        Resolver-->>Planner: manifest payload
+        Planner->>Resolver: resolveGraphSource(ref)
+        Resolver-->>Planner: typed graphSource
     end
     Planner-->>Caller: plan + canonicalPlanJson
     Caller->>Store: storePlan(buildResult)
@@ -168,17 +168,17 @@ sequenceDiagram
 
 ## Delta From Current State
 
-| Target area                           | Current status                    | Target status                                                    |
-| ------------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
-| Public contract ownership             | Closed enough                     | Keep as-is; no ownership rework                                  |
-| Typed graph-source boundary           | Open                              | Accept a typed graph-source interface or typed normalized source |
-| `planVersion` governance              | Partial                           | One aligned registry plus emitted version plus runtime matrix    |
-| Plan storage and validation lifecycle | Contract-only                     | Real runtime implementation                                      |
-| Unknown kind handling                 | Governed but fail-open in planner | Fail-closed by default                                           |
-| `custom` namespace governance         | Contract-only                     | Planner-enforced registration and validation                     |
-| Recovery / replanning                 | Proposal-only                     | Operator-grade derived-run flow                                  |
-| DSL governance                        | Package exists, no accepted spec  | Accepted spec or explicit de-scope                               |
-| Planner docs placement                | Split                             | Repo-level subsystem docs become primary                         |
+| Target area                           | Current status                    | Target status                                                                     |
+| ------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------- |
+| Public contract ownership             | Closed enough                     | Keep as-is; no ownership rework                                                   |
+| Typed graph-source boundary           | Closed `2026-03-20`               | Keep `graphSource` / `manifestRef` canonical and retire compatibility paths later |
+| `planVersion` governance              | Partial                           | One aligned registry plus emitted version plus runtime matrix                     |
+| Plan storage and validation lifecycle | Contract-only                     | Real runtime implementation                                                       |
+| Unknown kind handling                 | Governed but fail-open in planner | Fail-closed by default                                                            |
+| `custom` namespace governance         | Contract-only                     | Planner-enforced registration and validation                                      |
+| Recovery / replanning                 | Proposal-only                     | Operator-grade derived-run flow                                                   |
+| DSL governance                        | Package exists, no accepted spec  | Accepted spec or explicit de-scope                                                |
+| Planner docs placement                | Split                             | Repo-level subsystem docs become primary                                          |
 
 ## Roadmap Slices
 
@@ -209,6 +209,14 @@ Must include:
   treated as the semantic public boundary
 - preservation of `manifestRef` as the canonical production path without making
   DBT artifact structure the long-term public planner contract
+
+Status:
+
+- closed `2026-03-20`
+- delivered via `PlannerGraphSourceV1`, `graphSource`, facade-side raw
+  manifest normalization, and `IArtifactResolver.resolveGraphSource(...)`
+- remaining related debt is migration debt, not missing boundary shape:
+  `manifest` and direct `nodes` still exist as compatibility inputs
 
 Why next:
 
@@ -290,36 +298,36 @@ Must include:
 
 ## Recommended Execution Order
 
-| Wave | Slices     | Why                                                            |
-| ---- | ---------- | -------------------------------------------------------------- |
-| 0    | `R1`       | establish one planner baseline and remove stale assumptions    |
-| 1    | `R2`, `R7` | tighten the boundary while the risk is low                     |
-| 2    | `R3`       | unify version governance before more consumers depend on drift |
-| 3    | `R4`       | make stored-plan and validated-start lifecycle real            |
-| 4    | `R5`       | turn contract-level governance into runtime enforcement        |
-| 5    | `R6`       | ship recovery only after the lifecycle and boundary are stable |
+| Wave | Slices | Why                                                             |
+| ---- | ------ | --------------------------------------------------------------- |
+| 0    | `R1`   | establish one planner baseline and remove stale assumptions     |
+| 1    | `R7`   | close adjacent governance debt while the boundary work is fresh |
+| 2    | `R3`   | unify version governance before more consumers depend on drift  |
+| 3    | `R4`   | make stored-plan and validated-start lifecycle real             |
+| 4    | `R5`   | turn contract-level governance into runtime enforcement         |
+| 5    | `R6`   | ship recovery only after the lifecycle and boundary are stable  |
 
 ## Proposed Owners And Target Dates
 
 These dates are planning targets, not merge guarantees. They exist to remove
 the "partial without timing" problem from the planner roadmap.
 
-| Slice | Proposed owner                                  | Target date  | Notes                                                                                  |
-| ----- | ----------------------------------------------- | ------------ | -------------------------------------------------------------------------------------- |
-| `R1`  | Architecture / Planner / Docs                   | `2026-03-20` | Current branch scope: quantified status baseline, local-doc triage, system-status link |
-| `R2`  | Architecture / Planner / Contracts              | `2026-03-27` | Typed graph-source boundary (`S10`, redefined)                                         |
-| `R7`  | Architecture / Planner / DSL / Engine           | `2026-04-03` | Close governance debt around `@dvt/dsl` and `@dvt/plan-interpreter`                    |
-| `R3`  | Architecture / Planner / Contracts / Engine     | `2026-04-10` | Unify emitted `planVersion`, registry, and runtime matrix                              |
-| `R4`  | Architecture / Planner / API / State / Engine   | `2026-04-24` | Persisted plan store plus validation lifecycle runtime                                 |
-| `R5`  | Architecture / Planner / Contracts / Engine     | `2026-05-01` | Fail-closed unknown kind and `custom` namespace enforcement                            |
-| `R6`  | Product / Architecture / Planner / API / Engine | `2026-05-15` | Recovery and replanning after lifecycle/runtime closure                                |
+| Slice | Proposed owner                                  | Target date  | Notes                                                                                   |
+| ----- | ----------------------------------------------- | ------------ | --------------------------------------------------------------------------------------- |
+| `R1`  | Architecture / Planner / Docs                   | `2026-03-20` | Current branch scope: quantified status baseline, local-doc triage, system-status link  |
+| `R2`  | Architecture / Planner / Contracts              | `2026-03-20` | Delivered: typed graph-source boundary in contracts/planner; compatibility paths remain |
+| `R7`  | Architecture / Planner / DSL / Engine           | `2026-04-03` | Close governance debt around `@dvt/dsl` and `@dvt/plan-interpreter`                     |
+| `R3`  | Architecture / Planner / Contracts / Engine     | `2026-04-10` | Unify emitted `planVersion`, registry, and runtime matrix                               |
+| `R4`  | Architecture / Planner / API / State / Engine   | `2026-04-24` | Persisted plan store plus validation lifecycle runtime                                  |
+| `R5`  | Architecture / Planner / Contracts / Engine     | `2026-05-01` | Fail-closed unknown kind and `custom` namespace enforcement                             |
+| `R6`  | Product / Architecture / Planner / API / Engine | `2026-05-15` | Recovery and replanning after lifecycle/runtime closure                                 |
 
 ### Dependency Graph
 
 ```mermaid
 flowchart TD
     R1[R1 Doc triage and status baseline]
-    R2[R2 Typed graph-source boundary]
+    R2[R2 Typed graph-source boundary done 2026-03-20]
     R3[R3 planVersion closure]
     R4[R4 Plan storage and validation lifecycle runtime]
     R5[R5 Unknown kind and custom enforcement]

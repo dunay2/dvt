@@ -42,7 +42,7 @@ flowchart TD
     S07["S07\nOpenLineage Job Naming Fix"]
     S08["S08\nPlan Storage ADR + PostgresPlanStore"]
     S09["S09\nRetry Ownership ADR"]
-    S10["S10\nTyped Graph-Source Boundary"]
+    S10["S10\nTyped Graph-Source Boundary\nclosed 2026-03-20"]
     S11["S11\nILineageSink.jobFacets Tighten"]
 
     S01 --> S02
@@ -58,7 +58,7 @@ flowchart TD
 
 | Wave | Slices                     | Can start                                            |
 | ---- | -------------------------- | ---------------------------------------------------- |
-| 0    | `S06`, `S07`, `S09`, `S10` | immediately                                          |
+| 0    | `S06`, `S07`, `S09`        | immediately                                          |
 | 1    | `S01`                      | immediately                                          |
 | 2    | `S02`, `S03`, `S05`, `S11` | after `S01` for `S02/S03/S05`; after `S07` for `S11` |
 | 3    | `S04`, `S08`               | after `S02+S05` for `S04`; after `S09` for `S08`     |
@@ -165,6 +165,14 @@ graph-source boundary. The planner core should depend on a generic normalized
 graph-source shape or graph-derivation interface, while DBT remains one
 implementation behind that seam rather than the semantic public boundary.
 
+Status:
+
+- closed `2026-03-20`
+- delivered via `PlannerGraphSourceV1`, `graphSource`, and facade-side
+  normalization of the raw `manifest` compatibility path
+- remaining related debt is compatibility-path retirement, not missing
+  boundary shape
+
 ### S11: `ILineageSink.jobFacets` Tighten
 
 Tighten the lineage sink contract to match the runtime assumptions already made
@@ -172,8 +180,8 @@ by the lineage path.
 
 ## Execution Notes
 
-- Prefer slices `S06`, `S07`, `S09`, and `S10` first if the goal is fast
-  momentum with low integration risk.
+- `S10` is now closed; prefer `S06`, `S07`, and `S09` first if the goal is
+  fast momentum with low integration risk.
 - Do not start `S04` until `S02` and `S05` are settled.
 - Do not start `S08` until `S09` clarifies retry ownership.
 

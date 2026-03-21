@@ -278,6 +278,13 @@ export const GraphNodeSchema = z
   })
   .strict();
 
+export const PlannerGraphSourceV1Schema = z
+  .object({
+    kind: z.literal('normalized-graph-v1'),
+    nodes: z.array(GraphNodeSchema),
+  })
+  .strict();
+
 export const DbtManifestRefSchema = z
   .object({
     uri: z.string().min(1),
@@ -346,6 +353,7 @@ export const ExecutionPlanV2Schema = CurrentExecutionPlanV2Schema as z.ZodType<E
 
 export const PlannerInputEnvelopeV2Schema = z
   .object({
+    graphSource: PlannerGraphSourceV1Schema.optional(),
     manifest: z.record(z.string(), z.unknown()).optional(),
     manifestRef: DbtManifestRefSchema.optional(),
     nodes: z.array(GraphNodeSchema).optional(),
@@ -356,6 +364,22 @@ export const PlannerInputEnvelopeV2Schema = z
     requestedBy: z.string().min(1).optional(),
     requestId: z.string().min(1).optional(),
     requestedAtIso: z.string().min(1).optional(),
+  })
+  .superRefine((input, ctx) => {
+    const activeSources = [
+      input.graphSource,
+      input.manifest,
+      input.manifestRef,
+      input.nodes,
+    ].filter((value) => value !== undefined).length;
+
+    if (activeSources !== 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'PlannerInputEnvelopeV2 requires exactly one active source: graphSource, manifest, manifestRef, or nodes.',
+      });
+    }
   })
   .strict();
 
@@ -388,6 +412,7 @@ export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
 export type { PlannerPolicyClassSetSchemaT };
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
 export type GraphNodeSchemaT = z.infer<typeof GraphNodeSchema>;
+export type PlannerGraphSourceV1SchemaT = z.infer<typeof PlannerGraphSourceV1Schema>;
 export type DbtManifestRefSchemaT = z.infer<typeof DbtManifestRefSchema>;
 export type ExecutionStepV2SchemaT = z.infer<typeof ExecutionStepV2Schema>;
 export type PlanCoreSchemaT = z.infer<typeof PlanCoreSchema>;

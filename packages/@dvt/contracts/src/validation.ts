@@ -31,6 +31,8 @@ import {
   type ExecuteStepResultSchemaT,
   GraphNodeSchema,
   type GraphNodeSchemaT,
+  PlannerGraphSourceV1Schema,
+  type PlannerGraphSourceV1SchemaT,
   PlannerBuildResultV2Schema,
   type PlannerBuildResultV2SchemaT,
   PlannerEnvironmentContextSchema,
@@ -221,6 +223,10 @@ export function parsePlannerEnvironmentContext(input: unknown): PlannerEnvironme
 
 export function parseGraphNode(input: unknown): GraphNodeSchemaT {
   return parseWithSchema(GraphNodeSchema, input);
+}
+
+export function parsePlannerGraphSourceV1(input: unknown): PlannerGraphSourceV1SchemaT {
+  return parseWithSchema(PlannerGraphSourceV1Schema, input);
 }
 
 export function parseDbtManifestRef(input: unknown): DbtManifestRefSchemaT {
