@@ -28,6 +28,43 @@ export {
   buildPinnedTerminalSnapshot,
   calculateArchiveEventChecksum,
 } from './lifecycle/archiveArtifacts.js';
+export type {
+  ArchiveBatchExportedRecord,
+  ArchiveBatchFailureRecord,
+  ArchiveBatchRecord,
+  ArchiveBatchStatus,
+  ArchiveBatchVerifiedRecord,
+  ArchiveExportRequest,
+  ArchiveExportedUnit,
+  ArchiveLifecycleLogger,
+  ArchiveLifecycleMetrics,
+  ArchiveLifecycleTelemetry,
+  ArchiveObjectWriteResult,
+  ArchiveUnitTerminalSnapshotCandidate,
+  ArchiveVerificationRequest,
+  EligibleArchiveUnit,
+  IArchiveObjectStore,
+  IRunArchiveExporter,
+  IRunArchiveStore,
+  PendingArchiveVerification,
+  RunEventRetentionPolicy,
+} from './lifecycle/archiveRuntime.js';
+export {
+  buildArchivedSnapshotsForUnit,
+  createNoopArchiveLifecycleTelemetry,
+  toArchiveFailureMessage,
+} from './lifecycle/archiveRuntime.js';
+export { ObjectStorageRunArchiveExporter } from './lifecycle/ObjectStorageRunArchiveExporter.js';
+export { RunArchiveCoordinator } from './lifecycle/RunArchiveCoordinator.js';
+export { RunArchiveVerifier } from './lifecycle/RunArchiveVerifier.js';
+export {
+  FileSystemArchiveObjectStore,
+  type FileSystemArchiveObjectStoreOptions,
+} from './lifecycle/adapters/FileSystemArchiveObjectStore.js';
+export {
+  S3ArchiveObjectStore,
+  type S3ArchiveObjectStoreOptions,
+} from './lifecycle/adapters/S3ArchiveObjectStore.js';
 export { InMemoryRunStateCommandPort } from './inMemoryRunStateCommandPort.js';
 export type {
   AppendResult,

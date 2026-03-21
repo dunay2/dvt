@@ -724,6 +724,9 @@ importers:
 
   packages/@dvt/state-store:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.868.0
+        version: 3.1003.0
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts

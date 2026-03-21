@@ -1,0 +1,224 @@
+import type { EventEnvelope } from '@dvt/contracts';
+import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+
+import { buildArchiveUnitManifest } from './archiveArtifacts.js';
+import type {
+  ArchiveExportRequest,
+  ArchiveExportedUnit,
+  ArchiveVerificationRequest,
+  IArchiveObjectStore,
+  IRunArchiveExporter,
+} from './archiveRuntime.js';
+
+export interface ObjectStorageRunArchiveExporterOptions {
+  objectStore: IArchiveObjectStore;
+  prefix?: string;
+}
+
+export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
+  readonly archiveFormat = 'jsonl';
+  readonly destinationKind: 'file' | 's3';
+
+  private readonly objectStore: IArchiveObjectStore;
+  private readonly prefix: string;
+
+  constructor(options: ObjectStorageRunArchiveExporterOptions) {
+    this.objectStore = options.objectStore;
+    this.prefix = normalizePrefix(options.prefix ?? 'archive');
+    this.destinationKind = resolveDestinationKind(options.objectStore);
+  }
+
+  async exportArchiveUnit(input: ArchiveExportRequest): Promise<ArchiveExportedUnit> {
+    const events = sortArchiveEvents(input.events);
+    const objectKey = buildEventsObjectKey(this.prefix, input.archiveUnitKey);
+    const manifestObjectKey = buildManifestObjectKey(this.prefix, input.archiveUnitKey);
+    const checksumObjectKey = buildChecksumObjectKey(this.prefix, input.archiveUnitKey);
+
+    const eventsPayload = encodeEventsAsNdjson(events);
+    const manifestResult = buildArchiveUnitManifest({
+      archiveUnitKey: input.archiveUnitKey,
+      tenantBucket: input.tenantBucket,
+      objectKey,
+      exportedAtIso: input.exportedAtIso,
+      events,
+    });
+
+    const [eventsWrite] = await Promise.all([
+      this.objectStore.putObject(objectKey, eventsPayload, 'application/x-ndjson; charset=utf-8'),
+      this.objectStore.putObject(
+        manifestObjectKey,
+        Buffer.from(manifestResult.canonicalManifestJson, 'utf8'),
+        'application/json; charset=utf-8'
+      ),
+      this.objectStore.putObject(
+        checksumObjectKey,
+        Buffer.from(`${manifestResult.manifestSha256}\n`, 'utf8'),
+        'text/plain; charset=utf-8'
+      ),
+    ]);
+
+    return {
+      archiveUnitKey: input.archiveUnitKey,
+      tenantBucket: input.tenantBucket,
+      tenantIds: manifestResult.manifest.tenantIds,
+      rowCount: manifestResult.manifest.rowCount,
+      minRunSeq: manifestResult.manifest.minRunSeq,
+      maxRunSeq: manifestResult.manifest.maxRunSeq,
+      objectKey,
+      objectUri: eventsWrite.uri,
+      manifestObjectKey,
+      checksumObjectKey,
+      checksumSha256: manifestResult.manifest.checksumSha256,
+      manifestSha256: manifestResult.manifestSha256,
+      exportedAtIso: manifestResult.manifest.exportedAt,
+    };
+  }
+
+  async verifyArchiveUnit(input: ArchiveVerificationRequest): Promise<void> {
+    const manifestObjectKey = deriveSiblingObjectKey(input.objectKey, 'manifest.json');
+    const checksumObjectKey = deriveSiblingObjectKey(input.objectKey, 'checksum.sha256');
+
+    const [eventsExists, manifestExists, checksumExists] = await Promise.all([
+      this.objectStore.existsObject(input.objectKey),
+      this.objectStore.existsObject(manifestObjectKey),
+      this.objectStore.existsObject(checksumObjectKey),
+    ]);
+
+    if (!eventsExists || !manifestExists || !checksumExists) {
+      throw new Error('ARCHIVE_VERIFICATION_OBJECTS_MISSING');
+    }
+
+    const [eventsBuffer, manifestBuffer, checksumBuffer] = await Promise.all([
+      this.objectStore.readObject(input.objectKey),
+      this.objectStore.readObject(manifestObjectKey),
+      this.objectStore.readObject(checksumObjectKey),
+    ]);
+
+    const events = parseNdjsonEvents(eventsBuffer);
+    const manifest = JSON.parse(manifestBuffer.toString('utf8')) as {
+      archiveUnitKey: string;
+      tenantBucket: string;
+      tenantIds: readonly string[];
+      rowCount: number;
+      minRunSeq: number;
+      maxRunSeq: number;
+      checksumSha256: string;
+      objectKey: string;
+      exportedAt: string;
+    };
+
+    const canonicalManifestJson = jcsCanonicalize(manifest);
+    const manifestSha256 = sha256Hex(canonicalManifestJson);
+    if (checksumBuffer.toString('utf8').trim() !== manifestSha256) {
+      throw new Error('ARCHIVE_MANIFEST_CHECKSUM_MISMATCH');
+    }
+
+    const rebuilt = buildArchiveUnitManifest({
+      archiveUnitKey: input.archiveUnitKey,
+      tenantBucket: input.tenantBucket,
+      objectKey: input.objectKey,
+      exportedAtIso: manifest.exportedAt,
+      events,
+    });
+
+    if (manifest.archiveUnitKey !== input.archiveUnitKey) {
+      throw new Error('ARCHIVE_MANIFEST_UNIT_KEY_MISMATCH');
+    }
+    if (manifest.tenantBucket !== input.tenantBucket) {
+      throw new Error('ARCHIVE_MANIFEST_TENANT_BUCKET_MISMATCH');
+    }
+    if (manifest.objectKey !== input.objectKey) {
+      throw new Error('ARCHIVE_MANIFEST_OBJECT_KEY_MISMATCH');
+    }
+    if (manifest.rowCount !== input.expectedRowCount) {
+      throw new Error('ARCHIVE_MANIFEST_ROW_COUNT_MISMATCH');
+    }
+    if (manifest.checksumSha256 !== input.expectedChecksumSha256) {
+      throw new Error('ARCHIVE_MANIFEST_EVENT_CHECKSUM_MISMATCH');
+    }
+    if (rebuilt.manifest.rowCount !== input.expectedRowCount) {
+      throw new Error('ARCHIVE_REBUILT_ROW_COUNT_MISMATCH');
+    }
+    if (rebuilt.manifest.checksumSha256 !== input.expectedChecksumSha256) {
+      throw new Error('ARCHIVE_REBUILT_EVENT_CHECKSUM_MISMATCH');
+    }
+    if (rebuilt.canonicalManifestJson !== canonicalManifestJson) {
+      throw new Error('ARCHIVE_REBUILT_MANIFEST_MISMATCH');
+    }
+  }
+}
+
+export function sortArchiveEvents(events: readonly EventEnvelope[]): readonly EventEnvelope[] {
+  return [...events].sort((left, right) => {
+    const tenantOrder = left.tenantId.localeCompare(right.tenantId);
+    if (tenantOrder !== 0) return tenantOrder;
+
+    const runOrder = left.runId.localeCompare(right.runId);
+    if (runOrder !== 0) return runOrder;
+
+    const runSeqOrder = left.runSeq - right.runSeq;
+    if (runSeqOrder !== 0) return runSeqOrder;
+
+    return left.eventType.localeCompare(right.eventType);
+  });
+}
+
+function encodeEventsAsNdjson(events: readonly EventEnvelope[]): Buffer {
+  const content = sortArchiveEvents(events)
+    .map((event) => jcsCanonicalize(event))
+    .join('\n');
+  return Buffer.from(`${content}\n`, 'utf8');
+}
+
+function parseNdjsonEvents(buffer: Buffer): readonly EventEnvelope[] {
+  const lines = buffer
+    .toString('utf8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  if (lines.length === 0) {
+    throw new Error('ARCHIVE_EVENTS_REQUIRED');
+  }
+
+  return lines.map((line) => JSON.parse(line) as EventEnvelope);
+}
+
+function buildEventsObjectKey(prefix: string, archiveUnitKey: string): string {
+  return `${prefix}/${archiveUnitKey}/events.jsonl`;
+}
+
+function buildManifestObjectKey(prefix: string, archiveUnitKey: string): string {
+  return `${prefix}/${archiveUnitKey}/manifest.json`;
+}
+
+function buildChecksumObjectKey(prefix: string, archiveUnitKey: string): string {
+  return `${prefix}/${archiveUnitKey}/checksum.sha256`;
+}
+
+function deriveSiblingObjectKey(
+  objectKey: string,
+  fileName: 'manifest.json' | 'checksum.sha256'
+): string {
+  const trimmed = objectKey.trim();
+  const slashIndex = trimmed.lastIndexOf('/');
+  if (slashIndex < 0) {
+    throw new Error('ARCHIVE_OBJECT_KEY_INVALID');
+  }
+  return `${trimmed.slice(0, slashIndex)}/${fileName}`;
+}
+
+function normalizePrefix(value: string): string {
+  return value
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/^\/+|\/+$/g, '');
+}
+
+function resolveDestinationKind(objectStore: IArchiveObjectStore): 'file' | 's3' {
+  const constructorName = objectStore.constructor?.name ?? '';
+  if (constructorName.includes('S3')) {
+    return 's3';
+  }
+  return 'file';
+}
