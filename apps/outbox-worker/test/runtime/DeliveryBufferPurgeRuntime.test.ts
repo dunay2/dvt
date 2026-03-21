@@ -38,7 +38,7 @@ describe('DeliveryBufferPurgeRuntime', () => {
     const logger = buildLogger();
     const runtime = new DeliveryBufferPurgeRuntime(purge, 60_000, logger);
 
-    const controller = new AbortController();
+    const controller = new globalThis.AbortController();
     const startPromise = runtime.start(controller.signal);
 
     // Give the microtask queue a turn so the first purge runs.
@@ -57,7 +57,7 @@ describe('DeliveryBufferPurgeRuntime', () => {
     const logger = buildLogger();
     const runtime = new DeliveryBufferPurgeRuntime(purge, 60_000, logger);
 
-    const controller = new AbortController();
+    const controller = new globalThis.AbortController();
     controller.abort();
 
     await runtime.start(controller.signal);
@@ -70,7 +70,7 @@ describe('DeliveryBufferPurgeRuntime', () => {
     const logger = buildLogger();
     const runtime = new DeliveryBufferPurgeRuntime(purge, 60_000, logger);
 
-    const controller = new AbortController();
+    const controller = new globalThis.AbortController();
     const startPromise = runtime.start(controller.signal);
 
     await new Promise((r) => setTimeout(r, 10));
