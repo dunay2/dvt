@@ -196,6 +196,170 @@ export function toArchiveFailureMessage(error: unknown): string {
   return String(error);
 }
 
+// ---------------------------------------------------------------------------
+// Delete lifecycle
+// ---------------------------------------------------------------------------
+
+export interface RunArchiveDeletionPolicy {
+  readonly deletionGraceDays: number;
+  readonly maxUnitsPerRun: number;
+  readonly leaseTimeoutSeconds: number;
+  readonly workerId: string;
+}
+
+export interface DeleteEligibleArchiveUnit {
+  readonly archiveUnitKey: string;
+  readonly tenantBucket: string;
+  readonly tenantIds: readonly string[];
+  readonly rowCount: number;
+  readonly objectKey: string;
+  readonly verifiedAtIso: string;
+  readonly deleteAfterIso: string;
+  readonly state: Extract<ArchiveUnitState, 'DELETE_ELIGIBLE'>;
+}
+
+export interface ArchiveBatchDroppedRecord {
+  readonly batchId: string;
+  readonly archiveUnitKey: string;
+  readonly rowsDeleted: number;
+  readonly droppedAtIso: string;
+}
+
+// ---------------------------------------------------------------------------
+// Lease / fencing
+// ---------------------------------------------------------------------------
+
+export interface ArchiveLease {
+  readonly workerId: string;
+  readonly leaseToken: string;
+  readonly acquiredAt: string;
+  readonly expiresAt: string;
+}
+
+export interface IArchiveLeaseStore {
+  /**
+   * Try to acquire (or steal an expired) lease for `workerId`.
+   * Returns the lease if acquired, null if another worker holds a live lease.
+   */
+  tryAcquire(workerId: string, ttlSeconds: number, nowIso: string): Promise<ArchiveLease | null>;
+
+  /**
+   * Renew an existing lease. Returns true if the lease was renewed, false if
+   * it was stolen or expired since it was acquired.
+   */
+  renew(lease: ArchiveLease, ttlSeconds: number, nowIso: string): Promise<boolean>;
+
+  /** Release the lease unconditionally. */
+  release(lease: ArchiveLease): Promise<void>;
+
+  /**
+   * Assert that this worker's lease token is still valid before a destructive
+   * operation. Throws ARCHIVE_LEASE_LOST if the lease is gone or expired.
+   */
+  assertLeaseHeld(lease: ArchiveLease, nowIso: string): Promise<void>;
+}
+
+// ---------------------------------------------------------------------------
+// Restore
+// ---------------------------------------------------------------------------
+
+export interface ArchiveRunRestoreRequest {
+  readonly restoreId: string;
+  readonly runId: string;
+  readonly archiveUnitKey: string;
+  readonly objectKey: string;
+  readonly targetSchema: string;
+  readonly requesterId: string;
+  readonly reason: string;
+  readonly startedAtIso: string;
+}
+
+export interface ArchiveUnitRestoreRequest {
+  readonly restoreId: string;
+  readonly archiveUnitKey: string;
+  readonly objectKey: string;
+  readonly targetSchema: string;
+  readonly requesterId: string;
+  readonly reason: string;
+  readonly startedAtIso: string;
+}
+
+export interface ArchiveRestoreResult {
+  readonly restoreId: string;
+  readonly rowsRestored: number;
+  readonly targetSchema: string;
+  readonly completedAtIso: string;
+}
+
+export interface RestoreLogRecord {
+  readonly restoreId: string;
+  readonly archiveUnitKey: string | null;
+  readonly runId: string | null;
+  readonly targetSchema: string;
+  readonly requesterId: string;
+  readonly reason: string;
+  readonly status: 'STARTED';
+  readonly startedAt: string;
+}
+
+export interface IRunArchiveRestoreStore {
+  startRestoreLog(input: Omit<RestoreLogRecord, 'status'>): Promise<RestoreLogRecord>;
+
+  markRestoreCompleted(
+    restoreId: string,
+    rowsRestored: number,
+    completedAtIso: string
+  ): Promise<void>;
+
+  markRestoreFailed(restoreId: string, error: string, failedAtIso: string): Promise<void>;
+
+  /** Write restored events into the given target schema's run_events table. */
+  writeRestoredEvents(events: readonly EventEnvelope[], targetSchema: string): Promise<number>;
+
+  /**
+   * Look up the latest exported batch record for an archive unit.
+   * Returns null if no exported batch exists.
+   */
+  getExportedBatchForUnit(
+    archiveUnitKey: string
+  ): Promise<{ batchId: string; objectKey: string; tenantBucket: string } | null>;
+}
+
+// ---------------------------------------------------------------------------
+// Extended IRunArchiveStore — delete + restore operations
+// ---------------------------------------------------------------------------
+
+export interface IRunArchiveDeleteStore {
+  /**
+   * Transition VERIFIED → DELETE_ELIGIBLE and set delete_after.
+   * Returns the archive unit keys that were transitioned.
+   */
+  markDeleteEligibleUnits(
+    policy: RunArchiveDeletionPolicy,
+    nowIso: string
+  ): Promise<readonly DeleteEligibleArchiveUnit[]>;
+
+  /**
+   * List DELETE_ELIGIBLE units whose delete_after timestamp has passed.
+   */
+  listDueForDrop(
+    policy: RunArchiveDeletionPolicy,
+    nowIso: string
+  ): Promise<readonly DeleteEligibleArchiveUnit[]>;
+
+  /**
+   * Delete hot run_events rows for the given archive unit.
+   * Must only be called after lease assertion.
+   */
+  dropHotArchiveUnit(
+    archiveUnitKey: string,
+    droppedAtIso: string
+  ): Promise<{ rowsDeleted: number }>;
+
+  /** Record a successful drop batch. */
+  markArchiveBatchDropped(record: ArchiveBatchDroppedRecord): Promise<void>;
+}
+
 export function buildArchivedSnapshotsForUnit(params: {
   archiveUnitKey: string;
   archivedAtIso: string;
