@@ -68,6 +68,17 @@ export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValid
     const requiredCapabilities =
       plan.metadata.requiresCapabilities ?? validatedRef.requiresCapabilities ?? [];
     const declaredCapabilities = adapter.capabilities?.();
+    if (requiredCapabilities.length > 0 && declaredCapabilities === undefined) {
+      return {
+        status: 'ERROR',
+        planId: validatedRef.planId,
+        adapterId,
+        code: 'REJECTED',
+        degradable: false,
+        reason: 'Adapter does not declare capabilities required for executability validation',
+        cause: 'capabilities',
+      };
+    }
     if (declaredCapabilities !== undefined) {
       const supported = new Set(declaredCapabilities);
       const missing = requiredCapabilities.find((capability) => !supported.has(capability));
@@ -106,5 +117,13 @@ function validatePlanRefAlignment(plan: ExecutionPlan, planRef: PlanRefSchemaT):
 }
 
 function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return 'Unknown error';
 }
