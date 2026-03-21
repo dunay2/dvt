@@ -132,6 +132,58 @@ Exported from `@dvt/adapter-postgres` index.
 
 ---
 
+## Runtime Wiring — `dvt-outbox-worker`
+
+**Added post-initial-closeout (same session, PR #540).**
+
+The coordinator and store existed but were never called from a production path. This section records the gap closure.
+
+### `DeliveryBufferPurgeRuntime` — `apps/outbox-worker`
+
+**File**: `apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts`
+
+Periodic scheduler with `start(signal?) / stop()` lifecycle matching `RuntimeHandle`. Behaviour:
+
+- Runs `purge()` immediately on first tick (no full interval delay at boot).
+- Re-runs every `DVT_PURGE_INTERVAL_MS` (default 3 600 000 ms = 1 h).
+- Fail-soft per cycle: errors are logged but do not stop the loop.
+- Aborts cleanly on `AbortSignal` or explicit `stop()` call.
+
+### Integration into `createOutboxWorkerRuntime`
+
+When `DVT_PURGE_ENABLED=true`, `createOutboxWorkerRuntime` builds a `PostgresDeliveryBufferPurgeStore` from the same pool, wraps it in `DeliveryBufferPurger`, and runs `DeliveryBufferPurgeRuntime` in parallel with the outbox delivery loop using `Promise.all`. Both are stopped together in `stopRuntimeResources`.
+
+Default: `DVT_PURGE_ENABLED=false` — existing deployments are unaffected until the env var is set.
+
+### New env vars (`ActiveCommonEnvSchema`)
+
+| Var                                            | Default     | Notes                                       |
+| ---------------------------------------------- | ----------- | ------------------------------------------- |
+| `DVT_PURGE_ENABLED`                            | `false`     | Gates the entire purge runtime              |
+| `DVT_PURGE_INTERVAL_MS`                        | `3_600_000` | Cycle interval in ms                        |
+| `DVT_PURGE_DELIVERED_OUTBOX_RETENTION_DAYS`    | `7`         | Matches `DEFAULT_DELIVERY_BUFFER_RETENTION` |
+| `DVT_PURGE_OUTBOX_DEAD_LETTER_RETENTION_DAYS`  | `30`        | Matches default                             |
+| `DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS` | `30`        | Matches default                             |
+| `DVT_PURGE_MAX_ROWS_PER_RUN`                   | `5_000`     | Matches default                             |
+
+### New dependency
+
+`dvt-outbox-worker` → `@dvt/state-store` added to `package.json`.
+
+### Test coverage
+
+7 new tests in `apps/outbox-worker/test/runtime/DeliveryBufferPurgeRuntime.test.ts`:
+
+- Purge called immediately on start; loop resolves after stop
+- `start()` no-ops when signal already aborted
+- Loop exits when abort signal fires
+- Same promise returned on duplicate `start()` calls
+- `stop()` is a no-op before start
+- Cycle errors logged but loop continues (fail-soft)
+- `stop()` resolves correctly while a purge is in flight
+
+---
+
 ## Out of Scope (Deferred to PR4)
 
 - Redaction implementation → PR4
