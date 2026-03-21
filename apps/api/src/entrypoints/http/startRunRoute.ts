@@ -188,7 +188,9 @@ function parseStartRunCommand(
       ...(plannerInput.value.manifestRef !== undefined
         ? { manifestRef: plannerInput.value.manifestRef }
         : {}),
-      ...(plannerInput.value.manifest !== undefined ? { manifest: plannerInput.value.manifest } : {}),
+      ...(plannerInput.value.manifest !== undefined
+        ? { manifest: plannerInput.value.manifest }
+        : {}),
       ...(plannerInput.value.nodes !== undefined ? { nodes: plannerInput.value.nodes } : {}),
       ...(plannerInput.value.policies !== undefined
         ? { policies: plannerInput.value.policies }
@@ -215,7 +217,13 @@ function parsePlannerInput(
 ): ParseStartRunFieldResult<
   Pick<
     StartRunCommand,
-    'graphSource' | 'manifestRef' | 'manifest' | 'nodes' | 'policies' | 'environment' | 'observability'
+    | 'graphSource'
+    | 'manifestRef'
+    | 'manifest'
+    | 'nodes'
+    | 'policies'
+    | 'environment'
+    | 'observability'
   >
 > {
   try {
@@ -243,7 +251,13 @@ function toPlannerCommandFields(
   parsed: ReturnType<typeof parsePlannerInputEnvelopeV2>
 ): Pick<
   StartRunCommand,
-  'graphSource' | 'manifestRef' | 'manifest' | 'nodes' | 'policies' | 'environment' | 'observability'
+  | 'graphSource'
+  | 'manifestRef'
+  | 'manifest'
+  | 'nodes'
+  | 'policies'
+  | 'environment'
+  | 'observability'
 > {
   return {
     ...(parsed.graphSource !== undefined

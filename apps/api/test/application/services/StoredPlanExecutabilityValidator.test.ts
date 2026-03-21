@@ -17,12 +17,7 @@ describe('StoredPlanExecutabilityValidator', () => {
       fetcher: {
         fetchForValidation: vi.fn(async () => executablePlanBytes()),
       },
-      adapters: new Map([
-        [
-          'mock',
-          makeAdapter(['basic-execution', 'workflow.fan.parallel']),
-        ],
-      ]),
+      adapters: new Map([['mock', makeAdapter(['basic-execution', 'workflow.fan.parallel'])]]),
     });
 
     const result = await validator.validatePlan(PLAN_REF, 'mock');
@@ -41,12 +36,7 @@ describe('StoredPlanExecutabilityValidator', () => {
           executablePlanBytes({ requiresCapabilities: ['workflow.pause'] })
         ),
       },
-      adapters: new Map([
-        [
-          'mock',
-          makeAdapter(['basic-execution']),
-        ],
-      ]),
+      adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
     });
 
     const result = await validator.validatePlan(PLAN_REF, 'mock');
@@ -67,12 +57,7 @@ describe('StoredPlanExecutabilityValidator', () => {
       fetcher: {
         fetchForValidation: vi.fn(async () => executablePlanBytes({ planVersion: '9.9' })),
       },
-      adapters: new Map([
-        [
-          'mock',
-          makeAdapter(['basic-execution']),
-        ],
-      ]),
+      adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
     });
 
     const result = await validator.validatePlan(PLAN_REF, 'mock');
@@ -95,12 +80,7 @@ describe('StoredPlanExecutabilityValidator', () => {
           throw new Error('PLAN_NOT_FOUND: plan-1');
         }),
       },
-      adapters: new Map([
-        [
-          'mock',
-          makeAdapter(['basic-execution']),
-        ],
-      ]),
+      adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
     });
 
     const result = await validator.validatePlan(PLAN_REF, 'mock');
