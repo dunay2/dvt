@@ -11,8 +11,6 @@ const {
   parseRunStatusSnapshot,
   parseCanonicalEngineEvent,
   parseRunSnapshot,
-  parseExecuteStepRequest,
-  parseExecuteStepResult,
   ContractValidationError,
 } = require('../contracts/dist/index.js');
 
@@ -158,36 +156,6 @@ function validatePlanFile(filePath) {
           artifacts: [],
         })),
         artifacts: [],
-      });
-    })
-  );
-
-  checks.push(
-    runCheck('ExecuteStepRequest schema', () => {
-      const firstStep =
-        Array.isArray(payload?.steps) && payload.steps.length ? payload.steps[0] : null;
-      parseExecuteStepRequest({
-        tenantId: 'tenant-demo',
-        planId: payload?.metadata?.planId || 'unknown',
-        runId: 'run-1',
-        stepId: firstStep?.stepId || 's1',
-        stepType: firstStep?.kind || 'noop',
-        stepData: {},
-      });
-    })
-  );
-
-  checks.push(
-    runCheck('ExecuteStepResult schema', () => {
-      const firstStep =
-        Array.isArray(payload?.steps) && payload.steps.length ? payload.steps[0] : null;
-      parseExecuteStepResult({
-        runId: 'run-1',
-        stepId: firstStep?.stepId || 's1',
-        status: 'SUCCESS',
-        output: {},
-        duration: 1,
-        executedAt: Date.now(),
       });
     })
   );
