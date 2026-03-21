@@ -1,3 +1,6 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { StartRunAdmissionGuard } from '@dvt/delivery';
 import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
@@ -15,6 +18,9 @@ import { StructuredAuditLogger } from '../infrastructure/audit/structuredAuditLo
 import { JwksJwtVerifier } from '../infrastructure/auth/jwksJwtVerifier.js';
 import { OidcAuthenticator } from '../infrastructure/auth/oidcAuthenticator.js';
 import { PostgresPrincipalAccessRepository } from '../infrastructure/auth/postgresPrincipalAccessRepository.js';
+import { CachedBackpressureStore } from '../infrastructure/backpressure/CachedBackpressureStore.js';
+import { CircuitBreakingBackpressureStore } from '../infrastructure/backpressure/CircuitBreakingBackpressureStore.js';
+import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/FileBackpressureFallbackStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import type { Env } from '../plugins/env.js';
@@ -27,6 +33,10 @@ function requireDatabaseUrl(env: Env): string {
     throw new Error('DATABASE_URL is required when OIDC-protected runtime routes are enabled');
   }
   return env.DATABASE_URL;
+}
+
+function resolveBackpressureFallbackPath(env: Env): string {
+  return join(tmpdir(), 'dvt', `${env.SERVICE_NAME}-start-run-backpressure-fallback.json`);
 }
 
 export async function buildProtectedRuntimeModule(
@@ -75,8 +85,21 @@ export async function buildProtectedRuntimeModule(
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
   });
+  const rawBackpressureStore = new RawSqlBackpressureStore(backpressureReader);
+  const resilientBackpressureStore = new CircuitBreakingBackpressureStore({
+    delegate: rawBackpressureStore,
+    fallbackStore: new FileBackpressureFallbackStore(resolveBackpressureFallbackPath(env)),
+    failureThreshold: 5,
+    openDurationMs: 30_000,
+    snapshotMaxAgeMs:
+      env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS + env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
+  });
+  const backpressureStore = new CachedBackpressureStore({
+    delegate: resilientBackpressureStore,
+    ttlMs: env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS,
+  });
   const admissionGuard = new StartRunAdmissionGuard({
-    backpressureStore: new RawSqlBackpressureStore(backpressureReader),
+    backpressureStore,
     policy: {
       maxPendingEventsPerTenant: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
       maxOutboxLagMs: env.DVT_START_RUN_MAX_OUTBOX_LAG_MS,

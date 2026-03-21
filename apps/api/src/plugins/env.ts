@@ -26,6 +26,7 @@ const EnvSchema = z.object({
   DVT_START_RUN_MAX_OUTBOX_LAG_MS: z.coerce.number().int().positive().default(300000),
   DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS: z.coerce.number().int().positive().default(604800000),
   DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS: z.coerce.number().int().positive().default(1000),
+  DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS: z.coerce.number().int().positive().default(2000),
   DVT_START_RUN_RETRY_AFTER_SECONDS: z.coerce.number().int().positive().default(30),
   DVT_OUTBOX_SHARD_COUNT: z.coerce.number().int().positive().default(1),
   DVT_INTENT_RECONCILER_ENABLED: strictTrueBoolean.default(false),
