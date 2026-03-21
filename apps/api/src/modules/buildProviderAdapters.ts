@@ -1,4 +1,5 @@
-import type { EngineRunRef, IProviderAdapter } from '@dvt/engine';
+import type { PlanRef } from '@dvt/contracts';
+import type { EngineRunRef, ExecutionPlan, IProviderAdapter } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 
 import type { Env } from '../plugins/env.js';
@@ -21,12 +22,14 @@ export async function buildProviderAdapters(
     stateStore: { listEvents(tenantId: string, runId: string): Promise<unknown[]> };
     projector: { rebuild(runId: string, events: unknown[]): unknown };
     observability: IObservability;
+    planFetcher?: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
   }
 ): Promise<BuildProviderAdaptersResult> {
   const { MockAdapter } = await import('@dvt/engine/testing');
   const mockAdapter = new MockAdapter({
     stateStore: deps.stateStore as never,
     projector: deps.projector as never,
+    ...(deps.planFetcher !== undefined ? { planFetcher: deps.planFetcher as never } : {}),
   });
 
   const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);

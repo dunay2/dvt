@@ -1,4 +1,14 @@
 ﻿import type {
+  DbtManifestRef,
+  ExecutabilityRejectionCode,
+  ExecutionPlanV2,
+  GraphNode,
+  PlannerEnvironmentContext,
+  PlannerGraphSourceV1,
+  PlannerPolicyClassSet,
+} from '@dvt/contracts';
+
+import type {
   AuthenticatedPrincipal,
   AuthorizationAction,
   DeniedReason,
@@ -55,7 +65,14 @@ export interface StartRunPlanRef {
 }
 
 export interface StartRunCommand {
-  readonly planRef: StartRunPlanRef;
+  readonly planRef?: StartRunPlanRef;
+  readonly graphSource?: PlannerGraphSourceV1;
+  readonly manifestRef?: DbtManifestRef;
+  readonly manifest?: Record<string, unknown>;
+  readonly nodes?: ReadonlyArray<GraphNode>;
+  readonly policies?: PlannerPolicyClassSet;
+  readonly environment?: PlannerEnvironmentContext;
+  readonly observability?: ExecutionPlanV2['observability'];
   readonly runId: string;
   readonly targetAdapter: 'temporal' | 'mock';
   readonly selection: ReadonlyArray<string>;
@@ -109,12 +126,21 @@ export interface StartRunRateLimitedResult {
   readonly retryAfterSeconds?: number;
 }
 
+export interface StartRunPlanRejectedResult {
+  readonly kind: 'plan_rejected';
+  readonly accepted: false;
+  readonly code: ExecutabilityRejectionCode;
+  readonly reason: string;
+  readonly cause?: string;
+}
+
 export type StartRunResult =
   | StartRunAcceptedResult
   | StartRunDuplicateResult
   | StartRunTenantBackpressureResult
   | StartRunSystemBackpressureResult
-  | StartRunRateLimitedResult;
+  | StartRunRateLimitedResult
+  | StartRunPlanRejectedResult;
 
 export interface IStartRunUseCase {
   execute(
@@ -131,4 +157,5 @@ export type StartRunFacadeResult =
   | StartRunDuplicateResult
   | StartRunTenantBackpressureResult
   | StartRunSystemBackpressureResult
-  | StartRunRateLimitedResult;
+  | StartRunRateLimitedResult
+  | StartRunPlanRejectedResult;

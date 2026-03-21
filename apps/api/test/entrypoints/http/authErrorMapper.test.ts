@@ -91,6 +91,23 @@ describe('mapStartRunFacadeResult', () => {
       code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
     });
   });
+
+  it('plan_rejected -> 422 with structured rejection payload', () => {
+    const result = mapStartRunFacadeResult({
+      kind: 'plan_rejected',
+      accepted: false,
+      code: 'MISSING_CAPABILITY',
+      reason: 'Missing adapter capability: workflow.pause',
+      cause: 'workflow.pause',
+    });
+    expect(result.status).toBe(422);
+    expect(result.body).toEqual({
+      error: 'PLAN_REJECTED',
+      code: 'MISSING_CAPABILITY',
+      reason: 'Missing adapter capability: workflow.pause',
+      cause: 'workflow.pause',
+    });
+  });
 });
 
 describe('mapRuntimeDomainError', () => {

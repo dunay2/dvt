@@ -131,4 +131,24 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain('archived_at TIMESTAMPTZ');
     expect(executedSql).toContain('run_snapshots_archive_unit_key_idx');
   });
+
+  it('creates the stored_plans table and validation-state index required for planner R4', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((entry) => entry.sql).join('\n');
+
+    expect(executedSql).toContain('stored_plans');
+    expect(executedSql).toContain('canonical_plan_json TEXT NOT NULL');
+    expect(executedSql).toContain('executable_plan_json TEXT NOT NULL');
+    expect(executedSql).toContain('validation_state TEXT NOT NULL');
+    expect(executedSql).toContain('stored_plans_validation_state_idx');
+  });
 });
