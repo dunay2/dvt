@@ -25,10 +25,6 @@ import {
   type ExecutionPlanV2SchemaT,
   ExecutionStepV2Schema,
   type ExecutionStepV2SchemaT,
-  ExecuteStepRequestSchema,
-  type ExecuteStepRequestSchemaT,
-  ExecuteStepResultSchema,
-  type ExecuteStepResultSchemaT,
   GraphNodeSchema,
   type GraphNodeSchemaT,
   PlannerGraphSourceV1Schema,
@@ -199,14 +195,6 @@ export function parseStepSnapshot(input: unknown): StepSnapshotSchemaT {
 
 export function parseRunSnapshot(input: unknown): RunSnapshotSchemaT {
   return parseWithSchema(RunSnapshotSchema, input);
-}
-
-export function parseExecuteStepRequest(input: unknown): ExecuteStepRequestSchemaT {
-  return parseWithSchema(ExecuteStepRequestSchema, input);
-}
-
-export function parseExecuteStepResult(input: unknown): ExecuteStepResultSchemaT {
-  return parseWithSchema(ExecuteStepResultSchema, input);
 }
 
 export function parsePlannerSelection(input: unknown): PlannerSelectionSchemaT {

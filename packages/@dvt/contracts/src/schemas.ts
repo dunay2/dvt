@@ -217,35 +217,6 @@ export const RunSnapshotSchema = z.object({
   totalDurationMs: z.number().nonnegative().optional(),
 });
 
-// ─── Adapter request/response schemas ────────────────────────────────────────
-
-export const ExecuteStepRequestSchema = z.object({
-  tenantId: z.string().min(1),
-  planId: z.string().min(1),
-  runId: z.string().min(1),
-  stepId: z.string().min(1),
-  stepType: z.string().min(1),
-  stepData: z.record(z.string(), z.unknown()),
-  idempotencyKey: z.string().optional(),
-  timeout: z.number().int().positive().optional(),
-});
-
-export const ExecuteStepResultSchema = z.object({
-  runId: z.string().min(1),
-  stepId: z.string().min(1),
-  status: z.string().min(1),
-  output: z.record(z.string(), z.unknown()).optional(),
-  error: z
-    .object({
-      code: z.string(),
-      message: z.string(),
-      retryable: z.boolean(),
-    })
-    .optional(),
-  duration: z.number().nonnegative(),
-  executedAt: z.number(),
-});
-
 // ─── Planner schemas (GAP-P0-02) ─────────────────────────────────────────────
 // @see specs/contracts/engine/ExecutionPlan.v1.md — Normative prose contract
 // @see specs/contracts/engine/ExecutionPlan.v1.schema.json — JSON Schema (draft 2020-12)
@@ -406,8 +377,6 @@ export type RunEventRecordSchemaT = z.infer<typeof RunEventRecordSchema>;
 export type StepSnapshotSchemaT = z.infer<typeof StepSnapshotSchema>;
 export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
 
-export type ExecuteStepRequestSchemaT = z.infer<typeof ExecuteStepRequestSchema>;
-export type ExecuteStepResultSchemaT = z.infer<typeof ExecuteStepResultSchema>;
 export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
 export type { PlannerPolicyClassSetSchemaT };
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;

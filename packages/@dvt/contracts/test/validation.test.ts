@@ -2,13 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ContractValidationError,
-  parseExecuteStepRequest,
   parsePlannerGraphSourceV1,
   parsePlannerInputEnvelopeV2,
   parsePlanRef,
   parseRunContext,
   parseSignalRequest,
-  toValidationErrorResponse,
 } from '../src/validation.js';
 
 describe('contracts: validation helpers', () => {
@@ -22,30 +20,6 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(planRef.planId).toBe('plan-1');
-  });
-
-  it('returns structured errors with field path and constraint violation', () => {
-    try {
-      parseExecuteStepRequest({
-        tenantId: '',
-        planId: 'plan-1',
-        runId: 'run-1',
-        stepId: 'step-1',
-        stepType: 'task',
-        stepData: {},
-      });
-      throw new Error('expected parseExecuteStepRequest to throw');
-    } catch (error) {
-      const response = toValidationErrorResponse(error);
-      expect(response.statusCode).toBe(400);
-      expect(response.error).toBe('Bad Request');
-      expect(response.message).toBe('Validation failed');
-      expect(response.details.length).toBeGreaterThan(0);
-      expect(response.details[0]).toHaveProperty('path');
-      expect(response.details[0]).toHaveProperty('code');
-      expect(response.details[0]).toHaveProperty('message');
-      expect(response.details.some((d) => d.path === 'tenantId')).toBe(true);
-    }
   });
 
   it('throws ContractValidationError for invalid signal type', () => {
