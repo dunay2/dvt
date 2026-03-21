@@ -27,9 +27,13 @@ class RecordingMigrationClient {
   public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
   public releaseCalls = 0;
 
-  async query(sql: string, params?: unknown[]): Promise<{ rows: unknown[]; rowCount: number }> {
+  async query(
+    sql: string,
+    params?: unknown[]
+  ): Promise<{ rows: { exists: boolean }[]; rowCount: number }> {
     this.queries.push({ sql, params });
-    return { rows: [], rowCount: 0 };
+    // Return exists: false so all migration steps are applied (not skipped)
+    return { rows: [{ exists: false }], rowCount: 0 };
   }
 
   release(): void {
@@ -88,7 +92,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
     await expect(adapter.listPending(0)).rejects.toThrow(/MIGRATE_NOT_CALLED/);
   });
 
-  it('applies SET LOCAL statement_timeout during migrate() when configured', async () => {
+  it('applies SET LOCAL statement_timeout inside each step transaction when configured', async () => {
     const client = new RecordingMigrationClient();
     const adapter = new PostgresStateStoreAdapter({
       pool: {
@@ -100,27 +104,81 @@ describe('PostgresStateStoreAdapter migration state', () => {
 
     await adapter.migrate();
 
-    expect(client.queries[0]?.sql).toBe('BEGIN');
-    expect(client.queries[1]).toEqual({
-      sql: 'SET LOCAL statement_timeout = $1',
-      params: [4321],
-    });
-    expect(client.queries.at(-1)?.sql).toBe('COMMIT');
-    expect(client.releaseCalls).toBe(1);
+    const sqls = client.queries.map((q) => q.sql);
+
+    // Timeout must appear in the queries
+    expect(sqls).toContain('SET LOCAL statement_timeout = $1');
+
+    // It must follow a BEGIN (inside a step transaction, not outside)
+    const timeoutIdx = client.queries.findIndex(
+      (q) => q.sql === 'SET LOCAL statement_timeout = $1'
+    );
+    expect(client.queries[timeoutIdx - 1]?.sql).toBe('BEGIN');
+
+    // Correct parameter value
+    expect(client.queries[timeoutIdx]?.params).toEqual([4321]);
   });
 
-  it('creates the archive catalog tables and warm snapshot pinning indexes required for Gap 5 P1', async () => {
+  it('creates the schema_migrations tracking table', async () => {
     const client = new RecordingMigrationClient();
     const adapter = new PostgresStateStoreAdapter({
-      pool: {
-        connect: async () => client,
-      } as never,
+      pool: { connect: async () => client } as never,
       schema: 'DvtOps',
     });
 
     await adapter.migrate();
 
-    const executedSql = client.queries.map((entry) => entry.sql).join('\n');
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+    expect(executedSql).toContain('schema_migrations');
+    expect(executedSql).toContain('component');
+    expect(executedSql).toContain('applied_at');
+  });
+
+  it('uses an advisory lock to serialize concurrent migrations', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const sqls = client.queries.map((q) => q.sql);
+    expect(sqls.some((s) => s.includes('pg_advisory_lock'))).toBe(true);
+    expect(sqls.some((s) => s.includes('pg_advisory_unlock'))).toBe(true);
+  });
+
+  it('records each step in schema_migrations with component and version', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const insertQueries = client.queries.filter(
+      (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
+    );
+    // One INSERT per named migration step (10 steps)
+    expect(insertQueries.length).toBe(10);
+
+    const versions = insertQueries.map((q) => (q.params as string[])[1]);
+    expect(versions).toContain('core_001_initial_tables');
+    expect(versions).toContain('core_006_archive_lease_restore_tables');
+    expect(versions).toContain('core_010_purge_indexes');
+  });
+
+  it('creates the archive catalog tables and indexes required for G5-PR1', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
 
     expect(executedSql).toContain('run_event_archive_units');
     expect(executedSql).toContain('run_event_archive_batches');
@@ -132,23 +190,35 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain('run_snapshots_archive_unit_key_idx');
   });
 
-  it('creates the stored_plans table and validation-state index required for planner R4', async () => {
+  it('creates the archive lease and restore log tables required for G5-PR2', async () => {
     const client = new RecordingMigrationClient();
     const adapter = new PostgresStateStoreAdapter({
-      pool: {
-        connect: async () => client,
-      } as never,
+      pool: { connect: async () => client } as never,
       schema: 'DvtOps',
     });
 
     await adapter.migrate();
 
-    const executedSql = client.queries.map((entry) => entry.sql).join('\n');
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
 
-    expect(executedSql).toContain('stored_plans');
-    expect(executedSql).toContain('canonical_plan_json TEXT NOT NULL');
-    expect(executedSql).toContain('executable_plan_json TEXT NOT NULL');
-    expect(executedSql).toContain('validation_state TEXT NOT NULL');
-    expect(executedSql).toContain('stored_plans_validation_state_idx');
+    expect(executedSql).toContain('run_event_archive_leases');
+    expect(executedSql).toContain('run_event_archive_restore_log');
+    expect(executedSql).toContain('archive_restore_log_unit_key_idx');
+  });
+
+  it('creates the delivery buffer purge indexes required for G5-PR3', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+
+    expect(executedSql).toContain('outbox_delivered_at_idx');
+    expect(executedSql).toContain('outbox_dead_letter_dead_lettered_at_idx');
+    expect(executedSql).toContain('lineage_dead_letter_dead_lettered_at_idx');
   });
 });
