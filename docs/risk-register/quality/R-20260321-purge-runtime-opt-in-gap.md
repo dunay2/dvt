@@ -5,7 +5,7 @@ owner: Platform / Ops
 last_reviewed: 2026-03-21
 ---
 
-# R-20260321-PURGE-OPT-IN-01
+# R-20260321-PURGE-OPT-IN-01 - Delivery buffer purge runtime is opt-in and will not run in existing deployments until DVT_PURGE_ENABLED is set
 
 ## Risk Statement
 
