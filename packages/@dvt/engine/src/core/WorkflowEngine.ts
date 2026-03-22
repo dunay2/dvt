@@ -509,27 +509,15 @@ export class WorkflowEngine implements IWorkflowEngine {
     const failMeta = await this.deps.stateStore
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
-    await this.maybeEmitRunFailedAfterStartError(
-      failMeta,
-      validatedContext,
-      errorContext,
-      traceContext,
-      error
-    );
+    await this.maybeEmitRunFailedAfterStartError(failMeta, errorContext, traceContext);
     throw error;
   }
 
   private async maybeEmitRunFailedAfterStartError(
     failMeta: RunMetadata | null,
-    validatedContext: RunContext,
     errorContext: StartRunErrorContext,
-    traceContext: ReturnType<typeof buildTraceContext>,
-    originalError: unknown
+    traceContext: ReturnType<typeof buildTraceContext>
   ): Promise<void> {
-    // Reference parameters to avoid unused-variable TS6133 when not needed yet
-    void validatedContext;
-    void originalError;
-
     if (!failMeta) return;
 
     const pendingIntent = errorContext.intentId
