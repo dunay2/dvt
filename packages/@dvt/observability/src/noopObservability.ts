@@ -19,59 +19,51 @@ import type {
 
 class NoopCounter implements ICounter {
   add(_value: number, _labels?: MetricLabels): void {
-    void _value;
-    void _labels;
+    // intentionally no-op
   }
 }
 
 class NoopHistogram implements IHistogram {
   record(_value: number, _labels?: MetricLabels): void {
-    void _value;
-    void _labels;
+    // intentionally no-op
   }
 }
 
 class NoopGauge implements IGauge {
   set(_value: number, _labels?: MetricLabels): void {
-    void _value;
-    void _labels;
+    // intentionally no-op
   }
 }
 
 class NoopMetrics implements IMetrics {
   counter(_name: string, _baseLabels?: MetricLabels): ICounter {
-    void _name;
-    void _baseLabels;
+    // intentionally no-op
     return new NoopCounter();
   }
 
   histogram(_name: string, _baseLabels?: MetricLabels): IHistogram {
-    void _name;
-    void _baseLabels;
+    // intentionally no-op
     return new NoopHistogram();
   }
 
   gauge(_name: string, _baseLabels?: MetricLabels): IGauge {
-    void _name;
-    void _baseLabels;
+    // intentionally no-op
     return new NoopGauge();
   }
 }
 
 class NoopSpan implements ISpan {
   setAttribute(_key: string, _value: unknown): void {
-    void _key;
-    void _value;
+    // intentionally no-op
   }
   setAttributes(_attrs: Attributes): void {
-    void _attrs;
+    // intentionally no-op
   }
   recordException(_err: unknown): void {
-    void _err;
+    // intentionally no-op
   }
   setStatus(_status: SpanStatus, _message?: string): void {
-    void _status;
-    void _message;
+    // intentionally no-op
   }
   end(): void {
     return;
@@ -80,8 +72,7 @@ class NoopSpan implements ISpan {
 
 class NoopTraces implements ITraces {
   startSpan(_name: string, _options?: SpanOptions): ISpan {
-    void _name;
-    void _options;
+    // intentionally no-op
     return new NoopSpan();
   }
 
@@ -97,16 +88,16 @@ class NoopTraces implements ITraces {
 
 class NoopLogs implements ILogs {
   debug(_entry: Omit<LogEntry, 'level'>): void {
-    void _entry;
+    // intentionally no-op
   }
   info(_entry: Omit<LogEntry, 'level'>): void {
-    void _entry;
+    // intentionally no-op
   }
   warn(_entry: Omit<LogEntry, 'level'>): void {
-    void _entry;
+    // intentionally no-op
   }
   error(_entry: Omit<LogEntry, 'level'>): void {
-    void _entry;
+    // intentionally no-op
   }
 }
 
