@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 1
-- `queued`: 35
+- `review`: 2
+- `queued`: 34
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -31,7 +31,7 @@ block in the workboard.
 | -------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                     | Close review/merge decision and lock baseline.                         |
 | `P0`     | `RC-A1`  | Production correctness/security hook should be closed first.               | Disable/remove runtime `simulateError` in production path.             |
-| `P0`     | `RC-A2`  | Deterministic intent invariant affects crash recovery correctness.         | Implement deterministic `(tenantId, runId)` intent ID derivation.      |
+| `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.  | Merge review and lock deterministic intent-id baseline.                |
 | `P1`     | `RC-A4`  | Unblocks runtime planVersion enforcement (`S16`).                          | Replace inline planVersion literal with canonical registry constant.   |
 | `P1`     | `RC-A6`  | Explicit prerequisite for the full state-store split sweep (`S02`).        | Align dead-letter contract signatures with tenant-scoped concrete API. |
 | `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.              | Inject lineage outbox dependency directly in composition root.         |

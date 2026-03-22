@@ -69,6 +69,26 @@ export class IdempotencyKeyBuilder {
     return sha256Hex(preimage);
   }
 
+  /**
+   * INV-INTENT-011: deterministic identity for start-run intents.
+   *
+   * Uses a versioned canonical payload to avoid delimiter ambiguity
+   * (for example tenantId/runId containing `|`) and allow safe evolution.
+   * Inputs are consumed as-is (no case folding or Unicode normalization);
+   * callers must provide canonical tenantId/runId values.
+   */
+  startRunIntentId(tenantId: string, runId: string): string {
+    const normalizedTenantId = normalizeNonEmptyField(tenantId, 'tenantId');
+    const normalizedRunId = normalizeNonEmptyField(runId, 'runId');
+    const canonicalPayload = JSON.stringify({
+      kind: 'START_RUN_INTENT',
+      version: 1,
+      tenantId: normalizedTenantId,
+      runId: normalizedRunId,
+    });
+    return sha256Hex(canonicalPayload);
+  }
+
   eventId(): string {
     return randomUUID();
   }
@@ -92,4 +112,11 @@ function normalizeStepId(eventType: EventType, stepId?: string): string {
     throw new Error(`IdempotencyKeyBuilder: stepId required for ${eventType}`);
   }
   return stepId;
+}
+
+function normalizeNonEmptyField(value: string, fieldName: string): string {
+  if (value.length === 0) {
+    throw new Error(`IdempotencyKeyBuilder: ${fieldName} must be non-empty`);
+  }
+  return value;
 }

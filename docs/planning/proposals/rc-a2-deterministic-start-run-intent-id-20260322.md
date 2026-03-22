@@ -66,3 +66,13 @@ Validation commands:
 
 - `RC-A2` status can move from `Queued` to `Review` with deterministic ID tests.
 - No governance or hook bypass.
+
+## Compatibility Note
+
+- `IIdempotencyKeyBuilder` now includes `startRunIntentId(tenantId, runId)`.
+- This is a backward-compatible additive change for the active major line in-repo,
+  but all custom implementations of the interface MUST add this method before
+  consuming the updated engine package.
+- Derivation inputs are consumed as-is (no trimming/case folding/Unicode
+  normalization). Callers are responsible for supplying canonical `tenantId`
+  and `runId` values.

@@ -283,7 +283,10 @@ export class WorkflowEngine implements IWorkflowEngine {
     validatedContext: RunContext,
     provider: EngineRunRef['provider']
   ): Promise<string> {
-    const intentId = this.deps.idempotency.eventId();
+    const intentId = this.deps.idempotency.startRunIntentId(
+      validatedContext.tenantId,
+      validatedContext.runId
+    );
     await this.deps.intentStore.createIntent({
       intentId,
       tenantId: validatedContext.tenantId,

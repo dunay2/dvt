@@ -66,4 +66,37 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
       expect(builder.runEventKey(v.input)).toBe(v.expected);
     }
   });
+
+  it('startRunIntentId is deterministic and delimiter-safe via canonical payload', () => {
+    const a = builder.startRunIntentId('tenant-a|x', 'run-y');
+    const b = builder.startRunIntentId('tenant-a', 'x|run-y');
+    const sameA = builder.startRunIntentId('tenant-a|x', 'run-y');
+
+    expect(a).toBe(sameA);
+    expect(a).not.toBe(b);
+  });
+
+  it('startRunIntentId matches the canonical golden vector', () => {
+    expect(builder.startRunIntentId('tenant-golden', 'run-golden')).toBe(
+      '206cf63d6e549b4d6a0da7d9342f7d7f794fb331e82c4716a4557344b719ef53'
+    );
+  });
+
+  it('startRunIntentId rejects empty tenantId or runId', () => {
+    expect(() => builder.startRunIntentId('', 'run-1')).toThrow(/tenantId must be non-empty/);
+    expect(() => builder.startRunIntentId('tenant-1', '')).toThrow(/runId must be non-empty/);
+  });
+
+  it('eventId remains non-deterministic outside start-run intent path', () => {
+    const first = builder.eventId();
+    const second = builder.eventId();
+
+    expect(first).not.toBe(second);
+    expect(first).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    expect(second).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+  });
 });
