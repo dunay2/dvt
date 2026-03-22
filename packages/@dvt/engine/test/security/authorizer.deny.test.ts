@@ -94,7 +94,7 @@ function makeEngine(
 async function seedRunMetadata(
   store: InMemoryTxStore,
   metadata: import('@dvt/contracts').RunMetadata
-) {
+): Promise<void> {
   await store.bootstrapRunTx({
     metadata,
     firstEvents: [],
