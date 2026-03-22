@@ -365,6 +365,11 @@ export class WorkflowEngine implements IWorkflowEngine {
             operation: 'markResolved',
           })
           .add(1);
+      } catch {
+        // ADR-0030 best-effort contract: observability failures must never turn
+        // intent-resolution cleanup failures into startRun failures.
+      }
+      try {
         this.observability.logs.warn({
           msg: 'markResolved failed; leaving intent cleanup to reconciliation worker',
           context: input.traceContext,
