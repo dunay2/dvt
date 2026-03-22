@@ -1,10 +1,16 @@
 import type { PlanRef, RunContext, RunStateCommandPort } from '@dvt/contracts';
+import { createNoopObservability, type IObservability } from '@dvt/observability';
+import { ApplicationFailure } from '@temporalio/activity';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
   createActivities,
+  SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE,
+  SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE,
+  UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION_ERROR,
   type Activities,
   type ActivityDeps,
+  type SimulateErrorPolicy,
   type StepExecutor,
   type StepInput,
 } from '../src/activities/stepActivities.js';
@@ -72,6 +78,7 @@ const EXPECTED_ERRORS = {
   inputBindingsNotSupported: 'INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1',
   transientStepErrorS1: 'TRANSIENT_STEP_ERROR:s1',
   permanentStepErrorS1: 'PERMANENT_STEP_ERROR:s1',
+  simulateErrorRejectedByRuntimePolicyS1: `RUNTIME_POLICY_VIOLATION: ${SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE}:s1`,
   gatewayConfigRequired: 'INVALID_STEP_SCHEMA: gateway_config_required:gw-invalid',
   invalidGatewayDsl: 'INVALID_GATEWAY_DSL:gw-invalid-dsl',
 } as const;
@@ -214,7 +221,11 @@ interface TestActivityDeps extends ActivityDeps {
   testStore: TestTxStore;
 }
 
-function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
+function buildDeps(
+  store: TestTxStore = new TestTxStore(),
+  observability?: IObservability,
+  simulateErrorPolicy?: SimulateErrorPolicy
+): TestActivityDeps {
   const runStateCommandPort: RunStateCommandPort = {
     bootstrapRun: (input) => store.bootstrapRunTx(input),
     appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
@@ -225,6 +236,8 @@ function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
     testStore: store,
     clock: new TestClock(),
     idempotency: new TestIdempotencyKeyBuilder(),
+    ...(observability !== undefined ? { observability } : {}),
+    ...(simulateErrorPolicy !== undefined ? { simulateErrorPolicy } : {}),
     fetcher: { fetch: vi.fn(async () => PLAN_BYTES) },
     integrity: {
       fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
@@ -234,12 +247,14 @@ function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
 
 function setupActivities(
   store: TestTxStore = new TestTxStore(),
-  stepExecutors?: readonly StepExecutor[]
+  stepExecutors?: readonly StepExecutor[],
+  observability?: IObservability,
+  simulateErrorPolicy?: SimulateErrorPolicy
 ): {
   deps: TestActivityDeps;
   acts: Activities;
 } {
-  const deps = buildDeps(store);
+  const deps = buildDeps(store, observability, simulateErrorPolicy);
   const acts = createActivities(deps, stepExecutors);
   return { deps, acts };
 }
@@ -301,6 +316,21 @@ function expectExecuteStepRejects(step: unknown, expectedError: string) {
   };
 }
 
+function createObservabilitySpy(): {
+  observability: IObservability;
+  warnSpy: ReturnType<typeof vi.spyOn>;
+  counterSpy: ReturnType<typeof vi.spyOn>;
+  counterAddSpy: ReturnType<typeof vi.fn>;
+} {
+  const observability = createNoopObservability();
+  const counterAddSpy = vi.fn();
+  const counterSpy = vi
+    .spyOn(observability.metrics, 'counter')
+    .mockReturnValue({ add: counterAddSpy });
+  const warnSpy = vi.spyOn(observability.logs, 'warn');
+  return { observability, warnSpy, counterSpy, counterAddSpy };
+}
+
 async function withNodeEnv<T>(value: string | undefined, fn: () => Promise<T> | T): Promise<T> {
   const previous = process.env['NODE_ENV'];
   if (value === undefined) {
@@ -308,7 +338,6 @@ async function withNodeEnv<T>(value: string | undefined, fn: () => Promise<T> | 
   } else {
     process.env['NODE_ENV'] = value;
   }
-
   try {
     return await fn();
   } finally {
@@ -362,6 +391,143 @@ describe('stepActivities', () => {
       await expect(acts.fetchPlan(PLAN_REF)).rejects.toThrow(
         EXPECTED_ERRORS.planContractVersionUnknown
       );
+    });
+
+    it.each(['transient', 'permanent'])(
+      'rejects fetchPlan in production when step contains simulateError=%s and emits signal',
+      async (simulateError) => {
+        const badPlan = {
+          ...PLAN_JSON,
+          steps: [{ stepId: 's1', kind: 'test', simulateError }],
+        };
+        const badBytes = Buffer.from(JSON.stringify(badPlan), 'utf-8');
+        const { observability, warnSpy, counterSpy, counterAddSpy } = createObservabilitySpy();
+        const { deps, acts } = setupActivities(undefined, undefined, observability, {
+          rejectInProduction: true,
+          runtimeMode: 'production',
+        });
+        deps.fetcher = { fetch: vi.fn(async () => badBytes) };
+        deps.integrity = {
+          fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
+        } as unknown as ActivityDeps['integrity'];
+
+        const rejection = await acts.fetchPlan(PLAN_REF).then(
+          () => {
+            throw new TypeError('EXPECTED_REJECTION');
+          },
+          (error) => error
+        );
+        expect(rejection).toBeInstanceOf(ApplicationFailure);
+        expect((rejection as Error).message).toContain(
+          EXPECTED_ERRORS.simulateErrorRejectedByRuntimePolicyS1
+        );
+        expect((rejection as ApplicationFailure).nonRetryable).toBe(true);
+
+        expect(counterSpy).toHaveBeenCalledWith(
+          'dvt.temporal.activity.simulate_error_rejected_total',
+          { adapter: 'temporal', operation: 'fetchPlan', result: 'rejected' }
+        );
+        expect(counterAddSpy).toHaveBeenCalledTimes(1);
+        expect(counterAddSpy).toHaveBeenCalledWith(1, { simulateErrorKind: simulateError });
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            msg: 'Rejected simulateError hook by runtime activity policy',
+            attributes: expect.objectContaining({
+              stepId: 's1',
+              simulateErrorKind: simulateError,
+              runtimeMode: 'production',
+            }),
+          })
+        );
+      }
+    );
+
+    it('keeps canonical rejection when observability sinks throw during fetchPlan signal emission', async () => {
+      const badPlan = {
+        ...PLAN_JSON,
+        steps: [{ stepId: 's1', kind: 'test', simulateError: 'permanent' }],
+      };
+      const badBytes = Buffer.from(JSON.stringify(badPlan), 'utf-8');
+      const stderrWriteSpy = vi
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => true as boolean);
+      const observability = createNoopObservability();
+      vi.spyOn(observability.metrics, 'counter').mockImplementation(() => {
+        throw new Error('METRIC_BACKEND_DOWN');
+      });
+      vi.spyOn(observability.logs, 'warn').mockImplementation(() => {
+        throw new Error('LOG_BACKEND_DOWN');
+      });
+      const { deps, acts } = setupActivities(undefined, undefined, observability, {
+        rejectInProduction: true,
+        runtimeMode: 'production',
+      });
+      deps.fetcher = { fetch: vi.fn(async () => badBytes) };
+      deps.integrity = {
+        fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
+      } as unknown as ActivityDeps['integrity'];
+
+      const rejection = await acts.fetchPlan(PLAN_REF).then(
+        () => {
+          throw new TypeError('EXPECTED_REJECTION');
+        },
+        (error) => error
+      );
+      expect(rejection).toBeInstanceOf(ApplicationFailure);
+      expect((rejection as Error).message).toContain(
+        EXPECTED_ERRORS.simulateErrorRejectedByRuntimePolicyS1
+      );
+      expect((rejection as ApplicationFailure).nonRetryable).toBe(true);
+      expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
+      const rawFallback = stderrWriteSpy.mock.calls[0]?.[0];
+      expect(typeof rawFallback).toBe('string');
+      const parsed = JSON.parse(String(rawFallback).trim()) as {
+        marker: string;
+        operation: string;
+        stepId: string;
+        simulateErrorKind: string;
+        runtimeMode: string;
+        canonicalCode: string;
+        legacyCode: string;
+        failures: Array<{ channel: string; cause: string }>;
+      };
+      expect(parsed.marker).toBe('dvt.simulate_error_signal_fallback');
+      expect(parsed.operation).toBe('fetchPlan');
+      expect(parsed.stepId).toBe('s1');
+      expect(parsed.simulateErrorKind).toBe('permanent');
+      expect(parsed.runtimeMode).toBe('production');
+      expect(parsed.canonicalCode).toBe(SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE);
+      expect(parsed.legacyCode).toBe(SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE);
+      expect(parsed.failures).toHaveLength(2);
+      expect(parsed.failures.map((entry) => entry.channel).sort()).toEqual(['logs', 'metrics']);
+      expect(parsed.failures.every((entry) => entry.cause.length > 0)).toBe(true);
+      expect(stderrWriteSpy).toHaveBeenCalledWith(
+        expect.stringContaining('"marker":"dvt.simulate_error_signal_fallback"')
+      );
+      stderrWriteSpy.mockRestore();
+    });
+
+    it('allows fetchPlan with simulateError when policy explicitly allows it', async () => {
+      const planWithSimulateError = {
+        ...PLAN_JSON,
+        steps: [{ stepId: 's1', kind: 'test', simulateError: 'permanent' }],
+      };
+      const bytes = Buffer.from(JSON.stringify(planWithSimulateError), 'utf-8');
+      const { observability, warnSpy, counterAddSpy } = createObservabilitySpy();
+      const { deps, acts } = setupActivities(undefined, undefined, observability, {
+        rejectInProduction: false,
+        runtimeMode: 'test',
+      });
+      deps.fetcher = { fetch: vi.fn(async () => bytes) };
+      deps.integrity = {
+        fetchAndValidate: vi.fn(async (_ref, fetcher) => fetcher.fetch(_ref)),
+      } as unknown as ActivityDeps['integrity'];
+
+      const plan = await acts.fetchPlan(PLAN_REF);
+      expect(plan.steps).toHaveLength(1);
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(counterAddSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -526,18 +692,197 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
-    it('ignores simulateError hook in production runtime', async () => {
-      await withNodeEnv('production', async () => {
-        const { acts } = setupActivities();
-        const result = await acts.executeStep({
+    it.each(['transient', 'permanent'])(
+      'rejects simulateError=%s in production and emits signal',
+      async (simulateError) => {
+        const { observability, warnSpy, counterSpy, counterAddSpy } = createObservabilitySpy();
+        const { acts } = setupActivities(undefined, undefined, observability, {
+          rejectInProduction: true,
+          runtimeMode: 'production',
+        });
+        const rejection = await acts
+          .executeStep({
+            step: {
+              stepId: 's1',
+              kind: 'test',
+              simulateError,
+            } as unknown as StepInput['step'],
+            ctx: CTX,
+          })
+          .then(
+            () => {
+              throw new TypeError('EXPECTED_REJECTION');
+            },
+            (error) => error
+          );
+        expect(rejection).toBeInstanceOf(ApplicationFailure);
+        expect((rejection as Error).message).toContain(
+          EXPECTED_ERRORS.simulateErrorRejectedByRuntimePolicyS1
+        );
+        expect((rejection as ApplicationFailure).nonRetryable).toBe(true);
+
+        expect(counterSpy).toHaveBeenCalledWith(
+          'dvt.temporal.activity.simulate_error_rejected_total',
+          { adapter: 'temporal', operation: 'executeStep', result: 'rejected' }
+        );
+        expect(counterAddSpy).toHaveBeenCalledTimes(1);
+        expect(counterAddSpy).toHaveBeenCalledWith(1, { simulateErrorKind: simulateError });
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            msg: 'Rejected simulateError hook by runtime activity policy',
+            attributes: expect.objectContaining({
+              stepId: 's1',
+              simulateErrorKind: simulateError,
+              runtimeMode: 'production',
+            }),
+          })
+        );
+      }
+    );
+
+    it('keeps canonical rejection when observability sinks throw during signal emission', async () => {
+      const stderrWriteSpy = vi
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => true as boolean);
+      const observability = createNoopObservability();
+      vi.spyOn(observability.metrics, 'counter').mockImplementation(() => {
+        throw new Error('METRIC_BACKEND_DOWN');
+      });
+      vi.spyOn(observability.logs, 'warn').mockImplementation(() => {
+        throw new Error('LOG_BACKEND_DOWN');
+      });
+
+      const { acts } = setupActivities(undefined, undefined, observability, {
+        rejectInProduction: true,
+        runtimeMode: 'production',
+      });
+      const rejection = await acts
+        .executeStep({
           step: {
             stepId: 's1',
             kind: 'test',
             simulateError: 'permanent',
           } as unknown as StepInput['step'],
           ctx: CTX,
-        });
-        expect(result).toEqual({ stepId: 's1', status: 'COMPLETED' });
+        })
+        .then(
+          () => {
+            throw new TypeError('EXPECTED_REJECTION');
+          },
+          (error) => error
+        );
+
+      expect(rejection).toBeInstanceOf(ApplicationFailure);
+      expect((rejection as Error).message).toContain(
+        EXPECTED_ERRORS.simulateErrorRejectedByRuntimePolicyS1
+      );
+      expect((rejection as ApplicationFailure).nonRetryable).toBe(true);
+      expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
+      const rawFallback = stderrWriteSpy.mock.calls[0]?.[0];
+      expect(typeof rawFallback).toBe('string');
+      const parsed = JSON.parse(String(rawFallback).trim()) as {
+        marker: string;
+        operation: string;
+        stepId: string;
+        simulateErrorKind: string;
+        runtimeMode: string;
+        canonicalCode: string;
+        legacyCode: string;
+        failures: Array<{ channel: string; cause: string }>;
+      };
+      expect(parsed.marker).toBe('dvt.simulate_error_signal_fallback');
+      expect(parsed.operation).toBe('executeStep');
+      expect(parsed.stepId).toBe('s1');
+      expect(parsed.simulateErrorKind).toBe('permanent');
+      expect(parsed.runtimeMode).toBe('production');
+      expect(parsed.canonicalCode).toBe(SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE);
+      expect(parsed.legacyCode).toBe(SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE);
+      expect(parsed.failures).toHaveLength(2);
+      expect(parsed.failures.map((entry) => entry.channel).sort()).toEqual(['logs', 'metrics']);
+      expect(parsed.failures.every((entry) => entry.cause.length > 0)).toBe(true);
+      expect(stderrWriteSpy).toHaveBeenCalledWith(
+        expect.stringContaining('"marker":"dvt.simulate_error_signal_fallback"')
+      );
+      stderrWriteSpy.mockRestore();
+    });
+
+    it('rejects simulateError with explicit runtime policy outside production', async () => {
+      const { observability, warnSpy } = createObservabilitySpy();
+      const { acts } = setupActivities(undefined, undefined, observability, {
+        rejectInProduction: true,
+        runtimeMode: 'policy-test',
+      });
+      await expect(
+        acts.executeStep({
+          step: {
+            stepId: 's1',
+            kind: 'test',
+            simulateError: 'permanent',
+          } as unknown as StepInput['step'],
+          ctx: CTX,
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.simulateErrorRejectedByRuntimePolicyS1);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attributes: expect.objectContaining({
+            runtimeMode: 'policy-test',
+          }),
+        })
+      );
+    });
+
+    it('uses implicit fail-closed policy when simulateErrorPolicy is omitted', async () => {
+      const { observability, warnSpy } = createObservabilitySpy();
+      const { acts } = setupActivities(undefined, undefined, observability);
+      await expect(
+        acts.executeStep({
+          step: {
+            stepId: 's1',
+            kind: 'test',
+            simulateError: 'permanent',
+          } as unknown as StepInput['step'],
+          ctx: CTX,
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.permanentStepErrorS1);
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('uses implicit production fail-closed behavior when NODE_ENV=production and policy is omitted', async () => {
+      await withNodeEnv('production', async () => {
+        const { observability, warnSpy } = createObservabilitySpy();
+        const { acts } = setupActivities(undefined, undefined, observability);
+        await expect(
+          acts.executeStep({
+            step: {
+              stepId: 's1',
+              kind: 'test',
+              simulateError: 'permanent',
+            } as unknown as StepInput['step'],
+            ctx: CTX,
+          })
+        ).rejects.toThrow(EXPECTED_ERRORS.simulateErrorRejectedByRuntimePolicyS1);
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            attributes: expect.objectContaining({
+              runtimeMode: 'production',
+            }),
+          })
+        );
+      });
+    });
+
+    it('fails closed when NODE_ENV=production and policy explicitly disables rejection', async () => {
+      await withNodeEnv('production', async () => {
+        expect(() =>
+          setupActivities(undefined, undefined, undefined, {
+            rejectInProduction: false,
+            runtimeMode: 'test',
+          })
+        ).toThrow(UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION_ERROR);
       });
     });
 
@@ -547,22 +892,25 @@ describe('stepActivities', () => {
     ])(
       'applies simulateError=$simulateError outside production',
       async ({ simulateError, expectedError }) => {
-        await withNodeEnv('test', async () => {
-          const { acts } = setupActivities();
-          await expect(
-            acts.executeStep({
-              step: {
-                stepId: 's1',
-                kind: 'test',
-                simulateError,
-              } as unknown as StepInput['step'],
-              ctx: CTX,
-            })
-          ).rejects.toThrow(expectedError);
+        const { acts } = setupActivities(undefined, undefined, undefined, {
+          rejectInProduction: false,
+          runtimeMode: 'test',
         });
+        await expect(
+          acts.executeStep({
+            step: {
+              stepId: 's1',
+              kind: 'test',
+              simulateError,
+            } as unknown as StepInput['step'],
+            ctx: CTX,
+          })
+        ).rejects.toThrow(expectedError);
       }
     );
+  });
 
+  describe('gateway execution', () => {
     it.each([
       { status: 'COMPLETED', expectedDecision: true },
       { status: 'FAILED', expectedDecision: false },
@@ -593,7 +941,9 @@ describe('stepActivities', () => {
         });
       }
     );
+  });
 
+  describe('step validation and executor errors', () => {
     it(
       'rejects step when dependsOn is not an array',
       expectExecuteStepRejects(
@@ -633,7 +983,13 @@ describe('stepActivities', () => {
     it('throws transient error when executor raises retryable failure', async () => {
       const { acts } = setupActivities(undefined, withErrorExecutors(transientErrorExecutor('s1')));
       await expect(
-        acts.executeStep({ step: { stepId: 's1', kind: 'test' }, ctx: CTX })
+        acts.executeStep({
+          step: {
+            stepId: 's1',
+            kind: 'test',
+          } as unknown as StepInput['step'],
+          ctx: CTX,
+        })
       ).rejects.toThrow(EXPECTED_ERRORS.transientStepErrorS1);
     });
 

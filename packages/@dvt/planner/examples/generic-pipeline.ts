@@ -39,4 +39,4 @@ async function main(): Promise<void> {
   console.warn(plan.metadata.planId);
 }
 
-void main();
+await main();

@@ -132,6 +132,6 @@ function extractGatewayDecision(e: EventEnvelope): boolean | undefined {
     return undefined;
   }
 
-  const maybeDecision = (payload as Record<string, unknown>)['gatewayDecision'];
+  const maybeDecision = payload['gatewayDecision'];
   return typeof maybeDecision === 'boolean' ? maybeDecision : undefined;
 }

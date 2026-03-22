@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadTemporalAdapterConfig, TemporalWorkerHost } from '../src/index.js';
 
@@ -88,9 +88,15 @@ function mkActivityDeps(): {
 }
 
 describe('TemporalWorkerHost lifecycle', () => {
+  const originalNodeEnv = process.env['NODE_ENV'];
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetWorkerRunPromise();
+  });
+
+  afterEach(() => {
+    restoreNodeEnv(originalNodeEnv);
   });
 
   it('starts once and wires Worker.create deterministically', async () => {
@@ -158,6 +164,226 @@ describe('TemporalWorkerHost lifecycle', () => {
       operation: 'runExit',
       result: 'ok',
     });
+  });
+
+  it('injects host observability and runtime policy into activities when deps omit both', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+    const { observability, logs } = makeTrackingObservability();
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: mkActivityDeps(),
+      observability,
+      simulateErrorPolicy: {
+        rejectInProduction: true,
+        runtimeMode: 'policy-test',
+      },
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await host.start({} as never);
+    const createArgs = getLastCreateArgs() as {
+      activities: {
+        executeStep(input: unknown): Promise<unknown>;
+      };
+    };
+
+    await expect(
+      createArgs.activities.executeStep({
+        step: {
+          stepId: 's1',
+          kind: 'test',
+          simulateError: 'permanent',
+        },
+        ctx: {} as never,
+      })
+    ).rejects.toThrow('simulateError_not_allowed_in_production:s1');
+
+    expect(logs.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attributes: expect.objectContaining({
+          runtimeMode: 'policy-test',
+        }),
+      })
+    );
+
+    await host.shutdown();
+  });
+
+  it('prefers activityDeps policy over host policy when both are provided', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: {
+        ...mkActivityDeps(),
+        simulateErrorPolicy: {
+          rejectInProduction: false,
+          runtimeMode: 'deps-policy',
+        },
+      },
+      simulateErrorPolicy: {
+        rejectInProduction: true,
+        runtimeMode: 'host-policy',
+      },
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await host.start({} as never);
+    const createArgs = getLastCreateArgs() as {
+      activities: {
+        executeStep(input: unknown): Promise<unknown>;
+      };
+    };
+
+    const result = await createArgs.activities.executeStep({
+      step: {
+        stepId: 's1',
+        kind: 'test',
+        simulateError: 'noop',
+      },
+      ctx: {} as never,
+    });
+    expect(result).toEqual({ stepId: 's1', status: 'COMPLETED' });
+
+    await host.shutdown();
+  });
+
+  it('fails start in production when host policy allows simulateError', async () => {
+    process.env['NODE_ENV'] = 'production';
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: mkActivityDeps(),
+      simulateErrorPolicy: {
+        rejectInProduction: false,
+        runtimeMode: 'test-policy',
+      },
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await expect(host.start({} as never)).rejects.toThrow(
+      'TEMPORAL_UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION'
+    );
+    expect(mockWorkerCreate).not.toHaveBeenCalled();
+    expect(host.isRunning()).toBe(false);
+  });
+
+  it('fails start in production when activityDeps policy overrides host policy to allow simulateError', async () => {
+    process.env['NODE_ENV'] = 'production';
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: {
+        ...mkActivityDeps(),
+        simulateErrorPolicy: {
+          rejectInProduction: false,
+          runtimeMode: 'deps-policy',
+        },
+      },
+      simulateErrorPolicy: {
+        rejectInProduction: true,
+        runtimeMode: 'host-policy',
+      },
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await expect(host.start({} as never)).rejects.toThrow(
+      'TEMPORAL_UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION'
+    );
+    expect(mockWorkerCreate).not.toHaveBeenCalled();
+    expect(host.isRunning()).toBe(false);
+  });
+
+  it('starts in production when simulateErrorPolicy is omitted (implicit fail-closed)', async () => {
+    process.env['NODE_ENV'] = 'production';
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: mkActivityDeps(),
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await host.start({} as never);
+    expect(mockWorkerCreate).toHaveBeenCalledTimes(1);
+    expect(host.isRunning()).toBe(true);
+    await host.shutdown();
+  });
+
+  it('prefers activityDeps observability over host observability when both are provided', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+    const { observability: hostObservability, logs: hostLogs } = makeTrackingObservability();
+    const { observability: depsObservability, logs: depsLogs } = makeTrackingObservability();
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: {
+        ...mkActivityDeps(),
+        observability: depsObservability,
+        simulateErrorPolicy: {
+          rejectInProduction: true,
+          runtimeMode: 'deps-policy',
+        },
+      },
+      observability: hostObservability,
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await host.start({} as never);
+    const createArgs = getLastCreateArgs() as {
+      activities: {
+        executeStep(input: unknown): Promise<unknown>;
+      };
+    };
+
+    await expect(
+      createArgs.activities.executeStep({
+        step: {
+          stepId: 's1',
+          kind: 'test',
+          simulateError: 'permanent',
+        },
+        ctx: {} as never,
+      })
+    ).rejects.toThrow('simulateError_not_allowed_in_production:s1');
+
+    expect(depsLogs.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attributes: expect.objectContaining({
+          runtimeMode: 'deps-policy',
+        }),
+      })
+    );
+    expect(hostLogs.warn).not.toHaveBeenCalled();
+
+    await host.shutdown();
   });
 
   it('rejects double start', async () => {
@@ -261,4 +487,18 @@ describe('TemporalWorkerHost lifecycle', () => {
     expect(host.isRunning()).toBe(false);
     expect(mockWorkerShutdown).not.toHaveBeenCalled();
   });
+
+  it('restoreNodeEnv removes NODE_ENV when original value is undefined', () => {
+    process.env['NODE_ENV'] = 'production';
+    restoreNodeEnv(undefined);
+    expect(process.env['NODE_ENV']).toBeUndefined();
+  });
 });
+
+function restoreNodeEnv(value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env['NODE_ENV'];
+    return;
+  }
+  process.env['NODE_ENV'] = value;
+}

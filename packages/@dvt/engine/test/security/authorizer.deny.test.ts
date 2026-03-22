@@ -91,6 +91,16 @@ function makeEngine(
   return { engine, store };
 }
 
+async function seedRunMetadata(
+  store: InMemoryTxStore,
+  metadata: import('@dvt/contracts').RunMetadata
+) {
+  await store.bootstrapRunTx({
+    metadata,
+    firstEvents: [],
+  });
+}
+
 describe('RBAC/IAuthorizer (negative paths)', () => {
   it('denies startRun and does not call adapter', async () => {
     const adapter = new CountingAdapter();
@@ -121,7 +131,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const { engine, store } = makeEngine(new DenyAuthorizer(), adapter);
 
     // Pre-populate metadata so resolveMetaOrThrow succeeds
-    await store.saveRunMetadata({
+    await seedRunMetadata(store, {
       tenantId: 't1',
       projectId: 'p1',
       environmentId: 'dev',
@@ -151,7 +161,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const authorizer = new TenantScopeAuthorizer('tenant-allowed');
     const { engine, store } = makeEngine(authorizer, adapter);
 
-    await store.saveRunMetadata({
+    await seedRunMetadata(store, {
       tenantId: 'tenant-allowed',
       projectId: 'p1',
       environmentId: 'dev',
@@ -180,7 +190,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const authorizer = new TenantScopeAuthorizer('tenant-allowed');
     const { engine, store } = makeEngine(authorizer, adapter);
 
-    await store.saveRunMetadata({
+    await seedRunMetadata(store, {
       tenantId: 'tenant-allowed',
       projectId: 'p1',
       environmentId: 'dev',
@@ -208,7 +218,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
     const authorizer = new TenantScopeAuthorizer('tenant-allowed');
     const { engine, store } = makeEngine(authorizer, adapter);
 
-    await store.saveRunMetadata({
+    await seedRunMetadata(store, {
       tenantId: 'tenant-allowed',
       projectId: 'p1',
       environmentId: 'dev',
