@@ -529,16 +529,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     this.logStartRunFailure(error, validatedContext, metricTags, traceContext);
 
     if (error instanceof PostStartIntentPersistenceError) {
-      this.observability.logs.warn({
-        msg: 'Provider workflow started but intent persistence failed; leaving reconciliation to maintenance worker',
-        context: traceContext,
-        attributes: {
-          intentId: error.intentId,
-          runId: error.runRef.runId,
-          provider: error.runRef.provider,
-          error: toErrorMessage(error.originalError),
-        },
-      });
+      this.warnIntentPersistenceFailure(error, traceContext);
       throw error;
     }
 
@@ -546,7 +537,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
     if (failMeta) {
-      await this.maybeEmitRunFailed(failMeta, errorContext, traceContext);
+      await this.handlePersistedRunStartFailure(failMeta, errorContext, traceContext);
     }
     throw error;
   }
@@ -951,6 +942,30 @@ export class WorkflowEngine implements IWorkflowEngine {
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
     }
+  }
+
+  private warnIntentPersistenceFailure(
+    error: PostStartIntentPersistenceError,
+    traceContext: ReturnType<typeof buildTraceContext>
+  ): void {
+    this.observability.logs.warn({
+      msg: 'Provider workflow started but intent persistence failed; leaving reconciliation to maintenance worker',
+      context: traceContext,
+      attributes: {
+        intentId: error.intentId,
+        runId: error.runRef.runId,
+        provider: error.runRef.provider,
+        error: toErrorMessage(error.originalError),
+      },
+    });
+  }
+
+  private async handlePersistedRunStartFailure(
+    failMeta: RunMetadata,
+    errorContext: StartRunErrorContext,
+    traceContext: ReturnType<typeof buildTraceContext>
+  ): Promise<void> {
+    await this.maybeEmitRunFailed(failMeta, errorContext, traceContext);
   }
 
   private validateDependencies(): void {
