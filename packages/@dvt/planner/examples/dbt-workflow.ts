@@ -29,4 +29,4 @@ async function main(): Promise<void> {
   console.warn(canonicalPlanJson.length);
 }
 
-void main();
+await main();

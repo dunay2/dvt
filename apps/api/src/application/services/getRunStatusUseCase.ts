@@ -33,16 +33,28 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ? await this.engine.enrichRunStatus(runRef)
       : await this.engine.getRunStatus(runRef);
 
-    return {
+    const result: GetRunStatusResult = {
       runId: snapshot.runId,
       tenantId: context.scope.tenantId.value,
       status: snapshot.status,
       enriched: query.enriched,
-      ...(snapshot.substatus !== undefined ? { substatus: snapshot.substatus } : {}),
-      ...(snapshot.message !== undefined ? { message: snapshot.message } : {}),
-      ...(snapshot.startedAt !== undefined ? { startedAt: snapshot.startedAt } : {}),
-      ...(snapshot.completedAt !== undefined ? { completedAt: snapshot.completedAt } : {}),
-      ...(snapshot.hash !== undefined ? { hash: snapshot.hash } : {}),
     };
+    assignIfDefined(result, 'substatus', snapshot.substatus);
+    assignIfDefined(result, 'message', snapshot.message);
+    assignIfDefined(result, 'startedAt', snapshot.startedAt);
+    assignIfDefined(result, 'completedAt', snapshot.completedAt);
+    assignIfDefined(result, 'hash', snapshot.hash);
+    return result;
   }
+}
+
+function assignIfDefined<T extends Record<string, unknown>, K extends keyof T>(
+  target: T,
+  key: K,
+  value: T[K] | undefined
+): void {
+  if (value === undefined) {
+    return;
+  }
+  target[key] = value;
 }
