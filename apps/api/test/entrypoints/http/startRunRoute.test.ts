@@ -257,6 +257,88 @@ describe('startRunRoute', () => {
     });
   });
 
+  it('accepts planner-backed starts with a typed graph source', async () => {
+    const reply = createReply();
+
+    let received: Record<string, unknown> | undefined;
+    const facade = {
+      async execute(input: Record<string, unknown>) {
+        received = input;
+        return { kind: 'accepted' as const, runId: 'r-graph', accepted: true };
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-graph-source',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          graphSource: {
+            kind: 'normalized-graph-v1',
+            nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          },
+          runId: 'run-graph',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(202);
+    expect(received?.command).toEqual({
+      graphSource: {
+        kind: 'normalized-graph-v1',
+        nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+      },
+      runId: 'run-graph',
+      targetAdapter: 'mock',
+      selection: ['model_a'],
+    });
+  });
+
+  it('returns 400 when planRef and planner source are both supplied', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-conflicting-plan-inputs',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          graphSource: {
+            kind: 'normalized-graph-v1',
+            nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          },
+          runId: 'run-conflict',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: 'BAD_REQUEST',
+      code: 'CONFLICTING_PLAN_INPUTS',
+    });
+  });
+
   it('accepts lowercase bearer scheme', async () => {
     const reply = createReply();
 

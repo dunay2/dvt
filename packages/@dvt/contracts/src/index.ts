@@ -1,15 +1,14 @@
 export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
-export * from './adapters/IOutboxStorageAdapter.v1.js';
-export * from './adapters/IProjectorAdapter.v1.js';
-export * from './adapters/IStateStoreAdapter.v1.js';
-export * from './adapters/IWorkflowEngineAdapter.v1.js';
 export * from './adapters/IProviderAdapter.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/IStartRunIntentStore.v1.js';
 export * from './contracts/engine/StartRunIntentPolicy.v1.js';
-export { GRAPH_SOURCE_COMPATIBILITY_POLICY } from './contracts/planner/ExecutionPlan.v2.js';
+export {
+  GRAPH_SOURCE_COMPATIBILITY_POLICY,
+  PLANNER_GRAPH_SOURCE_KIND,
+} from './contracts/planner/ExecutionPlan.v2.js';
 export {
   CURRENT_EXECUTION_PLAN_VERSION,
   EXECUTION_PLAN_VERSION_REGISTRY,
@@ -23,6 +22,7 @@ export type {
   ExecutionPlanV2,
   ExecutionStepV2,
   GraphNode,
+  PlannerGraphSourceV1,
   PlanCore,
   PlannerBuildResultV2,
   PlannerEnvironmentContext,

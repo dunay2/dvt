@@ -20,4 +20,25 @@ describe('RawSqlBackpressureStore', () => {
     });
     expect(reader.getTenantSnapshot).toHaveBeenCalledWith('tenant-a');
   });
+
+  it('exposes acquisition metadata for resilience wrappers', async () => {
+    const reader = {
+      getTenantSnapshot: vi.fn().mockResolvedValue({
+        tenantActivePendingEventCount: 1,
+        tenantStuckPendingEventCount: 0,
+        globalActivePendingEventCount: 2,
+        globalHealthyTenantOldestActiveAgeMs: 12_000,
+      }),
+    };
+    const store = new RawSqlBackpressureStore(reader, () => 1234);
+
+    await expect(store.getTenantSnapshotEnvelope('tenant-a')).resolves.toEqual({
+      snapshot: {
+        pendingEventsPerTenant: 1,
+        outboxOldestAgeMs: 12_000,
+      },
+      capturedAtEpochMs: 1234,
+      source: 'live',
+    });
+  });
 });

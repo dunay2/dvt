@@ -4,15 +4,17 @@
  * ## Responsibilities
  *
  * The domain `Planner` is a pure, synchronous-style domain service that
- * accepts only pre-resolved graph inputs (manifest or nodes). This facade
+ * accepts only pre-resolved graph inputs (graphSource or nodes). This facade
  * handles concerns that live outside the pure domain:
  *
- * - `manifestRef` resolution: fetches and integrity-verifies the manifest
+ * - `manifestRef` resolution: fetches and integrity-verifies the graph-source
  *   payload via `IArtifactResolver` before handing off to the domain planner.
+ * - `manifest` compatibility path: derives a typed graph source from the raw
+ *   DBT payload before handing off to the domain planner.
  * - `environment` context: accepted and stripped at this boundary (the domain
  *   planner does not model environment-dependent behaviour).
- * - Three-way one-active-source rule: rejects envelopes where more than one
- *   of `manifestRef`, `manifest`, or `nodes` is provided.
+ * - Four-way one-active-source rule: rejects envelopes where more than one
+ *   of `manifestRef`, `graphSource`, `manifest`, or `nodes` is provided.
  *
  * ## Invariants
  *
@@ -21,19 +23,31 @@
  * - Resolution errors (fetch failure, sha256 mismatch) propagate as thrown
  *   errors from the resolver — this facade does not wrap them.
  * - The inner domain `Planner` sees exactly one resolved graph source
- *   (`manifest` or `nodes`) with no application-boundary fields.
+ *   (`graphSource` or `nodes`) with no application-boundary fields.
  *
  * @implements IPlanner
  * @see IArtifactResolver — the port used to resolve manifestRef payloads
  * @see Planner — the pure domain planner this facade delegates to
  */
 import type {
+  DbtManifestRef,
+  ExecutionPlanV2,
   IPlanner,
+  PlannerGraphSourceV1,
   PlannerBuildResultV2,
   PlannerInputEnvelopeV2 as ContractEnvelope,
+  PlannerInputEnvelopeV2SchemaT,
+  PlannerSelection,
+} from '@dvt/contracts';
+import {
+  ContractValidationError,
+  PLANNER_GRAPH_SOURCE_KIND,
+  parsePlannerGraphSourceV1,
+  parsePlannerInputEnvelopeV2,
 } from '@dvt/contracts';
 
 import { PlannerError, PlannerErrorCode } from '../domain/errors.js';
+import { DeriveNodesCommand, ManifestGraphDeriver } from '../domain/manifest.js';
 import { Planner, type PlannerOptions } from '../domain/Planner.js';
 import type { PlannerInputEnvelopeV2 as DomainEnvelope } from '../domain/types.js';
 import type { IArtifactResolver } from '../ports/IArtifactResolver.js';
@@ -60,25 +74,16 @@ export class PlannerFacade implements IPlanner {
     this.resolver = resolver;
   }
 
-  buildPlan(input: ContractEnvelope): Promise<PlannerBuildResultV2> {
-    return this.toDomainInput(input).then((domainInput) => this.planner.buildPlan(domainInput));
+  async buildPlan(input: ContractEnvelope): Promise<PlannerBuildResultV2> {
+    const domainInput = await this.toDomainInput(this.validateEnvelope(input));
+    return this.planner.buildPlan(domainInput);
   }
 
-  private async toDomainInput(input: ContractEnvelope): Promise<DomainEnvelope> {
-    const activeSources = [input.manifestRef, input.manifest, input.nodes].filter(
-      (v) => v !== undefined
-    ).length;
-
-    if (activeSources > 1) {
-      throw new PlannerError(
-        PlannerErrorCode.INVALID_INPUT,
-        'One-active-source rule violation: at most one of manifestRef, manifest, or nodes may be provided.'
-      );
-    }
-
-    // Strip application-boundary fields before domain hand-off.
-    // `environment` is accepted at this layer but not modelled by the domain planner.
-    const { manifestRef, environment: _env, ...domainRest } = input;
+  private async toDomainInput(input: PlannerInputEnvelopeV2SchemaT): Promise<DomainEnvelope> {
+    const domainRest = this.toDomainBaseInput(input);
+    const manifestRef = input.manifestRef;
+    const graphSource = input.graphSource;
+    const manifest = input.manifest;
 
     if (manifestRef !== undefined) {
       if (this.resolver === undefined) {
@@ -87,10 +92,123 @@ export class PlannerFacade implements IPlanner {
           'manifestRef provided but no IArtifactResolver is configured.'
         );
       }
-      const manifest = await this.resolver.resolveManifest(manifestRef);
-      return { ...domainRest, manifest };
+      const resolvedGraphSource = this.validateGraphSource(
+        await this.resolver.resolveGraphSource(this.toManifestRef(manifestRef))
+      );
+      return { ...domainRest, graphSource: resolvedGraphSource };
+    }
+
+    if (graphSource !== undefined) {
+      return { ...domainRest, graphSource: this.validateGraphSource(graphSource) };
+    }
+
+    if (manifest !== undefined) {
+      return { ...domainRest, graphSource: this.graphSourceFromManifest(manifest) };
     }
 
     return domainRest;
+  }
+
+  private toDomainBaseInput(
+    input: PlannerInputEnvelopeV2SchemaT
+  ): Omit<DomainEnvelope, 'graphSource'> {
+    const domainInput: Omit<DomainEnvelope, 'graphSource'> = {
+      selection: this.toPlannerSelection(input.selection),
+    };
+
+    if (input.nodes !== undefined) domainInput.nodes = input.nodes;
+    if (input.policies !== undefined) domainInput.policies = input.policies;
+    if (input.observability !== undefined) {
+      domainInput.observability = this.toObservability(input.observability);
+    }
+    if (input.requestedBy !== undefined) domainInput.requestedBy = input.requestedBy;
+    if (input.requestId !== undefined) domainInput.requestId = input.requestId;
+    if (input.requestedAtIso !== undefined) domainInput.requestedAtIso = input.requestedAtIso;
+
+    return domainInput;
+  }
+
+  private toManifestRef(
+    manifestRef: NonNullable<PlannerInputEnvelopeV2SchemaT['manifestRef']>
+  ): DbtManifestRef {
+    const normalizedManifestRef: DbtManifestRef = {
+      uri: manifestRef.uri,
+      sha256: manifestRef.sha256,
+    };
+
+    if (manifestRef.artifactId !== undefined) {
+      normalizedManifestRef.artifactId = manifestRef.artifactId;
+    }
+
+    return normalizedManifestRef;
+  }
+
+  private toPlannerSelection(
+    selection: PlannerInputEnvelopeV2SchemaT['selection']
+  ): PlannerSelection {
+    const normalizedSelection: PlannerSelection = {
+      selectedNodeIds: selection.selectedNodeIds,
+    };
+
+    if (selection.includeUpstream !== undefined) {
+      normalizedSelection.includeUpstream = selection.includeUpstream;
+    }
+    if (selection.includeDownstream !== undefined) {
+      normalizedSelection.includeDownstream = selection.includeDownstream;
+    }
+
+    return normalizedSelection;
+  }
+
+  private toObservability(
+    observability: NonNullable<PlannerInputEnvelopeV2SchemaT['observability']>
+  ): NonNullable<ExecutionPlanV2['observability']> {
+    const normalizedObservability: NonNullable<ExecutionPlanV2['observability']> = {};
+
+    for (const [key, value] of Object.entries(observability)) {
+      if (key === 'tags' || key === 'extra' || value === undefined) continue;
+      normalizedObservability[key] = value;
+    }
+
+    if (observability.tags !== undefined) normalizedObservability.tags = observability.tags;
+    if (observability.extra !== undefined) normalizedObservability.extra = observability.extra;
+
+    return normalizedObservability;
+  }
+
+  private validateEnvelope(input: ContractEnvelope): PlannerInputEnvelopeV2SchemaT {
+    try {
+      return parsePlannerInputEnvelopeV2(input);
+    } catch (error) {
+      const message =
+        error instanceof ContractValidationError &&
+        error.details.length > 0 &&
+        error.details.every(
+          (detail) => detail.path === 'graphSource' || detail.path.startsWith('graphSource.')
+        )
+          ? 'graphSource failed contract validation.'
+          : 'Planner input failed contract validation.';
+
+      throw new PlannerError(PlannerErrorCode.INVALID_INPUT, message, error);
+    }
+  }
+
+  private validateGraphSource(graphSource: unknown): PlannerGraphSourceV1 {
+    try {
+      return parsePlannerGraphSourceV1(graphSource);
+    } catch (error) {
+      throw new PlannerError(
+        PlannerErrorCode.INVALID_INPUT,
+        'graphSource failed contract validation.',
+        error
+      );
+    }
+  }
+
+  private graphSourceFromManifest(manifest: Record<string, unknown>): PlannerGraphSourceV1 {
+    return {
+      kind: PLANNER_GRAPH_SOURCE_KIND,
+      nodes: new ManifestGraphDeriver().execute(new DeriveNodesCommand(manifest)),
+    };
   }
 }

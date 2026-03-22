@@ -1,8 +1,8 @@
 ---
 title: Gap 4 PR3 Resilience Envelope
-status: Proposed
+status: Review
 owner: Architecture / API / Delivery
-last_reviewed: 2026-03-19
+last_reviewed: 2026-03-20
 planning_type: proposal
 ---
 
@@ -61,19 +61,19 @@ Implementation note:
 
 ## Checklist
 
-- [ ] cache TTL is configurable and tested
-- [ ] circuit opens after 5 consecutive failures
-- [ ] half-open uses a single probe
-- [ ] stale fallback is rejected
-- [ ] hot restart can read last-known-good fallback
-- [ ] multi-replica limitation is documented
-- [ ] sticky-session recommendation is documented
+- [x] cache TTL is configurable and tested
+- [x] circuit opens after 5 consecutive failures
+- [x] half-open uses a single probe
+- [x] stale fallback is rejected
+- [x] hot restart can read last-known-good fallback
+- [x] multi-replica limitation is documented
+- [x] sticky-session recommendation is documented
 
 ## Resolution Table
 
-| Item               | Status   | Notes                                      |
-| ------------------ | -------- | ------------------------------------------ |
-| Cache wrapper      | Proposed | Low TTL, instance-local                    |
-| Circuit breaker    | Proposed | 5 failures, 30s open, 1 probe              |
-| Persisted fallback | Proposed | Advisory, freshness still enforced         |
-| Review readiness   | Proposed | Must stay independent from projection work |
+| Item               | Status      | Notes                                                                       |
+| ------------------ | ----------- | --------------------------------------------------------------------------- |
+| Cache wrapper      | Implemented | Low TTL, instance-local, and fallback snapshots are not re-cached           |
+| Circuit breaker    | Implemented | 5 failures, 30s open, 1 probe, and fail-counting stays scoped to live reads |
+| Persisted fallback | Implemented | Advisory, freshness-enforced, and reused across hot restart per replica     |
+| Review readiness   | Review      | Remains independent from projected snapshot work                            |

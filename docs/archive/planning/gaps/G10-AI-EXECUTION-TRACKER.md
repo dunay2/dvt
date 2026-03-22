@@ -1,12 +1,15 @@
 ---
 title: G10 - AI Execution Tracker
-status: Active
+status: Archived
 owner: Delivery / Engineering
-last_reviewed: 2026-03-15
+last_reviewed: 2026-03-20
 planning_type: execution-plan
 ---
 
 # G10 - AI Execution Tracker
+
+Historical planning artifact retained for reference. `G10` is closed; active
+status lives in [Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md).
 
 Operational tracker for AI-assisted execution of `G10`.
 
@@ -16,15 +19,15 @@ Operational tracker for AI-assisted execution of `G10`.
 sources in this precedence order:
 
 - Normative drivers:
-  - [ADR-0004 - Event Sourcing Strategy](../../adr/ADR-0004-event-sourcing-strategy.md)
-  - [Gap Execution Plans - G10 section](GAP_EXECUTION_PLANS.md)
-  - [G6 - OpenLineage CI and Schema Pin Plan](g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
+  - [ADR-0004 - Event Sourcing Strategy](../../../adr/ADR-0004-event-sourcing-strategy.md)
+  - [Gap Execution Plans - G10 section](../../../planning/gaps/GAP_EXECUTION_PLANS.md)
+  - [G6 - OpenLineage CI and Schema Pin Plan](../../../planning/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md)
 - Architectural context:
-  - [Traceability Contracts](../../contracts/traceability/index.md)
-  - [System Delivery Status](../../architecture/system-delivery-status.md)
+  - [Traceability Contracts](../../../contracts/traceability/index.md)
+  - [System Delivery Status](../../../architecture/system-delivery-status.md)
 - Active status docs:
-  - [Gap Execution Plans](GAP_EXECUTION_PLANS.md)
-  - [Current Status](../../architecture/system-delivery-status.md)
+  - [Gap Execution Plans](../../../planning/gaps/GAP_EXECUTION_PLANS.md)
+  - [Current Status](../../../architecture/system-delivery-status.md)
 
 This file is not a second source of truth. It records the execution pointer and
 the constraints already fixed by accepted ADRs and contracts.

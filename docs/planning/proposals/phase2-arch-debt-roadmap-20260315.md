@@ -33,7 +33,7 @@ be implemented by publication of this document.
 
 ```mermaid
 flowchart TD
-    S01["S01\nContract And Dead Code Cleanup"]
+    S01["S01\nContract And Dead Code Cleanup\nclosed 2026-03-21"]
     S02["S02\nIRunStateStore Split"]
     S03["S03\nStartRunCoordinator Extraction"]
     S04["S04\nProviderRefUpdated Event"]
@@ -42,7 +42,7 @@ flowchart TD
     S07["S07\nOpenLineage Job Naming Fix"]
     S08["S08\nPlan Storage ADR + PostgresPlanStore"]
     S09["S09\nRetry Ownership ADR"]
-    S10["S10\ndbt Manifest Typed Input"]
+    S10["S10\nTyped Graph-Source Boundary\nclosed 2026-03-20"]
     S11["S11\nILineageSink.jobFacets Tighten"]
 
     S01 --> S02
@@ -58,30 +58,36 @@ flowchart TD
 
 | Wave | Slices                     | Can start                                            |
 | ---- | -------------------------- | ---------------------------------------------------- |
-| 0    | `S06`, `S07`, `S09`, `S10` | immediately                                          |
+| 0    | `S06`, `S07`, `S09`        | immediately                                          |
 | 1    | `S01`                      | immediately                                          |
 | 2    | `S02`, `S03`, `S05`, `S11` | after `S01` for `S02/S03/S05`; after `S07` for `S11` |
 | 3    | `S04`, `S08`               | after `S02+S05` for `S04`; after `S09` for `S08`     |
 
 ## Slice Catalog
 
-| Slice | Problem                                                        | Main paths                                                                             | Size | Risk   |
-| ----- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---- | ------ |
-| `S01` | stale public contract surfaces and dead architecture artifacts | `@dvt/contracts`, `@dvt/engine`                                                        | S    | Low    |
-| `S02` | `IRunStateStore` mixes write, read, and maintenance roles      | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`, `@dvt/delivery`, `apps/api`  | M    | Medium |
-| `S03` | `WorkflowEngine` still owns too much start-run orchestration   | `@dvt/engine`                                                                          | M    | Medium |
-| `S04` | provider ref reconciliation is fail-soft but under-modeled     | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`                               | M    | Medium |
-| `S05` | event payload shape lacks explicit versioning                  | `@dvt/contracts`, `@dvt/engine`, adapters, projectors                                  | M    | Medium |
-| `S06` | schema migrations have no applied-version table                | `@dvt/adapter-postgres`                                                                | S    | Low    |
-| `S07` | lineage job naming and sink shape need tightening              | `@dvt/traceability-service`, lineage workers                                           | S    | Low    |
-| `S08` | plan storage is implicit and provider-side only                | `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, planner/api wiring | L    | High   |
-| `S09` | retry ownership rules are implicit across layers               | ADR/doc layer, engine, adapters                                                        | S    | Medium |
-| `S10` | dbt manifest inputs stay too weakly typed at the boundary      | planner/contracts                                                                      | S    | Low    |
-| `S11` | lineage sink facets are looser than the runtime now expects    | contracts + traceability                                                               | S    | Low    |
+| Slice | Problem                                                                                | Main paths                                                                             | Size | Risk   |
+| ----- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---- | ------ |
+| `S01` | stale public contract surfaces and dead architecture artifacts — **closed 2026-03-21** | `@dvt/contracts`, `@dvt/engine`                                                        | S    | Low    |
+| `S02` | `IRunStateStore` mixes write, read, and maintenance roles                              | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`, `@dvt/delivery`, `apps/api`  | M    | Medium |
+| `S03` | `WorkflowEngine` still owns too much start-run orchestration                           | `@dvt/engine`                                                                          | M    | Medium |
+| `S04` | provider ref reconciliation is fail-soft but under-modeled                             | `@dvt/contracts`, `@dvt/engine`, `@dvt/adapter-postgres`                               | M    | Medium |
+| `S05` | event payload shape lacks explicit versioning                                          | `@dvt/contracts`, `@dvt/engine`, adapters, projectors                                  | M    | Medium |
+| `S06` | schema migrations have no applied-version table — **closed 2026-03-21**                | `@dvt/adapter-postgres`                                                                | S    | Low    |
+| `S07` | lineage job naming and sink shape need tightening                                      | `@dvt/traceability-service`, lineage workers                                           | S    | Low    |
+| `S08` | plan storage is implicit and provider-side only                                        | `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, planner/api wiring | L    | High   |
+| `S09` | retry ownership rules are implicit across layers                                       | ADR/doc layer, engine, adapters                                                        | S    | Medium |
+| `S10` | planner graph-source ingestion is still DBT-centric and weakly typed at the boundary   | planner/contracts                                                                      | S    | Low    |
+| `S11` | lineage sink facets are looser than the runtime now expects                            | contracts + traceability                                                               | S    | Low    |
 
 ## Slice Summaries
 
 ### S01: Contract And Dead Code Cleanup
+
+Status: **closed 2026-03-21** — four ghost adapter interfaces (`IOutboxStorageAdapter`,
+`IProjectorAdapter`, `IStateStoreAdapter`, `IWorkflowEngineAdapter`) and their associated
+schemas (`ExecuteStepRequestSchema`, `ExecuteStepResultSchema`) and parse functions
+(`parseExecuteStepRequest`, `parseExecuteStepResult`) were deleted from `@dvt/contracts`.
+`validate-contracts.cjs` was updated to remove the now-deleted check calls.
 
 Remove or deprecate stale public surfaces and internal dead code that distort
 the current architecture. The target includes ghost interfaces, obsolete
@@ -158,10 +164,20 @@ execution. This slice likely needs an ADR because it changes storage ownership.
 State explicitly where retry policy is owned across planner, engine, and
 provider layers. The goal is to stop implicit overlap.
 
-### S10: dbt Manifest Typed Input
+### S10: Typed Graph-Source Boundary
 
-Reduce `Record<string, unknown>` escape hatches around dbt manifest-derived
-inputs so invalid configs are rejected earlier.
+Replace the DBT-centric `Record<string, unknown>` admission shape with a typed
+graph-source boundary. The planner core should depend on a generic normalized
+graph-source shape or graph-derivation interface, while DBT remains one
+implementation behind that seam rather than the semantic public boundary.
+
+Status:
+
+- closed `2026-03-20`
+- delivered via `PlannerGraphSourceV1`, `graphSource`, and facade-side
+  normalization of the raw `manifest` compatibility path
+- remaining related debt is compatibility-path retirement, not missing
+  boundary shape
 
 ### S11: `ILineageSink.jobFacets` Tighten
 
@@ -170,8 +186,9 @@ by the lineage path.
 
 ## Execution Notes
 
-- Prefer slices `S06`, `S07`, `S09`, and `S10` first if the goal is fast
-  momentum with low integration risk.
+- `S01` is now closed (2026-03-21); `S02`, `S03`, and `S05` are now unblocked.
+- `S06` is now closed (2026-03-21); migration version tracking is live in `PostgresSchemaManager`.
+- `S10` is now closed (2026-03-20); prefer `S07` and `S09` for next fast momentum.
 - Do not start `S04` until `S02` and `S05` are settled.
 - Do not start `S08` until `S09` clarifies retry ownership.
 

@@ -6,7 +6,8 @@ import { buildApp } from '../src/app.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
 
 const adapterPostgres = await import('@dvt/adapter-postgres');
-const { PostgresStartRunIntentStore, PostgresStateStoreAdapter } = adapterPostgres;
+const { PostgresPlanStore, PostgresStartRunIntentStore, PostgresStateStoreAdapter } =
+  adapterPostgres;
 
 describe('buildApp', () => {
   it('wires observability and health endpoint works', async () => {
@@ -28,14 +29,19 @@ describe('buildApp', () => {
 
   it('migrates principal grants before serving protected runtime routes', async () => {
     const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+    const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
     const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
     const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
     let accessRepoMigrateCalls = 0;
+    let planStoreMigrateCalls = 0;
     let stateStoreMigrateCalls = 0;
     let intentStoreMigrateCalls = 0;
 
     PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {
       accessRepoMigrateCalls += 1;
+    };
+    PostgresPlanStore.prototype.migrate = async function migrate() {
+      planStoreMigrateCalls += 1;
     };
     PostgresStateStoreAdapter.prototype.migrate = async function migrate() {
       stateStoreMigrateCalls += 1;
@@ -56,12 +62,14 @@ describe('buildApp', () => {
       await app.ready();
 
       expect(accessRepoMigrateCalls).toBe(1);
+      expect(planStoreMigrateCalls).toBe(1);
       expect(stateStoreMigrateCalls).toBe(1);
       expect(intentStoreMigrateCalls).toBe(1);
 
       await app.close();
     } finally {
       PostgresPrincipalAccessRepository.prototype.migrate = originalAccessRepoMigrate;
+      PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
       PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
       PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
       delete process.env.DATABASE_URL;

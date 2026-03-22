@@ -1504,10 +1504,10 @@ performance, resilience, or observability.
 
 ## PR Resolution Table
 
-| PR ID  | Title                   | Primary Outcome                                                      | Depends On | Status   | Secondary Doc                                                           |
-| ------ | ----------------------- | -------------------------------------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- |
-| G4-PR1 | Admission Foundation    | API orchestration, duplicate probe, mode gating, error mapping       | None       | Proposed | [PR1](gap4-backpressure-admission-pr1-foundation-20260319.md)           |
-| G4-PR2 | Raw Snapshot Store      | Raw SQL snapshot source, active or stuck classification              | G4-PR1     | Proposed | [PR2](gap4-backpressure-admission-pr2-raw-store-20260319.md)            |
-| G4-PR3 | Resilience Envelope     | Cache, circuit breaker, persisted fallback, multi-replica guardrails | G4-PR2     | Proposed | [PR3](gap4-backpressure-admission-pr3-resilience-20260319.md)           |
-| G4-PR4 | Operability And Rollout | Observe mode, metrics, runbooks, cleanup tooling, tuning             | G4-PR3     | Proposed | [PR4](gap4-backpressure-admission-pr4-operability-20260319.md)          |
-| G4-PR5 | Projected Read Model    | Shared snapshot projection, throughput, dynamic Retry-After          | G4-PR4     | Proposed | [PR5](gap4-backpressure-admission-pr5-projected-read-model-20260319.md) |
+| PR ID  | Title                   | Primary Outcome                                                      | Depends On | Status      | Secondary Doc                                                           |
+| ------ | ----------------------- | -------------------------------------------------------------------- | ---------- | ----------- | ----------------------------------------------------------------------- |
+| G4-PR1 | Admission Foundation    | API orchestration, duplicate probe, mode gating, error mapping       | None       | Implemented | [PR1](gap4-backpressure-admission-pr1-foundation-20260319.md)           |
+| G4-PR2 | Raw Snapshot Store      | Raw SQL snapshot source, active or stuck classification              | G4-PR1     | Implemented | [PR2](gap4-backpressure-admission-pr2-raw-store-20260319.md)            |
+| G4-PR3 | Resilience Envelope     | Cache, circuit breaker, persisted fallback, multi-replica guardrails | G4-PR2     | Review      | [PR3](gap4-backpressure-admission-pr3-resilience-20260319.md)           |
+| G4-PR4 | Operability And Rollout | Observe mode, metrics, runbooks, cleanup tooling, tuning             | G4-PR3     | Proposed    | [PR4](gap4-backpressure-admission-pr4-operability-20260319.md)          |
+| G4-PR5 | Projected Read Model    | Shared snapshot projection, throughput, dynamic Retry-After          | G4-PR4     | Proposed    | [PR5](gap4-backpressure-admission-pr5-projected-read-model-20260319.md) |

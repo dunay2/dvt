@@ -25,12 +25,10 @@ import {
   type ExecutionPlanV2SchemaT,
   ExecutionStepV2Schema,
   type ExecutionStepV2SchemaT,
-  ExecuteStepRequestSchema,
-  type ExecuteStepRequestSchemaT,
-  ExecuteStepResultSchema,
-  type ExecuteStepResultSchemaT,
   GraphNodeSchema,
   type GraphNodeSchemaT,
+  PlannerGraphSourceV1Schema,
+  type PlannerGraphSourceV1SchemaT,
   PlannerBuildResultV2Schema,
   type PlannerBuildResultV2SchemaT,
   PlannerEnvironmentContextSchema,
@@ -199,14 +197,6 @@ export function parseRunSnapshot(input: unknown): RunSnapshotSchemaT {
   return parseWithSchema(RunSnapshotSchema, input);
 }
 
-export function parseExecuteStepRequest(input: unknown): ExecuteStepRequestSchemaT {
-  return parseWithSchema(ExecuteStepRequestSchema, input);
-}
-
-export function parseExecuteStepResult(input: unknown): ExecuteStepResultSchemaT {
-  return parseWithSchema(ExecuteStepResultSchema, input);
-}
-
 export function parsePlannerSelection(input: unknown): PlannerSelectionSchemaT {
   return parseWithSchema(PlannerSelectionSchema, input);
 }
@@ -221,6 +211,10 @@ export function parsePlannerEnvironmentContext(input: unknown): PlannerEnvironme
 
 export function parseGraphNode(input: unknown): GraphNodeSchemaT {
   return parseWithSchema(GraphNodeSchema, input);
+}
+
+export function parsePlannerGraphSourceV1(input: unknown): PlannerGraphSourceV1SchemaT {
+  return parseWithSchema(PlannerGraphSourceV1Schema, input);
 }
 
 export function parseDbtManifestRef(input: unknown): DbtManifestRefSchemaT {

@@ -14,6 +14,7 @@ Frozen historical documentation retained for reference.
 - [Dvt Artifact Store Spec Pack](dvt_artifact_store_spec_pack/index.md)
 - [Dvt Traceability Pack V2 Lite R6](dvt-traceability-pack-v2-lite-R6/index.md)
 - [Historical Blueprints](historical-blueprints/index.md)
+- [Planning](planning/index.md)
 - [Working Notes](working-notes/index.md)
 - [Batch Relaunch Plan to Replace PR #301 (2026-02-28)](PR_301_RELAUNCH_BATCH_PLAN_20260228.md)
 - [Change Impact Report — ADR-0030 Session 2026-03-04](CHANGE_IMPACT_ADR0030_20260304.md)

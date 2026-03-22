@@ -110,6 +110,9 @@ importers:
       '@dvt/adapter-temporal':
         specifier: workspace:*
         version: link:../../packages/@dvt/adapter-temporal
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/contracts
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../../packages/@dvt/delivery
@@ -211,6 +214,9 @@ importers:
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../../packages/@dvt/delivery
+      '@dvt/state-store':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/state-store
       pg:
         specifier: ^8.12.0
         version: 8.18.0
@@ -724,6 +730,9 @@ importers:
 
   packages/@dvt/state-store:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.868.0
+        version: 3.1003.0
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts

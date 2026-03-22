@@ -22,6 +22,10 @@ export class EngineStartRunUseCase implements IStartRunUseCase {
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunResult> {
+    if (!command.planRef) {
+      throw new Error('PLAN_REF_REQUIRED');
+    }
+
     const ref = await this.engine.startRun(
       {
         uri: command.planRef.uri,

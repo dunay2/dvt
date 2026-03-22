@@ -2,7 +2,7 @@
 title: Canonical Doc Code Matrix
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-03-16
+last_reviewed: 2026-03-20
 planning_type: status
 ---
 
@@ -50,6 +50,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                                                      | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | Web frontend shell and client routing          | `apps/web`                                                                             | [Frontend Architecture](../../architecture/frontend/index.md), [Frontend Plan Back Alignment](../../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md)                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
 | Plan integrity and compatibility verification  | `@dvt/plan-verifier`                                                                   | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                                      | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
+| Planner typed graph-source boundary            | `@dvt/contracts`, `@dvt/planner`                                                       | [Planner Contracts](../../contracts/planner/index.md), [Planner Target State Roadmap](../proposals/planner-target-state-roadmap-20260320.md), [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)         | [Planner Current State Assessment](planner-current-state-assessment-20260320.md)                                         |
 | Deterministic DAG interpretation               | `@dvt/plan-interpreter`                                                                | [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)                                                                                                                                                          | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
 | Gateway DSL evaluator                          | `@dvt/dsl`                                                                             | [Gateway DSL Package](../../architecture/shared/dsl.md)                                                                                                                                                                            | [Shared Package Architecture](../../architecture/shared/index.md)                                                        |
 | Observability contracts and cardinality policy | `@dvt/observability`                                                                   | [Observability Guide](../../architecture/engine/ops/observability.md), [Metrics Catalog](../../architecture/engine/metrics-catalog.md)                                                                                             | [System Delivery Status](../../architecture/system-delivery-status.md)                                                   |
@@ -286,6 +287,49 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   `pnpm --filter @dvt/traceability-service test`
 
+### Planner typed graph-source boundary
+
+- Canonical spec:
+  [Planner Contracts](../../contracts/planner/index.md)
+  and
+  [Planner Target State Roadmap](../proposals/planner-target-state-roadmap-20260320.md)
+  and
+  [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
+- Current status source:
+  [Planner Current State Assessment](planner-current-state-assessment-20260320.md)
+  and
+  [System Delivery Status](../../architecture/system-delivery-status.md)
+- Status:
+  `R2` closed `2026-03-20`; `graphSource` / `PlannerGraphSourceV1` is now the
+  canonical typed inline planner boundary, while `manifestRef` remains the
+  canonical production artifact path and raw `manifest` / direct `nodes`
+  remain compatibility inputs.
+- Primary code:
+  [packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts),
+  [packages/@dvt/contracts/src/schemas.ts](../../../packages/@dvt/contracts/src/schemas.ts),
+  [packages/@dvt/planner/src/application/PlannerFacade.ts](../../../packages/@dvt/planner/src/application/PlannerFacade.ts),
+  [packages/@dvt/planner/src/ports/IArtifactResolver.ts](../../../packages/@dvt/planner/src/ports/IArtifactResolver.ts),
+  [packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts](../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts),
+  [packages/@dvt/planner/src/domain/Planner.ts](../../../packages/@dvt/planner/src/domain/Planner.ts)
+- Key tests:
+  [packages/@dvt/contracts/test/planner.contract.test.ts](../../../packages/@dvt/contracts/test/planner.contract.test.ts),
+  [packages/@dvt/contracts/test/schema-sync.test.ts](../../../packages/@dvt/contracts/test/schema-sync.test.ts),
+  [packages/@dvt/planner/test/unit/planner-facade.test.ts](../../../packages/@dvt/planner/test/unit/planner-facade.test.ts),
+  [packages/@dvt/planner/test/unit/input-envelope-validator.test.ts](../../../packages/@dvt/planner/test/unit/input-envelope-validator.test.ts),
+  [packages/@dvt/planner/test/unit/manifest-mvp.test.ts](../../../packages/@dvt/planner/test/unit/manifest-mvp.test.ts)
+- Evidence:
+  [ED-20260320 - Planner R2 typed graph-source boundary](../../evidence/ED-20260320-planner-r2-typed-graph-source-boundary.md)
+- Verification:
+  `pnpm --filter @dvt/contracts build`
+  and
+  `pnpm --filter @dvt/contracts test`
+  and
+  `pnpm --filter @dvt/planner build`
+  and
+  `pnpm --filter @dvt/planner test`
+  and
+  `pnpm validate:contracts`
+
 ### Step type registry and step config hardening
 
 - Canonical source today:
@@ -364,22 +408,50 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [G8 Real Auth Final Spec](../gaps/G8-REAL-AUTH-FINAL-SPEC.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`G8`)
+- Current posture:
+  G8 is **Closed** and the protected runtime command/query surface now has a
+  dedicated OIDC plus PostgreSQL integration lane.
 - Primary code:
   [apps/api/src/app.ts](../../../apps/api/src/app.ts),
   [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),
+  [apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts](../../../apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts),
+  [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts),
   [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts),
+  [apps/api/src/entrypoints/http/listRunsRoute.ts](../../../apps/api/src/entrypoints/http/listRunsRoute.ts),
+  [apps/api/src/entrypoints/http/getRunRoute.ts](../../../apps/api/src/entrypoints/http/getRunRoute.ts),
+  [apps/api/src/entrypoints/http/getRunEventsRoute.ts](../../../apps/api/src/entrypoints/http/getRunEventsRoute.ts),
+  [apps/api/src/entrypoints/http/signalRunRoute.ts](../../../apps/api/src/entrypoints/http/signalRunRoute.ts),
+  [apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore.ts),
+  [apps/api/src/infrastructure/backpressure/CachedBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/CachedBackpressureStore.ts),
+  [apps/api/src/infrastructure/backpressure/CircuitBreakingBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/CircuitBreakingBackpressureStore.ts),
+  [apps/api/src/infrastructure/backpressure/FileBackpressureFallbackStore.ts](../../../apps/api/src/infrastructure/backpressure/FileBackpressureFallbackStore.ts),
+  [apps/api/src/infrastructure/auth/oidcAuthenticator.ts](../../../apps/api/src/infrastructure/auth/oidcAuthenticator.ts),
+  [apps/api/src/infrastructure/auth/jwksJwtVerifier.ts](../../../apps/api/src/infrastructure/auth/jwksJwtVerifier.ts),
   [apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts](../../../apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts)
 - Key tests:
   [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
+  [apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts),
   [apps/api/test/application/services/WorkflowEngineFactory.test.ts](../../../apps/api/test/application/services/WorkflowEngineFactory.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.test.ts),
-  [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts)
+  [apps/api/test/entrypoints/http/listRunsRoute.test.ts](../../../apps/api/test/entrypoints/http/listRunsRoute.test.ts),
+  [apps/api/test/entrypoints/http/getRunRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/getRunEventsRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunEventsRoute.test.ts),
+  [apps/api/test/entrypoints/http/signalRunRoute.test.ts](../../../apps/api/test/entrypoints/http/signalRunRoute.test.ts),
+  [apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts),
+  [apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts),
+  [apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts),
+  [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts),
+  [apps/api/test/integration/protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts)
+- Evidence:
+  [ED-20260320 - API runtime query integration](../../evidence/ED-20260320-api-runtime-query-integration.md)
 - Risk:
   [R-20260308 API auth runtime integration coverage](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
 - Verification:
   `pnpm --filter dvt-api typecheck`
   and
   `pnpm --filter dvt-api test`
+  and
+  `pnpm --filter dvt-api test:integration`
 
 ### Web frontend shell and client routing
 

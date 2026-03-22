@@ -50,6 +50,7 @@ quadrantChart
 ### What the code shows
 
 `WorkflowEngine.ts:861`:
+
 ```typescript
 logicalAttemptId: ctx.logicalAttemptId ?? 1,
 ```
@@ -59,6 +60,7 @@ logicalAttemptId: ctx.logicalAttemptId ?? 1,
 `RunMetadata`, or any snapshot type. There is no contract for recovery lineage.
 
 When a run reaches `FAILED` or `CANCELLED`:
+
 - There is no defined path to create a recovery run.
 - A new `startRun` call with no lineage fields produces a run with zero traceability
   to the original failure.
@@ -135,13 +137,13 @@ classDiagram
 
 ### Recovery invariants
 
-| Invariant | Rule |
-|-----------|------|
-| Terminal immutability | `FAILED` and `CANCELLED` runs are never reopened. Recovery = new run. |
+| Invariant                      | Rule                                                                                                                                                                             |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Terminal immutability          | `FAILED` and `CANCELLED` runs are never reopened. Recovery = new run.                                                                                                            |
 | `logicalAttemptId` on recovery | Always `1` on the new run. `logicalAttemptId` tracks attempts of a single logical run, not across the recovery chain. Recovery chain is tracked via `parentRunId`/`originRunId`. |
-| Plan generation | `RecoverRunUseCase` calls the planner, not the engine. The engine receives a complete `ExecutionPlanV2`. Partial plan reconstruction is the planner's responsibility. |
-| Source run validation | `RecoverRunUseCase` rejects if source run is not in a terminal state. Soft-deletes or runs in `RUNNING` state are rejected with a typed error. |
-| Lineage fields | `parentRunId` = direct source. `originRunId` = first run in the chain (i.e., if A → B → C, then C has `originRunId = A`). |
+| Plan generation                | `RecoverRunUseCase` calls the planner, not the engine. The engine receives a complete `ExecutionPlanV2`. Partial plan reconstruction is the planner's responsibility.            |
+| Source run validation          | `RecoverRunUseCase` rejects if source run is not in a terminal state. Soft-deletes or runs in `RUNNING` state are rejected with a typed error.                                   |
+| Lineage fields                 | `parentRunId` = direct source. `originRunId` = first run in the chain (i.e., if A → B → C, then C has `originRunId = A`).                                                        |
 
 ### Delivery tasks
 
@@ -174,6 +176,7 @@ gantt
 ### What the code shows
 
 `packages/@dvt/contracts/src/types/contracts.ts:61`:
+
 ```typescript
 planVersion: string;
 ```
@@ -259,11 +262,11 @@ classDiagram
 ```typescript
 // packages/@dvt/contracts/src/contracts/planner/PlanVersionPolicy.ts
 
-export type SupportedPlanVersion = '2.3';           // extended with each release
+export type SupportedPlanVersion = '2.3'; // extended with each release
 export const CURRENT_PLAN_VERSION: SupportedPlanVersion = '2.3';
 
 export const SUPPORTED_PLAN_VERSIONS = new Set<string>(['2.3']);
-export const DEPRECATED_PLAN_VERSIONS = new Set<string>();       // populated at deprecation
+export const DEPRECATED_PLAN_VERSIONS = new Set<string>(); // populated at deprecation
 
 export function assertCompatiblePlanVersion(planVersion: string): void {
   if (SUPPORTED_PLAN_VERSIONS.has(planVersion)) return;
@@ -312,6 +315,7 @@ gantt
 ### What the code shows
 
 `PostgresSchemaManager.ts:163`:
+
 ```sql
 CREATE TABLE IF NOT EXISTS run_events (
   tenant_id  TEXT NOT NULL,
@@ -323,6 +327,7 @@ CREATE TABLE IF NOT EXISTS run_events (
 ```
 
 The archival tracking infrastructure exists:
+
 - `run_event_archive_units` — tracks batches of runs pending archival
 - `run_event_archive_batches` — tracks individual archival jobs
 
@@ -419,7 +424,7 @@ This requires a maintenance window. Schedule before Phase 3 load begins.
 async function ensurePartitionsExist(pool: Pool, schema: string, monthsAhead: number) {
   for (let i = 0; i <= monthsAhead; i++) {
     const start = startOfMonth(addMonths(new Date(), i));
-    const end   = startOfMonth(addMonths(new Date(), i + 1));
+    const end = startOfMonth(addMonths(new Date(), i + 1));
     await pool.query(`
       CREATE TABLE IF NOT EXISTS ${schema}.run_events_${format(start, 'yyyy_MM')}
         PARTITION OF ${schema}.run_events
@@ -519,9 +524,9 @@ parallel with GAP-1.
 
 ## What does not move until these three are closed
 
-| Work item | Reason for deferral |
-|-----------|---------------------|
-| Conductor adapter parity | No POC; zero evidence of state equivalence with Temporal; GAP-1 must define the recovery contract before a second engine implements it |
-| Cost attribution dashboard | No `QUERY_TAG` + `QUERY_HISTORY` pipeline; do not build UI before the data source exists |
-| Plugin sandbox | Currently DRAFT; third-party code running in-process with the engine before a sandbox is an unacceptable security posture |
-| Enriched run status UI | GET /runs/:id?enriched=true is a query enrichment feature; validate the base query path at load first |
+| Work item                  | Reason for deferral                                                                                                                    |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Conductor adapter parity   | No POC; zero evidence of state equivalence with Temporal; GAP-1 must define the recovery contract before a second engine implements it |
+| Cost attribution dashboard | No `QUERY_TAG` + `QUERY_HISTORY` pipeline; do not build UI before the data source exists                                               |
+| Plugin sandbox             | Currently DRAFT; third-party code running in-process with the engine before a sandbox is an unacceptable security posture              |
+| Enriched run status UI     | GET /runs/:id?enriched=true is a query enrichment feature; validate the base query path at load first                                  |

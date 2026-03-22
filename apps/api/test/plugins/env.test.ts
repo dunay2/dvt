@@ -29,6 +29,7 @@ describe('loadEnv', () => {
     expect(env.DVT_START_RUN_MAX_OUTBOX_LAG_MS).toBe(300000);
     expect(env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS).toBe(604800000);
     expect(env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS).toBe(1000);
+    expect(env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS).toBe(2000);
     expect(env.DVT_START_RUN_RETRY_AFTER_SECONDS).toBe(30);
   });
 });

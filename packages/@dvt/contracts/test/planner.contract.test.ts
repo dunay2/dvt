@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  PLANNER_GRAPH_SOURCE_KIND,
   type PlannerBuildResultV2,
   type PlannerInputEnvelopeV2,
 } from '../src/contracts/planner/ExecutionPlan.v2.js';
@@ -15,6 +16,8 @@ import {
 
 import {
   INVALID_PLANNER_INPUT_FIXTURE,
+  MULTI_SOURCE_PLANNER_INPUT_FIXTURE,
+  NO_SOURCE_PLANNER_INPUT_FIXTURE,
   VALID_EXECUTION_PLAN_V2_FIXTURE,
   VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
   VALID_PLANNER_INPUT_FIXTURE,
@@ -46,8 +49,18 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     const input = PlannerInputEnvelopeV2Schema.parse(VALID_PLANNER_INPUT_FIXTURE);
     const typed: PlannerInputEnvelopeV2SchemaT = input;
 
+    expect(typed.graphSource?.kind).toBe(PLANNER_GRAPH_SOURCE_KIND);
     expect(typed.selection.selectedNodeIds).toContain('model.analytics.orders');
-    expect(typed.manifestRef?.uri).toBe('s3://acme-dbt-artifacts/prod/manifest.json');
+  });
+
+  it('rechaza input inválido cuando no hay ninguna fuente activa', () => {
+    const result = PlannerInputEnvelopeV2Schema.safeParse(NO_SOURCE_PLANNER_INPUT_FIXTURE);
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza input inválido cuando hay más de una fuente activa', () => {
+    const result = PlannerInputEnvelopeV2Schema.safeParse(MULTI_SOURCE_PLANNER_INPUT_FIXTURE);
+    expect(result.success).toBe(false);
   });
 
   it('rechaza input inválido cuando manifestRef.sha256 no es hash hex de 64 chars', () => {

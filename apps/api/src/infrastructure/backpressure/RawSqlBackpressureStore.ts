@@ -1,16 +1,27 @@
 import type { PostgresBackpressureSnapshotReader } from '@dvt/adapter-postgres';
-import type { BackpressureSnapshot, BackpressureStore } from '@dvt/delivery';
+import type { BackpressureSnapshot } from '@dvt/delivery';
 
-export class RawSqlBackpressureStore implements BackpressureStore {
+import type { BackpressureSnapshotEnvelope, BackpressureSnapshotEnvelopeStore } from './types.js';
+
+export class RawSqlBackpressureStore implements BackpressureSnapshotEnvelopeStore {
   public constructor(
-    private readonly reader: Pick<PostgresBackpressureSnapshotReader, 'getTenantSnapshot'>
+    private readonly reader: Pick<PostgresBackpressureSnapshotReader, 'getTenantSnapshot'>,
+    private readonly nowEpochMs: () => number = () => Date.now()
   ) {}
 
   public async getTenantSnapshot(tenantId: string): Promise<BackpressureSnapshot> {
+    return (await this.getTenantSnapshotEnvelope(tenantId)).snapshot;
+  }
+
+  public async getTenantSnapshotEnvelope(tenantId: string): Promise<BackpressureSnapshotEnvelope> {
     const snapshot = await this.reader.getTenantSnapshot(tenantId);
     return {
-      pendingEventsPerTenant: snapshot.tenantActivePendingEventCount,
-      outboxOldestAgeMs: snapshot.globalHealthyTenantOldestActiveAgeMs,
+      snapshot: {
+        pendingEventsPerTenant: snapshot.tenantActivePendingEventCount,
+        outboxOldestAgeMs: snapshot.globalHealthyTenantOldestActiveAgeMs,
+      },
+      capturedAtEpochMs: this.nowEpochMs(),
+      source: 'live',
     };
   }
 }

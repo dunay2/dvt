@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-03-16
+last_reviewed: 2026-03-21
 ---
 
 # Current Status
@@ -23,6 +23,8 @@ Use this page together with:
   shared across planning, architecture, contracts, and code
 - [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
   for the curated topic -> doc -> code -> test -> command mapping
+- [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md)
+  for the quantified planner-specific baseline and component scorecard
 - [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md) for the
   active gap-by-gap delivery posture
 - [Generated Code State](../planning/status/generated-code-state.md) for the
@@ -36,50 +38,51 @@ Minimum tuple for this document:
   [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
 - `test_paths`: summarized by area here; exact paths live in
   [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
-- `verification_cmd`: `pnpm test:engine`, `pnpm test:adapter-postgres`,
-  `pnpm test:adapter-temporal`, `pnpm test:adapter-temporal:integration`,
-  `pnpm validate:contracts`
+- `verification_cmd`: `pnpm --filter dvt-api test`,
+  `pnpm --filter dvt-api test:integration`, `pnpm test:engine`,
+  `pnpm test:adapter-postgres`, `pnpm test:adapter-temporal`,
+  `pnpm test:adapter-temporal:integration`, `pnpm validate:contracts`
 - `evidence_or_risk`: use linked evidence docs for closed work and linked risk
   records for residual hardening debt
 
 ## Snapshot
 
-- Review date: 2026-03-16
+- Review date: 2026-03-21
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
-- Active workspaces: 20
-- Source files: 289
-- Test files: 76
-- Workspaces with test scripts: 16 of 20
+- Active workspaces: 23
+- Source files: 359
+- Test files: 138
+- Workspaces with test scripts: 20 of 23
 
 ## Executive Summary
 
-| Area                       | Current posture    | What is true now                                                                                                                                                                                   | Primary status source                                                                                                                        |
-| -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Entry layer                | Partial            | `apps/api` auth hardening closed (G8): OIDC auth, tenant policy, arch rules, and engine-backed StartRun all closed; web has no automated tests                                                     | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; contract and package surfaces are present, but not every product flow is production-hardened                                          | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; delivery runtime ownership is now extracted into `@dvt/delivery`, while scheduler and further hardening remain gap-driven          | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
-| Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open       | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                               |
-| Observability              | Partial            | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                       | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                 |
-| Traceability / OpenLineage | Closed for Phase 1 | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns remain Phase 2 under G10 | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Area                       | Current posture    | What is true now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Primary status source                                                                                                                                                             |
+| -------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entry layer                | Partial            | `apps/api` ships the protected runtime command/query surface (`POST /runs/start`, `GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`, `POST /runs/:runId/signal`) with OIDC auth, tenant policy, package-level route coverage, a dedicated `pnpm --filter dvt-api test:integration` lane executed against local Docker PostgreSQL on 2026-03-20, and start-run backpressure acquisition now wrapped by low-TTL cache, circuit-breaker, and persisted last-known-good fallback logic; web still has no automated tests | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                      |
+| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; quantified planner baseline is linked (`71%` overall) and the typed graph-source boundary is now real, but lifecycle, productization, and broader product hardening remain open                                                                                                                                                                                                                                                                                  | [Planner Current State Assessment](../planning/status/planner-current-state-assessment-20260320.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; delivery runtime ownership is now extracted into `@dvt/delivery`, while scheduler and further hardening remain gap-driven                                                                                                                                                                                                                                                                                                                                     | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                                                                    |
+| Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists, but downstream contract hardening, canary rollout, and shard model remain open                                                                                                                                                                                                                                                                                                                                  | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md)                                                                                                                    |
+| Observability              | Partial            | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                                                                                                                                                                                                                                                                                                                                                  | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                                                      |
+| Traceability / OpenLineage | Closed for Phase 1 | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns remain Phase 2 under G10                                                                                                                                                                                                                                                                                                                            | [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                      |
 
 ## Area Status
 
 ### Entry Layer
 
-| Area       | Packages   | Status             | Notes                                                                                                                                      |
-| ---------- | ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| API server | `apps/api` | Closed for Phase 1 | G8 closed 2026-03-12: OIDC auth, tenant policy, dependency-cruiser arch rules, and `EngineStartRunUseCase` all delivered; 21/21 tests pass |
-| Web UI     | `apps/web` | Partial            | Client shell and routing exist; automated test coverage is still absent                                                                    |
+| Area       | Packages   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| API server | `apps/api` | Closed for Phase 1 | G8 closed 2026-03-12 and the protected runtime query slice is now merged: OIDC auth, tenant policy, dependency-cruiser arch rules, `EngineStartRunUseCase`, `GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`, and `POST /runs/:runId/signal` are delivered; `startRun` admission now uses a resilient backpressure acquisition chain (cache + breaker + persisted fallback); `pnpm --filter dvt-api test` passes in the package baseline, and `pnpm --filter dvt-api test:integration` now proves the real JWKS-backed OIDC plus PostgreSQL path against local Docker on 2026-03-20 while still skipping cleanly when database env is absent |
+| Web UI     | `apps/web` | Partial            | Client shell and routing exist; automated test coverage is still absent                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ### Planning And Interpretation
 
-| Area                | Packages                | Status      | Notes                                                                                                           |
-| ------------------- | ----------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
-| Planning core       | `@dvt/planner`          | Partial     | Registry/schema hardening and planner validation closed under G9; broader planning-layer hardening remains open |
-| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer          |
-| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page                       |
-| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                              |
+| Area                | Packages                | Status      | Notes                                                                                                                                         |
+| ------------------- | ----------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planning core       | `@dvt/planner`          | Partial     | Assessment-linked partial: `71%` average; typed graph-source boundary is closed, compile core `94%`, validation/storage `50%`, recovery `17%` |
+| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer                                        |
+| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page                                                     |
+| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs                                                            |
 
 ### Execution And Adapters
 
@@ -92,11 +95,12 @@ Minimum tuple for this document:
 
 ### Persistence, Read Models, And Delivery
 
-| Area           | Packages                                                          | Status             | Notes                                                                                                                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| State store    | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                       |
-| Outbox runtime | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10 |
-| Read models    | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | G7 is closed: `run_snapshots` migration `004`, `rebuildSnapshot`, `listStaleSnapshotRuns`, `ProjectorWorkerRuntime`, `apps/projector-worker`, and provider execution-ID reconciliation are delivered                                                                |
+| Area              | Packages                                                          | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State store       | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                                                             |
+| Outbox runtime    | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Closed G5 2026-03-12; delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain Phase 2 under G10; purge runtime (`DeliveryBufferPurgeRuntime`) added to `dvt-outbox-worker` 2026-03-21, gated by `DVT_PURGE_ENABLED` (default `false`) |
+| Archive lifecycle | `@dvt/state-store`, `@dvt/adapter-postgres`, `dvt-outbox-worker`  | Partial            | G5-PR1 (archive export + verifier, migration 007, `RunArchiveCoordinator`, `PostgresRunArchiveStore`) and G5-PR3 (delivery buffer retention, migration 009, `DeliveryBufferPurger`, `PostgresDeliveryBufferPurgeStore`, purge runtime wiring) are closed 2026-03-21; G5-PR2 (deferred deletion and restore) and G5-PR4 (redaction ADR) remain open                                                        |
+| Read models       | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | G7 is closed: `run_snapshots` migration `004`, `rebuildSnapshot`, `listStaleSnapshotRuns`, `ProjectorWorkerRuntime`, `apps/projector-worker`, and provider execution-ID reconciliation are delivered                                                                                                                                                                                                      |
 
 ### Observability And Traceability
 
@@ -137,6 +141,24 @@ Minimum tuple for this document:
 
 For closure criteria, evidence, and exact verification commands, use
 [Gap Execution Plans](../planning/gaps/GAP_EXECUTION_PLANS.md).
+
+## Phase 2 Slice Debt
+
+| Slice | Title                                | Status                    |
+| ----- | ------------------------------------ | ------------------------- |
+| S01   | Contract And Dead Code Cleanup       | Closed 2026-03-21         |
+| S06   | Migration Version Table              | Closed 2026-03-21         |
+| S10   | Typed Graph-Source Boundary          | Closed 2026-03-20         |
+| S02   | IRunStateStore Split                 | Open (unblocked by S01)   |
+| S03   | StartRunCoordinator Extraction       | Open (unblocked by S01)   |
+| S05   | EventEnvelope.payloadVersion         | Open (unblocked by S01)   |
+| S07   | OpenLineage Job Naming Fix           | Open                      |
+| S09   | Retry Ownership ADR                  | Open                      |
+| S04   | ProviderRefUpdated Event             | Open (blocked by S02+S05) |
+| S08   | Plan Storage ADR + PostgresPlanStore | Open (blocked by S09)     |
+| S11   | ILineageSink.jobFacets Tighten       | Open (blocked by S07)     |
+
+See [Phase 2 Architectural Debt Roadmap](../planning/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
 
 ## Reading Order
 

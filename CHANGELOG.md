@@ -1,5 +1,63 @@
 # Changelog
 
+## [4.7.0](https://github.com/dunay2/dvt/compare/v4.6.0...v4.7.0) (2026-03-21)
+
+
+### Features
+
+* **adapters:** S06 + S01 — Migration version table and dead contract cleanup ([#538](https://github.com/dunay2/dvt/issues/538)) ([7c63073](https://github.com/dunay2/dvt/commit/7c63073e64163a9a1962d218c9c034664c5d9831))
+* **state-store:** G5-PR3 — Delivery buffer retention and purge ([#540](https://github.com/dunay2/dvt/issues/540)) ([709782b](https://github.com/dunay2/dvt/commit/709782bae3e8a4abba0e9666bad18ed82e6ea4ce))
+
+## [4.6.0](https://github.com/dunay2/dvt/compare/v4.5.0...v4.6.0) (2026-03-21)
+
+
+### Features
+
+* **state-store:** Archive export, verifier, Postgres adapter, and test coverage ([#535](https://github.com/dunay2/dvt/issues/535)) ([bac3b4c](https://github.com/dunay2/dvt/commit/bac3b4c9bbc79c035284045b75f5ab782c8510cb))
+* **state-store:** G5-PR2 — Deferred deletion and restore ([#536](https://github.com/dunay2/dvt/issues/536)) ([91fa3a0](https://github.com/dunay2/dvt/commit/91fa3a0eb21e41fe2f7d5691fde62e2490928f2c))
+
+
+### Bug Fixes
+
+* **api:** Harden planner-backed startRun validation and evidence ([#541](https://github.com/dunay2/dvt/issues/541)) ([6ffc260](https://github.com/dunay2/dvt/commit/6ffc260e7e60f38ae373117f1efe85cd97f6b635))
+
+## [4.5.0](https://github.com/dunay2/dvt/compare/v4.4.0...v4.5.0) (2026-03-21)
+
+
+### Features
+
+* **api:** Add planner-backed stored plan start flow ([#533](https://github.com/dunay2/dvt/issues/533)) ([f960284](https://github.com/dunay2/dvt/commit/f9602845365aa0e33012bfecdfcf15b7fb12b825))
+
+## [4.4.0](https://github.com/dunay2/dvt/compare/v4.3.0...v4.4.0) (2026-03-21)
+
+
+### Features
+
+* **api:** Add backpressure resilience envelope ([#532](https://github.com/dunay2/dvt/issues/532)) ([f0b1577](https://github.com/dunay2/dvt/commit/f0b157705450f9cb7593edc86314da6774ed46be))
+
+
+### Bug Fixes
+
+* **contracts:** Harden planner boundary validation ([#530](https://github.com/dunay2/dvt/issues/530)) ([a6f8e22](https://github.com/dunay2/dvt/commit/a6f8e2240f6a104e501e8990adddf9f819f0be8c))
+
+## [4.3.0](https://github.com/dunay2/dvt/compare/v4.2.2...v4.3.0) (2026-03-20)
+
+
+### Features
+
+* **adapters:** Pin archived terminal snapshots ([#525](https://github.com/dunay2/dvt/issues/525)) ([ef9efcf](https://github.com/dunay2/dvt/commit/ef9efcf30dd02bb3022ab9111dc5e174f1aaef6c))
+* **api:** Add raw SQL admission snapshot source ([#524](https://github.com/dunay2/dvt/issues/524)) ([6190a41](https://github.com/dunay2/dvt/commit/6190a415dacf462e7742832d8945fdedd7fe6a30))
+* **api:** Add runtime query routes and execution guards ([#517](https://github.com/dunay2/dvt/issues/517)) ([699ca7c](https://github.com/dunay2/dvt/commit/699ca7cbdfbb23d89b71373d134a9fa51bcbdb55))
+* **api:** Add startRun admission foundation ([#522](https://github.com/dunay2/dvt/issues/522)) ([1c52118](https://github.com/dunay2/dvt/commit/1c52118ae16e42211650023367e6e4c0f00853cd))
+* **contracts:** Complete planner Stage 1.1 boundary canonization ([#511](https://github.com/dunay2/dvt/issues/511)) ([e3c8e24](https://github.com/dunay2/dvt/commit/e3c8e243ff9f0c3b1268e7de38c8f41bec89a5aa))
+* **contracts:** Govern execution plan versioning ([#518](https://github.com/dunay2/dvt/issues/518)) ([90f445c](https://github.com/dunay2/dvt/commit/90f445c45f52c712e2e9fe8715ff4df4a8424889))
+* **state-store:** Add archive artifact helpers ([#523](https://github.com/dunay2/dvt/issues/523)) ([065ac4d](https://github.com/dunay2/dvt/commit/065ac4d090d71ba2e07b652a3a61b1d9b1254fff))
+
+
+### Bug Fixes
+
+* **state-store:** Harden archive lifecycle helper validation ([#521](https://github.com/dunay2/dvt/issues/521)) ([1d5fa74](https://github.com/dunay2/dvt/commit/1d5fa746bf04f2585e1a6317273661c77e69060e))
+
 ## [4.2.2](https://github.com/dunay2/dvt/compare/v4.2.1...v4.2.2) (2026-03-17)
 
 

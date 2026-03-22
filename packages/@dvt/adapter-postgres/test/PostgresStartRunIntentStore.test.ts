@@ -11,6 +11,7 @@ import { quoteIdentifier } from '../src/sqlUtils.js';
 
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
 const describeIfPg = runIntegration ? describe : describe.skip;
+const FIXED_NOW = '2026-03-04T00:00:00.000Z';
 
 const dispatchTestData = {
   provider: 'temporal' as const,
@@ -38,7 +39,10 @@ describeIfPg('PostgresStartRunIntentStore integration', () => {
   async function withStore(
     fn: (store: PostgresStartRunIntentStore) => Promise<void>
   ): Promise<void> {
-    const store = new PostgresStartRunIntentStore({ schema });
+    const store = new PostgresStartRunIntentStore({
+      schema,
+      now: () => FIXED_NOW,
+    });
     try {
       await store.migrate();
       await fn(store);

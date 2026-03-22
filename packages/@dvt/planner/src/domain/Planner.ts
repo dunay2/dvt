@@ -25,7 +25,6 @@ import { BuildGraphCommand, GraphBuilder } from './graph/GraphBuilder.js';
 import { topoSort } from './graph/TopoSort.js';
 import { InputEnvelopeValidator } from './InputEnvelopeValidator.js';
 import { resolveLimits, type PlannerLimits, throwLimitExceeded } from './limits.js';
-import { DeriveNodesCommand, ManifestGraphDeriver } from './manifest.js';
 import { NoopPlannerMetrics, type PlannerMetrics } from './metrics.js';
 import { NodeSelector, SelectNodesCommand } from './NodeSelector.js';
 import { AssemblePlanCommand, PlanAssembler } from './PlanAssembler.js';
@@ -174,15 +173,15 @@ export class Planner {
     let nodes: readonly GraphNode[];
     if (Array.isArray(input.nodes) && input.nodes.length > 0) {
       nodes = input.nodes;
-    } else if (input.manifest === undefined) {
-      nodes = [];
+    } else if (input.graphSource !== undefined) {
+      nodes = input.graphSource.nodes;
     } else {
-      nodes = new ManifestGraphDeriver().execute(new DeriveNodesCommand(input.manifest));
+      nodes = [];
     }
     if (nodes.length === 0) {
       throw new PlannerError(
         PlannerErrorCode.INVALID_INPUT,
-        'Planner requires non-empty nodes (directly or derived from manifest).'
+        'Planner requires non-empty nodes (directly or derived from graphSource).'
       );
     }
     return { ...input, nodes };
