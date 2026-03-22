@@ -11,8 +11,14 @@ import {
 } from './runtime/intentReconcilerRuntime.js';
 import type { ReconcilerHealthState } from './runtime/reconcilerHealth.js';
 
-type ReconcilerBootstrapContext = Pick<AppContext, 'env' | 'observability' | 'setIntentReconcilerHealth'>;
-type ReconcilerHealthReadContext = Pick<AppContext, 'getIntentReconcilerHealth' | 'setIntentReconcilerHealth' | 'observability'>;
+type ReconcilerBootstrapContext = Pick<
+  AppContext,
+  'env' | 'observability' | 'setIntentReconcilerHealth'
+>;
+type ReconcilerHealthReadContext = Pick<
+  AppContext,
+  'getIntentReconcilerHealth' | 'setIntentReconcilerHealth' | 'observability'
+>;
 
 type CreateIntentReconcilerRuntime = (
   env: AppContext['env'],

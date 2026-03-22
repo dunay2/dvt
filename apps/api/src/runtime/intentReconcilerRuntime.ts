@@ -212,6 +212,12 @@ export async function createIntentReconcilerRuntime(
   }
 
   const maintenance = createMaintenanceService(stateStore, intentStore, adapters, observability);
-  const worker = createWorker(maintenance, logger, observability, config.workerOptions, healthHooks);
+  const worker = createWorker(
+    maintenance,
+    logger,
+    observability,
+    config.workerOptions,
+    healthHooks
+  );
   return createRuntimeHandle(worker, stores, logger);
 }

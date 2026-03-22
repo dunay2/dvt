@@ -16,9 +16,10 @@ function resolveOverallHealthStatus(reconciler: ReconcilerHealthState): 'healthy
   return reconciler.status === 'degraded' ? 'degraded' : 'healthy';
 }
 
-function toPublicIntentReconcilerHealth(
-  reconciler: ReconcilerHealthState
-): { status: ReconcilerHealthStatus; reasonCode?: ReconcilerHealthReasonCode } {
+function toPublicIntentReconcilerHealth(reconciler: ReconcilerHealthState): {
+  status: ReconcilerHealthStatus;
+  reasonCode?: ReconcilerHealthReasonCode;
+} {
   if (reconciler.status !== 'degraded') {
     return { status: reconciler.status };
   }

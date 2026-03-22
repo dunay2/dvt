@@ -142,22 +142,12 @@ describe('reconciler bootstrap health wiring', () => {
   });
 
   it('marks runtime unavailable only when non-degraded health exceeds stale threshold', () => {
-    expect(
-      shouldMarkReconcilerRuntimeUnavailable(
-        { status: 'healthy' },
-        1_000,
-        5_000,
-        5_000
-      )
-    ).toBe(false);
+    expect(shouldMarkReconcilerRuntimeUnavailable({ status: 'healthy' }, 1_000, 5_000, 5_000)).toBe(
+      false
+    );
 
     expect(
-      shouldMarkReconcilerRuntimeUnavailable(
-        { status: 'starting' },
-        1_000,
-        7_000,
-        5_000
-      )
+      shouldMarkReconcilerRuntimeUnavailable({ status: 'starting' }, 1_000, 7_000, 5_000)
     ).toBe(true);
 
     expect(
