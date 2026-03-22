@@ -13,12 +13,20 @@ import {
   createEngine,
 } from './WorkflowEngine.helpers';
 
+type CollectorReturn = ReturnType<typeof makeObservabilityCollector>;
+type EngineReturn = ReturnType<typeof createEngine>;
+type AdaptersReturn = ReturnType<typeof makeAdapters>;
+
 function setupMarkResolvedFailTest(opts?: {
   collectorOverrides?: Parameters<typeof makeObservabilityCollector>[0];
   adapterOverrides?: Parameters<typeof makeAdapters>[0];
   failOnce?: boolean;
   runId?: string;
-}) {
+}): CollectorReturn & {
+  adapters: AdaptersReturn;
+  engine: EngineReturn['engine'];
+  intentStore: EngineReturn['intentStore'];
+} {
   const { obs, warns, metricCalls, warnEntries } = makeObservabilityCollector(
     opts?.collectorOverrides
   );
@@ -126,15 +134,15 @@ it('keeps startRun non-fatal when observability throws while reporting markResol
 it('still emits warning when metric reporting fails for markResolved failure', async () => {
   const { engine, warns } = setupMarkResolvedFailTest({
     collectorOverrides: {
-      counter(name) {
-        if (name !== 'dvt.intent.mark_resolved_failed_total') return { add() {} } as any;
+      counter(name: string, labels?: Record<string, string>) {
+        if (name !== 'dvt.intent.mark_resolved_failed_total') return { add(value?: number) {} };
         return {
-          add() {
+          add(value?: number) {
             throw new Error('metrics backend unavailable');
           },
-        } as any;
+        };
       },
-    } as any,
+    },
     failOnce: true,
   });
 
@@ -151,13 +159,13 @@ it('still emits warning with semantic attributes when metrics counter creation f
   const runId = 'obs-counter-create-fail-warn-still-emits-1';
   const { engine, warnEntries } = setupMarkResolvedFailTest({
     collectorOverrides: {
-      counter(name) {
+      counter(name: string, labels?: Record<string, string>) {
         if (name === 'dvt.intent.mark_resolved_failed_total') {
           throw new Error('counter creation unavailable');
         }
-        return { add() {} } as any;
+        return { add(value?: number) {} };
       },
-    } as any,
+    },
     failOnce: true,
   });
 
@@ -183,10 +191,10 @@ it('still emits warning with semantic attributes when metrics counter creation f
 it('keeps startRun non-fatal when warning sink throws after metric reporting', async () => {
   const { engine, metricCalls: counters } = setupMarkResolvedFailTest({
     collectorOverrides: {
-      warn() {
+      warn(entry?: unknown) {
         throw new Error('log backend unavailable');
       },
-    } as any,
+    },
     failOnce: true,
   });
 
@@ -207,16 +215,16 @@ it('keeps startRun non-fatal when warning sink throws after metric reporting', a
 it('keeps startRun non-fatal when both metric and warning sinks throw on markResolved failure', async () => {
   const { engine } = setupMarkResolvedFailTest({
     collectorOverrides: {
-      counter(name) {
+      counter(name: string, labels?: Record<string, string>) {
         if (name === 'dvt.intent.mark_resolved_failed_total') {
           throw new Error('counter unavailable');
         }
-        return { add() {} } as any;
+        return { add(value?: number) {} };
       },
-      warn() {
+      warn(entry?: unknown) {
         throw new Error('warn unavailable');
       },
-    } as any,
+    },
     failOnce: true,
   });
 
@@ -334,15 +342,15 @@ it('emits warning with stable payload shape on markResolved failure', async () =
 it('attempts metric emission before warning emission when markResolved fails', async () => {
   const calls: string[] = [];
   const { obs } = makeObservabilityCollector({
-    counter(name) {
+    counter(name: string, labels?: Record<string, string>) {
       if (name === 'dvt.intent.mark_resolved_failed_total') {
         calls.push('metric.counter');
       }
       return {
-        add() {
+        add(value?: number) {
           calls.push('metric.add');
         },
-      } as any;
+      };
     },
     warn() {
       calls.push('log.warn');
@@ -408,11 +416,11 @@ it('falls back to stderr when both observability sinks fail', async () => {
   const obs: IObservability = {
     ...baseObs,
     metrics: {
-      counter(name) {
+      counter(name: string, labels?: Record<string, string>) {
         if (name === 'dvt.intent.mark_resolved_failed_total') {
           throw new Error('counter unavailable');
         }
-        return { add() {} } as any;
+        return { add(value?: number) {} };
       },
       histogram(name, labels) {
         return baseObs.metrics.histogram(name, labels);
@@ -422,17 +430,17 @@ it('falls back to stderr when both observability sinks fail', async () => {
       },
     },
     logs: {
-      debug(entry) {
-        baseObs.logs.debug(entry as any);
+      debug(entry?: unknown) {
+        baseObs.logs.debug(entry as unknown as Parameters<typeof baseObs.logs.debug>[0]);
       },
-      info(entry) {
-        baseObs.logs.info(entry as any);
+      info(entry?: unknown) {
+        baseObs.logs.info(entry as unknown as Parameters<typeof baseObs.logs.info>[0]);
       },
       warn() {
         throw new Error('warn unavailable');
       },
-      error(entry) {
-        baseObs.logs.error(entry as any);
+      error(entry?: unknown) {
+        baseObs.logs.error(entry as unknown as Parameters<typeof baseObs.logs.error>[0]);
       },
     },
   } as IObservability;
