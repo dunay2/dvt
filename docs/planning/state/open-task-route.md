@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 1
-- `queued`: 35
+- `review`: 2
+- `queued`: 34
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 

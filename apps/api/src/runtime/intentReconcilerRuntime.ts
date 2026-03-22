@@ -18,9 +18,14 @@ import type { FastifyBaseLogger } from 'fastify';
 import { getPgPool } from '../db/pool.js';
 import type { Env } from '../plugins/env.js';
 
-interface RuntimeHandle {
+export interface IntentReconcilerRuntimeHandle {
   start(): void;
   stop(): Promise<void>;
+}
+
+export interface ReconcilerRuntimeHealthHooks {
+  onSweepSuccess?: () => void;
+  onSweepFailure?: () => void;
 }
 
 interface RuntimeStores {
@@ -141,13 +146,20 @@ function createWorker(
   maintenance: RunMaintenanceService,
   logger: FastifyBaseLogger,
   observability: IObservability,
-  options: IntentReconcilerWorkerOptions
+  options: IntentReconcilerWorkerOptions,
+  healthHooks: ReconcilerRuntimeHealthHooks
 ): IntentReconcilerWorker {
   return new IntentReconcilerWorker(
     maintenance,
     {
-      info: (data) => logger.info(data, 'intent reconciler sweep'),
-      error: (data) => logger.error(data, 'intent reconciler sweep failed'),
+      info: (data) => {
+        healthHooks.onSweepSuccess?.();
+        logger.info(data, 'intent reconciler sweep');
+      },
+      error: (data) => {
+        healthHooks.onSweepFailure?.();
+        logger.error(data, 'intent reconciler sweep failed');
+      },
     } satisfies IntentReconcilerWorkerLogger,
     {
       increment: (name, value = 1) => {
@@ -168,7 +180,7 @@ function createRuntimeHandle(
   worker: IntentReconcilerWorker,
   stores: RuntimeStores,
   logger: FastifyBaseLogger
-): RuntimeHandle {
+): IntentReconcilerRuntimeHandle {
   return {
     start: () => {
       worker.start();
@@ -185,8 +197,9 @@ function createRuntimeHandle(
 export async function createIntentReconcilerRuntime(
   env: Env,
   logger: FastifyBaseLogger,
-  observability: IObservability
-): Promise<RuntimeHandle | null> {
+  observability: IObservability,
+  healthHooks: ReconcilerRuntimeHealthHooks = {}
+): Promise<IntentReconcilerRuntimeHandle | null> {
   const config = resolveRuntimeConfig(env, logger);
   if (config === null) return null;
 
@@ -199,6 +212,6 @@ export async function createIntentReconcilerRuntime(
   }
 
   const maintenance = createMaintenanceService(stateStore, intentStore, adapters, observability);
-  const worker = createWorker(maintenance, logger, observability, config.workerOptions);
+  const worker = createWorker(maintenance, logger, observability, config.workerOptions, healthHooks);
   return createRuntimeHandle(worker, stores, logger);
 }

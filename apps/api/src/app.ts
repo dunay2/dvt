@@ -21,11 +21,14 @@ import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
 import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
+import type { ReconcilerHealthState } from './runtime/reconcilerHealth.js';
 import { versionRoutes } from './routes/version.js';
 
 export type AppContext = {
   env: Env;
   observability: ReturnType<typeof buildObservability>;
+  setIntentReconcilerHealth: (health: ReconcilerHealthState) => void;
+  getIntentReconcilerHealth: () => ReconcilerHealthState;
 };
 
 const REQUEST_SPAN = Symbol('requestSpan');
@@ -37,6 +40,10 @@ type RequestWithSpan = FastifyRequest & {
 export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContext }> {
   const env = loadEnv(process.env);
   const observability = buildObservability(env);
+  let intentReconcilerHealth: ReconcilerHealthState =
+    !env.DVT_INTENT_RECONCILER_ENABLED || !env.DATABASE_URL
+      ? { status: 'disabled' }
+      : { status: 'starting' };
 
   const app = Fastify({
     logger: buildLoggerOptions(env),
@@ -48,7 +55,14 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     },
   });
 
-  const ctx: AppContext = { env, observability };
+  const ctx: AppContext = {
+    env,
+    observability,
+    setIntentReconcilerHealth: (health) => {
+      intentReconcilerHealth = health;
+    },
+    getIntentReconcilerHealth: () => intentReconcilerHealth,
+  };
 
   app.addHook('onRequest', async (request) => {
     const span = observability.traces.startSpan('api.request', {
@@ -109,7 +123,11 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(',').map((s) => s.trim()),
   });
 
-  app.register(healthRoutes, { prefix: '/', env });
+  app.register(healthRoutes, {
+    prefix: '/',
+    env,
+    getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
+  });
   app.register(versionRoutes, { prefix: '/', env });
   app.register(dbReadyRoutes, { prefix: '/', env });
 
