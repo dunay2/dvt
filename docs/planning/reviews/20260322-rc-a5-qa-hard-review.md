@@ -61,10 +61,13 @@ Reviewed against:
     - legacy bootstrap-success path
     - compensation path with preserved bootstrap error
     - telemetry-backend-failure while reporting `markResolved` failure
+    - metrics counter-construction failure with warning still emitted
+    - warning-sink failure with metric path preserved
+    - both telemetry sinks failing while `startRun` remains non-fatal
 
 ## Evidence
 
-- Validation command: `pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts` (pass, 27 tests)
+- Validation command: `pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.test.ts` (pass, 31 tests)
 - Validation command: `pnpm verify:prepush` (pass)
 
 ## Updated Verdict

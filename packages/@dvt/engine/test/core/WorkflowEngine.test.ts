@@ -410,6 +410,222 @@ describe('WorkflowEngine (basic failure modes)', () => {
     );
   });
 
+  it('still emits warning when metric reporting fails for markResolved failure', async () => {
+    const baseObs = createNoopObservability();
+    const warns: string[] = [];
+    const obs: IObservability = {
+      ...baseObs,
+      metrics: {
+        counter(name) {
+          if (name !== 'dvt.intent.mark_resolved_failed_total') {
+            return { add() {} };
+          }
+          return {
+            add() {
+              throw new Error('metrics backend unavailable');
+            },
+          };
+        },
+        histogram(name, labels) {
+          return baseObs.metrics.histogram(name, labels);
+        },
+        gauge(name, labels) {
+          return baseObs.metrics.gauge(name, labels);
+        },
+      },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn(entry) {
+          warns.push(entry.msg);
+          baseObs.logs.warn(entry);
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
+    };
+    const adapters = makeAdapters();
+    const { engine, intentStore } = createEngine({ adapters, observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-metrics-fail-warn-still-emits-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-metrics-fail-warn-still-emits-1',
+      })
+    );
+
+    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+  });
+
+  it('still emits warning with semantic attributes when metrics counter creation fails', async () => {
+    const baseObs = createNoopObservability();
+    const warns: Array<{
+      msg: string;
+      attributes?: Record<string, unknown>;
+    }> = [];
+    const obs: IObservability = {
+      ...baseObs,
+      metrics: {
+        counter(name) {
+          if (name === 'dvt.intent.mark_resolved_failed_total') {
+            throw new Error('counter creation unavailable');
+          }
+          return { add() {} };
+        },
+        histogram(name, labels) {
+          return baseObs.metrics.histogram(name, labels);
+        },
+        gauge(name, labels) {
+          return baseObs.metrics.gauge(name, labels);
+        },
+      },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn(entry) {
+          warns.push({ msg: entry.msg, attributes: entry.attributes });
+          baseObs.logs.warn(entry);
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
+    };
+    const adapters = makeAdapters();
+    const runId = 'obs-counter-create-fail-warn-still-emits-1';
+    const { engine, intentStore } = createEngine({ adapters, observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(engine.startRun(makePlanRef(), makeContext(runId))).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId,
+      })
+    );
+
+    const warning = warns.find(
+      (entry) =>
+        entry.msg === 'markResolved failed; leaving intent cleanup to reconciliation worker'
+    );
+    expect(warning).toBeDefined();
+    expect(warning?.attributes).toEqual(
+      expect.objectContaining({
+        runId,
+        tenantId: 't',
+        provider: 'temporal',
+        intentId: expect.any(String),
+        error: 'resolve boom',
+      })
+    );
+  });
+
+  it('keeps startRun non-fatal when warning sink throws after metric reporting', async () => {
+    const baseObs = createNoopObservability();
+    const counters: string[] = [];
+    const obs: IObservability = {
+      ...baseObs,
+      metrics: {
+        counter(name) {
+          counters.push(name);
+          return { add() {} };
+        },
+        histogram(name, labels) {
+          return baseObs.metrics.histogram(name, labels);
+        },
+        gauge(name, labels) {
+          return baseObs.metrics.gauge(name, labels);
+        },
+      },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn() {
+          throw new Error('log backend unavailable');
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
+    };
+    const adapters = makeAdapters();
+    const { engine, intentStore } = createEngine({ adapters, observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-warn-fail-metric-still-recorded-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-warn-fail-metric-still-recorded-1',
+      })
+    );
+
+    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+  });
+
+  it('keeps startRun non-fatal when both metric and warning sinks throw on markResolved failure', async () => {
+    const baseObs = createNoopObservability();
+    const obs: IObservability = {
+      ...baseObs,
+      metrics: {
+        counter(name) {
+          if (name === 'dvt.intent.mark_resolved_failed_total') {
+            throw new Error('counter unavailable');
+          }
+          return { add() {} };
+        },
+        histogram(name, labels) {
+          return baseObs.metrics.histogram(name, labels);
+        },
+        gauge(name, labels) {
+          return baseObs.metrics.gauge(name, labels);
+        },
+      },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn() {
+          throw new Error('warn unavailable');
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
+    };
+    const adapters = makeAdapters();
+    const { engine, intentStore } = createEngine({ adapters, observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-both-sinks-fail-soft-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-both-sinks-fail-soft-1',
+      })
+    );
+  });
+
   it('constructor validates requiredProviders', () => {
     expect(() =>
       createEngine({
