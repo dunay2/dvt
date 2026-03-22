@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 1
-- `queued`: 35
+- `review`: 2
+- `queued`: 34
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -42,7 +42,6 @@ block in the workboard.
 | `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                     | Add payload version handling in envelope flow.                         |
 | `P1`     | `S07`    | No blockers; unlocks `S11`.                                                | Normalize lineage job naming + sink shape.                             |
 | `P1`     | `S09`    | No blockers; unlocks `S08`.                                                | Set retry ownership ADR/runtime rule.                                  |
-| `P2`     | `RC-A5`  | Silent intent-resolution failures reduce operational visibility.           | Add warning/metric telemetry for `markResolved` failure.               |
 | `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.            | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
 | `P2`     | `RC-D1`  | Reconciler startup degradation is not visible to health consumers.         | Expose reconciler status as `degraded` in API health.                  |
 | `P2`     | `RC-D2`  | Hardcoded claim timeout is deployment-fragile.                             | Parameterize outbox claim timeout in store configuration.              |
