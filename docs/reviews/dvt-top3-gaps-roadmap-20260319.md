@@ -1,5 +1,5 @@
 ---
-title: DVT+ — Top 3 Gaps and Roadmap
+title: DVT+ - Top 3 Gaps and Roadmap
 status: Active
 owner: Architecture
 date: 2026-03-19
@@ -11,19 +11,19 @@ sources:
   - apps/api/src/application/services/
 ---
 
-# DVT+ — Top 3 Gaps and Roadmap
+# DVT+ - Top 3 Gaps and Roadmap
 
 ## Current system state
 
-All G1–G10 gaps are closed for Phase 1. The system has:
+All G1-G10 gaps are closed for Phase 1. The system has:
 
 - `POST /runs` with OIDC auth, tenant policy, and authorized facade
-- `GET /runs`, `GET /runs/:id`, `GET /runs/:id/events`, `POST /runs/:id/signal` — implemented
+- `GET /runs`, `GET /runs/:id`, `GET /runs/:id/events`, `POST /runs/:id/signal` - implemented
 - Temporal adapter with real worker host and time-skipping integration tests
-- Postgres state store, outbox worker, projector worker, lineage worker — all running
+- Postgres state store, outbox worker, projector worker, lineage worker - all running
 - `contractVersion` validated against `SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0'])` at activity dispatch
 
-What is open is what was never part of G1–G10 scope. These are Phase 2 gaps visible in the current code.
+What is open is what was never part of G1-G10 scope. These are Phase 2 gaps visible in the current code.
 
 ---
 
@@ -31,7 +31,7 @@ What is open is what was never part of G1–G10 scope. These are Phase 2 gaps vi
 
 ```mermaid
 quadrantChart
-    title Gap Priority Matrix — DVT+ Phase 2
+    title Gap Priority Matrix - DVT+ Phase 2
     x-axis Low Blast Radius --> High Blast Radius
     y-axis Low Urgency --> High Urgency
     quadrant-1 Act now
@@ -45,7 +45,7 @@ quadrantChart
 
 ---
 
-## GAP-1 — Business recovery flow does not exist
+## GAP-1 - Business recovery flow does not exist
 
 ### What the code shows
 
@@ -68,7 +68,7 @@ When a run reaches `FAILED` or `CANCELLED`:
 
 ADR-0008 establishes that idempotency keys derive from `logicalAttemptId`. An
 uncontrolled `logicalAttemptId` on business retries means two semantically related
-runs can hash to different key spaces with no auditable link — or the same key space
+runs can hash to different key spaces with no auditable link - or the same key space
 if the caller accidentally reuses identifiers.
 
 ### Why it is the most urgent gap
@@ -84,7 +84,7 @@ above the API boundary.
 flowchart TD
     subgraph TODAY["Today (no recovery primitive)"]
         A[Run FAILED] -->|operator action| B[New startRun call]
-        B -->|logicalAttemptId: 1| C[New run — no lineage]
+        B -->|logicalAttemptId: 1| C[New run - no lineage]
         C -->|no parentRunId| D[Orphaned run in state store]
     end
 
@@ -93,7 +93,7 @@ flowchart TD
         F --> G[RecoverRunUseCase]
         G -->|reads failed run snapshot| H[PlannerClient.planFromSelection]
         H -->|new ExecutionPlanV2 for failed steps| I[WorkflowEngine.startRun]
-        I -->|RunContext with parentRunId + originRunId| J[New run — full lineage]
+        I -->|RunContext with parentRunId + originRunId| J[New run - full lineage]
     end
 ```
 
@@ -143,7 +143,7 @@ classDiagram
 | `logicalAttemptId` on recovery | Always `1` on the new run. `logicalAttemptId` tracks attempts of a single logical run, not across the recovery chain. Recovery chain is tracked via `parentRunId`/`originRunId`. |
 | Plan generation                | `RecoverRunUseCase` calls the planner, not the engine. The engine receives a complete `ExecutionPlanV2`. Partial plan reconstruction is the planner's responsibility.            |
 | Source run validation          | `RecoverRunUseCase` rejects if source run is not in a terminal state. Soft-deletes or runs in `RUNNING` state are rejected with a typed error.                                   |
-| Lineage fields                 | `parentRunId` = direct source. `originRunId` = first run in the chain (i.e., if A → B → C, then C has `originRunId = A`).                                                        |
+| Lineage fields                 | `parentRunId` = direct source. `originRunId` = first run in the chain (i.e., if A -> B -> C, then C has `originRunId = A`).                                                      |
 
 ### Delivery tasks
 
@@ -171,7 +171,7 @@ gantt
 
 ---
 
-## GAP-2 — `planVersion` is an untyped string with no compatibility matrix
+## GAP-2 - `planVersion` is an untyped string with no compatibility matrix
 
 ### What the code shows
 
@@ -186,12 +186,12 @@ planVersion: string;
 ```typescript
 // stepActivities.ts:269
 const SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0']);
-// validates contractVersion — NOT planVersion
+// validates contractVersion - NOT planVersion
 
 // stepActivities.ts:321-322
 if (plan.metadata.planVersion !== ref.planVersion)
   throw new TypeError(`PLAN_REF_MISMATCH: planVersion`);
-// equality check only — no compatibility range, no migration
+// equality check only - no compatibility range, no migration
 ```
 
 Test fixtures use inconsistent values: `'1.0'`, `'1.0.0'`, `'v1'`, `'2.3'`.
@@ -216,11 +216,11 @@ stateDiagram-v2
     ContractVersionCheck --> Rejected_Contract : not in SUPPORTED_PLAN_CONTRACT_VERSIONS
     ContractVersionCheck --> PlanVersionCheck : pass
 
-    PlanVersionCheck --> Rejected_PlanVersion : TODAY — strict equality fails
+    PlanVersionCheck --> Rejected_PlanVersion : TODAY - strict equality fails
     PlanVersionCheck --> Accepted_Exact : exact match
-    PlanVersionCheck --> Accepted_Compatible : TARGET — within compatibility range
-    PlanVersionCheck --> Deprecated_Warning : TARGET — supported but deprecated
-    PlanVersionCheck --> Rejected_PlanVersion : TARGET — outside range
+    PlanVersionCheck --> Accepted_Compatible : TARGET - within compatibility range
+    PlanVersionCheck --> Deprecated_Warning : TARGET - supported but deprecated
+    PlanVersionCheck --> Rejected_PlanVersion : TARGET - outside range
 
     Rejected_Contract --> [*]
     Rejected_PlanVersion --> [*]
@@ -275,7 +275,7 @@ export function assertCompatiblePlanVersion(planVersion: string): void {
 ```
 
 This replaces the current strict equality in `stepActivities.ts`. Adding `'2.4'` support
-requires only adding `'2.4'` to `SUPPORTED_PLAN_VERSIONS` — no contracts package major
+requires only adding `'2.4'` to `SUPPORTED_PLAN_VERSIONS` - no contracts package major
 version bump, no coordinated deployment.
 
 ### ADR requirement
@@ -285,7 +285,7 @@ An ADR must define before any new `planVersion` is introduced:
 - Valid version format (semver vs calendar vs integer)
 - Minimum support window for deprecated versions (e.g., 30 days)
 - In-flight run behavior when worker is upgraded mid-run
-- Contract test requirements for planner ↔ engine compatibility
+- Contract test requirements for planner <-> engine compatibility
 
 ### Delivery tasks
 
@@ -310,7 +310,7 @@ gantt
 
 ---
 
-## GAP-3 — `run_events` is unpartitioned; archival pipeline is incomplete
+## GAP-3 - `run_events` is unpartitioned; archival pipeline is incomplete
 
 ### What the code shows
 
@@ -328,8 +328,8 @@ CREATE TABLE IF NOT EXISTS run_events (
 
 The archival tracking infrastructure exists:
 
-- `run_event_archive_units` — tracks batches of runs pending archival
-- `run_event_archive_batches` — tracks individual archival jobs
+- `run_event_archive_units` - tracks batches of runs pending archival
+- `run_event_archive_batches` - tracks individual archival jobs
 
 But `run_events` is a flat heap table. Without range partitioning by time, the archival
 job must do a full-table scan to find old rows. At Phase 3 scale (500K runs/day, 100+
@@ -344,7 +344,7 @@ DELETE FROM run_events WHERE persisted_at < now() - interval '90 days';
 
 ```mermaid
 xychart-beta
-    title run_events row growth — unpartitioned vs partitioned
+    title run_events row growth - unpartitioned vs partitioned
     x-axis ["Day 1", "Day 30", "Day 90", "Day 180", "Day 365"]
     y-axis "Rows (millions)" 0 --> 18000
     line "Unpartitioned (no deletion)" [50, 1500, 4500, 9000, 18000]
@@ -355,26 +355,26 @@ xychart-beta
 
 ```mermaid
 flowchart LR
-    subgraph HOT["Hot — PostgreSQL (partitioned range)"]
+    subgraph HOT["Hot - PostgreSQL (partitioned range)"]
         RE[run_events\nPARTITION BY RANGE persisted_at]
-        RE --> P1[run_events_2026_04\n2026-04-01 → 2026-05-01]
+        RE --> P1[run_events_2026_04\n2026-04-01 -> 2026-05-01]
         RE --> P2[run_events_2026_05]
         RE --> Pdot[...]
         RE --> PN[run_events_CURRENT]
     end
 
-    subgraph WARM["Warm — PostgreSQL (snapshots, read models)"]
+    subgraph WARM["Warm - PostgreSQL (snapshots, read models)"]
         RS[run_snapshots\nterminal state pinned]
         RM[read models\nrun list, cost aggregates]
     end
 
-    subgraph COLD["Cold — S3 + Parquet"]
+    subgraph COLD["Cold - S3 + Parquet"]
         S3[s3://dvt-archive/\ntenant_id/year/month/\nevents.parquet]
         ATH[Athena external table\nlong-term audit queries]
         S3 --> ATH
     end
 
-    subgraph ARCHIVALJOB["Archival job — nightly cron"]
+    subgraph ARCHIVALJOB["Archival job - nightly cron"]
         AJ1[Identify partitions\nolder than 90 days]
         AJ2[Export to S3 Parquet]
         AJ3[Verify row count]
@@ -404,10 +404,10 @@ sequenceDiagram
     OPS->>PG: CREATE TABLE run_events_partitioned (PARTITION BY RANGE persisted_at)
     OPS->>PG: CREATE monthly partitions (current month + 3 future months)
     OPS->>PG: CREATE TABLE run_events_legacy AS SELECT * FROM run_events (offline copy)
-    APP->>APP: maintenance window — writes paused
+    APP->>APP: maintenance window - writes paused
     OPS->>PG: INSERT INTO run_events_partitioned SELECT * FROM run_events
-    OPS->>PG: RENAME run_events → run_events_old
-    OPS->>PG: RENAME run_events_partitioned → run_events
+    OPS->>PG: RENAME run_events -> run_events_old
+    OPS->>PG: RENAME run_events_partitioned -> run_events
     APP->>APP: writes resume
     OPS->>PG: ANALYZE run_events
     OPS->>PG: DROP TABLE run_events_old (after validation window)
@@ -419,7 +419,7 @@ This requires a maintenance window. Schedule before Phase 3 load begins.
 
 ```typescript
 // apps/archival-worker/src/PartitionManagerJob.ts (to be created)
-// Runs weekly — creates next 2 monthly partitions in advance
+// Runs weekly - creates next 2 monthly partitions in advance
 
 async function ensurePartitionsExist(pool: Pool, schema: string, monthsAhead: number) {
   for (let i = 0; i <= monthsAhead; i++) {
@@ -468,25 +468,25 @@ gantt
 
 ```mermaid
 gantt
-    title DVT+ Phase 2 — Gap Closure Roadmap
+    title DVT+ Phase 2 - Gap Closure Roadmap
     dateFormat YYYY-MM-DD
     axisFormat %d-%b
 
-    section GAP-2 (lowest risk, highest leverage — do first)
+    section GAP-2 (lowest risk, highest leverage - do first)
     SupportedPlanVersion type + PlanVersionPolicy   :g2a, 2026-03-25, 2d
     ADR: planVersion compatibility policy           :g2b, 2026-03-25, 2d
     Replace strict equality + normalize fixtures    :g2c, after g2a, 1d
     Contract tests                                  :g2d, after g2c, 2d
     Rolling deployment simulation test              :g2e, after g2d, 2d
 
-    section GAP-1 (highest impact — depends on nothing)
+    section GAP-1 (highest impact - depends on nothing)
     RunContextV2 + ADR logicalAttemptId authority   :g1a, 2026-03-25, 2d
     RecoverRunUseCase                               :g1b, after g1a, 3d
     PlannerClient.planFromSelection                 :g1c, after g1a, 4d
     POST /runs/:id/recover route + DTO              :g1d, after g1b, 2d
     Integration test full recovery cycle            :g1e, after g1c g1d, 3d
 
-    section GAP-3 (ops risk — schedule before Phase 3)
+    section GAP-3 (ops risk - schedule before Phase 3)
     Design partitioned DDL + ADR retention          :g3a, 2026-03-28, 2d
     Migration script + rollback path                :g3b, after g3a, 3d
     Test on production-volume dataset               :g3c, after g3b, 3d

@@ -14,6 +14,8 @@ Draft proposals and candidate changes. Non-normative.
 - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md)
 - [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
+- [Domain Cohesion Refactor Plan](../domain-cohesion-refactor-plan.md)
+- [Domain Cohesion Refactor Subplans](../domain-cohesion-refactor-subplans.md)
 - [DVT+ - Top 5 Architectural Gaps (Corrected)](../dvt-top-5-gaps-corrected-20260319.md)
 - [Engine Migration Plan: Current Gap to Target Blueprint v0.6](../engine-gap-to-target-migration-plan.md)
 - [G5 Outbox Worker Development Proposal](g5-outbox-worker-development-proposal-20260308.md)
