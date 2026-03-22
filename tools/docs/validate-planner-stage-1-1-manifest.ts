@@ -59,9 +59,10 @@ function extractHumanSections(content: string): Set<string> {
 }
 
 function ensurePathExists(repoRelativePath: string, report: Report, owner: string): void {
-  if (!existsSync(join(REPO_ROOT, repoRelativePath))) {
-    report.error(owner, `Referenced path does not exist: ${repoRelativePath}`);
-  }
+  const target = join(REPO_ROOT, repoRelativePath);
+  if (existsSync(target)) return;
+
+  report.error(owner, `Referenced path does not exist: ${repoRelativePath}`);
 }
 
 function ensureUnique(values: string[], owner: string, label: string, report: Report): void {
@@ -85,7 +86,9 @@ function main(): void {
   const ajv = new Ajv2020({ strict: true, allErrors: true });
   const validate = ajv.compile(schema);
 
-  if (!validate(manifest)) {
+  if (validate(manifest)) {
+    // manifest validated successfully
+  } else {
     report.error(
       MANIFEST_RELATIVE_PATH,
       'Manifest failed JSON Schema validation',

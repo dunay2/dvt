@@ -44,15 +44,13 @@ function parseSelection(
   selection: unknown
 ): { readonly ok: true; readonly value: ReadonlyArray<string> } | { readonly ok: false } {
   if (Array.isArray(selection) && selection.length > 0) {
-    if (!selection.every((item) => typeof item === 'string')) {
-      return { ok: false };
-    }
-
-    const normalized = (selection as ReadonlyArray<string>)
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-    if (normalized.length === selection.length) {
-      return { ok: true, value: normalized };
+    if (selection.every((item) => typeof item === 'string')) {
+      const normalized = (selection as ReadonlyArray<string>)
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+      if (normalized.length === selection.length) {
+        return { ok: true, value: normalized };
+      }
     }
   }
 
@@ -73,10 +71,10 @@ function parsePlanRef(
   const schemaVersion = asNonEmptyTrimmedStringOrUndefined(r.schemaVersion);
   const planId = asNonEmptyTrimmedStringOrUndefined(r.planId);
   const planVersion = asNonEmptyTrimmedStringOrUndefined(r.planVersion);
-  if (!uri || !sha256 || !schemaVersion || !planId || !planVersion) {
-    return { ok: false, code: 'INVALID_PLAN_REF' };
+  if (uri && sha256 && schemaVersion && planId && planVersion) {
+    return { ok: true, value: { uri, sha256, schemaVersion, planId, planVersion } };
   }
-  return { ok: true, value: { uri, sha256, schemaVersion, planId, planVersion } };
+  return { ok: false, code: 'INVALID_PLAN_REF' };
 }
 
 function parseTargetAdapter(
@@ -101,19 +99,23 @@ function parseStartRunScope(
   record: Record<string, unknown>
 ): ParseStartRunFieldResult<ParsedStartRunScope> {
   const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
-  if (!tenantId.ok) {
-    return { ok: false, code: tenantId.code };
-  }
-
   const projectId = ProjectId.parse(asStringOrUndefined(record.projectId));
-  if (!projectId.ok) {
-    return { ok: false, code: projectId.code };
+  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
+
+  if (tenantId.ok && projectId.ok && environmentId.ok) {
+    return {
+      ok: true,
+      value: {
+        tenantId: tenantId.value,
+        projectId: projectId.value,
+        environmentId: environmentId.value,
+      },
+    };
   }
 
-  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
-  if (!environmentId.ok) {
-    return { ok: false, code: environmentId.code };
-  }
+  if (!tenantId.ok) return { ok: false, code: tenantId.code };
+  if (!projectId.ok) return { ok: false, code: projectId.code };
+  return { ok: false, code: environmentId.code };
 
   return {
     ok: true,
@@ -129,9 +131,7 @@ function parseStartRunCommand(
   record: Record<string, unknown>
 ): ParseStartRunFieldResult<StartRunCommand> {
   const selection = parseSelection(record.selection);
-  if (!selection.ok) {
-    return { ok: false, code: 'INVALID_SELECTION' };
-  }
+  if (!selection.ok) return { ok: false, code: 'INVALID_SELECTION' };
 
   const runId = asNonEmptyTrimmedStringOrUndefined(record.runId);
   if (runId === undefined) {
@@ -139,17 +139,14 @@ function parseStartRunCommand(
   }
 
   const targetAdapter = parseTargetAdapter(record.targetAdapter);
-  if (!targetAdapter.ok) {
-    return { ok: false, code: 'INVALID_TARGET_ADAPTER' };
-  }
+  if (!targetAdapter.ok) return { ok: false, code: 'INVALID_TARGET_ADAPTER' };
 
   const plannerSourceCount = countPlannerSources(record);
   const hasPlanRef = record.planRef !== undefined;
-  if (hasPlanRef && plannerSourceCount > 0) {
-    return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
-  }
-  if (!hasPlanRef && plannerSourceCount !== 1) {
-    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
+  if (hasPlanRef) {
+    if (plannerSourceCount > 0) return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
+  } else {
+    if (plannerSourceCount !== 1) return { ok: false, code: 'INVALID_PLAN_SOURCE' };
   }
 
   if (hasPlanRef) {

@@ -60,13 +60,13 @@ export function parseAdrIndex(content: string): AdrIndexEntry[] {
   while ((match = rowRe.exec(content)) !== null) {
     const [, num, title, status, date, fileCell] = match as RegExpExecArray & string[];
     // Extract filename from a markdown link `[label](file.md)` in the file cell
-    const linkMatch = fileCell!.match(/\[([^\]]+)\]\(([^)]+)\)/);
-    const filename = linkMatch ? linkMatch[2]!.trim() : fileCell!.trim();
+    const linkMatch = fileCell.match(/\[([^\]]+)\]\(([^)]+)\)/);
+    const filename = linkMatch ? linkMatch[2].trim() : fileCell.trim();
     records.push({
-      num: num!.trim(),
-      title: title!.trim(),
-      status: status!.trim(),
-      date: date!.trim(),
+      num: num.trim(),
+      title: title.trim(),
+      status: status.trim(),
+      date: date.trim(),
       filename,
     });
   }
