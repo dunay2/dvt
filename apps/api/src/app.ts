@@ -21,8 +21,8 @@ import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
 import { dbReadyRoutes } from './routes/dbReady.js';
 import { healthRoutes } from './routes/health.js';
-import type { ReconcilerHealthState } from './runtime/reconcilerHealth.js';
 import { versionRoutes } from './routes/version.js';
+import type { ReconcilerHealthState } from './runtime/reconcilerHealth.js';
 
 export type AppContext = {
   env: Env;
