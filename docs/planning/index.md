@@ -106,6 +106,7 @@ Concept anchors for this page:
 - [Generated Code State](status/generated-code-state.md)
 - [Generated Spec Traceability](status/generated-spec-traceability.md)
 - [Governance Document And Rule Inventory](status/governance-document-rule-inventory.md)
+- [Plan: Corregir advertencias y reducir complejidad en `WorkflowEngine.ts`](status/agent-plan-fix-workflowengine.md)
 - [Planner Current State Assessment](status/planner-current-state-assessment-20260320.md)
 - [Planner Local Doc Triage](status/planner-local-doc-triage-20260320.md)
 - [Release Please Continuous Mode Status](status/release-please-continuous.md)

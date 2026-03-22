@@ -18,7 +18,7 @@ import { z } from 'zod';
 
 import type { ExecutionPlanV2, PlanCore } from './contracts/planner/ExecutionPlan.v2.js';
 import { PlannerPolicyClassSetSchema } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
-export { PlannerPolicyClassSetSchema };
+export { PlannerPolicyClassSetSchema }; // NOSONAR: local binding required for schema usage in this module
 export type { PlannerPolicyClassSetSchemaT } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 import {
   CURRENT_EXECUTION_PLAN_VERSION,

@@ -198,84 +198,18 @@ export class WorkflowEngine implements IWorkflowEngine {
 
     let runRef: EngineRunRef;
     if (adapter.estimateRunRef) {
-      // Pre-bootstrap path: eliminates dual-producer ordering race.
-      // Commits run_metadata + RunQueued BEFORE adapter.startRun() so the workflow
-      // worker sees run_metadata already committed when its first activity runs.
-      // No activity can write to an uncommitted stream.
-      const estimatedRef = adapter.estimateRunRef(validatedContext);
-      const bootMeta: RunMetadata = buildRunMetadata(
-        validatedContext,
+      runRef = await this.handlePreBootstrapPath({
         validatedPlanRef,
-        estimatedRef,
-        this.deps.clock.nowIsoUtc()
-      );
-      await this.deps.stateStore.bootstrapRunTx({
-        metadata: bootMeta,
-        firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
-      });
-      // bootstrapRunTx failure propagates; startRun never called; intent stays PENDING for reconciler.
-      runRef = await this.withTimeout(
-        adapter.startRun(validatedPlanRef, validatedContext),
-        this.deps.timeouts?.adapterCallMs ?? 30_000,
-        'adapter.startRun'
-      );
-      if (
-        this.deps.stateStore.saveProviderRef &&
-        (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
-      ) {
-        await this.deps.stateStore
-          .saveProviderRef(
-            validatedContext.tenantId,
-            validatedContext.runId,
-            buildProviderRefUpdate(runRef)
-          )
-          .catch((refErr: unknown) => {
-            this.observability.logs.warn({
-              msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
-              context: traceContext,
-              attributes: {
-                error: toErrorMessage(refErr),
-                provider: runRef.provider,
-                runId: validatedContext.runId,
-              },
-            });
-          });
-      }
-      // startRun failure propagates to handleStartRunError. With a pending intent,
-      // the error path skips RunFailed emission and leaves reconciliation to the
-      // maintenance worker, which probes lookupRunRef and marks the intent resolved
-      // if no workflow exists.
-      try {
-        await this.deps.intentStore.markDispatched(intentId, runRef);
-      } catch (markDispatchedError) {
-        throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
-      }
-      await this.markIntentResolvedBestEffort({
+        validatedContext,
+        adapter,
         intentId,
-        tenantId: validatedContext.tenantId,
-        runId: validatedContext.runId,
-        provider: runRef.provider,
         traceContext,
       });
     } else {
-      // Legacy path for adapters without estimateRunRef: startRun first, then bootstrap.
-      runRef = await this.withTimeout(
-        adapter.startRun(validatedPlanRef, validatedContext),
-        this.deps.timeouts?.adapterCallMs ?? 30_000,
-        'adapter.startRun'
-      );
-      await this.deps.intentStore.markDispatched(intentId, runRef);
-
-      const bootMeta: RunMetadata = buildRunMetadata(
-        validatedContext,
+      runRef = await this.handleLegacyPath({
         validatedPlanRef,
-        runRef,
-        this.deps.clock.nowIsoUtc()
-      );
-      await this._bootstrapRunTxWithCompensation({
-        bootMeta,
+        validatedContext,
         adapter,
-        runRef,
         intentId,
         traceContext,
       });
@@ -286,6 +220,105 @@ export class WorkflowEngine implements IWorkflowEngine {
       .histogram('dvt.run.start.duration_ms', metricTags)
       .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
     span.setStatus('ok');
+    return runRef;
+  }
+
+  private async handlePreBootstrapPath(input: {
+    validatedPlanRef: PlanRef;
+    validatedContext: RunContext;
+    adapter: IProviderAdapter;
+    intentId: string;
+    traceContext: ReturnType<typeof buildTraceContext>;
+  }): Promise<EngineRunRef> {
+    const { validatedPlanRef, validatedContext, adapter, intentId, traceContext } = input;
+    const estimatedRef = adapter.estimateRunRef!(validatedContext);
+    const bootMeta: RunMetadata = buildRunMetadata(
+      validatedContext,
+      validatedPlanRef,
+      estimatedRef,
+      this.deps.clock.nowIsoUtc()
+    );
+    await this.deps.stateStore.bootstrapRunTx({
+      metadata: bootMeta,
+      firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+    });
+
+    const runRef = await this.withTimeout(
+      adapter.startRun(validatedPlanRef, validatedContext),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.startRun'
+    );
+
+    if (
+      this.deps.stateStore.saveProviderRef &&
+      (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
+    ) {
+      await this.deps.stateStore
+        .saveProviderRef(
+          validatedContext.tenantId,
+          validatedContext.runId,
+          buildProviderRefUpdate(runRef)
+        )
+        .catch((refErr: unknown) => {
+          this.observability.logs.warn({
+            msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
+            context: traceContext,
+            attributes: {
+              error: toErrorMessage(refErr),
+              provider: runRef.provider,
+              runId: validatedContext.runId,
+            },
+          });
+        });
+    }
+
+    try {
+      await this.deps.intentStore.markDispatched(intentId, runRef);
+    } catch (markDispatchedError) {
+      throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
+    }
+
+    await this.markIntentResolvedBestEffort({
+      intentId,
+      tenantId: validatedContext.tenantId,
+      runId: validatedContext.runId,
+      provider: runRef.provider,
+      traceContext,
+    });
+
+    return runRef;
+  }
+
+  private async handleLegacyPath(input: {
+    validatedPlanRef: PlanRef;
+    validatedContext: RunContext;
+    adapter: IProviderAdapter;
+    intentId: string;
+    traceContext: ReturnType<typeof buildTraceContext>;
+  }): Promise<EngineRunRef> {
+    const { validatedPlanRef, validatedContext, adapter, intentId, traceContext } = input;
+    const runRef = await this.withTimeout(
+      adapter.startRun(validatedPlanRef, validatedContext),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.startRun'
+    );
+
+    await this.deps.intentStore.markDispatched(intentId, runRef);
+
+    const bootMeta: RunMetadata = buildRunMetadata(
+      validatedContext,
+      validatedPlanRef,
+      runRef,
+      this.deps.clock.nowIsoUtc()
+    );
+    await this._bootstrapRunTxWithCompensation({
+      bootMeta,
+      adapter,
+      runRef,
+      intentId,
+      traceContext,
+    });
+
     return runRef;
   }
 
@@ -361,34 +394,48 @@ export class WorkflowEngine implements IWorkflowEngine {
     try {
       await this.deps.intentStore.markResolved(input.intentId);
     } catch (error) {
-      try {
-        this.observability.metrics
-          .counter('dvt.intent.mark_resolved_failed_total', {
-            tenantId: input.tenantId,
-            provider: input.provider,
-            operation: 'markResolved',
-          })
-          .add(1);
-      } catch {
-        // ADR-0030 best-effort contract: observability failures must never turn
-        // intent-resolution cleanup failures into startRun failures.
-      }
-      try {
-        this.observability.logs.warn({
-          msg: 'markResolved failed; leaving intent cleanup to reconciliation worker',
-          context: input.traceContext,
-          attributes: {
-            intentId: input.intentId,
-            tenantId: input.tenantId,
-            runId: input.runId,
-            provider: input.provider,
-            error: toErrorMessage(error),
-          },
-        });
-      } catch {
-        // ADR-0030 best-effort contract: observability failures must never turn
-        // intent-resolution cleanup failures into startRun failures.
-      }
+      this.reportMarkResolvedFailureForIntent(input, error);
+    }
+  }
+
+  private reportMarkResolvedFailureForIntent(
+    input: {
+      intentId: string;
+      tenantId: string;
+      runId: string;
+      provider: EngineRunRef['provider'];
+      traceContext: ReturnType<typeof buildTraceContext>;
+    },
+    error: unknown
+  ): void {
+    try {
+      this.observability.metrics
+        .counter('dvt.intent.mark_resolved_failed_total', {
+          tenantId: input.tenantId,
+          provider: input.provider,
+          operation: 'markResolved',
+        })
+        .add(1);
+    } catch {
+      // ADR-0030 best-effort contract: observability failures must never turn
+      // intent-resolution cleanup failures into startRun failures.
+    }
+
+    try {
+      this.observability.logs.warn({
+        msg: 'markResolved failed; leaving intent cleanup to reconciliation worker',
+        context: input.traceContext,
+        attributes: {
+          intentId: input.intentId,
+          tenantId: input.tenantId,
+          runId: input.runId,
+          provider: input.provider,
+          error: toErrorMessage(error),
+        },
+      });
+    } catch {
+      // ADR-0030 best-effort contract: observability failures must never turn
+      // intent-resolution cleanup failures into startRun failures.
     }
   }
 
@@ -462,35 +509,52 @@ export class WorkflowEngine implements IWorkflowEngine {
     const failMeta = await this.deps.stateStore
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
-    if (failMeta) {
-      const pendingIntent = errorContext.intentId
-        ? await this.deps.intentStore.getIntent(errorContext.intentId).catch(() => null)
-        : null;
-      if (pendingIntent?.status === 'PENDING') {
-        this.observability.logs.warn({
-          msg: 'Skipping RunFailed emission after startRun error because intent remains pending',
-          context: traceContext,
-          attributes: {
-            intentId: pendingIntent.intentId,
-            runId: pendingIntent.runId,
-            provider: pendingIntent.provider,
-          },
-        });
-        throw error;
-      }
-
-      await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
-        this.observability.logs.error({
-          msg: 'RunFailed emission failed after startRun error',
-          context: traceContext,
-          err: describeUnknownValue(emitErr),
-          attributes: {
-            error: describeUnknownValue(emitErr),
-          },
-        });
-      });
-    }
+    await this.maybeEmitRunFailedAfterStartError(
+      failMeta,
+      validatedContext,
+      errorContext,
+      traceContext,
+      error
+    );
     throw error;
+  }
+
+  private async maybeEmitRunFailedAfterStartError(
+    failMeta: RunMetadata | null,
+    validatedContext: RunContext,
+    errorContext: StartRunErrorContext,
+    traceContext: ReturnType<typeof buildTraceContext>,
+    originalError: unknown
+  ): Promise<void> {
+    if (!failMeta) return;
+
+    const pendingIntent = errorContext.intentId
+      ? await this.deps.intentStore.getIntent(errorContext.intentId).catch(() => null)
+      : null;
+
+    if (pendingIntent?.status === 'PENDING') {
+      this.observability.logs.warn({
+        msg: 'Skipping RunFailed emission after startRun error because intent remains pending',
+        context: traceContext,
+        attributes: {
+          intentId: pendingIntent.intentId,
+          runId: pendingIntent.runId,
+          provider: pendingIntent.provider,
+        },
+      });
+      return;
+    }
+
+    await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
+      this.observability.logs.error({
+        msg: 'RunFailed emission failed after startRun error',
+        context: traceContext,
+        err: describeUnknownValue(emitErr),
+        attributes: {
+          error: describeUnknownValue(emitErr),
+        },
+      });
+    });
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
@@ -932,45 +996,42 @@ function validateRunIdOrThrow(runId: string): void {
   throw new InvalidRunIdError(runId);
 }
 
-function toErrorMessage(error: unknown): string {
+export function toErrorMessage(error: unknown): string {
   return describeUnknownValue(error);
 }
 
-function describeUnknownValue(value: unknown): string {
-  // Handle Error specially to surface the message text
-  if (value instanceof Error) return value.message;
-
-  // Primitive strings are returned as-is for readability
-  if (typeof value === 'string') return value;
-
-  // Nullish values and other primitives -> string conversion
-  if (value == null) return String(value);
-  if (
+function isPrimitive(value: unknown): boolean {
+  return (
+    value == null ||
+    typeof value === 'string' ||
     typeof value === 'number' ||
     typeof value === 'boolean' ||
     typeof value === 'bigint' ||
     typeof value === 'symbol'
-  )
-    return String(value);
+  );
+}
 
-  // Objects: attempt JSON serialization, fall back to Object.prototype tag
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return Object.prototype.toString.call(value);
-    }
-  }
-
-  // Fallback for any other types: attempt JSON serialization first to avoid
-  // default '[object Object]' stringification, then fall back to Object tag.
+function tryJsonStringify(value: unknown): string | null {
   try {
-    const json = JSON.stringify(value as unknown);
-    if (json !== undefined) return json;
+    return JSON.stringify(value);
   } catch {
-    /* ignore serialization errors */
+    return null;
   }
-  return Object.prototype.toString.call(value as object);
+}
+
+function objectTag(value: unknown): string {
+  return Object.prototype.toString.call(value);
+}
+
+export function describeUnknownValue(value: unknown): string {
+  if (value instanceof Error) return value.message;
+  if (typeof value === 'string') return value;
+  if (isPrimitive(value)) return String(value);
+
+  // Try JSON stringify for objects and other non-primitives; fall back to tag.
+  const json = tryJsonStringify(value);
+  if (json !== null) return json;
+  return objectTag(value);
 }
 
 function toErrorObject(error: unknown): Error {
