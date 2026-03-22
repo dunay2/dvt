@@ -270,6 +270,66 @@ function makeBothSinksFailObservability(): {
   return { obs, metricAttempts, warnAttempts };
 }
 
+function makeCustomObservability(opts: {
+  throwOnMetricAddName?: string | null;
+  throwOnCounterConstructName?: string | null;
+}): { obs: IObservability; warns: string[]; counters: string[] } {
+  const baseObs = createNoopObservability();
+  const warns: string[] = [];
+  const counters: string[] = [];
+
+  const obs: IObservability = {
+    ...baseObs,
+    metrics: {
+      counter(name: string) {
+        counters.push(name);
+        if (opts.throwOnCounterConstructName && name === opts.throwOnCounterConstructName) {
+          throw new Error('metric label validation failed');
+        }
+        return { add() {} };
+      },
+      histogram(name, labels) {
+        return baseObs.metrics.histogram(name, labels);
+      },
+      gauge(name, labels) {
+        return baseObs.metrics.gauge(name, labels);
+      },
+    },
+    logs: {
+      debug(entry) {
+        baseObs.logs.debug(entry);
+      },
+      info(entry) {
+        baseObs.logs.info(entry);
+      },
+      warn(entry) {
+        warns.push(entry.msg);
+        baseObs.logs.warn(entry);
+      },
+      error(entry) {
+        baseObs.logs.error(entry);
+      },
+    },
+  };
+
+  if (opts.throwOnMetricAddName) {
+    const originalCounter = obs.metrics.counter.bind(obs.metrics);
+    obs.metrics.counter = (name: string) => {
+      const c = originalCounter(name);
+      if (name === opts.throwOnMetricAddName) {
+        return {
+          add() {
+            throw new Error('metrics backend unavailable');
+          },
+        } as any;
+      }
+      return c;
+    };
+  }
+
+  return { obs, warns, counters };
+}
+
 function createEngine(input?: {
   adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
@@ -479,44 +539,9 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('emits warning when metric add throws during markResolved failure reporting', async () => {
-    const baseObs = createNoopObservability();
-    const warns: string[] = [];
-    const obs: IObservability = {
-      ...baseObs,
-      metrics: {
-        counter(name) {
-          if (name !== 'dvt.intent.mark_resolved_failed_total') {
-            return { add() {} };
-          }
-          return {
-            add() {
-              throw new Error('metrics backend unavailable');
-            },
-          };
-        },
-        histogram(name, labels) {
-          return baseObs.metrics.histogram(name, labels);
-        },
-        gauge(name, labels) {
-          return baseObs.metrics.gauge(name, labels);
-        },
-      },
-      logs: {
-        debug(entry) {
-          baseObs.logs.debug(entry);
-        },
-        info(entry) {
-          baseObs.logs.info(entry);
-        },
-        warn(entry) {
-          warns.push(entry.msg);
-          baseObs.logs.warn(entry);
-        },
-        error(entry) {
-          baseObs.logs.error(entry);
-        },
-      },
-    };
+    const { obs, warns } = makeCustomObservability({
+      throwOnMetricAddName: 'dvt.intent.mark_resolved_failed_total',
+    });
     const { engine, intentStore } = createEngine({ adapters: makeAdapters(), observability: obs });
     vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
 
@@ -647,40 +672,9 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('emits warning when counter construction throws during markResolved failure reporting', async () => {
-    const baseObs = createNoopObservability();
-    const warns: string[] = [];
-    const obs: IObservability = {
-      ...baseObs,
-      metrics: {
-        counter(name) {
-          if (name === 'dvt.intent.mark_resolved_failed_total') {
-            throw new Error('metric label validation failed');
-          }
-          return { add() {} };
-        },
-        histogram(name, labels) {
-          return baseObs.metrics.histogram(name, labels);
-        },
-        gauge(name, labels) {
-          return baseObs.metrics.gauge(name, labels);
-        },
-      },
-      logs: {
-        debug(entry) {
-          baseObs.logs.debug(entry);
-        },
-        info(entry) {
-          baseObs.logs.info(entry);
-        },
-        warn(entry) {
-          warns.push(entry.msg);
-          baseObs.logs.warn(entry);
-        },
-        error(entry) {
-          baseObs.logs.error(entry);
-        },
-      },
-    };
+    const { obs, warns } = makeCustomObservability({
+      throwOnCounterConstructName: 'dvt.intent.mark_resolved_failed_total',
+    });
     const adapters = makeEstimatedAdapters();
     const { engine, intentStore } = createEngine({ adapters, observability: obs });
     vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
