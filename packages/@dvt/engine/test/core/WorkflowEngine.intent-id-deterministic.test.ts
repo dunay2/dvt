@@ -53,7 +53,7 @@ function makeTemporalAdapter(): IProviderAdapter {
   };
 }
 
-function createEngine() {
+function createEngine(): { engine: WorkflowEngine; intentStore: InMemoryStartRunIntentStore } {
   const intentStore = new InMemoryStartRunIntentStore();
   const engine = new WorkflowEngine({
     stateStore: new InMemoryTxStore(),
