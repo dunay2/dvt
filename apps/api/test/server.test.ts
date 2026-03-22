@@ -16,9 +16,17 @@ import {
   shouldMarkReconcilerRuntimeUnavailable,
 } from '../src/server.js';
 
-function createHarness() {
+function createHarness(): {
+  ctx: {
+    env: Env;
+    observability: IObservability;
+    setIntentReconcilerHealth: (next: ReconcilerHealthState) => void;
+  };
+  logger: FastifyBaseLogger;
+  getHealth: () => ReconcilerHealthState;
+} {
   let health: ReconcilerHealthState = { status: 'starting' };
-  const setIntentReconcilerHealth = (next: ReconcilerHealthState) => {
+  const setIntentReconcilerHealth = (next: ReconcilerHealthState): void => {
     health = next;
   };
   const ctx = {

@@ -1,8 +1,8 @@
 import { pathToFileURL } from 'node:url';
 
-import { buildApp } from './app.js';
 import type { FastifyBaseLogger } from 'fastify';
 
+import { buildApp } from './app.js';
 import type { AppContext } from './app.js';
 import {
   createIntentReconcilerRuntime,
