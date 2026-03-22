@@ -962,8 +962,15 @@ function describeUnknownValue(value: unknown): string {
     }
   }
 
-  // Fallback for any other types
-  return String(value);
+  // Fallback for any other types: attempt JSON serialization first to avoid
+  // default '[object Object]' stringification, then fall back to Object tag.
+  try {
+    const json = JSON.stringify(value as unknown);
+    if (json !== undefined) return json;
+  } catch {
+    /* ignore serialization errors */
+  }
+  return Object.prototype.toString.call(value as object);
 }
 
 function toErrorObject(error: unknown): Error {

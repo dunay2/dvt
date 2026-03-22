@@ -337,7 +337,7 @@ async function runMarkResolvedFailCase(opts: {
   runId: string;
   expectReject?: boolean;
   useEstimatedAdapters?: boolean;
-}) {
+}): Promise<{ engine: WorkflowEngine; intentStore: InMemoryStartRunIntentStore }> {
   const adapters =
     opts.adapters ?? (opts.useEstimatedAdapters ? makeEstimatedAdapters() : makeAdapters());
   const { engine, intentStore } = createEngine({
