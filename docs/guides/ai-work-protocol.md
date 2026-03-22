@@ -20,6 +20,28 @@ procedure. Both must be respected — they are not alternatives.
 - [ADR-0005: Contract Formalization Tooling](../adr/ADR-0005-contract-formalization-tooling.md)
 - [RunEvents Contract](../architecture/engine/contracts/engine/RunEvents.v1.md)
 - [Testing and CI Capabilities](testing-and-ci-capabilities.md)
+- [Planning Control Tower](../planning/state/planning-control-tower.md)
+
+## Planning Update Placement Rule
+
+When a task touches planning material, the agent MUST start from
+[Planning Control Tower](../planning/state/planning-control-tower.md) and update
+the document surfaces defined there in the same task.
+
+Minimum rule for every planning-affecting task:
+
+1. update or confirm the work item row in
+   [Execution Workboard](../planning/state/execution-workboard.md);
+2. update the relevant source surface (`proposals`, `reviews`, `closeouts`,
+   `gaps`, or `roadmap`) based on task type;
+3. if sequencing, blockers, or lane ownership changed, update
+   [Gap Execution Route](../planning/state/gap-execution-route.md) and linked
+   diagrams.
+4. when creating or renaming review files, follow
+   [Review Naming Policy](../planning/reviews/review-naming-policy.md).
+
+Do not leave planning changes only in ad hoc notes or PR text when a canonical
+planning surface exists.
 
 ## Task Modes
 

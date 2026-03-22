@@ -78,6 +78,20 @@ Current subsystem roadmaps worth consulting:
 
 - [Gap 5 Executive Delivery Roadmap](gap-5-executive-delivery-roadmap-20260319.md)
 - [Planner Target State And Hardening Roadmap](../proposals/planner-target-state-roadmap-20260320.md)
+- [Roadmap By Domain](roadmap-by-domain.md)
+
+## Domain And Diagram Navigation
+
+Use these surfaces for domain-first planning navigation and updated diagrams:
+
+- [Planning Control Tower](../state/planning-control-tower.md)
+- [Planning Domains](../domains/index.md)
+- [Planning State](../state/index.md)
+- [Execution Workboard](../state/execution-workboard.md)
+- [Gap Execution Status](../state/gap-execution-status.md)
+- [Gap Execution Route](../state/gap-execution-route.md)
+- [Planning Roadmap Diagrams](diagrams/index.md)
+- [Planning Domain Map](diagrams/planning-domain-map.md)
 
 ## Maintenance Rule
 

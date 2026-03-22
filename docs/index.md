@@ -34,6 +34,7 @@ specifically about execution invariants or adapters.
 - [Infra Architecture](architecture/infra/index.md)
 - [Engine Architecture](architecture/engine/index.md)
 - [Roadmap Of Record](planning/roadmap/index.md)
+- [Planning Control Tower](planning/state/planning-control-tower.md)
 - [Gap Execution Plans](planning/gaps/GAP_EXECUTION_PLANS.md)
 - [Current Delivery Status](architecture/system-delivery-status.md)
 - [Planning Status](planning/status/index.md)
