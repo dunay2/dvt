@@ -385,6 +385,20 @@ function createEngine(input?: {
   return { engine, store, intentStore };
 }
 
+// Test helpers to reduce duplication in expectations
+function expectMarkResolvedWarnAndMetric(counters: string[], warns: string[]): void {
+  expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+  expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+}
+
+function expectMetricAndWarnAttempts(
+  metricAttempts: { count: number },
+  warnAttempts: { count: number }
+): void {
+  expect(metricAttempts.count).toBe(1);
+  expect(warnAttempts.count).toBe(1);
+}
+
 describe('WorkflowEngine (basic failure modes)', () => {
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
@@ -495,8 +509,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       useEstimatedAdapters: true,
     });
 
-    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
-    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+    expectMarkResolvedWarnAndMetric(counters, warns);
   });
 
   it('emits warning and metric when markResolved fails on legacy bootstrap-success path', async () => {
@@ -507,8 +520,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-legacy-resolve-warn-1',
     });
 
-    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
-    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+    expectMarkResolvedWarnAndMetric(counters, warns);
   });
 
   it('preserves bootstrap error and emits warning/metric when markResolved also fails on compensation path', async () => {
@@ -522,8 +534,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       expectReject: true,
     });
 
-    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
-    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+    expectMarkResolvedWarnAndMetric(counters, warns);
   });
 
   it('keeps startRun non-fatal when observability throws while reporting markResolved failure', async () => {
@@ -534,8 +545,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-telemetry-fail-soft-1',
     });
 
-    expect(metricAttempts.count).toBe(1);
-    expect(warnAttempts.count).toBe(1);
+    expectMetricAndWarnAttempts(metricAttempts, warnAttempts);
   });
 
   it('emits warning when metric add throws during markResolved failure reporting', async () => {
@@ -598,8 +608,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-dispatch-both-sinks-fail-soft-1',
     });
 
-    expect(metricAttempts.count).toBe(1);
-    expect(warnAttempts.count).toBe(1);
+    expectMetricAndWarnAttempts(metricAttempts, warnAttempts);
   });
 
   it('preserves bootstrap error when both metric and warn sinks throw on compensation path', async () => {
@@ -613,8 +622,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       expectReject: true,
     });
 
-    expect(metricAttempts.count).toBe(1);
-    expect(warnAttempts.count).toBe(1);
+    expectMetricAndWarnAttempts(metricAttempts, warnAttempts);
   });
 
   it('keeps startRun non-fatal when both metric and warn sinks throw on legacy path', async () => {
@@ -625,8 +633,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-legacy-both-sinks-fail-soft-1',
     });
 
-    expect(metricAttempts.count).toBe(1);
-    expect(warnAttempts.count).toBe(1);
+    expectMetricAndWarnAttempts(metricAttempts, warnAttempts);
   });
 
   it('emits warning when counter construction throws during markResolved failure reporting', async () => {
