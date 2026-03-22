@@ -52,7 +52,7 @@ function extractHumanSections(content: string): Set<string> {
   let match: RegExpExecArray | null;
 
   while ((match = re.exec(content)) !== null) {
-    sections.add(match[1]!);
+    sections.add(match[1]);
   }
 
   return sections;
@@ -116,42 +116,38 @@ function main(): void {
   const knownSections = extractHumanSections(humanProposalContent);
 
   for (const section of manifest.sectionIndex) {
-    if (!knownSections.has(section.humanSection)) {
-      report.error(
-        MANIFEST_RELATIVE_PATH,
-        `Section index points to missing human section: ${section.id} -> ${section.humanSection}`
-      );
-    }
+    if (knownSections.has(section.humanSection)) continue;
+    report.error(
+      MANIFEST_RELATIVE_PATH,
+      `Section index points to missing human section: ${section.id} -> ${section.humanSection}`
+    );
   }
 
   for (const diagram of manifest.diagramRefs) {
-    if (!knownSections.has(diagram.humanSection)) {
-      report.error(
-        MANIFEST_RELATIVE_PATH,
-        `Diagram ref points to missing human section: ${diagram.id} -> ${diagram.humanSection}`
-      );
-    }
+    if (knownSections.has(diagram.humanSection)) continue;
+    report.error(
+      MANIFEST_RELATIVE_PATH,
+      `Diagram ref points to missing human section: ${diagram.id} -> ${diagram.humanSection}`
+    );
   }
 
   for (const decision of manifest.decisionIndex) {
     for (const section of decision.humanSectionRefs) {
-      if (!knownSections.has(section)) {
-        report.error(
-          MANIFEST_RELATIVE_PATH,
-          `Decision ref points to missing human section: ${decision.id} -> ${section}`
-        );
-      }
+      if (knownSections.has(section)) continue;
+      report.error(
+        MANIFEST_RELATIVE_PATH,
+        `Decision ref points to missing human section: ${decision.id} -> ${section}`
+      );
     }
   }
 
   for (const shape of manifest.illustrativeShapes) {
     for (const section of shape.humanSectionRefs) {
-      if (!knownSections.has(section)) {
-        report.error(
-          MANIFEST_RELATIVE_PATH,
-          `Illustrative shape points to missing human section: ${shape.id} -> ${section}`
-        );
-      }
+      if (knownSections.has(section)) continue;
+      report.error(
+        MANIFEST_RELATIVE_PATH,
+        `Illustrative shape points to missing human section: ${shape.id} -> ${section}`
+      );
     }
   }
 
