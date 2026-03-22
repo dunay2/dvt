@@ -113,11 +113,14 @@ describe('WorkflowEngine (basic failure modes)', () => {
     obs: IObservability;
     counters: string[];
     histograms: string[];
+    warns: string[];
   } {
+    const baseObs = createNoopObservability();
     const counters: string[] = [];
     const histograms: string[] = [];
+    const warns: string[] = [];
     const obs: IObservability = {
-      ...createNoopObservability(),
+      ...baseObs,
       metrics: {
         counter(name: string) {
           counters.push(name);
@@ -131,8 +134,23 @@ describe('WorkflowEngine (basic failure modes)', () => {
           return { set: () => {} };
         },
       },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn(entry) {
+          warns.push(entry.msg);
+          baseObs.logs.warn(entry);
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
     };
-    return { obs, counters, histograms };
+    return { obs, counters, histograms, warns };
   }
 
   function createEngine(input?: {
@@ -262,6 +280,134 @@ describe('WorkflowEngine (basic failure modes)', () => {
       /forced failure/
     );
     expect(counters).toContain('dvt.run.start_failed_total');
+  });
+
+  it('emits warning and metric when markResolved fails after dispatch', async () => {
+    const { obs, counters, warns } = makeTrackingObservability();
+    const adapters = makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+    });
+    const { engine, intentStore } = createEngine({ adapters, observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('intent resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-resolve-warn-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-resolve-warn-1',
+      })
+    );
+
+    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+  });
+
+  it('emits warning and metric when markResolved fails on legacy bootstrap-success path', async () => {
+    const { obs, counters, warns } = makeTrackingObservability();
+    const adapters = makeAdapters();
+    const { engine, intentStore } = createEngine({ adapters, observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('legacy resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-legacy-resolve-warn-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-legacy-resolve-warn-1',
+      })
+    );
+
+    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+  });
+
+  it('preserves bootstrap error and emits warning/metric when markResolved also fails on compensation path', async () => {
+    const { obs, counters, warns } = makeTrackingObservability();
+    const adapters = makeAdapters();
+    const store = new InMemoryTxStore();
+    const originalBootstrap = store.bootstrapRunTx.bind(store);
+    store.bootstrapRunTx = async (input) => {
+      if (input.metadata.runId === 'obs-compensation-resolve-warn-1') {
+        throw new Error('bootstrap boom');
+      }
+      return originalBootstrap(input);
+    };
+
+    const { engine, intentStore } = createEngine({
+      adapters,
+      observability: obs,
+      stateStore: store,
+    });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(
+      new Error('compensation resolve boom')
+    );
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-compensation-resolve-warn-1'))
+    ).rejects.toThrow(/bootstrap boom/);
+
+    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+  });
+
+  it('keeps startRun non-fatal when observability throws while reporting markResolved failure', async () => {
+    const baseObs = createNoopObservability();
+    const obs: IObservability = {
+      ...baseObs,
+      metrics: {
+        counter(name) {
+          if (name !== 'dvt.intent.mark_resolved_failed_total') {
+            return { add() {} };
+          }
+          return {
+            add() {
+              throw new Error('metrics backend unavailable');
+            },
+          };
+        },
+        histogram(name, labels) {
+          return baseObs.metrics.histogram(name, labels);
+        },
+        gauge(name, labels) {
+          return baseObs.metrics.gauge(name, labels);
+        },
+      },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn() {
+          throw new Error('log backend unavailable');
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
+    };
+    const adapters = makeAdapters();
+    const { engine, intentStore } = createEngine({ adapters, observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-telemetry-fail-soft-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-telemetry-fail-soft-1',
+      })
+    );
   });
 
   it('constructor validates requiredProviders', () => {

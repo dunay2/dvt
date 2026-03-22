@@ -246,7 +246,13 @@ export class WorkflowEngine implements IWorkflowEngine {
       } catch (markDispatchedError) {
         throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
       }
-      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+      await this.markIntentResolvedBestEffort({
+        intentId,
+        tenantId: validatedContext.tenantId,
+        runId: validatedContext.runId,
+        provider: runRef.provider,
+        traceContext,
+      });
     } else {
       // Legacy path for adapters without estimateRunRef: startRun first, then bootstrap.
       runRef = await this.withTimeout(
@@ -312,7 +318,13 @@ export class WorkflowEngine implements IWorkflowEngine {
         metadata: bootMeta,
         firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
       });
-      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+      await this.markIntentResolvedBestEffort({
+        intentId,
+        tenantId: bootMeta.tenantId,
+        runId: bootMeta.runId,
+        provider: bootMeta.provider,
+        traceContext,
+      });
     } catch (bootstrapError) {
       await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
         this.observability.logs.error({
@@ -324,8 +336,50 @@ export class WorkflowEngine implements IWorkflowEngine {
           },
         });
       });
-      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+      await this.markIntentResolvedBestEffort({
+        intentId,
+        tenantId: bootMeta.tenantId,
+        runId: bootMeta.runId,
+        provider: bootMeta.provider,
+        traceContext,
+      });
       throw bootstrapError;
+    }
+  }
+
+  private async markIntentResolvedBestEffort(input: {
+    intentId: string;
+    tenantId: string;
+    runId: string;
+    provider: EngineRunRef['provider'];
+    traceContext: ReturnType<typeof buildTraceContext>;
+  }): Promise<void> {
+    try {
+      await this.deps.intentStore.markResolved(input.intentId);
+    } catch (error) {
+      try {
+        this.observability.metrics
+          .counter('dvt.intent.mark_resolved_failed_total', {
+            tenantId: input.tenantId,
+            provider: input.provider,
+            operation: 'markResolved',
+          })
+          .add(1);
+        this.observability.logs.warn({
+          msg: 'markResolved failed; leaving intent cleanup to reconciliation worker',
+          context: input.traceContext,
+          attributes: {
+            intentId: input.intentId,
+            tenantId: input.tenantId,
+            runId: input.runId,
+            provider: input.provider,
+            error: toErrorMessage(error),
+          },
+        });
+      } catch {
+        // ADR-0030 best-effort contract: observability failures must never turn
+        // intent-resolution cleanup failures into startRun failures.
+      }
     }
   }
 
