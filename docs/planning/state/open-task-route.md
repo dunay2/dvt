@@ -30,7 +30,7 @@ block in the workboard.
 | Priority | Task ID  | Why now                                                                    | Next action                                                            |
 | -------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                     | Close review/merge decision and lock baseline.                         |
-| `P0`     | `RC-A1`  | Production correctness/security hook should be closed first.               | Disable/remove runtime `simulateError` in production path.             |
+| `P0`     | `RC-A1`  | Already in `Review`; close QA/merge decision for production hardening.     | Merge and lock runtime policy baseline.                                |
 | `P0`     | `RC-A2`  | Deterministic intent invariant affects crash recovery correctness.         | Implement deterministic `(tenantId, runId)` intent ID derivation.      |
 | `P1`     | `RC-A4`  | Unblocks runtime planVersion enforcement (`S16`).                          | Replace inline planVersion literal with canonical registry constant.   |
 | `P1`     | `RC-A6`  | Explicit prerequisite for the full state-store split sweep (`S02`).        | Align dead-letter contract signatures with tenant-scoped concrete API. |

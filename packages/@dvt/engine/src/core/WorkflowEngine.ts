@@ -91,13 +91,17 @@ interface StartRunErrorContext {
   intentId?: string;
 }
 
+class MutableStartRunErrorContext implements StartRunErrorContext {
+  intentId?: string;
+}
+
 class PostStartIntentPersistenceError extends Error {
   constructor(
     readonly intentId: string,
     readonly runRef: EngineRunRef,
     readonly originalError: unknown
   ) {
-    const cause = originalError instanceof Error ? originalError : new Error(String(originalError));
+    const cause = toErrorObject(originalError);
     super(`Intent persistence failed after adapter.startRun succeeded: ${cause.message}`, {
       cause,
     });
@@ -129,7 +133,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       operation: 'startRun',
     });
     const traceContext = buildTraceContext(validatedContext, validatedPlanRef.planId);
-    const errorContext: StartRunErrorContext = {};
+    const errorContext = new MutableStartRunErrorContext();
 
     return this.observability.withContext(traceContext, () =>
       this.observability.traces.withSpan(
@@ -372,6 +376,104 @@ export class WorkflowEngine implements IWorkflowEngine {
     }
   }
 
+  private async handlePreBootstrapPath(input: {
+    validatedPlanRef: PlanRef;
+    validatedContext: RunContext;
+    adapter: IProviderAdapter;
+    intentId: string;
+    traceContext: ReturnType<typeof buildTraceContext>;
+  }): Promise<EngineRunRef> {
+    const { validatedPlanRef, validatedContext, adapter, intentId, traceContext } = input;
+    const estimatedRef = adapter.estimateRunRef!(validatedContext);
+    const bootMeta: RunMetadata = buildRunMetadata(
+      validatedContext,
+      validatedPlanRef,
+      estimatedRef,
+      this.deps.clock.nowIsoUtc()
+    );
+    await this.deps.stateStore.bootstrapRunTx({
+      metadata: bootMeta,
+      firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
+    });
+
+    const runRef = await this.withTimeout(
+      adapter.startRun(validatedPlanRef, validatedContext),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.startRun'
+    );
+
+    const saveProviderRef = this.deps.stateStore.saveProviderRef;
+    if (
+      saveProviderRef &&
+      (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
+    ) {
+      await saveProviderRef(
+        validatedContext.tenantId,
+        validatedContext.runId,
+        buildProviderRefUpdate(runRef)
+      ).catch((refErr: unknown) => {
+        this.observability.logs.warn({
+          msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
+          context: traceContext,
+          attributes: {
+            error: toErrorMessage(refErr),
+            provider: runRef.provider,
+            runId: validatedContext.runId,
+          },
+        });
+      });
+    }
+
+    try {
+      await this.deps.intentStore.markDispatched(intentId, runRef);
+    } catch (markDispatchedError) {
+      throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
+    }
+
+    await this.markIntentResolvedBestEffort({
+      intentId,
+      tenantId: validatedContext.tenantId,
+      runId: validatedContext.runId,
+      provider: runRef.provider,
+      traceContext,
+    });
+
+    return runRef;
+  }
+
+  private async handleLegacyPath(input: {
+    validatedPlanRef: PlanRef;
+    validatedContext: RunContext;
+    adapter: IProviderAdapter;
+    intentId: string;
+    traceContext: ReturnType<typeof buildTraceContext>;
+  }): Promise<EngineRunRef> {
+    const { validatedPlanRef, validatedContext, adapter, intentId, traceContext } = input;
+    const runRef = await this.withTimeout(
+      adapter.startRun(validatedPlanRef, validatedContext),
+      this.deps.timeouts?.adapterCallMs ?? 30_000,
+      'adapter.startRun'
+    );
+
+    await this.deps.intentStore.markDispatched(intentId, runRef);
+
+    const bootMeta: RunMetadata = buildRunMetadata(
+      validatedContext,
+      validatedPlanRef,
+      runRef,
+      this.deps.clock.nowIsoUtc()
+    );
+    await this._bootstrapRunTxWithCompensation({
+      bootMeta,
+      adapter,
+      runRef,
+      intentId,
+      traceContext,
+    });
+
+    return runRef;
+  }
+
   private async _createStartRunIntent(
     validatedContext: RunContext,
     provider: EngineRunRef['provider']
@@ -508,7 +610,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     if (adapterCaps === undefined) return; // adapter omits capabilities() — skip validation
 
     const supported = new Set(adapterCaps);
-    const unsupported = required.filter((c) => !supported.has(c));
+    const unsupported: string[] = [];
+    for (const capability of required) {
+      if (supported.has(capability)) {
+        continue;
+      }
+      unsupported.push(capability);
+    }
     if (unsupported.length > 0) {
       throw new CapabilitiesNotSupportedError(unsupported, adapter.provider);
     }
@@ -736,11 +844,18 @@ export class WorkflowEngine implements IWorkflowEngine {
             const substatus = providerView.substatus ?? base.substatus;
             const message = providerView.message ?? base.message;
             span.setStatus('ok');
-            return {
+            const result = {
               ...base,
               ...(substatus === undefined ? {} : { substatus }),
               ...(message === undefined ? {} : { message }),
             };
+            if (isDefined(substatus)) {
+              result.substatus = substatus;
+            }
+            if (isDefined(message)) {
+              result.message = message;
+            }
+            return result;
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
@@ -897,7 +1012,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     eventType: EventType,
     payload?: Record<string, unknown>
   ): RunEventInput {
-    return {
+    const event: RunEventInput = {
       eventId: this.deps.idempotency.eventId(),
       eventType,
       emittedAt: this.deps.clock.nowIsoUtc(),
@@ -916,13 +1031,16 @@ export class WorkflowEngine implements IWorkflowEngine {
         planId: meta.planId,
         planVersion: meta.planVersion,
       }),
-      ...(payload ? { payload } : {}),
     };
+    if (isDefined(payload)) {
+      event.payload = payload;
+    }
+    return event;
   }
 
   private async ensureRunDoesNotExist(tenantId: string, runId: string): Promise<void> {
     const existing = await this.deps.stateStore.getRunMetadataByRunId(tenantId, runId);
-    if (existing) throw new RunAlreadyExistsError(runId);
+    if (existing !== undefined && existing !== null) throw new RunAlreadyExistsError(runId);
   }
 
   private async withTimeout<T>(
@@ -1022,14 +1140,26 @@ function buildTraceContext(
   const raw = input.targetAdapter ?? input.provider;
   const adapter: 'temporal' | 'conductor' | undefined =
     raw === 'temporal' || raw === 'conductor' ? raw : undefined;
-  return {
+  const context: {
+    tenantId: string;
+    projectId: string;
+    environmentId: string;
+    runId: string;
+    planId?: string;
+    adapter?: 'temporal' | 'conductor' | 'local';
+  } = {
     tenantId: input.tenantId,
     projectId: input.projectId,
     environmentId: input.environmentId,
     runId: input.runId,
-    ...(planId ? { planId } : {}),
-    ...(adapter ? { adapter } : {}),
   };
+  if (isDefined(planId)) {
+    context.planId = planId;
+  }
+  if (isDefined(adapter)) {
+    context.adapter = adapter;
+  }
+  return context;
 }
 
 function validateSchemaVersionOrThrow(schemaVersion: string): void {
@@ -1045,8 +1175,8 @@ function validateRunIdOrThrow(runId: string): void {
   throw new InvalidRunIdError(runId);
 }
 
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+function isDefined<T>(value: T | undefined): value is T {
+  return value !== undefined;
 }
 
 // ADR-0013: runRef is passed in so provider refs are included in the atomic bootstrapRunTx.
@@ -1056,26 +1186,29 @@ function buildRunMetadata(
   runRef: EngineRunRef,
   createdAt: string
 ): RunMetadata {
-  return {
+  const metadata: RunMetadata = {
     tenantId: ctx.tenantId,
     projectId: ctx.projectId,
     environmentId: ctx.environmentId,
     runId: ctx.runId,
     planId: planRef.planId,
     planVersion: planRef.planVersion,
-    // API caller provides logicalAttemptId in RunContext on business retries.
-    // Defaults to 1 for first execution.
     logicalAttemptId: ctx.logicalAttemptId ?? 1,
     provider: ctx.targetAdapter,
     providerWorkflowId: runRef.workflowId,
     providerRunId: runRef.runId,
-    ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-    ...(runRef.provider === 'temporal' && runRef.taskQueue
-      ? { providerTaskQueue: runRef.taskQueue }
-      : {}),
-    ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
     createdAt,
   };
+  if (runRef.provider === 'temporal') {
+    metadata.providerNamespace = runRef.namespace;
+    if (isDefined(runRef.taskQueue)) {
+      metadata.providerTaskQueue = runRef.taskQueue;
+    }
+  }
+  if (runRef.provider === 'conductor') {
+    metadata.providerConductorUrl = runRef.conductorUrl;
+  }
+  return metadata;
 }
 
 function buildProviderRefUpdate(runRef: EngineRunRef): {
@@ -1085,19 +1218,30 @@ function buildProviderRefUpdate(runRef: EngineRunRef): {
   providerTaskQueue?: string;
   providerConductorUrl?: string;
 } {
-  return {
+  const update: {
+    providerWorkflowId: string;
+    providerRunId: string;
+    providerNamespace?: string;
+    providerTaskQueue?: string;
+    providerConductorUrl?: string;
+  } = {
     providerWorkflowId: runRef.workflowId,
     providerRunId: runRef.runId,
-    ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-    ...(runRef.provider === 'temporal' && runRef.taskQueue
-      ? { providerTaskQueue: runRef.taskQueue }
-      : {}),
-    ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
   };
+  if (runRef.provider === 'temporal') {
+    update.providerNamespace = runRef.namespace;
+    if (isDefined(runRef.taskQueue)) {
+      update.providerTaskQueue = runRef.taskQueue;
+    }
+  }
+  if (runRef.provider === 'conductor') {
+    update.providerConductorUrl = runRef.conductorUrl;
+  }
+  return update;
 }
 
 function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
-  return {
+  const result: PlanRef = {
     uri: input.uri,
     sha256: input.sha256,
     schemaVersion: input.schemaVersion,
@@ -1109,11 +1253,21 @@ function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
       ? {}
       : { requiresCapabilities: input.requiresCapabilities }),
   };
+  if (isDefined(input.sizeBytes)) {
+    result.sizeBytes = input.sizeBytes;
+  }
+  if (isDefined(input.expiresAt)) {
+    result.expiresAt = input.expiresAt;
+  }
+  if (isDefined(input.requiresCapabilities)) {
+    result.requiresCapabilities = input.requiresCapabilities;
+  }
+  return result;
 }
 
 function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
   if (input.provider === 'temporal') {
-    return {
+    const result: EngineRunRef = {
       provider: 'temporal',
       tenantId: input.tenantId,
       namespace: input.namespace,
@@ -1121,6 +1275,10 @@ function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): Eng
       runId: input.runId,
       ...(input.taskQueue === undefined ? {} : { taskQueue: input.taskQueue }),
     };
+    if (isDefined(input.taskQueue)) {
+      result.taskQueue = input.taskQueue;
+    }
+    return result;
   }
 
   if (input.provider === 'conductor') {
@@ -1142,17 +1300,27 @@ function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): Eng
 }
 
 function normalizeSignalRequest(input: ReturnType<typeof parseSignalRequest>): SignalRequest {
-  return {
+  const result: SignalRequest = {
     signalId: input.signalId,
     type: input.type,
     ...(input.stepId === undefined ? {} : { stepId: input.stepId }),
     ...(input.reason === undefined ? {} : { reason: input.reason }),
     ...(input.requestedAt === undefined ? {} : { requestedAt: input.requestedAt }),
   };
+  if (isDefined(input.stepId)) {
+    result.stepId = input.stepId;
+  }
+  if (isDefined(input.reason)) {
+    result.reason = input.reason;
+  }
+  if (isDefined(input.requestedAt)) {
+    result.requestedAt = input.requestedAt;
+  }
+  return result;
 }
 
 function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunContext {
-  return {
+  const result: RunContext = {
     tenantId: input.tenantId,
     projectId: input.projectId,
     environmentId: input.environmentId,
@@ -1160,4 +1328,8 @@ function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunCont
     targetAdapter: input.targetAdapter,
     ...(input.logicalAttemptId === undefined ? {} : { logicalAttemptId: input.logicalAttemptId }),
   };
+  if (isDefined(input.logicalAttemptId)) {
+    result.logicalAttemptId = input.logicalAttemptId;
+  }
+  return result;
 }

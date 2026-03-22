@@ -42,10 +42,15 @@ export type {
   ActivityDeps,
   Activities,
   EmitEventInput,
+  SimulateErrorPolicy,
   StepInput,
   StepResult,
 } from './activities/stepActivities.js';
-export { createActivities } from './activities/stepActivities.js';
+export {
+  createActivities,
+  SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE,
+  SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE,
+} from './activities/stepActivities.js';
 
 // PR-2: Workflow types (workflow function itself is loaded by Worker bundler)
 export type {

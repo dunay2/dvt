@@ -12,8 +12,15 @@
 import type { IObservability } from '@dvt/observability';
 import { NativeConnection, Worker } from '@temporalio/worker';
 
-import type { ActivityDeps, StepExecutor } from './activities/stepActivities.js';
-import { createActivities } from './activities/stepActivities.js';
+import type {
+  ActivityDeps,
+  SimulateErrorPolicy,
+  StepExecutor,
+} from './activities/stepActivities.js';
+import {
+  createActivities,
+  UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION_ERROR,
+} from './activities/stepActivities.js';
 import type { TemporalAdapterConfig } from './config.js';
 import {
   buildTemporalContext,
@@ -27,6 +34,8 @@ export interface TemporalWorkerHostConfig {
   temporalConfig: TemporalAdapterConfig;
   activityDeps: ActivityDeps;
   observability?: IObservability;
+  /** Optional policy override injected from composition root. */
+  simulateErrorPolicy?: SimulateErrorPolicy;
   /** Override for testing; defaults to bundling RunPlanWorkflow. */
   workflowsPath?: string;
   /**
@@ -61,7 +70,6 @@ export class TemporalWorkerHost {
     }
 
     const context = buildTemporalContext(this.config.temporalConfig);
-    const activities = createActivities(this.config.activityDeps, this.config.stepExecutors);
     const attributes = {
       namespace: this.config.temporalConfig.namespace,
       identity: this.config.temporalConfig.identity ?? '',
@@ -76,6 +84,19 @@ export class TemporalWorkerHost {
       durationName: 'dvt.temporal.worker.start.duration_ms',
       metricOperation: 'start',
       run: async () => {
+        const effectiveSimulateErrorPolicy =
+          this.config.activityDeps.simulateErrorPolicy ?? this.config.simulateErrorPolicy;
+        assertSafeSimulateErrorPolicyForRuntime(effectiveSimulateErrorPolicy);
+
+        const activities = createActivities(
+          {
+            ...this.config.activityDeps,
+            observability: this.config.activityDeps.observability ?? this.observability,
+            simulateErrorPolicy: effectiveSimulateErrorPolicy,
+          },
+          this.config.stepExecutors
+        );
+
         this.observability.logs.info({
           msg: 'Starting Temporal worker host',
           context,
@@ -209,4 +230,18 @@ export class TemporalWorkerHost {
     this.worker = null;
     this.runningState = null;
   }
+}
+
+function assertSafeSimulateErrorPolicyForRuntime(policy?: SimulateErrorPolicy): void {
+  if (!isProductionRuntime()) {
+    return;
+  }
+  if (policy?.rejectInProduction !== false) {
+    return;
+  }
+  throw new Error(UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION_ERROR);
+}
+
+function isProductionRuntime(): boolean {
+  return (process.env['NODE_ENV'] ?? '').trim().toLowerCase() === 'production';
 }

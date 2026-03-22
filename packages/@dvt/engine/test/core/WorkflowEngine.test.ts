@@ -15,7 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RunEventInput } from '../../src/contracts/runEvents.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import { describeUnknownValue, WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
@@ -611,5 +611,28 @@ describe('WorkflowEngine (basic failure modes)', () => {
       expect(snap?.gatewayDecisions).toEqual({ 'gw-1': true });
       expect(snap?.gatewayDecisions?.['gw-1']).toBe(true);
     });
+  });
+});
+
+describe('describeUnknownValue helper', () => {
+  it('returns Error.message for Error inputs', () => {
+    expect(describeUnknownValue(new Error('boom'))).toBe('boom');
+  });
+
+  it('returns strings as-is and numbers as strings', () => {
+    expect(describeUnknownValue('hello')).toBe('hello');
+    expect(describeUnknownValue(123)).toBe('123');
+  });
+
+  it('serializes plain objects to JSON or falls back to tag for circular', () => {
+    expect(describeUnknownValue({ a: 1 })).toBe(JSON.stringify({ a: 1 }));
+
+    const a: any = {};
+    a.self = a; // circular
+    const out = describeUnknownValue(a);
+    expect(typeof out).toBe('string');
+    expect(out.startsWith('[object') || out.includes('circular') || out.includes('self')).toBe(
+      true
+    );
   });
 });
