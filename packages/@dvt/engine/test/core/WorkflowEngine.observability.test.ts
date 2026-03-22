@@ -205,9 +205,7 @@ it('still emits warning with semantic attributes when metrics counter creation f
       error: 'resolve boom',
     })
   );
-  expect(metricCalls).toContainEqual(
-    expect.objectContaining({ name: 'dvt.intent.mark_resolved_failed_total' })
-  );
+  expect(metricCalls).toHaveLength(0);
 });
 
 it('keeps startRun non-fatal when both metric and warning sinks throw on markResolved failure', async () => {
