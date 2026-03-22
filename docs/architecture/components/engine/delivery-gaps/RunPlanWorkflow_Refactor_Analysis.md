@@ -5,7 +5,7 @@
 - AGENTS.md
 - ADR-0001: Temporal Integration Test Policy
 - ADR-0003: Execution Model
-- RunPlanWorkflow_Architecture_Review.md
+- 20260315-run-plan-workflow-architecture-review.md
 
 ---
 
