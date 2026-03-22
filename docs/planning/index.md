@@ -67,7 +67,11 @@ Concept anchors for this page:
 - [Phase 2 Architectural Debt Roadmap](proposals/phase2-arch-debt-roadmap-20260315.md)
 - [Planner Target State And Hardening Roadmap](proposals/planner-target-state-roadmap-20260320.md)
 - [Principal Architecture Review Execution Plan](proposals/principal-architecture-review-execution-plan-20260317.md)
+- [RC-A1 SimulateError Production Hardening](proposals/rc-a1-simulate-error-production-hardening-20260322.md)
+- [RC-A2 Deterministic StartRun Intent ID](proposals/rc-a2-deterministic-start-run-intent-id-20260322.md)
+- [RC-B2 Lineage Compiled Code Resolver Rollout](proposals/rc-b2-lineage-compiled-code-resolver-rollout-20260322.md)
 - [Repository Governance Proposal Set 2026-03-17](proposals/repository-governance-proposal-set-20260317.md)
+- [S15 Run Snapshot CAS Guard](proposals/s15-run-snapshot-cas-guard-20260322.md)
 
 ## Reviews
 
