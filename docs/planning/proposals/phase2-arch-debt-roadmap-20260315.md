@@ -191,6 +191,12 @@ by the lineage path.
 - `S10` is now closed (2026-03-20); prefer `S07` and `S09` for next fast momentum.
 - Do not start `S04` until `S02` and `S05` are settled.
 - Do not start `S08` until `S09` clarifies retry ownership.
+- The 2026-03-22 DDD/Hexagonal Port Audit identified a new untracked slice:
+  **`IAuthorizationPolicy` port extraction** (F1 in the audit). This is orthogonal
+  to S02 and S03 and can start immediately. It is the recommended prerequisite for
+  S03, as it removes authorization from `WorkflowEngine` before the use-case
+  extraction. See [ADR-0039](../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md).
+- Recommended execution order for the next wave: **`IAuthorizationPolicy`** → **S02** → **S03**.
 
 ## Non-Goals
 

@@ -75,6 +75,7 @@ Concept anchors for this page:
 - [20260314 Domain Cohesion Review](reviews/20260314-domain-cohesion-review.md)
 - [20260314 Review](reviews/20260314-review.md)
 - [20260321 Planner-Backed StartRun QA Review](reviews/20260321-planner-backed-start-run-qa-review.md)
+- [20260322 DDD and Hexagonal Port Audit](reviews/20260322-ddd-hexagonal-port-audit.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/ARCH_DOC_CONSOLIDATION_MATRIX_20260307.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/DVT_ARCH_REVIEW_GAP_TASKS_20260226.md)
 - [DVT+ — Consolidated Architectural Review](reviews/DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md)

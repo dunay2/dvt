@@ -37,6 +37,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0036   | ExecutionPlan planVersion registry and runtime compatibility matrix                             | Accepted                 | 2026-03-19                       | [ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md](ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)           |
 | ADR-0037   | Run Event Lifecycle Archival, Verification, and Restore Model                                   | Accepted                 | 2026-03-19                       | [ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md](ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md) |
 | ADR-0038   | Delivery Buffer Retention and Purge Policy                                                      | Accepted                 | 2026-03-19                       | [ADR-0038-delivery-buffer-retention-and-purge-policy.md](ADR-0038-delivery-buffer-retention-and-purge-policy.md)                                   |
+| ADR-0039   | Hexagonal Port Hardening and SOLID Remediation                                                  | Accepted                 | 2026-03-22                       | [ADR-0039-hexagonal-port-hardening-and-solid-remediation.md](ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)                           |
 
 ## Usage rules
 
@@ -49,4 +50,4 @@ Canonical catalog of ADRs in this repository.
 - [ADR landing page](index.md)
 - [ADR implementation status](ADR-Implementation-Status.md)
 
-_Last updated: 2026-03-19_
+_Last updated: 2026-03-22_
