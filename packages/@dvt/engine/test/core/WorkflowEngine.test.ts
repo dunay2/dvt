@@ -109,6 +109,32 @@ describe('WorkflowEngine (basic failure modes)', () => {
     return new Map([['temporal', makeTemporalAdapter(overrides)]]);
   }
 
+  function makeEstimatedAdapters(): Map<EngineRunRef['provider'], IProviderAdapter> {
+    return makeAdapters({
+      estimateRunRef(ctx) {
+        return {
+          provider: 'temporal',
+          tenantId: ctx.tenantId,
+          namespace: 'default',
+          workflowId: `wf-${ctx.runId}`,
+          runId: ctx.runId,
+        } as EngineRunRef;
+      },
+    });
+  }
+
+  function makeStoreWithBootstrapFailure(failingRunId: string): InMemoryTxStore {
+    const store = new InMemoryTxStore();
+    const originalBootstrap = store.bootstrapRunTx.bind(store);
+    store.bootstrapRunTx = async (input) => {
+      if (input.metadata.runId === failingRunId) {
+        throw new Error('bootstrap boom');
+      }
+      return originalBootstrap(input);
+    };
+    return store;
+  }
+
   function makeTrackingObservability(): {
     obs: IObservability;
     counters: string[];
@@ -373,17 +399,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('emits warning and metric when markResolved fails after dispatch', async () => {
     const { obs, counters, warns } = makeTrackingObservability();
-    const adapters = makeAdapters({
-      estimateRunRef(ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-    });
+    const adapters = makeEstimatedAdapters();
     const { engine, intentStore } = createEngine({ adapters, observability: obs });
     vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('intent resolve boom'));
 
@@ -422,14 +438,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   it('preserves bootstrap error and emits warning/metric when markResolved also fails on compensation path', async () => {
     const { obs, counters, warns } = makeTrackingObservability();
     const adapters = makeAdapters();
-    const store = new InMemoryTxStore();
-    const originalBootstrap = store.bootstrapRunTx.bind(store);
-    store.bootstrapRunTx = async (input) => {
-      if (input.metadata.runId === 'obs-compensation-resolve-warn-1') {
-        throw new Error('bootstrap boom');
-      }
-      return originalBootstrap(input);
-    };
+    const store = makeStoreWithBootstrapFailure('obs-compensation-resolve-warn-1');
 
     const { engine, intentStore } = createEngine({
       adapters,
@@ -449,42 +458,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('keeps startRun non-fatal when observability throws while reporting markResolved failure', async () => {
-    const baseObs = createNoopObservability();
-    const obs: IObservability = {
-      ...baseObs,
-      metrics: {
-        counter(name) {
-          if (name !== 'dvt.intent.mark_resolved_failed_total') {
-            return { add() {} };
-          }
-          return {
-            add() {
-              throw new Error('metrics backend unavailable');
-            },
-          };
-        },
-        histogram(name, labels) {
-          return baseObs.metrics.histogram(name, labels);
-        },
-        gauge(name, labels) {
-          return baseObs.metrics.gauge(name, labels);
-        },
-      },
-      logs: {
-        debug(entry) {
-          baseObs.logs.debug(entry);
-        },
-        info(entry) {
-          baseObs.logs.info(entry);
-        },
-        warn() {
-          throw new Error('log backend unavailable');
-        },
-        error(entry) {
-          baseObs.logs.error(entry);
-        },
-      },
-    };
+    const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
     const adapters = makeAdapters();
     const { engine, intentStore } = createEngine({ adapters, observability: obs });
     vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
@@ -497,6 +471,9 @@ describe('WorkflowEngine (basic failure modes)', () => {
         runId: 'obs-telemetry-fail-soft-1',
       })
     );
+
+    expect(metricAttempts.count).toBe(1);
+    expect(warnAttempts.count).toBe(1);
   });
 
   it('emits warning when metric add throws during markResolved failure reporting', async () => {
@@ -573,17 +550,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('keeps metric emission when warn sink throws on dispatch path', async () => {
     const { obs, counters, warnAttempts } = makeWarnFailObservability();
-    const adapters = makeAdapters({
-      estimateRunRef(ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-    });
+    const adapters = makeEstimatedAdapters();
     const { engine, intentStore } = createEngine({ adapters, observability: obs });
     vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
 
@@ -603,14 +570,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   it('preserves bootstrap error and keeps metric emission when warn sink throws on compensation path', async () => {
     const { obs, counters, warnAttempts } = makeWarnFailObservability();
     const adapters = makeAdapters();
-    const store = new InMemoryTxStore();
-    const originalBootstrap = store.bootstrapRunTx.bind(store);
-    store.bootstrapRunTx = async (input) => {
-      if (input.metadata.runId === 'obs-compensation-log-fail-counter-survives-1') {
-        throw new Error('bootstrap boom');
-      }
-      return originalBootstrap(input);
-    };
+    const store = makeStoreWithBootstrapFailure('obs-compensation-log-fail-counter-survives-1');
 
     const { engine, intentStore } = createEngine({
       adapters,
@@ -629,17 +589,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('keeps startRun non-fatal when both metric and warn sinks throw on dispatch path', async () => {
     const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
-    const adapters = makeAdapters({
-      estimateRunRef(ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-    });
+    const adapters = makeEstimatedAdapters();
     const { engine, intentStore } = createEngine({ adapters, observability: obs });
     vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
 
@@ -659,14 +609,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   it('preserves bootstrap error when both metric and warn sinks throw on compensation path', async () => {
     const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
     const adapters = makeAdapters();
-    const store = new InMemoryTxStore();
-    const originalBootstrap = store.bootstrapRunTx.bind(store);
-    store.bootstrapRunTx = async (input) => {
-      if (input.metadata.runId === 'obs-compensation-both-sinks-fail-soft-1') {
-        throw new Error('bootstrap boom');
-      }
-      return originalBootstrap(input);
-    };
+    const store = makeStoreWithBootstrapFailure('obs-compensation-both-sinks-fail-soft-1');
 
     const { engine, intentStore } = createEngine({
       adapters,
@@ -718,17 +661,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
         },
       },
     };
-    const adapters = makeAdapters({
-      estimateRunRef(ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-    });
+    const adapters = makeEstimatedAdapters();
     const { engine, intentStore } = createEngine({ adapters, observability: obs });
     vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
 
