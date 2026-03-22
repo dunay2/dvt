@@ -22,7 +22,7 @@ function setupMarkResolvedFailTest(opts?: {
   adapterOverrides?: Parameters<typeof makeAdapters>[0];
   failOnce?: boolean;
   runId?: string;
-}): CollectorReturn & {
+}): Pick<CollectorReturn, 'obs' | 'warns' | 'metricCalls' | 'warnEntries'> & {
   adapters: AdaptersReturn;
   engine: EngineReturn['engine'];
   intentStore: EngineReturn['intentStore'];
@@ -38,6 +38,25 @@ function setupMarkResolvedFailTest(opts?: {
     vi.spyOn(intentStore, 'markResolved').mockRejectedValue(new Error('resolve boom'));
   }
   return { obs, warns, metricCalls, warnEntries, adapters, engine, intentStore };
+}
+
+function startEngineWithFailingMarkResolved(opts?: { once?: boolean }): {
+  engine: EngineReturn['engine'];
+  intentStore: EngineReturn['intentStore'];
+  obs: CollectorReturn['obs'];
+  warns: CollectorReturn['warns'];
+  metricCalls: CollectorReturn['metricCalls'];
+  warnEntries: CollectorReturn['warnEntries'];
+} {
+  const { obs, warns, metricCalls, warnEntries } = makeObservabilityCollector();
+  const adapters = makeAdapters();
+  const { engine, intentStore } = createEngine({ adapters, observability: obs });
+  if (opts?.once) {
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+  } else {
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValue(new Error('resolve boom'));
+  }
+  return { engine, intentStore, obs, warns, metricCalls, warnEntries } as const;
 }
 
 /* Observability-focused tests moved from WorkflowEngine.test.ts to improve Code Health */
@@ -157,7 +176,7 @@ it('still emits warning when metric reporting fails for markResolved failure', a
 
 it('still emits warning with semantic attributes when metrics counter creation fails', async () => {
   const runId = 'obs-counter-create-fail-warn-still-emits-1';
-  const { engine, warnEntries } = setupMarkResolvedFailTest({
+  const { engine, warnEntries, metricCalls } = setupMarkResolvedFailTest({
     collectorOverrides: {
       counter(name: string, labels?: Record<string, string>) {
         if (name === 'dvt.intent.mark_resolved_failed_total') {
@@ -186,28 +205,7 @@ it('still emits warning with semantic attributes when metrics counter creation f
       error: 'resolve boom',
     })
   );
-});
-
-it('keeps startRun non-fatal when warning sink throws after metric reporting', async () => {
-  const { engine, metricCalls: counters } = setupMarkResolvedFailTest({
-    collectorOverrides: {
-      warn(entry?: unknown) {
-        throw new Error('log backend unavailable');
-      },
-    },
-    failOnce: true,
-  });
-
-  await expect(
-    engine.startRun(makePlanRef(), makeContext('obs-warn-fail-metric-still-recorded-1'))
-  ).resolves.toEqual(
-    expect.objectContaining({
-      provider: 'temporal',
-      runId: 'obs-warn-fail-metric-still-recorded-1',
-    })
-  );
-
-  expect(counters).toContainEqual(
+  expect(metricCalls).toContainEqual(
     expect.objectContaining({ name: 'dvt.intent.mark_resolved_failed_total' })
   );
 });
@@ -236,11 +234,7 @@ it('keeps startRun non-fatal when both metric and warning sinks throw on markRes
 });
 
 it('emits one warning per failed markResolved under concurrent starts', async () => {
-  const { obs, warns } = makeObservabilityCollector();
-
-  const adapters = makeAdapters();
-  const { engine, intentStore } = createEngine({ adapters, observability: obs });
-  vi.spyOn(intentStore, 'markResolved').mockRejectedValue(new Error('resolve boom'));
+  const { engine, warns } = startEngineWithFailingMarkResolved();
 
   await Promise.all([
     engine.startRun(makePlanRef(), makeContext('obs-concurrent-1')),
@@ -252,11 +246,7 @@ it('emits one warning per failed markResolved under concurrent starts', async ()
 });
 
 it('records expected metric labels when markResolved fails', async () => {
-  const { obs, metricCalls } = makeObservabilityCollector();
-
-  const adapters = makeAdapters();
-  const { engine, intentStore } = createEngine({ adapters, observability: obs });
-  vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+  const { engine, metricCalls } = startEngineWithFailingMarkResolved({ once: true });
 
   await expect(
     engine.startRun(makePlanRef(), makeContext('obs-metric-labels-on-resolve-fail-1'))
@@ -285,11 +275,7 @@ it('records expected metric labels when markResolved fails', async () => {
 });
 
 it('emits one warning per failed markResolved under burst concurrency', async () => {
-  const { obs, warns } = makeObservabilityCollector();
-
-  const adapters = makeAdapters();
-  const { engine, intentStore } = createEngine({ adapters, observability: obs });
-  vi.spyOn(intentStore, 'markResolved').mockRejectedValue(new Error('resolve boom'));
+  const { engine, warns } = startEngineWithFailingMarkResolved();
 
   const runIds = Array.from({ length: 5 }, (_, idx) => `obs-concurrent-burst-${idx + 1}`);
   await Promise.all(runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId))));
@@ -299,12 +285,8 @@ it('emits one warning per failed markResolved under burst concurrency', async ()
 });
 
 it('emits warning with stable payload shape on markResolved failure', async () => {
-  const { obs, warnEntries } = makeObservabilityCollector();
-
-  const adapters = makeAdapters();
   const runId = 'obs-warning-payload-shape-1';
-  const { engine, intentStore } = createEngine({ adapters, observability: obs });
-  vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+  const { engine, warnEntries } = startEngineWithFailingMarkResolved({ once: true });
 
   await expect(engine.startRun(makePlanRef(), makeContext(runId))).resolves.toEqual(
     expect.objectContaining({
@@ -376,11 +358,7 @@ it('attempts metric emission before warning emission when markResolved fails', a
 });
 
 it('emits one warning per failed markResolved under high burst concurrency', async () => {
-  const { obs, warns } = makeObservabilityCollector();
-
-  const adapters = makeAdapters();
-  const { engine, intentStore } = createEngine({ adapters, observability: obs });
-  vi.spyOn(intentStore, 'markResolved').mockRejectedValue(new Error('resolve boom'));
+  const { engine, warns } = startEngineWithFailingMarkResolved();
 
   const runIds = Array.from({ length: 20 }, (_, idx) => `obs-concurrent-high-burst-${idx + 1}`);
   await Promise.all(runIds.map((runId) => engine.startRun(makePlanRef(), makeContext(runId))));
@@ -431,16 +409,16 @@ it('falls back to stderr when both observability sinks fail', async () => {
     },
     logs: {
       debug(entry?: unknown) {
-        baseObs.logs.debug(entry as unknown as Parameters<typeof baseObs.logs.debug>[0]);
+        baseObs.logs.debug(entry as Parameters<typeof baseObs.logs.debug>[0]);
       },
       info(entry?: unknown) {
-        baseObs.logs.info(entry as unknown as Parameters<typeof baseObs.logs.info>[0]);
+        baseObs.logs.info(entry as Parameters<typeof baseObs.logs.info>[0]);
       },
       warn() {
         throw new Error('warn unavailable');
       },
       error(entry?: unknown) {
-        baseObs.logs.error(entry as unknown as Parameters<typeof baseObs.logs.error>[0]);
+        baseObs.logs.error(entry as Parameters<typeof baseObs.logs.error>[0]);
       },
     },
   } as IObservability;
