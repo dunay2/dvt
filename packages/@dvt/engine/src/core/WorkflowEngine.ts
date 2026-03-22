@@ -156,13 +156,11 @@ export class WorkflowEngine implements IWorkflowEngine {
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
-            return this.handleStartRunError(
-              error,
-              validatedContext,
+            return this.handleStartRunError(error, validatedContext, {
               metricTags,
               traceContext,
-              errorContext
-            );
+              errorContext,
+            });
           }
         }
       )
@@ -249,27 +247,26 @@ export class WorkflowEngine implements IWorkflowEngine {
       'adapter.startRun'
     );
 
+    const saveProviderRef = this.deps.stateStore.saveProviderRef;
     if (
-      this.deps.stateStore.saveProviderRef &&
+      saveProviderRef &&
       (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
     ) {
-      await this.deps.stateStore
-        .saveProviderRef(
-          validatedContext.tenantId,
-          validatedContext.runId,
-          buildProviderRefUpdate(runRef)
-        )
-        .catch((refErr: unknown) => {
-          this.observability.logs.warn({
-            msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
-            context: traceContext,
-            attributes: {
-              error: toErrorMessage(refErr),
-              provider: runRef.provider,
-              runId: validatedContext.runId,
-            },
-          });
+      await saveProviderRef(
+        validatedContext.tenantId,
+        validatedContext.runId,
+        buildProviderRefUpdate(runRef)
+      ).catch((refErr: unknown) => {
+        this.observability.logs.warn({
+          msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
+          context: traceContext,
+          attributes: {
+            error: toErrorMessage(refErr),
+            provider: runRef.provider,
+            runId: validatedContext.runId,
+          },
         });
+      });
     }
 
     try {
@@ -477,14 +474,16 @@ export class WorkflowEngine implements IWorkflowEngine {
   private async handleStartRunError(
     error: unknown,
     validatedContext: RunContext,
-    metricTags: Record<string, string>,
-    traceContext: ReturnType<typeof buildTraceContext>,
-    errorContext: StartRunErrorContext
+    ctx: {
+      metricTags: Record<string, string>;
+      traceContext: ReturnType<typeof buildTraceContext>;
+      errorContext: StartRunErrorContext;
+    }
   ): Promise<never> {
-    this.observability.metrics.counter('dvt.run.start_failed_total', metricTags).add(1);
+    this.observability.metrics.counter('dvt.run.start_failed_total', ctx.metricTags).add(1);
     this.observability.logs.error({
       msg: 'startRun failed',
-      context: traceContext,
+      context: ctx.traceContext,
       err: describeUnknownValue(error),
       attributes: {
         provider: validatedContext.targetAdapter,
@@ -495,7 +494,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     if (error instanceof PostStartIntentPersistenceError) {
       this.observability.logs.warn({
         msg: 'Provider workflow started but intent persistence failed; leaving reconciliation to maintenance worker',
-        context: traceContext,
+        context: ctx.traceContext,
         attributes: {
           intentId: error.intentId,
           runId: error.runRef.runId,
@@ -509,7 +508,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const failMeta = await this.deps.stateStore
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
-    await this.maybeEmitRunFailedAfterStartError(failMeta, errorContext, traceContext);
+    await this.maybeEmitRunFailedAfterStartError(failMeta, ctx.errorContext, ctx.traceContext);
     throw error;
   }
 

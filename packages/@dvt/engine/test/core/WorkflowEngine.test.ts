@@ -407,6 +407,40 @@ function expectMetricAndWarnAttempts(
   expect(warnAttempts.count).toBe(1);
 }
 
+async function runAndExpectMarkResolved(opts: {
+  adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
+  observability: IObservability;
+  counters?: string[];
+  warns?: string[];
+  metricAttempts?: { count: number };
+  warnAttempts?: { count: number };
+  stateStore?: InMemoryTxStore;
+  runId: string;
+  expectCounter?: boolean;
+  expectWarn?: boolean;
+  expectWarnAttempts?: boolean;
+  expectMetricAndWarnAttempts?: boolean;
+  expectReject?: boolean;
+  useEstimatedAdapters?: boolean;
+}): Promise<void> {
+  const adapters =
+    opts.adapters ?? (opts.useEstimatedAdapters ? makeEstimatedAdapters() : makeAdapters());
+  await runMarkResolvedFailCase({
+    adapters,
+    observability: opts.observability,
+    stateStore: opts.stateStore,
+    runId: opts.runId,
+    expectReject: opts.expectReject,
+    useEstimatedAdapters: opts.useEstimatedAdapters,
+  });
+
+  if (opts.expectCounter && opts.counters) expectMarkResolvedCounter(opts.counters);
+  if (opts.expectWarn && opts.warns) expectMarkResolvedWarn(opts.warns);
+  if (opts.expectWarnAttempts && opts.warnAttempts) expect(opts.warnAttempts.count).toBe(1);
+  if (opts.expectMetricAndWarnAttempts && opts.metricAttempts && opts.warnAttempts)
+    expectMetricAndWarnAttempts(opts.metricAttempts, opts.warnAttempts);
+}
+
 describe('WorkflowEngine (basic failure modes)', () => {
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
@@ -560,25 +594,26 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const { obs, warns } = makeCustomObservability({
       throwOnMetricAddName: 'dvt.intent.mark_resolved_failed_total',
     });
-    await runMarkResolvedFailCase({
+    await runAndExpectMarkResolved({
       adapters: makeAdapters(),
       observability: obs,
       runId: 'obs-metrics-fail-warn-survives-1',
+      warns,
+      expectWarn: true,
     });
-
-    expectMarkResolvedWarn(warns);
   });
 
   it('keeps metric emission when warn sink throws during markResolved failure reporting', async () => {
     const { obs, counters, warnAttempts } = makeWarnFailObservability();
-    await runMarkResolvedFailCase({
+    await runAndExpectMarkResolved({
       observability: obs,
       adapters: makeAdapters(),
       runId: 'obs-log-fail-counter-survives-1',
+      counters,
+      warnAttempts,
+      expectCounter: true,
+      expectWarnAttempts: true,
     });
-
-    expectMarkResolvedCounter(counters);
-    expect(warnAttempts.count).toBe(1);
   });
 
   it('keeps metric emission when warn sink throws on dispatch path', async () => {
