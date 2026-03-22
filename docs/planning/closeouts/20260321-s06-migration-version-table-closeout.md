@@ -27,11 +27,15 @@ Created inline in `PostgresSchemaManager` before any named step runs:
 
 ```sql
 CREATE TABLE IF NOT EXISTS schema_migrations (
-  component TEXT NOT NULL,
-  version   TEXT NOT NULL,
-  applied_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  component   TEXT        NOT NULL,
+  version     TEXT        NOT NULL,
+  description TEXT        NOT NULL,
+  applied_at  TIMESTAMPTZ NOT NULL,
   PRIMARY KEY (component, version)
 );
+
+CREATE INDEX IF NOT EXISTS schema_migrations_component_applied_idx
+  ON schema_migrations (component, applied_at DESC);
 ```
 
 ### 2. Named migration steps in `PostgresSchemaManager`
@@ -53,8 +57,9 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 | `core_009_archive_verified_at_idx` | Index for verified_at (G5-PR1)                                                  |
 | `core_010_purge_indexes`           | Purge indexes on `outbox`, `outbox_dead_letter`, `lineage_dead_letter` (G5-PR3) |
 
-Each step is tracked with `(component='core', version='<step_name>')` in `schema_migrations`.
-A step only executes if its version row is absent — making every step fully idempotent.
+Each step is tracked with `(component='core', version='<step_name>', description='<human label>')` in
+`schema_migrations`. A step only executes if its version row is absent — making every step
+fully idempotent.
 
 ### 3. `pg_advisory_lock` concurrency guard
 
