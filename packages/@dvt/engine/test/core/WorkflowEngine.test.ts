@@ -61,241 +61,243 @@ function makeRunEventInput(args: {
   };
 }
 
-describe('WorkflowEngine (basic failure modes)', () => {
-  function makePlanRef(): PlanRef {
-    return {
-      uri: 'https://example.com/plan',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.1',
-      planId: 'p',
-      planVersion: '1.0',
-    };
-  }
+function makePlanRef(): PlanRef {
+  return {
+    uri: 'https://example.com/plan',
+    sha256: 'deadbeef',
+    schemaVersion: 'v1.1',
+    planId: 'p',
+    planVersion: '1.0',
+  };
+}
 
-  function makeContext(runId = 'r1'): RunContext {
-    return {
-      tenantId: 't',
-      projectId: 'p',
-      environmentId: 'dev',
-      runId,
-      targetAdapter: 'temporal',
-    };
-  }
+function makeContext(runId = 'r1'): RunContext {
+  return {
+    tenantId: 't',
+    projectId: 'p',
+    environmentId: 'dev',
+    runId,
+    targetAdapter: 'temporal',
+  };
+}
 
-  function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
-    return {
-      provider: 'temporal',
-      async startRun(_planRef: PlanRef, ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
+function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
+  const adapter: IProviderAdapter = {
+    provider: 'temporal',
+    async startRun(_planRef: PlanRef, ctx) {
+      return {
+        provider: 'temporal',
+        tenantId: ctx.tenantId,
+        namespace: 'default',
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+    async cancelRun() {},
+    async getRunStatus(runRef) {
+      return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
+    },
+    async signal() {},
+  };
+  if (overrides) {
+    Object.assign(adapter, overrides);
+  }
+  return adapter;
+}
+
+function makeAdapters(
+  overrides?: Partial<IProviderAdapter>
+): Map<EngineRunRef['provider'], IProviderAdapter> {
+  return new Map([['temporal', makeTemporalAdapter(overrides)]]);
+}
+
+function makeEstimatedAdapters(): Map<EngineRunRef['provider'], IProviderAdapter> {
+  return makeAdapters({
+    estimateRunRef(ctx) {
+      return {
+        provider: 'temporal',
+        tenantId: ctx.tenantId,
+        namespace: 'default',
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+  });
+}
+
+function makeStoreWithBootstrapFailure(failingRunId: string): InMemoryTxStore {
+  const store = new InMemoryTxStore();
+  const originalBootstrap = store.bootstrapRunTx.bind(store);
+  store.bootstrapRunTx = async (input) => {
+    if (input.metadata.runId === failingRunId) {
+      throw new Error('bootstrap boom');
+    }
+    return originalBootstrap(input);
+  };
+  return store;
+}
+
+function makeTrackingObservability(): {
+  obs: IObservability;
+  counters: string[];
+  histograms: string[];
+  warns: string[];
+} {
+  const baseObs = createNoopObservability();
+  const counters: string[] = [];
+  const histograms: string[] = [];
+  const warns: string[] = [];
+  const obs: IObservability = {
+    ...baseObs,
+    metrics: {
+      counter(name: string) {
+        counters.push(name);
+        return { add: () => {} };
       },
-      async cancelRun() {},
-      async getRunStatus(runRef) {
-        return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
+      histogram(name: string) {
+        histograms.push(name);
+        return { record: () => {} };
       },
-      async signal() {},
-      ...(overrides ?? {}),
-    };
-  }
-
-  function makeAdapters(
-    overrides?: Partial<IProviderAdapter>
-  ): Map<EngineRunRef['provider'], IProviderAdapter> {
-    return new Map([['temporal', makeTemporalAdapter(overrides)]]);
-  }
-
-  function makeEstimatedAdapters(): Map<EngineRunRef['provider'], IProviderAdapter> {
-    return makeAdapters({
-      estimateRunRef(ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
+      gauge() {
+        return { set: () => {} };
       },
-    });
-  }
-
-  function makeStoreWithBootstrapFailure(failingRunId: string): InMemoryTxStore {
-    const store = new InMemoryTxStore();
-    const originalBootstrap = store.bootstrapRunTx.bind(store);
-    store.bootstrapRunTx = async (input) => {
-      if (input.metadata.runId === failingRunId) {
-        throw new Error('bootstrap boom');
-      }
-      return originalBootstrap(input);
-    };
-    return store;
-  }
-
-  function makeTrackingObservability(): {
-    obs: IObservability;
-    counters: string[];
-    histograms: string[];
-    warns: string[];
-  } {
-    const baseObs = createNoopObservability();
-    const counters: string[] = [];
-    const histograms: string[] = [];
-    const warns: string[] = [];
-    const obs: IObservability = {
-      ...baseObs,
-      metrics: {
-        counter(name: string) {
-          counters.push(name);
-          return { add: () => {} };
-        },
-        histogram(name: string) {
-          histograms.push(name);
-          return { record: () => {} };
-        },
-        gauge() {
-          return { set: () => {} };
-        },
+    },
+    logs: {
+      debug(entry) {
+        baseObs.logs.debug(entry);
       },
-      logs: {
-        debug(entry) {
-          baseObs.logs.debug(entry);
-        },
-        info(entry) {
-          baseObs.logs.info(entry);
-        },
-        warn(entry) {
-          warns.push(entry.msg);
-          baseObs.logs.warn(entry);
-        },
-        error(entry) {
-          baseObs.logs.error(entry);
-        },
+      info(entry) {
+        baseObs.logs.info(entry);
       },
-    };
-    return { obs, counters, histograms, warns };
-  }
+      warn(entry) {
+        warns.push(entry.msg);
+        baseObs.logs.warn(entry);
+      },
+      error(entry) {
+        baseObs.logs.error(entry);
+      },
+    },
+  };
+  return { obs, counters, histograms, warns };
+}
 
-  function makeWarnFailObservability(): {
-    obs: IObservability;
-    counters: string[];
-    warnAttempts: { count: number };
-  } {
-    const baseObs = createNoopObservability();
-    const counters: string[] = [];
-    const warnAttempts = { count: 0 };
-    const obs: IObservability = {
-      ...baseObs,
-      metrics: {
-        counter(name: string) {
-          counters.push(name);
+function makeWarnFailObservability(): {
+  obs: IObservability;
+  counters: string[];
+  warnAttempts: { count: number };
+} {
+  const baseObs = createNoopObservability();
+  const counters: string[] = [];
+  const warnAttempts = { count: 0 };
+  const obs: IObservability = {
+    ...baseObs,
+    metrics: {
+      counter(name: string) {
+        counters.push(name);
+        return { add() {} };
+      },
+      histogram(name, labels) {
+        return baseObs.metrics.histogram(name, labels);
+      },
+      gauge(name, labels) {
+        return baseObs.metrics.gauge(name, labels);
+      },
+    },
+    logs: {
+      debug(entry) {
+        baseObs.logs.debug(entry);
+      },
+      info(entry) {
+        baseObs.logs.info(entry);
+      },
+      warn() {
+        warnAttempts.count += 1;
+        throw new Error('log backend unavailable');
+      },
+      error(entry) {
+        baseObs.logs.error(entry);
+      },
+    },
+  };
+  return { obs, counters, warnAttempts };
+}
+
+function makeBothSinksFailObservability(): {
+  obs: IObservability;
+  metricAttempts: { count: number };
+  warnAttempts: { count: number };
+} {
+  const baseObs = createNoopObservability();
+  const metricAttempts = { count: 0 };
+  const warnAttempts = { count: 0 };
+  const obs: IObservability = {
+    ...baseObs,
+    metrics: {
+      counter(name) {
+        if (name !== 'dvt.intent.mark_resolved_failed_total') {
           return { add() {} };
-        },
-        histogram(name, labels) {
-          return baseObs.metrics.histogram(name, labels);
-        },
-        gauge(name, labels) {
-          return baseObs.metrics.gauge(name, labels);
-        },
+        }
+        return {
+          add() {
+            metricAttempts.count += 1;
+            throw new Error('metrics backend unavailable');
+          },
+        };
       },
-      logs: {
-        debug(entry) {
-          baseObs.logs.debug(entry);
-        },
-        info(entry) {
-          baseObs.logs.info(entry);
-        },
-        warn() {
-          warnAttempts.count += 1;
-          throw new Error('log backend unavailable');
-        },
-        error(entry) {
-          baseObs.logs.error(entry);
-        },
+      histogram(name, labels) {
+        return baseObs.metrics.histogram(name, labels);
       },
-    };
-    return { obs, counters, warnAttempts };
-  }
-
-  function makeBothSinksFailObservability(): {
-    obs: IObservability;
-    metricAttempts: { count: number };
-    warnAttempts: { count: number };
-  } {
-    const baseObs = createNoopObservability();
-    const metricAttempts = { count: 0 };
-    const warnAttempts = { count: 0 };
-    const obs: IObservability = {
-      ...baseObs,
-      metrics: {
-        counter(name) {
-          if (name !== 'dvt.intent.mark_resolved_failed_total') {
-            return { add() {} };
-          }
-          return {
-            add() {
-              metricAttempts.count += 1;
-              throw new Error('metrics backend unavailable');
-            },
-          };
-        },
-        histogram(name, labels) {
-          return baseObs.metrics.histogram(name, labels);
-        },
-        gauge(name, labels) {
-          return baseObs.metrics.gauge(name, labels);
-        },
+      gauge(name, labels) {
+        return baseObs.metrics.gauge(name, labels);
       },
-      logs: {
-        debug(entry) {
-          baseObs.logs.debug(entry);
-        },
-        info(entry) {
-          baseObs.logs.info(entry);
-        },
-        warn() {
-          warnAttempts.count += 1;
-          throw new Error('log backend unavailable');
-        },
-        error(entry) {
-          baseObs.logs.error(entry);
-        },
+    },
+    logs: {
+      debug(entry) {
+        baseObs.logs.debug(entry);
       },
-    };
-    return { obs, metricAttempts, warnAttempts };
-  }
+      info(entry) {
+        baseObs.logs.info(entry);
+      },
+      warn() {
+        warnAttempts.count += 1;
+        throw new Error('log backend unavailable');
+      },
+      error(entry) {
+        baseObs.logs.error(entry);
+      },
+    },
+  };
+  return { obs, metricAttempts, warnAttempts };
+}
 
-  function createEngine(input?: {
-    adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
-    requiredProviders?: EngineRunRef['provider'][];
-    observability?: IObservability;
-    stateStore?: InMemoryTxStore;
-  }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
-    const store = input?.stateStore ?? new InMemoryTxStore();
-    const intentStore = new InMemoryStartRunIntentStore();
+function createEngine(input?: {
+  adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
+  requiredProviders?: EngineRunRef['provider'][];
+  observability?: IObservability;
+  stateStore?: InMemoryTxStore;
+}): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
+  const store = input?.stateStore ?? new InMemoryTxStore();
+  const intentStore = new InMemoryStartRunIntentStore();
 
-    const engine = new WorkflowEngine({
-      stateStore: store,
+  const engine = new WorkflowEngine({
+    stateStore: store,
+    projector: new SnapshotProjector(),
+    idempotency: new IdempotencyKeyBuilder(),
+    clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+    policy: new RunAccessPolicy({
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
+    intentStore,
+    observability: input?.observability ?? createNoopObservability(),
+    adapters: input?.adapters ?? new Map(),
+    requiredProviders: input?.requiredProviders,
+  });
 
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: input?.observability ?? createNoopObservability(),
-      adapters: input?.adapters ?? new Map(),
-      requiredProviders: input?.requiredProviders,
-    });
+  return { engine, store, intentStore };
+}
 
-    return { engine, store, intentStore };
-  }
-
+describe('WorkflowEngine (basic failure modes)', () => {
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
 
@@ -621,6 +623,24 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await expect(
       engine.startRun(makePlanRef(), makeContext('obs-compensation-both-sinks-fail-soft-1'))
     ).rejects.toThrow(/bootstrap boom/);
+
+    expect(metricAttempts.count).toBe(1);
+    expect(warnAttempts.count).toBe(1);
+  });
+
+  it('keeps startRun non-fatal when both metric and warn sinks throw on legacy path', async () => {
+    const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
+    const { engine, intentStore } = createEngine({ adapters: makeAdapters(), observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-legacy-both-sinks-fail-soft-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-legacy-both-sinks-fail-soft-1',
+      })
+    );
 
     expect(metricAttempts.count).toBe(1);
     expect(warnAttempts.count).toBe(1);
