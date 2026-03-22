@@ -330,6 +330,34 @@ function makeCustomObservability(opts: {
   return { obs, warns, counters };
 }
 
+async function runMarkResolvedFailCase(opts: {
+  adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
+  observability: IObservability;
+  stateStore?: InMemoryTxStore;
+  runId: string;
+  expectReject?: boolean;
+  useEstimatedAdapters?: boolean;
+}) {
+  const adapters =
+    opts.adapters ?? (opts.useEstimatedAdapters ? makeEstimatedAdapters() : makeAdapters());
+  const { engine, intentStore } = createEngine({
+    adapters,
+    observability: opts.observability,
+    stateStore: opts.stateStore,
+  });
+  vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+  if (opts.expectReject) {
+    await expect(engine.startRun(makePlanRef(), makeContext(opts.runId))).rejects.toThrow();
+  } else {
+    await expect(engine.startRun(makePlanRef(), makeContext(opts.runId))).resolves.toEqual(
+      expect.objectContaining({ provider: 'temporal', runId: opts.runId })
+    );
+  }
+
+  return { engine, intentStore };
+}
+
 function createEngine(input?: {
   adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
@@ -461,18 +489,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('emits warning and metric when markResolved fails after dispatch', async () => {
     const { obs, counters, warns } = makeTrackingObservability();
-    const adapters = makeEstimatedAdapters();
-    const { engine, intentStore } = createEngine({ adapters, observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('intent resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-resolve-warn-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-resolve-warn-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      observability: obs,
+      runId: 'obs-resolve-warn-1',
+      useEstimatedAdapters: true,
+    });
 
     expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
     expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
@@ -480,18 +501,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('emits warning and metric when markResolved fails on legacy bootstrap-success path', async () => {
     const { obs, counters, warns } = makeTrackingObservability();
-    const adapters = makeAdapters();
-    const { engine, intentStore } = createEngine({ adapters, observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('legacy resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-legacy-resolve-warn-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-legacy-resolve-warn-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      adapters: makeAdapters(),
+      observability: obs,
+      runId: 'obs-legacy-resolve-warn-1',
+    });
 
     expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
     expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
@@ -499,21 +513,14 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('preserves bootstrap error and emits warning/metric when markResolved also fails on compensation path', async () => {
     const { obs, counters, warns } = makeTrackingObservability();
-    const adapters = makeAdapters();
     const store = makeStoreWithBootstrapFailure('obs-compensation-resolve-warn-1');
-
-    const { engine, intentStore } = createEngine({
-      adapters,
+    await runMarkResolvedFailCase({
+      adapters: makeAdapters(),
       observability: obs,
       stateStore: store,
+      runId: 'obs-compensation-resolve-warn-1',
+      expectReject: true,
     });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(
-      new Error('compensation resolve boom')
-    );
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-compensation-resolve-warn-1'))
-    ).rejects.toThrow(/bootstrap boom/);
 
     expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
     expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
@@ -521,18 +528,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('keeps startRun non-fatal when observability throws while reporting markResolved failure', async () => {
     const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
-    const adapters = makeAdapters();
-    const { engine, intentStore } = createEngine({ adapters, observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-telemetry-fail-soft-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-telemetry-fail-soft-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      adapters: makeAdapters(),
+      observability: obs,
+      runId: 'obs-telemetry-fail-soft-1',
+    });
 
     expect(metricAttempts.count).toBe(1);
     expect(warnAttempts.count).toBe(1);
@@ -542,34 +542,22 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const { obs, warns } = makeCustomObservability({
       throwOnMetricAddName: 'dvt.intent.mark_resolved_failed_total',
     });
-    const { engine, intentStore } = createEngine({ adapters: makeAdapters(), observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-metrics-fail-warn-survives-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-metrics-fail-warn-survives-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      adapters: makeAdapters(),
+      observability: obs,
+      runId: 'obs-metrics-fail-warn-survives-1',
+    });
 
     expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
   });
 
   it('keeps metric emission when warn sink throws during markResolved failure reporting', async () => {
     const { obs, counters, warnAttempts } = makeWarnFailObservability();
-    const { engine, intentStore } = createEngine({ adapters: makeAdapters(), observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-log-fail-counter-survives-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-log-fail-counter-survives-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      observability: obs,
+      adapters: makeAdapters(),
+      runId: 'obs-log-fail-counter-survives-1',
+    });
 
     expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
     expect(warnAttempts.count).toBe(1);
@@ -577,18 +565,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('keeps metric emission when warn sink throws on dispatch path', async () => {
     const { obs, counters, warnAttempts } = makeWarnFailObservability();
-    const adapters = makeEstimatedAdapters();
-    const { engine, intentStore } = createEngine({ adapters, observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-dispatch-log-fail-counter-survives-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-dispatch-log-fail-counter-survives-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      observability: obs,
+      adapters: makeEstimatedAdapters(),
+      runId: 'obs-dispatch-log-fail-counter-survives-1',
+    });
 
     expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
     expect(warnAttempts.count).toBe(1);
@@ -596,19 +577,14 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('preserves bootstrap error and keeps metric emission when warn sink throws on compensation path', async () => {
     const { obs, counters, warnAttempts } = makeWarnFailObservability();
-    const adapters = makeAdapters();
     const store = makeStoreWithBootstrapFailure('obs-compensation-log-fail-counter-survives-1');
-
-    const { engine, intentStore } = createEngine({
-      adapters,
+    await runMarkResolvedFailCase({
+      adapters: makeAdapters(),
       observability: obs,
       stateStore: store,
+      runId: 'obs-compensation-log-fail-counter-survives-1',
+      expectReject: true,
     });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-compensation-log-fail-counter-survives-1'))
-    ).rejects.toThrow(/bootstrap boom/);
 
     expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
     expect(warnAttempts.count).toBe(1);
@@ -616,18 +592,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('keeps startRun non-fatal when both metric and warn sinks throw on dispatch path', async () => {
     const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
-    const adapters = makeEstimatedAdapters();
-    const { engine, intentStore } = createEngine({ adapters, observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-dispatch-both-sinks-fail-soft-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-dispatch-both-sinks-fail-soft-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      observability: obs,
+      adapters: makeEstimatedAdapters(),
+      runId: 'obs-dispatch-both-sinks-fail-soft-1',
+    });
 
     expect(metricAttempts.count).toBe(1);
     expect(warnAttempts.count).toBe(1);
@@ -635,19 +604,14 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('preserves bootstrap error when both metric and warn sinks throw on compensation path', async () => {
     const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
-    const adapters = makeAdapters();
     const store = makeStoreWithBootstrapFailure('obs-compensation-both-sinks-fail-soft-1');
-
-    const { engine, intentStore } = createEngine({
-      adapters,
+    await runMarkResolvedFailCase({
+      adapters: makeAdapters(),
       observability: obs,
       stateStore: store,
+      runId: 'obs-compensation-both-sinks-fail-soft-1',
+      expectReject: true,
     });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-compensation-both-sinks-fail-soft-1'))
-    ).rejects.toThrow(/bootstrap boom/);
 
     expect(metricAttempts.count).toBe(1);
     expect(warnAttempts.count).toBe(1);
@@ -655,17 +619,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('keeps startRun non-fatal when both metric and warn sinks throw on legacy path', async () => {
     const { obs, metricAttempts, warnAttempts } = makeBothSinksFailObservability();
-    const { engine, intentStore } = createEngine({ adapters: makeAdapters(), observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-legacy-both-sinks-fail-soft-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-legacy-both-sinks-fail-soft-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      observability: obs,
+      adapters: makeAdapters(),
+      runId: 'obs-legacy-both-sinks-fail-soft-1',
+    });
 
     expect(metricAttempts.count).toBe(1);
     expect(warnAttempts.count).toBe(1);
@@ -675,18 +633,11 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const { obs, warns } = makeCustomObservability({
       throwOnCounterConstructName: 'dvt.intent.mark_resolved_failed_total',
     });
-    const adapters = makeEstimatedAdapters();
-    const { engine, intentStore } = createEngine({ adapters, observability: obs });
-    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
-
-    await expect(
-      engine.startRun(makePlanRef(), makeContext('obs-counter-construction-fail-warn-survives-1'))
-    ).resolves.toEqual(
-      expect.objectContaining({
-        provider: 'temporal',
-        runId: 'obs-counter-construction-fail-warn-survives-1',
-      })
-    );
+    await runMarkResolvedFailCase({
+      observability: obs,
+      adapters: makeEstimatedAdapters(),
+      runId: 'obs-counter-construction-fail-warn-survives-1',
+    });
 
     expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
   });

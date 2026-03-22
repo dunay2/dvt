@@ -937,27 +937,23 @@ function toErrorMessage(error: unknown): string {
 }
 
 function describeUnknownValue(value: unknown): string {
-  if (value instanceof Error) {
-    return value.message;
-  }
+  // Handle Error specially to surface the message text
+  if (value instanceof Error) return value.message;
 
-  if (typeof value === 'string') {
-    return value;
-  }
+  // Primitive strings are returned as-is for readability
+  if (typeof value === 'string') return value;
 
+  // Nullish values and other primitives -> string conversion
+  if (value == null) return String(value);
   if (
     typeof value === 'number' ||
     typeof value === 'boolean' ||
     typeof value === 'bigint' ||
     typeof value === 'symbol'
-  ) {
+  )
     return String(value);
-  }
 
-  if (value === null || value === undefined) {
-    return String(value);
-  }
-
+  // Objects: attempt JSON serialization, fall back to Object.prototype tag
   if (typeof value === 'object') {
     try {
       return JSON.stringify(value);
@@ -966,6 +962,7 @@ function describeUnknownValue(value: unknown): string {
     }
   }
 
+  // Fallback for any other types
   return String(value);
 }
 
