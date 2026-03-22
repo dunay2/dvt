@@ -410,6 +410,60 @@ describe('WorkflowEngine (basic failure modes)', () => {
     );
   });
 
+  it('emits warning when metric add throws during markResolved failure reporting', async () => {
+    const baseObs = createNoopObservability();
+    const warns: string[] = [];
+    const obs: IObservability = {
+      ...baseObs,
+      metrics: {
+        counter(name) {
+          if (name !== 'dvt.intent.mark_resolved_failed_total') {
+            return { add() {} };
+          }
+          return {
+            add() {
+              throw new Error('metrics backend unavailable');
+            },
+          };
+        },
+        histogram(name, labels) {
+          return baseObs.metrics.histogram(name, labels);
+        },
+        gauge(name, labels) {
+          return baseObs.metrics.gauge(name, labels);
+        },
+      },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn(entry) {
+          warns.push(entry.msg);
+          baseObs.logs.warn(entry);
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
+    };
+    const { engine, intentStore } = createEngine({ adapters: makeAdapters(), observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-metrics-fail-warn-survives-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-metrics-fail-warn-survives-1',
+      })
+    );
+
+    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+  });
+
   it('constructor validates requiredProviders', () => {
     expect(() =>
       createEngine({
