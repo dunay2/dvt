@@ -526,6 +526,10 @@ export class WorkflowEngine implements IWorkflowEngine {
     traceContext: ReturnType<typeof buildTraceContext>,
     originalError: unknown
   ): Promise<void> {
+    // Reference parameters to avoid unused-variable TS6133 when not needed yet
+    void validatedContext;
+    void originalError;
+
     if (!failMeta) return;
 
     const pendingIntent = errorContext.intentId

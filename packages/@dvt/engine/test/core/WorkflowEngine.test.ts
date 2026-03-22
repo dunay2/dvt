@@ -391,6 +391,14 @@ function expectMarkResolvedWarnAndMetric(counters: string[], warns: string[]): v
   expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
 }
 
+function expectMarkResolvedWarn(warns: string[]): void {
+  expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+}
+
+function expectMarkResolvedCounter(counters: string[]): void {
+  expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+}
+
 function expectMetricAndWarnAttempts(
   metricAttempts: { count: number },
   warnAttempts: { count: number }
@@ -558,7 +566,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-metrics-fail-warn-survives-1',
     });
 
-    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+    expectMarkResolvedWarn(warns);
   });
 
   it('keeps metric emission when warn sink throws during markResolved failure reporting', async () => {
@@ -569,7 +577,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-log-fail-counter-survives-1',
     });
 
-    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+    expectMarkResolvedCounter(counters);
     expect(warnAttempts.count).toBe(1);
   });
 
@@ -581,7 +589,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-dispatch-log-fail-counter-survives-1',
     });
 
-    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+    expectMarkResolvedCounter(counters);
     expect(warnAttempts.count).toBe(1);
   });
 
@@ -596,7 +604,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       expectReject: true,
     });
 
-    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+    expectMarkResolvedCounter(counters);
     expect(warnAttempts.count).toBe(1);
   });
 
@@ -646,7 +654,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       runId: 'obs-counter-construction-fail-warn-survives-1',
     });
 
-    expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
+    expectMarkResolvedWarn(warns);
   });
 
   it('constructor validates requiredProviders', () => {
