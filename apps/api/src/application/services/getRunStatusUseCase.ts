@@ -48,10 +48,11 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   }
 }
 
-function assignIfDefined<
-  T extends Record<string, unknown>,
-  K extends keyof T,
->(target: T, key: K, value: T[K] | undefined): void {
+function assignIfDefined<T extends Record<string, unknown>, K extends keyof T>(
+  target: T,
+  key: K,
+  value: T[K] | undefined
+): void {
   if (value === undefined) {
     return;
   }

@@ -58,7 +58,11 @@ function main(): void {
   process.exit(report.exitCode);
 }
 
-function processFileLinks(filePath: string, report: Report, anchorCache: Map<string, Set<string>>): void {
+function processFileLinks(
+  filePath: string,
+  report: Report,
+  anchorCache: Map<string, Set<string>>
+): void {
   const content = readIfExists(filePath);
   if (!content) {
     return;
@@ -101,7 +105,14 @@ function processLink(input: {
   }
 
   if (parsed.anchor !== null) {
-    checkAnchor(input.report, input.filePath, input.line, targetPath, parsed.anchor, input.anchorCache);
+    checkAnchor(
+      input.report,
+      input.filePath,
+      input.line,
+      targetPath,
+      parsed.anchor,
+      input.anchorCache
+    );
   }
 }
 
