@@ -122,7 +122,7 @@ export function makeTrackingObservability(): {
   return { obs, counters, histograms, warns };
 }
 
-function warnCapture(e: Record<string, unknown>, warns: string[]) {
+function warnCapture(e: Record<string, unknown>, warns: string[]): void {
   const msg = typeof e.msg === 'string' ? e.msg : undefined;
   if (msg) warns.push(msg);
 }
@@ -175,7 +175,7 @@ export function makeRunEventInput(input: {
   eventType?: string;
   idempotencyKey?: string;
   payload?: unknown;
-}) {
+}): RunEventInput {
   const now = new SequenceClock('2026-02-12T00:00:00.000Z').nowIsoUtc();
   const out: RunEventInput = {
     eventId: input.eventId,
@@ -210,7 +210,19 @@ export function makeObservabilityCollector(overrides?: {
   info?: (entry: unknown) => void;
   debug?: (entry: unknown) => void;
   error?: (entry: unknown) => void;
-}) {
+}): {
+  obs: IObservability;
+  metricCalls: Array<Record<string, unknown>>;
+  warns: string[];
+  warnEntries: Array<{
+    msg?: string;
+    context?: Record<string, unknown>;
+    attributes?: Record<string, unknown>;
+  }>;
+  calls: string[];
+  counters: string[];
+  histograms: string[];
+} {
   const baseObs = createNoopObservability();
   const metricCalls: Array<Record<string, unknown>> = [];
   const warns: string[] = [];
