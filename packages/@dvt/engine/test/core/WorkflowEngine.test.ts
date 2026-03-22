@@ -464,6 +464,53 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(warns).toContain('markResolved failed; leaving intent cleanup to reconciliation worker');
   });
 
+  it('keeps metric emission when warn sink throws during markResolved failure reporting', async () => {
+    const baseObs = createNoopObservability();
+    const counters: string[] = [];
+    const obs: IObservability = {
+      ...baseObs,
+      metrics: {
+        counter(name) {
+          counters.push(name);
+          return { add() {} };
+        },
+        histogram(name, labels) {
+          return baseObs.metrics.histogram(name, labels);
+        },
+        gauge(name, labels) {
+          return baseObs.metrics.gauge(name, labels);
+        },
+      },
+      logs: {
+        debug(entry) {
+          baseObs.logs.debug(entry);
+        },
+        info(entry) {
+          baseObs.logs.info(entry);
+        },
+        warn() {
+          throw new Error('log backend unavailable');
+        },
+        error(entry) {
+          baseObs.logs.error(entry);
+        },
+      },
+    };
+    const { engine, intentStore } = createEngine({ adapters: makeAdapters(), observability: obs });
+    vi.spyOn(intentStore, 'markResolved').mockRejectedValueOnce(new Error('resolve boom'));
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('obs-log-fail-counter-survives-1'))
+    ).resolves.toEqual(
+      expect.objectContaining({
+        provider: 'temporal',
+        runId: 'obs-log-fail-counter-survives-1',
+      })
+    );
+
+    expect(counters).toContain('dvt.intent.mark_resolved_failed_total');
+  });
+
   it('constructor validates requiredProviders', () => {
     expect(() =>
       createEngine({
