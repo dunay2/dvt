@@ -127,7 +127,7 @@ describe('reconciler bootstrap health wiring', () => {
   it('sets bootstrap_failed when runtime creation throws non-Error values', async () => {
     const harness = createHarness();
     const createRuntime = vi.fn(async () => {
-      throw 'boom';
+      throw 'boom'; // NOSONAR - intentionally throws a non-Error value to test that code path
     });
 
     const result = await bootstrapIntentReconciler(harness.ctx, harness.logger, createRuntime);

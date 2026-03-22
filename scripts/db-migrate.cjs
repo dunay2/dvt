@@ -10,7 +10,7 @@ const path = require('path');
 const { Client } = require('pg');
 
 function quoteIdentifier(value) {
-  return `"${String(value).replace(/"/g, '""')}"`;
+  return `"${String(value).replaceAll('"', '""')}"`;
 }
 
 function splitSqlStatements(sql) {
