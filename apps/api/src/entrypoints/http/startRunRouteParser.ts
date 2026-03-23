@@ -354,8 +354,12 @@ function mapEnvironment(
   if (environment === undefined) return undefined;
 
   return {
-    ...(environment.environmentId === undefined ? {} : { environmentId: environment.environmentId }),
-    ...(environment.targetProfile === undefined ? {} : { targetProfile: environment.targetProfile }),
+    ...(environment.environmentId === undefined
+      ? {}
+      : { environmentId: environment.environmentId }),
+    ...(environment.targetProfile === undefined
+      ? {}
+      : { targetProfile: environment.targetProfile }),
     ...(environment.vars === undefined ? {} : { vars: environment.vars }),
   };
 }
