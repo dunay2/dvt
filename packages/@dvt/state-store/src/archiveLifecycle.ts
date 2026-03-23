@@ -68,12 +68,12 @@ export function parseArchiveUnitKey(archiveUnitKey: string): ParsedArchiveUnitKe
 
 export function calculateDeleteAfterIso(input: ArchiveDeleteEligibilityInput): string {
   if (!Number.isInteger(input.deletionGraceDays) || input.deletionGraceDays < 0) {
-    throw new TypeError('ARCHIVE_DELETION_GRACE_DAYS_INVALID');
+    throw new Error('ARCHIVE_DELETION_GRACE_DAYS_INVALID');
   }
 
   const verifiedAt = new Date(input.verifiedAtIso);
   if (Number.isNaN(verifiedAt.getTime())) {
-    throw new TypeError('ARCHIVE_VERIFIED_AT_INVALID');
+    throw new Error('ARCHIVE_VERIFIED_AT_INVALID');
   }
 
   const deleteAfterMs = verifiedAt.getTime() + input.deletionGraceDays * 24 * 60 * 60 * 1000;
@@ -83,9 +83,8 @@ export function calculateDeleteAfterIso(input: ArchiveDeleteEligibilityInput): s
 function crc32(input: string): number {
   let crc = 0xffffffff;
   for (let index = 0; index < input.length; index += 1) {
-    const byte = (input.codePointAt(index) ?? 0) & 0xff;
-    const tableValue = CRC32_TABLE[(crc ^ byte) & 0xff] ?? 0;
-    crc = (crc >>> 8) ^ tableValue;
+    const byte = input.charCodeAt(index) & 0xff;
+    crc = (crc >>> 8) ^ CRC32_TABLE[(crc ^ byte) & 0xff]!;
   }
   return (crc ^ 0xffffffff) >>> 0;
 }
@@ -93,7 +92,7 @@ function crc32(input: string): number {
 function normalizePersistedAtDay(value: string | Date): string {
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) {
-      throw new TypeError('ARCHIVE_PERSISTED_AT_DAY_INVALID');
+      throw new Error('ARCHIVE_PERSISTED_AT_DAY_INVALID');
     }
     return value.toISOString().slice(0, 10).replaceAll('-', '_');
   }
@@ -110,18 +109,18 @@ function normalizePersistedAtDay(value: string | Date): string {
   if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) {
     const parsed = new Date(trimmed);
     if (Number.isNaN(parsed.getTime())) {
-      throw new TypeError('ARCHIVE_PERSISTED_AT_DAY_INVALID');
+      throw new Error('ARCHIVE_PERSISTED_AT_DAY_INVALID');
     }
     return parsed.toISOString().slice(0, 10).replaceAll('-', '_');
   }
 
-  throw new TypeError('ARCHIVE_PERSISTED_AT_DAY_INVALID');
+  throw new Error('ARCHIVE_PERSISTED_AT_DAY_INVALID');
 }
 
 function validateCalendarDay(normalizedDay: string, isoDay: string): string {
   const parsed = new Date(`${isoDay}T00:00:00.000Z`);
   if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== isoDay) {
-    throw new TypeError('ARCHIVE_PERSISTED_AT_DAY_INVALID');
+    throw new Error('ARCHIVE_PERSISTED_AT_DAY_INVALID');
   }
   return normalizedDay;
 }
