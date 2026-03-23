@@ -112,7 +112,6 @@ function makeServiceErrorNotFoundTextWithSpaces(): Error {
   err.code = ' NOT_FOUND ';
   return err;
 }
-
 function makeServiceErrorUnknownCode(): Error {
   const err = new Error('Workflow service error with unknown code') as Error & { code: string };
   err.name = 'ServiceError';
@@ -227,7 +226,6 @@ describe('TemporalAdapter.lookupRunRef', () => {
 
     expect(result).toBeNull();
   });
-
   it('propagates ServiceError with unknown code', async () => {
     const unknownCodeError = makeServiceErrorUnknownCode();
     const handle = makeWorkflowHandleMock(async () => {

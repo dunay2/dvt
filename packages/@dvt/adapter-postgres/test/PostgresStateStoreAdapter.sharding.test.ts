@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { normalizeOutboxClaimTimeoutMs } from '../src/PostgresOutboxStore.js';
 import { PostgresStateStoreAdapter } from '../src/PostgresStateStoreAdapter.js';
 
 class RecordingPoolClient {
@@ -72,14 +73,11 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
 
     const claimQuery = client.queries.find((entry) => entry.sql.includes('WITH picked AS'));
     expect(claimQuery).toBeDefined();
-    expect(claimQuery?.sql).toContain('o.claimed_at < $3::timestamptz');
+    expect(claimQuery?.sql).toContain(
+      "o.claimed_at < ($2::timestamptz - ($3::bigint * INTERVAL '1 millisecond'))"
+    );
     expect(claimQuery?.sql).toContain('o.shard_id = ANY($4::int[])');
-    expect(claimQuery?.params).toEqual([
-      10,
-      '2026-03-12T00:00:00.000Z',
-      '2026-03-11T23:55:00.000Z',
-      [1, 3],
-    ]);
+    expect(claimQuery?.params).toEqual([10, '2026-03-12T00:00:00.000Z', 300_000, [1, 3]]);
   });
 
   it('uses a configured claim timeout when calculating pending-claim thresholds', async () => {
@@ -97,11 +95,7 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
 
     const claimQuery = client.queries.find((entry) => entry.sql.includes('WITH picked AS'));
     expect(claimQuery).toBeDefined();
-    expect(claimQuery?.params).toEqual([
-      10,
-      '2026-03-12T00:00:00.000Z',
-      '2026-03-11T23:58:30.000Z',
-    ]);
+    expect(claimQuery?.params).toEqual([10, '2026-03-12T00:00:00.000Z', 90_000]);
   });
 
   it('returns early when the owned shard list is empty', async () => {
@@ -158,5 +152,19 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s ON s.run_id = m.run_id');
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_events e');
     expect(staleQuery?.params).toEqual([5]);
+  });
+
+  it('rejects invalid outbox claim timeout values', () => {
+    expect(normalizeOutboxClaimTimeoutMs(undefined)).toBe(300_000);
+    expect(normalizeOutboxClaimTimeoutMs(86_400_000)).toBe(86_400_000);
+    expect(() => normalizeOutboxClaimTimeoutMs(0)).toThrow('INVALID_OUTBOX_CLAIM_TIMEOUT_MS');
+    expect(() => normalizeOutboxClaimTimeoutMs(-1)).toThrow('INVALID_OUTBOX_CLAIM_TIMEOUT_MS');
+    expect(() => normalizeOutboxClaimTimeoutMs(90.5)).toThrow('INVALID_OUTBOX_CLAIM_TIMEOUT_MS');
+    expect(() => normalizeOutboxClaimTimeoutMs(Number.NaN)).toThrow(
+      'INVALID_OUTBOX_CLAIM_TIMEOUT_MS'
+    );
+    expect(() => normalizeOutboxClaimTimeoutMs(Number.POSITIVE_INFINITY)).toThrow(
+      'INVALID_OUTBOX_CLAIM_TIMEOUT_MS'
+    );
   });
 });
