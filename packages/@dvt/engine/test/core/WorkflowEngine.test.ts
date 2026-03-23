@@ -99,7 +99,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
         return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
       },
       async signal() {},
-      ...overrides,
+      ...(overrides ?? {}),
     };
   }
 
