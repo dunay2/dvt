@@ -43,6 +43,7 @@ Concept anchors for this page:
 ## Proposals
 
 - [CI Workflow Deduplication Plan](proposals/ci-workflow-deduplication-plan-20260307.md)
+- [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [Documentation Restructuring Diagnostic And Roadmap](proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
@@ -70,6 +71,7 @@ Concept anchors for this page:
 - [RC-A1 SimulateError Production Hardening](proposals/rc-a1-simulate-error-production-hardening-20260322.md)
 - [RC-A2 Deterministic StartRun Intent ID](proposals/rc-a2-deterministic-start-run-intent-id-20260322.md)
 - [RC-B2 Lineage Compiled Code Resolver Rollout](proposals/rc-b2-lineage-compiled-code-resolver-rollout-20260322.md)
+- [RC-B2 Lineage Resolver Production Hardening](proposals/rc-b2-lineage-resolver-production-hardening-20260323.md)
 - [RC-D1A Health Contract Compatibility And Watchdog Integration](proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md)
 - [RC-D2 Follow-up - Outbox Claim Timeout Contract Explicitness](proposals/rc-d2-claim-timeout-contract-20260323.md)
 - [Repository Governance Proposal Set 2026-03-17](proposals/repository-governance-proposal-set-20260317.md)

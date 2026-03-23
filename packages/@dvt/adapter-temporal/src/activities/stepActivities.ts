@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file packages/@dvt/engine/test/core/WorkflowEngine.test.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0014: Run-Driven Adapter Model
@@ -140,9 +140,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
     requiredProviders?: EngineRunRef['provider'][];
     observability?: IObservability;
     stateStore?: InMemoryTxStore;
+    intentStore?: InMemoryStartRunIntentStore;
   }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
     const store = input?.stateStore ?? new InMemoryTxStore();
-    const intentStore = new InMemoryStartRunIntentStore();
+    const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
 
     const engine = new WorkflowEngine({
       stateStore: store,
@@ -340,19 +341,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       },
     });
     const intentStore = new InMemoryStartRunIntentStore();
-    const engine = new WorkflowEngine({
-      stateStore: store,
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
-      adapters,
-    });
+    const { engine } = createEngine({ adapters, stateStore: store, intentStore });
 
     await engine.startRun(makePlanRef(), makeContext('pre-bootstrap-1'));
 
@@ -522,19 +511,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
     vi.spyOn(intentStore, 'markDispatched').mockRejectedValueOnce(new Error('dispatch boom'));
 
-    const engine = new WorkflowEngine({
-      stateStore: store,
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
-      adapters,
-    });
+    const { engine } = createEngine({ adapters, stateStore: store, intentStore });
 
     await expect(engine.startRun(makePlanRef(), makeContext('dispatch-fail-1'))).rejects.toThrow(
       /dispatch boom/

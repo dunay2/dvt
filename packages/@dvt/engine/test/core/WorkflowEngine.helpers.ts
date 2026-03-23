@@ -132,11 +132,12 @@ export function createEngine(input?: {
   requiredProviders?: EngineRunRef['provider'][];
   observability?: IObservability;
   stateStore?: InMemoryTxStore;
+  intentStore?: InMemoryStartRunIntentStore;
   observabilityFallbackThrottleMs?: number;
   clock?: IClock;
 }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
   const store = input?.stateStore ?? new InMemoryTxStore();
-  const intentStore = new InMemoryStartRunIntentStore();
+  const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
 
   const engine = new WorkflowEngine({
     stateStore: store,
