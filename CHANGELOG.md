@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.7.1](https://github.com/dunay2/dvt/compare/v4.7.0...v4.7.1) (2026-03-22)
+
+
+### Bug Fixes
+
+* **engine:** Emit markResolved warning when metric sink fails ([#553](https://github.com/dunay2/dvt/issues/553)) ([e509b46](https://github.com/dunay2/dvt/commit/e509b462be27c2ecfc58ad4eecadadca55db2939))
+* **engine:** Harden markResolved observability and close RC-A5 QA findings ([#549](https://github.com/dunay2/dvt/issues/549)) ([28d8922](https://github.com/dunay2/dvt/commit/28d8922efe2edf114ad4f41cf428c4d82fc92309))
+
 ## [4.7.0](https://github.com/dunay2/dvt/compare/v4.6.0...v4.7.0) (2026-03-21)
 
 

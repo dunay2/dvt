@@ -26,7 +26,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunResult> {
-    if (command.planRef) {
+    if (command.planRef != null) {
       return this.deps.delegate.execute(command, context);
     }
 
@@ -41,7 +41,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
         accepted: false,
         code: validation.code,
         reason: validation.reason,
-        ...(validation.cause !== undefined ? { cause: validation.cause } : {}),
+        ...(validation.cause === undefined ? {} : { cause: validation.cause }),
       };
     }
 
@@ -54,17 +54,32 @@ function toPlannerInput(
   command: StartRunCommand,
   context: AuthorizedCommandExecutionContext
 ): PlannerInputEnvelopeV2 {
-  return {
-    ...(command.graphSource !== undefined ? { graphSource: command.graphSource } : {}),
-    ...(command.manifestRef !== undefined ? { manifestRef: command.manifestRef } : {}),
-    ...(command.manifest !== undefined ? { manifest: command.manifest } : {}),
-    ...(command.nodes !== undefined ? { nodes: command.nodes } : {}),
-    ...(command.policies !== undefined ? { policies: command.policies } : {}),
-    ...(command.environment !== undefined ? { environment: command.environment } : {}),
-    ...(command.observability !== undefined ? { observability: command.observability } : {}),
+  const result: PlannerInputEnvelopeV2 = {
     selection: { selectedNodeIds: command.selection },
     requestedBy: context.principal.principalId,
     requestId: context.requestId,
     requestedAtIso: context.authorizedAt.toISOString(),
   };
+  if (command.graphSource !== undefined) {
+    result.graphSource = command.graphSource;
+  }
+  if (command.manifestRef !== undefined) {
+    result.manifestRef = command.manifestRef;
+  }
+  if (command.manifest !== undefined) {
+    result.manifest = command.manifest;
+  }
+  if (command.nodes !== undefined) {
+    result.nodes = command.nodes;
+  }
+  if (command.policies !== undefined) {
+    result.policies = command.policies;
+  }
+  if (command.environment !== undefined) {
+    result.environment = command.environment;
+  }
+  if (command.observability !== undefined) {
+    result.observability = command.observability;
+  }
+  return result;
 }

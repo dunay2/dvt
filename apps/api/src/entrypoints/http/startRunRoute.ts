@@ -1,4 +1,5 @@
 import { parsePlannerInputEnvelopeV2 } from '@dvt/contracts';
+import type { GraphNode } from '@dvt/contracts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { StartRunCommand, StartRunPlanRef } from '../../application/ports/auth.js';
@@ -43,18 +44,18 @@ function badRequest(code: string): ParseStartRunBadRequestResult {
 function parseSelection(
   selection: unknown
 ): { readonly ok: true; readonly value: ReadonlyArray<string> } | { readonly ok: false } {
-  if (!Array.isArray(selection) || selection.length === 0) {
+  if (Array.isArray(selection) === false || selection.length === 0) {
     return { ok: false };
   }
 
-  if (!selection.every((item) => typeof item === 'string')) {
+  if (selection.some((item) => typeof item !== 'string')) {
     return { ok: false };
   }
 
   const normalized = (selection as ReadonlyArray<string>)
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
-  if (normalized.length !== selection.length) {
+  if (normalized.length !== (selection as ReadonlyArray<string>).length) {
     return { ok: false };
   }
 
@@ -75,7 +76,13 @@ function parsePlanRef(
   const schemaVersion = asNonEmptyTrimmedStringOrUndefined(r.schemaVersion);
   const planId = asNonEmptyTrimmedStringOrUndefined(r.planId);
   const planVersion = asNonEmptyTrimmedStringOrUndefined(r.planVersion);
-  if (!uri || !sha256 || !schemaVersion || !planId || !planVersion) {
+  if (
+    uri === undefined ||
+    sha256 === undefined ||
+    schemaVersion === undefined ||
+    planId === undefined ||
+    planVersion === undefined
+  ) {
     return { ok: false, code: 'INVALID_PLAN_REF' };
   }
   return { ok: true, value: { uri, sha256, schemaVersion, planId, planVersion } };
@@ -103,17 +110,17 @@ function parseStartRunScope(
   record: Record<string, unknown>
 ): ParseStartRunFieldResult<ParsedStartRunScope> {
   const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
-  if (!tenantId.ok) {
+  if (tenantId.ok === false) {
     return { ok: false, code: tenantId.code };
   }
 
   const projectId = ProjectId.parse(asStringOrUndefined(record.projectId));
-  if (!projectId.ok) {
+  if (projectId.ok === false) {
     return { ok: false, code: projectId.code };
   }
 
   const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
-  if (!environmentId.ok) {
+  if (environmentId.ok === false) {
     return { ok: false, code: environmentId.code };
   }
 
@@ -131,17 +138,17 @@ function parseStartRunCommand(
   record: Record<string, unknown>
 ): ParseStartRunFieldResult<StartRunCommand> {
   const selection = parseSelection(record.selection);
-  if (!selection.ok) {
+  if (selection.ok === false) {
     return { ok: false, code: 'INVALID_SELECTION' };
   }
 
   const runId = asNonEmptyTrimmedStringOrUndefined(record.runId);
-  if (!runId) {
+  if (runId === undefined) {
     return { ok: false, code: 'INVALID_RUN_ID' };
   }
 
   const targetAdapter = parseTargetAdapter(record.targetAdapter);
-  if (!targetAdapter.ok) {
+  if (targetAdapter.ok === false) {
     return { ok: false, code: 'INVALID_TARGET_ADAPTER' };
   }
 
@@ -150,59 +157,56 @@ function parseStartRunCommand(
   if (hasPlanRef && plannerSourceCount > 0) {
     return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
   }
-  if (!hasPlanRef && plannerSourceCount !== 1) {
+  if (hasPlanRef === false && plannerSourceCount !== 1) {
     return { ok: false, code: 'INVALID_PLAN_SOURCE' };
   }
 
   if (hasPlanRef) {
     const planRef = parsePlanRef(record.planRef);
-    if (!planRef.ok) {
+    if (planRef.ok === false) {
       return { ok: false, code: planRef.code };
     }
 
-    return {
-      ok: true,
-      value: {
-        planRef: planRef.value,
-        runId,
-        targetAdapter: targetAdapter.value,
-        selection: selection.value,
-      },
-    };
+    return buildCommandFromPlanRef(planRef.value, runId, targetAdapter.value, selection.value);
   }
 
   const plannerInput = parsePlannerInput(record, selection.value);
-  if (!plannerInput.ok) {
+  if (plannerInput.ok === false) {
     return { ok: false, code: plannerInput.code };
   }
 
+  return buildCommandFromPlannerInput(
+    plannerInput.value,
+    runId,
+    targetAdapter.value,
+    selection.value
+  );
+}
+
+function buildCommandFromPlanRef(
+  planRef: StartRunPlanRef,
+  runId: string,
+  targetAdapter: 'temporal' | 'mock',
+  selection: ReadonlyArray<string>
+): ParseStartRunFieldResult<StartRunCommand> {
   return {
     ok: true,
     value: {
+      planRef,
       runId,
-      targetAdapter: targetAdapter.value,
-      selection: selection.value,
-      ...(plannerInput.value.graphSource !== undefined
-        ? { graphSource: plannerInput.value.graphSource }
-        : {}),
-      ...(plannerInput.value.manifestRef !== undefined
-        ? { manifestRef: plannerInput.value.manifestRef }
-        : {}),
-      ...(plannerInput.value.manifest !== undefined
-        ? { manifest: plannerInput.value.manifest }
-        : {}),
-      ...(plannerInput.value.nodes !== undefined ? { nodes: plannerInput.value.nodes } : {}),
-      ...(plannerInput.value.policies !== undefined
-        ? { policies: plannerInput.value.policies }
-        : {}),
-      ...(plannerInput.value.environment !== undefined
-        ? { environment: plannerInput.value.environment }
-        : {}),
-      ...(plannerInput.value.observability !== undefined
-        ? { observability: plannerInput.value.observability }
-        : {}),
+      targetAdapter,
+      selection,
     },
   };
+}
+
+function buildCommandFromPlannerInput(
+  plannerInput: ReturnType<typeof toPlannerCommandFields>,
+  runId: string,
+  targetAdapter: 'temporal' | 'mock',
+  selection: ReadonlyArray<string>
+): ParseStartRunFieldResult<StartRunCommand> {
+  return { ok: true, value: { runId, targetAdapter, selection, ...plannerInput } };
 }
 
 function countPlannerSources(record: Record<string, unknown>): number {
@@ -228,13 +232,13 @@ function parsePlannerInput(
 > {
   try {
     const parsed = parsePlannerInputEnvelopeV2({
-      ...(record.graphSource !== undefined ? { graphSource: record.graphSource } : {}),
-      ...(record.manifestRef !== undefined ? { manifestRef: record.manifestRef } : {}),
-      ...(record.manifest !== undefined ? { manifest: record.manifest } : {}),
-      ...(record.nodes !== undefined ? { nodes: record.nodes } : {}),
-      ...(record.policies !== undefined ? { policies: record.policies } : {}),
-      ...(record.environment !== undefined ? { environment: record.environment } : {}),
-      ...(record.observability !== undefined ? { observability: record.observability } : {}),
+      ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
+      ...(record.manifestRef === undefined ? {} : { manifestRef: record.manifestRef }),
+      ...(record.manifest === undefined ? {} : { manifest: record.manifest }),
+      ...(record.nodes === undefined ? {} : { nodes: record.nodes }),
+      ...(record.policies === undefined ? {} : { policies: record.policies }),
+      ...(record.environment === undefined ? {} : { environment: record.environment }),
+      ...(record.observability === undefined ? {} : { observability: record.observability }),
       selection: { selectedNodeIds: selection },
     });
 
@@ -260,79 +264,95 @@ function toPlannerCommandFields(
   | 'observability'
 > {
   return {
-    ...(parsed.graphSource !== undefined
-      ? {
+    ...(parsed.graphSource === undefined
+      ? {}
+      : {
           graphSource: {
             kind: parsed.graphSource.kind,
-            nodes: parsed.graphSource.nodes.map((node) => ({
+            nodes: parsed.graphSource.nodes.map((node: GraphNode) => ({
               nodeId: node.nodeId,
               resourceType: node.resourceType,
               dependsOn: [...node.dependsOn],
             })),
           },
-        }
-      : {}),
-    ...(parsed.manifestRef !== undefined
-      ? {
+        }),
+    ...(parsed.manifestRef === undefined
+      ? {}
+      : {
           manifestRef: {
             uri: parsed.manifestRef.uri,
             sha256: parsed.manifestRef.sha256,
-            ...(parsed.manifestRef.artifactId !== undefined
-              ? { artifactId: parsed.manifestRef.artifactId }
-              : {}),
+            ...(parsed.manifestRef.artifactId === undefined
+              ? {}
+              : {
+                  artifactId: parsed.manifestRef.artifactId,
+                }),
           },
-        }
-      : {}),
-    ...(parsed.manifest !== undefined ? { manifest: parsed.manifest } : {}),
-    ...(parsed.nodes !== undefined
-      ? {
-          nodes: parsed.nodes.map((node) => ({
+        }),
+    ...(parsed.manifest === undefined ? {} : { manifest: parsed.manifest }),
+    ...(parsed.nodes === undefined
+      ? {}
+      : {
+          nodes: parsed.nodes.map((node: GraphNode) => ({
             nodeId: node.nodeId,
             resourceType: node.resourceType,
             dependsOn: [...node.dependsOn],
           })),
-        }
-      : {}),
-    ...(parsed.policies !== undefined ? { policies: parsed.policies } : {}),
-    ...(parsed.environment !== undefined
-      ? {
+        }),
+    ...(parsed.policies === undefined ? {} : { policies: parsed.policies }),
+    ...(parsed.environment === undefined
+      ? {}
+      : {
           environment: {
-            ...(parsed.environment.environmentId !== undefined
-              ? { environmentId: parsed.environment.environmentId }
-              : {}),
-            ...(parsed.environment.targetProfile !== undefined
-              ? { targetProfile: parsed.environment.targetProfile }
-              : {}),
-            ...(parsed.environment.vars !== undefined ? { vars: parsed.environment.vars } : {}),
+            ...(parsed.environment.environmentId === undefined
+              ? {}
+              : {
+                  environmentId: parsed.environment.environmentId,
+                }),
+            ...(parsed.environment.targetProfile === undefined
+              ? {}
+              : {
+                  targetProfile: parsed.environment.targetProfile,
+                }),
+            ...(parsed.environment.vars === undefined
+              ? {}
+              : {
+                  vars: parsed.environment.vars,
+                }),
           },
-        }
-      : {}),
-    ...(parsed.observability !== undefined
-      ? {
+        }),
+    ...(parsed.observability === undefined
+      ? {}
+      : {
           observability: {
-            ...(parsed.observability.tags !== undefined ? { tags: parsed.observability.tags } : {}),
-            ...(parsed.observability.extra !== undefined
-              ? { extra: parsed.observability.extra }
-              : {}),
+            ...(parsed.observability.tags === undefined
+              ? {}
+              : {
+                  tags: parsed.observability.tags,
+                }),
+            ...(parsed.observability.extra === undefined
+              ? {}
+              : {
+                  extra: parsed.observability.extra,
+                }),
           },
-        }
-      : {}),
+        }),
   };
 }
 
 function parseStartRunBody(body: unknown): ParseStartRunRequestResult {
   const bodyRecord = parseBodyRecord(body);
-  if (!bodyRecord.ok) {
+  if (bodyRecord.ok === false) {
     return badRequest(bodyRecord.code);
   }
 
   const scope = parseStartRunScope(bodyRecord.value);
-  if (!scope.ok) {
+  if (scope.ok === false) {
     return badRequest(scope.code);
   }
 
   const command = parseStartRunCommand(bodyRecord.value);
-  if (!command.ok) {
+  if (command.ok === false) {
     return badRequest(command.code);
   }
 
@@ -374,7 +394,7 @@ export async function startRunRoute(
   facade: StartRunAuthorizedFacade
 ): Promise<void> {
   const parsed = parseStartRunBody(request.body);
-  if (!parsed.ok) {
+  if (parsed.ok === false) {
     reply.code(parsed.status).send(parsed.body);
     return;
   }

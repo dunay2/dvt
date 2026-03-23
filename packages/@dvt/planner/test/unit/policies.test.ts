@@ -4,7 +4,7 @@ import { resolvePolicies } from '../../src/domain/policies.js';
 
 describe('policies', () => {
   it('applies defaults when undefined', () => {
-    const p = resolvePolicies(undefined);
+    const p = resolvePolicies();
     expect(p.stepTimeoutMs).toBeGreaterThan(0);
     expect(p.retries?.maxAttempts).toBeGreaterThan(0);
     expect(p.concurrency?.maxInFlight).toBeGreaterThan(0);

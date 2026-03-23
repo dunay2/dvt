@@ -58,7 +58,7 @@ function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAd
       return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
     },
     async signal() {},
-    ...(overrides ?? {}),
+    ...overrides,
   };
 }
 
