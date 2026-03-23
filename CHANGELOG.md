@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.9.3](https://github.com/dunay2/dvt/compare/v4.9.2...v4.9.3) (2026-03-23)
+
+
+### Bug Fixes
+
+* **api:** Make fallback writes atomic ([#583](https://github.com/dunay2/dvt/issues/583)) ([5760fcf](https://github.com/dunay2/dvt/commit/5760fcf20fdfb0b352c40ebc32fdf97b7f721a64))
+* **api:** split startRun route parser ([#580](https://github.com/dunay2/dvt/issues/580)) ([8abd9d6](https://github.com/dunay2/dvt/commit/8abd9d638896d5793ceaaf57d14bdb383a04794d))
+
 ## [4.9.2](https://github.com/dunay2/dvt/compare/v4.9.1...v4.9.2) (2026-03-23)
 
 
