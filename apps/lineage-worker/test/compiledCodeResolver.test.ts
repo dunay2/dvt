@@ -31,7 +31,7 @@ describe('createCompiledCodeResolver', () => {
     }));
 
     const resolver = createCompiledCodeResolver(
-      { DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
+      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
       {
         readerOverrides: new Map([['memory', { read }]]),
         retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
@@ -44,7 +44,7 @@ describe('createCompiledCodeResolver', () => {
     expect(read).toHaveBeenCalledTimes(1);
   });
 
-  it('reads real file:// compiled code through the file backend', async () => {
+  it('reads real file:// compiled code through the file backend in development', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'dvt-lineage-worker-'));
     try {
       const filePath = join(tempDir, 'compiled.sql');
@@ -53,7 +53,7 @@ describe('createCompiledCodeResolver', () => {
 
       const ref = mkRef(pathToFileURL(filePath).href, sqlText);
       const resolver = createCompiledCodeResolver(
-        { DVT_COMPILED_CODE_RESOLVER_BACKEND: 'file' },
+        { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'file' },
         { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
       );
 
@@ -62,6 +62,27 @@ describe('createCompiledCodeResolver', () => {
       expect(resolved.sqlText).toBe(sqlText);
       expect(resolved.sha256).toBe(ref.sha256);
       expect(resolved.sourceUri).toBe(ref.storageUri);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects file:// compiled code in production', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'dvt-lineage-worker-'));
+    try {
+      const filePath = join(tempDir, 'compiled.sql');
+      const sqlText = 'select id from dim_orders';
+      await writeFile(filePath, sqlText, 'utf8');
+
+      const ref = mkRef(pathToFileURL(filePath).href, sqlText);
+      const resolver = createCompiledCodeResolver(
+        { NODE_ENV: 'production', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
+        {
+          retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+        }
+      );
+
+      await expect(resolver.resolve(ref)).rejects.toThrow(/INV-CCREF-007/);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
@@ -79,7 +100,7 @@ describe('createCompiledCodeResolver', () => {
     }));
 
     const resolver = createCompiledCodeResolver(
-      { DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3' },
+      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3' },
       {
         readerOverrides: new Map([['s3', { read }]]),
         retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
@@ -90,5 +111,44 @@ describe('createCompiledCodeResolver', () => {
 
     expect(resolved.sqlText).toBe(sqlText);
     expect(read).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails fast when the s3 backend is selected without a region', () => {
+    expect(() =>
+      createCompiledCodeResolver(
+        { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3' },
+        { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
+      )
+    ).toThrow(/Missing S3 region/i);
+  });
+
+  it('rejects s3:// compiled code in auto mode without a region', async () => {
+    const previousAwsRegion = process.env.AWS_REGION;
+    const previousAwsDefaultRegion = process.env.AWS_DEFAULT_REGION;
+    delete process.env.AWS_REGION;
+    delete process.env.AWS_DEFAULT_REGION;
+
+    try {
+      const sqlText = 'select count(*) from fct_sales';
+      const ref = mkRef('s3://dvt-artifacts/prod/compiled/fct_sales.sql', sqlText);
+      const resolver = createCompiledCodeResolver(
+        { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
+        { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
+      );
+
+      await expect(resolver.resolve(ref)).rejects.toThrow(/Missing S3 region/i);
+    } finally {
+      if (previousAwsRegion === undefined) {
+        delete process.env.AWS_REGION;
+      } else {
+        process.env.AWS_REGION = previousAwsRegion;
+      }
+
+      if (previousAwsDefaultRegion === undefined) {
+        delete process.env.AWS_DEFAULT_REGION;
+      } else {
+        process.env.AWS_DEFAULT_REGION = previousAwsDefaultRegion;
+      }
+    }
   });
 });

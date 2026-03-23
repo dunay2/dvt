@@ -33,6 +33,7 @@ export interface CompiledCodeResolverOptions {
 export function createCompiledCodeResolver(
   env: Pick<
     Env,
+    | 'NODE_ENV'
     | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
@@ -53,6 +54,7 @@ export function createCompiledCodeResolver(
 export function createStepStartedLineageMapper(
   env: Pick<
     Env,
+    | 'NODE_ENV'
     | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
@@ -69,6 +71,7 @@ export function createStepStartedLineageMapper(
 function createCompiledCodeReader(
   env: Pick<
     Env,
+    | 'NODE_ENV'
     | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
@@ -77,9 +80,13 @@ function createCompiledCodeReader(
   options: CompiledCodeResolverOptions
 ): ICompiledCodeReader {
   const backend = options.backend ?? env.DVT_COMPILED_CODE_RESOLVER_BACKEND;
-  const fileReader = options.readerOverrides?.get('file') ?? new FileUriCompiledCodeReader();
+  const fileReader = createFileUriCompiledCodeReader(
+    env,
+    options.readerOverrides?.get('file') ?? new FileUriCompiledCodeReader()
+  );
   const s3Reader =
-    options.readerOverrides?.get('s3') ?? new S3UriCompiledCodeReader(createS3Client(env));
+    options.readerOverrides?.get('s3') ??
+    createS3UriCompiledCodeReader(env, backend === 's3');
 
   if (backend === 'file') return fileReader;
   if (backend === 's3') return s3Reader;
@@ -101,17 +108,18 @@ function createCompiledCodeReader(
 function createS3Client(
   env: Pick<
     Env,
-    | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
+    | 'NODE_ENV'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
   >
 ): S3Client {
-  const region =
-    env.DVT_COMPILED_CODE_RESOLVER_S3_REGION ??
-    process.env['AWS_REGION'] ??
-    process.env['AWS_DEFAULT_REGION'] ??
-    'us-east-1';
+  const region = resolveS3Region(env);
+  if (!region) {
+    throw new CompiledCodeReaderError(
+      'Missing S3 region for compiled code resolver. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
+    );
+  }
 
   return new S3Client({
     region,
@@ -122,8 +130,67 @@ function createS3Client(
   });
 }
 
+function createS3UriCompiledCodeReader(
+  env: Pick<
+    Env,
+    | 'NODE_ENV'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
+  >,
+  eagerValidation: boolean
+): ICompiledCodeReader {
+  if (eagerValidation) {
+    createS3Client(env);
+  }
+
+  return new S3UriCompiledCodeReader(env);
+}
+
+function createFileUriCompiledCodeReader(
+  env: Pick<Env, 'NODE_ENV'>,
+  delegate: ICompiledCodeReader
+): ICompiledCodeReader {
+  return new ProductionGuardedFileUriCompiledCodeReader(env.NODE_ENV, delegate);
+}
+
+class ProductionGuardedFileUriCompiledCodeReader implements ICompiledCodeReader {
+  constructor(
+    private readonly nodeEnv: Env['NODE_ENV'],
+    private readonly delegate: ICompiledCodeReader
+  ) {}
+
+  async read(ref: CompiledCodeRef): Promise<CompiledCodeBlob> {
+    if (this.nodeEnv === 'production' && isFileUri(ref.storageUri)) {
+      throw new CompiledCodeReaderError(
+        `INV-CCREF-007: file:// URIs are prohibited in NODE_ENV=production: ${ref.storageUri}`
+      );
+    }
+
+    return this.delegate.read(ref);
+  }
+}
+
 class S3UriCompiledCodeReader implements ICompiledCodeReader {
-  constructor(private readonly client: S3Client) {}
+  private client: S3Client | null = null;
+
+  constructor(
+    private readonly env: Pick<
+      Env,
+      | 'NODE_ENV'
+      | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
+      | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
+      | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
+    >
+  ) {}
+
+  private getClient(): S3Client {
+    if (this.client === null) {
+      this.client = createS3Client(this.env);
+    }
+
+    return this.client;
+  }
 
   async read(ref: CompiledCodeRef): Promise<CompiledCodeBlob> {
     const parsed = parseS3Uri(ref.storageUri);
@@ -134,7 +201,7 @@ class S3UriCompiledCodeReader implements ICompiledCodeReader {
     }
 
     try {
-      const response = await this.client.send(
+      const response = await this.getClient().send(
         new GetObjectCommand({ Bucket: parsed.bucket, Key: parsed.key })
       );
       const bytes = await response.Body?.transformToByteArray();
@@ -183,4 +250,29 @@ function parseS3Uri(uri: string): { bucket: string; key: string } | null {
   if (bucket.length === 0 || key.length === 0) return null;
 
   return { bucket, key };
+}
+
+function resolveS3Region(
+  env: Pick<
+    Env,
+    | 'NODE_ENV'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
+  >
+): string | null {
+  return (
+    env.DVT_COMPILED_CODE_RESOLVER_S3_REGION ??
+    process.env['AWS_REGION'] ??
+    process.env['AWS_DEFAULT_REGION'] ??
+    null
+  );
+}
+
+function isFileUri(uri: string): boolean {
+  try {
+    return new URL(uri).protocol === 'file:';
+  } catch {
+    return false;
+  }
 }

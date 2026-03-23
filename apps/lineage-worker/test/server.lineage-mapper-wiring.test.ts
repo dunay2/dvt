@@ -50,7 +50,7 @@ describe('lineage worker mapper wiring', () => {
     }));
 
     const mapper = createStepStartedLineageMapper(
-      { DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
+      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
       {
         readerOverrides: new Map([['memory', { read }]]),
         retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
@@ -73,7 +73,7 @@ describe('lineage worker mapper wiring', () => {
     });
 
     const mapper = createStepStartedLineageMapper(
-      { DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
+      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
       {
         readerOverrides: new Map([['memory', { read }]]),
         retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
