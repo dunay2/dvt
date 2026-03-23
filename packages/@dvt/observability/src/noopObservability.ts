@@ -18,61 +18,41 @@ import type {
 } from './contracts/ObservabilityContext.js';
 
 class NoopCounter implements ICounter {
-  add(_value: number, _labels?: MetricLabels): void {
-    // intentionally no-op
-  }
+  add(_value: number, _labels?: MetricLabels): void {}
 }
 
 class NoopHistogram implements IHistogram {
-  record(_value: number, _labels?: MetricLabels): void {
-    // intentionally no-op
-  }
+  record(_value: number, _labels?: MetricLabels): void {}
 }
 
 class NoopGauge implements IGauge {
-  set(_value: number, _labels?: MetricLabels): void {
-    // intentionally no-op
-  }
+  set(_value: number, _labels?: MetricLabels): void {}
 }
 
 class NoopMetrics implements IMetrics {
   counter(_name: string, _baseLabels?: MetricLabels): ICounter {
-    // intentionally no-op
     return new NoopCounter();
   }
 
   histogram(_name: string, _baseLabels?: MetricLabels): IHistogram {
-    // intentionally no-op
     return new NoopHistogram();
   }
 
   gauge(_name: string, _baseLabels?: MetricLabels): IGauge {
-    // intentionally no-op
     return new NoopGauge();
   }
 }
 
 class NoopSpan implements ISpan {
-  setAttribute(_key: string, _value: unknown): void {
-    // intentionally no-op
-  }
-  setAttributes(_attrs: Attributes): void {
-    // intentionally no-op
-  }
-  recordException(_err: unknown): void {
-    // intentionally no-op
-  }
-  setStatus(_status: SpanStatus, _message?: string): void {
-    // intentionally no-op
-  }
-  end(): void {
-    return;
-  }
+  setAttribute(_key: string, _value: unknown): void {}
+  setAttributes(_attrs: Attributes): void {}
+  recordException(_err: unknown): void {}
+  setStatus(_status: SpanStatus, _message?: string): void {}
+  end(): void {}
 }
 
 class NoopTraces implements ITraces {
   startSpan(_name: string, _options?: SpanOptions): ISpan {
-    // intentionally no-op
     return new NoopSpan();
   }
 
@@ -87,18 +67,10 @@ class NoopTraces implements ITraces {
 }
 
 class NoopLogs implements ILogs {
-  debug(_entry: Omit<LogEntry, 'level'>): void {
-    // intentionally no-op
-  }
-  info(_entry: Omit<LogEntry, 'level'>): void {
-    // intentionally no-op
-  }
-  warn(_entry: Omit<LogEntry, 'level'>): void {
-    // intentionally no-op
-  }
-  error(_entry: Omit<LogEntry, 'level'>): void {
-    // intentionally no-op
-  }
+  debug(_entry: Omit<LogEntry, 'level'>): void {}
+  info(_entry: Omit<LogEntry, 'level'>): void {}
+  warn(_entry: Omit<LogEntry, 'level'>): void {}
+  error(_entry: Omit<LogEntry, 'level'>): void {}
 }
 
 export function createNoopObservability(): IObservability {

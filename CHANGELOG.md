@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.9.2](https://github.com/dunay2/dvt/compare/v4.9.1...v4.9.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* **adapters:** Tighten claim timeout and docs guards ([#576](https://github.com/dunay2/dvt/issues/576)) ([30d3907](https://github.com/dunay2/dvt/commit/30d39078030718b7bab7c8cfd61fb2e52af1c558))
+
 ## [4.9.1](https://github.com/dunay2/dvt/compare/v4.9.0...v4.9.1) (2026-03-23)
 
 

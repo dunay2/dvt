@@ -52,17 +52,16 @@ function extractHumanSections(content: string): Set<string> {
   let match: RegExpExecArray | null;
 
   while ((match = re.exec(content)) !== null) {
-    sections.add(match[1]);
+    sections.add(match[1]!);
   }
 
   return sections;
 }
 
 function ensurePathExists(repoRelativePath: string, report: Report, owner: string): void {
-  const target = join(REPO_ROOT, repoRelativePath);
-  if (existsSync(target)) return;
-
-  report.error(owner, `Referenced path does not exist: ${repoRelativePath}`);
+  if (!existsSync(join(REPO_ROOT, repoRelativePath))) {
+    report.error(owner, `Referenced path does not exist: ${repoRelativePath}`);
+  }
 }
 
 function ensureUnique(values: string[], owner: string, label: string, report: Report): void {
@@ -86,9 +85,7 @@ function main(): void {
   const ajv = new Ajv2020({ strict: true, allErrors: true });
   const validate = ajv.compile(schema);
 
-  if (validate(manifest)) {
-    // manifest validated successfully
-  } else {
+  if (!validate(manifest)) {
     report.error(
       MANIFEST_RELATIVE_PATH,
       'Manifest failed JSON Schema validation',
@@ -119,38 +116,42 @@ function main(): void {
   const knownSections = extractHumanSections(humanProposalContent);
 
   for (const section of manifest.sectionIndex) {
-    if (knownSections.has(section.humanSection)) continue;
-    report.error(
-      MANIFEST_RELATIVE_PATH,
-      `Section index points to missing human section: ${section.id} -> ${section.humanSection}`
-    );
+    if (!knownSections.has(section.humanSection)) {
+      report.error(
+        MANIFEST_RELATIVE_PATH,
+        `Section index points to missing human section: ${section.id} -> ${section.humanSection}`
+      );
+    }
   }
 
   for (const diagram of manifest.diagramRefs) {
-    if (knownSections.has(diagram.humanSection)) continue;
-    report.error(
-      MANIFEST_RELATIVE_PATH,
-      `Diagram ref points to missing human section: ${diagram.id} -> ${diagram.humanSection}`
-    );
+    if (!knownSections.has(diagram.humanSection)) {
+      report.error(
+        MANIFEST_RELATIVE_PATH,
+        `Diagram ref points to missing human section: ${diagram.id} -> ${diagram.humanSection}`
+      );
+    }
   }
 
   for (const decision of manifest.decisionIndex) {
     for (const section of decision.humanSectionRefs) {
-      if (knownSections.has(section)) continue;
-      report.error(
-        MANIFEST_RELATIVE_PATH,
-        `Decision ref points to missing human section: ${decision.id} -> ${section}`
-      );
+      if (!knownSections.has(section)) {
+        report.error(
+          MANIFEST_RELATIVE_PATH,
+          `Decision ref points to missing human section: ${decision.id} -> ${section}`
+        );
+      }
     }
   }
 
   for (const shape of manifest.illustrativeShapes) {
     for (const section of shape.humanSectionRefs) {
-      if (knownSections.has(section)) continue;
-      report.error(
-        MANIFEST_RELATIVE_PATH,
-        `Illustrative shape points to missing human section: ${shape.id} -> ${section}`
-      );
+      if (!knownSections.has(section)) {
+        report.error(
+          MANIFEST_RELATIVE_PATH,
+          `Illustrative shape points to missing human section: ${shape.id} -> ${section}`
+        );
+      }
     }
   }
 
