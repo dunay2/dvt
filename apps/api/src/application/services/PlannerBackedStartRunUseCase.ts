@@ -26,7 +26,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunResult> {
-    if (command.planRef) {
+    if (command.planRef != null) {
       return this.deps.delegate.execute(command, context);
     }
 
@@ -41,7 +41,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
         accepted: false,
         code: validation.code,
         reason: validation.reason,
-        ...(validation.cause !== undefined ? { cause: validation.cause } : {}),
+        ...(validation.cause === undefined ? {} : { cause: validation.cause }),
       };
     }
 
@@ -55,13 +55,13 @@ function toPlannerInput(
   context: AuthorizedCommandExecutionContext
 ): PlannerInputEnvelopeV2 {
   return {
-    ...(command.graphSource !== undefined ? { graphSource: command.graphSource } : {}),
-    ...(command.manifestRef !== undefined ? { manifestRef: command.manifestRef } : {}),
-    ...(command.manifest !== undefined ? { manifest: command.manifest } : {}),
-    ...(command.nodes !== undefined ? { nodes: command.nodes } : {}),
-    ...(command.policies !== undefined ? { policies: command.policies } : {}),
-    ...(command.environment !== undefined ? { environment: command.environment } : {}),
-    ...(command.observability !== undefined ? { observability: command.observability } : {}),
+    ...(command.graphSource === undefined ? {} : { graphSource: command.graphSource }),
+    ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
+    ...(command.manifest === undefined ? {} : { manifest: command.manifest }),
+    ...(command.nodes === undefined ? {} : { nodes: command.nodes }),
+    ...(command.policies === undefined ? {} : { policies: command.policies }),
+    ...(command.environment === undefined ? {} : { environment: command.environment }),
+    ...(command.observability === undefined ? {} : { observability: command.observability }),
     selection: { selectedNodeIds: command.selection },
     requestedBy: context.principal.principalId,
     requestId: context.requestId,

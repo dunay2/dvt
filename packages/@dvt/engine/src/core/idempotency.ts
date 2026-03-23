@@ -9,7 +9,7 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import type { SignalRequest } from '@dvt/contracts';
+import type { Provider, SignalRequest } from '@dvt/contracts';
 
 import type { EventType } from '../contracts/runEvents.js';
 import { sha256Hex } from '../utils/sha256.js';
@@ -69,6 +69,34 @@ export class IdempotencyKeyBuilder {
     return sha256Hex(preimage);
   }
 
+  /**
+   * INV-INTENT-011: deterministic identity for start-run intents.
+   *
+   * Uses a versioned canonical payload to avoid delimiter ambiguity
+   * (for example tenantId/runId containing `|`) and allow safe evolution.
+   * Inputs are consumed as-is (no case folding or Unicode normalization);
+   * callers must provide canonical tenantId/runId values.
+   */
+  startRunIntentId(
+    tenantId: string,
+    runId: string,
+    logicalAttemptId = 1,
+    targetAdapter?: Provider
+  ): string {
+    const normalizedTenantId = normalizeNonEmptyField(tenantId, 'tenantId');
+    const normalizedRunId = normalizeNonEmptyField(runId, 'runId');
+    const normalizedLogicalAttemptId = normalizeLogicalAttemptId(logicalAttemptId);
+    const canonicalPayload = JSON.stringify({
+      kind: 'START_RUN_INTENT',
+      version: 2,
+      tenantId: normalizedTenantId,
+      runId: normalizedRunId,
+      logicalAttemptId: normalizedLogicalAttemptId,
+      ...(targetAdapter !== undefined ? { targetAdapter } : {}),
+    });
+    return sha256Hex(canonicalPayload);
+  }
+
   eventId(): string {
     return randomUUID();
   }
@@ -92,4 +120,11 @@ function normalizeStepId(eventType: EventType, stepId?: string): string {
     throw new Error(`IdempotencyKeyBuilder: stepId required for ${eventType}`);
   }
   return stepId;
+}
+
+function normalizeNonEmptyField(value: string, fieldName: string): string {
+  if (value.length === 0) {
+    throw new Error(`IdempotencyKeyBuilder: ${fieldName} must be non-empty`);
+  }
+  return value;
 }

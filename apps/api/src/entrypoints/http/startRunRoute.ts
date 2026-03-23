@@ -43,22 +43,18 @@ function badRequest(code: string): ParseStartRunBadRequestResult {
 function parseSelection(
   selection: unknown
 ): { readonly ok: true; readonly value: ReadonlyArray<string> } | { readonly ok: false } {
-  if (!Array.isArray(selection) || selection.length === 0) {
-    return { ok: false };
+  if (Array.isArray(selection) && selection.length > 0) {
+    if (selection.every((item) => typeof item === 'string')) {
+      const normalized = (selection as ReadonlyArray<string>)
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+      if (normalized.length === selection.length) {
+        return { ok: true, value: normalized };
+      }
+    }
   }
 
-  if (!selection.every((item) => typeof item === 'string')) {
-    return { ok: false };
-  }
-
-  const normalized = (selection as ReadonlyArray<string>)
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-  if (normalized.length !== selection.length) {
-    return { ok: false };
-  }
-
-  return { ok: true, value: normalized };
+  return { ok: false };
 }
 
 function parsePlanRef(
@@ -75,10 +71,10 @@ function parsePlanRef(
   const schemaVersion = asNonEmptyTrimmedStringOrUndefined(r.schemaVersion);
   const planId = asNonEmptyTrimmedStringOrUndefined(r.planId);
   const planVersion = asNonEmptyTrimmedStringOrUndefined(r.planVersion);
-  if (!uri || !sha256 || !schemaVersion || !planId || !planVersion) {
-    return { ok: false, code: 'INVALID_PLAN_REF' };
+  if (uri && sha256 && schemaVersion && planId && planVersion) {
+    return { ok: true, value: { uri, sha256, schemaVersion, planId, planVersion } };
   }
-  return { ok: true, value: { uri, sha256, schemaVersion, planId, planVersion } };
+  return { ok: false, code: 'INVALID_PLAN_REF' };
 }
 
 function parseTargetAdapter(
@@ -103,19 +99,23 @@ function parseStartRunScope(
   record: Record<string, unknown>
 ): ParseStartRunFieldResult<ParsedStartRunScope> {
   const tenantId = TenantId.parse(asStringOrUndefined(record.tenantId));
-  if (!tenantId.ok) {
-    return { ok: false, code: tenantId.code };
-  }
-
   const projectId = ProjectId.parse(asStringOrUndefined(record.projectId));
-  if (!projectId.ok) {
-    return { ok: false, code: projectId.code };
+  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
+
+  if (tenantId.ok && projectId.ok && environmentId.ok) {
+    return {
+      ok: true,
+      value: {
+        tenantId: tenantId.value,
+        projectId: projectId.value,
+        environmentId: environmentId.value,
+      },
+    };
   }
 
-  const environmentId = EnvironmentId.parse(asStringOrUndefined(record.environmentId));
-  if (!environmentId.ok) {
-    return { ok: false, code: environmentId.code };
-  }
+  if (!tenantId.ok) return { ok: false, code: tenantId.code };
+  if (!projectId.ok) return { ok: false, code: projectId.code };
+  if (!environmentId.ok) return { ok: false, code: environmentId.code };
 
   return {
     ok: true,
@@ -131,27 +131,22 @@ function parseStartRunCommand(
   record: Record<string, unknown>
 ): ParseStartRunFieldResult<StartRunCommand> {
   const selection = parseSelection(record.selection);
-  if (!selection.ok) {
-    return { ok: false, code: 'INVALID_SELECTION' };
-  }
+  if (!selection.ok) return { ok: false, code: 'INVALID_SELECTION' };
 
   const runId = asNonEmptyTrimmedStringOrUndefined(record.runId);
-  if (!runId) {
+  if (runId === undefined) {
     return { ok: false, code: 'INVALID_RUN_ID' };
   }
 
   const targetAdapter = parseTargetAdapter(record.targetAdapter);
-  if (!targetAdapter.ok) {
-    return { ok: false, code: 'INVALID_TARGET_ADAPTER' };
-  }
+  if (!targetAdapter.ok) return { ok: false, code: 'INVALID_TARGET_ADAPTER' };
 
   const plannerSourceCount = countPlannerSources(record);
   const hasPlanRef = record.planRef !== undefined;
-  if (hasPlanRef && plannerSourceCount > 0) {
-    return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
-  }
-  if (!hasPlanRef && plannerSourceCount !== 1) {
-    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
+  if (hasPlanRef) {
+    if (plannerSourceCount > 0) return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
+  } else {
+    if (plannerSourceCount !== 1) return { ok: false, code: 'INVALID_PLAN_SOURCE' };
   }
 
   if (hasPlanRef) {
@@ -182,25 +177,25 @@ function parseStartRunCommand(
       runId,
       targetAdapter: targetAdapter.value,
       selection: selection.value,
-      ...(plannerInput.value.graphSource !== undefined
-        ? { graphSource: plannerInput.value.graphSource }
-        : {}),
-      ...(plannerInput.value.manifestRef !== undefined
-        ? { manifestRef: plannerInput.value.manifestRef }
-        : {}),
-      ...(plannerInput.value.manifest !== undefined
-        ? { manifest: plannerInput.value.manifest }
-        : {}),
-      ...(plannerInput.value.nodes !== undefined ? { nodes: plannerInput.value.nodes } : {}),
-      ...(plannerInput.value.policies !== undefined
-        ? { policies: plannerInput.value.policies }
-        : {}),
-      ...(plannerInput.value.environment !== undefined
-        ? { environment: plannerInput.value.environment }
-        : {}),
-      ...(plannerInput.value.observability !== undefined
-        ? { observability: plannerInput.value.observability }
-        : {}),
+      ...(plannerInput.value.graphSource === undefined
+        ? {}
+        : { graphSource: plannerInput.value.graphSource }),
+      ...(plannerInput.value.manifestRef === undefined
+        ? {}
+        : { manifestRef: plannerInput.value.manifestRef }),
+      ...(plannerInput.value.manifest === undefined
+        ? {}
+        : { manifest: plannerInput.value.manifest }),
+      ...(plannerInput.value.nodes === undefined ? {} : { nodes: plannerInput.value.nodes }),
+      ...(plannerInput.value.policies === undefined
+        ? {}
+        : { policies: plannerInput.value.policies }),
+      ...(plannerInput.value.environment === undefined
+        ? {}
+        : { environment: plannerInput.value.environment }),
+      ...(plannerInput.value.observability === undefined
+        ? {}
+        : { observability: plannerInput.value.observability }),
     },
   };
 }
@@ -228,13 +223,13 @@ function parsePlannerInput(
 > {
   try {
     const parsed = parsePlannerInputEnvelopeV2({
-      ...(record.graphSource !== undefined ? { graphSource: record.graphSource } : {}),
-      ...(record.manifestRef !== undefined ? { manifestRef: record.manifestRef } : {}),
-      ...(record.manifest !== undefined ? { manifest: record.manifest } : {}),
-      ...(record.nodes !== undefined ? { nodes: record.nodes } : {}),
-      ...(record.policies !== undefined ? { policies: record.policies } : {}),
-      ...(record.environment !== undefined ? { environment: record.environment } : {}),
-      ...(record.observability !== undefined ? { observability: record.observability } : {}),
+      ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
+      ...(record.manifestRef === undefined ? {} : { manifestRef: record.manifestRef }),
+      ...(record.manifest === undefined ? {} : { manifest: record.manifest }),
+      ...(record.nodes === undefined ? {} : { nodes: record.nodes }),
+      ...(record.policies === undefined ? {} : { policies: record.policies }),
+      ...(record.environment === undefined ? {} : { environment: record.environment }),
+      ...(record.observability === undefined ? {} : { observability: record.observability }),
       selection: { selectedNodeIds: selection },
     });
 
@@ -272,51 +267,51 @@ function toPlannerCommandFields(
           },
         }
       : {}),
-    ...(parsed.manifestRef !== undefined
-      ? {
+    ...(parsed.manifestRef === undefined
+      ? {}
+      : {
           manifestRef: {
             uri: parsed.manifestRef.uri,
             sha256: parsed.manifestRef.sha256,
-            ...(parsed.manifestRef.artifactId !== undefined
-              ? { artifactId: parsed.manifestRef.artifactId }
-              : {}),
+            ...(parsed.manifestRef.artifactId === undefined
+              ? {}
+              : { artifactId: parsed.manifestRef.artifactId }),
           },
-        }
-      : {}),
-    ...(parsed.manifest !== undefined ? { manifest: parsed.manifest } : {}),
-    ...(parsed.nodes !== undefined
-      ? {
+        }),
+    ...(parsed.manifest === undefined ? {} : { manifest: parsed.manifest }),
+    ...(parsed.nodes === undefined
+      ? {}
+      : {
           nodes: parsed.nodes.map((node) => ({
             nodeId: node.nodeId,
             resourceType: node.resourceType,
             dependsOn: [...node.dependsOn],
           })),
-        }
-      : {}),
-    ...(parsed.policies !== undefined ? { policies: parsed.policies } : {}),
-    ...(parsed.environment !== undefined
-      ? {
+        }),
+    ...(parsed.policies === undefined ? {} : { policies: parsed.policies }),
+    ...(parsed.environment === undefined
+      ? {}
+      : {
           environment: {
-            ...(parsed.environment.environmentId !== undefined
-              ? { environmentId: parsed.environment.environmentId }
-              : {}),
-            ...(parsed.environment.targetProfile !== undefined
-              ? { targetProfile: parsed.environment.targetProfile }
-              : {}),
-            ...(parsed.environment.vars !== undefined ? { vars: parsed.environment.vars } : {}),
+            ...(parsed.environment.environmentId === undefined
+              ? {}
+              : { environmentId: parsed.environment.environmentId }),
+            ...(parsed.environment.targetProfile === undefined
+              ? {}
+              : { targetProfile: parsed.environment.targetProfile }),
+            ...(parsed.environment.vars === undefined ? {} : { vars: parsed.environment.vars }),
           },
-        }
-      : {}),
-    ...(parsed.observability !== undefined
-      ? {
+        }),
+    ...(parsed.observability === undefined
+      ? {}
+      : {
           observability: {
-            ...(parsed.observability.tags !== undefined ? { tags: parsed.observability.tags } : {}),
-            ...(parsed.observability.extra !== undefined
-              ? { extra: parsed.observability.extra }
-              : {}),
+            ...(parsed.observability.tags === undefined ? {} : { tags: parsed.observability.tags }),
+            ...(parsed.observability.extra === undefined
+              ? {}
+              : { extra: parsed.observability.extra }),
           },
-        }
-      : {}),
+        }),
   };
 }
 

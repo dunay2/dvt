@@ -55,16 +55,23 @@ Reviewed against:
 
 - Finding 1 resolved:
   - `markIntentResolvedBestEffort(...)` now wraps telemetry emission (`counter.add`, `logs.warn`) in inner `try/catch` and preserves ADR-0030 best-effort behavior under observability backend failures.
+  - When both observability sinks fail, the engine now emits a throttled fallback signal to `stderr` as last-resort diagnostics, while keeping the path non-fatal.
 - Finding 2 resolved:
   - Negative-path tests now cover all RC-A5 call sites:
     - pre-bootstrap dispatch path
     - legacy bootstrap-success path
     - compensation path with preserved bootstrap error
     - telemetry-backend-failure while reporting `markResolved` failure
+    - metrics counter-construction failure with warning still emitted
+    - warning-sink failure with metric path preserved
+    - both telemetry sinks failing while `startRun` remains non-fatal
+    - fallback `stderr` emission when both sinks fail
+    - fallback throttle behavior under repeated failures
+    - fallback safety when `stderr.write` itself throws
 
 ## Evidence
 
-- Validation command: `pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts` (pass, 27 tests)
+- Validation command: `pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.test.ts` (pass, 42 tests)
 - Validation command: `pnpm verify:prepush` (pass)
 
 ## Updated Verdict

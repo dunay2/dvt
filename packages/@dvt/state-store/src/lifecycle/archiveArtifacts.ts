@@ -72,7 +72,7 @@ export interface TerminalSnapshotPinStore {
   ): Promise<ArchivedTerminalSnapshot | null>;
 }
 
-const TERMINAL_STATUSES: readonly TerminalRunStatus[] = ['COMPLETED', 'FAILED', 'CANCELLED'];
+const TERMINAL_STATUSES = new Set<TerminalRunStatus>(['COMPLETED', 'FAILED', 'CANCELLED']);
 
 export function calculateArchiveEventChecksum(events: readonly EventEnvelope[]): string {
   if (events.length === 0) {
@@ -131,7 +131,7 @@ export function buildArchiveUnitManifest(
   const manifest: ArchiveUnitManifest = {
     archiveUnitKey: input.archiveUnitKey.trim(),
     tenantBucket,
-    tenantIds: Array.from(tenantIds).sort(),
+    tenantIds: Array.from(tenantIds).sort((left, right) => left.localeCompare(right)),
     rowCount: events.length,
     minRunSeq,
     maxRunSeq,
@@ -153,7 +153,7 @@ export function buildPinnedTerminalSnapshot(
 ): PinnedTerminalSnapshot {
   const { snapshot, events } = input;
 
-  if (!TERMINAL_STATUSES.includes(snapshot.status as TerminalRunStatus)) {
+  if (!TERMINAL_STATUSES.has(snapshot.status as TerminalRunStatus)) {
     throw new Error('ARCHIVE_TERMINAL_SNAPSHOT_STATUS_INVALID');
   }
   if (events.length === 0) {
@@ -225,7 +225,7 @@ function normalizeEventPersistedAtDay(value: string): string {
 function parseIsoUtc(value: string, errorCode: string): Date {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
-    throw new Error(errorCode);
+    throw new TypeError(errorCode);
   }
   return parsed;
 }

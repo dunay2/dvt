@@ -72,8 +72,36 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
 
     const claimQuery = client.queries.find((entry) => entry.sql.includes('WITH picked AS'));
     expect(claimQuery).toBeDefined();
-    expect(claimQuery?.sql).toContain('o.shard_id = ANY($3::int[])');
-    expect(claimQuery?.params).toEqual([10, '2026-03-12T00:00:00.000Z', [1, 3]]);
+    expect(claimQuery?.sql).toContain('o.claimed_at < $3::timestamptz');
+    expect(claimQuery?.sql).toContain('o.shard_id = ANY($4::int[])');
+    expect(claimQuery?.params).toEqual([
+      10,
+      '2026-03-12T00:00:00.000Z',
+      '2026-03-11T23:55:00.000Z',
+      [1, 3],
+    ]);
+  });
+
+  it('uses a configured claim timeout when calculating pending-claim thresholds', async () => {
+    const client = new RecordingPoolClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => client,
+      } as never,
+      assumeSchemaReady: true,
+      now: () => '2026-03-12T00:00:00.000Z',
+      outboxClaimTimeoutMs: 90_000,
+    });
+
+    await adapter.listPendingForClaim(10);
+
+    const claimQuery = client.queries.find((entry) => entry.sql.includes('WITH picked AS'));
+    expect(claimQuery).toBeDefined();
+    expect(claimQuery?.params).toEqual([
+      10,
+      '2026-03-12T00:00:00.000Z',
+      '2026-03-11T23:58:30.000Z',
+    ]);
   });
 
   it('returns early when the owned shard list is empty', async () => {

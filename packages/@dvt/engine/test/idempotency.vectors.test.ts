@@ -66,4 +66,50 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
       expect(builder.runEventKey(v.input)).toBe(v.expected);
     }
   });
+
+  it('startRunIntentId is deterministic and delimiter-safe via canonical payload', () => {
+    const a = builder.startRunIntentId('tenant-a|x', 'run-y', 1, 'temporal');
+    const b = builder.startRunIntentId('tenant-a', 'x|run-y', 1, 'temporal');
+    const sameA = builder.startRunIntentId('tenant-a|x', 'run-y', 1, 'temporal');
+
+    expect(a).toBe(sameA);
+    expect(a).not.toBe(b);
+  });
+
+  it('startRunIntentId matches the canonical golden vector', () => {
+    expect(builder.startRunIntentId('tenant-golden', 'run-golden', 1, 'temporal')).toBe(
+      'ba9883bfb2cad7c9e3f1105f94af6d3e7ddf3ab3835e06abe01a71be16a72d93'
+    );
+  });
+
+  it('startRunIntentId rejects empty tenantId or runId', () => {
+    expect(() => builder.startRunIntentId('', 'run-1', 1, 'temporal')).toThrow(
+      /tenantId must be non-empty/
+    );
+    expect(() => builder.startRunIntentId('tenant-1', '', 1, 'temporal')).toThrow(
+      /runId must be non-empty/
+    );
+  });
+
+  it('startRunIntentId changes when logicalAttemptId or targetAdapter changes', () => {
+    const first = builder.startRunIntentId('tenant-1', 'run-1', 1, 'temporal');
+    const differentAttempt = builder.startRunIntentId('tenant-1', 'run-1', 2, 'temporal');
+    const differentAdapter = builder.startRunIntentId('tenant-1', 'run-1', 1, 'conductor');
+
+    expect(first).not.toBe(differentAttempt);
+    expect(first).not.toBe(differentAdapter);
+  });
+
+  it('eventId remains non-deterministic outside start-run intent path', () => {
+    const first = builder.eventId();
+    const second = builder.eventId();
+
+    expect(first).not.toBe(second);
+    expect(first).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    expect(second).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+  });
 });

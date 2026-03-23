@@ -277,5 +277,21 @@ function isWorkflowNotFound(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   if (error.name === 'WorkflowNotFoundError') return true;
   const asRecord = error as unknown as Record<string, unknown>;
-  return error.name === 'ServiceError' && asRecord['code'] === 5;
+  if (error.name !== 'ServiceError') return false;
+  const normalizedCode = normalizeTemporalErrorCode(asRecord['code']);
+  return normalizedCode === '5' || normalizedCode === 'NOT_FOUND';
+}
+
+function normalizeTemporalErrorCode(code: unknown): string | undefined {
+  if (typeof code === 'number') {
+    return Number.isFinite(code) ? String(code) : undefined;
+  }
+  if (typeof code !== 'string') {
+    return undefined;
+  }
+  const normalized = code.trim();
+  if (normalized.length === 0) {
+    return undefined;
+  }
+  return /^\d+$/.test(normalized) ? String(Number(normalized)) : normalized.toUpperCase();
 }

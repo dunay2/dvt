@@ -1,4 +1,4 @@
-import type { IsoUtcString, PlanRef, RunStatus } from '../types/contracts.js';
+import type { IsoUtcString, PlanRef, Provider, RunStatus } from '../types/contracts.js';
 
 export type EventType =
   | 'RunQueued'
@@ -257,6 +257,16 @@ export interface EventIdempotencyInput {
 
 export interface IIdempotencyKeyBuilder {
   runEventKey(e: EventIdempotencyInput): string;
+  /**
+   * INV-INTENT-011: deterministic, versioned, canonical derivation for
+   * start-run intent identity from (tenantId, runId, logicalAttemptId, targetAdapter).
+   */
+  startRunIntentId(
+    tenantId: string,
+    runId: string,
+    logicalAttemptId?: number,
+    targetAdapter?: Provider
+  ): string;
   eventId(): string;
 }
 
