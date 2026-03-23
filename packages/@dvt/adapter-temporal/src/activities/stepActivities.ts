@@ -346,6 +346,11 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
 }
 
 function applySimulateErrorIfPresent(step: ExecutionPlan['steps'][number]): void {
+  // RC-A1: never execute test-only failure hooks in production runtime.
+  if (process.env['NODE_ENV'] === 'production') {
+    return;
+  }
+
   const simulateErrorKind =
     typeof step['simulateError'] === 'string' ? String(step['simulateError']) : undefined;
   if (simulateErrorKind === 'transient') {
