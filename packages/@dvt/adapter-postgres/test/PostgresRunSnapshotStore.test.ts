@@ -134,6 +134,7 @@ describe('PostgresRunSnapshotStore', () => {
       entry.sql.includes('INSERT INTO "dvt".run_snapshots')
     );
     expect(upsert).toBeDefined();
+    expect(upsert?.sql).toContain('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq');
     expect(upsert?.params).toEqual([
       'run-1',
       JSON.stringify(snapshot),

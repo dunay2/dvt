@@ -82,7 +82,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       await this.requireRunOwnership(client, record.tenantId, record.runId);
       await client.query(
         `
-          INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (
+          INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots AS run_snapshots (
             run_id,
             snapshot,
             last_run_seq,
@@ -99,6 +99,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
             archive_unit_key = EXCLUDED.archive_unit_key,
             event_checksum_sha256 = EXCLUDED.event_checksum_sha256,
             archived_at = EXCLUDED.archived_at
+          WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq
         `,
         [
           record.runId,
@@ -253,12 +254,18 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     }
     await client.query(
       `
-        INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots (run_id, snapshot, last_run_seq, updated_at)
+        INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots AS run_snapshots (
+          run_id,
+          snapshot,
+          last_run_seq,
+          updated_at
+        )
         VALUES ($1, $2::jsonb, $3, $4::timestamptz)
         ON CONFLICT (run_id) DO UPDATE SET
           snapshot = EXCLUDED.snapshot,
           last_run_seq = EXCLUDED.last_run_seq,
           updated_at = EXCLUDED.updated_at
+        WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq
       `,
       [runId, JSON.stringify(snap), lastSeq, this.now()]
     );
