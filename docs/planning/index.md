@@ -87,6 +87,7 @@ Concept anchors for this page:
 - [20260322 DVT Deep Architectural Review](reviews/20260322-dvt-deep-architectural-review.md)
 - [20260322 RC-A5 QA Hard Review](reviews/20260322-rc-a5-qa-hard-review.md)
 - [20260322 Review](reviews/20260322-general-review.md)
+- [20260323 StartRun Route Parser QA Review](reviews/20260323-start-run-route-parser-qa-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/20260307-architecture-doc-consolidation-matrix-review.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/20260226-dvt-architectural-gap-remediation-tasks-review.md)
 - [DVT+ — Consolidated Architectural Review](reviews/20260305-dvt-architectural-review-consolidated.md)

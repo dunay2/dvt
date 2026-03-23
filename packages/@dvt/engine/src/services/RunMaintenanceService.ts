@@ -383,7 +383,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
         planId: meta.planId,
         planVersion: meta.planVersion,
       }),
-      ...(payload === undefined ? {} : { payload }),
+      ...(payload !== undefined ? { payload } : {}),
     };
   }
 }

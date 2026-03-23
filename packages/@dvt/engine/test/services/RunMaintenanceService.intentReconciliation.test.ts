@@ -94,7 +94,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
         return { runId: runRef.runId, status: 'RUNNING' } as any;
       },
       async signal() {},
-      ...overrides,
+      ...(overrides ?? {}),
     };
   }
 
@@ -544,7 +544,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.cancelFailed).toEqual([]);
 
     expect(cancelledRefs).toHaveLength(1);
-    expect(cancelledRefs[0].runId).toBe('mixed-dispatched');
+    expect(cancelledRefs[0]!.runId).toBe('mixed-dispatched');
   });
 
   it('does not touch RESOLVED intents', async () => {

@@ -124,7 +124,7 @@ function validateMockStep(step: ExecutionPlan['steps'][number]): void {
   }
 
   if (!Array.isArray(step.dependsOn) && typeof step.dependsOn !== 'undefined') {
-    throw new TypeError('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
+    throw new Error('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
   }
 
   if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
