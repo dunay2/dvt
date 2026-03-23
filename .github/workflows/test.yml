@@ -116,34 +116,59 @@ jobs:
           'true' && steps.changes.outputs.root_config != 'true'
         run: echo "No affected test packages detected; skipping package test execution."
 
-      - name: Generate coverage report
-        if:
-          matrix.node-version == '20.x' && github.event_name != 'pull_request' &&
-          github.event.inputs.run_full_test_suite == 'true' && github.event.inputs.run_coverage ==
-          'true'
-        run: pnpm test:coverage
+  adapter-postgres-integration:
+    name: Adapter Postgres Integration Smoke
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: dvt_test
+          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_DB: dvt_test
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DVT_PG_INTEGRATION: '1'
+      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        if:
-          matrix.node-version == '20.x' && github.event_name != 'pull_request' &&
-          github.event.inputs.run_full_test_suite == 'true' && github.event.inputs.run_coverage ==
-          'true'
+      - name: Detect adapter-postgres integration changes (PR only)
+        id: changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v4
         with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+          filters: |
+            adapter_postgres_integration:
+              - 'packages/@dvt/adapter-postgres/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.github/workflows/test.yml'
 
-      - name: Coverage Summary
+      - name: Setup pnpm, cache and dependencies
         if:
-          matrix.node-version == '20.x' && github.event_name != 'pull_request' &&
-          github.event.inputs.run_full_test_suite == 'true' && github.event.inputs.run_coverage ==
-          'true'
-        run: |
-          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          cat coverage/coverage-summary.json | jq -r '.total | "**Lines:** \(.lines.pct)% | **Statements:** \(.statements.pct)% | **Functions:** \(.functions.pct)% | **Branches:** \(.branches.pct)%"' >> $GITHUB_STEP_SUMMARY
+          github.event_name != 'pull_request' || steps.changes.outputs.adapter_postgres_integration
+          == 'true'
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 20.x
+
+      - name: Run adapter-postgres smoke integration
+        if:
+          github.event_name != 'pull_request' || steps.changes.outputs.adapter_postgres_integration
+          == 'true'
+        run: pnpm test:adapter-postgres:integration
+
+      - name: Skip adapter-postgres smoke integration (PR without relevant changes)
+        if:
+          github.event_name == 'pull_request' && steps.changes.outputs.adapter_postgres_integration
+          != 'true'
+        run: echo "No adapter-postgres integration changes detected; skipping smoke integration."
 
   test-determinism:
     name: Determinism Tests

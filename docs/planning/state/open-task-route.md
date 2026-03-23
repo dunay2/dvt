@@ -27,37 +27,33 @@ Authoritative task source remains:
 Pick from this list when you want immediate execution with no hard dependency
 block in the workboard.
 
-| Priority | Task ID  | Why now                                                                    | Next action                                                            |
-| -------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                     | Close review/merge decision and lock baseline.                         |
-| `P0`     | `RC-A1`  | Already in `Review`; close QA/merge decision for production hardening.     | Merge and lock runtime policy baseline.                                |
-| `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.  | Merge review and lock deterministic intent-id baseline.                |
-| `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.        | Merge review and lock configurable claim timeout baseline.             |
-| `P1`     | `RC-A4`  | Unblocks runtime planVersion enforcement (`S16`).                          | Replace inline planVersion literal with canonical registry constant.   |
-| `P1`     | `RC-A6`  | Explicit prerequisite for the full state-store split sweep (`S02`).        | Align dead-letter contract signatures with tenant-scoped concrete API. |
-| `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.              | Inject lineage outbox dependency directly in composition root.         |
-| `P1`     | `RC-B2`  | Unlocks real SQL facets output from existing compiled-code reference flow. | Wire non-noop compiled-code resolver in lineage worker runtime.        |
-| `P1`     | `S15`    | Already in `Review`; closes snapshot regression under concurrency.         | Merge review and lock monotonic snapshot CAS baseline.                 |
-| `P1`     | `S15-F1` | Follow-up to S15; makes stale snapshot write discards visible.             | Expose stale-write discard outcome to repair/archival callers.         |
-| `P1`     | `S14`    | Correctness drift risk in gateway decisions across workflow segments.      | Preserve `completedStepResults` or fail loudly on missing context.     |
-| `P1`     | `S13`    | Fast contract cleanup with no blockers.                                    | Remove duplicate `estimateRunRef` declaration.                         |
-| `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                     | Add payload version handling in envelope flow.                         |
-| `P1`     | `S07`    | No blockers; unlocks `S11`.                                                | Normalize lineage job naming + sink shape.                             |
-| `P1`     | `S09`    | No blockers; unlocks `S08`.                                                | Set retry ownership ADR/runtime rule.                                  |
-| `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.            | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
-| `P2`     | `RC-D1`  | Reconciler startup degradation is not visible to health consumers.         | Expose reconciler status as `degraded` in API health.                  |
-<<<<<<< fix/rc-d2-outbox-claim-timeout
-=======
-| `P2`     | `RC-D1A` | RC-D1 follow-up still needs compatibility closure and runtime timer proof. | Add `/healthz` compat policy and watchdog integration tests.           |
-| `P2`     | `RC-D2`  | Hardcoded claim timeout is deployment-fragile.                             | Parameterize outbox claim timeout in store configuration.              |
->>>>>>> main
-| `P2`     | `RC-D3`  | Temporal not-found detection can break by SDK value shape drift.           | Normalize code type before not-found comparison.                       |
-| `P2`     | `F4`     | DDD finding still open and currently only documented.                      | Freeze `WorkflowSnapshot` role and versioning rule.                    |
-| `P2`     | `F5`     | DDD boundary finding still open.                                           | Move/remove engine-side provider selection env handling.               |
-| `P2`     | `S17`    | Multi-worker safety depends on claim path semantics today.                 | Harden outbox contract/runtime to require claim/lease semantics.       |
-| `P2`     | `A1`     | Review-validated gap with no current owner slice.                          | Define realtime run-status delivery contract.                          |
-| `P2`     | `A2`     | Per-process limiter does not hold in horizontal deployments.               | Design distributed tenant rate-limiter rollout.                        |
-| `P2`     | `R7`     | Unblocks `R6` dependency gate currently marked external.                   | Close DSL/interpreter governance decision.                             |
+| Priority | Task ID  | Why now                                                                      | Next action                                                            |
+| -------- | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                       | Close review/merge decision and lock baseline.                         |
+| `P0`     | `RC-A1`  | Already in `Review`; close QA/merge decision for production hardening.       | Merge and lock runtime policy baseline.                                |
+| `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.    | Merge review and lock deterministic intent-id baseline.                |
+| `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.          | Merge review and lock configurable claim timeout baseline.             |
+| `P1`     | `RC-A4`  | Unblocks runtime planVersion enforcement (`S16`).                            | Replace inline planVersion literal with canonical registry constant.   |
+| `P1`     | `RC-A6`  | Explicit prerequisite for the full state-store split sweep (`S02`).          | Align dead-letter contract signatures with tenant-scoped concrete API. |
+| `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.                | Inject lineage outbox dependency directly in composition root.         |
+| `P1`     | `RC-B2`  | Unlocks real SQL facets output from existing compiled-code reference flow.   | Wire non-noop compiled-code resolver in lineage worker runtime.        |
+| `P1`     | `S15`    | Already in `Review`; closes snapshot regression under concurrency.           | Merge review and lock monotonic snapshot CAS baseline.                 |
+| `P1`     | `S15-F1` | Follow-up to S15; makes stale snapshot write discards visible.               | Expose stale-write discard outcome to repair/archival callers.         |
+| `P1`     | `S14`    | Correctness drift risk in gateway decisions across workflow segments.        | Preserve `completedStepResults` or fail loudly on missing context.     |
+| `P1`     | `S13`    | Fast contract cleanup with no blockers.                                      | Remove duplicate `estimateRunRef` declaration.                         |
+| `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                       | Add payload version handling in envelope flow.                         |
+| `P1`     | `S07`    | No blockers; unlocks `S11`.                                                  | Normalize lineage job naming + sink shape.                             |
+| `P1`     | `S09`    | No blockers; unlocks `S08`.                                                  | Set retry ownership ADR/runtime rule.                                  |
+| `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.              | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
+| `P2`     | `RC-D1`  | Reconciler startup degradation is not visible to health consumers.           | Expose reconciler status as `degraded` in API health.                  |
+| `P2`     | `RC-D1A` | `RC-D1` follow-up still needs compatibility closure and runtime timer proof. | Add `/healthz` compat policy and watchdog integration tests.           |
+| `P2`     | `RC-D3`  | Temporal not-found detection can break by SDK value shape drift.             | Normalize code type before not-found comparison.                       |
+| `P2`     | `F4`     | DDD finding still open and currently only documented.                        | Freeze `WorkflowSnapshot` role and versioning rule.                    |
+| `P2`     | `F5`     | DDD boundary finding still open.                                             | Move/remove engine-side provider selection env handling.               |
+| `P2`     | `S17`    | Multi-worker safety depends on claim path semantics today.                   | Harden outbox contract/runtime to require claim/lease semantics.       |
+| `P2`     | `A1`     | Review-validated gap with no current owner slice.                            | Define realtime run-status delivery contract.                          |
+| `P2`     | `A2`     | Per-process limiter does not hold in horizontal deployments.                 | Design distributed tenant rate-limiter rollout.                        |
+| `P2`     | `R7`     | Unblocks `R6` dependency gate currently marked external.                     | Close DSL/interpreter governance decision.                             |
 
 ## Blocked Or Gated Next
 
@@ -94,11 +90,8 @@ flowchart LR
   RC_B2[RC-B2]
   RC_B5[RC-B5]
   RC_D1[RC-D1]
-<<<<<<< fix/rc-d2-outbox-claim-timeout
-=======
   RC_D1A[RC-D1A]
   RC_D2[RC-D2]
->>>>>>> main
   RC_D3[RC-D3]
 
   S02 --> S12[S12]

@@ -49,6 +49,9 @@ adapter contract aligned with the rest of the repository's time-based settings.
 3. Add regression coverage for non-integer timeout inputs.
 4. If needed, mirror the contract in the relevant planning status surface when
    the docs branch is ready.
+5. Keep the smoke path enforced in CI with the dedicated adapter-postgres
+   integration job so the claim timeout behavior is not validated only
+   manually.
 
 ## Acceptance Criteria
 
