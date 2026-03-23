@@ -15,7 +15,11 @@ import type { ArchivedTerminalSnapshot } from '@dvt/state-store';
 import { Pool, type PoolClient } from 'pg';
 
 import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
-import { PostgresOutboxStore, normalizeOutboxShardCount } from './PostgresOutboxStore.js';
+import {
+  PostgresOutboxStore,
+  normalizeOutboxClaimTimeoutMs,
+  normalizeOutboxShardCount,
+} from './PostgresOutboxStore.js';
 import { PostgresRunEventStore } from './PostgresRunEventStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
@@ -46,6 +50,7 @@ export interface PostgresAdapterConfig {
   queryTimeoutMs?: number;
   assumeSchemaReady?: boolean;
   outboxShardCount?: number;
+  outboxClaimTimeoutMs?: number;
 }
 
 /**
@@ -101,6 +106,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
       this.schema,
       this.now,
       this.outboxShardCount,
+      normalizeOutboxClaimTimeoutMs(config.outboxClaimTimeoutMs),
       (fn) => this.withTransaction(fn),
       (fn) => this.withClient(fn)
     );
