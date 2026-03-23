@@ -17,7 +17,6 @@ Current status snapshots and implementation tracking.
 - [Generated Code State](generated-code-state.md)
 - [Generated Spec Traceability](generated-spec-traceability.md)
 - [Governance Document And Rule Inventory](governance-document-rule-inventory.md)
-- [Plan: Corregir advertencias y reducir complejidad en `WorkflowEngine.ts`](agent-plan-fix-workflowengine.md)
 - [Planner Current State Assessment](planner-current-state-assessment-20260320.md)
 - [Planner Local Doc Triage](planner-local-doc-triage-20260320.md)
 - [Release Please Continuous Mode Status](release-please-continuous.md)
