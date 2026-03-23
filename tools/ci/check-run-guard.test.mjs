@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   evaluateCheckRunResult,
+  listCheckRunsForRef,
   selectLatestCheckRunByName,
   waitForCheckRun,
 } from './check-run-guard.mjs';
@@ -35,6 +36,28 @@ test('selectLatestCheckRunByName picks newest run for a check name', () => {
   assert.equal(selected?.conclusion, 'success');
 });
 
+test('selectLatestCheckRunByName is stable when timestamps are invalid', () => {
+  const selected = selectLatestCheckRunByName(
+    [
+      {
+        name: 'Adapter Postgres Smoke',
+        status: 'completed',
+        conclusion: 'failure',
+        completed_at: 'invalid-date',
+      },
+      {
+        name: 'Adapter Postgres Smoke',
+        status: 'completed',
+        conclusion: 'success',
+        completed_at: 'also-invalid',
+      },
+    ],
+    'Adapter Postgres Smoke',
+  );
+
+  assert.equal(selected?.conclusion, 'failure');
+});
+
 test('evaluateCheckRunResult handles not-found, pending, success and failure', () => {
   assert.deepEqual(evaluateCheckRunResult(undefined), { status: 'not_found' });
   assert.equal(evaluateCheckRunResult({ status: 'queued' }).status, 'pending');
@@ -44,6 +67,18 @@ test('evaluateCheckRunResult handles not-found, pending, success and failure', (
   );
   assert.equal(
     evaluateCheckRunResult({ status: 'completed', conclusion: 'timed_out' }).status,
+    'failure',
+  );
+  assert.equal(
+    evaluateCheckRunResult({ status: 'completed', conclusion: 'cancelled' }).status,
+    'failure',
+  );
+  assert.equal(
+    evaluateCheckRunResult({ status: 'completed', conclusion: 'neutral' }).status,
+    'failure',
+  );
+  assert.equal(
+    evaluateCheckRunResult({ status: 'completed', conclusion: 'skipped' }).status,
     'failure',
   );
 });
@@ -105,4 +140,37 @@ test('waitForCheckRun returns timeout when check never completes', async () => {
 
   assert.equal(result.ok, false);
   assert.equal(result.reason, 'timeout');
+});
+
+test('listCheckRunsForRef throws on non-OK HTTP responses', async () => {
+  await assert.rejects(
+    () =>
+      listCheckRunsForRef({
+        owner: 'dunay2',
+        repo: 'dvt',
+        ref: 'sha',
+        token: 'token',
+        fetchImpl: async () => ({
+          ok: false,
+          status: 403,
+          text: async () => 'forbidden',
+        }),
+      }),
+    /GitHub Checks API failed \(403\): forbidden/,
+  );
+});
+
+test('listCheckRunsForRef returns check_runs array on success', async () => {
+  const runs = await listCheckRunsForRef({
+    owner: 'dunay2',
+    repo: 'dvt',
+    ref: 'sha',
+    token: 'token',
+    fetchImpl: async () => ({
+      ok: true,
+      json: async () => ({ check_runs: [{ name: 'Adapter Postgres Smoke' }] }),
+    }),
+  });
+
+  assert.deepEqual(runs, [{ name: 'Adapter Postgres Smoke' }]);
 });

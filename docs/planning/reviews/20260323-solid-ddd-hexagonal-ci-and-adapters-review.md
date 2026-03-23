@@ -88,11 +88,11 @@ flowchart TD
 
 Recorded and tracked in this review for the current branch:
 
-| Risk ID | Description                                                            | Level     | Status              | Mitigation applied                                                                                          |
-| ------- | ---------------------------------------------------------------------- | --------- | ------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `CI-R1` | Guard selecting wrong check run when multiple runs share the same name | 🟠 High   | Mitigated in branch | Extracted guard logic to `tools/ci/check-run-guard.mjs` with deterministic "latest run" selection and tests |
-| `CI-R2` | Silent drift in guard behavior under status/conclusion variants        | 🟠 High   | Mitigated in branch | Added unit tests for not-found/pending/success/failure and timeout paths                                    |
-| `CI-R3` | Missing executable evidence for CI guard logic                         | 🟡 Medium | Mitigated in branch | Added `pnpm test:ci-tools` and `tools/ci/check-run-guard.test.mjs`                                          |
+| Risk ID | Description                                                            | Level  | Status              | Mitigation applied                                                                                          |
+| ------- | ---------------------------------------------------------------------- | ------ | ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `CI-R1` | Guard selecting wrong check run when multiple runs share the same name | High   | Mitigated in branch | Extracted guard logic to `tools/ci/check-run-guard.mjs` with deterministic "latest run" selection and tests |
+| `CI-R2` | Silent drift in guard behavior under status/conclusion variants        | High   | Mitigated in branch | Added unit tests for not-found/pending/success/failure and timeout paths                                    |
+| `CI-R3` | Missing executable evidence for CI guard logic                         | Medium | Mitigated in branch | Added `pnpm test:ci-tools` and `tools/ci/check-run-guard.test.mjs`                                          |
 
 ## Proposed Target Design
 

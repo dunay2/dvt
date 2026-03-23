@@ -47,8 +47,8 @@ export async function waitForCheckRun({
   return { ok: false, reason: 'timeout' };
 }
 
-async function listCheckRunsForRef({ owner, repo, ref, token }) {
-  const response = await fetch(
+export async function listCheckRunsForRef({ owner, repo, ref, token, fetchImpl = fetch }) {
+  const response = await fetchImpl(
     `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/check-runs?per_page=100`,
     {
       headers: {
