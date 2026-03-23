@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import type { BackpressureSnapshotEnvelope, PersistedBackpressureFallbackStore } from './types.js';
@@ -35,7 +35,11 @@ export class FileBackpressureFallbackStore implements PersistedBackpressureFallb
       capturedAtEpochMs: envelope.capturedAtEpochMs,
     };
 
-    await writeFile(this.filePath, JSON.stringify(current), 'utf8');
+    const tempPath = `${this.filePath}.tmp-${process.pid}-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}`;
+    await writeFile(tempPath, JSON.stringify(current), 'utf8');
+    await rename(tempPath, this.filePath);
   }
 
   private async readData(): Promise<PersistedData | null> {

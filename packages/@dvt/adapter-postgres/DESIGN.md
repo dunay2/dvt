@@ -45,6 +45,8 @@ Transactional outbox records used for at-least-once dispatch semantics:
 - primary key: `id` (`<runId>:<runSeq>`)
 - persisted routing key: `shard_id`
 - delivery lifecycle: `attempts`, `last_error`, `claimed_at`, `next_attempt_at`, `delivered_at`
+- claim timeout: integer milliseconds only, validated by
+  `normalizeOutboxClaimTimeoutMs()` before SQL uses it
 
 ### `run_snapshots`
 

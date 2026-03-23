@@ -73,6 +73,7 @@ Concept anchors for this page:
 - [RC-B2 Lineage Compiled Code Resolver Rollout](proposals/rc-b2-lineage-compiled-code-resolver-rollout-20260322.md)
 - [RC-B2 Lineage Resolver Production Hardening](proposals/rc-b2-lineage-resolver-production-hardening-20260323.md)
 - [RC-D1A Health Contract Compatibility And Watchdog Integration](proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md)
+- [RC-D2 Follow-up - Outbox Claim Timeout Contract Explicitness](proposals/rc-d2-claim-timeout-contract-20260323.md)
 - [Repository Governance Proposal Set 2026-03-17](proposals/repository-governance-proposal-set-20260317.md)
 - [S15 Run Snapshot CAS Guard](proposals/s15-run-snapshot-cas-guard-20260322.md)
 
@@ -90,6 +91,7 @@ Concept anchors for this page:
 - [20260322 DVT Deep Architectural Review](reviews/20260322-dvt-deep-architectural-review.md)
 - [20260322 RC-A5 QA Hard Review](reviews/20260322-rc-a5-qa-hard-review.md)
 - [20260322 Review](reviews/20260322-general-review.md)
+- [20260323 SOLID DDD Hexagonal CI and Adapters Review](reviews/20260323-solid-ddd-hexagonal-ci-and-adapters-review.md)
 - [20260323 StartRun Route Parser QA Review](reviews/20260323-start-run-route-parser-qa-review.md)
 - [Architecture Documentation Consolidation Matrix (2026-03-07)](reviews/20260307-architecture-doc-consolidation-matrix-review.md)
 - [DVT+ - Architectural Gap Remediation Tasks (2026-02-26)](reviews/20260226-dvt-architectural-gap-remediation-tasks-review.md)

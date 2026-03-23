@@ -66,7 +66,7 @@ function main(): void {
   const allFiles = collectAdrFiles(ADR_DIR);
   const mainFiles = allFiles.filter((f) => !isSpecialDir(f.filePath));
   const archivedFiles = allFiles.filter((f) =>
-    f.filePath.replaceAll('\\', '/').includes('/_archive/')
+    f.filePath.replace(/\\/g, '/').includes('/_archive/')
   );
 
   // ── Rule 1: Unique ADR numbers ──────────────────────────────────────────
@@ -86,6 +86,7 @@ function main(): void {
   for (const [key, paths] of byNum) {
     // Strip language tag (.en.md, .es.md …) before deduplicating
     const canonical = paths.filter((p) => !/\.[a-z]{2}\.md$/.test(basename(p)));
+    const translated = paths.filter((p) => /\.[a-z]{2}\.md$/.test(basename(p)));
     // Error only if there are multiple canonical (non-translated) files with the same number
     if (canonical.length > 1) {
       report.error(
@@ -108,12 +109,7 @@ function main(): void {
     process.exit(report.exitCode);
   }
 
-  const indexContent = readIfExists(indexPath);
-  if (indexContent === null) {
-    report.error(indexPath, 'Unable to read ADR index file');
-    report.print();
-    process.exit(report.exitCode);
-  }
+  const indexContent = readIfExists(indexPath)!;
   const indexEntries = parseAdrIndex(indexContent);
 
   // ── Rule 2: Index entries must point to existing files ──────────────────
@@ -154,8 +150,8 @@ function main(): void {
       continue;
     }
 
-    const fileNorm = normalizeStatus(fileStatus.split(/[,/]/)[0] ?? '');
-    const indexNorm = normalizeStatus(entry.status.split(/[,/]/)[0] ?? '');
+    const fileNorm = normalizeStatus(fileStatus.split(/[,/]/)[0]!);
+    const indexNorm = normalizeStatus(entry.status.split(/[,/]/)[0]!);
 
     if (fileNorm !== indexNorm) {
       report.error(

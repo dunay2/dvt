@@ -209,8 +209,10 @@ function deriveSiblingObjectKey(
 }
 
 function normalizePrefix(value: string): string {
-  const normalizedSlashes = value.trim().replaceAll('\\', '/');
-  return normalizedSlashes.replace(/^\/+/, '').replace(/\/+$/, '');
+  return value
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/^\/+|\/+$/g, '');
 }
 
 function resolveDestinationKind(objectStore: IArchiveObjectStore): 'file' | 's3' {

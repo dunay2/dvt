@@ -41,58 +41,12 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
     const tenantId = context.scope.tenantId.value;
     const duplicate = await this.deps.duplicateProbe.findExisting(tenantId, command.runId);
     if (duplicate.kind !== 'not_found') {
-      const result: Extract<StartRunResult, { readonly kind: 'duplicate' }> = {
-        kind: 'duplicate',
-        runId: duplicate.runId,
-        accepted: true,
-        duplicateOf: duplicate.kind === 'found_run' ? 'run' : 'intent',
-      };
-      await this.recordTelemetry({
-        requestId: context.requestId,
-        tenantId,
-        runId: result.runId,
-        mode: this.deps.mode,
-        decision: 'duplicate',
-        duplicateOf: result.duplicateOf,
-      });
-      return result;
+      return this.handleDuplicate(duplicate, context, tenantId);
     }
 
-    if (this.deps.mode !== 'off') {
-      try {
-        await this.deps.admissionGuard.assertAdmissible(tenantId);
-      } catch (error) {
-        const reject = this.toAdmissionRejectResult(error);
-        if (reject !== null) {
-          if (this.deps.mode === 'observe') {
-            await this.recordTelemetry({
-              requestId: context.requestId,
-              tenantId,
-              runId: command.runId,
-              mode: this.deps.mode,
-              decision:
-                reject.kind === 'tenant_backpressure'
-                  ? 'would_reject_tenant'
-                  : 'would_reject_system',
-              retryAfterSeconds: reject.retryAfterSeconds,
-              code: reject.code,
-            });
-          } else {
-            await this.recordTelemetry({
-              requestId: context.requestId,
-              tenantId,
-              runId: command.runId,
-              mode: this.deps.mode,
-              decision: reject.kind === 'tenant_backpressure' ? 'reject_tenant' : 'reject_system',
-              retryAfterSeconds: reject.retryAfterSeconds,
-              code: reject.code,
-            });
-            return reject;
-          }
-        } else {
-          throw error;
-        }
-      }
+    const admissionResult = await this.evaluateAdmission(command, context, tenantId);
+    if (admissionResult !== null) {
+      return admissionResult;
     }
 
     // Future rate limiter ordering, if enabled: duplicate -> backpressure -> rate limiter -> engine.
@@ -107,7 +61,74 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
         ...(result.kind === 'duplicate' ? { duplicateOf: result.duplicateOf } : {}),
       });
     }
+
     return result;
+  }
+
+  private async handleDuplicate(
+    duplicate: { kind: 'found_run' | 'found_intent'; runId: string },
+    context: AuthorizedCommandExecutionContext,
+    tenantId: string
+  ): Promise<Extract<StartRunResult, { readonly kind: 'duplicate' }>> {
+    const result: Extract<StartRunResult, { readonly kind: 'duplicate' }> = {
+      kind: 'duplicate',
+      runId: duplicate.runId,
+      accepted: true,
+      duplicateOf: duplicate.kind === 'found_run' ? 'run' : 'intent',
+    };
+
+    await this.recordTelemetry({
+      requestId: context.requestId,
+      tenantId,
+      runId: result.runId,
+      mode: this.deps.mode,
+      decision: 'duplicate',
+      duplicateOf: result.duplicateOf,
+    });
+
+    return result;
+  }
+
+  private async evaluateAdmission(
+    command: StartRunCommand,
+    context: AuthorizedCommandExecutionContext,
+    tenantId: string
+  ): Promise<AdmissionRejectResult | null> {
+    if (this.deps.mode === 'off') {
+      return null;
+    }
+
+    try {
+      await this.deps.admissionGuard.assertAdmissible(tenantId);
+      return null;
+    } catch (error) {
+      const reject = this.toAdmissionRejectResult(error);
+      if (reject === null) {
+        throw error;
+      }
+
+      await this.recordTelemetry({
+        requestId: context.requestId,
+        tenantId,
+        runId: command.runId,
+        mode: this.deps.mode,
+        decision: this.buildAdmissionDecision(reject),
+        retryAfterSeconds: reject.retryAfterSeconds,
+        code: reject.code,
+      });
+
+      return this.deps.mode === 'observe' ? null : reject;
+    }
+  }
+
+  private buildAdmissionDecision(
+    reject: AdmissionRejectResult
+  ): 'would_reject_tenant' | 'would_reject_system' | 'reject_tenant' | 'reject_system' {
+    if (this.deps.mode === 'observe') {
+      return reject.kind === 'tenant_backpressure' ? 'would_reject_tenant' : 'would_reject_system';
+    }
+
+    return reject.kind === 'tenant_backpressure' ? 'reject_tenant' : 'reject_system';
   }
 
   private toAdmissionRejectResult(error: unknown): AdmissionRejectResult | null {

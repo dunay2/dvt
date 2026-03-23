@@ -43,6 +43,37 @@ Son gaps reales, no diferencias de filosofia.
 - Estado: Aceptacion condicionada (lista para merge de slice RC-D1).
 - RC-D1 ahora cierra el objetivo funcional y los hallazgos QA clave para visibilidad operativa del reconciler.
 
+## QA RC-D1A - Watchdog recovery regression (2026-03-23)
+
+### Hallazgos
+
+1. Severidad: Alta
+   Tema: La nueva regresion cubre solo helpers, no el wiring real del watchdog.
+   Evidencia: el test agregado ejercita `evaluateAndMarkReconcilerHealthStale()` y `buildReconcilerHealthHooks()`, pero no pasa por el flujo de `main()` que actualiza `lastSweepSignalAtMs`, instala el `setInterval` y limpia el watchdog en `onClose`.
+   Riesgo: un error en la integracion real del runtime podria seguir pasando verde aunque la regresion helper siga verde.
+   Accion aplicada: se fijo un ciclo minimo de degradacion y recuperacion en la suite de server tests.
+
+2. Severidad: Media
+   Tema: Falta fijar el borde exacto del umbral de stale.
+   Evidencia: la regresion usa valores claramente por encima del umbral, pero no cubre el caso `nowMs - lastSweepSignalAtMs === staleMs`.
+   Riesgo: un cambio accidental de `>` a `>=` en la logica de stale seguiria sin romper este test.
+   Accion aplicada: ninguna aun; conviene fijarlo con un test adicional.
+
+### Tests faltantes
+
+1. Integracion watchdog real:
+   - cubrir el wiring de `main()` o un wrapper equivalente;
+   - verificar que `lastSweepSignalAtMs` se actualiza en `onSweepSuccess` y `onSweepFailure`;
+   - verificar que el interval marca `runtime_unavailable` y luego recupera `healthy`.
+2. Borde de umbral:
+   - cubrir el caso exacto `nowMs - lastSweepSignalAtMs === staleMs`;
+   - dejar fijado si el contrato es estricto `>` o inclusivo `>=`.
+
+### Veredicto QA
+
+- Estado: Aceptacion condicionada.
+- El slice aporta valor como regresion, pero todavia no cierra la cobertura de watchdog integrada que el riesgo abierto pide.
+
 ## Constancia formal de riesgos y descubrimientos (2026-03-22)
 
 - Riesgo abierto registrado:
