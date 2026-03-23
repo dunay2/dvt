@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 4
-- `queued`: 33
+- `review`: 3
+- `queued`: 35
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -46,6 +46,11 @@ block in the workboard.
 | `P1`     | `S09`    | No blockers; unlocks `S08`.                                                | Set retry ownership ADR/runtime rule.                                  |
 | `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.            | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
 | `P2`     | `RC-D1`  | Reconciler startup degradation is not visible to health consumers.         | Expose reconciler status as `degraded` in API health.                  |
+<<<<<<< fix/rc-d2-outbox-claim-timeout
+=======
+| `P2`     | `RC-D1A` | RC-D1 follow-up still needs compatibility closure and runtime timer proof. | Add `/healthz` compat policy and watchdog integration tests.           |
+| `P2`     | `RC-D2`  | Hardcoded claim timeout is deployment-fragile.                             | Parameterize outbox claim timeout in store configuration.              |
+>>>>>>> main
 | `P2`     | `RC-D3`  | Temporal not-found detection can break by SDK value shape drift.           | Normalize code type before not-found comparison.                       |
 | `P2`     | `F4`     | DDD finding still open and currently only documented.                      | Freeze `WorkflowSnapshot` role and versioning rule.                    |
 | `P2`     | `F5`     | DDD boundary finding still open.                                           | Move/remove engine-side provider selection env handling.               |
@@ -89,6 +94,11 @@ flowchart LR
   RC_B2[RC-B2]
   RC_B5[RC-B5]
   RC_D1[RC-D1]
+<<<<<<< fix/rc-d2-outbox-claim-timeout
+=======
+  RC_D1A[RC-D1A]
+  RC_D2[RC-D2]
+>>>>>>> main
   RC_D3[RC-D3]
 
   S02 --> S12[S12]
@@ -122,7 +132,7 @@ If you want maximum parallelism now without violating gates, start these lanes:
 4. `State-store lane`: `RC-A6` then `S02` then `S03` then `F1`.
 5. `Traceability lane`: `RC-B1` + `RC-B2` + `S07` + `RC-B5`.
 6. `Planner lane`: `S09`.
-7. `Ops lane`: `RC-D1` + `RC-D2` + `RC-D3`.
+7. `Ops lane`: `RC-D1` + `RC-D1A` + `RC-D2` + `RC-D3`.
 8. `Governance lane`: `S13` + `F4` + `F5` + `A1` + `A2` + `R7`.
 
 ## Usage Rule
