@@ -30,6 +30,8 @@ Architecture reviews, critiques, and analysis notes. Non-normative.
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](20260315-postgres-state-store-adapter-refactor-review.md)
 - [Principal Architecture Review - DVT+](20260316-principal-architecture-review.md)
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](20260315-postgres-start-run-intent-store-qa-review.md)
+- [RC-A2 Architectural Review Hard Mode](20260322-rc-a2-architectural-review-hard-mode.md)
+- [RC-A2 QA Hard Review](20260322-rc-a2-qa-hard-review.md)
 - [Review Naming Policy](review-naming-policy.md)
 - [RunPlanWorkflow — Architecture Review, Refactor Map, and Mermaid Diagrams](20260315-run-plan-workflow-architecture-review.md)
 - [StartRunIntentSchemaManager — QA, Architecture Review, and Refactor Proposal](20260315-start-run-intent-schema-manager-architecture-review.md)
