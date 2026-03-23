@@ -83,6 +83,14 @@ test('evaluateCheckRunResult handles not-found, pending, success and failure', (
   );
 });
 
+test('evaluateCheckRunResult supports configurable accepted conclusions', () => {
+  const result = evaluateCheckRunResult(
+    { status: 'completed', conclusion: 'neutral' },
+    { acceptedConclusions: ['success', 'neutral'] },
+  );
+  assert.equal(result.status, 'success');
+});
+
 test('waitForCheckRun returns success when check eventually passes', async () => {
   let call = 0;
   const snapshots = [
@@ -173,4 +181,39 @@ test('listCheckRunsForRef returns check_runs array on success', async () => {
   });
 
   assert.deepEqual(runs, [{ name: 'Adapter Postgres Smoke' }]);
+});
+
+test('listCheckRunsForRef follows pagination links', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (calls.length === 1) {
+      return {
+        ok: true,
+        json: async () => ({ check_runs: [{ name: 'first-page' }] }),
+        headers: {
+          get: (name) =>
+            name.toLowerCase() === 'link'
+              ? '<https://api.github.com/next?page=2>; rel="next"'
+              : null,
+        },
+      };
+    }
+    return {
+      ok: true,
+      json: async () => ({ check_runs: [{ name: 'second-page' }] }),
+      headers: { get: () => null },
+    };
+  };
+
+  const runs = await listCheckRunsForRef({
+    owner: 'dunay2',
+    repo: 'dvt',
+    ref: 'sha',
+    token: 'token',
+    fetchImpl,
+  });
+
+  assert.equal(calls.length, 2);
+  assert.deepEqual(runs, [{ name: 'first-page' }, { name: 'second-page' }]);
 });

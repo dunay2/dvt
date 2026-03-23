@@ -13,10 +13,10 @@ export function selectLatestCheckRunByName(checkRuns, checkName) {
   return matches.sort((a, b) => score(b) - score(a))[0];
 }
 
-export function evaluateCheckRunResult(run) {
+export function evaluateCheckRunResult(run, { acceptedConclusions = ['success'] } = {}) {
   if (!run) return { status: 'not_found' };
   if (run.status !== 'completed') return { status: 'pending', run };
-  if (run.conclusion === 'success') return { status: 'success', run };
+  if (acceptedConclusions.includes(run.conclusion)) return { status: 'success', run };
   return { status: 'failure', run };
 }
 
@@ -25,13 +25,14 @@ export async function waitForCheckRun({
   checkName,
   retries = 60,
   delayMs = 10000,
+  acceptedConclusions = ['success'],
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   log = () => {},
 }) {
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     const checkRuns = await fetchRuns();
     const run = selectLatestCheckRunByName(checkRuns, checkName);
-    const evaluation = evaluateCheckRunResult(run);
+    const evaluation = evaluateCheckRunResult(run, { acceptedConclusions });
 
     if (evaluation.status === 'success') return { ok: true, run };
     if (evaluation.status === 'failure') return { ok: false, reason: 'failed', run };
@@ -47,25 +48,50 @@ export async function waitForCheckRun({
   return { ok: false, reason: 'timeout' };
 }
 
-export async function listCheckRunsForRef({ owner, repo, ref, token, fetchImpl = fetch }) {
-  const response = await fetchImpl(
-    `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/check-runs?per_page=100`,
-    {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    },
-  );
+function parseNextLink(linkHeader) {
+  if (!linkHeader) return undefined;
+  const parts = linkHeader.split(',');
+  for (const part of parts) {
+    if (!part.includes('rel="next"')) continue;
+    const match = part.match(/<([^>]+)>/);
+    if (match?.[1]) return match[1];
+  }
+  return undefined;
+}
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`GitHub Checks API failed (${response.status}): ${body}`);
+export async function listCheckRunsForRef({
+  owner,
+  repo,
+  ref,
+  token,
+  fetchImpl = fetch,
+  maxPages = 10,
+}) {
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${token}`,
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+
+  let nextUrl = `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/check-runs?per_page=100`;
+  const allRuns = [];
+  let page = 0;
+
+  while (nextUrl && page < maxPages) {
+    page += 1;
+    const response = await fetchImpl(nextUrl, { headers });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`GitHub Checks API failed (${response.status}): ${body}`);
+    }
+
+    const payload = await response.json();
+    allRuns.push(...(payload.check_runs ?? []));
+    nextUrl = parseNextLink(response.headers?.get?.('link'));
   }
 
-  const payload = await response.json();
-  return payload.check_runs ?? [];
+  return allRuns;
 }
 
 async function runCli() {
@@ -75,6 +101,10 @@ async function runCli() {
   const checkName = process.env.CHECK_NAME;
   const retries = Number(process.env.CHECK_RETRIES ?? '60');
   const delayMs = Number(process.env.CHECK_DELAY_MS ?? '10000');
+  const acceptedConclusions = (process.env.CHECK_ACCEPTED_CONCLUSIONS ?? 'success')
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
 
   if (!token || !repository || !ref || !checkName) {
     console.error(
@@ -88,6 +118,7 @@ async function runCli() {
     checkName,
     retries,
     delayMs,
+    acceptedConclusions,
     fetchRuns: () => listCheckRunsForRef({ owner, repo, ref, token }),
     log: (msg) => console.log(msg),
   });

@@ -259,6 +259,7 @@ jobs:
           CHECK_NAME: Adapter Postgres Smoke
           CHECK_RETRIES: '60'
           CHECK_DELAY_MS: '10000'
+          CHECK_ACCEPTED_CONCLUSIONS: success
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
