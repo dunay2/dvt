@@ -18,6 +18,33 @@ function mkRef(storageUri: string, sqlText: string): CompiledCodeRef {
   };
 }
 
+async function withTemporaryEnv<T>(
+  changes: Readonly<Record<string, string | undefined>>,
+  run: () => Promise<T>
+): Promise<T> {
+  const previous = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(changes)) {
+    previous.set(key, process.env[key]);
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+
+  try {
+    return await run();
+  } finally {
+    for (const [key, value] of previous) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+}
+
 describe('createCompiledCodeResolver', () => {
   it('caches repeated resolutions for the same ref', async () => {
     const sqlText = 'select * from dim_customers';
@@ -73,19 +100,26 @@ describe('createCompiledCodeResolver', () => {
       const filePath = join(tempDir, 'compiled.sql');
       const sqlText = 'select id from dim_orders';
       await writeFile(filePath, sqlText, 'utf8');
-
-      const ref = mkRef(pathToFileURL(filePath).href, sqlText);
-      const resolver = createCompiledCodeResolver(
-        { NODE_ENV: 'production', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
-        {
-          retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
-        }
-      );
-
-      await expect(resolver.resolve(ref)).rejects.toThrow(/INV-CCREF-007/);
+      expect(() =>
+        createCompiledCodeResolver(
+          { NODE_ENV: 'production', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'file' },
+          {
+            retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+          }
+        )
+      ).toThrow(/INV-CCREF-007/);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
+  });
+
+  it('fails fast in production when auto backend has no s3 region', () => {
+    expect(() =>
+      createCompiledCodeResolver(
+        { NODE_ENV: 'production', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
+        { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
+      )
+    ).toThrow(/Missing S3 region.*production/i);
   });
 
   it('routes s3:// refs through the s3 backend override', async () => {
@@ -123,12 +157,7 @@ describe('createCompiledCodeResolver', () => {
   });
 
   it('rejects s3:// compiled code in auto mode without a region', async () => {
-    const previousAwsRegion = process.env.AWS_REGION;
-    const previousAwsDefaultRegion = process.env.AWS_DEFAULT_REGION;
-    delete process.env.AWS_REGION;
-    delete process.env.AWS_DEFAULT_REGION;
-
-    try {
+    await withTemporaryEnv({ AWS_REGION: undefined, AWS_DEFAULT_REGION: undefined }, async () => {
       const sqlText = 'select count(*) from fct_sales';
       const ref = mkRef('s3://dvt-artifacts/prod/compiled/fct_sales.sql', sqlText);
       const resolver = createCompiledCodeResolver(
@@ -137,18 +166,6 @@ describe('createCompiledCodeResolver', () => {
       );
 
       await expect(resolver.resolve(ref)).rejects.toThrow(/Missing S3 region/i);
-    } finally {
-      if (previousAwsRegion === undefined) {
-        delete process.env.AWS_REGION;
-      } else {
-        process.env.AWS_REGION = previousAwsRegion;
-      }
-
-      if (previousAwsDefaultRegion === undefined) {
-        delete process.env.AWS_DEFAULT_REGION;
-      } else {
-        process.env.AWS_DEFAULT_REGION = previousAwsDefaultRegion;
-      }
-    }
+    });
   });
 });

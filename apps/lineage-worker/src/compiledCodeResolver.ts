@@ -80,13 +80,16 @@ function createCompiledCodeReader(
   options: CompiledCodeResolverOptions
 ): ICompiledCodeReader {
   const backend = options.backend ?? env.DVT_COMPILED_CODE_RESOLVER_BACKEND;
+  validateCompiledCodeResolverConfiguration(
+    env,
+    backend,
+    options.readerOverrides?.has('s3') ?? false
+  );
   const fileReader = createFileUriCompiledCodeReader(
     env,
     options.readerOverrides?.get('file') ?? new FileUriCompiledCodeReader()
   );
-  const s3Reader =
-    options.readerOverrides?.get('s3') ??
-    createS3UriCompiledCodeReader(env, backend === 's3');
+  const s3Reader = options.readerOverrides?.get('s3') ?? createS3UriCompiledCodeReader(env);
 
   if (backend === 'file') return fileReader;
   if (backend === 's3') return s3Reader;
@@ -137,13 +140,8 @@ function createS3UriCompiledCodeReader(
     | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >,
-  eagerValidation: boolean
+  >
 ): ICompiledCodeReader {
-  if (eagerValidation) {
-    createS3Client(env);
-  }
-
   return new S3UriCompiledCodeReader(env);
 }
 
@@ -274,5 +272,40 @@ function isFileUri(uri: string): boolean {
     return new URL(uri).protocol === 'file:';
   } catch {
     return false;
+  }
+}
+
+function validateCompiledCodeResolverConfiguration(
+  env: Pick<
+    Env,
+    | 'NODE_ENV'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
+    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
+  >,
+  backend: CompiledCodeResolverBackend,
+  hasS3ReaderOverride: boolean
+): void {
+  if (backend === 'file') {
+    if (env.NODE_ENV === 'production') {
+      throw new CompiledCodeReaderError(
+        'INV-CCREF-007: file:// compiled code is prohibited when NODE_ENV=production.'
+      );
+    }
+
+    return;
+  }
+
+  const hasS3Region = resolveS3Region(env) !== null;
+  if (backend === 's3' && !hasS3Region && !hasS3ReaderOverride) {
+    throw new CompiledCodeReaderError(
+      'Missing S3 region for compiled code resolver. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
+    );
+  }
+
+  if (backend === 'auto' && env.NODE_ENV === 'production' && !hasS3Region && !hasS3ReaderOverride) {
+    throw new CompiledCodeReaderError(
+      'Missing S3 region for compiled code resolver in production. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
+    );
   }
 }

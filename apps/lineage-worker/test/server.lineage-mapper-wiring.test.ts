@@ -88,4 +88,13 @@ describe('lineage worker mapper wiring', () => {
     expect(result.warnings).toHaveLength(1);
     expect(result.warnings[0]?.code).toBe('COMPILED_CODE_RESOLUTION_FAILED');
   });
+
+  it('fails fast in production when compiled code resolution has no s3 region', () => {
+    expect(() =>
+      createStepStartedLineageMapper({
+        NODE_ENV: 'production',
+        DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto',
+      })
+    ).toThrow(/Missing S3 region.*production/i);
+  });
 });
