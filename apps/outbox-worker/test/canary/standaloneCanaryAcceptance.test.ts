@@ -107,10 +107,10 @@ describe('standalone canary acceptance', () => {
           );
           expect(activeMetrics.body).toMatch(/dvt_outbox_delivered_records_total 1/);
           expect(activeMetrics.body).toMatch(/dvt_outbox_runtime_errors_total 0/);
-          expect(deliveredRequest!.events.length).toBe(1);
-          expect(deliveredRequest!.events[0]?.eventId).toBe(event.eventId);
-          expect(deliveredRequest!.events[0]?.runId).toBe(event.runId);
-          expect(deliveredRequest!.events[0]?.runSeq).toBe(event.runSeq);
+          expect(deliveredRequest.events.length).toBe(1);
+          expect(deliveredRequest.events[0]?.eventId).toBe(event.eventId);
+          expect(deliveredRequest.events[0]?.runId).toBe(event.runId);
+          expect(deliveredRequest.events[0]?.runSeq).toBe(event.runSeq);
         } finally {
           await stopHost(activeHost);
         }

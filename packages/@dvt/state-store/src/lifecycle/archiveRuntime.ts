@@ -173,27 +173,22 @@ export interface ArchiveLifecycleTelemetry {
 
 class NoopArchiveLifecycleMetrics implements ArchiveLifecycleMetrics {
   addCounter(_name: string, _value: number): void {
-    void _name;
-    void _value;
+    // intentionally no-op
   }
   recordHistogram(_name: string, _value: number): void {
-    void _name;
-    void _value;
+    // intentionally no-op
   }
 }
 
 class NoopArchiveLifecycleLogger implements ArchiveLifecycleLogger {
   info(_data: Record<string, unknown>, _msg?: string): void {
-    void _data;
-    void _msg;
+    // intentionally no-op
   }
   warn(_data: Record<string, unknown>, _msg?: string): void {
-    void _data;
-    void _msg;
+    // intentionally no-op
   }
   error(_data: Record<string, unknown>, _msg?: string): void {
-    void _data;
-    void _msg;
+    // intentionally no-op
   }
 }
 

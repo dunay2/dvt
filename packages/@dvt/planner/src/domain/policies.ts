@@ -59,8 +59,8 @@ export function resolvePolicies(policies?: PlannerPolicyClassSet): ResolvedPolic
   }
 
   return {
-    ...(timeout !== undefined ? { stepTimeoutMs: timeout } : {}),
+    ...(timeout === undefined ? {} : { stepTimeoutMs: timeout }),
     retries,
-    ...(concurrency !== undefined ? { concurrency } : {}),
+    ...(concurrency === undefined ? {} : { concurrency }),
   };
 }
