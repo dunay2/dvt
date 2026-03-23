@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import { CURRENT_EXECUTION_PLAN_VERSION } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { Planner } from '../../src/domain/Planner.js';
@@ -25,7 +26,7 @@ describe('planner MVP manifest.json -> DAG -> layers -> ExecutionPlan', () => {
     });
 
     expect(a.plan.steps.length).toBe(10);
-    expect(a.plan.metadata.planVersion).toBe('2.3');
+    expect(a.plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
     expect(a.plan.metadata.planId).toBe(b.plan.metadata.planId);
 
     const layers = a.plan.observability?.extra?.['plannerLayers'];

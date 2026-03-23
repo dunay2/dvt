@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 4
-- `queued`: 34
+- `review`: 5
+- `queued`: 33
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -34,7 +34,7 @@ block in the workboard.
 | `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.  | Merge review and lock deterministic intent-id baseline.                |
 | `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.        | Merge review and lock configurable claim timeout baseline.             |
 | `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.           | Merge review and lock error-code normalization baseline.               |
-| `P1`     | `RC-A4`  | Unblocks runtime planVersion enforcement (`S16`).                          | Replace inline planVersion literal with canonical registry constant.   |
+| `P0`     | `RC-A4`  | Already in `Review`; unblocks runtime planVersion enforcement (`S16`).     | Close review/merge decision and lock shared version source of truth.   |
 | `P1`     | `RC-A6`  | Explicit prerequisite for the full state-store split sweep (`S02`).        | Align dead-letter contract signatures with tenant-scoped concrete API. |
 | `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.              | Inject lineage outbox dependency directly in composition root.         |
 | `P1`     | `RC-B2`  | Unlocks real SQL facets output from existing compiled-code reference flow. | Wire non-noop compiled-code resolver in lineage worker runtime.        |
