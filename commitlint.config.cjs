@@ -28,6 +28,7 @@ module.exports = {
         'conductor',
         'state-store',
         'contracts',
+        'planner',
         'docs',
         'ci',
         'deps',
