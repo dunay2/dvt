@@ -13,7 +13,7 @@ import { TextDecoder } from 'node:util';
 import { parsePlanRef, parseRunContext } from '@dvt/contracts';
 import type { PlanRef, RunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
-import type { IObservability } from '@dvt/observability';
+import type { Attributes, IObservability } from '@dvt/observability';
 import { ApplicationFailure, Context } from '@temporalio/activity';
 
 import type {
@@ -322,7 +322,7 @@ function isProductionRuntime(): boolean {
 }
 
 function assertSafeSimulateErrorPolicyForRuntime(policy: SimulateErrorPolicy): void {
-  if (!isProductionRuntime()) {
+  if (isProductionRuntime() === false) {
     return;
   }
   if (policy.rejectInProduction) {
@@ -448,24 +448,24 @@ function assertSimulateErrorDisallowedInProduction(
   policy: SimulateErrorPolicy,
   operation: 'fetchPlan'
 ): void {
-  if (!policy.rejectInProduction) {
+  if (policy.rejectInProduction === false) {
     return;
   }
 
-  const offendingStep = plan.steps.find((step) => typeof step['simulateError'] === 'string') as
-    | ExecutionPlan['steps'][number]
-    | undefined;
-  if (!offendingStep) {
+  const offendingStep = plan.steps.find((step) => typeof step['simulateError'] === 'string');
+  if (offendingStep === undefined) {
     return;
   }
 
   const simulateErrorKind = String(offendingStep['simulateError']);
+  const planId = plan.metadata.planId;
+
   emitRejectedSimulateErrorSignal(observability, {
     operation,
     stepId: offendingStep.stepId,
     simulateErrorKind,
     runtimeMode: policy.runtimeMode,
-    ...(plan.metadata.planId !== undefined ? { planId: plan.metadata.planId } : {}),
+    planId,
   });
   throw createSimulateErrorRejectedByRuntimePolicyError(offendingStep.stepId);
 }
@@ -497,16 +497,18 @@ function emitRejectedSimulateErrorSignal(
   }
 
   try {
+    const attributes = {
+      stepId: options.stepId,
+      simulateErrorKind: options.simulateErrorKind,
+      runtimeMode: options.runtimeMode,
+      canonicalCode: SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE,
+      legacyCode: SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE,
+      ...(options.planId === undefined ? {} : { planId: options.planId }),
+    } satisfies Attributes;
+
     observability.logs.warn({
       msg: 'Rejected simulateError hook by runtime activity policy',
-      attributes: {
-        stepId: options.stepId,
-        simulateErrorKind: options.simulateErrorKind,
-        ...(options.planId !== undefined ? { planId: options.planId } : {}),
-        runtimeMode: options.runtimeMode,
-        canonicalCode: SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE,
-        legacyCode: SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE,
-      },
+      attributes,
     });
   } catch (error) {
     signalFailures.push({
@@ -530,7 +532,7 @@ function emitRejectedSignalFallback(
     planId?: string;
   }
 ): void {
-  const payload = {
+  const payload: Record<string, unknown> = {
     marker: 'dvt.simulate_error_signal_fallback',
     operation: options.operation,
     stepId: options.stepId,
@@ -538,9 +540,12 @@ function emitRejectedSignalFallback(
     runtimeMode: options.runtimeMode,
     canonicalCode: SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE,
     legacyCode: SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE,
-    ...(options.planId !== undefined ? { planId: options.planId } : {}),
     failures,
   };
+
+  if (options.planId !== undefined) {
+    payload.planId = options.planId;
+  }
 
   try {
     process.stderr.write(`${JSON.stringify(payload)}\n`);
@@ -589,7 +594,8 @@ function parseGatewayConfigOrThrow(step: ExecutionPlan['steps'][number]): {
   }
 
   const value = gateway as Record<string, unknown>;
-  if (value['dslVersion'] !== '1.0') {
+  const dslVersion = value['dslVersion'];
+  if (dslVersion !== '1.0') {
     throw ApplicationFailure.create({
       type: PERMANENT_STEP_ERROR_TYPE,
       message: `${ActivityErrorCode.INVALID_STEP_SCHEMA}: gateway_dsl_version:${step.stepId}`,

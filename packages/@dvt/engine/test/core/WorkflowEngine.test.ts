@@ -9,19 +9,12 @@
  * @date 2026-03-03
  */
 import type { EngineRunRef, RunId, RunStatusSnapshot } from '@dvt/contracts';
-import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RunEventInput } from '../../src/contracts/runEvents.js';
-import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
-import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { describeUnknownValue, WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
-import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
-import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
-import { SequenceClock } from '../../src/utils/clock.js';
 
 import {
   makePlanRef,
@@ -212,19 +205,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       },
     });
     const intentStore = new InMemoryStartRunIntentStore();
-    const engine = new WorkflowEngine({
-      stateStore: store,
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
-      adapters,
-    });
+    const { engine } = createEngine({ adapters, stateStore: store, intentStore });
 
     await engine.startRun(makePlanRef(), makeContext('pre-bootstrap-1'));
 
@@ -394,19 +375,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
     vi.spyOn(intentStore, 'markDispatched').mockRejectedValueOnce(new Error('dispatch boom'));
 
-    const engine = new WorkflowEngine({
-      stateStore: store,
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
-      adapters,
-    });
+    const { engine } = createEngine({ adapters, stateStore: store, intentStore });
 
     await expect(engine.startRun(makePlanRef(), makeContext('dispatch-fail-1'))).rejects.toThrow(
       /dispatch boom/

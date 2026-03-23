@@ -18,7 +18,7 @@ Authoritative task source remains:
 
 - `in_progress`: 0
 - `review`: 4
-- `queued`: 35
+- `queued`: 36
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -49,6 +49,7 @@ block in the workboard.
 | `P2`     | `RC-B5`    | Lineage retry path currently exhausts too quickly under outage.            | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
 | `P2`     | `RC-D1`    | Reconciler startup degradation is not visible to health consumers.         | Expose reconciler status as `degraded` in API health.                  |
 | `P2`     | `RC-D1A`   | RC-D1 follow-up still needs compatibility closure and runtime timer proof. | Add `/healthz` compat policy and watchdog integration tests.           |
+| `P2`     | `DHM`      | Modularization backlog reduces helper sprawl and clarifies current seams.  | Start with `WS5`, then follow the dependency order in the proposal.    |
 | `P2`     | `F4`       | DDD finding still open and currently only documented.                      | Freeze `WorkflowSnapshot` role and versioning rule.                    |
 | `P2`     | `F5`       | DDD boundary finding still open.                                           | Move/remove engine-side provider selection env handling.               |
 | `P2`     | `S17`      | Multi-worker safety depends on claim path semantics today.                 | Harden outbox contract/runtime to require claim/lease semantics.       |
@@ -96,6 +97,7 @@ flowchart LR
   RC_D1A[RC-D1A]
   RC_D2[RC-D2]
   RC_D3[RC-D3]
+  DHM[DHM]
 
   S02 --> S12[S12]
   S14[S14]
@@ -116,6 +118,7 @@ flowchart LR
   G52[G5-PR2] --> G54[G5-PR4]
   A1[A1]
   A2[A2]
+  DHM
 ```
 
 ## Parallel Start Pack
@@ -130,6 +133,7 @@ If you want maximum parallelism now without violating gates, start these lanes:
 6. `Planner lane`: `S09`.
 7. `Ops lane`: `RC-D1` + `RC-D1A` + `RC-D2` + `RC-D3`.
 8. `Governance lane`: `S13` + `F4` + `F5` + `A1` + `A2` + `R7`.
+9. `Architecture lane`: `DHM` (start with `WS5`).
 
 ## Usage Rule
 

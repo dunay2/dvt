@@ -9,12 +9,23 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createCompiledCodeResolver } from '../src/compiledCodeResolver.js';
 
+type ResolverEnv = Parameters<typeof createCompiledCodeResolver>[0];
+
 function mkRef(storageUri: string, sqlText: string): CompiledCodeRef {
   return {
     sha256: sha256HexUtf8(sqlText),
     storageUri,
     sizeBytes: Buffer.byteLength(sqlText, 'utf8'),
     encoding: 'utf-8',
+  };
+}
+
+function makeResolverEnv(overrides: Partial<ResolverEnv> = {}): ResolverEnv {
+  return {
+    NODE_ENV: 'development',
+    DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto',
+    DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: false,
+    ...overrides,
   };
 }
 
@@ -57,13 +68,10 @@ describe('createCompiledCodeResolver', () => {
       encoding: 'utf-8' as const,
     }));
 
-    const resolver = createCompiledCodeResolver(
-      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
-      {
-        readerOverrides: new Map([['memory', { read }]]),
-        retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
-      }
-    );
+    const resolver = createCompiledCodeResolver(makeResolverEnv(), {
+      readerOverrides: new Map([['memory', { read }]]),
+      retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+    });
 
     await resolver.resolve(ref);
     await resolver.resolve(ref);
@@ -80,7 +88,7 @@ describe('createCompiledCodeResolver', () => {
 
       const ref = mkRef(pathToFileURL(filePath).href, sqlText);
       const resolver = createCompiledCodeResolver(
-        { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'file' },
+        makeResolverEnv({ DVT_COMPILED_CODE_RESOLVER_BACKEND: 'file' }),
         { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
       );
 
@@ -102,7 +110,10 @@ describe('createCompiledCodeResolver', () => {
       await writeFile(filePath, sqlText, 'utf8');
       expect(() =>
         createCompiledCodeResolver(
-          { NODE_ENV: 'production', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'file' },
+          makeResolverEnv({
+            NODE_ENV: 'production',
+            DVT_COMPILED_CODE_RESOLVER_BACKEND: 'file',
+          }),
           {
             retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
           }
@@ -124,7 +135,9 @@ describe('createCompiledCodeResolver', () => {
 
     expect(() =>
       createCompiledCodeResolver(
-        { NODE_ENV: 'production', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
+        makeResolverEnv({
+          NODE_ENV: 'production',
+        }),
         {
           readerOverrides: new Map([['memory', { read }]]),
           retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
@@ -145,7 +158,7 @@ describe('createCompiledCodeResolver', () => {
     }));
 
     const resolver = createCompiledCodeResolver(
-      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3' },
+      makeResolverEnv({ DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3' }),
       {
         readerOverrides: new Map([['s3', { read }]]),
         retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
@@ -160,10 +173,9 @@ describe('createCompiledCodeResolver', () => {
 
   it('fails fast when the s3 backend is selected without a region', () => {
     expect(() =>
-      createCompiledCodeResolver(
-        { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3' },
-        { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
-      )
+      createCompiledCodeResolver(makeResolverEnv({ DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3' }), {
+        retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+      })
     ).toThrow(/Missing S3 region/i);
   });
 
@@ -171,10 +183,9 @@ describe('createCompiledCodeResolver', () => {
     await withTemporaryEnv({ AWS_REGION: undefined, AWS_DEFAULT_REGION: undefined }, async () => {
       const sqlText = 'select count(*) from fct_sales';
       const ref = mkRef('s3://dvt-artifacts/prod/compiled/fct_sales.sql', sqlText);
-      const resolver = createCompiledCodeResolver(
-        { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
-        { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
-      );
+      const resolver = createCompiledCodeResolver(makeResolverEnv(), {
+        retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+      });
 
       await expect(resolver.resolve(ref)).rejects.toThrow(/Missing S3 region/i);
     });

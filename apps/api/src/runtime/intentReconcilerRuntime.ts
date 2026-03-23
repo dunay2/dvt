@@ -142,13 +142,15 @@ function createMaintenanceService(
   });
 }
 
-function createWorker(
-  maintenance: RunMaintenanceService,
-  logger: FastifyBaseLogger,
-  observability: IObservability,
-  options: IntentReconcilerWorkerOptions,
-  healthHooks: ReconcilerRuntimeHealthHooks
-): IntentReconcilerWorker {
+function createWorker(input: {
+  maintenance: RunMaintenanceService;
+  logger: FastifyBaseLogger;
+  observability: IObservability;
+  options: IntentReconcilerWorkerOptions;
+  healthHooks: ReconcilerRuntimeHealthHooks;
+}): IntentReconcilerWorker {
+  const { maintenance, logger, observability, options, healthHooks } = input;
+
   return new IntentReconcilerWorker(
     maintenance,
     {
@@ -212,12 +214,12 @@ export async function createIntentReconcilerRuntime(
   }
 
   const maintenance = createMaintenanceService(stateStore, intentStore, adapters, observability);
-  const worker = createWorker(
+  const worker = createWorker({
     maintenance,
     logger,
     observability,
-    config.workerOptions,
-    healthHooks
-  );
+    options: config.workerOptions,
+    healthHooks,
+  });
   return createRuntimeHandle(worker, stores, logger);
 }

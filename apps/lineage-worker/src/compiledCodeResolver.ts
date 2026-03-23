@@ -23,6 +23,15 @@ import type { Env } from './env.js';
 
 export type CompiledCodeResolverBackend = 'auto' | 'file' | 's3';
 
+type CompiledCodeResolverEnv = Pick<
+  Env,
+  | 'NODE_ENV'
+  | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
+  | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
+  | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
+  | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
+>;
+
 export interface CompiledCodeResolverOptions {
   backend?: CompiledCodeResolverBackend;
   cache?: ICompiledCodeCache;
@@ -31,14 +40,7 @@ export interface CompiledCodeResolverOptions {
 }
 
 export function createCompiledCodeResolver(
-  env: Pick<
-    Env,
-    | 'NODE_ENV'
-    | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >,
+  env: CompiledCodeResolverEnv,
   options: CompiledCodeResolverOptions = {}
 ): ICompiledCodeResolver {
   const reader = createCompiledCodeReader(env, options);
@@ -52,14 +54,7 @@ export function createCompiledCodeResolver(
 }
 
 export function createStepStartedLineageMapper(
-  env: Pick<
-    Env,
-    | 'NODE_ENV'
-    | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >,
+  env: CompiledCodeResolverEnv,
   options: CompiledCodeResolverOptions = {}
 ): StepStartedLineageMapper {
   return new StepStartedLineageMapper({
@@ -69,14 +64,7 @@ export function createStepStartedLineageMapper(
 }
 
 function createCompiledCodeReader(
-  env: Pick<
-    Env,
-    | 'NODE_ENV'
-    | 'DVT_COMPILED_CODE_RESOLVER_BACKEND'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >,
+  env: CompiledCodeResolverEnv,
   options: CompiledCodeResolverOptions
 ): ICompiledCodeReader {
   const backend = options.backend ?? env.DVT_COMPILED_CODE_RESOLVER_BACKEND;
@@ -110,8 +98,7 @@ function createCompiledCodeReader(
 
 function createS3Client(
   env: Pick<
-    Env,
-    | 'NODE_ENV'
+    CompiledCodeResolverEnv,
     | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
@@ -135,7 +122,7 @@ function createS3Client(
 
 function createS3UriCompiledCodeReader(
   env: Pick<
-    Env,
+    CompiledCodeResolverEnv,
     | 'NODE_ENV'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
     | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
@@ -174,8 +161,7 @@ class S3UriCompiledCodeReader implements ICompiledCodeReader {
 
   constructor(
     private readonly env: Pick<
-      Env,
-      | 'NODE_ENV'
+      CompiledCodeResolverEnv,
       | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
       | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
       | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
@@ -183,11 +169,7 @@ class S3UriCompiledCodeReader implements ICompiledCodeReader {
   ) {}
 
   private getClient(): S3Client {
-    if (this.client === null) {
-      this.client = createS3Client(this.env);
-    }
-
-    return this.client;
+    return (this.client ??= createS3Client(this.env));
   }
 
   async read(ref: CompiledCodeRef): Promise<CompiledCodeBlob> {
@@ -276,13 +258,7 @@ function isFileUri(uri: string): boolean {
 }
 
 function validateCompiledCodeResolverConfiguration(
-  env: Pick<
-    Env,
-    | 'NODE_ENV'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >,
+  env: CompiledCodeResolverEnv,
   backend: CompiledCodeResolverBackend,
   hasS3ReaderOverride: boolean
 ): void {

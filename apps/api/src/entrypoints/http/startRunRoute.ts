@@ -34,6 +34,19 @@ type ParsedStartRunScope = {
   readonly environmentId: EnvironmentId;
 };
 
+type PlannerCommandFields = Pick<
+  StartRunCommand,
+  | 'graphSource'
+  | 'manifestRef'
+  | 'manifest'
+  | 'nodes'
+  | 'policies'
+  | 'environment'
+  | 'observability'
+>;
+
+type PlannerEnvelope = ReturnType<typeof parsePlannerInputEnvelopeV2>;
+
 type ParseStartRunBadRequestResult = Extract<ParseStartRunRequestResult, { readonly ok: false }>;
 
 function badRequest(code: string): ParseStartRunBadRequestResult {
@@ -143,61 +156,21 @@ function parseStartRunCommand(
 
   const plannerSourceCount = countPlannerSources(record);
   const hasPlanRef = record.planRef !== undefined;
-  if (hasPlanRef) {
-    if (plannerSourceCount > 0) return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
-  } else {
-    if (plannerSourceCount !== 1) return { ok: false, code: 'INVALID_PLAN_SOURCE' };
+  const sourceValidation = validatePlannerSourceSelection(hasPlanRef, plannerSourceCount);
+  if (!sourceValidation.ok) {
+    return { ok: false, code: sourceValidation.code };
   }
 
   if (hasPlanRef) {
-    const planRef = parsePlanRef(record.planRef);
-    if (!planRef.ok) {
-      return { ok: false, code: planRef.code };
-    }
-
-    return {
-      ok: true,
-      value: {
-        planRef: planRef.value,
-        runId,
-        targetAdapter: targetAdapter.value,
-        selection: selection.value,
-      },
-    };
-  }
-
-  const plannerInput = parsePlannerInput(record, selection.value);
-  if (!plannerInput.ok) {
-    return { ok: false, code: plannerInput.code };
-  }
-
-  return {
-    ok: true,
-    value: {
+    return buildStartRunCommandFromPlanRef(
+      record.planRef,
       runId,
-      targetAdapter: targetAdapter.value,
-      selection: selection.value,
-      ...(plannerInput.value.graphSource === undefined
-        ? {}
-        : { graphSource: plannerInput.value.graphSource }),
-      ...(plannerInput.value.manifestRef === undefined
-        ? {}
-        : { manifestRef: plannerInput.value.manifestRef }),
-      ...(plannerInput.value.manifest === undefined
-        ? {}
-        : { manifest: plannerInput.value.manifest }),
-      ...(plannerInput.value.nodes === undefined ? {} : { nodes: plannerInput.value.nodes }),
-      ...(plannerInput.value.policies === undefined
-        ? {}
-        : { policies: plannerInput.value.policies }),
-      ...(plannerInput.value.environment === undefined
-        ? {}
-        : { environment: plannerInput.value.environment }),
-      ...(plannerInput.value.observability === undefined
-        ? {}
-        : { observability: plannerInput.value.observability }),
-    },
-  };
+      targetAdapter.value,
+      selection.value
+    );
+  }
+
+  return buildStartRunCommandFromPlannerInput(record, runId, targetAdapter.value, selection.value);
 }
 
 function countPlannerSources(record: Record<string, unknown>): number {
@@ -209,18 +182,7 @@ function countPlannerSources(record: Record<string, unknown>): number {
 function parsePlannerInput(
   record: Record<string, unknown>,
   selection: ReadonlyArray<string>
-): ParseStartRunFieldResult<
-  Pick<
-    StartRunCommand,
-    | 'graphSource'
-    | 'manifestRef'
-    | 'manifest'
-    | 'nodes'
-    | 'policies'
-    | 'environment'
-    | 'observability'
-  >
-> {
+): ParseStartRunFieldResult<PlannerCommandFields> {
   try {
     const parsed = parsePlannerInputEnvelopeV2({
       ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
@@ -242,76 +204,190 @@ function parsePlannerInput(
   }
 }
 
-function toPlannerCommandFields(
-  parsed: ReturnType<typeof parsePlannerInputEnvelopeV2>
-): Pick<
-  StartRunCommand,
-  | 'graphSource'
-  | 'manifestRef'
-  | 'manifest'
-  | 'nodes'
-  | 'policies'
-  | 'environment'
-  | 'observability'
-> {
+function buildStartRunCommandFromPlanRef(
+  rawPlanRef: unknown,
+  runId: string,
+  targetAdapter: StartRunCommand['targetAdapter'],
+  selection: ReadonlyArray<string>
+): ParseStartRunFieldResult<StartRunCommand> {
+  const planRef = parsePlanRef(rawPlanRef);
+  if (!planRef.ok) {
+    return { ok: false, code: planRef.code };
+  }
+
   return {
-    ...(parsed.graphSource !== undefined
-      ? {
-          graphSource: {
-            kind: parsed.graphSource.kind,
-            nodes: parsed.graphSource.nodes.map((node) => ({
-              nodeId: node.nodeId,
-              resourceType: node.resourceType,
-              dependsOn: [...node.dependsOn],
-            })),
-          },
-        }
-      : {}),
-    ...(parsed.manifestRef === undefined
+    ok: true,
+    value: {
+      planRef: planRef.value,
+      runId,
+      targetAdapter,
+      selection,
+    },
+  };
+}
+
+function buildStartRunCommandFromPlannerInput(
+  record: Record<string, unknown>,
+  runId: string,
+  targetAdapter: StartRunCommand['targetAdapter'],
+  selection: ReadonlyArray<string>
+): ParseStartRunFieldResult<StartRunCommand> {
+  const plannerInput = parsePlannerInput(record, selection);
+  if (!plannerInput.ok) {
+    return { ok: false, code: plannerInput.code };
+  }
+
+  return {
+    ok: true,
+    value: {
+      runId,
+      targetAdapter,
+      selection,
+      ...plannerInput.value,
+    },
+  };
+}
+
+function validatePlannerSourceSelection(
+  hasPlanRef: boolean,
+  plannerSourceCount: number
+): ParseStartRunFieldResult<null> {
+  if (hasPlanRef) {
+    if (plannerSourceCount > 0) {
+      return { ok: false, code: 'CONFLICTING_PLAN_INPUTS' };
+    }
+    return { ok: true, value: null };
+  }
+
+  if (plannerSourceCount !== 1) {
+    return { ok: false, code: 'INVALID_PLAN_SOURCE' };
+  }
+
+  return { ok: true, value: null };
+}
+
+function toPlannerCommandFields(parsed: PlannerEnvelope): PlannerCommandFields {
+  const fields: PlannerCommandFields = {};
+
+  const graphSource = cloneGraphSource(parsed.graphSource);
+  if (graphSource !== undefined) {
+    fields.graphSource = graphSource;
+  }
+
+  const manifestRef = cloneManifestRef(parsed.manifestRef);
+  if (manifestRef !== undefined) {
+    fields.manifestRef = manifestRef;
+  }
+
+  const manifest = parsed.manifest;
+  if (manifest !== undefined) {
+    fields.manifest = manifest;
+  }
+
+  const nodes = cloneNodes(parsed.nodes);
+  if (nodes !== undefined) {
+    fields.nodes = nodes;
+  }
+
+  const policies = parsed.policies;
+  if (policies !== undefined) {
+    fields.policies = policies;
+  }
+
+  const environment = cloneEnvironment(parsed.environment);
+  if (environment !== undefined) {
+    fields.environment = environment;
+  }
+
+  const observability = cloneObservability(parsed.observability);
+  if (observability !== undefined) {
+    fields.observability = observability;
+  }
+
+  return fields;
+}
+
+function cloneGraphSource(
+  graphSource: PlannerEnvelope['graphSource']
+): PlannerCommandFields['graphSource'] | undefined {
+  if (graphSource === undefined) {
+    return undefined;
+  }
+
+  return {
+    kind: graphSource.kind,
+    nodes: clonePlannerNodes(graphSource.nodes),
+  };
+}
+
+function cloneManifestRef(
+  manifestRef: PlannerEnvelope['manifestRef']
+): PlannerCommandFields['manifestRef'] | undefined {
+  if (manifestRef === undefined) {
+    return undefined;
+  }
+
+  return {
+    uri: manifestRef.uri,
+    sha256: manifestRef.sha256,
+    ...(manifestRef.artifactId === undefined ? {} : { artifactId: manifestRef.artifactId }),
+  };
+}
+
+function cloneNodes(nodes: PlannerEnvelope['nodes']): PlannerCommandFields['nodes'] | undefined {
+  if (nodes === undefined) {
+    return undefined;
+  }
+
+  return clonePlannerNodes(nodes);
+}
+
+function clonePlannerNodes(
+  nodes: ReadonlyArray<{
+    readonly nodeId: string;
+    readonly resourceType: string;
+    readonly dependsOn: ReadonlyArray<string>;
+  }>
+): ReadonlyArray<{
+  readonly nodeId: string;
+  readonly resourceType: string;
+  readonly dependsOn: ReadonlyArray<string>;
+}> {
+  return nodes.map((node) => ({
+    nodeId: node.nodeId,
+    resourceType: node.resourceType,
+    dependsOn: [...node.dependsOn],
+  }));
+}
+
+function cloneEnvironment(
+  environment: PlannerEnvelope['environment']
+): PlannerCommandFields['environment'] | undefined {
+  if (environment === undefined) {
+    return undefined;
+  }
+
+  return {
+    ...(environment.environmentId === undefined
       ? {}
-      : {
-          manifestRef: {
-            uri: parsed.manifestRef.uri,
-            sha256: parsed.manifestRef.sha256,
-            ...(parsed.manifestRef.artifactId === undefined
-              ? {}
-              : { artifactId: parsed.manifestRef.artifactId }),
-          },
-        }),
-    ...(parsed.manifest === undefined ? {} : { manifest: parsed.manifest }),
-    ...(parsed.nodes === undefined
+      : { environmentId: environment.environmentId }),
+    ...(environment.targetProfile === undefined
       ? {}
-      : {
-          nodes: parsed.nodes.map((node) => ({
-            nodeId: node.nodeId,
-            resourceType: node.resourceType,
-            dependsOn: [...node.dependsOn],
-          })),
-        }),
-    ...(parsed.policies === undefined ? {} : { policies: parsed.policies }),
-    ...(parsed.environment === undefined
-      ? {}
-      : {
-          environment: {
-            ...(parsed.environment.environmentId === undefined
-              ? {}
-              : { environmentId: parsed.environment.environmentId }),
-            ...(parsed.environment.targetProfile === undefined
-              ? {}
-              : { targetProfile: parsed.environment.targetProfile }),
-            ...(parsed.environment.vars === undefined ? {} : { vars: parsed.environment.vars }),
-          },
-        }),
-    ...(parsed.observability === undefined
-      ? {}
-      : {
-          observability: {
-            ...(parsed.observability.tags === undefined ? {} : { tags: parsed.observability.tags }),
-            ...(parsed.observability.extra === undefined
-              ? {}
-              : { extra: parsed.observability.extra }),
-          },
-        }),
+      : { targetProfile: environment.targetProfile }),
+    ...(environment.vars === undefined ? {} : { vars: environment.vars }),
+  };
+}
+
+function cloneObservability(
+  observability: PlannerEnvelope['observability']
+): PlannerCommandFields['observability'] | undefined {
+  if (observability === undefined) {
+    return undefined;
+  }
+
+  return {
+    ...(observability.tags === undefined ? {} : { tags: observability.tags }),
+    ...(observability.extra === undefined ? {} : { extra: observability.extra }),
   };
 }
 

@@ -28,7 +28,7 @@ const bootstrapMocks = vi.hoisted(() => {
   const mapperFactory = vi.fn(
     (env: {
       DVT_COMPILED_CODE_RESOLVER_BACKEND?: string;
-      DVT_COMPILED_CODE_RESOLVER_S3_REGION?: string | undefined;
+      DVT_COMPILED_CODE_RESOLVER_S3_REGION?: string;
     }) => {
       if (
         env.DVT_COMPILED_CODE_RESOLVER_BACKEND === 's3' &&

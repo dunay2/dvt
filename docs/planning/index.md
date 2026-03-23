@@ -43,6 +43,7 @@ Concept anchors for this page:
 ## Proposals
 
 - [CI Workflow Deduplication Plan](proposals/ci-workflow-deduplication-plan-20260307.md)
+- [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [Documentation Restructuring Diagnostic And Roadmap](proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)

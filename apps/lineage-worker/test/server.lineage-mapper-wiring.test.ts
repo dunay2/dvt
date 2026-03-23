@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createStepStartedLineageMapper } from '../src/compiledCodeResolver.js';
 
+type ResolverEnv = Parameters<typeof createStepStartedLineageMapper>[0];
+
 function mkCompiledCodeRef(
   sqlText: string,
   storageUri = 'memory://compiled/sql-step'
@@ -13,6 +15,15 @@ function mkCompiledCodeRef(
     storageUri,
     sizeBytes: Buffer.byteLength(sqlText, 'utf8'),
     encoding: 'utf-8',
+  };
+}
+
+function makeResolverEnv(overrides: Partial<ResolverEnv> = {}): ResolverEnv {
+  return {
+    NODE_ENV: 'development',
+    DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto',
+    DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: false,
+    ...overrides,
   };
 }
 
@@ -49,13 +60,10 @@ describe('lineage worker mapper wiring', () => {
       encoding: 'utf-8' as const,
     }));
 
-    const mapper = createStepStartedLineageMapper(
-      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
-      {
-        readerOverrides: new Map([['memory', { read }]]),
-        retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
-      }
-    );
+    const mapper = createStepStartedLineageMapper(makeResolverEnv(), {
+      readerOverrides: new Map([['memory', { read }]]),
+      retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+    });
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
 
@@ -72,13 +80,10 @@ describe('lineage worker mapper wiring', () => {
       throw new Error('storage timeout');
     });
 
-    const mapper = createStepStartedLineageMapper(
-      { NODE_ENV: 'development', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
-      {
-        readerOverrides: new Map([['memory', { read }]]),
-        retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
-      }
-    );
+    const mapper = createStepStartedLineageMapper(makeResolverEnv(), {
+      readerOverrides: new Map([['memory', { read }]]),
+      retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+    });
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
 
@@ -101,10 +106,9 @@ describe('lineage worker mapper wiring', () => {
     }));
 
     const mapper = createStepStartedLineageMapper(
-      {
+      makeResolverEnv({
         NODE_ENV: 'production',
-        DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto',
-      },
+      }),
       {
         readerOverrides: new Map([['memory', { read }]]),
         retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
