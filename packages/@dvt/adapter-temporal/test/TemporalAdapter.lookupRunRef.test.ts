@@ -92,6 +92,34 @@ function makeServiceErrorNotFoundCodeAsText(): Error {
   return err;
 }
 
+function makeServiceErrorNotFoundCodeAsLowerText(): Error {
+  const err = new Error('Workflow not found (gRPC not_found)') as Error & { code: string };
+  err.name = 'ServiceError';
+  err.code = 'not_found';
+  return err;
+}
+
+function makeServiceErrorNotFoundCodeWithSpaces(): Error {
+  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
+  err.name = 'ServiceError';
+  err.code = ' 5 ';
+  return err;
+}
+
+function makeServiceErrorUnknownCode(): Error {
+  const err = new Error('Workflow service error with unknown code') as Error & { code: string };
+  err.name = 'ServiceError';
+  err.code = 'UNKNOWN_CODE';
+  return err;
+}
+
+function makeNonServiceErrorCodeFive(): Error {
+  const err = new Error('Some other error with code 5') as Error & { code: number };
+  err.name = 'UnexpectedError';
+  err.code = 5;
+  return err;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -158,6 +186,58 @@ describe('TemporalAdapter.lookupRunRef', () => {
     const result = await adapter.lookupRunRef('run-missing', 'tenant1');
 
     expect(result).toBeNull();
+  });
+
+  it('returns null when workflow does not exist (ServiceError not_found lowercase code)', async () => {
+    const handle = makeWorkflowHandleMock(async () => {
+      throw makeServiceErrorNotFoundCodeAsLowerText();
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when workflow does not exist (ServiceError numeric string with spaces)', async () => {
+    const handle = makeWorkflowHandleMock(async () => {
+      throw makeServiceErrorNotFoundCodeWithSpaces();
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
+
+    expect(result).toBeNull();
+  });
+
+  it('propagates ServiceError with unknown code', async () => {
+    const unknownCodeError = makeServiceErrorUnknownCode();
+    const handle = makeWorkflowHandleMock(async () => {
+      throw unknownCodeError;
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(unknownCodeError);
+  });
+
+  it('propagates non-ServiceError even when code is 5', async () => {
+    const nonServiceError = makeNonServiceErrorCodeFive();
+    const handle = makeWorkflowHandleMock(async () => {
+      throw nonServiceError;
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(nonServiceError);
+  });
+
+  it('propagates non-Error throwables even with name/code shape', async () => {
+    const nonErrorThrowable = { name: 'ServiceError', code: 5, message: 'not-an-Error object' };
+    const handle = makeWorkflowHandleMock(async () => {
+      throw nonErrorThrowable;
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(nonErrorThrowable);
   });
 
   it('propagates non-not-found errors (network failure, auth, etc.)', async () => {
