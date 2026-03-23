@@ -4,7 +4,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createStepStartedLineageMapper } from '../src/compiledCodeResolver.js';
 
-function mkCompiledCodeRef(sqlText: string, storageUri = 'memory://compiled/sql-step'): CompiledCodeRef {
+function mkCompiledCodeRef(
+  sqlText: string,
+  storageUri = 'memory://compiled/sql-step'
+): CompiledCodeRef {
   return {
     sha256: sha256HexUtf8(sqlText),
     storageUri,
