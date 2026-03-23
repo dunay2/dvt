@@ -30,7 +30,7 @@ block in the workboard.
 | Priority | Task ID  | Why now                                                                    | Next action                                                            |
 | -------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                     | Close review/merge decision and lock baseline.                         |
-| `P0`     | `RC-A1`  | Production correctness/security hook should be closed first.               | Disable/remove runtime `simulateError` in production path.             |
+| `P0`     | `RC-A1`  | Already in `Review`; close QA/merge decision for production hardening.     | Merge and lock runtime policy baseline.                                |
 | `P0`     | `RC-A2`  | Deterministic intent invariant affects crash recovery correctness.         | Implement deterministic `(tenantId, runId)` intent ID derivation.      |
 | `P1`     | `RC-A4`  | Unblocks runtime planVersion enforcement (`S16`).                          | Replace inline planVersion literal with canonical registry constant.   |
 | `P1`     | `RC-A6`  | Explicit prerequisite for the full state-store split sweep (`S02`).        | Align dead-letter contract signatures with tenant-scoped concrete API. |
@@ -42,7 +42,6 @@ block in the workboard.
 | `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                     | Add payload version handling in envelope flow.                         |
 | `P1`     | `S07`    | No blockers; unlocks `S11`.                                                | Normalize lineage job naming + sink shape.                             |
 | `P1`     | `S09`    | No blockers; unlocks `S08`.                                                | Set retry ownership ADR/runtime rule.                                  |
-| `P2`     | `RC-A5`  | Silent intent-resolution failures reduce operational visibility.           | Add warning/metric telemetry for `markResolved` failure.               |
 | `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.            | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
 | `P2`     | `RC-D1`  | Reconciler startup degradation is not visible to health consumers.         | Expose reconciler status as `degraded` in API health.                  |
 | `P2`     | `RC-D2`  | Hardcoded claim timeout is deployment-fragile.                             | Parameterize outbox claim timeout in store configuration.              |
