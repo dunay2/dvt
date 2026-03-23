@@ -89,12 +89,32 @@ describe('lineage worker mapper wiring', () => {
     expect(result.warnings[0]?.code).toBe('COMPILED_CODE_RESOLUTION_FAILED');
   });
 
-  it('fails fast in production when compiled code resolution has no s3 region', () => {
-    expect(() =>
-      createStepStartedLineageMapper({
+  it('allows production auto mapper construction without an s3 region', async () => {
+    const sqlText = 'select id from dim_orders';
+    const compiledCodeRef = mkCompiledCodeRef(sqlText, 'memory://compiled/sql-step');
+    const read = vi.fn(async () => ({
+      sourceUri: compiledCodeRef.storageUri,
+      sqlText,
+      sha256: compiledCodeRef.sha256,
+      sizeBytes: compiledCodeRef.sizeBytes,
+      encoding: 'utf-8' as const,
+    }));
+
+    const mapper = createStepStartedLineageMapper(
+      {
         NODE_ENV: 'production',
         DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto',
-      })
-    ).toThrow(/Missing S3 region.*production/i);
+      },
+      {
+        readerOverrides: new Map([['memory', { read }]]),
+        retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+      }
+    );
+
+    const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
+
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(result.warnings).toEqual([]);
+    expect(result.jobFacets.sql?.query).toBe(sqlText);
   });
 });

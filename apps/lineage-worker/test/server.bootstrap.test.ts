@@ -1,6 +1,6 @@
 import process from 'node:process';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const bootstrapMocks = vi.hoisted(() => {
   const loadEnv = vi.fn(() => ({
@@ -10,7 +10,7 @@ const bootstrapMocks = vi.hoisted(() => {
     DVT_PG_SCHEMA: 'dvt',
     DVT_PG_STATEMENT_TIMEOUT_MS: 0,
     DVT_PG_QUERY_TIMEOUT_MS: 0,
-    DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto',
+    DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3',
     DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT: undefined,
     DVT_COMPILED_CODE_RESOLVER_S3_REGION: undefined,
     DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: false,
@@ -25,11 +25,25 @@ const bootstrapMocks = vi.hoisted(() => {
     SERVICE_NAME: 'dvt-lineage-worker',
   }));
 
-  const mapperFactory = vi.fn(() => {
-    throw new Error(
-      'Missing S3 region for compiled code resolver in production. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
-    );
-  });
+  const mapperFactory = vi.fn(
+    (env: {
+      DVT_COMPILED_CODE_RESOLVER_BACKEND?: string;
+      DVT_COMPILED_CODE_RESOLVER_S3_REGION?: string | undefined;
+    }) => {
+      if (
+        env.DVT_COMPILED_CODE_RESOLVER_BACKEND === 's3' &&
+        env.DVT_COMPILED_CODE_RESOLVER_S3_REGION === undefined
+      ) {
+        throw new Error(
+          'Missing S3 region for compiled code resolver. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
+        );
+      }
+
+      return {
+        map: vi.fn(),
+      };
+    }
+  );
 
   const stateStoreCtor = vi.fn();
   const migrate = vi.fn().mockResolvedValue(undefined);
@@ -69,6 +83,11 @@ const bootstrapMocks = vi.hoisted(() => {
   };
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.clearAllMocks();
+});
+
 vi.mock('../src/env.js', () => ({
   loadEnv: bootstrapMocks.loadEnv,
 }));
@@ -101,7 +120,9 @@ vi.mock('pino', () => ({
 describe('lineage worker bootstrap', () => {
   it('validates the lineage mapper before starting database side effects', async () => {
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
+    vi.resetModules();
     await import('../src/server.js');
 
     expect(bootstrapMocks.loadEnv).toHaveBeenCalledTimes(1);
@@ -109,5 +130,6 @@ describe('lineage worker bootstrap', () => {
     expect(bootstrapMocks.stateStoreCtor).not.toHaveBeenCalled();
     expect(bootstrapMocks.migrate).not.toHaveBeenCalled();
     expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errorSpy).toHaveBeenCalled();
   });
 });

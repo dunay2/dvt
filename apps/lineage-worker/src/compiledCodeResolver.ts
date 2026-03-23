@@ -302,10 +302,4 @@ function validateCompiledCodeResolverConfiguration(
       'Missing S3 region for compiled code resolver. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
     );
   }
-
-  if (backend === 'auto' && env.NODE_ENV === 'production' && !hasS3Region && !hasS3ReaderOverride) {
-    throw new CompiledCodeReaderError(
-      'Missing S3 region for compiled code resolver in production. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
-    );
-  }
 }

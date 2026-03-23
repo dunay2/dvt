@@ -113,13 +113,24 @@ describe('createCompiledCodeResolver', () => {
     }
   });
 
-  it('fails fast in production when auto backend has no s3 region', () => {
+  it('allows production auto resolver construction without an s3 region', () => {
+    const read = vi.fn(async () => ({
+      sourceUri: 'memory://compiled/sql-step',
+      sqlText: 'select 1',
+      sha256: sha256HexUtf8('select 1'),
+      sizeBytes: Buffer.byteLength('select 1', 'utf8'),
+      encoding: 'utf-8' as const,
+    }));
+
     expect(() =>
       createCompiledCodeResolver(
         { NODE_ENV: 'production', DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto' },
-        { retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 } }
+        {
+          readerOverrides: new Map([['memory', { read }]]),
+          retryPolicy: { maxAttempts: 1, initialDelayMs: 0, maxDelayMs: 0 },
+        }
       )
-    ).toThrow(/Missing S3 region.*production/i);
+    ).not.toThrow();
   });
 
   it('routes s3:// refs through the s3 backend override', async () => {
