@@ -23,19 +23,10 @@ export class GetRunEventsUseCase implements IGetRunEventsUseCase {
       throw new RunMetadataNotFoundError(query.runId);
     }
 
-    const listOptions: Parameters<IRunStateStore['listEvents']>[2] = {};
-    if (query.afterSeq !== undefined) {
-      listOptions.afterSeq = query.afterSeq;
-    }
-    if (query.limit !== undefined) {
-      listOptions.limit = query.limit;
-    }
-
-    const items = await this.stateStore.listEvents(
-      context.scope.tenantId.value,
-      query.runId,
-      listOptions
-    );
+    const items = await this.stateStore.listEvents(context.scope.tenantId.value, query.runId, {
+      ...(query.afterSeq !== undefined ? { afterSeq: query.afterSeq } : {}),
+      ...(query.limit !== undefined ? { limit: query.limit } : {}),
+    });
 
     return {
       items,
