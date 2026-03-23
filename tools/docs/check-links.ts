@@ -51,120 +51,71 @@ function main(): void {
   const anchorCache = new Map<string, Set<string>>();
 
   for (const filePath of files) {
-    processFileLinks(filePath, report, anchorCache);
+    const content = readIfExists(filePath);
+    if (!content) continue;
+
+    const links = extractLinks(content);
+    const fileDir = dirname(filePath);
+
+    for (const { href, line } of links) {
+      // Skip external links, mailto, and pure same-page anchors
+      if (/^https?:\/\/|^mailto:|^#/.test(href)) continue;
+
+      // Split into path component and optional anchor
+      const hashIdx = href.indexOf('#');
+      const anchor = hashIdx === -1 ? null : href.slice(hashIdx + 1);
+      const rawPath = (hashIdx === -1 ? href : href.slice(0, hashIdx))
+        // Strip trailing :line or :line:col suffixes on code file links (e.g. foo.ts:42)
+        .replace(/:(\d+)(:\d+)?$/, '');
+
+      // Skip if no file path (pure anchor)
+      if (!rawPath) continue;
+
+      // Check for known renames
+      const targetBasename = basename(decodeURIComponent(rawPath));
+      if (KNOWN_RENAMES[targetBasename]) {
+        report.warn(
+          `${filePath}:${line}`,
+          `Link uses renamed path: ${rawPath}`,
+          `Current name: ${KNOWN_RENAMES[targetBasename]}`
+        );
+      }
+
+      // Resolve target path (URL-decode encoded spaces etc. in link hrefs)
+      const targetPath = resolve(fileDir, decodeURIComponent(rawPath));
+
+      if (!existsSync(targetPath)) {
+        report.error(
+          `${filePath}:${line}`,
+          `Broken link: ${rawPath}`,
+          `Resolved to: ${targetPath}`
+        );
+        continue;
+      }
+
+      // Check anchor if present
+      if (anchor) {
+        let anchors = anchorCache.get(targetPath);
+        if (!anchors) {
+          const targetContent = readIfExists(targetPath);
+          anchors = targetContent ? extractAnchors(targetContent) : new Set();
+          anchorCache.set(targetPath, anchors);
+        }
+
+        if (!anchors.has(anchor)) {
+          const sample = [...anchors].slice(0, 4).join(', ');
+          report.warn(
+            `${filePath}:${line}`,
+            `Anchor #${anchor} not found in ${basename(targetPath)}`,
+            sample ? `Available: ${sample}` : 'No headings found'
+          );
+        }
+      }
+    }
   }
 
   report.print();
   process.exit(report.exitCode);
-}
-
-function processFileLinks(
-  filePath: string,
-  report: Report,
-  anchorCache: Map<string, Set<string>>
-): void {
-  const content = readIfExists(filePath);
-  if (!content) {
-    return;
-  }
-
-  const links = extractLinks(content);
-  const fileDir = dirname(filePath);
-  for (const { href, line } of links) {
-    processLink({ filePath, fileDir, href, line, report, anchorCache });
-  }
-}
-
-function processLink(input: {
-  filePath: string;
-  fileDir: string;
-  href: string;
-  line: number;
-  report: Report;
-  anchorCache: Map<string, Set<string>>;
-}): void {
-  if (isExternalOrSamePageHref(input.href)) {
-    return;
-  }
-
-  const parsed = parseHref(input.href);
-  if (!parsed.rawPath) {
-    return;
-  }
-
-  reportKnownRename(input.report, input.filePath, input.line, parsed.rawPath);
-  const decodedPath = decodeURIComponent(parsed.rawPath);
-  const targetPath = resolve(input.fileDir, decodedPath);
-  if (!existsSync(targetPath)) {
-    input.report.error(
-      `${input.filePath}:${input.line}`,
-      `Broken link: ${parsed.rawPath}`,
-      `Resolved to: ${targetPath}`
-    );
-    return;
-  }
-
-  if (parsed.anchor !== null) {
-    checkAnchor(
-      input.report,
-      input.filePath,
-      input.line,
-      targetPath,
-      parsed.anchor,
-      input.anchorCache
-    );
-  }
-}
-
-function isExternalOrSamePageHref(href: string): boolean {
-  return /^https?:\/\/|^mailto:|^#/.test(href);
-}
-
-function parseHref(href: string): { rawPath: string; anchor: string | null } {
-  const hashIdx = href.indexOf('#');
-  const anchor = hashIdx === -1 ? null : href.slice(hashIdx + 1);
-  const rawPath = (hashIdx === -1 ? href : href.slice(0, hashIdx)).replace(/:(\d+)(:\d+)?$/, '');
-  return { rawPath, anchor };
-}
-
-function reportKnownRename(report: Report, filePath: string, line: number, rawPath: string): void {
-  const targetBasename = basename(decodeURIComponent(rawPath));
-  const renamedTo = KNOWN_RENAMES[targetBasename];
-  if (renamedTo === undefined) {
-    return;
-  }
-  report.warn(
-    `${filePath}:${line}`,
-    `Link uses renamed path: ${rawPath}`,
-    `Current name: ${renamedTo}`
-  );
-}
-
-function checkAnchor(
-  report: Report,
-  filePath: string,
-  line: number,
-  targetPath: string,
-  anchor: string,
-  anchorCache: Map<string, Set<string>>
-): void {
-  let anchors = anchorCache.get(targetPath);
-  if (anchors === undefined) {
-    const targetContent = readIfExists(targetPath);
-    anchors = targetContent ? extractAnchors(targetContent) : new Set();
-    anchorCache.set(targetPath, anchors);
-  }
-
-  if (anchors.has(anchor)) {
-    return;
-  }
-
-  const sample = [...anchors].slice(0, 4).join(', ');
-  report.warn(
-    `${filePath}:${line}`,
-    `Anchor #${anchor} not found in ${basename(targetPath)}`,
-    sample ? `Available: ${sample}` : 'No headings found'
-  );
 }
 
 function getChangedMarkdownFiles(): string[] {
