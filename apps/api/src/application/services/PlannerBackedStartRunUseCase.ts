@@ -54,32 +54,17 @@ function toPlannerInput(
   command: StartRunCommand,
   context: AuthorizedCommandExecutionContext
 ): PlannerInputEnvelopeV2 {
-  const result: PlannerInputEnvelopeV2 = {
+  return {
+    ...(command.graphSource === undefined ? {} : { graphSource: command.graphSource }),
+    ...(command.manifestRef === undefined ? {} : { manifestRef: command.manifestRef }),
+    ...(command.manifest === undefined ? {} : { manifest: command.manifest }),
+    ...(command.nodes === undefined ? {} : { nodes: command.nodes }),
+    ...(command.policies === undefined ? {} : { policies: command.policies }),
+    ...(command.environment === undefined ? {} : { environment: command.environment }),
+    ...(command.observability === undefined ? {} : { observability: command.observability }),
     selection: { selectedNodeIds: command.selection },
     requestedBy: context.principal.principalId,
     requestId: context.requestId,
     requestedAtIso: context.authorizedAt.toISOString(),
   };
-  if (command.graphSource !== undefined) {
-    result.graphSource = command.graphSource;
-  }
-  if (command.manifestRef !== undefined) {
-    result.manifestRef = command.manifestRef;
-  }
-  if (command.manifest !== undefined) {
-    result.manifest = command.manifest;
-  }
-  if (command.nodes !== undefined) {
-    result.nodes = command.nodes;
-  }
-  if (command.policies !== undefined) {
-    result.policies = command.policies;
-  }
-  if (command.environment !== undefined) {
-    result.environment = command.environment;
-  }
-  if (command.observability !== undefined) {
-    result.observability = command.observability;
-  }
-  return result;
 }

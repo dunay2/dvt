@@ -17,9 +17,10 @@
 import { z } from 'zod';
 
 import type { ExecutionPlanV2, PlanCore } from './contracts/planner/ExecutionPlan.v2.js';
-import { PlannerPolicyClassSetSchema } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
-export { PlannerPolicyClassSetSchema }; // NOSONAR: local binding required for schema usage in this module
-export type { PlannerPolicyClassSetSchemaT } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
+import {
+  PlannerPolicyClassSetSchema,
+  type PlannerPolicyClassSetSchemaT,
+} from './contracts/planner/PlannerPolicyVocabulary.v2.js';
 import {
   CURRENT_EXECUTION_PLAN_VERSION,
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
@@ -345,7 +346,7 @@ export const PlannerInputEnvelopeV2Schema = z
 
     if (activeSources !== 1) {
       ctx.addIssue({
-        code: 'custom',
+        code: z.ZodIssueCode.custom,
         message:
           'PlannerInputEnvelopeV2 requires exactly one active source: graphSource, manifest, manifestRef, or nodes.',
       });
@@ -377,6 +378,7 @@ export type StepSnapshotSchemaT = z.infer<typeof StepSnapshotSchema>;
 export type RunSnapshotSchemaT = z.infer<typeof RunSnapshotSchema>;
 
 export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
+export type { PlannerPolicyClassSetSchemaT };
 export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
 export type GraphNodeSchemaT = z.infer<typeof GraphNodeSchema>;
 export type PlannerGraphSourceV1SchemaT = z.infer<typeof PlannerGraphSourceV1Schema>;

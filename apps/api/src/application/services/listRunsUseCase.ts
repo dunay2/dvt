@@ -52,8 +52,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
       planVersion: item.planVersion,
       logicalAttemptId: item.logicalAttemptId,
       provider: item.provider,
-      ...(item.createdAt === undefined ? {} : { createdAt: item.createdAt }),
-      ...(status === undefined ? {} : { status }),
+      ...(item.createdAt !== undefined ? { createdAt: item.createdAt } : {}),
+      ...(status !== undefined ? { status } : {}),
     };
   }
 
