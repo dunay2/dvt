@@ -11,7 +11,8 @@ planning_type: proposal
 ## Goal
 
 Enforce `INV-INTENT-011` by deriving `intentId` deterministically from
-`(tenantId, runId)` for start-run intent creation.
+`(tenantId, runId, logicalAttemptId, targetAdapter)` for start-run intent
+creation.
 
 ## Dependency
 
@@ -32,12 +33,12 @@ Out of scope:
 
 ## Work Breakdown
 
-| Item    | Task                                                                                | Output                                    |
-| ------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
-| `A2-T1` | Add deterministic intent ID method in idempotency builder interface/implementation. | Stable `intentId(tenantId, runId)` API.   |
-| `A2-T2` | Replace random `eventId()` use in start-run intent path.                            | `WorkflowEngine` uses deterministic key.  |
-| `A2-T3` | Add reconciliation tests for crash/retry preserving same `intentId`.                | Crash-recovery invariant proof.           |
-| `A2-T4` | Update planning traceability links.                                                 | Workboard and proposal index are aligned. |
+| Item    | Task                                                                                | Output                                                                   |
+| ------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `A2-T1` | Add deterministic intent ID method in idempotency builder interface/implementation. | Stable `intentId(tenantId, runId, logicalAttemptId, targetAdapter)` API. |
+| `A2-T2` | Wire logical attempt and adapter identity into the start-run intent path.           | `WorkflowEngine` uses deterministic key.                                 |
+| `A2-T3` | Add reconciliation tests for crash/retry preserving intent identity.                | Crash-recovery invariant proof.                                          |
+| `A2-T4` | Update planning traceability links.                                                 | Workboard and proposal index are aligned.                                |
 
 ## File Plan
 
@@ -52,9 +53,10 @@ Out of scope:
 
 ## Validation Criteria
 
-1. Same `(tenantId, runId)` always yields the same `intentId`.
+1. Same `(tenantId, runId, logicalAttemptId, targetAdapter)` always yields the same `intentId`.
 2. Start-run retry after crash does not create orphaned duplicate pending intents.
-3. Existing event ID usage outside start-run intent path remains unaffected.
+3. Recovery retries that advance `logicalAttemptId` produce a fresh `intentId`.
+4. Existing event ID usage outside start-run intent path remains unaffected.
 
 Validation commands:
 
@@ -69,10 +71,11 @@ Validation commands:
 
 ## Compatibility Note
 
-- `IIdempotencyKeyBuilder` now includes `startRunIntentId(tenantId, runId)`.
+- `IIdempotencyKeyBuilder` now includes
+  `startRunIntentId(tenantId, runId, logicalAttemptId, targetAdapter)`.
 - This is a backward-compatible additive change for the active major line in-repo,
   but all custom implementations of the interface MUST add this method before
   consuming the updated engine package.
 - Derivation inputs are consumed as-is (no trimming/case folding/Unicode
-  normalization). Callers are responsible for supplying canonical `tenantId`
-  and `runId` values.
+  normalization). Callers are responsible for supplying canonical `tenantId`,
+  `runId`, `logicalAttemptId`, and `targetAdapter` values.

@@ -9,7 +9,7 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import type { SignalRequest } from '@dvt/contracts';
+import type { Provider, SignalRequest } from '@dvt/contracts';
 
 import type { EventType } from '../contracts/runEvents.js';
 import { sha256Hex } from '../utils/sha256.js';
@@ -77,14 +77,22 @@ export class IdempotencyKeyBuilder {
    * Inputs are consumed as-is (no case folding or Unicode normalization);
    * callers must provide canonical tenantId/runId values.
    */
-  startRunIntentId(tenantId: string, runId: string): string {
+  startRunIntentId(
+    tenantId: string,
+    runId: string,
+    logicalAttemptId = 1,
+    targetAdapter?: Provider
+  ): string {
     const normalizedTenantId = normalizeNonEmptyField(tenantId, 'tenantId');
     const normalizedRunId = normalizeNonEmptyField(runId, 'runId');
+    const normalizedLogicalAttemptId = normalizeLogicalAttemptId(logicalAttemptId);
     const canonicalPayload = JSON.stringify({
       kind: 'START_RUN_INTENT',
-      version: 1,
+      version: 2,
       tenantId: normalizedTenantId,
       runId: normalizedRunId,
+      logicalAttemptId: normalizedLogicalAttemptId,
+      ...(targetAdapter !== undefined ? { targetAdapter } : {}),
     });
     return sha256Hex(canonicalPayload);
   }

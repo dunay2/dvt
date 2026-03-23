@@ -68,23 +68,36 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
   });
 
   it('startRunIntentId is deterministic and delimiter-safe via canonical payload', () => {
-    const a = builder.startRunIntentId('tenant-a|x', 'run-y');
-    const b = builder.startRunIntentId('tenant-a', 'x|run-y');
-    const sameA = builder.startRunIntentId('tenant-a|x', 'run-y');
+    const a = builder.startRunIntentId('tenant-a|x', 'run-y', 1, 'temporal');
+    const b = builder.startRunIntentId('tenant-a', 'x|run-y', 1, 'temporal');
+    const sameA = builder.startRunIntentId('tenant-a|x', 'run-y', 1, 'temporal');
 
     expect(a).toBe(sameA);
     expect(a).not.toBe(b);
   });
 
   it('startRunIntentId matches the canonical golden vector', () => {
-    expect(builder.startRunIntentId('tenant-golden', 'run-golden')).toBe(
-      '206cf63d6e549b4d6a0da7d9342f7d7f794fb331e82c4716a4557344b719ef53'
+    expect(builder.startRunIntentId('tenant-golden', 'run-golden', 1, 'temporal')).toBe(
+      'ba9883bfb2cad7c9e3f1105f94af6d3e7ddf3ab3835e06abe01a71be16a72d93'
     );
   });
 
   it('startRunIntentId rejects empty tenantId or runId', () => {
-    expect(() => builder.startRunIntentId('', 'run-1')).toThrow(/tenantId must be non-empty/);
-    expect(() => builder.startRunIntentId('tenant-1', '')).toThrow(/runId must be non-empty/);
+    expect(() => builder.startRunIntentId('', 'run-1', 1, 'temporal')).toThrow(
+      /tenantId must be non-empty/
+    );
+    expect(() => builder.startRunIntentId('tenant-1', '', 1, 'temporal')).toThrow(
+      /runId must be non-empty/
+    );
+  });
+
+  it('startRunIntentId changes when logicalAttemptId or targetAdapter changes', () => {
+    const first = builder.startRunIntentId('tenant-1', 'run-1', 1, 'temporal');
+    const differentAttempt = builder.startRunIntentId('tenant-1', 'run-1', 2, 'temporal');
+    const differentAdapter = builder.startRunIntentId('tenant-1', 'run-1', 1, 'conductor');
+
+    expect(first).not.toBe(differentAttempt);
+    expect(first).not.toBe(differentAdapter);
   });
 
   it('eventId remains non-deterministic outside start-run intent path', () => {

@@ -23,13 +23,17 @@ function makePlanRef(): PlanRef {
   };
 }
 
-function makeContext(runId = 'r1'): RunContext {
+function makeContext(
+  runId = 'r1',
+  overrides?: Partial<Pick<RunContext, 'logicalAttemptId' | 'targetAdapter'>>
+): RunContext {
   return {
     tenantId: 't',
     projectId: 'p',
     environmentId: 'dev',
     runId,
     targetAdapter: 'temporal',
+    ...(overrides ?? {}),
   };
 }
 
@@ -74,7 +78,7 @@ function createEngine(): { engine: WorkflowEngine; intentStore: InMemoryStartRun
 }
 
 describe('WorkflowEngine startRun intent id determinism', () => {
-  it('uses deterministic intent id derived from (tenantId, runId)', async () => {
+  it('uses deterministic intent id derived from tenant, run, attempt, and adapter', async () => {
     const { engine, intentStore } = createEngine();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
     const builder = new IdempotencyKeyBuilder();
@@ -82,16 +86,33 @@ describe('WorkflowEngine startRun intent id determinism', () => {
     await engine.startRun(makePlanRef(), makeContext('deterministic-run-1'));
 
     const created = createSpy.mock.calls[0]?.[0];
-    expect(created?.intentId).toBe(builder.startRunIntentId('t', 'deterministic-run-1'));
+    expect(created?.intentId).toBe(
+      builder.startRunIntentId('t', 'deterministic-run-1', 1, 'temporal')
+    );
   });
 
-  it('derivation is stable for same tenantId and runId', () => {
+  it('uses logicalAttemptId from RunContext when present', async () => {
+    const { engine, intentStore } = createEngine();
+    const createSpy = vi.spyOn(intentStore, 'createIntent');
     const builder = new IdempotencyKeyBuilder();
-    const first = builder.startRunIntentId('tenant-a', 'run-123');
-    const second = builder.startRunIntentId('tenant-a', 'run-123');
-    const differentTenant = builder.startRunIntentId('tenant-b', 'run-123');
+
+    await engine.startRun(makePlanRef(), makeContext('attempted-run-1', { logicalAttemptId: 2 }));
+
+    const created = createSpy.mock.calls[0]?.[0];
+    expect(created?.intentId).toBe(builder.startRunIntentId('t', 'attempted-run-1', 2, 'temporal'));
+  });
+
+  it('derivation is stable for the same tenantId, runId, attempt, and adapter', () => {
+    const builder = new IdempotencyKeyBuilder();
+    const first = builder.startRunIntentId('tenant-a', 'run-123', 1, 'temporal');
+    const second = builder.startRunIntentId('tenant-a', 'run-123', 1, 'temporal');
+    const differentTenant = builder.startRunIntentId('tenant-b', 'run-123', 1, 'temporal');
+    const differentAttempt = builder.startRunIntentId('tenant-a', 'run-123', 2, 'temporal');
+    const differentAdapter = builder.startRunIntentId('tenant-a', 'run-123', 1, 'conductor');
 
     expect(first).toBe(second);
     expect(first).not.toBe(differentTenant);
+    expect(first).not.toBe(differentAttempt);
+    expect(first).not.toBe(differentAdapter);
   });
 });
