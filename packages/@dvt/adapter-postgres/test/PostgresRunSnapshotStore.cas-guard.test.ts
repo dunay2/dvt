@@ -9,18 +9,18 @@ interface QueryResult<T = unknown> {
   rowCount: number;
 }
 
+interface SnapshotState {
+  snapshot: WorkflowSnapshot;
+  lastRunSeq: number;
+  archiveUnitKey: string | null;
+  eventChecksumSha256: string | null;
+  archivedAt: string | null;
+}
+
 class SnapshotUpsertClient {
   readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
 
-  constructor(
-    private readonly state: {
-      snapshot: WorkflowSnapshot;
-      lastRunSeq: number;
-      archiveUnitKey: string | null;
-      eventChecksumSha256: string | null;
-      archivedAt: string | null;
-    }
-  ) {}
+  constructor(private readonly state: SnapshotState) {}
 
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<QueryResult<T>> {
     this.queries.push({ sql, params });
@@ -79,7 +79,7 @@ class SnapshotUpsertClient {
     return { rows: [] as T[], rowCount: 0 };
   }
 
-  get currentState() {
+  get currentState(): SnapshotState {
     return this.state;
   }
 }
