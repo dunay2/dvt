@@ -115,7 +115,16 @@ function parseStartRunScope(
 
   if (!tenantId.ok) return { ok: false, code: tenantId.code };
   if (!projectId.ok) return { ok: false, code: projectId.code };
-  return { ok: false, code: environmentId.code };
+  if (!environmentId.ok) return { ok: false, code: environmentId.code };
+
+  return {
+    ok: true,
+    value: {
+      tenantId: tenantId.value,
+      projectId: projectId.value,
+      environmentId: environmentId.value,
+    },
+  };
 }
 
 function parseStartRunCommand(
