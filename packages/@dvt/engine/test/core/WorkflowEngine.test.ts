@@ -8,15 +8,14 @@
  * @version 1.0.0
  * @date 2026-03-03
  */
-import type { EngineRunRef, PlanRef, RunContext, RunId, RunStatusSnapshot } from '@dvt/contracts';
+import type { EngineRunRef, RunId, RunStatusSnapshot } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
-import type { IObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import type { RunEventInput } from '../../src/contracts/runEvents.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
-import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import { describeUnknownValue, WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
@@ -24,145 +23,16 @@ import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunInt
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
-type StoreEventInput = Parameters<InMemoryTxStore['appendAndEnqueueTx']>[1][number];
-
-function makeRunEventInput(args: {
-  runId: string;
-  eventId: string;
-  idempotencyKey: string;
-  eventType?: 'RunQueued' | 'RunFailed' | 'RunStarted';
-}): {
-  eventId: string;
-  eventType: 'RunQueued' | 'RunFailed' | 'RunStarted';
-  runId: string;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  planId: string;
-  planVersion: string;
-  logicalAttemptId: number;
-  engineAttemptId: number;
-  emittedAt: string;
-  idempotencyKey: string;
-} {
-  return {
-    eventId: args.eventId,
-    eventType: args.eventType ?? 'RunQueued',
-    runId: args.runId,
-    tenantId: 't',
-    projectId: 'p',
-    environmentId: 'dev',
-    planId: 'plan-1',
-    planVersion: '1',
-    logicalAttemptId: 1,
-    engineAttemptId: 1,
-    emittedAt: '2026-02-12T00:00:00.000Z',
-    idempotencyKey: args.idempotencyKey,
-  };
-}
+import {
+  makePlanRef,
+  makeContext,
+  makeAdapters,
+  makeTrackingObservability,
+  createEngine,
+  makeRunEventInput,
+} from './WorkflowEngine.helpers';
 
 describe('WorkflowEngine (basic failure modes)', () => {
-  function makePlanRef(): PlanRef {
-    return {
-      uri: 'https://example.com/plan',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.1',
-      planId: 'p',
-      planVersion: '1.0',
-    };
-  }
-
-  function makeContext(runId = 'r1'): RunContext {
-    return {
-      tenantId: 't',
-      projectId: 'p',
-      environmentId: 'dev',
-      runId,
-      targetAdapter: 'temporal',
-    };
-  }
-
-  function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
-    return {
-      provider: 'temporal',
-      async startRun(_planRef: PlanRef, ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-      async cancelRun() {},
-      async getRunStatus(runRef) {
-        return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
-      },
-      async signal() {},
-      ...overrides,
-    };
-  }
-
-  function makeAdapters(
-    overrides?: Partial<IProviderAdapter>
-  ): Map<EngineRunRef['provider'], IProviderAdapter> {
-    return new Map([['temporal', makeTemporalAdapter(overrides)]]);
-  }
-
-  function makeTrackingObservability(): {
-    obs: IObservability;
-    counters: string[];
-    histograms: string[];
-  } {
-    const counters: string[] = [];
-    const histograms: string[] = [];
-    const obs: IObservability = {
-      ...createNoopObservability(),
-      metrics: {
-        counter(name: string) {
-          counters.push(name);
-          return { add: () => {} };
-        },
-        histogram(name: string) {
-          histograms.push(name);
-          return { record: () => {} };
-        },
-        gauge() {
-          return { set: () => {} };
-        },
-      },
-    };
-    return { obs, counters, histograms };
-  }
-
-  function createEngine(input?: {
-    adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
-    requiredProviders?: EngineRunRef['provider'][];
-    observability?: IObservability;
-    stateStore?: InMemoryTxStore;
-  }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
-    const store = input?.stateStore ?? new InMemoryTxStore();
-    const intentStore = new InMemoryStartRunIntentStore();
-
-    const engine = new WorkflowEngine({
-      stateStore: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: input?.observability ?? createNoopObservability(),
-      adapters: input?.adapters ?? new Map(),
-      requiredProviders: input?.requiredProviders,
-    });
-
-    return { engine, store, intentStore };
-  }
-
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
 
@@ -263,6 +133,8 @@ describe('WorkflowEngine (basic failure modes)', () => {
     );
     expect(counters).toContain('dvt.run.start_failed_total');
   });
+
+  // Observability-focused tests moved to WorkflowEngine.observability.test.ts
 
   it('constructor validates requiredProviders', () => {
     expect(() =>
@@ -671,7 +543,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           idempotencyKey: 'a2-shape-runseq',
         }),
         runSeq: 99,
-      } as unknown as StoreEventInput;
+      } as unknown as RunEventInput;
 
       await expect(store.appendAndEnqueueTx(runId, [invalidWithRunSeq])).rejects.toThrow(
         /INVALID_EVENT_WRITE_SHAPE: runSeq forbidden/
@@ -685,7 +557,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           idempotencyKey: 'a2-shape-persisted',
         }),
         persistedAt: '2026-02-12T00:00:01.000Z',
-      } as unknown as StoreEventInput;
+      } as unknown as RunEventInput;
 
       await expect(store.appendAndEnqueueTx(runId, [invalidWithPersistedAt])).rejects.toThrow(
         /INVALID_EVENT_WRITE_SHAPE: persistedAt forbidden/
@@ -739,5 +611,28 @@ describe('WorkflowEngine (basic failure modes)', () => {
       expect(snap?.gatewayDecisions).toEqual({ 'gw-1': true });
       expect(snap?.gatewayDecisions?.['gw-1']).toBe(true);
     });
+  });
+});
+
+describe('describeUnknownValue helper', () => {
+  it('returns Error.message for Error inputs', () => {
+    expect(describeUnknownValue(new Error('boom'))).toBe('boom');
+  });
+
+  it('returns strings as-is and numbers as strings', () => {
+    expect(describeUnknownValue('hello')).toBe('hello');
+    expect(describeUnknownValue(123)).toBe('123');
+  });
+
+  it('serializes plain objects to JSON or falls back to tag for circular', () => {
+    expect(describeUnknownValue({ a: 1 })).toBe(JSON.stringify({ a: 1 }));
+
+    const a: any = {};
+    a.self = a; // circular
+    const out = describeUnknownValue(a);
+    expect(typeof out).toBe('string');
+    expect(out.startsWith('[object') || out.includes('circular') || out.includes('self')).toBe(
+      true
+    );
   });
 });
