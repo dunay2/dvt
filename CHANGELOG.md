@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.7.2](https://github.com/dunay2/dvt/compare/v4.7.1...v4.7.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* **api:** Harden RC-D1 health runtime watchdog and QA closure ([#555](https://github.com/dunay2/dvt/issues/555)) ([681c27c](https://github.com/dunay2/dvt/commit/681c27c0131d1ebccedf5ddceb35f9661125490c))
+* **engine:** Harden RC-A5 markResolved observability failure handling ([#554](https://github.com/dunay2/dvt/issues/554)) ([5d891c5](https://github.com/dunay2/dvt/commit/5d891c5796abea6eeada942a4c7a1c60477ef895))
+
 ## [4.7.1](https://github.com/dunay2/dvt/compare/v4.7.0...v4.7.1) (2026-03-22)
 
 
