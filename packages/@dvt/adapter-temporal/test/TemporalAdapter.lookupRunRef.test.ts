@@ -78,6 +78,20 @@ function makeServiceErrorNotFound(): Error {
   return err;
 }
 
+function makeServiceErrorNotFoundCodeAsString(): Error {
+  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
+  err.name = 'ServiceError';
+  err.code = '5';
+  return err;
+}
+
+function makeServiceErrorNotFoundCodeAsText(): Error {
+  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
+  err.name = 'ServiceError';
+  err.code = 'NOT_FOUND';
+  return err;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -116,6 +130,28 @@ describe('TemporalAdapter.lookupRunRef', () => {
   it('returns null when workflow does not exist (ServiceError gRPC NOT_FOUND code 5)', async () => {
     const handle = makeWorkflowHandleMock(async () => {
       throw makeServiceErrorNotFound();
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when workflow does not exist (ServiceError gRPC NOT_FOUND code "5")', async () => {
+    const handle = makeWorkflowHandleMock(async () => {
+      throw makeServiceErrorNotFoundCodeAsString();
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when workflow does not exist (ServiceError NOT_FOUND string code)', async () => {
+    const handle = makeWorkflowHandleMock(async () => {
+      throw makeServiceErrorNotFoundCodeAsText();
     });
     const { adapter } = makeAdapter(() => handle);
 
