@@ -39,6 +39,7 @@ Draft proposals and candidate changes. Non-normative.
 - [RC-A1 SimulateError Production Hardening](rc-a1-simulate-error-production-hardening-20260322.md)
 - [RC-A2 Deterministic StartRun Intent ID](rc-a2-deterministic-start-run-intent-id-20260322.md)
 - [RC-B2 Lineage Compiled Code Resolver Rollout](rc-b2-lineage-compiled-code-resolver-rollout-20260322.md)
+- [RC-D1A Health Contract Compatibility And Watchdog Integration](rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md)
 - [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)
 - [S15 Run Snapshot CAS Guard](s15-run-snapshot-cas-guard-20260322.md)
 
