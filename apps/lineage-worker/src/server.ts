@@ -16,6 +16,8 @@ async function main(): Promise<void> {
     base: { service: env.SERVICE_NAME },
   });
 
+  const mapper = createStepStartedLineageMapper(env);
+
   const stateStore = new PostgresStateStoreAdapter({
     connectionString: env.DATABASE_URL,
     schema: env.DVT_PG_SCHEMA,
@@ -34,8 +36,6 @@ async function main(): Promise<void> {
       ? { headers: { authorization: `Bearer ${env.DVT_LINEAGE_API_TOKEN}` } }
       : {}),
   });
-
-  const mapper = createStepStartedLineageMapper(env);
 
   const runtime = new LineageWorkerRuntime(lineageStore, sink, mapper, logger, {
     batchSize: env.DVT_LINEAGE_BATCH_SIZE,
