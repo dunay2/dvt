@@ -106,12 +106,13 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
 
   async function withAdapter(
     fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
-    options?: { outboxShardCount?: number }
+    options?: { outboxShardCount?: number; outboxClaimTimeoutMs?: number }
   ): Promise<void> {
     const adapter = new PostgresStateStoreAdapter({
       schema,
       now: () => NOW,
       outboxShardCount: options?.outboxShardCount,
+      outboxClaimTimeoutMs: options?.outboxClaimTimeoutMs,
     });
     try {
       await adapter.migrate();
@@ -123,11 +124,13 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
 
   async function withClockAdapter(
     nowRef: { value: string },
-    fn: (adapter: PostgresStateStoreAdapter) => Promise<void>
+    fn: (adapter: PostgresStateStoreAdapter) => Promise<void>,
+    options?: { outboxClaimTimeoutMs?: number }
   ): Promise<void> {
     const adapter = new PostgresStateStoreAdapter({
       schema,
       now: () => nowRef.value,
+      outboxClaimTimeoutMs: options?.outboxClaimTimeoutMs,
     });
     try {
       await adapter.migrate();
@@ -396,6 +399,47 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         )
       ).toBeUndefined();
     });
+  });
+
+  test('outbox: stale claims honor a configured claim timeout before the default window', async () => {
+    const nowRef = { value: NOW };
+
+    await withClockAdapter(
+      nowRef,
+      async (adapter) => {
+        await adapter.bootstrapRunTx(makeBootstrap('run-configured-claim'));
+        await adapter.appendAndEnqueueTx(rid('run-configured-claim'), [
+          makeEvent({
+            runId: 'run-configured-claim',
+            eventType: 'RunStarted',
+            idempotencyKey: 'run-configured-claim:started',
+          }),
+        ]);
+
+        const firstClaim = await adapter.listPending(10);
+        const claimed = firstClaim.find(
+          (record) => record.payload.runId === 'run-configured-claim'
+        );
+        expect(claimed).toBeDefined();
+        expect(claimed?.payload.runSeq).toBe(1);
+
+        nowRef.value = '2026-02-22T00:01:29.000Z';
+        const beforeExpiry = await adapter.listPending(10);
+        expect(
+          beforeExpiry.find((record) => record.payload.runId === 'run-configured-claim')
+        ).toBeUndefined();
+
+        nowRef.value = '2026-02-22T00:01:31.000Z';
+        const afterExpiry = await adapter.listPending(10);
+        const reclaimed = afterExpiry.find(
+          (record) => record.payload.runId === 'run-configured-claim'
+        );
+        expect(reclaimed).toBeDefined();
+        expect(reclaimed?.id).toBe(claimed?.id);
+        expect(reclaimed?.payload.runSeq).toBe(1);
+      },
+      { outboxClaimTimeoutMs: 90_000 }
+    );
   });
 
   test('outbox: replayDeadLetters moves records back to pending', () =>

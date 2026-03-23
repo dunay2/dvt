@@ -69,7 +69,7 @@ export function normalizeOutboxShardCount(value: number | undefined): number {
 
 export function normalizeOutboxClaimTimeoutMs(value: number | undefined): number {
   const claimTimeoutMs = value ?? DEFAULT_OUTBOX_CLAIM_TIMEOUT_MS;
-  if (!Number.isFinite(claimTimeoutMs) || claimTimeoutMs <= 0) {
+  if (!Number.isInteger(claimTimeoutMs) || claimTimeoutMs <= 0) {
     throw new Error(`INVALID_OUTBOX_CLAIM_TIMEOUT_MS: ${value}`);
   }
   return claimTimeoutMs;
@@ -180,8 +180,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
 
     return this.withTransaction(async (client) => {
       const now = this.now();
-      const staleClaimBefore = new Date(Date.parse(now) - this.outboxClaimTimeoutMs).toISOString();
-      const params: unknown[] = [boundedLimit, now, staleClaimBefore];
+      const params: unknown[] = [boundedLimit, now, this.outboxClaimTimeoutMs];
       let shardFilterClause = '';
       if (shardIds) {
         params.push(shardIds);
@@ -195,7 +194,10 @@ export class PostgresOutboxStore implements IOutboxStorage {
             FROM ${quoteIdentifier(this.schema)}.outbox o
             WHERE o.delivered_at IS NULL
               AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $2::timestamptz)
-              AND (o.claimed_at IS NULL OR o.claimed_at < $3::timestamptz)
+              AND (
+                o.claimed_at IS NULL
+                OR o.claimed_at < ($2::timestamptz - ($3::bigint * INTERVAL '1 millisecond'))
+              )
               ${shardFilterClause}
               AND NOT EXISTS (
                 SELECT 1
