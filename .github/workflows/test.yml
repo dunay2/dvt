@@ -158,6 +158,12 @@ jobs:
         with:
           node-version: 20.x
 
+      - name: Build adapter-postgres dependency graph (integration)
+        if:
+          github.event_name != 'pull_request' || steps.changes.outputs.adapter_postgres_integration
+          == 'true'
+        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
+
       - name: Run adapter-postgres smoke integration
         if:
           github.event_name != 'pull_request' || steps.changes.outputs.adapter_postgres_integration
