@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.8.1](https://github.com/dunay2/dvt/compare/v4.8.0...v4.8.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **adapters:** Make outbox claim timeout configurable ([#568](https://github.com/dunay2/dvt/issues/568)) ([f1b3b31](https://github.com/dunay2/dvt/commit/f1b3b3163401f138a19b81d8a34a3be69822dba3))
+
 ## [4.8.0](https://github.com/dunay2/dvt/compare/v4.7.2...v4.8.0) (2026-03-23)
 
 
