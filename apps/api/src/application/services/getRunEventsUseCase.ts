@@ -1,4 +1,4 @@
-﻿import type { IRunStateStore } from '@dvt/contracts';
+import type { IRunStateStore } from '@dvt/contracts';
 import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import type {
@@ -23,17 +23,34 @@ export class GetRunEventsUseCase implements IGetRunEventsUseCase {
       throw new RunMetadataNotFoundError(query.runId);
     }
 
-    const items = await this.stateStore.listEvents(context.scope.tenantId.value, query.runId, {
-      ...(query.afterSeq !== undefined ? { afterSeq: query.afterSeq } : {}),
-      ...(query.limit !== undefined ? { limit: query.limit } : {}),
-    });
+    const options: { afterSeq?: number; limit?: number } = {};
+    if (query.afterSeq === undefined) {
+      // no cursor
+    } else {
+      options.afterSeq = query.afterSeq;
+    }
+    if (query.limit === undefined) {
+      // no limit
+    } else {
+      options.limit = query.limit;
+    }
+
+    const items = await this.stateStore.listEvents(
+      context.scope.tenantId.value,
+      query.runId,
+      options
+    );
+
+    if (query.limit === undefined) {
+      return {
+        items,
+        nextCursor: null,
+      };
+    }
 
     return {
       items,
-      nextCursor:
-        query.limit !== undefined && items.length === query.limit
-          ? (items.at(-1)?.runSeq ?? null)
-          : null,
+      nextCursor: items.length === query.limit ? (items.at(-1)?.runSeq ?? null) : null,
     };
   }
 }
