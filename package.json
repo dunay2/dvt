@@ -34,6 +34,7 @@
     "test:determinism": "pnpm --filter @dvt/engine test -- --grep determinism || true",
     "test:replay": "pnpm --filter @dvt/engine test -- --grep replay || true",
     "test:coverage": "pnpm -r test -- --coverage",
+    "test:ci-tools": "node --test tools/ci/*.test.mjs",
     "validate:contracts": "pnpm --filter @dvt/contracts run build && pnpm --filter @dvt/cli validate-contracts",
     "gen:ai-index": "node scripts/gen-ai-index.js",
     "rebuild:snapshots": "node scripts/rebuild-snapshots.js",

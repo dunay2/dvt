@@ -247,42 +247,18 @@ jobs:
       needs.pr-checks.outputs.adapter_postgres_changed == 'true' && github.event_name ==
       'pull_request' && github.event.pull_request.draft == false
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Require dedicated adapter-postgres smoke check
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const ref = context.payload.pull_request.head.sha;
-            const checkName = 'Adapter Postgres Smoke';
-            const retries = 60;
-            const delayMs = 10000;
-
-            for (let attempt = 1; attempt <= retries; attempt++) {
-              const response = await github.rest.checks.listForRef({
-                owner,
-                repo,
-                ref,
-                per_page: 100,
-              });
-
-              const run = response.data.check_runs.find((check) => check.name === checkName);
-              if (!run) {
-                core.info(`[${attempt}/${retries}] Check "${checkName}" not found yet.`);
-              } else if (run.status !== 'completed') {
-                core.info(`[${attempt}/${retries}] Check "${checkName}" status is "${run.status}".`);
-              } else if (run.conclusion === 'success') {
-                core.info(`✅ Required check "${checkName}" passed.`);
-                return;
-              } else {
-                core.setFailed(`❌ Required check "${checkName}" finished with conclusion "${run.conclusion}".`);
-                return;
-              }
-
-              await new Promise((resolve) => setTimeout(resolve, delayMs));
-            }
-
-            core.setFailed(`❌ Required check "${checkName}" did not complete in time.`);
+        run: node tools/ci/check-run-guard.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_SHA: ${{ github.event.pull_request.head.sha }}
+          CHECK_NAME: Adapter Postgres Smoke
+          CHECK_RETRIES: '60'
+          CHECK_DELAY_MS: '10000'
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
