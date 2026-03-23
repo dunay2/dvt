@@ -45,9 +45,16 @@ export interface IStartRunIntentCommandStore {
    * `intentId` and the idempotency guarantee absorbs the retry. Generating a
    * fresh UUID on every call breaks this guarantee.
    *
+   * Normalization policy: derivation inputs are consumed as-is (no trimming,
+   * no case folding, no Unicode normalization). Callers MUST provide canonical
+   * tenantId/runId values before derivation.
+   *
+   * Canonicalization policy: derivation MUST use a versioned canonical payload
+   * shape so delimiter collisions do not alter semantic identity.
+   *
    * If a different `intentId` is supplied but an active (PENDING or DISPATCHED)
    * intent already exists for the same (tenantId, runId), implementations MUST
-   * throw `IntentActiveConflictError` — this indicates a caller bug.
+   * throw `IntentActiveConflictError` - this indicates a caller bug.
    */
   createIntent(input: CreateIntentInput): Promise<StartRunIntent>;
   markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void>;

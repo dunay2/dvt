@@ -1,5 +1,27 @@
 # Changelog
 
+## [4.8.1](https://github.com/dunay2/dvt/compare/v4.8.0...v4.8.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **adapters:** Make outbox claim timeout configurable ([#568](https://github.com/dunay2/dvt/issues/568)) ([f1b3b31](https://github.com/dunay2/dvt/commit/f1b3b3163401f138a19b81d8a34a3be69822dba3))
+
+## [4.8.0](https://github.com/dunay2/dvt/compare/v4.7.2...v4.8.0) (2026-03-23)
+
+
+### Features
+
+* **api:** Add reconciler health visibility ([#564](https://github.com/dunay2/dvt/issues/564)) ([4a96f94](https://github.com/dunay2/dvt/commit/4a96f94c8e1b4bc50b180e76ce05586cd81afb56))
+
+## [4.7.2](https://github.com/dunay2/dvt/compare/v4.7.1...v4.7.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* **api:** Harden RC-D1 health runtime watchdog and QA closure ([#555](https://github.com/dunay2/dvt/issues/555)) ([681c27c](https://github.com/dunay2/dvt/commit/681c27c0131d1ebccedf5ddceb35f9661125490c))
+* **engine:** Harden RC-A5 markResolved observability failure handling ([#554](https://github.com/dunay2/dvt/issues/554)) ([5d891c5](https://github.com/dunay2/dvt/commit/5d891c5796abea6eeada942a4c7a1c60477ef895))
+
 ## [4.7.1](https://github.com/dunay2/dvt/compare/v4.7.0...v4.7.1) (2026-03-22)
 
 

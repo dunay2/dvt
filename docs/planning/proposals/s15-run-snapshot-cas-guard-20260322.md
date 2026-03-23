@@ -24,6 +24,7 @@ In scope:
 - SQL guard on `persistWithClient` upsert path
 - regression tests for projector/write-path race
 - planning traceability updates
+- follow-up task to surface CAS no-op outcome for stale-write visibility
 
 Out of scope:
 
@@ -38,6 +39,7 @@ Out of scope:
 | `S15-T2` | Add tests for stale update overwrite attempts.                | Regression proof against snapshot rollback.     |
 | `S15-T3` | Validate no behavioral regression in existing snapshot tests. | Existing adapter-postgres suite remains green.  |
 | `S15-T4` | Update planning traceability links.                           | Workboard and proposal index are aligned.       |
+| `S15-T5` | Surface CAS no-op outcome for stale snapshot writes.          | Repair and archival callers can detect discard. |
 
 ## File Plan
 
@@ -63,4 +65,5 @@ Validation commands:
 ## Exit Criteria
 
 - `S15` status can move from `Queued` to `Review` with CAS regression evidence.
+- Follow-up task is captured in the workboard to close the remaining silent no-op visibility gap.
 - No hidden debt or temporary bypass.

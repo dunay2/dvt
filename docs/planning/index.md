@@ -70,6 +70,7 @@ Concept anchors for this page:
 - [RC-A1 SimulateError Production Hardening](proposals/rc-a1-simulate-error-production-hardening-20260322.md)
 - [RC-A2 Deterministic StartRun Intent ID](proposals/rc-a2-deterministic-start-run-intent-id-20260322.md)
 - [RC-B2 Lineage Compiled Code Resolver Rollout](proposals/rc-b2-lineage-compiled-code-resolver-rollout-20260322.md)
+- [RC-D1A Health Contract Compatibility And Watchdog Integration](proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md)
 - [Repository Governance Proposal Set 2026-03-17](proposals/repository-governance-proposal-set-20260317.md)
 - [S15 Run Snapshot CAS Guard](proposals/s15-run-snapshot-cas-guard-20260322.md)
 
@@ -95,6 +96,8 @@ Concept anchors for this page:
 - [PostgresStateStoreAdapter — Architecture Review and Refactor Proposal](reviews/20260315-postgres-state-store-adapter-refactor-review.md)
 - [Principal Architecture Review - DVT+](reviews/20260316-principal-architecture-review.md)
 - [QA Review and Class Documentation — `PostgresStartRunIntentStore`](reviews/20260315-postgres-start-run-intent-store-qa-review.md)
+- [RC-A2 Architectural Review Hard Mode](reviews/20260322-rc-a2-architectural-review-hard-mode.md)
+- [RC-A2 QA Hard Review](reviews/20260322-rc-a2-qa-hard-review.md)
 - [Review Naming Policy](reviews/review-naming-policy.md)
 - [RunPlanWorkflow — Architecture Review, Refactor Map, and Mermaid Diagrams](reviews/20260315-run-plan-workflow-architecture-review.md)
 - [StartRunIntentSchemaManager — QA, Architecture Review, and Refactor Proposal](reviews/20260315-start-run-intent-schema-manager-architecture-review.md)

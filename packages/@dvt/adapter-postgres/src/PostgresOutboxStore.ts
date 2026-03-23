@@ -23,6 +23,8 @@ import type {
 } from './types.js';
 import { MAX_OUTBOX_ATTEMPTS } from './types.js';
 
+const DEFAULT_OUTBOX_CLAIM_TIMEOUT_MS = 5 * 60 * 1000;
+
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
 // ---------------------------------------------------------------------------
@@ -65,6 +67,14 @@ export function normalizeOutboxShardCount(value: number | undefined): number {
   return shardCount;
 }
 
+export function normalizeOutboxClaimTimeoutMs(value: number | undefined): number {
+  const claimTimeoutMs = value ?? DEFAULT_OUTBOX_CLAIM_TIMEOUT_MS;
+  if (!Number.isFinite(claimTimeoutMs) || claimTimeoutMs <= 0) {
+    throw new Error(`INVALID_OUTBOX_CLAIM_TIMEOUT_MS: ${value}`);
+  }
+  return claimTimeoutMs;
+}
+
 export function normalizeShardSelection(shardIds: readonly number[] | undefined): number[] | null {
   if (shardIds === undefined) {
     return null;
@@ -85,6 +95,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
     private readonly schema: string,
     private readonly now: () => string,
     private readonly outboxShardCount: number,
+    private readonly outboxClaimTimeoutMs: number,
     private readonly withTransaction: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>,
     private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>
   ) {}
@@ -169,7 +180,8 @@ export class PostgresOutboxStore implements IOutboxStorage {
 
     return this.withTransaction(async (client) => {
       const now = this.now();
-      const params: unknown[] = [boundedLimit, now];
+      const staleClaimBefore = new Date(Date.parse(now) - this.outboxClaimTimeoutMs).toISOString();
+      const params: unknown[] = [boundedLimit, now, staleClaimBefore];
       let shardFilterClause = '';
       if (shardIds) {
         params.push(shardIds);
@@ -183,7 +195,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
             FROM ${quoteIdentifier(this.schema)}.outbox o
             WHERE o.delivered_at IS NULL
               AND (o.next_attempt_at IS NULL OR o.next_attempt_at <= $2::timestamptz)
-              AND (o.claimed_at IS NULL OR o.claimed_at < ($2::timestamptz - INTERVAL '5 minutes'))
+              AND (o.claimed_at IS NULL OR o.claimed_at < $3::timestamptz)
               ${shardFilterClause}
               AND NOT EXISTS (
                 SELECT 1
