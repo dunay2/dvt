@@ -201,6 +201,7 @@ jobs:
               - 'vitest.config.ts'
               - 'tsconfig*.json'
               - '.github/workflows/test.yml'
+              - '.github/workflows/pr-quality-gate.yml'
 
       - name: Setup pnpm, cache and dependencies
         if:
@@ -219,6 +220,12 @@ jobs:
           github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
           == 'true'
         run: pnpm --filter @dvt/adapter-postgres test -- smoke.test.ts
+
+      - name: Run adapter-postgres full test suite
+        if:
+          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
+          == 'true'
+        run: pnpm test:adapter-postgres
 
       - name: Skip adapter-postgres smoke (PR without relevant changes)
         if:
