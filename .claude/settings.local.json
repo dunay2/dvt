@@ -91,7 +91,10 @@
       "Bash(find /f/segundodvt/dvt/packages/@dvt/planner-contracts/src -name *.ts)",
       "Bash(find /f/segundodvt/dvt/apps/lineage-worker/src -name *.ts)",
       "Bash(find /f/segundodvt/dvt/apps/projector-worker/src -name *.ts)",
-      "Bash(find /f/segundodvt/dvt/packages/@dvt/traceability-service/src -name *.ts)"
+      "Bash(find /f/segundodvt/dvt/packages/@dvt/traceability-service/src -name *.ts)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(pnpm install:*)",
+      "Bash(grep -rl \"tsconfig.node-runtime.base.json\" f:/tercerdvt/dvt/apps/*/tsconfig.json)"
     ]
   }
 }

@@ -26,7 +26,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunResult> {
-    if (command.planRef) {
+    if (command.planRef != null) {
       return this.deps.delegate.execute(command, context);
     }
 
