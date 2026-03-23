@@ -307,19 +307,20 @@ function restoreEnv(stored: StoredEnv): void {
 }
 
 function quoteIdentifier(identifier: string): string {
-  return `"${identifier.replace(/"/g, '""')}"`;
+  return `"${identifier.replaceAll('"', '""')}"`;
 }
 
 function eventTypes(payload: unknown): string[] {
-  if (
-    payload === null ||
-    typeof payload !== 'object' ||
-    !Array.isArray((payload as { items?: unknown }).items)
-  ) {
+  if (payload === null || typeof payload !== 'object') {
     return [];
   }
 
-  return ((payload as { items: Array<{ eventType?: unknown }> }).items ?? [])
+  const items = (payload as { items?: unknown }).items;
+  if (Array.isArray(items) === false) {
+    return [];
+  }
+
+  return (items ?? [])
     .map((item) => item.eventType)
     .filter((value): value is string => typeof value === 'string');
 }
@@ -384,7 +385,7 @@ async function startJwksServer(): Promise<JwksServerHandle> {
   });
 
   const address = server.address();
-  if (!address || typeof address === 'string') {
+  if (address === null || typeof address === 'string') {
     throw new Error('Unable to resolve JWKS server address');
   }
 
