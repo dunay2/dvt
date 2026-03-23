@@ -59,9 +59,9 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         if:
           github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
-          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_postgres ==
-          'true' || steps.changes.outputs.adapter_temporal == 'true' || steps.changes.outputs.cli ==
-          'true' || steps.changes.outputs.root_config == 'true'
+          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_temporal ==
+          'true' || steps.changes.outputs.cli == 'true' || steps.changes.outputs.root_config ==
+          'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: ${{ matrix.node-version }}
@@ -84,18 +84,6 @@ jobs:
           steps.changes.outputs.root_config == 'true')
         run: pnpm test:contracts
 
-      - name: Build adapter-postgres dependency graph (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.adapter_postgres == 'true'
-          || steps.changes.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
-
-      - name: Run adapter-postgres tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.adapter_postgres == 'true'
-          || steps.changes.outputs.root_config == 'true')
-        run: pnpm test:adapter-postgres
-
       - name: Run adapter-temporal tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.changes.outputs.adapter_temporal == 'true'
@@ -111,9 +99,9 @@ jobs:
       - name: Skip package tests (PR with no affected packages)
         if:
           github.event_name == 'pull_request' && steps.changes.outputs.engine != 'true' &&
-          steps.changes.outputs.contracts != 'true' && steps.changes.outputs.adapter_postgres !=
-          'true' && steps.changes.outputs.adapter_temporal != 'true' && steps.changes.outputs.cli !=
-          'true' && steps.changes.outputs.root_config != 'true'
+          steps.changes.outputs.contracts != 'true' && steps.changes.outputs.adapter_temporal !=
+          'true' && steps.changes.outputs.cli != 'true' && steps.changes.outputs.root_config !=
+          'true'
         run: echo "No affected test packages detected; skipping package test execution."
 
       - name: Generate coverage report
@@ -189,3 +177,51 @@ jobs:
           github.event_name == 'pull_request' && steps.det_changes.outputs.determinism_relevant !=
           'true'
         run: echo "No determinism-relevant changes detected; skipping determinism checks."
+
+  adapter-postgres-smoke:
+    name: Adapter Postgres Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Detect adapter-postgres-relevant changes (PR only)
+        id: pg_changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            adapter_postgres_relevant:
+              - 'packages/@dvt/adapter-postgres/**'
+              - 'packages/@dvt/engine/**'
+              - 'packages/@dvt/contracts/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'vitest.config.ts'
+              - 'tsconfig*.json'
+              - '.github/workflows/test.yml'
+
+      - name: Setup pnpm, cache and dependencies
+        if:
+          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
+          == 'true'
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Build adapter-postgres dependency graph
+        if:
+          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
+          == 'true'
+        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
+
+      - name: Run adapter-postgres smoke suite
+        if:
+          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
+          == 'true'
+        run: pnpm --filter @dvt/adapter-postgres test -- smoke.test.ts
+
+      - name: Skip adapter-postgres smoke (PR without relevant changes)
+        if:
+          github.event_name == 'pull_request' && steps.pg_changes.outputs.adapter_postgres_relevant
+          != 'true'
+        run: echo "No adapter-postgres-relevant changes detected; skipping smoke suite."

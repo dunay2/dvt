@@ -30,6 +30,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     outputs:
       temporal_changed: ${{ steps.detect_changes.outputs.temporal_changed }}
+      adapter_postgres_changed: ${{ steps.detect_changes.outputs.adapter_postgres_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -198,6 +199,21 @@ jobs:
             const changed = files.some(f => patterns.some(p => f.filename.startsWith(p)));
             core.setOutput('temporal_changed', changed ? 'true' : 'false');
 
+            const adapterPostgresPatterns = [
+              'packages/@dvt/adapter-postgres/',
+              'packages/@dvt/engine/',
+              'packages/@dvt/contracts/',
+              'package.json',
+              'pnpm-lock.yaml',
+              'pnpm-workspace.yaml',
+              '.github/workflows/test.yml',
+              '.github/workflows/pr-quality-gate.yml',
+            ];
+            const adapterPostgresChanged = files.some(f =>
+              adapterPostgresPatterns.some(p => f.filename.startsWith(p)),
+            );
+            core.setOutput('adapter_postgres_changed', adapterPostgresChanged ? 'true' : 'false');
+
   temporal-integration:
     name: Temporal adapter integration (time-skipping)
     runs-on: ubuntu-latest
@@ -218,10 +234,55 @@ jobs:
 
       - name: Run Temporal adapter integration (time-skipping)
         run: pnpm --filter @dvt/adapter-temporal test:integration
+
+  adapter-postgres-smoke-guard:
+    name: Adapter Postgres Smoke Guard
+    runs-on: ubuntu-latest
+    needs: [pr-checks]
+    if:
+      needs.pr-checks.outputs.adapter_postgres_changed == 'true' && github.event_name ==
+      'pull_request' && github.event.pull_request.draft == false
+    steps:
+      - name: Require dedicated adapter-postgres smoke check
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const ref = context.payload.pull_request.head.sha;
+            const checkName = 'Adapter Postgres Smoke';
+            const retries = 30;
+            const delayMs = 10000;
+
+            for (let attempt = 1; attempt <= retries; attempt++) {
+              const response = await github.rest.checks.listForRef({
+                owner,
+                repo,
+                ref,
+                per_page: 100,
+              });
+
+              const run = response.data.check_runs.find((check) => check.name === checkName);
+              if (!run) {
+                core.info(`[${attempt}/${retries}] Check "${checkName}" not found yet.`);
+              } else if (run.status !== 'completed') {
+                core.info(`[${attempt}/${retries}] Check "${checkName}" status is "${run.status}".`);
+              } else if (run.conclusion === 'success') {
+                core.info(`✅ Required check "${checkName}" passed.`);
+                return;
+              } else {
+                core.setFailed(`❌ Required check "${checkName}" finished with conclusion "${run.conclusion}".`);
+                return;
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, delayMs));
+            }
+
+            core.setFailed(`❌ Required check "${checkName}" did not complete in time.`);
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
-    needs: [pr-checks, temporal-integration]
+    needs: [pr-checks, temporal-integration, adapter-postgres-smoke-guard]
     if: always()
     steps:
       - name: Check all jobs
