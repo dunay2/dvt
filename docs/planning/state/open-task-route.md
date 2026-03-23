@@ -2,7 +2,7 @@
 title: Open Task Route
 status: Review
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-03-23
 planning_type: status
 ---
 
@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 3
-- `queued`: 35
+- `review`: 4
+- `queued`: 34
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 

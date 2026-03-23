@@ -145,15 +145,18 @@ export class BackpressureAwareStartRunUseCase implements IStartRunUseCase {
 }
 
 function getAdmissionErrorCode(error: unknown): AdmissionErrorCode | null {
-  if (error instanceof Error) {
-    const code = (error as Error & { code?: unknown }).code;
-    if (
-      code === 'TENANT_BACKPRESSURE' ||
-      code === 'SYSTEM_BACKPRESSURE' ||
-      code === 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE'
-    ) {
-      return code;
-    }
+  if (!(error instanceof Error)) {
+    return null;
   }
+
+  const code = (error as Error & { code?: unknown }).code;
+  if (
+    code === 'TENANT_BACKPRESSURE' ||
+    code === 'SYSTEM_BACKPRESSURE' ||
+    code === 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE'
+  ) {
+    return code;
+  }
+
   return null;
 }

@@ -1,5 +1,26 @@
 # Changelog
 
+## [4.9.1](https://github.com/dunay2/dvt/compare/v4.9.0...v4.9.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **adapters:** Normalize Temporal not-found detection robustness ([#572](https://github.com/dunay2/dvt/issues/572)) ([f848b4a](https://github.com/dunay2/dvt/commit/f848b4a0fa6c7f1c95f8b6897f77e2c17edc9a8a))
+
+## [4.9.0](https://github.com/dunay2/dvt/compare/v4.8.1...v4.9.0) (2026-03-23)
+
+
+### Features
+
+* **api:** Harden start-run parser edges ([#570](https://github.com/dunay2/dvt/issues/570)) ([7b917fb](https://github.com/dunay2/dvt/commit/7b917fba4141e029fe516c37d810ed35028f7bd8))
+
+## [4.8.1](https://github.com/dunay2/dvt/compare/v4.8.0...v4.8.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **adapters:** Make outbox claim timeout configurable ([#568](https://github.com/dunay2/dvt/issues/568)) ([f1b3b31](https://github.com/dunay2/dvt/commit/f1b3b3163401f138a19b81d8a34a3be69822dba3))
+
 ## [4.8.0](https://github.com/dunay2/dvt/compare/v4.7.2...v4.8.0) (2026-03-23)
 
 
