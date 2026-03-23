@@ -69,6 +69,9 @@ export interface WorkflowEngineDeps {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
   };
+
+  /** Optional throttle window for stderr fallback diagnostics (milliseconds). */
+  observabilityFallbackThrottleMs?: number;
 }
 
 export interface HealthStatus {
@@ -88,6 +91,10 @@ interface StartRunErrorContext {
   intentId?: string;
 }
 
+class MutableStartRunErrorContext implements StartRunErrorContext {
+  intentId?: string;
+}
+
 class PostStartIntentPersistenceError extends Error {
   constructor(
     readonly intentId: string,
@@ -104,10 +111,18 @@ class PostStartIntentPersistenceError extends Error {
 
 export class WorkflowEngine implements IWorkflowEngine {
   private readonly observability: IObservability;
+  private readonly stderrFallbackThrottleMs: number;
+  private lastStderrFallbackAtMs = 0;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
     this.observability = deps.observability;
+    this.stderrFallbackThrottleMs =
+      typeof deps.observabilityFallbackThrottleMs === 'number' &&
+      Number.isFinite(deps.observabilityFallbackThrottleMs) &&
+      deps.observabilityFallbackThrottleMs > 0
+        ? deps.observabilityFallbackThrottleMs
+        : 30_000;
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
@@ -118,7 +133,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       operation: 'startRun',
     });
     const traceContext = buildTraceContext(validatedContext, validatedPlanRef.planId);
-    const errorContext: StartRunErrorContext = {};
+    const errorContext = new MutableStartRunErrorContext();
 
     return this.observability.withContext(traceContext, () =>
       this.observability.traces.withSpan(
@@ -246,7 +261,13 @@ export class WorkflowEngine implements IWorkflowEngine {
       } catch (markDispatchedError) {
         throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
       }
-      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+      await this.markIntentResolvedBestEffort({
+        intentId,
+        tenantId: validatedContext.tenantId,
+        runId: validatedContext.runId,
+        provider,
+        traceContext,
+      });
     } else {
       // Legacy path for adapters without estimateRunRef: startRun first, then bootstrap.
       runRef = await this.withTimeout(
@@ -283,7 +304,12 @@ export class WorkflowEngine implements IWorkflowEngine {
     validatedContext: RunContext,
     provider: EngineRunRef['provider']
   ): Promise<string> {
-    const intentId = this.deps.idempotency.eventId();
+    const intentId = this.deps.idempotency.startRunIntentId(
+      validatedContext.tenantId,
+      validatedContext.runId,
+      validatedContext.logicalAttemptId ?? 1,
+      provider
+    );
     await this.deps.intentStore.createIntent({
       intentId,
       tenantId: validatedContext.tenantId,
@@ -312,7 +338,13 @@ export class WorkflowEngine implements IWorkflowEngine {
         metadata: bootMeta,
         firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
       });
-      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+      await this.markIntentResolvedBestEffort({
+        intentId,
+        tenantId: bootMeta.tenantId,
+        runId: bootMeta.runId,
+        provider: bootMeta.provider,
+        traceContext,
+      });
     } catch (bootstrapError) {
       await adapter.cancelRun(runRef).catch((cancelErr: unknown) => {
         this.observability.logs.error({
@@ -324,8 +356,68 @@ export class WorkflowEngine implements IWorkflowEngine {
           },
         });
       });
-      await this.deps.intentStore.markResolved(intentId).catch(() => {});
+      await this.markIntentResolvedBestEffort({
+        intentId,
+        tenantId: bootMeta.tenantId,
+        runId: bootMeta.runId,
+        provider: bootMeta.provider,
+        traceContext,
+      });
       throw bootstrapError;
+    }
+  }
+
+  private async markIntentResolvedBestEffort(input: {
+    intentId: string;
+    tenantId: string;
+    runId: string;
+    provider: EngineRunRef['provider'];
+    traceContext: ReturnType<typeof buildTraceContext>;
+  }): Promise<void> {
+    try {
+      await this.deps.intentStore.markResolved(input.intentId);
+      return;
+    } catch (error) {
+      try {
+        this.observability.metrics
+          .counter('dvt.intent.mark_resolved_failed_total', {
+            tenantId: input.tenantId,
+            provider: input.provider,
+            operation: 'markResolved',
+          })
+          .add(1);
+      } catch {
+        // Best-effort: metrics reporting must not turn cleanup failure into a hard failure.
+      }
+
+      try {
+        this.observability.logs.warn({
+          msg: 'markResolved failed; leaving intent cleanup to reconciliation worker',
+          context: input.traceContext,
+          attributes: {
+            intentId: input.intentId,
+            tenantId: input.tenantId,
+            runId: input.runId,
+            provider: input.provider,
+            error: toErrorMessage(error),
+          },
+        });
+      } catch {
+        try {
+          const nowMs = Date.parse(this.deps.clock.nowIsoUtc());
+          if (
+            this.lastStderrFallbackAtMs === 0 ||
+            nowMs - this.lastStderrFallbackAtMs >= this.stderrFallbackThrottleMs
+          ) {
+            this.lastStderrFallbackAtMs = nowMs;
+            process.stderr.write(
+              `[dvt][WorkflowEngine] markResolved observability reporting failed; intentId=${input.intentId} runId=${input.runId} tenantId=${input.tenantId}\n`
+            );
+          }
+        } catch {
+          // Keep this path non-fatal even if stderr is unavailable.
+        }
+      }
     }
   }
 

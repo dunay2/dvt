@@ -117,6 +117,62 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
   });
 
+  it('returns 400 on empty selection', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-3b',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: [],
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
+  });
+
+  it('returns 400 on whitespace-only selection entries', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-3c',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['   '],
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
+  });
+
   it('returns 400 on blank runId', async () => {
     const reply = createReply();
 
@@ -171,6 +227,37 @@ describe('startRunRoute', () => {
             uri: '   ',
           },
           runId: 'run-abc',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_PLAN_REF' });
+  });
+
+  it('returns 400 on invalid planRef shape', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-6b',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: ['not-an-object'],
+          runId: 'run-invalid-plan-ref',
           targetAdapter: 'mock',
         },
       } as never,
@@ -325,6 +412,114 @@ describe('startRunRoute', () => {
             nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
           },
           runId: 'run-conflict',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: 'BAD_REQUEST',
+      code: 'CONFLICTING_PLAN_INPUTS',
+    });
+  });
+
+  it('returns 400 when manifestRef and planRef are both supplied', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-conflicting-manifest-ref',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          manifestRef: {
+            uri: 'dbt://manifest.json',
+            sha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+          },
+          runId: 'run-conflict-manifest-ref',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: 'BAD_REQUEST',
+      code: 'CONFLICTING_PLAN_INPUTS',
+    });
+  });
+
+  it('returns 400 when nodes and planRef are both supplied', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-conflicting-nodes',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
+          runId: 'run-conflict-nodes',
+          targetAdapter: 'mock',
+        },
+      } as never,
+      reply as never,
+      facade as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: 'BAD_REQUEST',
+      code: 'CONFLICTING_PLAN_INPUTS',
+    });
+  });
+
+  it('returns 400 when manifest and planRef are both supplied', async () => {
+    const reply = createReply();
+
+    const facade = {
+      async execute() {
+        throw new Error('should not be called');
+      },
+    };
+
+    await startRunRoute(
+      {
+        id: 'req-conflicting-manifest',
+        headers: {},
+        body: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          planRef: VALID_PLAN_REF,
+          manifest: { nodes: [] },
+          runId: 'run-conflict-manifest',
           targetAdapter: 'mock',
         },
       } as never,

@@ -258,9 +258,7 @@ describe('reconciler bootstrap health wiring', () => {
     };
     const hooks = buildReconcilerHealthHooks(ctx.setIntentReconcilerHealth);
 
-    expect(
-      evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 1_000, 7_500)
-    ).toBe(true);
+    expect(evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 1_000, 7_500)).toBe(true);
     expect(health).toEqual({
       status: 'degraded',
       reasonCode: 'runtime_unavailable',
@@ -271,9 +269,7 @@ describe('reconciler bootstrap health wiring', () => {
     hooks.onSweepSuccess?.();
     expect(health).toEqual({ status: 'healthy' });
 
-    expect(
-      evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 7_400, 7_900)
-    ).toBe(false);
+    expect(evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 7_400, 7_900)).toBe(false);
     expect(health).toEqual({ status: 'healthy' });
     expect(counter).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledTimes(1);
