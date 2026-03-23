@@ -100,24 +100,14 @@ function extractAdrFieldsFromBody(body: string): Record<string, string> {
   const bold = /^-\s+\*\*([^*]+)\*\*\s*:\s*(.*)$/gm;
   let m: RegExpExecArray | null;
   while ((m = bold.exec(body)) !== null) {
-    const key = m[1];
-    const value = m[2];
-    if (key === undefined || value === undefined) {
-      continue;
-    }
-    result[key.trim()] = value.trim();
+    result[m[1]!.trim()] = m[2]!.trim();
   }
 
   // Format 2: `- Key: Value`  (plain list item, no bold) — only if not already found
   const plainList = /^-\s+([\w][\w\s]*?)\s*:\s*(.+)$/gm;
   while ((m = plainList.exec(body)) !== null) {
-    const key = m[1];
-    const value = m[2];
-    if (key === undefined || value === undefined) {
-      continue;
-    }
-    const normalizedKey = key.trim();
-    if (!(normalizedKey in result)) result[normalizedKey] = value.trim();
+    const key = m[1]!.trim();
+    if (!(key in result)) result[key] = m[2]!.trim();
   }
 
   // Format 3: `Key: Value`  (bare, no dash, no bold) — top of document, before first H2
@@ -125,14 +115,10 @@ function extractAdrFieldsFromBody(body: string): Record<string, string> {
   const preamble = firstH2 === -1 ? body.slice(0, 300) : body.slice(0, firstH2);
   const bare = /^(Status|Date|Owners?|Owner|ARC Level|Version)\s*:\s*(.+)$/gim;
   while ((m = bare.exec(preamble)) !== null) {
-    const key = m[1];
-    const value = m[2];
-    if (key === undefined || value === undefined) {
-      continue;
-    }
+    const key = m[1]!.trim();
     // Normalize "Owner" → "Owners"
-    const normalKey = key.trim().toLowerCase() === 'owner' ? 'Owners' : key.trim();
-    if (!(normalKey in result)) result[normalKey] = value.trim();
+    const normalKey = key.toLowerCase() === 'owner' ? 'Owners' : key;
+    if (!(normalKey in result)) result[normalKey] = m[2]!.trim();
   }
 
   return result;
@@ -186,11 +172,7 @@ export function extractAnchors(content: string): Set<string> {
   const headingPattern = /^#{1,6}\s+(.+)$/gm;
   let match: RegExpExecArray | null;
   while ((match = headingPattern.exec(content)) !== null) {
-    const heading = match[1];
-    if (heading === undefined) {
-      continue;
-    }
-    const anchor = heading
+    const anchor = match[1]!
       .trim()
       .toLowerCase()
       .replace(/[`*[\]()]/g, '') // remove markdown formatting chars
@@ -204,10 +186,7 @@ export function extractAnchors(content: string): Set<string> {
   // Explicit <a id="..."> or <a name="...">
   const explicitPattern = /<a\s+(?:id|name)="([^"]+)"/gi;
   while ((match = explicitPattern.exec(content)) !== null) {
-    const explicit = match[1];
-    if (explicit !== undefined) {
-      anchors.add(explicit);
-    }
+    anchors.add(match[1]!);
   }
 
   return anchors;
