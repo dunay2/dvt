@@ -376,104 +376,6 @@ export class WorkflowEngine implements IWorkflowEngine {
     }
   }
 
-  private async handlePreBootstrapPath(input: {
-    validatedPlanRef: PlanRef;
-    validatedContext: RunContext;
-    adapter: IProviderAdapter;
-    intentId: string;
-    traceContext: ReturnType<typeof buildTraceContext>;
-  }): Promise<EngineRunRef> {
-    const { validatedPlanRef, validatedContext, adapter, intentId, traceContext } = input;
-    const estimatedRef = adapter.estimateRunRef!(validatedContext);
-    const bootMeta: RunMetadata = buildRunMetadata(
-      validatedContext,
-      validatedPlanRef,
-      estimatedRef,
-      this.deps.clock.nowIsoUtc()
-    );
-    await this.deps.stateStore.bootstrapRunTx({
-      metadata: bootMeta,
-      firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
-    });
-
-    const runRef = await this.withTimeout(
-      adapter.startRun(validatedPlanRef, validatedContext),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.startRun'
-    );
-
-    const saveProviderRef = this.deps.stateStore.saveProviderRef;
-    if (
-      saveProviderRef &&
-      (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
-    ) {
-      await saveProviderRef(
-        validatedContext.tenantId,
-        validatedContext.runId,
-        buildProviderRefUpdate(runRef)
-      ).catch((refErr: unknown) => {
-        this.observability.logs.warn({
-          msg: 'saveProviderRef failed after startRun; metadata retains estimated providerRunId',
-          context: traceContext,
-          attributes: {
-            error: toErrorMessage(refErr),
-            provider: runRef.provider,
-            runId: validatedContext.runId,
-          },
-        });
-      });
-    }
-
-    try {
-      await this.deps.intentStore.markDispatched(intentId, runRef);
-    } catch (markDispatchedError) {
-      throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
-    }
-
-    await this.markIntentResolvedBestEffort({
-      intentId,
-      tenantId: validatedContext.tenantId,
-      runId: validatedContext.runId,
-      provider: runRef.provider,
-      traceContext,
-    });
-
-    return runRef;
-  }
-
-  private async handleLegacyPath(input: {
-    validatedPlanRef: PlanRef;
-    validatedContext: RunContext;
-    adapter: IProviderAdapter;
-    intentId: string;
-    traceContext: ReturnType<typeof buildTraceContext>;
-  }): Promise<EngineRunRef> {
-    const { validatedPlanRef, validatedContext, adapter, intentId, traceContext } = input;
-    const runRef = await this.withTimeout(
-      adapter.startRun(validatedPlanRef, validatedContext),
-      this.deps.timeouts?.adapterCallMs ?? 30_000,
-      'adapter.startRun'
-    );
-
-    await this.deps.intentStore.markDispatched(intentId, runRef);
-
-    const bootMeta: RunMetadata = buildRunMetadata(
-      validatedContext,
-      validatedPlanRef,
-      runRef,
-      this.deps.clock.nowIsoUtc()
-    );
-    await this._bootstrapRunTxWithCompensation({
-      bootMeta,
-      adapter,
-      runRef,
-      intentId,
-      traceContext,
-    });
-
-    return runRef;
-  }
-
   private async _createStartRunIntent(
     validatedContext: RunContext,
     provider: EngineRunRef['provider']
@@ -1173,6 +1075,47 @@ function validateRunIdOrThrow(runId: string): void {
   // Defensive format guard: letters/digits + [._:-], no spaces.
   if (/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(runId)) return;
   throw new InvalidRunIdError(runId);
+}
+
+export function toErrorMessage(error: unknown): string {
+  return describeUnknownValue(error);
+}
+
+function isPrimitive(value: unknown): boolean {
+  return (
+    value == null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint' ||
+    typeof value === 'symbol'
+  );
+}
+
+function tryJsonStringify(value: unknown): string | null {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
+}
+
+function objectTag(value: unknown): string {
+  return Object.prototype.toString.call(value);
+}
+
+export function describeUnknownValue(value: unknown): string {
+  if (value instanceof Error) return value.message;
+  if (typeof value === 'string') return value;
+  if (isPrimitive(value)) return String(value);
+
+  const json = tryJsonStringify(value);
+  if (json !== null) return json;
+  return objectTag(value);
+}
+
+function toErrorObject(error: unknown): Error {
+  return error instanceof Error ? error : new Error(describeUnknownValue(error));
 }
 
 function isDefined<T>(value: T | undefined): value is T {
