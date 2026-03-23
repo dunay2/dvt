@@ -3,14 +3,10 @@ import process from 'node:process';
 
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import { LineageWorkerRuntime } from '@dvt/delivery';
-import {
-  DVT_TRACEABILITY_FACET_PRODUCER,
-  HttpOpenLineageSink,
-  OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
-  StepStartedLineageMapper,
-} from '@dvt/traceability-service';
+import { HttpOpenLineageSink } from '@dvt/traceability-service';
 import pino from 'pino';
 
+import { createStepStartedLineageMapper } from './compiledCodeResolver.js';
 import { loadEnv } from './env.js';
 
 async function main(): Promise<void> {
@@ -39,26 +35,7 @@ async function main(): Promise<void> {
       : {}),
   });
 
-  // StepStartedLineageMapper requires a compiledCodeResolver; for the lineage
-  // worker, resolution failures are fail-open (mapper returns baseFacets only).
-  // Inject a no-op resolver — actual compiled code resolution is out of scope
-  // for the delivery-layer worker.
-  const noopResolver = {
-    resolve: async () => {
-      throw new Error('no compiled code resolver configured');
-    },
-  };
-  const noopSqlFacetBuilder = {
-    fromSql: (sql: string) => ({
-      _producer: DVT_TRACEABILITY_FACET_PRODUCER,
-      _schemaURL: OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
-      query: sql,
-    }),
-  };
-  const mapper = new StepStartedLineageMapper({
-    compiledCodeResolver: noopResolver,
-    sqlFacetBuilder: noopSqlFacetBuilder,
-  });
+  const mapper = createStepStartedLineageMapper(env);
 
   const runtime = new LineageWorkerRuntime(lineageStore, sink, mapper, logger, {
     batchSize: env.DVT_LINEAGE_BATCH_SIZE,

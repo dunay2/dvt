@@ -1,8 +1,8 @@
 ---
 title: RC-B2 Lineage Compiled Code Resolver Rollout
-status: Proposed
+status: Review
 owner: Traceability / Delivery
-last_reviewed: 2026-03-22
+last_reviewed: 2026-03-23
 planning_type: proposal
 ---
 
