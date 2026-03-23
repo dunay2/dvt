@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.9.0](https://github.com/dunay2/dvt/compare/v4.8.1...v4.9.0) (2026-03-23)
+
+
+### Features
+
+* **api:** Harden start-run parser edges ([#570](https://github.com/dunay2/dvt/issues/570)) ([7b917fb](https://github.com/dunay2/dvt/commit/7b917fba4141e029fe516c37d810ed35028f7bd8))
+
 ## [4.8.1](https://github.com/dunay2/dvt/compare/v4.8.0...v4.8.1) (2026-03-23)
 
 
