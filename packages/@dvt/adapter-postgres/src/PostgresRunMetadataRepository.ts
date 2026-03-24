@@ -132,6 +132,19 @@ export class PostgresRunMetadataRepository {
         meta.providerConductorUrl ?? null,
       ]
     );
+
+    // When inserting a retry child, advance the origin run's counter so that
+    // the next reserveRetryAttempt sees the correct next slot.
+    if (meta.originRunId && meta.originRunId !== meta.runId) {
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+          SET next_retry_attempt_id = GREATEST(next_retry_attempt_id, $1)
+          WHERE run_id = $2 AND tenant_id = $3
+        `,
+        [meta.logicalAttemptId + 1, meta.originRunId, meta.tenantId]
+      );
+    }
   }
 
   /** Transaction-scoped metadata upsert used by canonical write paths. */
