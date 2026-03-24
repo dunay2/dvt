@@ -1,4 +1,4 @@
-import type { PlanRef, RunContext, RunStateCommandPort } from '@dvt/contracts';
+import type { PlanRef, ResolvedRunContext, RunStateCommandPort } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -44,12 +44,14 @@ const PLAN_REF: PlanRef = {
   planVersion: 'v1',
 };
 
-const CTX: RunContext = {
+const CTX: ResolvedRunContext = {
   tenantId: 'tenant-1',
   projectId: 'proj-1',
   environmentId: 'env-1',
   runId: 'run-1',
   targetAdapter: 'temporal',
+  logicalAttemptId: 1,
+  originRunId: 'run-1',
 };
 
 const DEFAULT_LOGICAL_ATTEMPT_ID = 1;

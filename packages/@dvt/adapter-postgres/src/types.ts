@@ -14,6 +14,7 @@ export type {
   ListRunsOptions,
   OutboxClaimSelection,
   OutboxRecord,
+  RetryAttemptReservation,
   RunBootstrapInput,
   RunId,
   RunMetadata,

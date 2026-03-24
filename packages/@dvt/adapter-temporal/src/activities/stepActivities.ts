@@ -10,8 +10,8 @@
  */
 import { TextDecoder } from 'node:util';
 
-import { parsePlanRef, parseRunContext } from '@dvt/contracts';
-import type { PlanRef, RunContext } from '@dvt/contracts';
+import { parsePlanRef, parseResolvedRunContext } from '@dvt/contracts';
+import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 import { ApplicationFailure, Context } from '@temporalio/activity';
 
@@ -73,7 +73,7 @@ export interface ActivityDeps extends PlanFetcherDeps, EventEmitterDeps, RunBoot
 
 export interface StepInput {
   step: ExecutionPlan['steps'][number];
-  ctx: RunContext;
+  ctx: ResolvedRunContext;
   /**
    * Deterministic context assembled by workflow from previously completed steps.
    * Used only by gateway steps.
@@ -90,7 +90,7 @@ export interface StepResult {
 }
 
 export interface EmitEventInput {
-  ctx: RunContext;
+  ctx: ResolvedRunContext;
   planRef: PlanRef;
   eventType: EventType;
   stepId?: string;
@@ -187,7 +187,7 @@ export function createActivities(
      * to the state store with idempotency + outbox forwarding.
      */
     async emitEvent(input: EmitEventInput): Promise<void> {
-      const ctx = parseRunContext(input.ctx);
+      const ctx = parseResolvedRunContext(input.ctx);
       const validatedPlanRef = parsePlanRef(input.planRef);
       const { eventType, stepId, payload } = input;
 
@@ -196,7 +196,9 @@ export function createActivities(
           ? deps.getEngineAttemptId()
           : resolveTemporalAttemptFromContext();
 
-      const logicalAttemptId = input.logicalAttemptId ?? 1;
+      // Temporal technical retries reuse the same logical attempt. Only the
+      // engine/application layer may advance logicalAttemptId.
+      const logicalAttemptId = input.logicalAttemptId ?? ctx.logicalAttemptId;
       const envelopeBase = {
         eventId: deps.idempotency.eventId(),
         eventType,

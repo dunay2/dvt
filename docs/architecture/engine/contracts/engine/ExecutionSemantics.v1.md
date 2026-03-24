@@ -165,14 +165,15 @@ stateDiagram-v2
 
 **`logicalAttemptId` (business-level)**:
 
-- Assigned by Engine (monotonic per `stepId` per `runId`).
+- Assigned by Engine/Application (authoritative business retry lineage).
 - Type: **`number`** (counter, not string).
 - Increments ONLY when:
-  - Operator issues `RETRY_STEP` signal, OR
-  - Planner policy dictates retry (e.g., backoff exhausted).
+  - Engine/Application creates a new recovery run from a terminal source run, OR
+  - a future engine-owned partial-retry semantic is explicitly introduced.
+- MUST NOT increment for provider-native technical retries.
 - Used by Planner for dependency resolution: **unique key is `(runId, stepId, logicalAttemptId)`**.
 - Visible to UI as "Retry #1", "Retry #2", etc.
-- Example: `logicalAttemptId=2` = operator/planner issued 1 retry signal.
+- Example: `logicalAttemptId=2` = second business attempt in the same recovery lineage.
 
 **`engineAttemptId` (infrastructure-level)**:
 
@@ -183,6 +184,15 @@ stateDiagram-v2
 - NOT used by Planner for dependencies, cost, or skip decisions.
 - Visible to SRE for debugging.
 - Example: `engineAttemptId=3` = Temporal retried activity 2 times before succeeding.
+
+**Implementation scope note (NORMATIVE)**:
+
+- `RETRY_RUN` creates a new `runId` and consumes the next `logicalAttemptId`
+  in the recovery chain.
+- `RETRY_STEP` remains unsupported in the current runtime and requires a
+  separate ADR for partial-execution semantics.
+- Provider-native retries MUST keep the same `logicalAttemptId` and MUST NOT
+  emit extra logical lifecycle events for the same attempt.
 
 **Idempotency key (NORMATIVE)**:
 

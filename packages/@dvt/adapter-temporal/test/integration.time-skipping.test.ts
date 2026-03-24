@@ -17,7 +17,12 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { EngineRunRef, PlanRef, RunContext, RunStateCommandPort } from '@dvt/contracts';
+import type {
+  EngineRunRef,
+  PlanRef,
+  ResolvedRunContext,
+  RunStateCommandPort,
+} from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -649,13 +654,15 @@ function createPlanRef(
   };
 }
 
-function createRunContext(runId: RunId): RunContext {
+function createRunContext(runId: RunId): ResolvedRunContext {
   return {
     tenantId: 't-it',
     projectId: 'p-it',
     environmentId: 'test',
     runId: runId.value,
     targetAdapter: 'temporal',
+    logicalAttemptId: 1,
+    originRunId: runId.value,
   };
 }
 
@@ -1055,7 +1062,7 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan-linear-3', planBytes);
-      const ctx: RunContext = {
+      const ctx: ResolvedRunContext = {
         ...createRunContext(RunId.of('run-it-linear-3')),
         tenantId: 't-it', // Explicit, non-empty
       };
@@ -1130,7 +1137,7 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan-gateway-skip', planBytes);
-      const ctx: RunContext = {
+      const ctx: ResolvedRunContext = {
         ...createRunContext(RunId.of('run-it-gateway-skip')),
         tenantId: 't-it',
       };
@@ -1215,7 +1222,7 @@ describe('temporal integration (time-skipping)', () => {
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
 
       const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
-      const ctx: RunContext = {
+      const ctx: ResolvedRunContext = {
         ...createRunContext(RunId.of('run-it-permanent-failure')),
         tenantId: 't-it', // Explicit, non-empty
       };

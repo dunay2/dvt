@@ -68,14 +68,21 @@ export const PlanRefSchema = z.object({
   requiresCapabilities: z.array(z.string().min(1)).optional(),
 });
 
-export const RunContextSchema = z.object({
-  tenantId: z.string().min(1),
-  projectId: z.string().min(1),
-  environmentId: z.string().min(1),
-  runId: z.string().min(1),
-  targetAdapter: ProviderSchema,
-  logicalAttemptId: z.number().int().positive().optional(),
-});
+export const RunContextSchema = z
+  .object({
+    tenantId: z.string().min(1),
+    projectId: z.string().min(1),
+    environmentId: z.string().min(1),
+    runId: z.string().min(1),
+    targetAdapter: ProviderSchema,
+  })
+  .strict();
+
+export const ResolvedRunContextSchema = RunContextSchema.extend({
+  logicalAttemptId: z.number().int().positive(),
+  parentRunId: z.string().min(1).optional(),
+  originRunId: z.string().min(1).optional(),
+}).strict();
 
 export const SignalRequestSchema = z.object({
   signalId: z.string().min(1),
@@ -365,6 +372,7 @@ export const PlannerBuildResultV2Schema = z
 
 export type PlanRefSchemaT = z.infer<typeof PlanRefSchema>;
 export type RunContextSchemaT = z.infer<typeof RunContextSchema>;
+export type ResolvedRunContextSchemaT = z.infer<typeof ResolvedRunContextSchema>;
 export type SignalRequestSchemaT = z.infer<typeof SignalRequestSchema>;
 export type RunStatusSnapshotSchemaT = z.infer<typeof RunStatusSnapshotSchema>;
 export type EngineRunRefSchemaT = z.infer<typeof EngineRunRefSchema>;

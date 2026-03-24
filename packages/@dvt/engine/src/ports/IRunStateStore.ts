@@ -51,9 +51,16 @@ export interface ProviderRefUpdate {
   providerConductorUrl?: string;
 }
 
+export interface RetryAttemptReservation {
+  parentRunId: string;
+  originRunId: string;
+  logicalAttemptId: number;
+}
+
 export interface IRunStateStoreWrite {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: RunEventInput[]): Promise<AppendResult>;
+  reserveRetryAttempt?(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
 
   /**
    * Updates the provider-assigned references on an already-bootstrapped run.

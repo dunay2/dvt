@@ -18,4 +18,8 @@ describe('workflow retry policy literals', () => {
   it('marks PermanentStepError as non-retryable', () => {
     expect(src).toContain("nonRetryableErrorTypes: ['PermanentStepError']");
   });
+
+  it('documents that Temporal maximumAttempts is technical retry only', () => {
+    expect(src).toContain('Technical retries only. These must not create new logical attempts.');
+  });
 });

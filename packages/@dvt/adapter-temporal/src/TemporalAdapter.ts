@@ -14,12 +14,12 @@ import {
   type EngineRunRef,
   type IProviderAdapter,
   type PlanRef,
-  type RunContext,
+  type ResolvedRunContext,
   type RunStatusSnapshot,
   type SignalRequest,
   parseEngineRunRef,
   parsePlanRef,
-  parseRunContext,
+  parseResolvedRunContext,
   parseSignalRequest,
 } from '@dvt/contracts';
 import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
@@ -81,8 +81,8 @@ export class TemporalAdapter implements IProviderAdapter {
 
   constructor(private readonly deps: TemporalAdapterDeps) {}
 
-  estimateRunRef(ctx: RunContext): EngineRunRef {
-    const validatedCtx = parseRunContext(ctx);
+  estimateRunRef(ctx: ResolvedRunContext): EngineRunRef {
+    const validatedCtx = parseResolvedRunContext(ctx);
     const workflowId = toTemporalWorkflowId(validatedCtx.runId);
     const taskQueue = toTemporalTaskQueue(validatedCtx.tenantId, this.deps.config);
     return toTemporalRunRef({
@@ -96,9 +96,9 @@ export class TemporalAdapter implements IProviderAdapter {
     });
   }
 
-  async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
+  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
     const validatedPlanRef = parsePlanRef(planRef);
-    const validatedCtx = parseRunContext(ctx);
+    const validatedCtx = parseResolvedRunContext(ctx);
     const workflowClient = await this.getClient();
 
     const workflowId = toTemporalWorkflowId(validatedCtx.runId);

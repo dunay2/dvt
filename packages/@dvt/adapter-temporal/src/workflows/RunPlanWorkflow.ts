@@ -32,7 +32,7 @@ import {
   setHandler,
 } from '@temporalio/workflow';
 
-import type { EventType, ExecutionPlan } from '../engine-types.js';
+import type { EventType, ExecutionPlan, ResolvedRunContext } from '../engine-types.js';
 
 import {
   buildCompletedStepFact,
@@ -92,13 +92,7 @@ export interface RunPlanWorkflowInput {
     sizeBytes?: number;
     expiresAt?: string;
   };
-  ctx: {
-    tenantId: string;
-    projectId: string;
-    environmentId: string;
-    runId: string;
-    targetAdapter: 'temporal' | 'conductor' | 'mock';
-  };
+  ctx: ResolvedRunContext;
   /** Number of layers to process before continue-as-new (`0` disables rollover). */
   continueAsNewAfterLayerCount?: number;
   /** Internal resume cursor used across continue-as-new executions. */
@@ -154,6 +148,7 @@ const activities = proxyActivities<WorkflowActivitiesPort>({
     initialInterval: '1s',
     maximumInterval: '60s',
     backoffCoefficient: 2,
+    // Technical retries only. These must not create new logical attempts.
     maximumAttempts: 3,
     nonRetryableErrorTypes: ['PermanentStepError'],
   },

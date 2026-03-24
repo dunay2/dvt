@@ -21,6 +21,7 @@ import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
+  RetryAttemptReservation,
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
 
@@ -35,6 +36,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
   private readonly snapshotLastRunSeqByRunId = new Map<string, number>();
+  private readonly nextRetryAttemptByOriginRunId = new Map<string, number>();
   private readonly outbox: InMemoryOutboxState;
 
   constructor(deps?: { outboxNowMs?: () => number; outboxShardCount?: number }) {
@@ -131,6 +133,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
 
     // Atomic block (no awaits): write metadata + first events together.
     this.metadataByRunId.set(input.metadata.runId, input.metadata);
+    this.initializeRetryLineage(input.metadata);
     this.snapshotByRunId.set(
       input.metadata.runId,
       this.createDefaultSnapshot(input.metadata.runId)
@@ -306,5 +309,38 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     ids?: string[];
   }): Promise<number> {
     return this.outbox.replayDeadLetters(options);
+  }
+
+  async reserveRetryAttempt(
+    tenantId: string,
+    sourceRunId: string
+  ): Promise<RetryAttemptReservation> {
+    const sourceMeta = this.metadataByRunId.get(sourceRunId);
+    if (!sourceMeta || sourceMeta.tenantId !== tenantId) {
+      throw new Error(`RUN_NOT_FOUND: ${sourceRunId}`);
+    }
+
+    const originRunId = sourceMeta.originRunId ?? sourceMeta.runId;
+    const nextAttempt = this.nextRetryAttemptByOriginRunId.get(originRunId) ?? 2;
+    this.nextRetryAttemptByOriginRunId.set(originRunId, nextAttempt + 1);
+
+    return {
+      parentRunId: sourceMeta.runId,
+      originRunId,
+      logicalAttemptId: nextAttempt,
+    };
+  }
+
+  private initializeRetryLineage(meta: RunMetadata): void {
+    const originRunId = meta.originRunId ?? meta.runId;
+    const nextAttempt = meta.logicalAttemptId + 1;
+    const current = this.nextRetryAttemptByOriginRunId.get(originRunId) ?? 2;
+    if (nextAttempt > current) {
+      this.nextRetryAttemptByOriginRunId.set(originRunId, nextAttempt);
+      return;
+    }
+    if (!this.nextRetryAttemptByOriginRunId.has(originRunId)) {
+      this.nextRetryAttemptByOriginRunId.set(originRunId, current);
+    }
   }
 }

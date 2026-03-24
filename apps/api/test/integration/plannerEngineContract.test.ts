@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 
-import type { PlanRef, RunContext } from '@dvt/contracts';
+import type { PlanRef, ResolvedRunContext, RunContext } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
   IdempotencyKeyBuilder,
@@ -62,6 +62,14 @@ function makeRunContext(runId: string): RunContext {
     environmentId: 'dev',
     runId,
     targetAdapter: 'mock',
+  };
+}
+
+function makeResolvedRunContext(runId: string): ResolvedRunContext {
+  return {
+    ...makeRunContext(runId),
+    logicalAttemptId: 1,
+    originRunId: runId,
   };
 }
 
@@ -296,7 +304,7 @@ describe('planner -> engine contract', () => {
     });
 
     const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
-    const runRef = await mock.startRun(planRef, makeRunContext('compat-run'));
+    const runRef = await mock.startRun(planRef, makeResolvedRunContext('compat-run'));
     expect(runRef.provider).toBe('mock');
   });
 

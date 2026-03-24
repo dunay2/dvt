@@ -18,9 +18,9 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 
 > Source of truth: `agent-lane-c.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
-- [ ] `P0` `S09`: decide retry ownership across planner, engine, and adapters.
-- [ ] `P0` `RC-D2`: make the outbox claim timeout configurable.
-- [ ] `P0` `RC-D3`: normalize Temporal not-found error code comparison.
+- [x] `P0` `S09`: decide retry ownership across planner, engine, and adapters.
+- [x] `P0` `RC-D2`: make the outbox claim timeout configurable.
+- [x] `P0` `RC-D3`: normalize Temporal not-found error code comparison.
 - [ ] `P1` `RC-D1`: surface reconciler degradation in API health.
 - [ ] `P1` `RC-D1A`: add health compatibility and watchdog integration tests.
 - [ ] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
@@ -31,7 +31,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 ## Dependencies
 
 - `RC-D1A` depends on `RC-D1`.
-- `RBAC at operation level` depends on `S09`.
+- `RBAC at operation level` is unblocked after `S09`.
 - `Read-your-writes contract` depends on `snapshot staleness in API`.
 
 ## Expected Outcome

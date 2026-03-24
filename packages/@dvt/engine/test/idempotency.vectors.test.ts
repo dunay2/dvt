@@ -100,6 +100,25 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
     expect(first).not.toBe(differentAdapter);
   });
 
+  it('run event identity changes across recovery lineage because the new runId is authoritative', () => {
+    const original = builder.runEventKey({
+      runId: 'run-original',
+      logicalAttemptId: 1,
+      eventType: 'RunStarted',
+      planId: 'plan-1',
+      planVersion: '1',
+    });
+    const recovered = builder.runEventKey({
+      runId: 'run-recovered',
+      logicalAttemptId: 2,
+      eventType: 'RunStarted',
+      planId: 'plan-1',
+      planVersion: '1',
+    });
+
+    expect(original).not.toBe(recovered);
+  });
+
   it('eventId remains non-deterministic outside start-run intent path', () => {
     const first = builder.eventId();
     const second = builder.eventId();

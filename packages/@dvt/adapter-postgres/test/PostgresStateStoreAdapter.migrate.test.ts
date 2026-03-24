@@ -181,13 +181,14 @@ describe('PostgresStateStoreAdapter migration state', () => {
     const insertQueries = client.queries.filter(
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
-    // One INSERT per named migration step (10 steps)
-    expect(insertQueries.length).toBe(10);
+    // One INSERT per named migration step (11 steps)
+    expect(insertQueries.length).toBe(11);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
     expect(versions).toContain('core_006_archive_lease_restore_tables');
     expect(versions).toContain('core_010_purge_indexes');
+    expect(versions).toContain('core_011_retry_lineage_columns');
   });
 
   it('creates the archive catalog tables and indexes required for G5-PR1', async () => {

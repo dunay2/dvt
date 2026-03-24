@@ -75,12 +75,30 @@ export interface RunContext {
   environmentId: string;
   runId: string;
   targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+}
+
+/**
+ * Engine-resolved execution context passed to provider adapters.
+ *
+ * Public callers MUST NOT supply `logicalAttemptId` directly. The engine or
+ * application layer resolves logical retry lineage before dispatch.
+ */
+export interface ResolvedRunContext extends RunContext {
   /**
-   * Business retry counter. Starts at 1 for first execution.
-   * The API caller increments on business-level retries.
-   * Defaults to 1 when omitted.
+   * Business retry counter for the recovery chain.
+   * `1` = first business execution, `2+` = recovered execution in the same chain.
    */
-  logicalAttemptId?: number;
+  logicalAttemptId: number;
+  /**
+   * Immediate source run for a recovery/retry-created run.
+   * Undefined for the first run in a chain.
+   */
+  parentRunId?: string;
+  /**
+   * First run in the recovery chain.
+   * For an initial run this SHOULD equal `runId`.
+   */
+  originRunId?: string;
 }
 
 export type EngineRunRef =

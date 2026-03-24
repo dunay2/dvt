@@ -13,7 +13,7 @@
 import type {
   EngineRunRef,
   PlanRef,
-  RunContext,
+  ResolvedRunContext,
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
@@ -30,7 +30,7 @@ export interface IProviderAdapter {
    * The engine MUST NOT fetch plan bytes before calling startRun.
    * Adapters are the plan-bytes trust boundary.
    */
-  startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef>;
+  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
@@ -41,7 +41,7 @@ export interface IProviderAdapter {
    * When implemented, WorkflowEngine bootstraps run_metadata before adapter.startRun(),
    * eliminating the dual-producer event ordering race.
    */
-  estimateRunRef?(ctx: RunContext): EngineRunRef;
+  estimateRunRef?(ctx: ResolvedRunContext): EngineRunRef;
 
   /**
    * Returns the capability identifiers this adapter implements.

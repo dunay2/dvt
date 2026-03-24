@@ -40,7 +40,6 @@ export class EngineStartRunUseCase implements IStartRunUseCase {
         environmentId: context.scope.environmentId?.value ?? '',
         runId: command.runId,
         targetAdapter: command.targetAdapter,
-        logicalAttemptId: 1,
       }
     );
 

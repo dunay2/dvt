@@ -1,27 +1,39 @@
-# ADR-0016 — logicalAttemptId Ownership by Adapter
+---
+title: ADR-0016 - logicalAttemptId Ownership by Adapter
+status: Superseded
+owner: Architecture / Engine
+last_reviewed: 2026-03-24
+superseded_by: ADR-0040
+---
 
-Status: Accepted  
-Date: 2026-02-20
+# ADR-0016 - logicalAttemptId Ownership by Adapter
 
-## Context
+## Status
 
-`logicalAttemptId` is a DVT domain concept (distinct from provider/engine retry counters). It is required for idempotency semantics and must be durable across retries and restarts.
+Superseded by [ADR-0040](ADR-0040-retry-ownership-and-attempt-authority.md).
 
-Temporal workflow determinism forbids arbitrary DB reads in workflow code, so attempt tracking cannot depend on querying the state store at emission time.
+## Historical Context
 
-## Decision
+ADR-0016 captured an early attempt to keep Temporal deterministic by making the
+adapter own `logicalAttemptId`.
 
-- Adapters MUST maintain `logicalAttemptId` internally and emit it in every event envelope.
-- The engine MUST NOT perform DB reads to determine `logicalAttemptId`.
-- Temporal adapter:
-  - tracks `logicalAttemptId` in workflow state
-  - passes it into activities as input parameters
-- Other adapters may use their own internal mechanisms.
+That decision was materially incomplete:
 
-Projector-derived attempt counts are allowed for projection/analysis but MUST NOT be used as an emission-time source of truth.
+- it predated the recovery/run-lineage review work;
+- it did not define authority for business retry budget across a recovery chain;
+- it conflated adapter-local retry state with DVT business semantics.
 
-## Consequences
+## Superseding Decision
 
-- Deterministic Temporal workflows remain compliant.
-- Retry signals must be wired into orchestrator runtime (e.g., Temporal signals) to increment logicalAttemptId.
-- **Scope note:** `RETRY_STEP` / `RETRY_RUN` signal handling and the end-to-end signal→increment wiring are Phase 2 scope.
+ADR-0040 replaces the ownership rule with this split:
+
+- `engineAttemptId` is adapter/runtime-owned and diagnostic only;
+- `logicalAttemptId` is engine/application-owned and authoritative for business
+  retry lineage;
+- adapters receive a resolved runtime context and MUST NOT invent or advance the
+  logical attempt counter.
+
+## Consequence
+
+Any code or document still treating adapters as the source of truth for
+`logicalAttemptId` is non-canonical and must be updated toward ADR-0040.

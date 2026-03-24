@@ -10,7 +10,7 @@ import type { PoolClient } from 'pg';
 
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { quoteIdentifier } from './sqlUtils.js';
-import type { ListRunsOptions, RunId, RunMetadata } from './types.js';
+import type { ListRunsOptions, RetryAttemptReservation, RunId, RunMetadata } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -23,6 +23,9 @@ interface RunMetadataRow {
   run_id: string;
   plan_id: string;
   plan_version: string;
+  logical_attempt_id: number;
+  parent_run_id: string | null;
+  origin_run_id: string | null;
   provider: RunMetadata['provider'];
   provider_workflow_id: string;
   provider_run_id: string;
@@ -42,6 +45,9 @@ const RUN_METADATA_COLUMNS = `
   run_id,
   plan_id,
   plan_version,
+  logical_attempt_id,
+  parent_run_id,
+  origin_run_id,
   provider,
   provider_workflow_id,
   provider_run_id,
@@ -62,8 +68,9 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
     runId: row.run_id,
     planId: row.plan_id,
     planVersion: row.plan_version,
-    // Phase 1: column not yet in schema. Phase 2: read from row.logical_attempt_id.
-    logicalAttemptId: 1,
+    logicalAttemptId: row.logical_attempt_id,
+    parentRunId: row.parent_run_id ?? undefined,
+    originRunId: row.origin_run_id ?? undefined,
     provider: row.provider,
     providerWorkflowId: row.provider_workflow_id,
     providerRunId: row.provider_run_id,
@@ -93,6 +100,10 @@ export class PostgresRunMetadataRepository {
           environment_id,
           plan_id,
           plan_version,
+          logical_attempt_id,
+          parent_run_id,
+          origin_run_id,
+          next_retry_attempt_id,
           provider,
           provider_workflow_id,
           provider_run_id,
@@ -100,7 +111,7 @@ export class PostgresRunMetadataRepository {
           provider_task_queue,
           provider_conductor_url
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       `,
       [
         meta.runId,
@@ -109,6 +120,10 @@ export class PostgresRunMetadataRepository {
         meta.environmentId,
         meta.planId,
         meta.planVersion,
+        meta.logicalAttemptId,
+        meta.parentRunId ?? null,
+        meta.originRunId ?? meta.runId,
+        meta.logicalAttemptId + 1,
         meta.provider,
         meta.providerWorkflowId,
         meta.providerRunId,
@@ -250,6 +265,9 @@ export class PostgresRunMetadataRepository {
             m.run_id,
             m.plan_id,
             m.plan_version,
+            m.logical_attempt_id,
+            m.parent_run_id,
+            m.origin_run_id,
             m.provider,
             m.provider_workflow_id,
             m.provider_run_id,
@@ -305,5 +323,51 @@ export class PostgresRunMetadataRepository {
     if (!result.rowCount) {
       throw new Error(`RUN_NOT_FOUND_OR_FORBIDDEN: ${runId}`);
     }
+  }
+
+  async reserveRetryAttempt(
+    tenantId: string,
+    sourceRunId: RunId
+  ): Promise<RetryAttemptReservation> {
+    return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+
+      const sourceResult = await client.query<{ run_id: string; origin_run_id: string | null }>(
+        `
+          SELECT run_id, origin_run_id
+          FROM ${quoteIdentifier(this.schema)}.run_metadata
+          WHERE tenant_id = $1 AND run_id = $2
+          LIMIT 1
+        `,
+        [tenantId, sourceRunId]
+      );
+
+      const source = sourceResult.rows[0];
+      if (!source) {
+        throw new Error(`RUN_NOT_FOUND: ${sourceRunId}`);
+      }
+
+      const originRunId = source.origin_run_id ?? source.run_id;
+      const reservation = await client.query<{ logical_attempt_id: number }>(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+          SET next_retry_attempt_id = next_retry_attempt_id + 1
+          WHERE tenant_id = $1 AND run_id = $2
+          RETURNING next_retry_attempt_id - 1 AS logical_attempt_id
+        `,
+        [tenantId, originRunId]
+      );
+
+      const logicalAttemptId = reservation.rows[0]?.logical_attempt_id;
+      if (!logicalAttemptId) {
+        throw new Error(`RUN_NOT_FOUND: ${originRunId}`);
+      }
+
+      return {
+        parentRunId: source.run_id,
+        originRunId,
+        logicalAttemptId,
+      };
+    });
   }
 }

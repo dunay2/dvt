@@ -69,7 +69,19 @@ export interface RunMetadata {
   runId: string;
   planId: string;
   planVersion: string;
+  /**
+   * Business retry lineage counter resolved by the engine/application layer.
+   */
   logicalAttemptId: number;
+  /**
+   * Immediate source run for recovery-created runs.
+   */
+  parentRunId?: string;
+  /**
+   * First run in the recovery chain. Implementations SHOULD persist the
+   * initial runId here for root runs to keep retry reservation stable.
+   */
+  originRunId?: string;
   provider: 'temporal' | 'conductor' | 'mock';
   providerWorkflowId: string;
   providerRunId: string;
@@ -147,9 +159,20 @@ export interface ProviderRefUpdate {
   providerConductorUrl?: string;
 }
 
+export interface RetryAttemptReservation {
+  parentRunId: string;
+  originRunId: string;
+  logicalAttemptId: number;
+}
+
 export interface IRunStateStoreWrite {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
+  /**
+   * Atomically reserves the next business retry lineage slot for a new run
+   * derived from `sourceRunId`.
+   */
+  reserveRetryAttempt?(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
 
   /**
    * Updates the provider-assigned references on an already-bootstrapped run.
