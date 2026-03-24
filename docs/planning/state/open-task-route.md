@@ -19,7 +19,7 @@ Authoritative task source remains:
 - `in_progress`: 0
 - `review`: 6
 - `queued`: 32
-- `blocked`: 4
+- `blocked`: 3
 - `done`: tracked in closeouts and evidence (not listed here)
 
 ## Actionable Now (Strictly Unblocked)
@@ -67,7 +67,6 @@ block in the workboard.
 | `F1`     | Queued  | C2 final wiring depends on `S03`              |
 | `S08`    | Blocked | waits for `S09`                               |
 | `S11`    | Blocked | waits for `S07`                               |
-| `S12`    | Blocked | waits for `S02`                               |
 | `R4`     | Queued  | waits for `R3`                                |
 | `R5`     | Queued  | waits for `R4`                                |
 | `R6`     | Queued  | waits for `R4` and `R7`                       |
@@ -95,7 +94,6 @@ flowchart LR
   S16[S16]
   DHM[DHM]
 
-  S02 --> S12[S12]
   S14[S14]
   S15[S15]
   S17[S17]
