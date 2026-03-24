@@ -297,7 +297,6 @@ export class PostgresStateStoreAdapter
     return this.metadataRepo.reserveRetryAttempt(tenantId, sourceRunId);
   }
 
-
   async listEvents(
     tenantId: string,
     runId: string,
