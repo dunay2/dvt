@@ -19,6 +19,7 @@ export * from './core/SnapshotProjector.js';
 export * from './core/idempotency.js';
 
 export * from './ports/IRunStateStore.js';
+export * from './ports/IRunSnapshotStalenessQuery.js';
 export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';
 export * from './adapters/IProviderAdapter.js';

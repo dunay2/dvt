@@ -59,8 +59,10 @@ function makeTemporalAdapter(): IProviderAdapter {
 
 function createEngine(): { engine: WorkflowEngine; intentStore: InMemoryStartRunIntentStore } {
   const intentStore = new InMemoryStartRunIntentStore();
+  const store = new InMemoryTxStore();
   const engine = new WorkflowEngine({
-    stateStore: new InMemoryTxStore(),
+    stateStoreRead: store,
+    stateStoreWrite: store,
     projector: new SnapshotProjector(),
     idempotency: new IdempotencyKeyBuilder(),
     clock: new SequenceClock('2026-03-01T00:00:00.000Z'),

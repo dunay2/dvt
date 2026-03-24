@@ -161,12 +161,12 @@ describe('InMemoryTxStore outbox semantics', () => {
       pendingWhileBlocked.find((record) => record.payload.runId === 'run-dlq')
     ).toBeUndefined();
 
-    const deadLetters = await store.listDeadLetter(10);
+    const deadLetters = await store.listDeadLetter(10, 't1');
     const deadLetter = deadLetters.find((record) => record.runId === 'run-dlq');
     const replayCandidate = requireDefined(deadLetter, 'expected run-dlq dead letter');
     expect(replayCandidate.payload).toEqual(pendingHead.payload);
 
-    const moved = await store.replayDeadLetters({ runId: 'run-dlq' });
+    const moved = await store.replayDeadLetters({ tenantId: 't1', runId: 'run-dlq' });
     expect(moved).toBe(1);
 
     const pendingAfterReplay = await store.listPending(10);

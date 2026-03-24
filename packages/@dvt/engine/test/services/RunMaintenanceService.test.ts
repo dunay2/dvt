@@ -74,7 +74,8 @@ describe('RunMaintenanceService', () => {
     ]);
 
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency,
@@ -89,7 +90,8 @@ describe('RunMaintenanceService', () => {
     });
 
     const service = new RunMaintenanceService({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
       intentStore,
       adapters,
       authorizer,
@@ -321,7 +323,8 @@ describe('RunMaintenanceService', () => {
       ]);
 
       const service = new RunMaintenanceService({
-        stateStore: store,
+        stateStoreRead: store,
+        stateStoreWrite: store,
         intentStore,
         adapters,
         authorizer,
@@ -578,7 +581,8 @@ describe('RunMaintenanceService', () => {
       const store = new InMemoryTxStore();
       const intentStore = new InMemoryStartRunIntentStore();
       const service = new RunMaintenanceService({
-        stateStore: store,
+        stateStoreRead: store,
+        stateStoreWrite: store,
         intentStore,
         adapters: new Map<EngineRunRef['provider'], IProviderAdapter>([
           ['temporal', temporalAdapter],

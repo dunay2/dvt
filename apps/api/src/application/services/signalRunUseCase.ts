@@ -1,5 +1,5 @@
-﻿import type { IRunStateStore } from '@dvt/contracts';
-import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
+import type { IRunStateStoreRead, IWorkflowEngine } from '@dvt/engine';
+import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
 import type { ISignalRunUseCase, SignalRunCommand, SignalRunResult } from '../ports/runtime.js';
@@ -9,7 +9,7 @@ import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 export class SignalRunUseCase implements ISignalRunUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
-    private readonly stateStore: IRunStateStore,
+    private readonly stateStore: IRunStateStoreRead,
     private readonly nowIsoUtc: () => string = () => new Date().toISOString()
   ) {}
 

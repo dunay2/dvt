@@ -52,7 +52,7 @@ interface WorkflowClientLike {
   getHandle(workflowId: string): WorkflowHandleLike;
 }
 
-interface IRunStateStoreLike {
+interface IRunStateStoreReadLike {
   listEvents(tenantId: string, runId: string): Promise<unknown[]>;
 }
 
@@ -64,7 +64,7 @@ export interface TemporalAdapterDeps {
   clientManager?: TemporalClientManager;
   workflowClient?: WorkflowClientLike;
   config: TemporalAdapterConfig;
-  stateStore: IRunStateStoreLike;
+  stateStore: IRunStateStoreReadLike;
   projector: SnapshotProjectorLike;
 }
 

@@ -2,9 +2,9 @@
  * @file apps/api/src/application/services/WorkflowEngineFactory.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Provide two construction paths:
- *   - buildWorkflowEngine: production path — accepts subsystem-grouped config,
+ *   - buildWorkflowEngine: production path - accepts subsystem-grouped config,
  *     validates adapters.size > 0 at construction time, hides internal dep wiring.
- *   - createWorkflowEngine: test-seam path — accepts a flat WorkflowEngineDeps
+ *   - createWorkflowEngine: test-seam path - accepts a flat WorkflowEngineDeps
  *     and an optional constructor override, allowing unit tests to inject fakes.
  */
 import {
@@ -14,18 +14,19 @@ import {
   SnapshotProjector,
   WorkflowEngine,
   type EngineRunRef,
+  type IAuthorizer,
+  type IClock,
   type IOutboxRateLimiter,
   type IProviderAdapter,
   type IRunAccessPolicy,
-  type IRunStateStore,
-  type WorkflowEngineDeps,
-  type IAuthorizer,
+  type IRunStateStoreRead,
+  type IRunStateStoreWrite,
   type IStartRunIntentStore,
-  type IClock,
+  type WorkflowEngineDeps,
 } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
 
-// ── Subsystem config types ────────────────────────────────────────────────────
+// Subsystem config types ------------------------------------------------------
 
 export interface EngineSecurityConfig {
   /** Authorizer that enforces tenant-level access control. */
@@ -39,7 +40,8 @@ export interface EngineSecurityConfig {
 }
 
 export interface EnginePersistenceConfig {
-  stateStore: IRunStateStore;
+  stateStoreRead: IRunStateStoreRead;
+  stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
 }
 
@@ -62,13 +64,13 @@ export interface EngineConfig {
   infrastructure: EngineInfrastructureConfig;
 }
 
-// ── Production factory ────────────────────────────────────────────────────────
+// Production factory ----------------------------------------------------------
 
 /**
  * Builds a WorkflowEngine from a structured subsystem config.
  * Validates that at least one adapter is registered before construction.
  * Constructs SnapshotProjector, IdempotencyKeyBuilder, PlanRefPolicy, and
- * RunAccessPolicy internally — callers only provide infrastructure inputs.
+ * RunAccessPolicy internally - callers only provide infrastructure inputs.
  */
 export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
   if (config.runtime.adapters.size === 0) {
@@ -91,7 +93,8 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
   });
 
   return new WorkflowEngine({
-    stateStore: config.persistence.stateStore,
+    stateStoreRead: config.persistence.stateStoreRead,
+    stateStoreWrite: config.persistence.stateStoreWrite,
     projector: new SnapshotProjector(),
     idempotency: new IdempotencyKeyBuilder(),
     clock: config.infrastructure.clock,
@@ -106,13 +109,13 @@ export function buildWorkflowEngine(config: EngineConfig): WorkflowEngine {
   });
 }
 
-// ── Test seam ─────────────────────────────────────────────────────────────────
+// Test seam -----------------------------------------------------------------
 
 export type WorkflowEngineConstructor = new (deps: WorkflowEngineDeps) => WorkflowEngine;
 
 /**
  * Test seam: allows unit tests to inject a fake engine constructor while keeping
- * the same dep shape. Do not use in production code — use buildWorkflowEngine.
+ * the same dep shape. Do not use in production code - use buildWorkflowEngine.
  */
 export function createWorkflowEngine(
   deps: WorkflowEngineDeps,

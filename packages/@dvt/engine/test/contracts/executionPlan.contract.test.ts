@@ -75,7 +75,8 @@ function createEngine(plan: ExecutionPlan): { engine: WorkflowEngine; planRef: P
   });
 
   const engine = new WorkflowEngine({
-    stateStore: store,
+    stateStoreRead: store,
+    stateStoreWrite: store,
 
     projector,
     idempotency: new IdempotencyKeyBuilder(),

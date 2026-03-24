@@ -9,7 +9,8 @@ class FakeWorkflowEngine {
 
 function makeDeps(): WorkflowEngineDeps {
   return {
-    stateStore: {} as never,
+    stateStoreRead: {} as never,
+    stateStoreWrite: {} as never,
     projector: {} as never,
     idempotency: {} as never,
     clock: {} as never,

@@ -1,4 +1,4 @@
-import type { IRunStateStore } from '@dvt/contracts';
+import type { IRunStateStoreRead } from '@dvt/engine';
 import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import type {
@@ -9,7 +9,7 @@ import type {
 } from '../ports/runtime.js';
 
 export class GetRunEventsUseCase implements IGetRunEventsUseCase {
-  public constructor(private readonly stateStore: IRunStateStore) {}
+  public constructor(private readonly stateStore: IRunStateStoreRead) {}
 
   public async execute(
     query: GetRunEventsQuery,

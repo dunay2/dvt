@@ -147,10 +147,9 @@ export interface ProviderRefUpdate {
   providerConductorUrl?: string;
 }
 
-export interface IRunStateStore {
+export interface IRunStateStoreWrite {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
-  getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
 
   /**
    * Updates the provider-assigned references on an already-bootstrapped run.
@@ -160,17 +159,23 @@ export interface IRunStateStore {
    * Optional - the engine call-site is fail-soft.
    */
   saveProviderRef?(tenantId: string, runId: string, update: ProviderRefUpdate): Promise<void>;
+}
+
+export interface IRunStateStoreRead {
+  getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
 
   listEvents(
     tenantId: string,
     runId: string,
     options?: ListEventsOptions
   ): Promise<EventEnvelope[]>;
+
   /**
    * Returns run metadata records, most-recently created first.
-   * Useful for dashboard / admin listing — does not include run status.
+   * Useful for dashboard / admin listing - does not include run status.
    */
   listRuns(options: ListRunsOptions): Promise<RunMetadata[]>;
+
   /**
    * Returns the latest materialized WorkflowSnapshot for the run, or null if
    * no snapshot exists yet (run predates snapshot support, or store crashed
@@ -179,7 +184,9 @@ export interface IRunStateStore {
    * Callers MUST fall back to full event replay when null is returned.
    */
   getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null>;
+}
 
+export interface IRunStateStoreMaintenance {
   /**
    * Replays all persisted events for the run from the beginning and overwrites
    * the materialized snapshot with the result.
@@ -187,29 +194,18 @@ export interface IRunStateStore {
    * Use for recovery/repair when the snapshot is known to be stale, missing,
    * or corrupt.
    *
-   * ADR-0004 §2.2: runSeq is the authority for event ordering; replay MUST
+   * ADR-0004 Section 2.2: runSeq is the authority for event ordering; replay MUST
    * consume events ordered by runSeq ASC.
-   * ADR-0031: tenant isolation enforced — throws when the run does not belong
+   * ADR-0031: tenant isolation enforced - throws when the run does not belong
    * to the given tenantId.
    *
    * @throws Error with message `RUN_NOT_FOUND: <runId>` when the run does not
    *   exist or belongs to a different tenant.
    */
   rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot>;
-
-  /**
-   * Returns up to `batchSize` runs that have a missing or stale snapshot.
-   *
-   * A snapshot is stale when `run_snapshots.last_run_seq` is less than the
-   * maximum `run_seq` in `run_events` for that run, or when no snapshot row
-   * exists at all.
-   *
-   * Used by the standalone projector worker (G7.2) to drive a catch-up loop.
-   * Optional - implementations that do not support this query may omit it;
-   * the projector worker will skip the tick when the method is absent.
-   */
-  listStaleSnapshotRuns?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
 }
+
+export type IRunStateStore = IRunStateStoreWrite & IRunStateStoreRead & IRunStateStoreMaintenance;
 
 export interface RunStateCommandPort {
   bootstrapRun(input: RunBootstrapInput): Promise<AppendResult>;

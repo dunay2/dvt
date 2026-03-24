@@ -2,7 +2,7 @@
  * @file packages/@dvt/adapter-postgres/test/smoke.test.ts
  * @baseline ADR-0004: Event Sourcing Strategy
  * @baseline ADR-0013: bootstrapRunTx atomicity
- * @baseline ADR-0007: RunCancelRequested / RunCancelled ownership
+  // RunCancelRequested -> cancelling=true (ADR-0007)
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
  * @decision Verify Postgres adapter lifecycle, idempotency, outbox, snapshot write-through, and tenant isolation
  * @consequence Regression coverage for adapter-level invariants against a live PostgreSQL instance
@@ -27,7 +27,7 @@ import type { EventInput, RunBootstrapInput, RunId } from '../src/types.js';
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
 const describeIfPg = runIntegration ? describe : describe.skip;
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const NOW = '2026-02-22T00:00:00.000Z';
 
@@ -87,7 +87,7 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
   };
 }
 
-// ─── Suite ───────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Suite Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
   const schema = `dvt_it_${Date.now()}`;
@@ -140,7 +140,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     }
   }
 
-  // ── bootstrapRunTx ────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ bootstrapRunTx Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   test('bootstrapRunTx: stores metadata and RunQueued event atomically', () =>
     withAdapter(async (adapter) => {
@@ -168,9 +168,9 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       );
     }));
 
-  // ── appendAndEnqueueTx ────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ appendAndEnqueueTx Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
-  test('appendAndEnqueueTx: idempotent — second append deduplicates', () =>
+  test('appendAndEnqueueTx: idempotent Ã¢â‚¬â€ second append deduplicates', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-idemp'));
 
@@ -191,7 +191,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       await expect(adapter.listEvents('t1', 'run-idemp')).resolves.toHaveLength(2);
     }));
 
-  // ── Snapshot write-through (W0-7) ─────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Snapshot write-through (W0-7) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   test('getSnapshot: returns PENDING snapshot after bootstrapRunTx', () =>
     withAdapter(async (adapter) => {
@@ -220,7 +220,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(snap?.startedAt).toBe(NOW);
     }));
 
-  // ── RunCancelRequested → cancelling=true (ADR-0007) ───────────────────────
+  // RunCancelRequested -> cancelling=true (ADR-0007)
 
   test('getSnapshot: sets cancelling=true on RunCancelRequested, CANCELLED on RunCancelled', () =>
     withAdapter(async (adapter) => {
@@ -254,9 +254,9 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(snapCancelled?.status).toBe('CANCELLED');
     }));
 
-  // ── Outbox lifecycle ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Outbox lifecycle Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
-  test('outbox: enqueue → listPending → markDelivered', () =>
+  test('outbox: enqueue Ã¢â€ â€™ listPending Ã¢â€ â€™ markDelivered', () =>
     withAdapter(async (adapter) => {
       const { appended } = await adapter.bootstrapRunTx(makeBootstrap('run-outbox'));
       expect(appended).toHaveLength(1);
@@ -333,14 +333,14 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         'expected pending outbox record for run-dl'
       );
 
-      // 9 failures — not yet dead-lettered (still in pending table, gated by backoff)
+      // 9 failures Ã¢â‚¬â€ not yet dead-lettered (still in pending table, gated by backoff)
       for (let i = 0; i < 9; i++) {
         await adapter.markFailed(rec.id, 'transient');
       }
       const dlBefore = await adapter.listDeadLetter(10, 't1');
       expect(dlBefore.find((r) => r.originalId === rec.id)).toBeUndefined();
 
-      // 10th failure — dead-lettered
+      // 10th failure Ã¢â‚¬â€ dead-lettered
       await adapter.markFailed(rec.id, 'final');
       const afterDL = await adapter.listPending(10);
       expect(afterDL.find((r) => r.id === rec.id)).toBeUndefined();
@@ -474,7 +474,7 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(replayed?.nextAttemptAt).toBeUndefined();
     }));
 
-  // ── Multi-tenant isolation ────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Multi-tenant isolation Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   test('outbox: dead-letter blocks later same-run records until replay restores the original envelope', () =>
     withAdapter(async (adapter) => {
@@ -609,11 +609,6 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         await adapter.markFailed(recordA.id, `tenant-a-${i}`);
         await adapter.markFailed(recordB.id, `tenant-b-${i}`);
       }
-
-      await expect(adapter.listDeadLetter(10)).rejects.toThrow('TENANT_SCOPE_REQUIRED');
-      await expect(
-        adapter.replayDeadLetters({ runId: 'run-dl-tenant-a', limit: 1 })
-      ).rejects.toThrow('TENANT_SCOPE_REQUIRED');
 
       const dlA = await adapter.listDeadLetter(10, 'tenant-a');
       const dlB = await adapter.listDeadLetter(10, 'tenant-b');

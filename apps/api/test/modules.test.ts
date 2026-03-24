@@ -31,7 +31,9 @@ describe('modules', () => {
       authorizer: {} as never,
       engine: {} as never,
       adapters: new Map(),
-      stateStore: {} as never,
+      stateStoreRead: {} as never,
+      stateStoreWrite: {} as never,
+      stateStoreMaintenance: {} as never,
       async migrate() {
         migrateCalls += 1;
       },

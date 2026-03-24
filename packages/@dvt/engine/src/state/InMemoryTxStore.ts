@@ -16,6 +16,7 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
+import type { IRunSnapshotStalenessQuery } from '../ports/IRunSnapshotStalenessQuery.js';
 import type {
   IRunStateStore,
   ListEventsOptions,
@@ -24,14 +25,16 @@ import type {
 } from '../ports/IRunStateStore.js';
 
 import { InMemoryOutboxState } from './InMemoryOutboxState.js';
+import { collectStaleSnapshotRuns } from './snapshotStaleness.js';
 
-export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
+export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage {
   private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 
   private readonly metadataByRunId = new Map<string, RunMetadata>();
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
+  private readonly snapshotLastRunSeqByRunId = new Map<string, number>();
   private readonly outbox: InMemoryOutboxState;
 
   constructor(deps?: { outboxNowMs?: () => number; outboxShardCount?: number }) {
@@ -140,6 +143,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
       input.metadata.runId,
       this.createDefaultSnapshot(input.metadata.runId)
     );
+    this.snapshotLastRunSeqByRunId.set(input.metadata.runId, 0);
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
   }
 
@@ -202,6 +206,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
       }
       this.snapshotByRunId.set(runId, snap);
     }
+    this.snapshotLastRunSeqByRunId.set(runId, committed.at(-1)?.runSeq ?? 0);
 
     // Commit outbox in the same "transaction"
     await this.outbox.enqueueTx(runId, appended);
@@ -216,7 +221,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   /**
    * @deprecated Use appendAndEnqueueTx. Scheduled for removal in Phase 3.
    * In this store the two are equivalent, but in Postgres appendEventsTx
-   * skips the outbox enqueue — a correctness hazard.
+   * skips the outbox enqueue ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â a correctness hazard.
    */
   async appendEventsTx(runId: string, envelopes: RunEventInput[]): Promise<AppendResult> {
     return this.appendAndEnqueueTx(runId, envelopes);
@@ -265,7 +270,19 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
       applyRunEvent(snap, e);
     }
     this.snapshotByRunId.set(runId, snap);
+    this.snapshotLastRunSeqByRunId.set(runId, events.at(-1)?.runSeq ?? 0);
     return snap;
+  }
+
+  async listStaleSnapshotRuns(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string }>> {
+    return collectStaleSnapshotRuns(
+      this.metadataByRunId.values(),
+      (runId) => this.snapshotLastRunSeqByRunId.get(runId),
+      (runId) => this.eventsByRunId.get(runId)?.at(-1)?.runSeq ?? 0,
+      batchSize
+    );
   }
 
   async enqueueTx(_runId: string, _events: RunEventPersisted[]): Promise<void> {
@@ -295,11 +312,12 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     return this.outbox.hasPendingRetries(selection);
   }
 
-  async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
-    return this.outbox.listDeadLetter(limit);
+  async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
+    return this.outbox.listDeadLetter(limit, tenantId);
   }
 
-  async replayDeadLetters(options?: {
+  async replayDeadLetters(options: {
+    tenantId: string;
     limit?: number;
     runId?: string;
     ids?: string[];

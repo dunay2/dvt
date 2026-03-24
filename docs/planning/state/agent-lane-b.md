@@ -16,11 +16,13 @@ Stabilize event payload versioning and lineage wiring.
 
 ## Tasks
 
-- `P0` `S05`: add `payloadVersion` and per-eventType schema validation.
-- `P1` `RC-B1`: decouple lineage worker from adapter internals.
-- `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
-- `P1` DLQ alerting + automated replay: surface and reduce lineage backlogs.
-- `P2` manifest S3 fetch cache: reduce planner egress and build latency.
+> Source of truth: `agent-lane-b.yaml`. Edit the YAML and run `pnpm docs:sync`.
+
+- [ ] `P0` `S05`: add payloadVersion and per-eventType schema validation.
+- [ ] `P1` `RC-B1`: decouple lineage worker from adapter internals.
+- [ ] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
+- [ ] `P1` `DLQ alerting + automated replay`: surface and reduce lineage backlogs.
+- [ ] `P2` `manifest S3 fetch cache`: reduce planner egress and build latency.
 
 ## Dependencies
 

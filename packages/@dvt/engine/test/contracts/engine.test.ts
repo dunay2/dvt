@@ -101,7 +101,8 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planFetcher: { fetch: async () => plan },
     });
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector,
       idempotency,
@@ -154,7 +155,8 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     });
 
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector,
       idempotency,
@@ -252,7 +254,8 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const planFetcher = { fetch: vi.fn(async () => makeHelloWorldPlan()) };
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector,
       idempotency,

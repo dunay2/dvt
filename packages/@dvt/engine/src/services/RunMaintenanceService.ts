@@ -23,13 +23,14 @@ import type {
   ReconcileOrphanedIntentsOptions,
   ReconcileOrphanedIntentsResult,
 } from '../ports/IRunMaintenanceService.js';
-import type { IRunStateStore } from '../ports/IRunStateStore.js';
+import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IAuthorizer } from '../security/authorizer.js';
 import type { IClock } from '../utils/clock.js';
 
 export interface RunMaintenanceServiceDeps {
-  stateStore: IRunStateStore;
+  stateStoreRead: IRunStateStoreRead;
+  stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   authorizer: IAuthorizer;
@@ -67,7 +68,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
     const traceContext = buildMaintenanceContext(tenantId);
 
     const candidates = await this.observability.withContext(traceContext, () =>
-      this.deps.stateStore.listRuns({
+      this.deps.stateStoreRead.listRuns({
         tenantId: tenantId as TenantId,
         status: 'PENDING',
         limit: limit ?? 100,
@@ -90,7 +91,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
       if (nowMs - Date.parse(meta.createdAt) < thresholdMs) continue;
       if (dryRun) continue;
 
-      await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [
+      await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
         this.buildRunEvent(meta, 'RunFailed', { reason: 'QUEUED_TIMEOUT' }),
       ]);
 
@@ -131,7 +132,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
 
     // Query RUNNING runs — CANCELLING is a substatus (snapshot.cancelling = true)
     // so we must post-filter after checking the snapshot.
-    const candidates = await this.deps.stateStore.listRuns({
+    const candidates = await this.deps.stateStoreRead.listRuns({
       tenantId: tenantId as TenantId,
       status: 'RUNNING',
       limit: limit ?? 100,
@@ -141,10 +142,10 @@ export class RunMaintenanceService implements IRunMaintenanceService {
     let skipped = 0;
 
     for (const meta of candidates) {
-      const snapshot = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
+      const snapshot = await this.deps.stateStoreRead.getSnapshot(meta.tenantId, meta.runId);
       if (!snapshot?.cancelling) continue;
 
-      const events = await this.deps.stateStore.listEvents(meta.tenantId, meta.runId);
+      const events = await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId);
       const cancelEvent = events.find((e) => e.eventType === 'RunCancelRequested');
       if (!cancelEvent) {
         skipped++;
@@ -156,7 +157,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
 
       // ADR-0007: Do NOT synthesize RunCancelled — only the adapter may emit that.
       // Instead, transition to FAILED with a clear reason.
-      await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [
+      await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
         this.buildRunEvent(meta, 'RunFailed', { reason: 'CANCELLATION_TIMEOUT' }),
       ]);
 
@@ -237,7 +238,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
     intent: OrphanedIntent,
     traceContext: ReturnType<typeof buildMaintenanceContext>
   ): Promise<ReconcileOrphanedIntentOutcome> {
-    const existingMeta = await this.deps.stateStore
+    const existingMeta = await this.deps.stateStoreRead
       .getRunMetadataByRunId(intent.tenantId, intent.runId)
       .catch(() => null);
 
@@ -341,7 +342,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
     intent: OrphanedIntent,
     traceContext: ReturnType<typeof buildMaintenanceContext>
   ): Promise<ReconcileOrphanedIntentOutcome> {
-    const existingMeta = await this.deps.stateStore
+    const existingMeta = await this.deps.stateStoreRead
       .getRunMetadataByRunId(intent.tenantId, intent.runId)
       .catch(() => null);
 

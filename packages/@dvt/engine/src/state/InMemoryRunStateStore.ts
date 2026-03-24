@@ -9,19 +9,22 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
-
+import type { IRunSnapshotStalenessQuery } from '../ports/IRunSnapshotStalenessQuery.js';
 import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
-} from './IRunStateStore.js';
+} from '../ports/IRunStateStore.js';
 
-export class InMemoryRunStateStore implements IRunStateStore {
+import { collectStaleSnapshotRuns } from './snapshotStaleness.js';
+
+export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalenessQuery {
   private readonly metadataByRunId = new Map<string, RunMetadata>();
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
+  private readonly snapshotLastRunSeqByRunId = new Map<string, number>();
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     const meta = this.metadataByRunId.get(runId) ?? null;
@@ -41,7 +44,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
     }
   ): Promise<void> {
     const current = this.metadataByRunId.get(runId);
-    if (!current || current.tenantId !== tenantId) throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    if (current?.tenantId !== tenantId) throw new Error(`RUN_NOT_FOUND: ${runId}`);
     this.metadataByRunId.set(runId, {
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,
@@ -68,6 +71,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
       gatewayDecisions: {},
       steps: {},
     });
+    this.snapshotLastRunSeqByRunId.set(input.metadata.runId, 0);
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
   }
 
@@ -121,6 +125,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
       }
       this.snapshotByRunId.set(runId, snap);
     }
+    this.snapshotLastRunSeqByRunId.set(runId, committed.at(-1)?.runSeq ?? 0);
 
     return {
       appended,
@@ -179,6 +184,18 @@ export class InMemoryRunStateStore implements IRunStateStore {
       applyRunEvent(snap, e);
     }
     this.snapshotByRunId.set(runId, snap);
+    this.snapshotLastRunSeqByRunId.set(runId, events.at(-1)?.runSeq ?? 0);
     return snap;
+  }
+
+  async listStaleSnapshotRuns(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string }>> {
+    return collectStaleSnapshotRuns(
+      this.metadataByRunId.values(),
+      (runId) => this.snapshotLastRunSeqByRunId.get(runId),
+      (runId) => this.eventsByRunId.get(runId)?.at(-1)?.runSeq ?? 0,
+      batchSize
+    );
   }
 }

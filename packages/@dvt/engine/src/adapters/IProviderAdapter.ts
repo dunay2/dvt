@@ -52,22 +52,6 @@ export interface IProviderAdapter {
   capabilities?(): readonly string[];
 
   /**
-   * Optional. Computes a deterministic EngineRunRef from RunContext WITHOUT a network call.
-   *
-   * When implemented, WorkflowEngine commits run_metadata + RunQueued BEFORE calling
-   * adapter.startRun(), eliminating the dual-producer ordering race: the workflow worker
-   * sees run_metadata already committed when its first activity runs, so no activity can
-   * write events to an uncommitted stream.
-   *
-   * The returned ref MUST agree with startRun() on all fields stored in run_metadata
-   * (provider, workflowId, namespace, taskQueue). The runId field may be an approximation
-   * when the provider assigns an execution-level UUID at start time.
-   *
-   * Adapters that omit this method fall back to the legacy path (startRun first, then bootstrap).
-   */
-  estimateRunRef?(ctx: RunContext): EngineRunRef;
-
-  /**
    * ADR-0030 §3.3 — Pre-dispatch intent reconciliation.
    *
    * Given a runId and tenantId, derive the provider's workflowId (per StartRunIdempotency §3.3)

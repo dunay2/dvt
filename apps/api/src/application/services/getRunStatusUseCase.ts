@@ -1,4 +1,4 @@
-﻿import type { IRunStateStore } from '@dvt/contracts';
+import type { IRunStateStoreRead } from '@dvt/engine';
 import { RunMetadataNotFoundError, type IWorkflowEngine } from '@dvt/engine';
 
 import type {
@@ -13,7 +13,7 @@ import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 export class GetRunStatusUseCase implements IGetRunStatusUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
-    private readonly stateStore: IRunStateStore
+    private readonly stateStore: IRunStateStoreRead
   ) {}
 
   public async execute(

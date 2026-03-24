@@ -12,7 +12,7 @@
 import type {
   AppendResult,
   EventInput,
-  IRunStateStore,
+  IRunStateStoreWrite,
   RunId,
   RunBootstrapInput,
   RunStateCommandPort,
@@ -23,7 +23,7 @@ import type {
  * RunStateCommandPort write boundary.
  */
 export class PostgresRunStateCommandPortBridge implements RunStateCommandPort {
-  constructor(private readonly store: IRunStateStore) {}
+  constructor(private readonly store: IRunStateStoreWrite) {}
 
   bootstrapRun(input: RunBootstrapInput): Promise<AppendResult> {
     return this.store.bootstrapRunTx(input);

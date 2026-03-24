@@ -10,6 +10,8 @@ import {
   SnapshotProjector,
   type IClock,
   type IProviderAdapter,
+  type IRunStateStoreRead,
+  type IRunStateStoreWrite,
 } from '@dvt/engine';
 import { MockAdapter } from '@dvt/engine/testing';
 import type { IObservability } from '@dvt/observability';
@@ -31,6 +33,8 @@ export interface ReconcilerRuntimeHealthHooks {
 interface RuntimeStores {
   stateStore: PostgresStateStoreAdapter;
   intentStore: PostgresStartRunIntentStore;
+  stateStoreRead: IRunStateStoreRead;
+  stateStoreWrite: IRunStateStoreWrite;
 }
 
 interface ReconcilerRuntimeConfig {
@@ -95,18 +99,20 @@ function createRuntimeStores(config: ReconcilerRuntimeConfig): RuntimeStores {
     queryTimeoutMs: config.queryTimeoutMs,
     outboxShardCount: config.outboxShardCount,
   });
+  const stateStoreRead = stateStore;
+  const stateStoreWrite = stateStore;
   const intentStore = new PostgresStartRunIntentStore({
     pool,
     schema: config.schema,
     statementTimeoutMs: config.statementTimeoutMs,
     queryTimeoutMs: config.queryTimeoutMs,
   });
-  return { stateStore, intentStore };
+  return { stateStore, intentStore, stateStoreRead, stateStoreWrite };
 }
 
 function resolveReconcilerAdapters(
   providers: readonly EngineRunRef['provider'][],
-  stateStore: PostgresStateStoreAdapter
+  stateStore: IRunStateStoreRead
 ): Map<EngineRunRef['provider'], IProviderAdapter> {
   const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>();
   for (const provider of providers) {
@@ -124,13 +130,15 @@ function resolveReconcilerAdapters(
 }
 
 function createMaintenanceService(
-  stateStore: PostgresStateStoreAdapter,
+  stateStoreRead: IRunStateStoreRead,
+  stateStoreWrite: IRunStateStoreWrite,
   intentStore: PostgresStartRunIntentStore,
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>,
   observability: IObservability
 ): RunMaintenanceService {
   return new RunMaintenanceService({
-    stateStore,
+    stateStoreRead,
+    stateStoreWrite,
     intentStore,
     adapters,
     // reconcileOrphanedIntents does not perform tenant-gated operations.
@@ -206,14 +214,20 @@ export async function createIntentReconcilerRuntime(
   if (config === null) return null;
 
   const stores = createRuntimeStores(config);
-  const { stateStore, intentStore } = stores;
+  const { stateStore, stateStoreRead, stateStoreWrite, intentStore } = stores;
   await Promise.all([stateStore.migrate(), intentStore.migrate()]);
-  const adapters = resolveReconcilerAdapters(config.providers, stateStore);
+  const adapters = resolveReconcilerAdapters(config.providers, stateStoreRead);
   if (adapters.size === 0) {
     throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');
   }
 
-  const maintenance = createMaintenanceService(stateStore, intentStore, adapters, observability);
+  const maintenance = createMaintenanceService(
+    stateStoreRead,
+    stateStoreWrite,
+    intentStore,
+    adapters,
+    observability
+  );
   const worker = createWorker({
     maintenance,
     logger,

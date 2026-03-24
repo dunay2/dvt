@@ -11,6 +11,7 @@ import {
 } from '@dvt/contracts';
 
 type ReplayDeadLetterOptions = {
+  tenantId: string;
   limit?: number;
   runId?: string;
   ids?: string[];
@@ -255,17 +256,17 @@ export class InMemoryOutboxState implements IOutboxStorage {
     );
   }
 
-  async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
+  async listDeadLetter(limit: number, _tenantId: string): Promise<DeadLetterRecord[]> {
     return this.deadLetters.slice(0, limit).map(stripPersistedDeadLetterShardId);
   }
 
-  async replayDeadLetters(options?: ReplayDeadLetterOptions): Promise<number> {
-    const limit = Math.max(0, options?.limit ?? Number.MAX_SAFE_INTEGER);
+  async replayDeadLetters(options: ReplayDeadLetterOptions): Promise<number> {
+    const limit = Math.max(0, options.limit ?? Number.MAX_SAFE_INTEGER);
     if (limit === 0) {
       return 0;
     }
 
-    const ids = options?.ids ? new Set(options.ids) : null;
+    const ids = options.ids ? new Set(options.ids) : null;
     const indexes = this.collectReplayDeadLetterIndexes(limit, options, ids);
     return this.replayDeadLettersAtIndexes(indexes);
   }

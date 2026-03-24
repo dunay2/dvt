@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import type {
   EventEnvelope as RunEventPersisted,
+  DeadLetterRecord,
   IEventBus,
   IOutboxStorage,
   OutboxFailureDisposition,
@@ -79,6 +80,19 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
 
   async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
     return (await this.inner.hasPendingRetries?.(selection)) ?? false;
+  }
+
+  async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
+    return this.inner.listDeadLetter(limit, tenantId);
+  }
+
+  async replayDeadLetters(options: {
+    tenantId: string;
+    limit?: number;
+    runId?: string;
+    ids?: string[];
+  }): Promise<number> {
+    return this.inner.replayDeadLetters(options);
   }
 }
 
@@ -238,6 +252,12 @@ describe('OutboxWorker', () => {
       },
       async markDelivered(): Promise<void> {},
       async markFailed(): Promise<void> {},
+      async listDeadLetter(): Promise<DeadLetterRecord[]> {
+        return [];
+      },
+      async replayDeadLetters(): Promise<number> {
+        return 0;
+      },
     };
     const worker = new OutboxWorker(storage, new CapturingBus(), {
       batchSize: 10,
@@ -269,6 +289,12 @@ describe('OutboxWorker', () => {
       async hasPendingRetries(selection?: { shardIds?: readonly number[] }): Promise<boolean> {
         receivedRetrySelection = selection;
         return false;
+      },
+      async listDeadLetter(): Promise<DeadLetterRecord[]> {
+        return [];
+      },
+      async replayDeadLetters(): Promise<number> {
+        return 0;
       },
     };
     const worker = new OutboxWorker(storage, new CapturingBus(), {
@@ -335,6 +361,12 @@ describe('OutboxWorker', () => {
       async markFailed(): Promise<void> {},
       async hasPendingRetries(): Promise<boolean> {
         throw new Error('synthetic retry probe failure');
+      },
+      async listDeadLetter(): Promise<DeadLetterRecord[]> {
+        return [];
+      },
+      async replayDeadLetters(): Promise<number> {
+        return 0;
       },
     };
     const alwaysFailBus: IEventBus = {
@@ -458,6 +490,12 @@ describe('OutboxWorker', () => {
       async hasPendingRetries(): Promise<boolean> {
         throw new Error('empty-batch retry probe failed');
       },
+      async listDeadLetter(): Promise<DeadLetterRecord[]> {
+        return [];
+      },
+      async replayDeadLetters(): Promise<number> {
+        return 0;
+      },
     };
     const worker = new OutboxWorker(storage, new CapturingBus(), {
       batchSize: 10,
@@ -494,13 +532,13 @@ describe('OutboxWorker', () => {
     }
 
     await expect(store.listPending(10)).resolves.toHaveLength(0);
-    const dlq = await store.listDeadLetter(10);
+    const dlq = await store.listDeadLetter(10, 't1');
     expect(dlq).toHaveLength(1);
     expect(dlq[0]?.runId).toBe('run-dlq');
 
-    const moved = await store.replayDeadLetters({ runId: 'run-dlq' });
+    const moved = await store.replayDeadLetters({ tenantId: 't1', runId: 'run-dlq' });
     expect(moved).toBe(1);
-    await expect(store.listDeadLetter(10)).resolves.toHaveLength(0);
+    await expect(store.listDeadLetter(10, 't1')).resolves.toHaveLength(0);
     await expect(store.listPending(10)).resolves.toHaveLength(1);
   });
 
@@ -524,7 +562,7 @@ describe('OutboxWorker', () => {
       await failingWorker.tick();
     }
 
-    const moved = await store.replayDeadLetters({ runId: 'run-replay-clean' });
+    const moved = await store.replayDeadLetters({ tenantId: 't1', runId: 'run-replay-clean' });
     expect(moved).toBe(1);
 
     const [replayed] = await store.listPending(10);
