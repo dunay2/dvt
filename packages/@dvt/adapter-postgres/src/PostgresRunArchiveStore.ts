@@ -848,7 +848,7 @@ function validateRetentionPolicy(policy: RunEventRetentionPolicy): void {
 function computeCutoffIso(nowIso: string, hotRetentionDays: number): string {
   const now = new Date(nowIso);
   if (Number.isNaN(now.getTime())) {
-    throw new TypeError('ARCHIVE_NOW_INVALID');
+    throw new Error('ARCHIVE_NOW_INVALID');
   }
   return new Date(now.getTime() - hotRetentionDays * 24 * 60 * 60 * 1000).toISOString();
 }
@@ -942,7 +942,7 @@ async function requireArchiveBatch(
 
 function parseTenantIds(value: unknown): readonly string[] {
   if (!Array.isArray(value)) {
-    throw new TypeError('ARCHIVE_UNIT_TENANT_IDS_INVALID');
+    throw new Error('ARCHIVE_UNIT_TENANT_IDS_INVALID');
   }
   const tenantIds = value.filter(
     (item): item is string => typeof item === 'string' && item.length > 0
