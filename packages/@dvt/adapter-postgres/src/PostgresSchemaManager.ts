@@ -540,6 +540,25 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         ON ${sq(schema)}.run_metadata (origin_run_id)
       `);
     },
+    rollbackDescription:
+      'Drop the logical_attempt_id, parent_run_id, origin_run_id, and next_retry_attempt_id columns and index from run_metadata',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_metadata_origin_run_id_idx')}`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS next_retry_attempt_id`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS origin_run_id`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS parent_run_id`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS logical_attempt_id`
+      );
+    },
   },
 ];
 

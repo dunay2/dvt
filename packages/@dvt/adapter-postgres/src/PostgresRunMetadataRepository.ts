@@ -342,44 +342,42 @@ export class PostgresRunMetadataRepository {
     tenantId: string,
     sourceRunId: RunId
   ): Promise<RetryAttemptReservation> {
-    return this.withTransaction(async (client) => {
+    return this.withClient(async (client) => {
       await PostgresSchemaManager.setTenantContext(client, tenantId);
 
-      const sourceResult = await client.query<{ run_id: string; origin_run_id: string | null }>(
+      const result = await client.query<{
+        parent_run_id: string;
+        origin_run_id: string;
+        logical_attempt_id: number;
+      }>(
         `
-          SELECT run_id, origin_run_id
-          FROM ${quoteIdentifier(this.schema)}.run_metadata
-          WHERE tenant_id = $1 AND run_id = $2
-          LIMIT 1
+          WITH source AS (
+            SELECT run_id, COALESCE(origin_run_id, run_id) AS origin_run_id
+            FROM ${quoteIdentifier(this.schema)}.run_metadata
+            WHERE tenant_id = $1 AND run_id = $2
+            LIMIT 1
+          ),
+          updated AS (
+            UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+            SET next_retry_attempt_id = next_retry_attempt_id + 1
+            WHERE tenant_id = $1 AND run_id = (SELECT origin_run_id FROM source)
+            RETURNING next_retry_attempt_id - 1 AS logical_attempt_id
+          )
+          SELECT source.run_id AS parent_run_id, source.origin_run_id, updated.logical_attempt_id
+          FROM source, updated
         `,
         [tenantId, sourceRunId]
       );
 
-      const source = sourceResult.rows[0];
-      if (!source) {
+      const row = result.rows[0];
+      if (!row) {
         throw new Error(`RUN_NOT_FOUND: ${sourceRunId}`);
       }
 
-      const originRunId = source.origin_run_id ?? source.run_id;
-      const reservation = await client.query<{ logical_attempt_id: number }>(
-        `
-          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
-          SET next_retry_attempt_id = next_retry_attempt_id + 1
-          WHERE tenant_id = $1 AND run_id = $2
-          RETURNING next_retry_attempt_id - 1 AS logical_attempt_id
-        `,
-        [tenantId, originRunId]
-      );
-
-      const logicalAttemptId = reservation.rows[0]?.logical_attempt_id;
-      if (!logicalAttemptId) {
-        throw new Error(`RUN_NOT_FOUND: ${originRunId}`);
-      }
-
       return {
-        parentRunId: source.run_id,
-        originRunId,
-        logicalAttemptId,
+        parentRunId: row.parent_run_id,
+        originRunId: row.origin_run_id,
+        logicalAttemptId: row.logical_attempt_id,
       };
     });
   }
