@@ -154,7 +154,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
   }
 
   // ---------------------------------------------------------------------------
-  // IOutboxStorage — outbox operations
+  // IOutboxStorage â€” outbox operations
   // ---------------------------------------------------------------------------
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
@@ -328,10 +328,10 @@ export class PostgresOutboxStore implements IOutboxStorage {
   }
 
   // ---------------------------------------------------------------------------
-  // IOutboxStorage — dead-letter operations
+  // IOutboxStorage â€” dead-letter operations
   // ---------------------------------------------------------------------------
 
-  async listDeadLetter(limit: number, tenantId?: string): Promise<DeadLetterRecord[]> {
+  async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
     if (!tenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
@@ -362,17 +362,17 @@ export class PostgresOutboxStore implements IOutboxStorage {
     }));
   }
 
-  async replayDeadLetters(options?: {
+  async replayDeadLetters(options: {
+    tenantId: string;
     limit?: number;
-    tenantId?: string;
     runId?: string;
     ids?: string[];
   }): Promise<number> {
-    const tenantId = options?.tenantId;
+    const tenantId = options.tenantId;
     if (!tenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
-    const limit = Math.max(0, options?.limit ?? 100);
+    const limit = Math.max(0, options.limit ?? 100);
     if (limit === 0) return 0;
 
     return this.withTransaction(async (client) => {
@@ -400,7 +400,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
   // ---------------------------------------------------------------------------
 
   private buildReplayDeadLettersParams(
-    options: { limit?: number; tenantId?: string; runId?: string; ids?: string[] } | undefined,
+    options: { limit?: number; tenantId: string; runId?: string; ids?: string[] },
     limit: number,
     tenantId: string
   ): { params: unknown[]; where: string[]; replayedAtParam: string } {

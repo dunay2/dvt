@@ -3,8 +3,8 @@
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
- * @decision Section 2.1 — Append-only event persistence with monotonic sequence semantics
- * @decision Section 2.2 — Read model snapshot projection derived from persisted event stream
+ * @decision Section 2.1 Ã¢â‚¬â€ Append-only event persistence with monotonic sequence semantics
+ * @decision Section 2.2 Ã¢â‚¬â€ Read model snapshot projection derived from persisted event stream
  * @decision All adapter methods enforce tenant scope per ADR-0031
  * @consequence PostgreSQL adapter preserves deterministic replay and transactional state consistency
  * @consequence Cross-tenant reads/writes are blocked at the adapter boundary
@@ -140,7 +140,7 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   /**
    * Runs all DDL migrations required for this adapter (CREATE TABLE IF NOT EXISTS, etc.).
    *
-   * Must be called — and awaited — once before the adapter is used.
+   * Must be called Ã¢â‚¬â€ and awaited Ã¢â‚¬â€ once before the adapter is used.
    * Safe to call multiple times: subsequent calls are no-ops (idempotent).
    *
    * Separating DDL from the constructor allows the adapter to be instantiated in
@@ -335,8 +335,8 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
   }
 
   /**
-   * ADR-0004 §2.2 — Full event replay from runSeq=1, overwrites the materialized snapshot.
-   * ADR-0031 — Tenant isolation verified before replay; throws RUN_NOT_FOUND on mismatch.
+   * ADR-0004 Ã‚Â§2.2 Ã¢â‚¬â€ Full event replay from runSeq=1, overwrites the materialized snapshot.
+   * ADR-0031 Ã¢â‚¬â€ Tenant isolation verified before replay; throws RUN_NOT_FOUND on mismatch.
    */
   async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
     this.ready();
@@ -411,14 +411,14 @@ export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage
     return this.outboxStore.hasPendingRetries(selection);
   }
 
-  async listDeadLetter(limit: number, tenantId?: string): Promise<DeadLetterRecord[]> {
+  async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
     this.ready();
     return this.outboxStore.listDeadLetter(limit, tenantId);
   }
 
-  async replayDeadLetters(options?: {
+  async replayDeadLetters(options: {
+    tenantId: string;
     limit?: number;
-    tenantId?: string;
     runId?: string;
     ids?: string[];
   }): Promise<number> {

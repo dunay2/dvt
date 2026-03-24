@@ -55,8 +55,13 @@ export interface IOutboxStorage {
   markDelivered(ids: string[]): Promise<void>;
   markFailed(id: string, error: string): Promise<void>;
   hasPendingRetries?(selection?: OutboxClaimSelection): Promise<boolean>;
-  listDeadLetter?(limit: number): Promise<DeadLetterRecord[]>;
-  replayDeadLetters?(options?: { limit?: number; runId?: string; ids?: string[] }): Promise<number>;
+  listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]>;
+  replayDeadLetters(options: {
+    tenantId: string;
+    limit?: number;
+    runId?: string;
+    ids?: string[];
+  }): Promise<number>;
 }
 
 export interface IEventBus {

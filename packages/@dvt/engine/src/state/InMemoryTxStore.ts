@@ -216,7 +216,7 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   /**
    * @deprecated Use appendAndEnqueueTx. Scheduled for removal in Phase 3.
    * In this store the two are equivalent, but in Postgres appendEventsTx
-   * skips the outbox enqueue — a correctness hazard.
+   * skips the outbox enqueue ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â a correctness hazard.
    */
   async appendEventsTx(runId: string, envelopes: RunEventInput[]): Promise<AppendResult> {
     return this.appendAndEnqueueTx(runId, envelopes);
@@ -295,11 +295,12 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
     return this.outbox.hasPendingRetries(selection);
   }
 
-  async listDeadLetter(limit: number): Promise<DeadLetterRecord[]> {
-    return this.outbox.listDeadLetter(limit);
+  async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
+    return this.outbox.listDeadLetter(limit, tenantId);
   }
 
-  async replayDeadLetters(options?: {
+  async replayDeadLetters(options: {
+    tenantId: string;
     limit?: number;
     runId?: string;
     ids?: string[];
