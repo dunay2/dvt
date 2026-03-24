@@ -1,4 +1,5 @@
-import { Pool, type PoolClient } from 'pg';
+import { Pool } from 'pg';
+import type { PoolClient } from 'pg';
 
 import { PostgresLineageOutboxStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import { HttpOpenLineageSink } from '@dvt/traceability-service';
