@@ -1,3 +1,4 @@
+import type { TenantId as ContractTenantId } from '@dvt/contracts';
 import type { IRunStateStoreRead, RunMetadata, RunStatus } from '@dvt/engine';
 
 import type {
@@ -16,7 +17,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
     context: AuthorizedQueryExecutionContext
   ): Promise<ListRunsResult> {
     const metadata = await this.stateStore.listRuns({
-      tenantId: context.scope.tenantId.value,
+      tenantId: context.scope.tenantId.value as ContractTenantId,
       limit: query.limit,
     });
 
