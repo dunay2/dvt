@@ -414,6 +414,7 @@ export class RunMaintenanceService implements IRunMaintenanceService {
     return {
       eventId: this.deps.idempotency.eventId(),
       eventType,
+      payloadVersion: 1,
       emittedAt: this.deps.clock.nowIsoUtc(),
       tenantId: meta.tenantId,
       projectId: meta.projectId,

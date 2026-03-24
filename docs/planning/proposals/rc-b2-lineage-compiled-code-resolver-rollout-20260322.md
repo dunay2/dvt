@@ -1,8 +1,8 @@
 ---
 title: RC-B2 Lineage Compiled Code Resolver Rollout
-status: Review
+status: Closed
 owner: Traceability / Delivery
-last_reviewed: 2026-03-23
+last_reviewed: 2026-03-24
 planning_type: proposal
 ---
 
@@ -65,5 +65,11 @@ Validation commands:
 
 ## Exit Criteria
 
-- `RC-B2` status can move from `Queued` to `Review` with lineage wiring evidence.
+- `RC-B2` closed in mainline with lineage wiring evidence.
 - No hidden stubs remain in production composition root.
+
+## Closeout
+
+- Implemented in `apps/lineage-worker/src/bootstrap.ts`, `apps/lineage-worker/src/server.ts`, and `apps/lineage-worker/src/compiledCodeResolver.ts`.
+- Regression coverage is in `apps/lineage-worker/test/bootstrap.test.ts`, `apps/lineage-worker/test/compiledCodeResolver.test.ts`, and `apps/lineage-worker/test/server.lineage-mapper-wiring.test.ts`.
+- Merged in main via `Fix/rc b2 lineage resolver (#584)` / commit `80558fbf`.

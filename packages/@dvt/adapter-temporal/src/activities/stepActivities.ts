@@ -200,6 +200,7 @@ export function createActivities(
       const envelopeBase = {
         eventId: deps.idempotency.eventId(),
         eventType,
+        payloadVersion: 1,
         emittedAt: deps.clock.nowIsoUtc(),
         tenantId: ctx.tenantId,
         projectId: ctx.projectId,

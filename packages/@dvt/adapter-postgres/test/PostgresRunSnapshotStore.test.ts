@@ -138,7 +138,7 @@ describe('PostgresRunSnapshotStore', () => {
                 eventType: 'RunFailed',
                 emittedAt: '2026-03-15T00:00:01.000Z',
                 runSeq: 2,
-                payload: {},
+                payload: { reason: 'WORKFLOW_FAILURE' },
               },
             },
           ] as T[],

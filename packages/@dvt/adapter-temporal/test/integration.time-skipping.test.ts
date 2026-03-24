@@ -1261,6 +1261,9 @@ describe('temporal integration (time-skipping)', () => {
           'StepFailed:s-fail',
           'RunFailed:-',
         ]);
+        expect(events.find((e) => e.eventType === 'RunFailed')?.payload).toMatchObject({
+          reason: 'STEP_FAILURE',
+        });
 
         const projected = projector.rebuild(ctx.runId, events);
         expect(projected.status).toBe('FAILED');
