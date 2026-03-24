@@ -505,16 +505,18 @@ export class WorkflowEngine implements IWorkflowEngine {
         throw error;
       }
 
-      await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
-        this.observability.logs.error({
-          msg: 'RunFailed emission failed after startRun error',
-          context: traceContext,
-          err: emitErr instanceof Error ? emitErr.message : String(emitErr),
-          attributes: {
-            error: toErrorMessage(emitErr),
-          },
-        });
-      });
+      await this.emitRunEvent(failMeta, 'RunFailed', { reason: 'START_RUN_FAILURE' }).catch(
+        (emitErr: unknown) => {
+          this.observability.logs.error({
+            msg: 'RunFailed emission failed after startRun error',
+            context: traceContext,
+            err: emitErr instanceof Error ? emitErr.message : String(emitErr),
+            attributes: {
+              error: toErrorMessage(emitErr),
+            },
+          });
+        }
+      );
     }
     throw error;
   }
@@ -656,11 +658,16 @@ export class WorkflowEngine implements IWorkflowEngine {
             const substatus = providerView.substatus ?? base.substatus;
             const message = providerView.message ?? base.message;
             span.setStatus('ok');
-            return {
+            const result = {
               ...base,
-              ...(substatus !== undefined ? { substatus } : {}),
-              ...(message !== undefined ? { message } : {}),
             };
+            if (substatus !== undefined) {
+              result.substatus = substatus;
+            }
+            if (message !== undefined) {
+              result.message = message;
+            }
+            return result;
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
@@ -749,7 +756,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   private getAdapterOrThrow(provider: EngineRunRef['provider']): IProviderAdapter {
     const adapter = this.deps.adapters.get(provider);
-    if (!adapter) throw new AdapterNotRegisteredError(provider);
+    if (adapter === undefined) throw new AdapterNotRegisteredError(provider);
     return adapter;
   }
 
@@ -776,9 +783,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     return m;
   }
 
-  private async emitRunEvent(meta: RunMetadata, eventType: EventType): Promise<void> {
+  private async emitRunEvent(
+    meta: RunMetadata,
+    eventType: EventType,
+    payload?: Record<string, unknown>
+  ): Promise<void> {
     await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
-      this.buildRunEvent(meta, eventType),
+      this.buildRunEvent(meta, eventType, payload),
     ]);
   }
 
@@ -790,6 +801,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const input: RunEventInput = {
       eventId: this.deps.idempotency.eventId(),
       eventType,
+      payloadVersion: 1,
       emittedAt: this.deps.clock.nowIsoUtc(),
       tenantId: meta.tenantId,
       projectId: meta.projectId,
@@ -821,6 +833,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     return {
       eventId: this.deps.idempotency.eventId(),
       eventType,
+      payloadVersion: 1,
       emittedAt: this.deps.clock.nowIsoUtc(),
       tenantId: meta.tenantId,
       projectId: meta.projectId,
@@ -889,7 +902,9 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   private assertRequiredProvidersRegistered(requiredProviders: EngineRunRef['provider'][]): void {
     for (const provider of requiredProviders) {
-      if (!this.deps.adapters.has(provider)) throw new AdapterNotRegisteredError(provider);
+      if (this.deps.adapters.has(provider) === false) {
+        throw new AdapterNotRegisteredError(provider);
+      }
     }
   }
 }
@@ -980,42 +995,55 @@ function buildProviderRefUpdate(runRef: EngineRunRef): {
   providerTaskQueue?: string;
   providerConductorUrl?: string;
 } {
-  return {
+  const update: {
+    providerWorkflowId: string;
+    providerRunId: string;
+    providerNamespace?: string;
+    providerTaskQueue?: string;
+    providerConductorUrl?: string;
+  } = {
     providerWorkflowId: runRef.workflowId,
     providerRunId: runRef.runId,
-    ...(runRef.provider === 'temporal' ? { providerNamespace: runRef.namespace } : {}),
-    ...(runRef.provider === 'temporal' && runRef.taskQueue
-      ? { providerTaskQueue: runRef.taskQueue }
-      : {}),
-    ...(runRef.provider === 'conductor' ? { providerConductorUrl: runRef.conductorUrl } : {}),
   };
+  if (runRef.provider === 'temporal') {
+    update.providerNamespace = runRef.namespace;
+    if (runRef.taskQueue) {
+      update.providerTaskQueue = runRef.taskQueue;
+    }
+  }
+  if (runRef.provider === 'conductor') {
+    update.providerConductorUrl = runRef.conductorUrl;
+  }
+  return update;
 }
 
 function normalizePlanRef(input: ReturnType<typeof parsePlanRef>): PlanRef {
-  return {
+  const planRef: PlanRef = {
     uri: input.uri,
     sha256: input.sha256,
     schemaVersion: input.schemaVersion,
     planId: input.planId,
     planVersion: input.planVersion,
-    ...(input.sizeBytes !== undefined ? { sizeBytes: input.sizeBytes } : {}),
-    ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
-    ...(input.requiresCapabilities !== undefined
-      ? { requiresCapabilities: input.requiresCapabilities }
-      : {}),
   };
+  if (input.sizeBytes !== undefined) planRef.sizeBytes = input.sizeBytes;
+  if (input.expiresAt !== undefined) planRef.expiresAt = input.expiresAt;
+  if (input.requiresCapabilities !== undefined) {
+    planRef.requiresCapabilities = input.requiresCapabilities;
+  }
+  return planRef;
 }
 
 function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
   if (input.provider === 'temporal') {
-    return {
+    const runRef: EngineRunRef = {
       provider: 'temporal',
       tenantId: input.tenantId,
       namespace: input.namespace,
       workflowId: input.workflowId,
       runId: input.runId,
-      ...(input.taskQueue !== undefined ? { taskQueue: input.taskQueue } : {}),
     };
+    if (input.taskQueue !== undefined) runRef.taskQueue = input.taskQueue;
+    return runRef;
   }
 
   if (input.provider === 'conductor') {
@@ -1037,29 +1065,24 @@ function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): Eng
 }
 
 function normalizeSignalRequest(input: ReturnType<typeof parseSignalRequest>): SignalRequest {
-  return {
+  const request: SignalRequest = {
     signalId: input.signalId,
     type: input.type,
-    ...(input.stepId !== undefined ? { stepId: input.stepId } : {}),
-    ...(input.reason !== undefined ? { reason: input.reason } : {}),
-    ...(input.requestedAt !== undefined ? { requestedAt: input.requestedAt } : {}),
   };
+  if (input.stepId !== undefined) request.stepId = input.stepId;
+  if (input.reason !== undefined) request.reason = input.reason;
+  if (input.requestedAt !== undefined) request.requestedAt = input.requestedAt;
+  return request;
 }
 
 function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunContext {
-  return {
+  const context: RunContext = {
     tenantId: input.tenantId,
     projectId: input.projectId,
     environmentId: input.environmentId,
     runId: input.runId,
     targetAdapter: input.targetAdapter,
   };
-}
-
-function resolveInitialRunContext(ctx: RunContext): ResolvedRunContext {
-  return {
-    ...ctx,
-    logicalAttemptId: 1,
-    originRunId: ctx.runId,
-  };
+  if (input.logicalAttemptId !== undefined) context.logicalAttemptId = input.logicalAttemptId;
+  return context;
 }

@@ -2,6 +2,7 @@ export const HEX_64_C = 'ccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 const BASE_STEP_STARTED_WRITE_EVENT = {
   eventType: 'StepStarted',
+  payloadVersion: 1,
   emittedAt: '2026-03-07T10:00:00.000Z',
   runId: 'run-compiled-code-ref-1',
   tenantId: 'tenant-a',

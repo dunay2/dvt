@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.12.0](https://github.com/dunay2/dvt/compare/v4.11.0...v4.12.0) (2026-03-24)
+
+
+### Features
+
+* **state-store:** S12 — Remove deprecated write paths ([#597](https://github.com/dunay2/dvt/issues/597)) ([19181b6](https://github.com/dunay2/dvt/commit/19181b60027e51e9374a9e4f60461954592735a5))
+
 ## [4.11.0](https://github.com/dunay2/dvt/compare/v4.10.0...v4.11.0) (2026-03-24)
 
 

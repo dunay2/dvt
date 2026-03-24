@@ -11,19 +11,19 @@ expected_outcome:
 tasks:
   - task_id: S05
     priority: P0
-    status: queued
+    status: done
     objective: add payloadVersion and per-eventType schema validation.
     dependency: none
     target: Add explicit payload version handling in the envelope flow.
   - task_id: RC-B1
     priority: P1
-    status: queued
+    status: done
     objective: decouple lineage worker from adapter internals.
     dependency: none
     target: Wire lineage outbox dependency directly in the composition root.
   - task_id: RC-B2
     priority: P1
-    status: queued
+    status: done
     objective: replace lineage noop resolver with a real resolver.
     dependency: RC-B1
     target: SQL job facets enabled in production.
@@ -41,5 +41,7 @@ tasks:
     target: Cache manifest fetches.
 dependency_notes: |
   - `S05` is the primary contract foundation for this lane.
-  - `RC-B2` should be wired after the lineage boundary is explicit.
+  - `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
   - DLQ replay and alerting depend on `S05` and the retry pacing follow-up.
+  - Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary even further.
+  - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.
