@@ -301,7 +301,7 @@ function epochMsToIsoUtc(epochMs: number): string {
 function parseIsoUtcToEpochMs(isoUtc: string): number {
   const epochMs = Date.parse(isoUtc);
   if (!Number.isFinite(epochMs)) {
-    throw new TypeError(`INVALID_ISO_UTC: ${isoUtc}`);
+    throw new Error(`INVALID_ISO_UTC: ${isoUtc}`);
   }
   return epochMs;
 }

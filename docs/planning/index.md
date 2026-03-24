@@ -43,6 +43,7 @@ Concept anchors for this page:
 ## Proposals
 
 - [CI Workflow Deduplication Plan](proposals/ci-workflow-deduplication-plan-20260307.md)
+- [Docs Governance Tooling Future Tasks](proposals/docs-governance-tooling-future-tasks-20260324.md)
 - [Documentation Restructuring Diagnostic And Roadmap](proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](proposals/documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](domain-cohesion-refactor-plan.md)
