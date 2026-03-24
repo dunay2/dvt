@@ -89,15 +89,15 @@ Stabilize event payload versioning and lineage wiring.
 > Source of truth: `agent-lane-b.yaml`. Edit the YAML and run `pnpm docs:sync`.
 
 - [x] `P0` `S05`: add payloadVersion and per-eventType schema validation.
-- [ ] `P1` `RC-B1`: decouple lineage worker from adapter internals.
-- [ ] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
+- [x] `P1` `RC-B1`: decouple lineage worker from adapter internals.
+- [x] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
 - [ ] `P1` `DLQ alerting + automated replay`: surface and reduce lineage backlogs.
 - [ ] `P2` `manifest S3 fetch cache`: reduce planner egress and build latency.
 
 ## Dependencies
 
 - `S05` is the primary contract foundation for this lane.
-- `RC-B2` should be wired after the lineage boundary is explicit.
+- `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
 - DLQ replay and alerting depend on `S05` and the retry pacing follow-up.
 - Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary even further.
 - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.
