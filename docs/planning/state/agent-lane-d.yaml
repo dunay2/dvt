@@ -23,7 +23,7 @@ tasks:
     target: Restore + grace delete worker.
   - task_id: S15
     priority: P1
-    status: review
+    status: done
     objective:
       add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression
       under concurrency.
