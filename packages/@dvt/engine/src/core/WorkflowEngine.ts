@@ -1076,13 +1076,19 @@ function normalizeSignalRequest(input: ReturnType<typeof parseSignalRequest>): S
 }
 
 function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunContext {
-  const context: RunContext = {
+  return {
     tenantId: input.tenantId,
     projectId: input.projectId,
     environmentId: input.environmentId,
     runId: input.runId,
     targetAdapter: input.targetAdapter,
   };
-  if (input.logicalAttemptId !== undefined) context.logicalAttemptId = input.logicalAttemptId;
-  return context;
+}
+
+function resolveInitialRunContext(ctx: RunContext): ResolvedRunContext {
+  return {
+    ...ctx,
+    logicalAttemptId: 1,
+    originRunId: ctx.runId,
+  };
 }
