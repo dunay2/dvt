@@ -25,7 +25,7 @@ tasks:
     target: Merge review and lock the write/read/maintenance contract split.
   - task_id: S18
     priority: P0
-    status: review
+    status: done
     objective:
       make composition-root state-store role bindings explicit instead of reconstructing the
       aggregate by intersection.
@@ -41,9 +41,19 @@ tasks:
       query port.
     dependency: S18
     target: Keep maintenance write-only and expose the staleness query separately.
+  - task_id: S18-F1
+    priority: P2
+    status: queued
+    objective:
+      harden the explicit state-store role bundle into a root-owned boundary and prevent convenience
+      rewiring drift.
+    dependency: S18
+    target:
+      Keep the explicit role bundle but lock its semantics behind a stricter root-owned boundary and
+      regression guard.
   - task_id: schema-migration-rollback
     priority: P1
-    status: queued
+    status: done
     objective: make storage changes recoverable after S02.
     dependency: S02
     target: Define and implement rollback recovery for state-store changes.
@@ -57,5 +67,6 @@ dependency_notes: |
   - `S02` depends on `RC-A6`.
   - `S18` depends on `S02`.
   - `S19` depends on `S18`.
+  - `S18-F1` depends on `S18`.
   - `Schema migration rollback` depends on `S02`.
   - `S13` is independent and can run in parallel.

@@ -18,8 +18,8 @@ Authoritative task source remains:
 
 - `in_progress`: 0
 - `review`: 6
-- `queued`: 28
-- `blocked`: 4
+- `queued`: 32
+- `blocked`: 3
 - `done`: tracked in closeouts and evidence (not listed here)
 
 ## Actionable Now (Strictly Unblocked)
@@ -34,7 +34,6 @@ block in the workboard.
 | `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.                | Merge review and lock deterministic intent-id baseline.                |
 | `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.                      | Merge review and lock configurable claim timeout baseline.             |
 | `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.                         | Merge review and lock error-code normalization baseline.               |
-| `P0`     | `S18`    | Already in Review; closes explicit state-store role bindings in the composition root.    | Merge review and lock the explicit root binding.                       |
 | `P1`     | `RC-A6`  | Already in `Review`; explicit prerequisite for the full state-store split sweep (`S02`). | Align dead-letter contract signatures with tenant-scoped concrete API. |
 | `P1`     | `S02`    | Already in `Review`; closes the state-store boundary split.                              | Merge review and lock the write/read/maintenance contract split.       |
 | `P1`     | `S13`    | Already in Review; closes duplicate provider-adapter contract drift.                     | Remove duplicate `estimateRunRef` declaration and lock the cleanup.    |
@@ -63,7 +62,6 @@ block in the workboard.
 | `F1`     | Queued  | C2 final wiring depends on `S03`              |
 | `S08`    | Blocked | waits for `S09`                               |
 | `S11`    | Blocked | waits for `S07`                               |
-| `S12`    | Blocked | waits for `S02`                               |
 | `R4`     | Queued  | waits for `R3`                                |
 | `R5`     | Queued  | waits for `R4`                                |
 | `R6`     | Queued  | waits for `R4` and `R7`                       |
@@ -86,7 +84,8 @@ flowchart LR
   S16[S16]
   DHM[DHM]
 
-  S02 --> S12[S12]
+  S14[S14]
+  S15[S15]
   S17[S17]
   F4[F4]
   F5[F5]

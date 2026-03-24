@@ -177,7 +177,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const events = await store.listEvents('t1', 'run-2');
     for (let i = 0; i < 100; i += 1) {
       // Strip runSeq and re-append. Dedup is by idempotencyKey.
-      await store.appendEventsTx(
+      await store.appendAndEnqueueTx(
         'run-2',
         events.map((e) => {
           const { runSeq: _runSeq, persistedAt: _persistedAt, ...rest } = e;

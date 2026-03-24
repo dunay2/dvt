@@ -24,7 +24,6 @@ import type {
   IPlanFetcher,
   IPlanIntegrityValidator,
   RunStateCommandPort,
-  RunMetadata,
 } from '../engine-types.js';
 
 // ---------------------------------------------------------------------------
@@ -160,7 +159,6 @@ export function createActivities(
   fetchPlan(planRef: PlanRef): Promise<ExecutionPlan>;
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
-  saveRunMetadata(meta: RunMetadata): Promise<void>;
 } {
   return {
     /**
@@ -227,24 +225,6 @@ export function createActivities(
         payload === undefined ? envelopeBase : { ...envelopeBase, payload };
 
       await deps.runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
-    },
-
-    /**
-     * Persist run metadata for correlation queries.
-     *
-     * Idempotent: when the WorkflowEngine has already called bootstrapRunTx (the normal
-     * production path per ADR-0013/0014), the state store throws RUN_ALREADY_EXISTS.
-     * The activity silently succeeds — the engine-owned bootstrap is the authoritative
-     * write, and the workflow continuing from resumeFromLayerIndex>0 (continue-as-new)
-     * should not re-bootstrap an already-existing run.
-     */
-    async saveRunMetadata(meta: RunMetadata): Promise<void> {
-      try {
-        await deps.runStateCommandPort.bootstrapRun({ metadata: meta, firstEvents: [] });
-      } catch (err) {
-        if (err instanceof Error && err.message === 'RUN_ALREADY_EXISTS') return;
-        throw err;
-      }
     },
   };
 }

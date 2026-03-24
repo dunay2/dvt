@@ -94,14 +94,6 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     return meta.tenantId === tenantId ? meta : null;
   }
 
-  /**
-   * @deprecated Use bootstrapRunTx. This bypasses the atomicity guarantee that
-   * metadata + first events are written together. Scheduled for removal in Phase 3.
-   */
-  async saveRunMetadata(meta: RunMetadata): Promise<void> {
-    this.metadataByRunId.set(meta.runId, meta);
-  }
-
   async saveProviderRef(
     _tenantId: string,
     runId: string,
@@ -216,15 +208,6 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       deduped,
       lastSeq: appended.at(-1)?.runSeq ?? baseRunSeq,
     };
-  }
-
-  /**
-   * @deprecated Use appendAndEnqueueTx. Scheduled for removal in Phase 3.
-   * In this store the two are equivalent, but in Postgres appendEventsTx
-   * skips the outbox enqueue ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â a correctness hazard.
-   */
-  async appendEventsTx(runId: string, envelopes: RunEventInput[]): Promise<AppendResult> {
-    return this.appendAndEnqueueTx(runId, envelopes);
   }
 
   async listEvents(

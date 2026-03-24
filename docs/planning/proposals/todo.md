@@ -154,15 +154,28 @@ shape:
 - **Target:** move `listStaleSnapshotRuns` out of maintenance into a dedicated
   query port and keep maintenance write-only
 
+### S18-F1 - Harden The Role Bundle Boundary
+
+- **Priority:** P2
+- **Status:** queued
+- **Dependency:** S18
+- **Scope:** root-owned role bundle semantics, negative contract coverage,
+  regression guard against convenience wiring
+- **Target:** keep the explicit role bundle, but stop treating it as a thin
+  structural wrapper that can drift back into intersection-based convenience
+  wiring
+
 ### Future Follow-Up
 
 The runtime export surface can be tightened further once the root wiring is
 explicit:
 
-- remove convenience aliases from public module types where they are no longer
-  needed
+- promote the role bundle helper into a root-owned boundary with clearer
+  semantics than "same adapter in three slots"
 - keep exact-role bindings visible in tests and helper builders
 - add a guard against reintroducing intersection-based wiring at the root
+- keep negative contract coverage around partial/invalid role sources so the
+  boundary fails loudly when miswired
 
 ## Acceptance Criteria
 

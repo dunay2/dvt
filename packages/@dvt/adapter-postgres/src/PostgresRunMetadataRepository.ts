@@ -80,7 +80,6 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
 export class PostgresRunMetadataRepository {
   constructor(
     private readonly schema: string,
-    private readonly withTransaction: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>,
     private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>
   ) {}
 
@@ -120,6 +119,72 @@ export class PostgresRunMetadataRepository {
     );
   }
 
+  /** Transaction-scoped metadata upsert used by canonical write paths. */
+  async upsertWithClient(client: PoolClient, meta: RunMetadata): Promise<void> {
+    await PostgresSchemaManager.setTenantContext(client, meta.tenantId);
+
+    const existing = await client.query<{ tenant_id: string }>(
+      `
+        SELECT tenant_id
+        FROM ${quoteIdentifier(this.schema)}.run_metadata
+        WHERE run_id = $1
+        LIMIT 1
+        FOR UPDATE
+      `,
+      [meta.runId]
+    );
+    const existingTenantId = existing.rows[0]?.tenant_id;
+    if (existingTenantId && existingTenantId !== meta.tenantId) {
+      throw new Error(`TENANT_SCOPE_VIOLATION: ${meta.runId}`);
+    }
+
+    await client.query(
+      `
+        INSERT INTO ${quoteIdentifier(this.schema)}.run_metadata (
+          run_id,
+          tenant_id,
+          project_id,
+          environment_id,
+          plan_id,
+          plan_version,
+          provider,
+          provider_workflow_id,
+          provider_run_id,
+          provider_namespace,
+          provider_task_queue,
+          provider_conductor_url
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ON CONFLICT (run_id) DO UPDATE SET
+          tenant_id = EXCLUDED.tenant_id,
+          project_id = EXCLUDED.project_id,
+          environment_id = EXCLUDED.environment_id,
+          plan_id = EXCLUDED.plan_id,
+          plan_version = EXCLUDED.plan_version,
+          provider = EXCLUDED.provider,
+          provider_workflow_id = EXCLUDED.provider_workflow_id,
+          provider_run_id = EXCLUDED.provider_run_id,
+          provider_namespace = EXCLUDED.provider_namespace,
+          provider_task_queue = EXCLUDED.provider_task_queue,
+          provider_conductor_url = EXCLUDED.provider_conductor_url
+      `,
+      [
+        meta.runId,
+        meta.tenantId,
+        meta.projectId,
+        meta.environmentId,
+        meta.planId,
+        meta.planVersion,
+        meta.provider,
+        meta.providerWorkflowId,
+        meta.providerRunId,
+        meta.providerNamespace ?? null,
+        meta.providerTaskQueue ?? null,
+        meta.providerConductorUrl ?? null,
+      ]
+    );
+  }
+
   async resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
     const result = await client.query<{ tenant_id: string }>(
       `
@@ -135,79 +200,6 @@ export class PostgresRunMetadataRepository {
       throw new Error(`RUN_NOT_FOUND: ${runId}`);
     }
     return tenantId;
-  }
-
-  /**
-   * @deprecated Use bootstrapRunTx. This upsert bypasses the atomic
-   * metadata + first-event + snapshot guarantee and may cause
-   * IRunStateStore.getSnapshot to return null for the run. Scheduled for
-   * removal in Phase 3.
-   */
-  async saveRunMetadata(meta: RunMetadata): Promise<void> {
-    await this.withTransaction(async (client) => {
-      await PostgresSchemaManager.setTenantContext(client, meta.tenantId);
-
-      const existing = await client.query<{ tenant_id: string }>(
-        `
-          SELECT tenant_id
-          FROM ${quoteIdentifier(this.schema)}.run_metadata
-          WHERE run_id = $1
-          LIMIT 1
-          FOR UPDATE
-        `,
-        [meta.runId]
-      );
-      const existingTenantId = existing.rows[0]?.tenant_id;
-      if (existingTenantId && existingTenantId !== meta.tenantId) {
-        throw new Error(`TENANT_SCOPE_VIOLATION: ${meta.runId}`);
-      }
-
-      await client.query(
-        `
-          INSERT INTO ${quoteIdentifier(this.schema)}.run_metadata (
-            run_id,
-            tenant_id,
-            project_id,
-            environment_id,
-            plan_id,
-            plan_version,
-            provider,
-            provider_workflow_id,
-            provider_run_id,
-            provider_namespace,
-            provider_task_queue,
-            provider_conductor_url
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-          ON CONFLICT (run_id) DO UPDATE SET
-            tenant_id = EXCLUDED.tenant_id,
-            project_id = EXCLUDED.project_id,
-            environment_id = EXCLUDED.environment_id,
-            plan_id = EXCLUDED.plan_id,
-            plan_version = EXCLUDED.plan_version,
-            provider = EXCLUDED.provider,
-            provider_workflow_id = EXCLUDED.provider_workflow_id,
-            provider_run_id = EXCLUDED.provider_run_id,
-            provider_namespace = EXCLUDED.provider_namespace,
-            provider_task_queue = EXCLUDED.provider_task_queue,
-            provider_conductor_url = EXCLUDED.provider_conductor_url
-        `,
-        [
-          meta.runId,
-          meta.tenantId,
-          meta.projectId,
-          meta.environmentId,
-          meta.planId,
-          meta.planVersion,
-          meta.provider,
-          meta.providerWorkflowId,
-          meta.providerRunId,
-          meta.providerNamespace ?? null,
-          meta.providerTaskQueue ?? null,
-          meta.providerConductorUrl ?? null,
-        ]
-      );
-    });
   }
 
   async getByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {

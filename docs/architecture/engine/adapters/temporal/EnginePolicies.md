@@ -132,9 +132,9 @@ Timeout interaction note:
 
 ## 5) Eventing and Idempotency (IMPLEMENTED)
 
-- Activities emit envelopes through `stateStore.appendEventsTx()` and forward appended events with `outbox.enqueueTx()`.
+- Activities emit envelopes through `runStateCommandPort.appendTransitions()`, which resolves to the canonical `appendAndEnqueueTx()` path in the state-store implementation.
 - `engineAttemptId` is sourced from Temporal activity context (`Context.current().info.attempt`) with test fallback to `1`.
-- `logicalAttemptId` defaults to `engineAttemptId` when not supplied.
+- `logicalAttemptId` defaults to `1` when not supplied.
 - Idempotency key is generated from event dimensions (`eventType`, tenant/run IDs, attempts, optional `stepId`) via injected idempotency builder.
 
 ### 5.1 Attempt semantics and event multiplicity

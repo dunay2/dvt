@@ -36,6 +36,22 @@ interface MigrationStep {
   readonly version: string;
   readonly description: string;
   readonly run: (client: PoolClient, schema: string) => Promise<void>;
+  readonly rollbackDescription: string;
+  readonly rollback: (client: PoolClient, schema: string) => Promise<void>;
+}
+
+export interface PostgresSchemaRollbackPlanStep {
+  readonly version: string;
+  readonly description: string;
+  readonly rollbackDescription: string;
+}
+
+export interface PostgresSchemaRollbackPlan {
+  readonly component: string;
+  readonly schema: string;
+  readonly currentVersion: string | null;
+  readonly targetVersion: string | null;
+  readonly steps: readonly PostgresSchemaRollbackPlanStep[];
 }
 
 function sq(schema: string): string {
@@ -102,6 +118,12 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         )
       `);
     },
+    rollbackDescription: 'Drop the base run_metadata, run_events, and outbox tables',
+    rollback: async (client, schema) => {
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.outbox`);
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_events`);
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_metadata`);
+    },
   },
   {
     version: 'core_002_run_snapshots_table',
@@ -120,6 +142,10 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         )
       `);
     },
+    rollbackDescription: 'Drop the run_snapshots table',
+    rollback: async (client, schema) => {
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_snapshots`);
+    },
   },
   {
     version: 'core_003_outbox_dead_letter_table',
@@ -136,6 +162,10 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
           dead_lettered_at TIMESTAMPTZ NOT NULL
         )
       `);
+    },
+    rollbackDescription: 'Drop the outbox_dead_letter table',
+    rollback: async (client, schema) => {
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.outbox_dead_letter`);
     },
   },
   {
@@ -165,6 +195,11 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
           dead_lettered_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `);
+    },
+    rollbackDescription: 'Drop the lineage outbox and dead-letter tables',
+    rollback: async (client, schema) => {
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.lineage_dead_letter`);
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.lineage_outbox`);
     },
   },
   {
@@ -205,6 +240,11 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         )
       `);
     },
+    rollbackDescription: 'Drop the archive catalog tables',
+    rollback: async (client, schema) => {
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_event_archive_batches`);
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_event_archive_units`);
+    },
   },
   {
     version: 'core_006_archive_lease_restore_tables',
@@ -244,6 +284,11 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         ON ${sq(schema)}.run_event_archive_restore_log (run_id)
         WHERE run_id IS NOT NULL
       `);
+    },
+    rollbackDescription: 'Drop the archive lease and restore-log tables',
+    rollback: async (client, schema) => {
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_event_archive_restore_log`);
+      await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.run_event_archive_leases`);
     },
   },
   {
@@ -290,6 +335,13 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         `ALTER TABLE ${sq(schema)}.run_snapshots ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ`
       );
     },
+    rollbackDescription:
+      'Remove only the migration bookkeeping because the compatibility columns are now part of the canonical baseline',
+    rollback: async () => {
+      // No physical rollback: the compatibility columns have been merged into the
+      // canonical schema definitions for fresh installs, so removing them here
+      // would over-rollback the baseline.
+    },
   },
   {
     version: 'core_008_compat_cleanup',
@@ -307,6 +359,27 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       await client.query(
         `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_events_run_id_run_seq_idx')}`
       );
+    },
+    rollbackDescription:
+      'Restore the compatibility constraint and indexes removed by the cleanup step',
+    rollback: async (client, schema) => {
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.outbox ADD CONSTRAINT outbox_run_id_run_seq_key UNIQUE (run_id, run_seq)`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS outbox_pending_idx
+        ON ${sq(schema)}.outbox (shard_id, next_attempt_at, created_at, claimed_at)
+        WHERE delivered_at IS NULL
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS outbox_pending_run_order_idx
+        ON ${sq(schema)}.outbox (shard_id, run_id, run_seq)
+        WHERE delivered_at IS NULL
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS run_events_run_id_run_seq_idx
+        ON ${sq(schema)}.run_events (run_id, run_seq)
+      `);
     },
   },
   {
@@ -367,6 +440,45 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         ON ${sq(schema)}.run_event_archive_batches (archive_unit_key, status)
       `);
     },
+    rollbackDescription: 'Drop the standard operational indexes introduced by the core index step',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('outbox_pending_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('outbox_dead_letter_run_id_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('outbox_pending_run_order_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_metadata_tenant_created_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_snapshots_snapshot_status_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_snapshots_archive_unit_key_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_outbox_pending_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_outbox_run_id_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_dead_letter_run_id_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_event_archive_units_state_day_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_event_archive_units_delete_after_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_event_archive_batches_unit_status_idx')}`
+      );
+    },
   },
   {
     version: 'core_010_purge_indexes',
@@ -385,6 +497,18 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         CREATE INDEX IF NOT EXISTS lineage_dead_letter_dead_lettered_at_idx
         ON ${sq(schema)}.lineage_dead_letter (dead_lettered_at)
       `);
+    },
+    rollbackDescription: 'Drop the delivery-buffer purge indexes',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('outbox_delivered_at_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('outbox_dead_letter_dead_lettered_at_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('lineage_dead_letter_dead_lettered_at_idx')}`
+      );
     },
   },
 ];
@@ -428,6 +552,40 @@ export class PostgresSchemaManager {
       });
     this.migrationState = 'in_progress';
     return this.migratePromise;
+  }
+
+  async planRollback(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
+    return this.createRollbackPlan(targetVersion);
+  }
+
+  async rollbackTo(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
+    const plan = await this.createRollbackPlan(targetVersion);
+    if (plan.steps.length === 0) {
+      return plan;
+    }
+
+    const client = await this.pool.connect();
+    let hasLock = false;
+    try {
+      await client.query('SELECT pg_advisory_lock(hashtext($1))', [`${this.schema}:${COMPONENT}`]);
+      hasLock = true;
+
+      for (const plannedStep of plan.steps) {
+        const step = this.resolveStep(plannedStep.version);
+        await this.rollbackStep(client, step);
+      }
+    } finally {
+      if (hasLock) {
+        await client.query('SELECT pg_advisory_unlock(hashtext($1))', [
+          `${this.schema}:${COMPONENT}`,
+        ]);
+      }
+      client.release();
+    }
+
+    this.migratePromise = null;
+    this.migrationState = 'not_called';
+    return plan;
   }
 
   /** Marks the schema as already ready, bypassing DDL execution. */
@@ -501,6 +659,78 @@ export class PostgresSchemaManager {
     }
   }
 
+  private async createRollbackPlan(
+    targetVersion: string | null
+  ): Promise<PostgresSchemaRollbackPlan> {
+    const targetIndex = this.resolveTargetIndex(targetVersion);
+    const appliedVersions = await this.loadAppliedVersions();
+    const appliedSet = new Set(appliedVersions);
+
+    if (targetVersion !== null && !appliedSet.has(targetVersion)) {
+      throw new Error(`ROLLBACK_TARGET_NOT_APPLIED: ${targetVersion}`);
+    }
+
+    const appliedSteps = MIGRATION_STEPS.filter((step) => appliedSet.has(step.version));
+    const steps = appliedSteps
+      .filter((step) => this.resolveTargetIndex(step.version) > targetIndex)
+      .reverse()
+      .map<PostgresSchemaRollbackPlanStep>((step) => ({
+        version: step.version,
+        description: step.description,
+        rollbackDescription: step.rollbackDescription,
+      }));
+
+    return {
+      component: COMPONENT,
+      schema: this.schema,
+      currentVersion: appliedSteps.at(-1)?.version ?? null,
+      targetVersion,
+      steps,
+    };
+  }
+
+  private resolveTargetIndex(targetVersion: string | null): number {
+    if (targetVersion === null) {
+      return -1;
+    }
+
+    const index = MIGRATION_STEPS.findIndex((step) => step.version === targetVersion);
+    if (index === -1) {
+      throw new Error(`UNKNOWN_MIGRATION_VERSION: ${targetVersion}`);
+    }
+    return index;
+  }
+
+  private resolveStep(version: string): MigrationStep {
+    const step = MIGRATION_STEPS.find((candidate) => candidate.version === version);
+    if (step === undefined) {
+      throw new Error(`UNKNOWN_MIGRATION_VERSION: ${version}`);
+    }
+    return step;
+  }
+
+  private async loadAppliedVersions(): Promise<string[]> {
+    await this.ensureMigrationsTable();
+
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query<{ version: string }>(
+        `
+          SELECT version
+          FROM ${sq(this.schema)}.schema_migrations
+          WHERE component = $1
+        `,
+        [COMPONENT]
+      );
+      const appliedSet = new Set(result.rows.map((row) => row.version));
+      return MIGRATION_STEPS.filter((step) => appliedSet.has(step.version)).map(
+        (step) => step.version
+      );
+    } finally {
+      client.release();
+    }
+  }
+
   private async applyStep(client: PoolClient, step: MigrationStep): Promise<void> {
     const exists = await client.query<{ exists: boolean }>(
       `
@@ -528,6 +758,32 @@ export class PostgresSchemaManager {
           ON CONFLICT (component, version) DO NOTHING
         `,
         [COMPONENT, step.version, step.description]
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        // Connection may be torn down.
+      }
+      throw error;
+    }
+  }
+
+  private async rollbackStep(client: PoolClient, step: MigrationStep): Promise<void> {
+    await client.query('BEGIN');
+    try {
+      if (this.statementTimeoutMs > 0) {
+        await client.query('SET LOCAL statement_timeout = $1', [this.statementTimeoutMs]);
+      }
+      await step.rollback(client, this.schema);
+      await client.query(
+        `
+          DELETE FROM ${sq(this.schema)}.schema_migrations
+          WHERE component = $1
+            AND version = $2
+        `,
+        [COMPONENT, step.version]
       );
       await client.query('COMMIT');
     } catch (error) {
