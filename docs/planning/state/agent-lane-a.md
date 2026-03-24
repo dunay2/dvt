@@ -86,19 +86,27 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 
 ## Tasks
 
-- `[x]` `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
-- `[x]` `P0` `S02`: split `IRunStateStore` into write/read/maintenance roles.
-- `P1` schema migration rollback: make storage changes recoverable after `S02`.
-- `[x]` `P1` `S13`: remove duplicate `estimateRunRef` declaration.
+> Source of truth: `agent-lane-a.yaml`. Edit the YAML and run `pnpm docs:sync`.
+
+- [x] `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
+- [x] `P0` `S02`: split IRunStateStore into write/read/maintenance roles.
+- [ ] `P0` `S18`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
+- [ ] `P1` `S19`: isolate the optional maintenance query into a dedicated port or close the optionality decision explicitly.
+- [ ] `P1` `schema-migration-rollback`: make storage changes recoverable after S02.
+- [x] `P1` `S13`: remove duplicate estimateRunRef declaration.
 
 ## Dependencies
 
 - `S02` depends on `RC-A6`.
+- `S18` depends on `S02`.
+- `S19` depends on `S18`.
 - `Schema migration rollback` depends on `S02`.
 - `S13` is independent and can run in parallel.
 
 ## Expected Outcome
 
 - state-store ownership is explicit
+- composition-root wiring names exact roles
 - contract drift is reduced
+- optional maintenance ownership is explicit
 - migration recovery is defined

@@ -1,0 +1,106 @@
+lane_id: D
+title: Scale And Go-To-Market
+owner: Product / Architecture / Delivery / Docs
+status: Active
+last_reviewed: 2026-03-24
+goal: Prepare the system for scale and for the first enterprise customer.
+expected_outcome:
+  - storage and read-path scale are bounded
+  - snapshot correctness is preserved
+  - GTM work is separated from code execution
+tasks:
+  - task_id: run event log retention + TTL
+    priority: P1
+    status: queued
+    objective: bound storage growth and automate archival.
+    dependency: none
+    target: Retention and archival automation.
+  - task_id: G5-PR2
+    priority: P1
+    status: queued
+    objective: add deferred deletion and restore flow for archived events.
+    dependency: none
+    target: Restore + grace delete worker.
+  - task_id: S15
+    priority: P1
+    status: review
+    objective:
+      add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression
+      under concurrency.
+    dependency: none
+    target: persistWithClient upsert guard.
+  - task_id: S15-F1
+    priority: P1
+    status: queued
+    objective:
+      surface CAS no-op outcome for stale snapshot writes so repair callers can observe discard.
+    dependency: S15
+    target: Return or emit stale-write conflict result.
+  - task_id: S14
+    priority: P1
+    status: queued
+    objective: preserve gateway evaluation context across `continueAsNew` segments.
+    dependency: none
+    target: Workflow state handoff hardening.
+  - task_id: cost attribution model
+    priority: P2
+    status: queued
+    objective: support billing and finance reporting.
+    dependency: S05, S02, retention
+    target: Usage accounting and finance visibility.
+  - task_id: run_events partitioning
+    priority: P2
+    status: queued
+    objective: reduce storage and write-path pressure.
+    dependency: none
+    target: Partitioned event log storage.
+  - task_id: read replica query path
+    priority: P2
+    status: queued
+    objective: offload read traffic from primary.
+    dependency: run_events partitioning
+    target: Read scaling path.
+  - task_id: projector event-driven invalidation
+    priority: P2
+    status: queued
+    objective: remove polling bottlenecks.
+    dependency: read-your-writes contract
+    target: Event-driven projection cache invalidation.
+  - task_id: Temporal -> API backpressure
+    priority: P2
+    status: queued
+    objective: protect admission under saturation.
+    dependency: projector event-driven invalidation
+    target: Backpressure propagation.
+  - task_id: first enterprise pilot
+    priority: P3
+    status: queued
+    objective: validate product-market fit.
+    dependency: SLOs and RBAC
+    target: First customer validation.
+  - task_id: billing integration
+    priority: P3
+    status: queued
+    objective: turn usage into invoicing.
+    dependency: first enterprise pilot
+    target: Revenue plumbing.
+  - task_id: compliance documentation pack
+    priority: P3
+    status: queued
+    objective: prepare regulated customer onboarding.
+    dependency: first enterprise pilot
+    target: Compliance-ready onboarding pack.
+  - task_id: acquisition positioning deck
+    priority: P3
+    status: queued
+    objective: support GTM narrative and exit positioning.
+    dependency: first enterprise pilot
+    target: Market positioning collateral.
+dependency_notes: |
+  - `G5-PR2` depends on the archival prerequisite chain already tracked in the workboard.
+  - `S15-F1` depends on `S15`.
+  - `cost attribution model` depends on `S05`, `S02`, and retention.
+  - `read replica query path` depends on `run_events partitioning`.
+  - `projector event-driven invalidation` depends on `read-your-writes contract`.
+  - `Temporal -> API backpressure` depends on the projector lane.
+  - `first enterprise pilot` depends on SLOs and RBAC.

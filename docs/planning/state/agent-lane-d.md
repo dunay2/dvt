@@ -16,20 +16,22 @@ Prepare the system for scale and for the first enterprise customer.
 
 ## Tasks
 
-- `P1` run event log retention + TTL: bound storage growth and automate archival.
-- `P1` `G5-PR2` archive restore: complete the archival lifecycle.
-- `P1` `S15`: add monotonic CAS guard for snapshot writes.
-- `P1` `S15-F1`: surface stale snapshot discard outcomes.
-- `P1` `S14`: preserve gateway context across continue-as-new segments.
-- `P2` cost attribution model: support billing and finance reporting.
-- `P2` run_events partitioning: reduce storage and write-path pressure.
-- `P2` read replica query path: offload read traffic from primary.
-- `P2` projector event-driven invalidation: remove polling bottlenecks.
-- `P2` Temporal -> API backpressure: protect admission under saturation.
-- `P3` first enterprise pilot: validate product-market fit.
-- `P3` billing integration: turn usage into invoicing.
-- `P3` compliance documentation pack: prepare regulated customer onboarding.
-- `P3` acquisition positioning deck: support GTM narrative and exit positioning.
+> Source of truth: `agent-lane-d.yaml`. Edit the YAML and run `pnpm docs:sync`.
+
+- [ ] `P1` `run event log retention + TTL`: bound storage growth and automate archival.
+- [ ] `P1` `G5-PR2`: add deferred deletion and restore flow for archived events.
+- [ ] `P1` `S15`: add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression under concurrency.
+- [ ] `P1` `S15-F1`: surface CAS no-op outcome for stale snapshot writes so repair callers can observe discard.
+- [ ] `P1` `S14`: preserve gateway evaluation context across `continueAsNew` segments.
+- [ ] `P2` `cost attribution model`: support billing and finance reporting.
+- [ ] `P2` `run_events partitioning`: reduce storage and write-path pressure.
+- [ ] `P2` `read replica query path`: offload read traffic from primary.
+- [ ] `P2` `projector event-driven invalidation`: remove polling bottlenecks.
+- [ ] `P2` `Temporal -> API backpressure`: protect admission under saturation.
+- [ ] `P3` `first enterprise pilot`: validate product-market fit.
+- [ ] `P3` `billing integration`: turn usage into invoicing.
+- [ ] `P3` `compliance documentation pack`: prepare regulated customer onboarding.
+- [ ] `P3` `acquisition positioning deck`: support GTM narrative and exit positioning.
 
 ## Dependencies
 

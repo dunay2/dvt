@@ -50,7 +50,9 @@
     "contracts:idempotency:validate": "node scripts/validate-idempotency-vectors.cjs",
     "contracts:examples:validate": "node scripts/validate-executable-examples.cjs",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",
-    "docs:sync": "node scripts/sync-docs.cjs",
+    "docs:sync": "node scripts/sync-docs.cjs && node scripts/generate-planning-lanes.cjs",
+    "docs:planning:lanes:generate": "node scripts/generate-planning-lanes.cjs",
+    "docs:planning:lanes:check": "pnpm docs:planning:lanes:generate && git diff --exit-code -- docs/planning/state/agent-lane-a.md docs/planning/state/agent-lane-b.md docs/planning/state/agent-lane-c.md docs/planning/state/agent-lane-d.md",
     "docs:quality:check": "node scripts/docs-quality-check.cjs",
     "docs:doctor": "node scripts/docs-doctor.cjs",
     "docs:canonical:check": "node scripts/docs-canonical-check.cjs",
@@ -71,7 +73,7 @@
     "docs:gov:planner-stage-1-1": "tsx tools/docs/validate-planner-stage-1-1-manifest.ts",
     "docs:gov": "pnpm docs:gov:filenames && pnpm docs:gov:adr && pnpm docs:gov:frontmatter && pnpm docs:gov:links:changed && pnpm docs:gov:refs && pnpm docs:gov:planner-stage-1-1",
     "docs:ci": "pnpm docs:sync:check && pnpm docs:quality:check && pnpm docs:doctor && pnpm docs:canonical:check && pnpm docs:status:check && pnpm docs:capability:check && pnpm docs:gov:locations && pnpm docs:gov",
-    "docs:sync:check": "pnpm docs:sync && git diff --exit-code -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/concepts/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/evidence/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/risk-register/index.md docs/risk-register/adapters/index.md docs/risk-register/quality/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml",
+    "docs:sync:check": "pnpm docs:sync && git diff --exit-code -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/concepts/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/evidence/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/planning/state/agent-lane-a.md docs/planning/state/agent-lane-b.md docs/planning/state/agent-lane-c.md docs/planning/state/agent-lane-d.md docs/guides/index.md docs/risk-register/index.md docs/risk-register/adapters/index.md docs/risk-register/quality/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml",
     "docs:serve": "pnpm docs:sync && zensical serve",
     "docs:build": "pnpm docs:sync && zensical build",
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
@@ -92,9 +94,9 @@
       "pnpm contracts:index:generate",
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
-    "docs/**/*.{md,txt}": [
+    "docs/**/*.{md,txt,yml,yaml}": [
       "pnpm docs:sync",
-      "node -e \"const cp=require('child_process');cp.execSync('git add -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/concepts/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/evidence/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/guides/index.md docs/risk-register/index.md docs/risk-register/adapters/index.md docs/risk-register/quality/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml',{stdio:'inherit'})\""
+      "node -e \"const cp=require('child_process');cp.execSync('git add -- docs/index.md docs/adr/index.md docs/adr/_drafts/index.md docs/adr/_archive/index.md docs/concepts/index.md docs/architecture/index.md docs/contracts/index.md docs/contracts/engine/index.md docs/contracts/planner/index.md docs/contracts/shared/index.md docs/evidence/index.md docs/planning/index.md docs/planning/proposals/index.md docs/planning/reviews/index.md docs/planning/status/index.md docs/planning/state/agent-lane-a.md docs/planning/state/agent-lane-b.md docs/planning/state/agent-lane-c.md docs/planning/state/agent-lane-d.md docs/guides/index.md docs/risk-register/index.md docs/risk-register/adapters/index.md docs/risk-register/quality/index.md docs/runbooks/index.md docs/archive/index.md mkdocs.yml',{stdio:'inherit'})\""
     ],
     "*.{js,json,md,yml,yaml}": [
       "prettier --write"
