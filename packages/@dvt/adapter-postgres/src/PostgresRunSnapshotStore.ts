@@ -13,6 +13,7 @@ import {
   buildArchivedTerminalSnapshot,
   type ArchivedTerminalSnapshot,
   type TerminalRunStatus,
+  type TerminalSnapshotPinResult,
   type TerminalSnapshotPinStore,
 } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
@@ -33,6 +34,10 @@ interface PinnedSnapshotRow extends SnapshotRow {
   archive_unit_key: string | null;
   event_checksum_sha256: string | null;
   archived_at: Date | string | null;
+}
+
+interface SnapshotSeqRow {
+  last_run_seq: number | string;
 }
 
 interface EventPayloadRow {
@@ -70,7 +75,9 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     return result.rows[0]?.snapshot ?? null;
   }
 
-  async pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<void> {
+  async pinTerminalSnapshot(
+    snapshot: ArchivedTerminalSnapshot
+  ): Promise<TerminalSnapshotPinResult> {
     const record = buildArchivedTerminalSnapshot({
       tenantId: snapshot.tenantId,
       archiveUnitKey: snapshot.archiveUnitKey,
@@ -78,9 +85,9 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       pinned: snapshot,
     });
 
-    await this.withTransaction(async (client) => {
+    return this.withTransaction(async (client) => {
       await this.requireRunOwnership(client, record.tenantId, record.runId);
-      await client.query(
+      const upsertResult = await client.query(
         `
           INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots AS run_snapshots (
             run_id,
@@ -111,6 +118,41 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
           record.archivedAt,
         ]
       );
+
+      if ((upsertResult.rowCount ?? 0) > 0) {
+        return {
+          outcome: 'APPLIED',
+          tenantId: record.tenantId,
+          runId: record.runId,
+          archiveUnitKey: record.archiveUnitKey,
+          incomingLastRunSeq: record.lastRunSeq,
+          storedLastRunSeq: record.lastRunSeq,
+        };
+      }
+
+      const currentResult = await client.query<SnapshotSeqRow>(
+        `
+          SELECT s.last_run_seq
+          FROM ${quoteIdentifier(this.schema)}.run_snapshots s
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
+          WHERE m.tenant_id = $1 AND s.run_id = $2
+          LIMIT 1
+        `,
+        [record.tenantId, record.runId]
+      );
+      const currentRow = currentResult.rows[0];
+      if (!currentRow) {
+        throw new Error(`ARCHIVE_TERMINAL_SNAPSHOT_PIN_DISCARDED_WITHOUT_ROW: ${record.runId}`);
+      }
+
+      return {
+        outcome: 'DISCARDED_STALE_SEQUENCE',
+        tenantId: record.tenantId,
+        runId: record.runId,
+        archiveUnitKey: record.archiveUnitKey,
+        incomingLastRunSeq: record.lastRunSeq,
+        storedLastRunSeq: Number(currentRow.last_run_seq),
+      };
     });
   }
 

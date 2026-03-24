@@ -19,6 +19,8 @@ export type {
   ArchiveUnitManifest,
   PinnedTerminalSnapshot,
   PinnedTerminalSnapshotBuildInput,
+  TerminalSnapshotPinOutcome,
+  TerminalSnapshotPinResult,
   TerminalRunStatus,
   TerminalSnapshotPinStore,
 } from './lifecycle/archiveArtifacts.js';

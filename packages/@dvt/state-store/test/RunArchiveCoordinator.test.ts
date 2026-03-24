@@ -1,6 +1,7 @@
 import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { TerminalSnapshotPinResult } from '../src/lifecycle/archiveArtifacts.js';
 import type {
   ArchiveBatchExportedRecord,
   ArchiveBatchFailureRecord,
@@ -104,6 +105,7 @@ interface StubStoreConfig {
   eligibleUnits?: readonly EligibleArchiveUnit[];
   events?: readonly EventEnvelope[];
   terminalSnapshots?: readonly ArchiveUnitTerminalSnapshotCandidate[];
+  pinTerminalSnapshotResult?: TerminalSnapshotPinResult;
   startArchiveBatchError?: Error;
   markExportedError?: Error;
   pendingVerifications?: readonly PendingArchiveVerification[];
@@ -174,6 +176,16 @@ function buildStubStore(config: StubStoreConfig = {}): IRunArchiveStore & {
     },
     async pinTerminalSnapshot(snapshot) {
       pinnedSnapshots.push(snapshot);
+      return (
+        config.pinTerminalSnapshotResult ?? {
+          outcome: 'APPLIED',
+          tenantId: snapshot.tenantId,
+          runId: snapshot.runId,
+          archiveUnitKey: snapshot.archiveUnitKey,
+          incomingLastRunSeq: snapshot.lastRunSeq,
+          storedLastRunSeq: snapshot.lastRunSeq,
+        }
+      );
     },
     async getPinnedTerminalSnapshot(_tenantId, _runId) {
       return null;
@@ -234,17 +246,20 @@ function buildRecordingTelemetry(): ArchiveLifecycleTelemetry & {
   counters: Record<string, number>;
   histograms: string[];
   infoMessages: string[];
+  warnMessages: string[];
   errorMessages: string[];
 } {
   const counters: Record<string, number> = {};
   const histograms: string[] = [];
   const infoMessages: string[] = [];
+  const warnMessages: string[] = [];
   const errorMessages: string[] = [];
 
   return {
     counters,
     histograms,
     infoMessages,
+    warnMessages,
     errorMessages,
     metrics: {
       addCounter(name, value) {
@@ -257,6 +272,9 @@ function buildRecordingTelemetry(): ArchiveLifecycleTelemetry & {
     logger: {
       info(_data, msg) {
         if (msg) infoMessages.push(msg);
+      },
+      warn(_data, msg) {
+        if (msg) warnMessages.push(msg);
       },
       error(_data, msg) {
         if (msg) errorMessages.push(msg);
@@ -426,6 +444,42 @@ describe('RunArchiveCoordinator', () => {
 
     expect(telemetry.counters['dvt.archive.export_failures_total']).toBe(1);
     expect(telemetry.errorMessages).toContain('archive unit export failed');
+  });
+
+  it('emits a discard signal when terminal snapshot pin is stale', async () => {
+    const unit = makeEligibleUnit();
+    const store = buildStubStore({
+      eligibleUnits: [unit],
+      events: [makeEvent({ runId: 'run-a', runSeq: 1 })],
+      terminalSnapshots: [
+        {
+          tenantId: 'tenant-a',
+          runId: 'run-a',
+          snapshot: makeTerminalSnapshot('run-a'),
+        },
+      ],
+      pinTerminalSnapshotResult: {
+        outcome: 'DISCARDED_STALE_SEQUENCE',
+        tenantId: 'tenant-a',
+        runId: 'run-a',
+        archiveUnitKey: unit.archiveUnitKey,
+        incomingLastRunSeq: 4,
+        storedLastRunSeq: 5,
+      },
+    });
+    const exporter = buildStubExporter([unit]);
+    const telemetry = buildRecordingTelemetry();
+    const coordinator = new RunArchiveCoordinator({
+      store,
+      exporter,
+      telemetry,
+      nowIso: () => NOW,
+    });
+
+    await coordinator.archiveEligibleHotData(RETENTION_POLICY);
+
+    expect(telemetry.counters['dvt.archive.terminal_snapshot_discarded_total']).toBe(1);
+    expect(telemetry.warnMessages).toContain('archive terminal snapshot discarded');
   });
 });
 
