@@ -18,7 +18,7 @@ Authoritative task source remains:
 
 - `in_progress`: 0
 - `review`: 6
-- `queued`: 31
+- `queued`: 30
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -30,7 +30,6 @@ block in the workboard.
 | Priority | Task ID  | Why now                                                                                  | Next action                                                            |
 | -------- | -------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                                   | Close review/merge decision and lock baseline.                         |
-| `P0`     | `RC-A1`  | Already in `Review`; close QA/merge decision for production hardening.                   | Merge and lock runtime policy baseline.                                |
 | `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.                | Merge review and lock deterministic intent-id baseline.                |
 | `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.                      | Merge review and lock configurable claim timeout baseline.             |
 | `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.                         | Merge review and lock error-code normalization baseline.               |
@@ -80,7 +79,6 @@ flowchart LR
   G43[G4-PR3] --> G44[G4-PR4] --> G45[G4-PR5]
 
   RC_A6[RC-A6] --> S02[S02] --> S03[S03] --> F1[F1]
-  RC_A1[RC-A1]
   RC_A2[RC-A2]
   RC_A5[RC-A5]
   RC_B1[RC-B1]
@@ -119,7 +117,7 @@ flowchart LR
 If you want maximum parallelism now without violating gates, start these lanes:
 
 1. `API lane`: close `G4-PR3`.
-2. `Correctness lane`: `RC-A1` + `RC-A2` + `S14`.
+2. `Correctness lane`: `RC-A2` + `S14`.
 3. `Version lane`: `S16`.
 4. `State-store lane`: `RC-A6` then `S02` then `S03` then `F1`.
 5. `Traceability lane`: `RC-B1` + `RC-B2` + `S07` + `RC-B5`.
