@@ -113,17 +113,8 @@ export class PostgresStateStoreAdapter
       (fn) => this.withTransaction(fn),
       (fn) => this.withClient(fn)
     );
-    this.metadataRepo = new PostgresRunMetadataRepository(
-      this.schema,
-      (fn) => this.withTransaction(fn),
-      (fn) => this.withClient(fn)
-    );
-    this.eventStore = new PostgresRunEventStore(
-      this.schema,
-      this.now,
-      (fn) => this.withTransaction(fn),
-      (fn) => this.withClient(fn)
-    );
+    this.metadataRepo = new PostgresRunMetadataRepository(this.schema, (fn) => this.withClient(fn));
+    this.eventStore = new PostgresRunEventStore(this.schema, this.now, (fn) => this.withClient(fn));
     this.snapshotStore = new PostgresRunSnapshotStore(
       this.schema,
       this.now,
@@ -287,17 +278,6 @@ export class PostgresStateStoreAdapter
     return this.metadataRepo.saveProviderRef(tenantId, runId, runRef);
   }
 
-  /**
-   * @deprecated Use bootstrapRunTx. This upsert bypasses the atomic
-   * metadata + first-event + snapshot guarantee and may cause
-   * IRunStateStore.getSnapshot to return null for the run. Scheduled for
-   * removal in Phase 3.
-   */
-  async saveRunMetadata(meta: RunMetadata): Promise<void> {
-    this.ready();
-    return this.metadataRepo.saveRunMetadata(meta);
-  }
-
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
     return this.metadataRepo.getByRunId(tenantId, runId);
@@ -306,19 +286,6 @@ export class PostgresStateStoreAdapter
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     this.ready();
     return this.metadataRepo.listRuns(options);
-  }
-
-  /**
-   * @deprecated Use appendAndEnqueueTx. Unlike appendAndEnqueueTx, this method
-   * appends events WITHOUT writing outbox records, so they will never be
-   * delivered to subscribers. Scheduled for removal in Phase 3.
-   */
-  async appendEventsTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
-    this.ready();
-    return this.withTransaction(async (client) => {
-      await this.resolveAndSetTenantContext(client, runId);
-      return this.appendEventsTxWithClient(client, runId, envelopes);
-    });
   }
 
   async listEvents(

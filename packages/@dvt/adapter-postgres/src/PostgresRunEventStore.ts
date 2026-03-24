@@ -9,7 +9,7 @@
 import type { PoolClient } from 'pg';
 
 import { quoteIdentifier } from './sqlUtils.js';
-import type { AppendResult, EventEnvelope, EventInput, ListEventsOptions, RunId } from './types.js';
+import type { EventEnvelope, EventInput, ListEventsOptions, RunId } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -42,7 +42,6 @@ export class PostgresRunEventStore {
   constructor(
     private readonly schema: string,
     private readonly now: () => string,
-    private readonly withTransaction: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>,
     private readonly withClient: <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>
   ) {}
 
@@ -60,26 +59,6 @@ export class PostgresRunEventStore {
       baseRunSeq
     );
     return { appended, deduped, lastAppendedRunSeq, baseRunSeq };
-  }
-
-  /**
-   * @deprecated Use appendAndEnqueueTx. Unlike appendAndEnqueueTx, this method
-   * appends events WITHOUT writing outbox records, so they will never be
-   * delivered to subscribers. Scheduled for removal in Phase 3.
-   */
-  async appendEventsTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
-    return this.withTransaction(async (client) => {
-      const { appended, deduped, lastAppendedRunSeq, baseRunSeq } = await this.appendWithClient(
-        client,
-        runId,
-        envelopes
-      );
-      return {
-        appended,
-        deduped,
-        lastSeq: lastAppendedRunSeq ?? baseRunSeq,
-      };
-    });
   }
 
   async listEvents(
