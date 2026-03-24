@@ -172,24 +172,14 @@ export interface ArchiveLifecycleTelemetry {
 }
 
 class NoopArchiveLifecycleMetrics implements ArchiveLifecycleMetrics {
-  addCounter(_name: string, _value: number): void {
-    // intentionally no-op
-  }
-  recordHistogram(_name: string, _value: number): void {
-    // intentionally no-op
-  }
+  addCounter(_name: string, _value: number): void {}
+  recordHistogram(_name: string, _value: number): void {}
 }
 
 class NoopArchiveLifecycleLogger implements ArchiveLifecycleLogger {
-  info(_data: Record<string, unknown>, _msg?: string): void {
-    // intentionally no-op
-  }
-  warn(_data: Record<string, unknown>, _msg?: string): void {
-    // intentionally no-op
-  }
-  error(_data: Record<string, unknown>, _msg?: string): void {
-    // intentionally no-op
-  }
+  info(_data: Record<string, unknown>, _msg?: string): void {}
+  warn(_data: Record<string, unknown>, _msg?: string): void {}
+  error(_data: Record<string, unknown>, _msg?: string): void {}
 }
 
 export function createNoopArchiveLifecycleTelemetry(): ArchiveLifecycleTelemetry {
