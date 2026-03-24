@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.10.0](https://github.com/dunay2/dvt/compare/v4.9.3...v4.10.0) (2026-03-24)
+
+
+### Features
+
+* **docs,adapters:** Consolidate remaining value slices ([#590](https://github.com/dunay2/dvt/issues/590)) ([ea7bbc0](https://github.com/dunay2/dvt/commit/ea7bbc0bf5b9a614c63f85b1ecc26ae7687f1263))
+
+
+### Bug Fixes
+
+* **adapters:** Harden archive SQL and validation ([#587](https://github.com/dunay2/dvt/issues/587)) ([b59c29c](https://github.com/dunay2/dvt/commit/b59c29cca737088977fa2b02f790988b31b67ffe))
+
 ## [4.9.3](https://github.com/dunay2/dvt/compare/v4.9.2...v4.9.3) (2026-03-23)
 
 
