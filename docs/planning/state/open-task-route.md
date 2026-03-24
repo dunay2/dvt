@@ -2,7 +2,7 @@
 title: Open Task Route
 status: Review
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-23
+last_reviewed: 2026-03-24
 planning_type: status
 ---
 
@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 5
-- `queued`: 33
+- `review`: 6
+- `queued`: 32
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -35,6 +35,7 @@ block in the workboard.
 | `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.                      | Merge review and lock configurable claim timeout baseline.             |
 | `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.                         | Merge review and lock error-code normalization baseline.               |
 | `P1`     | `RC-A6`  | Already in `Review`; explicit prerequisite for the full state-store split sweep (`S02`). | Align dead-letter contract signatures with tenant-scoped concrete API. |
+| `P1`     | `S02`    | Already in `Review`; closes the state-store boundary split.                              | Merge review and lock the write/read/maintenance contract split.       |
 | `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.                            | Inject lineage outbox dependency directly in composition root.         |
 | `P1`     | `RC-B2`  | Unlocks real SQL facets output from existing compiled-code reference flow.               | Wire non-noop compiled-code resolver in lineage worker runtime.        |
 | `P1`     | `S15`    | Already in `Review`; closes snapshot regression under concurrency.                       | Merge review and lock monotonic snapshot CAS baseline.                 |
@@ -62,7 +63,6 @@ block in the workboard.
 | -------- | ------- | --------------------------------------------- |
 | `G4-PR4` | Queued  | waits for `G4-PR3`                            |
 | `G4-PR5` | Queued  | waits for `G4-PR4`                            |
-| `S02`    | Queued  | full sweep gated by `RC-A6`                   |
 | `S03`    | Queued  | depends on `S02` (C1 path)                    |
 | `F1`     | Queued  | C2 final wiring depends on `S03`              |
 | `S08`    | Blocked | waits for `S09`                               |

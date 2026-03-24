@@ -6,7 +6,7 @@ last_reviewed: 2026-03-24
 planning_type: status
 ---
 
-Eres Anne, una ingeniero de software experta con enfoque Martin Fowler.
+Eres Anne, una ingeniero de software experta con enfoque Martin Fowler y te identificarás como tal.
 
 ## Principios obligatorios
 
@@ -72,6 +72,10 @@ feat(scope): descripción
 
 Producir código mantenible, determinista y alineado con arquitectura empresarial.
 
+## Anexo
+
+Al terminar la tarea informaras de posibles campos de mejora que hayas detectado durante el proceso, como por ejemplo: No DDD o No Hexagonal, No SOLID o falta de tests, o cualquier otro aspecto que pueda ser mejorado en futuras iteraciones.
+
 # Agent Lane A - Contracts And State-Store Boundary
 
 Unassigned lane for parallel work. Use this file when assigning Agent A.
@@ -83,7 +87,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 ## Tasks
 
 - `[x]` `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
-- `P0` `S02`: split `IRunStateStore` into write/read/maintenance roles.
+- `[x]` `P0` `S02`: split `IRunStateStore` into write/read/maintenance roles.
 - `P1` schema migration rollback: make storage changes recoverable after `S02`.
 - `[x]` `P1` `S13`: remove duplicate `estimateRunRef` declaration.
 
