@@ -92,6 +92,27 @@ describe('PostgresStateStoreAdapter migration state', () => {
     await expect(adapter.listPending(0)).rejects.toThrow(/MIGRATE_NOT_CALLED/);
   });
 
+  it('rejects schema rollback while tracked clients are still active', async () => {
+    const adapter = new PostgresStateStoreAdapter({
+      pool: {
+        connect: async () => {
+          throw new Error('connect should not be called when active clients exist');
+        },
+      } as never,
+      assumeSchemaReady: true,
+    });
+
+    (
+      adapter as unknown as {
+        activeClients: Set<unknown>;
+      }
+    ).activeClients.add({ release() {} });
+
+    await expect(adapter.rollbackSchemaTo('core_009_core_indexes')).rejects.toThrow(
+      /SCHEMA_ROLLBACK_ACTIVE_CLIENTS/
+    );
+  });
+
   it('applies SET LOCAL statement_timeout inside each step transaction when configured', async () => {
     const client = new RecordingMigrationClient();
     const adapter = new PostgresStateStoreAdapter({

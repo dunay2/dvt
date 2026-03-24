@@ -93,7 +93,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - [x] `P0` `S18`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
 - [x] `P1` `S19`: isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated query port.
 - [ ] `P2` `S18-F1`: harden the explicit state-store role bundle into a root-owned boundary and prevent convenience rewiring drift.
-- [ ] `P1` `schema-migration-rollback`: make storage changes recoverable after S02.
+- [x] `P1` `schema-migration-rollback`: make storage changes recoverable after S02.
 - [x] `P1` `S13`: remove duplicate estimateRunRef declaration.
 
 ## Dependencies

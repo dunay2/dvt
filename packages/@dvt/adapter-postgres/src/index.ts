@@ -34,6 +34,10 @@ export type { PostgresAdapterConfig } from './PostgresStateStoreAdapter.js';
 export type { ExecutablePlanArtifact, PostgresPlanStoreConfig } from './PostgresPlanStore.js';
 export type { PostgresStartRunIntentStoreConfig } from './PostgresStartRunIntentStore.js';
 export type {
+  PostgresSchemaRollbackPlan,
+  PostgresSchemaRollbackPlanStep,
+} from './PostgresSchemaManager.js';
+export type {
   PostgresBackpressureSnapshot,
   PostgresBackpressureSnapshotReaderConfig,
 } from './PostgresBackpressureSnapshotReader.js';

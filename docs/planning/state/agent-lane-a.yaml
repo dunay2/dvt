@@ -53,7 +53,7 @@ tasks:
       regression guard.
   - task_id: schema-migration-rollback
     priority: P1
-    status: queued
+    status: done
     objective: make storage changes recoverable after S02.
     dependency: S02
     target: Define and implement rollback recovery for state-store changes.

@@ -93,6 +93,16 @@ Migration support exists both in the package migrations directory and in the
 adapter's idempotent `migrate()` path, which also performs compatibility
 cleanup and index creation.
 
+The concrete adapter now also exposes:
+
+- `planSchemaRollback(targetVersion)` to inspect the reverse steps needed to
+  reach a known schema version
+- `rollbackSchemaTo(targetVersion)` to execute those reverse steps under the
+  same advisory lock discipline used by forward migrations
+
+Rollback remains a PostgreSQL adapter concern. It is not part of the
+engine-facing state-store ports.
+
 Env vars:
 
 - `DATABASE_URL` (required)

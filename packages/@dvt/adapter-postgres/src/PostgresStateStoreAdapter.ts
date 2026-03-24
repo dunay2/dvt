@@ -23,7 +23,7 @@ import {
 import { PostgresRunEventStore } from './PostgresRunEventStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
-import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { PostgresSchemaManager, type PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import type {
   AppendResult,
@@ -152,6 +152,17 @@ export class PostgresStateStoreAdapter
    */
   async migrate(): Promise<void> {
     return this.schemaManager.migrate();
+  }
+
+  async planSchemaRollback(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
+    return this.schemaManager.planRollback(targetVersion);
+  }
+
+  async rollbackSchemaTo(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
+    if (this.activeClients.size > 0) {
+      throw new Error('SCHEMA_ROLLBACK_ACTIVE_CLIENTS');
+    }
+    return this.schemaManager.rollbackTo(targetVersion);
   }
 
   async close(): Promise<void> {
