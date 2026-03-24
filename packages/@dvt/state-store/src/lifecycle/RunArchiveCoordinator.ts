@@ -70,7 +70,20 @@ export class RunArchiveCoordinator {
           });
 
           for (const snapshot of archivedSnapshots) {
-            await this.options.store.pinTerminalSnapshot(snapshot);
+            const pinResult = await this.options.store.pinTerminalSnapshot(snapshot);
+            if (pinResult.outcome === 'DISCARDED_STALE_SEQUENCE') {
+              this.telemetry.metrics.addCounter('dvt.archive.terminal_snapshot_discarded_total', 1);
+              this.telemetry.logger.warn?.(
+                {
+                  archiveUnitKey: pinResult.archiveUnitKey,
+                  runId: pinResult.runId,
+                  tenantId: pinResult.tenantId,
+                  incomingLastRunSeq: pinResult.incomingLastRunSeq,
+                  storedLastRunSeq: pinResult.storedLastRunSeq,
+                },
+                'archive terminal snapshot discarded'
+              );
+            }
           }
         }
 

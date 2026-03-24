@@ -179,7 +179,6 @@ export function createActivities(
      */
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
-      applySimulateErrorIfPresent(input.step);
       return dispatchStep(input.step, { gatewayContext: input.gatewayContext }, stepExecutors);
     },
 
@@ -243,7 +242,6 @@ const ALLOWED_STEP_FIELDS = new Set([
   'stepTypeConfig',
   'compiledCodeRef',
   'dependsOn',
-  'simulateError',
 ]);
 
 const SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0']);
@@ -322,26 +320,6 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
     throw new TypeError(
       `${ActivityErrorCode.INVALID_STEP_SCHEMA}: dependsOn_values_must_be_string`
     );
-  }
-}
-
-function applySimulateErrorIfPresent(step: ExecutionPlan['steps'][number]): void {
-  // RC-A1: never execute test-only failure hooks in production runtime.
-  if (process.env['NODE_ENV'] === 'production') {
-    return;
-  }
-
-  const simulateErrorKind =
-    typeof step['simulateError'] === 'string' ? String(step['simulateError']) : undefined;
-  if (simulateErrorKind === 'transient') {
-    throw new Error(`${ActivityErrorCode.TRANSIENT_STEP_ERROR}:${step.stepId}`);
-  }
-  if (simulateErrorKind === 'permanent') {
-    throw ApplicationFailure.create({
-      type: PERMANENT_STEP_ERROR_TYPE,
-      message: `${ActivityErrorCode.PERMANENT_STEP_ERROR}:${step.stepId}`,
-      nonRetryable: true,
-    });
   }
 }
 

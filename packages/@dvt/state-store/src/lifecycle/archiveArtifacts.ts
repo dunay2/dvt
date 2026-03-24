@@ -64,8 +64,19 @@ export interface ArchivedTerminalSnapshot extends PinnedTerminalSnapshot {
   readonly archivedAt: string;
 }
 
+export type TerminalSnapshotPinOutcome = 'APPLIED' | 'DISCARDED_STALE_SEQUENCE';
+
+export interface TerminalSnapshotPinResult {
+  readonly outcome: TerminalSnapshotPinOutcome;
+  readonly tenantId: string;
+  readonly runId: string;
+  readonly archiveUnitKey: string;
+  readonly incomingLastRunSeq: number;
+  readonly storedLastRunSeq: number;
+}
+
 export interface TerminalSnapshotPinStore {
-  pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<void>;
+  pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<TerminalSnapshotPinResult>;
   getPinnedTerminalSnapshot(
     tenantId: string,
     runId: string

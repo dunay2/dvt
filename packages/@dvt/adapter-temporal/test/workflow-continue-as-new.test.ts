@@ -87,6 +87,42 @@ describe('continue-as-new policy', () => {
     expect(nextInput.skippedStepIds).toEqual(['skipped-step']);
     expect(nextInput.planRef.planId).toBe('plan-1');
   });
+
+  it('carries completedStepResults across continue-as-new rollover', () => {
+    const nextInput = buildContinueAsNewInput({
+      input: {
+        planRef: {
+          uri: 'file://plan.json',
+          sha256: 'abc',
+          schemaVersion: 'v1.0.0',
+          planId: 'plan-1',
+          planVersion: '1',
+        },
+        ctx: {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          runId: 'r1',
+          targetAdapter: 'temporal',
+        },
+      },
+      continueAsNewAfterLayerCount: 3,
+      nextLayerIndex: 2,
+      continuedAsNewCount: 1,
+      gatewayDecisions: {
+        gwA: true,
+      },
+      completedStepResults: {
+        's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true, approval: 'yes' },
+      },
+      skippedStepIds: new Set(['skipped-step']),
+    });
+
+    expect(nextInput.completedStepResults).toEqual({
+      's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true, approval: 'yes' },
+    });
+    expect(nextInput.completedStepResults).not.toBeUndefined();
+  });
 });
 
 describe('workflow input parsing', () => {

@@ -68,6 +68,7 @@ const EXPECTED_ERRORS = {
   dependsOnMustBeArray: 'INVALID_STEP_SCHEMA: dependsOn_must_be_array',
   dependsOnValuesMustBeString: 'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string',
   fieldNotAllowedForbidden: 'INVALID_STEP_SCHEMA: field_not_allowed:forbidden',
+  fieldNotAllowedSimulateError: 'INVALID_STEP_SCHEMA: field_not_allowed:simulateError',
   inputBindingsNotSupported: 'INVALID_STEP_SCHEMA: inputBindings_not_supported_in_v1',
   transientStepErrorS1: 'TRANSIENT_STEP_ERROR:s1',
   permanentStepErrorS1: 'PERMANENT_STEP_ERROR:s1',
@@ -296,25 +297,6 @@ function expectExecuteStepRejects(step: unknown, expectedError: string) {
   };
 }
 
-async function withNodeEnv<T>(value: string | undefined, fn: () => Promise<T> | T): Promise<T> {
-  const previous = process.env['NODE_ENV'];
-  if (value === undefined) {
-    delete process.env['NODE_ENV'];
-  } else {
-    process.env['NODE_ENV'] = value;
-  }
-
-  try {
-    return await fn();
-  } finally {
-    if (previous === undefined) {
-      delete process.env['NODE_ENV'];
-    } else {
-      process.env['NODE_ENV'] = previous;
-    }
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -521,41 +503,12 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
-    it('ignores simulateError hook in production runtime', async () => {
-      await withNodeEnv('production', async () => {
-        const { acts } = setupActivities();
-        const result = await acts.executeStep({
-          step: {
-            stepId: 's1',
-            kind: 'test',
-            simulateError: 'permanent',
-          } as unknown as StepInput['step'],
-          ctx: CTX,
-        });
-        expect(result).toEqual({ stepId: 's1', status: 'COMPLETED' });
-      });
-    });
-
-    it.each([
-      { simulateError: 'transient', expectedError: EXPECTED_ERRORS.transientStepErrorS1 },
-      { simulateError: 'permanent', expectedError: EXPECTED_ERRORS.permanentStepErrorS1 },
-    ])(
-      'applies simulateError=$simulateError outside production',
-      async ({ simulateError, expectedError }) => {
-        await withNodeEnv('test', async () => {
-          const { acts } = setupActivities();
-          await expect(
-            acts.executeStep({
-              step: {
-                stepId: 's1',
-                kind: 'test',
-                simulateError,
-              } as unknown as StepInput['step'],
-              ctx: CTX,
-            })
-          ).rejects.toThrow(expectedError);
-        });
-      }
+    it(
+      'rejects simulateError on runtime step input',
+      expectExecuteStepRejects(
+        { stepId: 's1', kind: 'test', simulateError: 'permanent' },
+        EXPECTED_ERRORS.fieldNotAllowedSimulateError
+      )
     );
 
     it.each([

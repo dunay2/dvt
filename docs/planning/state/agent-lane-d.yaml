@@ -23,7 +23,7 @@ tasks:
     target: Restore + grace delete worker.
   - task_id: S15
     priority: P1
-    status: review
+    status: done
     objective:
       add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression
       under concurrency.
@@ -31,14 +31,14 @@ tasks:
     target: persistWithClient upsert guard.
   - task_id: S15-F1
     priority: P1
-    status: queued
+    status: done
     objective:
       surface CAS no-op outcome for stale snapshot writes so repair callers can observe discard.
     dependency: S15
     target: Return or emit stale-write conflict result.
   - task_id: S14
     priority: P1
-    status: queued
+    status: done
     objective: preserve gateway evaluation context across `continueAsNew` segments.
     dependency: none
     target: Workflow state handoff hardening.

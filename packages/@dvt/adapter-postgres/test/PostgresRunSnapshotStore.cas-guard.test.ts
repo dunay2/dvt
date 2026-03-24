@@ -54,6 +54,13 @@ class SnapshotUpsertClient {
       return { rows: [] as T[], rowCount: shouldUpdate ? 1 : 0 };
     }
 
+    if (sql.includes('SELECT s.last_run_seq') && sql.includes('FROM "dvt".run_snapshots s')) {
+      return {
+        rows: [{ last_run_seq: this.state.lastRunSeq }] as T[],
+        rowCount: 1,
+      };
+    }
+
     if (
       sql.includes('FROM "dvt".run_snapshots s') &&
       sql.includes('s.archive_unit_key IS NOT NULL')
@@ -137,13 +144,21 @@ describe('PostgresRunSnapshotStore CAS guard', () => {
       async (fn) => fn(client as never)
     );
 
-    await store.pinTerminalSnapshot(archived);
+    const result = await store.pinTerminalSnapshot(archived);
 
     expect(
       client.queries.some((entry) =>
         entry.sql.includes('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq')
       )
     ).toBe(true);
+    expect(result).toEqual({
+      outcome: 'APPLIED',
+      tenantId: 'tenant-1',
+      runId: 'run-1',
+      archiveUnitKey: 'tb07_2026_03_22',
+      incomingLastRunSeq: 5,
+      storedLastRunSeq: 5,
+    });
     expect(client.currentState.lastRunSeq).toBe(5);
     expect(client.currentState.snapshot).toEqual(terminalSnapshot);
     expect(client.currentState.archiveUnitKey).toBe('tb07_2026_03_22');

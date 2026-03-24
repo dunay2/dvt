@@ -11,7 +11,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type { ArchivedTerminalSnapshot } from '@dvt/state-store';
+import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
 import { Pool, type PoolClient } from 'pg';
 
 import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
@@ -302,7 +302,9 @@ export class PostgresStateStoreAdapter
     return this.snapshotStore.getSnapshot(tenantId, runId);
   }
 
-  async pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<void> {
+  async pinTerminalSnapshot(
+    snapshot: ArchivedTerminalSnapshot
+  ): Promise<TerminalSnapshotPinResult> {
     this.ready();
     return this.snapshotStore.pinTerminalSnapshot(snapshot);
   }
