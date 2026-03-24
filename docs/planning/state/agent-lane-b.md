@@ -99,6 +99,8 @@ Stabilize event payload versioning and lineage wiring.
 - `S05` is the primary contract foundation for this lane.
 - `RC-B2` should be wired after the lineage boundary is explicit.
 - DLQ replay and alerting depend on `S05` and the retry pacing follow-up.
+- Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary even further.
+- Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.
 
 ## Expected Outcome
 

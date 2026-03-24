@@ -31,6 +31,12 @@ type CompiledCodeResolverEnv = Pick<
   | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
   | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
 >;
+type S3ResolverEnv = Pick<
+  Env,
+  | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
+  | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
+  | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
+>;
 
 export interface CompiledCodeResolverOptions {
   backend?: CompiledCodeResolverBackend;
@@ -97,12 +103,7 @@ function createCompiledCodeReader(
 }
 
 function createS3Client(
-  env: Pick<
-    CompiledCodeResolverEnv,
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >
+  env: S3ResolverEnv
 ): S3Client {
   const region = resolveS3Region(env);
   if (!region) {
@@ -121,13 +122,7 @@ function createS3Client(
 }
 
 function createS3UriCompiledCodeReader(
-  env: Pick<
-    CompiledCodeResolverEnv,
-    | 'NODE_ENV'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >
+  env: CompiledCodeResolverEnv
 ): ICompiledCodeReader {
   return new S3UriCompiledCodeReader(env);
 }
@@ -159,17 +154,11 @@ class ProductionGuardedFileUriCompiledCodeReader implements ICompiledCodeReader 
 class S3UriCompiledCodeReader implements ICompiledCodeReader {
   private client: S3Client | null = null;
 
-  constructor(
-    private readonly env: Pick<
-      CompiledCodeResolverEnv,
-      | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-      | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-      | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-    >
-  ) {}
+  constructor(private readonly env: S3ResolverEnv) {}
 
   private getClient(): S3Client {
-    return (this.client ??= createS3Client(this.env));
+    this.client ??= createS3Client(this.env);
+    return this.client;
   }
 
   async read(ref: CompiledCodeRef): Promise<CompiledCodeBlob> {
@@ -181,37 +170,25 @@ class S3UriCompiledCodeReader implements ICompiledCodeReader {
     }
 
     try {
-      const response = await this.getClient().send(
-        new GetObjectCommand({ Bucket: parsed.bucket, Key: parsed.key })
-      );
-      const bytes = await response.Body?.transformToByteArray();
-      if (!bytes) {
-        throw new CompiledCodeReaderError(`Empty S3 body: ${ref.storageUri}`);
-      }
-
-      const sqlText = Buffer.from(bytes).toString('utf8');
-      return {
-        sourceUri: ref.storageUri,
-        sqlText,
-        sha256: sha256HexUtf8(sqlText),
-        sizeBytes: Buffer.byteLength(sqlText, 'utf8'),
-        encoding: 'utf-8',
-      };
+      const bytes = await this.readObjectBytes(parsed, ref.storageUri);
+      return toCompiledCodeBlob(ref.storageUri, bytes);
     } catch (error) {
-      if (error instanceof CompiledCodeReaderError) {
-        throw error;
-      }
-
-      if (error instanceof Error) {
-        throw new CompiledCodeReaderError(
-          `Failed to read compiled code from URI ${ref.storageUri}: ${error.message}`
-        );
-      }
-
-      throw new CompiledCodeReaderError(
-        `Failed to read compiled code from URI ${ref.storageUri}: ${String(error)}`
-      );
+      throw toCompiledCodeReaderError(ref.storageUri, error);
     }
+  }
+
+  private async readObjectBytes(
+    parsed: { bucket: string; key: string },
+    storageUri: string
+  ): Promise<Uint8Array> {
+    const response = await this.getClient().send(
+      new GetObjectCommand({ Bucket: parsed.bucket, Key: parsed.key })
+    );
+    const bytes = await response.Body?.transformToByteArray();
+    if (!bytes) {
+      throw new CompiledCodeReaderError(`Empty S3 body: ${storageUri}`);
+    }
+    return bytes;
   }
 }
 
@@ -233,13 +210,7 @@ function parseS3Uri(uri: string): { bucket: string; key: string } | null {
 }
 
 function resolveS3Region(
-  env: Pick<
-    Env,
-    | 'NODE_ENV'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_REGION'
-    | 'DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE'
-  >
+  env: S3ResolverEnv
 ): string | null {
   return (
     env.DVT_COMPILED_CODE_RESOLVER_S3_REGION ??
@@ -272,10 +243,40 @@ function validateCompiledCodeResolverConfiguration(
     return;
   }
 
+  if (backend !== 's3') return;
+
   const hasS3Region = resolveS3Region(env) !== null;
-  if (backend === 's3' && !hasS3Region && !hasS3ReaderOverride) {
-    throw new CompiledCodeReaderError(
-      'Missing S3 region for compiled code resolver. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
+  if (hasS3Region || hasS3ReaderOverride) return;
+
+  throw new CompiledCodeReaderError(
+    'Missing S3 region for compiled code resolver. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
+  );
+}
+
+function toCompiledCodeBlob(
+  sourceUri: string,
+  bytes: Uint8Array
+): CompiledCodeBlob {
+  const sqlText = Buffer.from(bytes).toString('utf8');
+  return {
+    sourceUri,
+    sqlText,
+    sha256: sha256HexUtf8(sqlText),
+    sizeBytes: Buffer.byteLength(sqlText, 'utf8'),
+    encoding: 'utf-8',
+  };
+}
+
+function toCompiledCodeReaderError(sourceUri: string, error: unknown): CompiledCodeReaderError {
+  if (error instanceof CompiledCodeReaderError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return new CompiledCodeReaderError(
+      `Failed to read compiled code from URI ${sourceUri}: ${error.message}`
     );
   }
+
+  return new CompiledCodeReaderError(`Failed to read compiled code from URI ${sourceUri}: ${String(error)}`);
 }
