@@ -1,6 +1,6 @@
-import type { EventEnvelope } from './IRunStateStore.v1.js';
+import type { EventEnvelope } from '../../engine/IRunStateStore.v1.js';
 
-export type { EventEnvelope } from './IRunStateStore.v1.js';
+export type { EventEnvelope } from '../../engine/IRunStateStore.v1.js';
 
 export interface OutboxRecord {
   id: string;

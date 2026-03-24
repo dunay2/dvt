@@ -1,13 +1,13 @@
 export type { IWorkflowEngine } from './IWorkflowEngine.v1.js';
 export type {
-  IRunStateStoreMaintenance,
-  IRunStateStoreRead,
-  IRunStateStoreWrite,
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
-} from './IRunStateStore.v1.js';
+  IRunStateStoreMaintenance,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
+} from '../../ports/IRunStateStore.js';
 export type { IProvider } from './IProvider.v1.js';
 export type { IPlanResolver, ResolvedPlan } from './IPlanResolver.v1.js';
 
