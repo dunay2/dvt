@@ -12,7 +12,12 @@ import { describe, it, expect, vi } from 'vitest';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
-import type { EngineRunRef, PlanRef, RunContext } from '../../src/contracts/types.js';
+import type {
+  EngineRunRef,
+  PlanRef,
+  ResolvedRunContext,
+  RunContext,
+} from '../../src/contracts/types.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -229,7 +234,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
   it('does not call adapter.startRun when PlanRef validation fails', async () => {
     const startRunMock: IProviderAdapter['startRun'] = vi.fn(
-      async (_planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> => ({
+      async (_planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> => ({
         provider: 'conductor',
         tenantId: ctx.tenantId,
         workflowId: 'wf',

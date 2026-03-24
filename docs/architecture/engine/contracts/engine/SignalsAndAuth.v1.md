@@ -26,19 +26,19 @@ Signals are **operator actions** routed to the engine and **ALWAYS enforced by `
 - `UPDATE_TARGET`
 - `EMERGENCY_STOP`
 
-| SignalType        | Payload                                   | RBAC Role | Destructive? | Effect                                   | Status     |
-| ----------------- | ----------------------------------------- | --------- | ------------ | ---------------------------------------- | ---------- |
-| `PAUSE`           | `{ reason?: string }`                     | Operator  | No           | Pauses future step scheduling            | ✅ Phase 1 |
-| `RESUME`          | `{}`                                      | Operator  | No           | Resumes paused run                       | ✅ Phase 1 |
-| `CANCEL`          | `{ reason?: string }`                     | Operator  | No           | Cancels run → terminal state `CANCELLED` | ✅ Phase 1 |
-| `RETRY_STEP`      | `{ stepId, force?: boolean }`             | Engineer  | No           | Retries failed step                      | ✅ Phase 1 |
-| `RETRY_RUN`       | `{ reason?: string, force?: boolean }`    | Engineer  | No           | Re-executes run as a new run             | ✅ Phase 1 |
-| `UPDATE_PARAMS`   | `{ params: object }`                      | Admin     | **YES**      | Updates runtime parameters               | ✅ Phase 1 |
-| `INJECT_OVERRIDE` | `{ stepId, override: object }`            | Admin     | **YES**      | Injects override for next step           | ✅ Phase 1 |
-| `ESCALATE_ALERT`  | `{ level: AlertLevel, note?: string }`    | System    | No           | Emits escalation audit event             | ✅ Phase 1 |
-| `SKIP_STEP`       | `{ stepId, reason?: string }`             | Engineer  | No           | Skips a step                             | ⏳ Phase 2 |
-| `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**      | Changes target schema/db                 | ✅ Phase 1 |
-| `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**      | Immediate termination                    | ⏳ Phase 3 |
+| SignalType        | Payload                                   | RBAC Role | Destructive? | Effect                                          | Status                         |
+| ----------------- | ----------------------------------------- | --------- | ------------ | ----------------------------------------------- | ------------------------------ |
+| `PAUSE`           | `{ reason?: string }`                     | Operator  | No           | Pauses future step scheduling                   | ✅ Phase 1                     |
+| `RESUME`          | `{}`                                      | Operator  | No           | Resumes paused run                              | ✅ Phase 1                     |
+| `CANCEL`          | `{ reason?: string }`                     | Operator  | No           | Cancels run → terminal state `CANCELLED`        | ✅ Phase 1                     |
+| `RETRY_STEP`      | `{ stepId, force?: boolean }`             | Engineer  | No           | Reserved for future partial-execution semantics | Deferred                       |
+| `RETRY_RUN`       | `{ reason?: string, force?: boolean }`    | Engineer  | No           | Re-executes run as a new run                    | ✅ Engine/Application recovery |
+| `UPDATE_PARAMS`   | `{ params: object }`                      | Admin     | **YES**      | Updates runtime parameters                      | ✅ Phase 1                     |
+| `INJECT_OVERRIDE` | `{ stepId, override: object }`            | Admin     | **YES**      | Injects override for next step                  | ✅ Phase 1                     |
+| `ESCALATE_ALERT`  | `{ level: AlertLevel, note?: string }`    | System    | No           | Emits escalation audit event                    | ✅ Phase 1                     |
+| `SKIP_STEP`       | `{ stepId, reason?: string }`             | Engineer  | No           | Skips a step                                    | ⏳ Phase 2                     |
+| `UPDATE_TARGET`   | `{ stepId, newTarget: object }`           | Admin     | **YES**      | Changes target schema/db                        | ✅ Phase 1                     |
+| `EMERGENCY_STOP`  | `{ reason: string, forceKill?: boolean }` | Admin     | **YES**      | Immediate termination                           | ⏳ Phase 3                     |
 
 #### 1.1.1 CANCEL vs EMERGENCY_STOP (NORMATIVE)
 
@@ -50,7 +50,12 @@ Signals are **operator actions** routed to the engine and **ALWAYS enforced by `
 
 - `RETRY_RUN` MUST create a **new run** with a **new `runId`**.
 - The original failed run remains **immutable** for audit.
-- Correlation MUST be preserved via `originalRunId` (stored in run context/metadata of the new run).
+- Correlation MUST be preserved via recovery lineage metadata:
+  - `parentRunId` = immediate source run
+  - `originRunId` = first run in the chain
+  - `logicalAttemptId` = business attempt number for the chain
+- Adapters MUST NOT implement `RETRY_RUN` by mutating the original provider run.
+- Provider-native technical retries MUST NOT consume `RETRY_RUN` business budget.
 
 #### 1.1.3 Alert levels (NORMATIVE)
 
@@ -69,7 +74,7 @@ type AlertLevel = 'INFO' | 'WARNING' | 'CRITICAL' | 'P1';
 
 Signals are processed in the order they are received (best-effort). The engine MUST enforce step-state constraints:
 
-- `RETRY_STEP` sent to a step in `RUNNING` MUST be rejected with `STEP_NOT_TERMINAL`.
+- Current runtime scope: `RETRY_STEP` is deferred and MUST be rejected as not implemented until a separate partial-execution ADR is accepted.
 - `SKIP_STEP` sent to a step in `COMPLETED` or `FAILED` MUST be rejected with `STEP_TERMINAL`.
 - Signals sent to a **terminal run** MUST be rejected with `RUN_TERMINAL`, except `ESCALATE_ALERT` which MAY be allowed if it does not mutate run state (adapter MUST document behavior).
 

@@ -25,7 +25,7 @@ function makePlanRef(): PlanRef {
 
 function makeContext(
   runId = 'r1',
-  overrides?: Partial<Pick<RunContext, 'logicalAttemptId' | 'targetAdapter'>>
+  overrides?: Partial<Pick<RunContext, 'targetAdapter'>>
 ): RunContext {
   return {
     tenantId: 't',
@@ -93,15 +93,18 @@ describe('WorkflowEngine startRun intent id determinism', () => {
     );
   });
 
-  it('uses logicalAttemptId from RunContext when present', async () => {
+  it('rejects caller-owned logicalAttemptId at the public boundary', async () => {
     const { engine, intentStore } = createEngine();
     const createSpy = vi.spyOn(intentStore, 'createIntent');
-    const builder = new IdempotencyKeyBuilder();
 
-    await engine.startRun(makePlanRef(), makeContext('attempted-run-1', { logicalAttemptId: 2 }));
+    await expect(
+      engine.startRun(makePlanRef(), {
+        ...makeContext('attempted-run-1'),
+        logicalAttemptId: 2,
+      } as unknown as RunContext)
+    ).rejects.toThrow(/Validation failed/);
 
-    const created = createSpy.mock.calls[0]?.[0];
-    expect(created?.intentId).toBe(builder.startRunIntentId('t', 'attempted-run-1', 2, 'temporal'));
+    expect(createSpy).not.toHaveBeenCalled();
   });
 
   it('derivation is stable for the same tenantId, runId, attempt, and adapter', () => {

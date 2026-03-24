@@ -10,7 +10,7 @@ import type { PoolClient } from 'pg';
 
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { quoteIdentifier } from './sqlUtils.js';
-import type { ListRunsOptions, RunId, RunMetadata } from './types.js';
+import type { ListRunsOptions, RetryAttemptReservation, RunId, RunMetadata } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -23,6 +23,9 @@ interface RunMetadataRow {
   run_id: string;
   plan_id: string;
   plan_version: string;
+  logical_attempt_id: number;
+  parent_run_id: string | null;
+  origin_run_id: string | null;
   provider: RunMetadata['provider'];
   provider_workflow_id: string;
   provider_run_id: string;
@@ -42,6 +45,9 @@ const RUN_METADATA_COLUMNS = `
   run_id,
   plan_id,
   plan_version,
+  logical_attempt_id,
+  parent_run_id,
+  origin_run_id,
   provider,
   provider_workflow_id,
   provider_run_id,
@@ -62,8 +68,9 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
     runId: row.run_id,
     planId: row.plan_id,
     planVersion: row.plan_version,
-    // Phase 1: column not yet in schema. Phase 2: read from row.logical_attempt_id.
-    logicalAttemptId: 1,
+    logicalAttemptId: row.logical_attempt_id,
+    parentRunId: row.parent_run_id ?? undefined,
+    originRunId: row.origin_run_id ?? undefined,
     provider: row.provider,
     providerWorkflowId: row.provider_workflow_id,
     providerRunId: row.provider_run_id,
@@ -93,6 +100,10 @@ export class PostgresRunMetadataRepository {
           environment_id,
           plan_id,
           plan_version,
+          logical_attempt_id,
+          parent_run_id,
+          origin_run_id,
+          next_retry_attempt_id,
           provider,
           provider_workflow_id,
           provider_run_id,
@@ -100,7 +111,7 @@ export class PostgresRunMetadataRepository {
           provider_task_queue,
           provider_conductor_url
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       `,
       [
         meta.runId,
@@ -109,6 +120,10 @@ export class PostgresRunMetadataRepository {
         meta.environmentId,
         meta.planId,
         meta.planVersion,
+        meta.logicalAttemptId,
+        meta.parentRunId ?? null,
+        meta.originRunId ?? meta.runId,
+        meta.logicalAttemptId + 1,
         meta.provider,
         meta.providerWorkflowId,
         meta.providerRunId,
@@ -117,6 +132,19 @@ export class PostgresRunMetadataRepository {
         meta.providerConductorUrl ?? null,
       ]
     );
+
+    // When inserting a retry child, advance the origin run's counter so that
+    // the next reserveRetryAttempt sees the correct next slot.
+    if (meta.originRunId && meta.originRunId !== meta.runId) {
+      await client.query(
+        `
+          UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+          SET next_retry_attempt_id = GREATEST(next_retry_attempt_id, $1)
+          WHERE run_id = $2 AND tenant_id = $3
+        `,
+        [meta.logicalAttemptId + 1, meta.originRunId, meta.tenantId]
+      );
+    }
   }
 
   /** Transaction-scoped metadata upsert used by canonical write paths. */
@@ -250,6 +278,9 @@ export class PostgresRunMetadataRepository {
             m.run_id,
             m.plan_id,
             m.plan_version,
+            m.logical_attempt_id,
+            m.parent_run_id,
+            m.origin_run_id,
             m.provider,
             m.provider_workflow_id,
             m.provider_run_id,
@@ -305,5 +336,49 @@ export class PostgresRunMetadataRepository {
     if (!result.rowCount) {
       throw new Error(`RUN_NOT_FOUND_OR_FORBIDDEN: ${runId}`);
     }
+  }
+
+  async reserveRetryAttempt(
+    tenantId: string,
+    sourceRunId: RunId
+  ): Promise<RetryAttemptReservation> {
+    return this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+
+      const result = await client.query<{
+        parent_run_id: string;
+        origin_run_id: string;
+        logical_attempt_id: number;
+      }>(
+        `
+          WITH source AS (
+            SELECT run_id, COALESCE(origin_run_id, run_id) AS origin_run_id
+            FROM ${quoteIdentifier(this.schema)}.run_metadata
+            WHERE tenant_id = $1 AND run_id = $2
+            LIMIT 1
+          ),
+          updated AS (
+            UPDATE ${quoteIdentifier(this.schema)}.run_metadata
+            SET next_retry_attempt_id = next_retry_attempt_id + 1
+            WHERE tenant_id = $1 AND run_id = (SELECT origin_run_id FROM source)
+            RETURNING next_retry_attempt_id - 1 AS logical_attempt_id
+          )
+          SELECT source.run_id AS parent_run_id, source.origin_run_id, updated.logical_attempt_id
+          FROM source, updated
+        `,
+        [tenantId, sourceRunId]
+      );
+
+      const row = result.rows[0];
+      if (!row) {
+        throw new Error(`RUN_NOT_FOUND: ${sourceRunId}`);
+      }
+
+      return {
+        parentRunId: row.parent_run_id,
+        originRunId: row.origin_run_id,
+        logicalAttemptId: row.logical_attempt_id,
+      };
+    });
   }
 }

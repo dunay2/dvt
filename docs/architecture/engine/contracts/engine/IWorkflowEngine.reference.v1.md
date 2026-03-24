@@ -55,6 +55,14 @@ interface RunContext {
 // (e.g., by a higher-level coordinator using deployment config and/or plan.metadata.targetAdapter)
 ```
 
+**Internal dispatch rule (NORMATIVE)**:
+
+- Public callers provide `RunContext` only.
+- The engine/application layer resolves an internal `ResolvedRunContext`
+  carrying `logicalAttemptId` and recovery lineage (`parentRunId`,
+  `originRunId`) before invoking a provider adapter.
+- Public callers MUST NOT supply `logicalAttemptId`.
+
 ### 2.1.1 EngineRunRef (Structured, Adapter-Polymorphic)
 
 ```ts
@@ -133,14 +141,15 @@ All operations and events MUST include these identifiers for traceability:
 - **`engineAttemptId`**: Physical attempt counter (engine/worker restarts, infra retries)
   - Increments on: workflow restart, worker crash recovery, continue-as-new
   - Used for: debugging, infra failure detection, cost attribution
-- **`logicalAttemptId`**: Logical attempt counter (step/run retries per planner policy)
-  - Increments on: explicit RETRY_STEP signal, automatic retry per plan policy
-  - Used for: deterministic replay, idempotency key generation, user-visible attempt count
+- **`logicalAttemptId`**: Business attempt counter resolved by the engine/application layer
+  - Increments on: business recovery lineage (`RETRY_RUN`) and future engine-owned partial-retry semantics
+  - MUST NOT increment for provider-native technical retries
+  - Used for: deterministic replay, idempotency key generation, user-visible business attempt count
 
 **Semantic difference**:
 
 - `engineAttemptId` = "how many times did the infrastructure restart this?"
-- `logicalAttemptId` = "how many times did the user/policy retry this step?"
+- `logicalAttemptId` = "how many business recovery attempts exist in this lineage?"
 
 **Idempotency rule (NORMATIVE)**:
 

@@ -77,7 +77,6 @@ describe('EngineStartRunUseCase', () => {
       environmentId: 'env-1',
       runId: 'run-test-1',
       targetAdapter: 'mock',
-      logicalAttemptId: 1,
     });
   });
 

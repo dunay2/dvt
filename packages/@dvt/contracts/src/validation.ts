@@ -41,6 +41,8 @@ import {
   type PlanCoreSchemaT,
   PlanRefSchema,
   type PlanRefSchemaT,
+  ResolvedRunContextSchema,
+  type ResolvedRunContextSchemaT,
   RunContextSchema,
   type RunContextSchemaT,
   RunEventWriteSchema,
@@ -137,6 +139,10 @@ export function parsePlanRef(input: unknown): PlanRefSchemaT {
 
 export function parseRunContext(input: unknown): RunContextSchemaT {
   return parseWithSchema(RunContextSchema, input);
+}
+
+export function parseResolvedRunContext(input: unknown): ResolvedRunContextSchemaT {
+  return parseWithSchema(ResolvedRunContextSchema, input);
 }
 
 export function parseSignalRequest(input: unknown): SignalRequestSchemaT {

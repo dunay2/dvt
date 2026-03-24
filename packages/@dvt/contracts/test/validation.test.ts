@@ -5,6 +5,7 @@ import {
   parsePlannerGraphSourceV1,
   parsePlannerInputEnvelopeV2,
   parsePlanRef,
+  parseResolvedRunContext,
   parseRunContext,
   parseSignalRequest,
 } from '../src/validation.js';
@@ -41,6 +42,36 @@ describe('contracts: validation helpers', () => {
     });
 
     expect(ctx.targetAdapter).toBe('temporal');
+  });
+
+  it('rejects caller-owned logicalAttemptId on public RunContext', () => {
+    expect(() =>
+      parseRunContext({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        runId: 'run-1',
+        targetAdapter: 'temporal',
+        logicalAttemptId: 2,
+      })
+    ).toThrow(ContractValidationError);
+  });
+
+  it('parses ResolvedRunContext with engine-owned retry lineage', () => {
+    const ctx = parseResolvedRunContext({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'prod',
+      runId: 'run-2',
+      targetAdapter: 'temporal',
+      logicalAttemptId: 2,
+      parentRunId: 'run-1',
+      originRunId: 'run-0',
+    });
+
+    expect(ctx.logicalAttemptId).toBe(2);
+    expect(ctx.parentRunId).toBe('run-1');
+    expect(ctx.originRunId).toBe('run-0');
   });
 
   it('throws ContractValidationError for malformed planner graph source', () => {

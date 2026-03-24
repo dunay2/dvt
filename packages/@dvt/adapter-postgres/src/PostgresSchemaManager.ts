@@ -511,6 +511,55 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       );
     },
   },
+  {
+    version: 'core_011_retry_lineage_columns',
+    description: 'Persist logical attempt and retry lineage authority in run_metadata',
+    run: async (client, schema) => {
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata ADD COLUMN IF NOT EXISTS logical_attempt_id INTEGER NOT NULL DEFAULT 1`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata ADD COLUMN IF NOT EXISTS parent_run_id TEXT`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata ADD COLUMN IF NOT EXISTS origin_run_id TEXT`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata ADD COLUMN IF NOT EXISTS next_retry_attempt_id INTEGER NOT NULL DEFAULT 2`
+      );
+      await client.query(`
+        UPDATE ${sq(schema)}.run_metadata
+        SET origin_run_id = run_id
+        WHERE origin_run_id IS NULL
+      `);
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata ALTER COLUMN origin_run_id SET NOT NULL`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS run_metadata_origin_run_id_idx
+        ON ${sq(schema)}.run_metadata (origin_run_id)
+      `);
+    },
+    rollbackDescription:
+      'Drop the logical_attempt_id, parent_run_id, origin_run_id, and next_retry_attempt_id columns and index from run_metadata',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_metadata_origin_run_id_idx')}`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS next_retry_attempt_id`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS origin_run_id`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS parent_run_id`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_metadata DROP COLUMN IF EXISTS logical_attempt_id`
+      );
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------

@@ -18,6 +18,7 @@ export type {
   IPlanIntegrityValidator,
   IOutboxStorage,
   IRunStateStore,
+  ResolvedRunContext,
   RunBootstrapInput,
   RunMetadata,
   RunStateCommandPort,

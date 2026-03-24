@@ -168,6 +168,54 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       );
     }));
 
+  test('reserveRetryAttempt: allocates monotonic logical attempts from the origin run', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-retry-root'));
+
+      const first = await adapter.reserveRetryAttempt('t1', rid('run-retry-root'));
+      const second = await adapter.reserveRetryAttempt('t1', rid('run-retry-root'));
+
+      expect(first).toEqual({
+        parentRunId: 'run-retry-root',
+        originRunId: 'run-retry-root',
+        logicalAttemptId: 2,
+      });
+      expect(second).toEqual({
+        parentRunId: 'run-retry-root',
+        originRunId: 'run-retry-root',
+        logicalAttemptId: 3,
+      });
+    }));
+
+  test('reserveRetryAttempt: keeps originRunId stable across recovered children', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-retry-chain-root'));
+      await adapter.bootstrapRunTx({
+        metadata: {
+          ...makeBootstrap('run-retry-chain-child').metadata,
+          logicalAttemptId: 2,
+          parentRunId: 'run-retry-chain-root',
+          originRunId: 'run-retry-chain-root',
+        },
+        firstEvents: [],
+      });
+
+      const reserved = await adapter.reserveRetryAttempt('t1', rid('run-retry-chain-child'));
+      expect(reserved).toEqual({
+        parentRunId: 'run-retry-chain-child',
+        originRunId: 'run-retry-chain-root',
+        logicalAttemptId: 3,
+      });
+
+      await expect(
+        adapter.getRunMetadataByRunId('t1', 'run-retry-chain-child')
+      ).resolves.toMatchObject({
+        logicalAttemptId: 2,
+        parentRunId: 'run-retry-chain-root',
+        originRunId: 'run-retry-chain-root',
+      });
+    }));
+
   // Ã¢â€â‚¬Ã¢â€â‚¬ appendAndEnqueueTx Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   test('appendAndEnqueueTx: idempotent Ã¢â‚¬â€ second append deduplicates', () =>

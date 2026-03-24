@@ -23,7 +23,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0013   | IRunStateStore.bootstrapRunTx                                                                   | Accepted                 | 2026-02-20                       | [ADR-0013-run-state-store-bootstrapRunTx.md](ADR-0013-run-state-store-bootstrapRunTx.md)                                                           |
 | ADR-0014   | Run-Driven Adapter Model                                                                        | Accepted                 | 2026-02-20                       | [ADR-0014-run-driven-adapter-model.md](ADR-0014-run-driven-adapter-model.md)                                                                       |
 | ADR-0015   | getRunStatus Read Model Separation                                                              | Accepted                 | 2026-02-20                       | [ADR-0015-getRunStatus-read-model-separation.md](ADR-0015-getRunStatus-read-model-separation.md)                                                   |
-| ADR-0016   | logicalAttemptId Ownership by Adapter                                                           | Accepted                 | 2026-02-20                       | [ADR-0016-logicalAttemptId-adapter-ownership.md](ADR-0016-logicalAttemptId-adapter-ownership.md)                                                   |
+| ADR-0016   | logicalAttemptId Ownership by Adapter                                                           | Superseded               | 2026-02-20 (updated: 2026-03-24) | [ADR-0016-logicalAttemptId-adapter-ownership.md](ADR-0016-logicalAttemptId-adapter-ownership.md)                                                   |
 | ADR-0017   | ExecutionPlan Schema Versioning & Compatibility                                                 | Accepted                 | 2026-02-21                       | [ADR-0017_ExecutionPlan_Schema_Versioning.md](ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                         |
 | ADR-0018   | Shared Kernel Ownership Governance (`@dvt/contracts`)                                           | Accepted                 | 2026-02-25                       | [ADR-0018_Shared_Kernel_Ownership_Governance.md](ADR-0018_Shared_Kernel_Ownership_Governance.md)                                                   |
 | ADR-0019   | Adapter Equivalence and Maintenance Boundary                                                    | Accepted                 | 2026-02-26                       | [ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md](ADR-0019_Adapter_Equivalence_and_Maintenance_Boundary.md)                               |
@@ -38,6 +38,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0037   | Run Event Lifecycle Archival, Verification, and Restore Model                                   | Accepted                 | 2026-03-19                       | [ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md](ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md) |
 | ADR-0038   | Delivery Buffer Retention and Purge Policy                                                      | Accepted                 | 2026-03-19                       | [ADR-0038-delivery-buffer-retention-and-purge-policy.md](ADR-0038-delivery-buffer-retention-and-purge-policy.md)                                   |
 | ADR-0039   | Hexagonal Port Hardening and SOLID Remediation                                                  | Accepted                 | 2026-03-22                       | [ADR-0039-hexagonal-port-hardening-and-solid-remediation.md](ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)                           |
+| ADR-0040   | Retry Ownership and Attempt Authority                                                           | Accepted                 | 2026-03-24                       | [ADR-0040-retry-ownership-and-attempt-authority.md](ADR-0040-retry-ownership-and-attempt-authority.md)                                             |
 
 ## Usage rules
 
@@ -50,4 +51,4 @@ Canonical catalog of ADRs in this repository.
 - [ADR landing page](index.md)
 - [ADR implementation status](ADR-Implementation-Status.md)
 
-_Last updated: 2026-03-22_
+_Last updated: 2026-03-24_

@@ -221,6 +221,19 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await expect(engine.startRun(makePlanRef(), invalidContext)).rejects.toThrow(
       /Validation failed/
     );
+
+    const callerOwnedAttemptContext = {
+      tenantId: 't',
+      projectId: 'p',
+      environmentId: 'dev',
+      runId: 'r',
+      targetAdapter: 'temporal',
+      logicalAttemptId: 2,
+    } as any;
+
+    await expect(engine.startRun(makePlanRef(), callerOwnedAttemptContext)).rejects.toThrow(
+      /Validation failed/
+    );
   });
 
   it('signal rejects invalid runtime boundary payloads', async () => {
@@ -349,6 +362,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(sawQueuedEventBeforeStart).toBe(true);
     const events = await store.listEvents('t', 'pre-bootstrap-1');
     expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
+    const meta = await store.getRunMetadataByRunId('t', 'pre-bootstrap-1');
+    expect(meta?.logicalAttemptId).toBe(1);
+    expect(meta?.originRunId).toBe('pre-bootstrap-1');
+    expect(meta?.parentRunId).toBeUndefined();
   });
 
   it('calls saveProviderRef when startRun returns a different runId than estimateRunRef', async () => {

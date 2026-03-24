@@ -2,7 +2,7 @@ import type {
   EngineRunRef,
   IProviderAdapter,
   PlanRef,
-  RunContext,
+  ResolvedRunContext,
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
@@ -39,7 +39,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
     this.observability = resolveTemporalObservability(deps.observability);
   }
 
-  startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
+  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
     return this.deps.adapter.startRun(planRef, ctx);
   }
 

@@ -1,4 +1,4 @@
-import type { RunContext } from '@dvt/contracts';
+import type { ResolvedRunContext, RunContext } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
@@ -37,7 +37,7 @@ class CountingAdapter implements IProviderAdapter {
 
   async startRun(
     planRef: import('@dvt/contracts').PlanRef,
-    ctx: RunContext
+    ctx: ResolvedRunContext
   ): Promise<{ provider: 'mock'; tenantId: string; workflowId: string; runId: string }> {
     this.startCalls += 1;
     // Debe devolver un EngineRunRef válido para provider 'mock'

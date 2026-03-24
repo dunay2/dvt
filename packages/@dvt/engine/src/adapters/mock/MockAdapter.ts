@@ -10,7 +10,7 @@
 import type {
   EngineRunRef,
   PlanRef,
-  RunContext,
+  ResolvedRunContext,
   RunStatusSnapshot,
   SignalRequest,
 } from '@dvt/contracts';
@@ -49,7 +49,7 @@ export class MockAdapter implements IProviderAdapter {
 
   constructor(private readonly deps: MockAdapterDeps) {}
 
-  estimateRunRef(ctx: RunContext): EngineRunRef {
+  estimateRunRef(ctx: ResolvedRunContext): EngineRunRef {
     return {
       provider: 'mock',
       tenantId: ctx.tenantId,
@@ -58,7 +58,7 @@ export class MockAdapter implements IProviderAdapter {
     };
   }
 
-  async startRun(planRef: PlanRef, ctx: RunContext): Promise<EngineRunRef> {
+  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
     const plan: ExecutionPlan = this.deps.planFetcher
       ? await this.deps.planFetcher.fetch(planRef)
       : {

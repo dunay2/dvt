@@ -36,6 +36,7 @@ import type {
   ListRunsOptions,
   IRunSnapshotStalenessQuery,
   OutboxRecord,
+  RetryAttemptReservation,
   RunBootstrapInput,
   RunId,
   RunMetadata,
@@ -286,6 +287,14 @@ export class PostgresStateStoreAdapter
   async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
     this.ready();
     return this.metadataRepo.listRuns(options);
+  }
+
+  async reserveRetryAttempt(
+    tenantId: string,
+    sourceRunId: RunId
+  ): Promise<RetryAttemptReservation> {
+    this.ready();
+    return this.metadataRepo.reserveRetryAttempt(tenantId, sourceRunId);
   }
 
   async listEvents(
