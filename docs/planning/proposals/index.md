@@ -13,6 +13,7 @@ Draft proposals and candidate changes. Non-normative.
 
 - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md)
 - [DDD Hexagonal Modularization Plan](ddd-hexagonal-modularization-plan-20260323.md)
+- [Docs Governance Tooling Future Tasks](docs-governance-tooling-future-tasks-20260324.md)
 - [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
 - [Domain Cohesion Refactor Plan](../domain-cohesion-refactor-plan.md)
