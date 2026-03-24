@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 7
-- `queued`: 30
+- `review`: 6
+- `queued`: 28
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -37,9 +37,6 @@ block in the workboard.
 | `P0`     | `S18`    | Already in Review; closes explicit state-store role bindings in the composition root.    | Merge review and lock the explicit root binding.                       |
 | `P1`     | `RC-A6`  | Already in `Review`; explicit prerequisite for the full state-store split sweep (`S02`). | Align dead-letter contract signatures with tenant-scoped concrete API. |
 | `P1`     | `S02`    | Already in `Review`; closes the state-store boundary split.                              | Merge review and lock the write/read/maintenance contract split.       |
-| `P1`     | `S15`    | Already in `Review`; closes snapshot regression under concurrency.                       | Merge review and lock monotonic snapshot CAS baseline.                 |
-| `P1`     | `S15-F1` | Follow-up to S15; makes stale snapshot write discards visible.                           | Expose stale-write discard outcome to repair/archival callers.         |
-| `P1`     | `S14`    | Correctness drift risk in gateway decisions across workflow segments.                    | Preserve `completedStepResults` or fail loudly on missing context.     |
 | `P1`     | `S13`    | Already in Review; closes duplicate provider-adapter contract drift.                     | Remove duplicate `estimateRunRef` declaration and lock the cleanup.    |
 | `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                                   | Add payload version handling in envelope flow.                         |
 | `P1`     | `S07`    | No blockers; unlocks `S11`.                                                              | Normalize lineage job naming + sink shape.                             |
@@ -81,7 +78,6 @@ flowchart LR
 
   RC_A6[RC-A6] --> S02[S02] --> S03[S03] --> F1[F1]
   RC_A5[RC-A5]
-  S15F1[S15-F1]
   RC_B5[RC-B5]
   RC_D1[RC-D1]
   RC_D1A[RC-D1A]
@@ -91,7 +87,6 @@ flowchart LR
   DHM[DHM]
 
   S02 --> S12[S12]
-  S14[S14]
   S17[S17]
   F4[F4]
   F5[F5]
@@ -116,14 +111,13 @@ flowchart LR
 If you want maximum parallelism now without violating gates, start these lanes:
 
 1. `API lane`: close `G4-PR3`.
-2. `Correctness lane`: `S14`.
+2. `State-store lane`: `RC-A6` then `S02` then `S03` then `F1`.
 3. `Version lane`: `S16`.
-4. `State-store lane`: `RC-A6` then `S02` then `S03` then `F1`.
-5. `Traceability lane`: `S07` + `RC-B5`.
-6. `Planner lane`: `S09`.
-7. `Ops lane`: `RC-D1` + `RC-D1A` + `RC-D2` + `RC-D3`.
-8. `Governance lane`: `S13` + `F4` + `F5` + `A1` + `A2` + `R7`.
-9. `Architecture lane`: `DHM` (start with `WS5`).
+4. `Traceability lane`: `S07` + `RC-B5`.
+5. `Planner lane`: `S09`.
+6. `Ops lane`: `RC-D1` + `RC-D1A` + `RC-D2` + `RC-D3`.
+7. `Governance lane`: `S13` + `F4` + `F5` + `A1` + `A2` + `R7`.
+8. `Architecture lane`: `DHM` (start with `WS5`).
 
 ## Usage Rule
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.11.0](https://github.com/dunay2/dvt/compare/v4.10.0...v4.11.0) (2026-03-24)
+
+
+### Features
+
+* **adapters:** remove simulateError and harden intent identity ([#592](https://github.com/dunay2/dvt/issues/592)) ([ea6973d](https://github.com/dunay2/dvt/commit/ea6973d0a82c87a6e8318d1f8d18fccb604469b4))
+* **temporal:** Preserve completed step results across continue-as-new ([#596](https://github.com/dunay2/dvt/issues/596)) ([dcd9a70](https://github.com/dunay2/dvt/commit/dcd9a70fe205c2b99996f2a95923d1c89b77b041))
+
 ## [4.10.0](https://github.com/dunay2/dvt/compare/v4.9.3...v4.10.0) (2026-03-24)
 
 
