@@ -44,7 +44,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     }
   ): Promise<void> {
     const current = this.metadataByRunId.get(runId);
-    if (!current || current.tenantId !== tenantId) throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    if (current?.tenantId !== tenantId) throw new Error(`RUN_NOT_FOUND: ${runId}`);
     this.metadataByRunId.set(runId, {
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,
