@@ -23,4 +23,8 @@ export type {
 export { MAX_OUTBOX_ATTEMPTS } from '@dvt/contracts';
 
 export type StepSnapshot = import('@dvt/contracts').WorkflowSnapshot['steps'][string];
-export type { ArchivedTerminalSnapshot, TerminalSnapshotPinStore } from '@dvt/state-store';
+export type {
+  ArchivedTerminalSnapshot,
+  TerminalSnapshotPinResult,
+  TerminalSnapshotPinStore,
+} from '@dvt/state-store';

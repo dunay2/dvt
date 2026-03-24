@@ -21,6 +21,7 @@ import {
   type RestoreLogRecord,
   type RunArchiveDeletionPolicy,
   type RunEventRetentionPolicy,
+  type TerminalSnapshotPinResult,
   type TerminalSnapshotPinStore,
 } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
@@ -321,7 +322,9 @@ export class PostgresRunArchiveStore
     });
   }
 
-  async pinTerminalSnapshot(snapshot: ArchivedTerminalSnapshot): Promise<void> {
+  async pinTerminalSnapshot(
+    snapshot: ArchivedTerminalSnapshot
+  ): Promise<TerminalSnapshotPinResult> {
     return this.snapshotStore.pinTerminalSnapshot(snapshot);
   }
 

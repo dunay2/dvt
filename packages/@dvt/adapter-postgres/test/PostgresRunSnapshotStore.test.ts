@@ -1,4 +1,4 @@
-import type { EventEnvelope } from '@dvt/contracts';
+import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { buildArchivedTerminalSnapshot, buildPinnedTerminalSnapshot } from '@dvt/state-store';
 import { describe, expect, it } from 'vitest';
@@ -20,6 +20,88 @@ class ScriptedClient {
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<QueryResult<T>> {
     this.queries.push({ sql, params });
     return this.responder<T>(sql, params);
+  }
+}
+
+interface SnapshotState {
+  snapshot: WorkflowSnapshot;
+  lastRunSeq: number;
+  archiveUnitKey: string | null;
+  eventChecksumSha256: string | null;
+  archivedAt: string | null;
+}
+
+class SnapshotUpsertClient {
+  readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
+
+  constructor(private readonly state: SnapshotState) {}
+
+  async query<T = unknown>(sql: string, params?: unknown[]): Promise<QueryResult<T>> {
+    this.queries.push({ sql, params });
+
+    if (sql.includes('FROM "dvt".run_metadata')) {
+      return { rows: [{ run_id: 'run-1' }] as T[], rowCount: 1 };
+    }
+
+    if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
+      const [, snapshotJson, lastRunSeq, , archiveUnitKey, eventChecksumSha256, archivedAt] =
+        params ?? [];
+      const incomingSeq = Number(lastRunSeq);
+      const hasCasGuard = sql.includes('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq');
+      const shouldUpdate = !hasCasGuard || this.state.lastRunSeq <= incomingSeq;
+
+      if (shouldUpdate) {
+        this.state.snapshot = JSON.parse(snapshotJson as string) as WorkflowSnapshot;
+        this.state.lastRunSeq = incomingSeq;
+        if (archiveUnitKey !== undefined) {
+          this.state.archiveUnitKey = (archiveUnitKey as string | null | undefined) ?? null;
+        }
+        if (eventChecksumSha256 !== undefined) {
+          this.state.eventChecksumSha256 =
+            (eventChecksumSha256 as string | null | undefined) ?? null;
+        }
+        if (archivedAt !== undefined) {
+          this.state.archivedAt = (archivedAt as string | null | undefined) ?? null;
+        }
+      }
+
+      return { rows: [] as T[], rowCount: shouldUpdate ? 1 : 0 };
+    }
+
+    if (sql.includes('SELECT s.last_run_seq') && sql.includes('FROM "dvt".run_snapshots s')) {
+      return {
+        rows: [{ last_run_seq: this.state.lastRunSeq }] as T[],
+        rowCount: 1,
+      };
+    }
+
+    if (
+      sql.includes('FROM "dvt".run_snapshots s') &&
+      sql.includes('s.archive_unit_key IS NOT NULL')
+    ) {
+      if (this.state.archiveUnitKey === null) {
+        return { rows: [] as T[], rowCount: 0 };
+      }
+
+      return {
+        rows: [
+          {
+            snapshot: this.state.snapshot,
+            last_run_seq: this.state.lastRunSeq,
+            archive_unit_key: this.state.archiveUnitKey,
+            event_checksum_sha256: this.state.eventChecksumSha256,
+            archived_at: this.state.archivedAt,
+          },
+        ] as T[],
+        rowCount: 1,
+      };
+    }
+
+    return { rows: [] as T[], rowCount: 0 };
+  }
+
+  get currentState(): SnapshotState {
+    return this.state;
   }
 }
 
@@ -128,7 +210,7 @@ describe('PostgresRunSnapshotStore', () => {
       pinned,
     });
 
-    await store.pinTerminalSnapshot(archived);
+    const result = await store.pinTerminalSnapshot(archived);
 
     const upsert = client.queries.find((entry) =>
       entry.sql.includes('INSERT INTO "dvt".run_snapshots')
@@ -144,6 +226,123 @@ describe('PostgresRunSnapshotStore', () => {
       archived.eventChecksumSha256,
       '2026-03-20T00:00:00.000Z',
     ]);
+    expect(result).toEqual({
+      outcome: 'APPLIED',
+      tenantId: 'tenant-1',
+      runId: 'run-1',
+      archiveUnitKey: 'tb07_2026_03_19',
+      incomingLastRunSeq: 2,
+      storedLastRunSeq: 2,
+    });
+  });
+
+  it('surfaces a discarded terminal snapshot pin when the stored seq is newer', async () => {
+    const existingSnapshot = {
+      runId: 'run-1',
+      status: 'COMPLETED' as const,
+      startedAt: '2026-03-19T00:00:00.000Z',
+      completedAt: '2026-03-19T00:10:00.000Z',
+      paused: false,
+      cancelling: false,
+      gatewayDecisions: {},
+      steps: {},
+    };
+    const client = new SnapshotUpsertClient({
+      snapshot: existingSnapshot,
+      lastRunSeq: 5,
+      archiveUnitKey: 'tb07_2026_03_19',
+      eventChecksumSha256: 'c'.repeat(64),
+      archivedAt: '2026-03-20T00:00:00.000Z',
+    });
+    const store = new PostgresRunSnapshotStore(
+      'dvt',
+      () => '2026-03-20T00:00:01.000Z',
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+    const staleSnapshot = buildArchivedTerminalSnapshot({
+      tenantId: 'tenant-1',
+      archiveUnitKey: 'tb07_2026_03_19',
+      archivedAtIso: '2026-03-20T00:00:00.000Z',
+      pinned: buildPinnedTerminalSnapshot({
+        snapshot: {
+          runId: 'run-1',
+          status: 'FAILED',
+          startedAt: '2026-03-19T00:00:00.000Z',
+          completedAt: '2026-03-19T00:11:00.000Z',
+          paused: false,
+          cancelling: false,
+          gatewayDecisions: {},
+          steps: {},
+        },
+        events: [
+          makeEvent({ runId: 'run-1', runSeq: 1 }),
+          makeEvent({ runId: 'run-1', runSeq: 4 }),
+        ],
+      }),
+    });
+
+    const result = await store.pinTerminalSnapshot(staleSnapshot);
+
+    expect(result).toEqual({
+      outcome: 'DISCARDED_STALE_SEQUENCE',
+      tenantId: 'tenant-1',
+      runId: 'run-1',
+      archiveUnitKey: 'tb07_2026_03_19',
+      incomingLastRunSeq: 4,
+      storedLastRunSeq: 5,
+    });
+    expect(client.currentState.lastRunSeq).toBe(5);
+    expect(client.currentState.snapshot).toEqual(existingSnapshot);
+  });
+
+  it('fails loudly when a discarded pin cannot read the stored seq', async () => {
+    const client = new ScriptedClient(async <T>(sql: string) => {
+      if (sql.includes('FROM "dvt".run_metadata')) {
+        return { rows: [{ run_id: 'run-1' }] as T[], rowCount: 1 };
+      }
+
+      if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
+        return { rows: [] as T[], rowCount: 0 };
+      }
+
+      if (sql.includes('SELECT s.last_run_seq') && sql.includes('FROM "dvt".run_snapshots s')) {
+        return { rows: [] as T[], rowCount: 0 };
+      }
+
+      return { rows: [] as T[], rowCount: 0 };
+    });
+    const store = new PostgresRunSnapshotStore(
+      'dvt',
+      () => '2026-03-20T00:00:01.000Z',
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+    const staleSnapshot = buildArchivedTerminalSnapshot({
+      tenantId: 'tenant-1',
+      archiveUnitKey: 'tb07_2026_03_19',
+      archivedAtIso: '2026-03-20T00:00:00.000Z',
+      pinned: buildPinnedTerminalSnapshot({
+        snapshot: {
+          runId: 'run-1',
+          status: 'FAILED',
+          startedAt: '2026-03-19T00:00:00.000Z',
+          completedAt: '2026-03-19T00:11:00.000Z',
+          paused: false,
+          cancelling: false,
+          gatewayDecisions: {},
+          steps: {},
+        },
+        events: [
+          makeEvent({ runId: 'run-1', runSeq: 1 }),
+          makeEvent({ runId: 'run-1', runSeq: 4 }),
+        ],
+      }),
+    });
+
+    await expect(store.pinTerminalSnapshot(staleSnapshot)).rejects.toThrow(
+      /ARCHIVE_TERMINAL_SNAPSHOT_PIN_DISCARDED_WITHOUT_ROW: run-1/
+    );
   });
 
   it('rejects pinning when the tenant does not own the run', async () => {

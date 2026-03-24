@@ -17,8 +17,8 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 7
-- `queued`: 32
+- `review`: 6
+- `queued`: 29
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
 
@@ -82,10 +82,7 @@ flowchart LR
   G43[G4-PR3] --> G44[G4-PR4] --> G45[G4-PR5]
 
   RC_A6[RC-A6] --> S02[S02] --> S03[S03] --> F1[F1]
-  RC_A1[RC-A1]
-  RC_A2[RC-A2]
   RC_A5[RC-A5]
-  S15F1[S15-F1]
   RC_B1[RC-B1]
   RC_B2[RC-B2]
   RC_B5[RC-B5]
@@ -98,7 +95,6 @@ flowchart LR
 
   S02 --> S12[S12]
   S14[S14]
-  S15[S15]
   S17[S17]
   F4[F4]
   F5[F5]
@@ -123,7 +119,7 @@ flowchart LR
 If you want maximum parallelism now without violating gates, start these lanes:
 
 1. `API lane`: close `G4-PR3`.
-2. `Correctness lane`: `RC-A1` + `RC-A2` + `S15` + `S15-F1` + `S14`.
+2. `Correctness lane`: `S14`.
 3. `Version lane`: `S16`.
 4. `State-store lane`: `RC-A6` then `S02` then `S03` then `F1`.
 5. `Traceability lane`: `RC-B1` + `RC-B2` + `S07` + `RC-B5`.
