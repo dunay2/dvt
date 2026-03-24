@@ -1,4 +1,4 @@
-﻿import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
@@ -31,9 +31,11 @@ describe('modules', () => {
       authorizer: {} as never,
       engine: {} as never,
       adapters: new Map(),
-      stateStoreRead: {} as never,
-      stateStoreWrite: {} as never,
-      stateStoreMaintenance: {} as never,
+      stateStore: {
+        read: {} as never,
+        write: {} as never,
+        maintenance: {} as never,
+      },
       async migrate() {
         migrateCalls += 1;
       },

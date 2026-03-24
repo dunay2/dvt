@@ -318,16 +318,17 @@ to `outbox_dead_letter` and deleted from `outbox`.
 - resets delivery state;
 - deletes replayed rows from `outbox_dead_letter`.
 
-## Deprecated Paths
+## Removed Paths
 
-These methods still exist but are explicitly not the preferred baseline:
+The deprecated write shortcuts have been removed from the adapter surface:
 
 - `saveRunMetadata`
 - `appendEventsTx`
 
-They bypass parts of the canonical atomic path and are documented in code as
-deprecated. New work should anchor on `bootstrapRunTx` and
-`appendAndEnqueueTx`.
+Canonical write entry points are now only:
+
+- `bootstrapRunTx`
+- `appendAndEnqueueTx`
 
 ## Verification
 

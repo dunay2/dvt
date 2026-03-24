@@ -31,6 +31,7 @@ import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDu
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
+import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
 
 function requireDatabaseUrl(env: Env): string {
@@ -70,9 +71,7 @@ export async function buildProtectedRuntimeModule(
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
   });
-  const stateStoreRead = stateStore;
-  const stateStoreWrite = stateStore;
-  const stateStoreMaintenance = stateStore;
+  const stateStoreRoles = bindStateStoreRoles(stateStore);
 
   const intentStore = new PostgresStartRunIntentStore({
     connectionString: databaseUrl,
@@ -136,7 +135,7 @@ export async function buildProtectedRuntimeModule(
   });
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
-    stateStore: stateStoreRead,
+    stateStore: stateStoreRoles.read,
     projector,
     observability,
     planFetcher: executablePlanResolver,
@@ -152,8 +151,8 @@ export async function buildProtectedRuntimeModule(
       planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
     },
     persistence: {
-      stateStoreRead,
-      stateStoreWrite,
+      stateStoreRead: stateStoreRoles.read,
+      stateStoreWrite: stateStoreRoles.write,
       intentStore,
     },
     runtime: { adapters },
@@ -207,9 +206,7 @@ export async function buildProtectedRuntimeModule(
     authorizer: commandAuthorizer,
     engine,
     adapters,
-    stateStoreRead,
-    stateStoreWrite,
-    stateStoreMaintenance,
+    stateStore: stateStoreRoles,
     migrate: async () => {
       await accessRepo.migrate();
       await stateStore.migrate();

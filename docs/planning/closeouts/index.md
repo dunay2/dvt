@@ -2,7 +2,7 @@
 title: Planning Closeouts
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-03-14
+last_reviewed: 2026-03-24
 ---
 
 # Planning Closeouts
@@ -22,6 +22,10 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260324 S12 Remove Deprecated State-Store Methods Closeout](20260324-s12-remove-deprecated-state-store-methods-closeout.md)
+- [20260324 Schema Migration Rollback Closeout](20260324-schema-migration-rollback-closeout.md)
+- [20260324 S18 Follow-Up Proposal Capture Closeout](20260324-s18-follow-up-proposal-capture-closeout.md)
+- [20260324 S18 Explicit State-Store Root Bindings Closeout](20260324-s18-explicit-state-store-root-bindings-closeout.md)
 - [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
 - [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
 - [20260321 Gap 5 PR1 Export Verifier Closeout](20260321-gap-5-pr1-export-verifier-closeout.md)

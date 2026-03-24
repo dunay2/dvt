@@ -18,6 +18,7 @@ import type { IObservability } from '@dvt/observability';
 import type { FastifyBaseLogger } from 'fastify';
 
 import { getPgPool } from '../db/pool.js';
+import { bindStateStoreRoles, type StateStoreRoleBindings } from '../modules/stateStoreRoles.js';
 import type { Env } from '../plugins/env.js';
 
 export interface IntentReconcilerRuntimeHandle {
@@ -32,9 +33,8 @@ export interface ReconcilerRuntimeHealthHooks {
 
 interface RuntimeStores {
   stateStore: PostgresStateStoreAdapter;
+  stateStoreRoles: StateStoreRoleBindings;
   intentStore: PostgresStartRunIntentStore;
-  stateStoreRead: IRunStateStoreRead;
-  stateStoreWrite: IRunStateStoreWrite;
 }
 
 interface ReconcilerRuntimeConfig {
@@ -99,20 +99,19 @@ function createRuntimeStores(config: ReconcilerRuntimeConfig): RuntimeStores {
     queryTimeoutMs: config.queryTimeoutMs,
     outboxShardCount: config.outboxShardCount,
   });
-  const stateStoreRead = stateStore;
-  const stateStoreWrite = stateStore;
+  const stateStoreRoles = bindStateStoreRoles(stateStore);
   const intentStore = new PostgresStartRunIntentStore({
     pool,
     schema: config.schema,
     statementTimeoutMs: config.statementTimeoutMs,
     queryTimeoutMs: config.queryTimeoutMs,
   });
-  return { stateStore, intentStore, stateStoreRead, stateStoreWrite };
+  return { stateStore, stateStoreRoles, intentStore };
 }
 
 function resolveReconcilerAdapters(
   providers: readonly EngineRunRef['provider'][],
-  stateStore: IRunStateStoreRead
+  stateStoreRead: IRunStateStoreRead
 ): Map<EngineRunRef['provider'], IProviderAdapter> {
   const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>();
   for (const provider of providers) {
@@ -120,7 +119,7 @@ function resolveReconcilerAdapters(
       adapters.set(
         'mock',
         new MockAdapter({
-          stateStore,
+          stateStore: stateStoreRead,
           projector: new SnapshotProjector(),
         })
       );
@@ -214,16 +213,16 @@ export async function createIntentReconcilerRuntime(
   if (config === null) return null;
 
   const stores = createRuntimeStores(config);
-  const { stateStore, stateStoreRead, stateStoreWrite, intentStore } = stores;
+  const { stateStore, stateStoreRoles, intentStore } = stores;
   await Promise.all([stateStore.migrate(), intentStore.migrate()]);
-  const adapters = resolveReconcilerAdapters(config.providers, stateStoreRead);
+  const adapters = resolveReconcilerAdapters(config.providers, stateStoreRoles.read);
   if (adapters.size === 0) {
     throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');
   }
 
   const maintenance = createMaintenanceService(
-    stateStoreRead,
-    stateStoreWrite,
+    stateStoreRoles.read,
+    stateStoreRoles.write,
     intentStore,
     adapters,
     observability
