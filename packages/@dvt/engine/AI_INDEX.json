@@ -499,14 +499,6 @@
       "tokenCount": 24
     },
     {
-      "path": "src/state/IRunStateStore.ts",
-      "title": "IRunStateStore.ts",
-      "summary": "import type { AppendResult, RunEventInput, RunEventPersisted, RunMetadata, } from '../contracts/runEvents.js';",
-      "keywords": [],
-      "lastUpdated": "2026-02-20T09:10:31.099Z",
-      "tokenCount": 13
-    },
-    {
       "path": "src/types/index.ts",
       "title": "index.ts",
       "summary": "// ...migrated from engine/src/types/index.ts...",

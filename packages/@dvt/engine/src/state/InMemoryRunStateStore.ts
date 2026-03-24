@@ -9,13 +9,12 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
-
 import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
   RunBootstrapInput,
-} from './IRunStateStore.js';
+} from '../ports/IRunStateStore.js';
 
 export class InMemoryRunStateStore implements IRunStateStore {
   private readonly metadataByRunId = new Map<string, RunMetadata>();
