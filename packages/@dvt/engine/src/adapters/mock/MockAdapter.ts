@@ -18,12 +18,12 @@ import type {
 import type { ExecutionPlan } from '../../contracts/executionPlan.js';
 import { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import { SnapshotProjector } from '../../core/SnapshotProjector.js';
-import type { IRunStateStore } from '../../ports/IRunStateStore.js';
+import type { IRunStateStoreRead } from '../../ports/IRunStateStore.js';
 import type { IClock } from '../../utils/clock.js';
 import type { IProviderAdapter } from '../IProviderAdapter.js';
 
 export interface MockAdapterDeps {
-  stateStore: IRunStateStore;
+  stateStore: IRunStateStoreRead;
   /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */
   clock?: IClock;
   /** @deprecated Mock adapter no longer appends events directly; retained for compatibility. */

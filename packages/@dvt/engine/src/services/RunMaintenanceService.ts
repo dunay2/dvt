@@ -23,13 +23,13 @@ import type {
   ReconcileOrphanedIntentsOptions,
   ReconcileOrphanedIntentsResult,
 } from '../ports/IRunMaintenanceService.js';
-import type { IRunStateStore } from '../ports/IRunStateStore.js';
+import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IAuthorizer } from '../security/authorizer.js';
 import type { IClock } from '../utils/clock.js';
 
 export interface RunMaintenanceServiceDeps {
-  stateStore: IRunStateStore;
+  stateStore: IRunStateStoreRead & IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   authorizer: IAuthorizer;

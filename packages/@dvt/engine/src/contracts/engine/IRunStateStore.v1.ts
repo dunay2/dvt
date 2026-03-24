@@ -1,4 +1,7 @@
 export type {
+  IRunStateStoreMaintenance,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,

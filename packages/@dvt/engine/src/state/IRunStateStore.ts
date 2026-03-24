@@ -3,6 +3,9 @@
  * @deprecated Canonical port moved to ../ports/IRunStateStore.ts
  */
 export type {
+  IRunStateStoreMaintenance,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,

@@ -39,7 +39,7 @@ import {
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
 import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEvents.js';
-import type { IRunStateStore } from '../ports/IRunStateStore.js';
+import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import type { IClock } from '../utils/clock.js';
@@ -48,7 +48,7 @@ import { IdempotencyKeyBuilder } from './idempotency.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
 
 export interface WorkflowEngineDeps {
-  stateStore: IRunStateStore;
+  stateStore: IRunStateStoreRead & IRunStateStoreWrite;
   projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
@@ -707,7 +707,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async healthCheck(): Promise<HealthStatus> {
     const checks: Array<{ name: string; target: HealthCheckable }> = [
-      { name: 'stateStore', target: this.deps.stateStore as IRunStateStore & HealthCheckable },
+      { name: 'stateStore', target: this.deps.stateStore as HealthCheckable },
       ...Array.from(this.deps.adapters.values()).map((adapter) => ({
         name: `adapter-${adapter.provider}`,
         target: adapter as IProviderAdapter & HealthCheckable,

@@ -1,5 +1,8 @@
 export type { IWorkflowEngine } from './IWorkflowEngine.v1.js';
 export type {
+  IRunStateStoreMaintenance,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
