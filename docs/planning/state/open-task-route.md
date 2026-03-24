@@ -30,6 +30,8 @@ block in the workboard.
 | Priority | Task ID  | Why now                                                                                  | Next action                                                            |
 | -------- | -------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `P0`     | `G4-PR3` | Already in `Review`; unlocks API lane.                                                   | Close review/merge decision and lock baseline.                         |
+| `P0`     | `RC-A1`  | Already in `Review`; close QA/merge decision for production hardening.                   | Merge and lock runtime policy baseline.                                |
+| `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.                | Merge review and lock deterministic intent-id baseline.                |
 | `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.                      | Merge review and lock configurable claim timeout baseline.             |
 | `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.                         | Merge review and lock error-code normalization baseline.               |
 | `P0`     | `S18`    | Already in Review; closes explicit state-store role bindings in the composition root.    | Merge review and lock the explicit root binding.                       |
@@ -37,6 +39,8 @@ block in the workboard.
 | `P1`     | `S02`    | Already in `Review`; closes the state-store boundary split.                              | Merge review and lock the write/read/maintenance contract split.       |
 | `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.                            | Inject lineage outbox dependency directly in composition root.         |
 | `P1`     | `RC-B2`  | Unlocks real SQL facets output from existing compiled-code reference flow.               | Wire non-noop compiled-code resolver in lineage worker runtime.        |
+| `P1`     | `S15`    | Already in `Review`; closes snapshot regression under concurrency.                       | Merge review and lock monotonic snapshot CAS baseline.                 |
+| `P1`     | `S15-F1` | Follow-up to S15; makes stale snapshot write discards visible.                           | Expose stale-write discard outcome to repair/archival callers.         |
 | `P1`     | `S14`    | Correctness drift risk in gateway decisions across workflow segments.                    | Preserve `completedStepResults` or fail loudly on missing context.     |
 | `P1`     | `S13`    | Already in Review; closes duplicate provider-adapter contract drift.                     | Remove duplicate `estimateRunRef` declaration and lock the cleanup.    |
 | `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                                   | Add payload version handling in envelope flow.                         |
