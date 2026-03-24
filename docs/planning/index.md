@@ -42,6 +42,7 @@ Concept anchors for this page:
 
 ## Proposals
 
+- [CI Scope-Aware Validation And Docs-Only Fast Path](proposals/ci-scope-aware-validation-and-docs-only-fast-path-20260324.md)
 - [CI Workflow Deduplication Plan](proposals/ci-workflow-deduplication-plan-20260307.md)
 - [DDD Hexagonal Modularization Plan](proposals/ddd-hexagonal-modularization-plan-20260323.md)
 - [Documentation Restructuring Diagnostic And Roadmap](proposals/documentation-restructuring-diagnostic-and-roadmap.md)

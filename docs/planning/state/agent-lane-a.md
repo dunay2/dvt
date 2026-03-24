@@ -82,7 +82,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 
 ## Tasks
 
-- `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
+- `[x]` `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
 - `P0` `S02`: split `IRunStateStore` into write/read/maintenance roles.
 - `P1` schema migration rollback: make storage changes recoverable after `S02`.
 - `[x]` `P1` `S13`: remove duplicate `estimateRunRef` declaration.
