@@ -34,6 +34,7 @@ import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
+  IRunSnapshotStalenessQuery,
   OutboxRecord,
   RunBootstrapInput,
   RunId,
@@ -62,7 +63,9 @@ export interface PostgresAdapterConfig {
  * - idempotency is enforced by UNIQUE(run_id, idempotency_key)
  * - outbox entries are persisted with retry metadata
  */
-export class PostgresStateStoreAdapter implements IRunStateStore, IOutboxStorage {
+export class PostgresStateStoreAdapter
+  implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage
+{
   private readonly pool: Pool;
   private readonly ownsPool: boolean;
   private readonly schema: string;

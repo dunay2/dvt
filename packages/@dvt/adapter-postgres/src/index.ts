@@ -19,6 +19,7 @@ export type {
   IRunStateStoreMaintenance,
   IRunStateStoreRead,
   IRunStateStoreWrite,
+  IRunSnapshotStalenessQuery,
   ListEventsOptions,
   ListRunsOptions,
   OutboxClaimSelection,

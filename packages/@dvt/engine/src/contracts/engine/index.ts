@@ -8,6 +8,7 @@ export type {
   IRunStateStoreRead,
   IRunStateStoreWrite,
 } from '../../ports/IRunStateStore.js';
+export type { IRunSnapshotStalenessQuery } from '../../ports/IRunSnapshotStalenessQuery.js';
 export type { IProvider } from './IProvider.v1.js';
 export type { IPlanResolver, ResolvedPlan } from './IPlanResolver.v1.js';
 

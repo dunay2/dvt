@@ -17,7 +17,7 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 8
+- `review`: 7
 - `queued`: 32
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
@@ -35,7 +35,6 @@ block in the workboard.
 | `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.                      | Merge review and lock configurable claim timeout baseline.             |
 | `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.                         | Merge review and lock error-code normalization baseline.               |
 | `P0`     | `S18`    | Already in Review; closes explicit state-store role bindings in the composition root.    | Merge review and lock the explicit root binding.                       |
-| `P1`     | `S19`    | Already in Review; closes maintenance-query optionality drift.                           | Merge review and lock maintenance port ownership.                      |
 | `P1`     | `RC-A6`  | Already in `Review`; explicit prerequisite for the full state-store split sweep (`S02`). | Align dead-letter contract signatures with tenant-scoped concrete API. |
 | `P1`     | `S02`    | Already in `Review`; closes the state-store boundary split.                              | Merge review and lock the write/read/maintenance contract split.       |
 | `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.                            | Inject lineage outbox dependency directly in composition root.         |
@@ -83,7 +82,6 @@ flowchart LR
   G43[G4-PR3] --> G44[G4-PR4] --> G45[G4-PR5]
 
   RC_A6[RC-A6] --> S02[S02] --> S03[S03] --> F1[F1]
-  S18[S18] --> S19[S19]
   RC_A1[RC-A1]
   RC_A2[RC-A2]
   RC_A5[RC-A5]

@@ -128,3 +128,4 @@ export type {
   StepEventInput,
   WorkflowSnapshot,
 } from './engine/IRunStateStore.v1.js';
+export type { IRunSnapshotStalenessQuery } from './engine/IRunSnapshotStalenessQuery.v1.js';

@@ -203,17 +203,6 @@ export interface IRunStateStoreMaintenance {
    *   exist or belongs to a different tenant.
    */
   rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot>;
-
-  /**
-   * Returns up to `batchSize` runs that have a missing or stale snapshot.
-   *
-   * A snapshot is stale when `run_snapshots.last_run_seq` is less than the
-   * maximum `run_seq` in `run_events` for that run, or when no snapshot row
-   * exists at all.
-   *
-   * Used by the standalone projector worker (G7.2) to drive a catch-up loop.
-   */
-  listStaleSnapshotRuns(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
 }
 
 export type IRunStateStore = IRunStateStoreWrite & IRunStateStoreRead & IRunStateStoreMaintenance;

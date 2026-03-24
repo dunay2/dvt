@@ -16,6 +16,7 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
+import type { IRunSnapshotStalenessQuery } from '../ports/IRunSnapshotStalenessQuery.js';
 import type {
   IRunStateStore,
   ListEventsOptions,
@@ -24,8 +25,9 @@ import type {
 } from '../ports/IRunStateStore.js';
 
 import { InMemoryOutboxState } from './InMemoryOutboxState.js';
+import { collectStaleSnapshotRuns } from './snapshotStaleness.js';
 
-export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
+export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage {
   private static readonly EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 
   private readonly metadataByRunId = new Map<string, RunMetadata>();
@@ -275,24 +277,12 @@ export class InMemoryTxStore implements IRunStateStore, IOutboxStorage {
   async listStaleSnapshotRuns(
     batchSize: number
   ): Promise<Array<{ runId: string; tenantId: string }>> {
-    const runs = Array.from(this.metadataByRunId.values())
-      .filter((meta) => {
-        const events = this.eventsByRunId.get(meta.runId) ?? [];
-        const snapshotLastRunSeq = this.snapshotLastRunSeqByRunId.get(meta.runId);
-        if (snapshotLastRunSeq === undefined) return true;
-        const latestRunSeq = events.at(-1)?.runSeq ?? 0;
-        return snapshotLastRunSeq < latestRunSeq;
-      })
-      .sort((left, right) => {
-        const leftCreatedAt = Date.parse(left.createdAt ?? '');
-        const rightCreatedAt = Date.parse(right.createdAt ?? '');
-        return leftCreatedAt - rightCreatedAt || left.runId.localeCompare(right.runId);
-      });
-
-    return runs.slice(0, batchSize).map((meta) => ({
-      runId: meta.runId,
-      tenantId: meta.tenantId,
-    }));
+    return collectStaleSnapshotRuns(
+      this.metadataByRunId.values(),
+      (runId) => this.snapshotLastRunSeqByRunId.get(runId),
+      (runId) => this.eventsByRunId.get(runId)?.at(-1)?.runSeq ?? 0,
+      batchSize
+    );
   }
 
   async enqueueTx(_runId: string, _events: RunEventPersisted[]): Promise<void> {

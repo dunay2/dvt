@@ -35,12 +35,12 @@ tasks:
       convenience.
   - task_id: S19
     priority: P1
-    status: review
+    status: done
     objective:
-      isolate the maintenance query ownership by making `listStaleSnapshotRuns` mandatory on the
-      maintenance port.
+      isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated
+      query port.
     dependency: S18
-    target: Close maintenance port ownership explicitly.
+    target: Keep maintenance write-only and expose the staleness query separately.
   - task_id: schema-migration-rollback
     priority: P1
     status: queued

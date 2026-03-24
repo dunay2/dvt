@@ -9,6 +9,7 @@ import type {
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
+import type { IRunSnapshotStalenessQuery } from '../ports/IRunSnapshotStalenessQuery.js';
 import type {
   IRunStateStore,
   ListEventsOptions,
@@ -16,7 +17,9 @@ import type {
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
 
-export class InMemoryRunStateStore implements IRunStateStore {
+import { collectStaleSnapshotRuns } from './snapshotStaleness.js';
+
+export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalenessQuery {
   private readonly metadataByRunId = new Map<string, RunMetadata>();
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
@@ -188,23 +191,11 @@ export class InMemoryRunStateStore implements IRunStateStore {
   async listStaleSnapshotRuns(
     batchSize: number
   ): Promise<Array<{ runId: string; tenantId: string }>> {
-    const runs = Array.from(this.metadataByRunId.values())
-      .filter((meta) => {
-        const events = this.eventsByRunId.get(meta.runId) ?? [];
-        const snapshotLastRunSeq = this.snapshotLastRunSeqByRunId.get(meta.runId);
-        if (snapshotLastRunSeq === undefined) return true;
-        const latestRunSeq = events.at(-1)?.runSeq ?? 0;
-        return snapshotLastRunSeq < latestRunSeq;
-      })
-      .sort((left, right) => {
-        const leftCreatedAt = Date.parse(left.createdAt ?? '');
-        const rightCreatedAt = Date.parse(right.createdAt ?? '');
-        return leftCreatedAt - rightCreatedAt || left.runId.localeCompare(right.runId);
-      });
-
-    return runs.slice(0, batchSize).map((meta) => ({
-      runId: meta.runId,
-      tenantId: meta.tenantId,
-    }));
+    return collectStaleSnapshotRuns(
+      this.metadataByRunId.values(),
+      (runId) => this.snapshotLastRunSeqByRunId.get(runId),
+      (runId) => this.eventsByRunId.get(runId)?.at(-1)?.runSeq ?? 0,
+      batchSize
+    );
   }
 }
