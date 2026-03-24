@@ -102,9 +102,7 @@ function createCompiledCodeReader(
   return new CompositeCompiledCodeReader(readersByScheme);
 }
 
-function createS3Client(
-  env: S3ResolverEnv
-): S3Client {
+function createS3Client(env: S3ResolverEnv): S3Client {
   const region = resolveS3Region(env);
   if (!region) {
     throw new CompiledCodeReaderError(
@@ -121,9 +119,7 @@ function createS3Client(
   });
 }
 
-function createS3UriCompiledCodeReader(
-  env: CompiledCodeResolverEnv
-): ICompiledCodeReader {
+function createS3UriCompiledCodeReader(env: CompiledCodeResolverEnv): ICompiledCodeReader {
   return new S3UriCompiledCodeReader(env);
 }
 
@@ -209,9 +205,7 @@ function parseS3Uri(uri: string): { bucket: string; key: string } | null {
   return { bucket, key };
 }
 
-function resolveS3Region(
-  env: S3ResolverEnv
-): string | null {
+function resolveS3Region(env: S3ResolverEnv): string | null {
   return (
     env.DVT_COMPILED_CODE_RESOLVER_S3_REGION ??
     process.env['AWS_REGION'] ??
@@ -253,10 +247,7 @@ function validateCompiledCodeResolverConfiguration(
   );
 }
 
-function toCompiledCodeBlob(
-  sourceUri: string,
-  bytes: Uint8Array
-): CompiledCodeBlob {
+function toCompiledCodeBlob(sourceUri: string, bytes: Uint8Array): CompiledCodeBlob {
   const sqlText = Buffer.from(bytes).toString('utf8');
   return {
     sourceUri,
@@ -278,5 +269,7 @@ function toCompiledCodeReaderError(sourceUri: string, error: unknown): CompiledC
     );
   }
 
-  return new CompiledCodeReaderError(`Failed to read compiled code from URI ${sourceUri}: ${String(error)}`);
+  return new CompiledCodeReaderError(
+    `Failed to read compiled code from URI ${sourceUri}: ${String(error)}`
+  );
 }
