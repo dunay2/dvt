@@ -17,7 +17,7 @@ Authoritative task source remains:
 ## Current Open Snapshot
 
 - `in_progress`: 0
-- `review`: 7
+- `review`: 6
 - `queued`: 32
 - `blocked`: 4
 - `done`: tracked in closeouts and evidence (not listed here)
@@ -34,7 +34,6 @@ block in the workboard.
 | `P0`     | `RC-A2`  | Deterministic intent invariant is implemented and awaiting merge closure.                | Merge review and lock deterministic intent-id baseline.                |
 | `P0`     | `RC-D2`  | Already in `Review`; closes deployment-fragile claim lease timeout.                      | Merge review and lock configurable claim timeout baseline.             |
 | `P0`     | `RC-D3`  | Already in `Review`; closes temporal not-found robustness drift.                         | Merge review and lock error-code normalization baseline.               |
-| `P0`     | `S18`    | Already in Review; closes explicit state-store role bindings in the composition root.    | Merge review and lock the explicit root binding.                       |
 | `P1`     | `RC-A6`  | Already in `Review`; explicit prerequisite for the full state-store split sweep (`S02`). | Align dead-letter contract signatures with tenant-scoped concrete API. |
 | `P1`     | `S02`    | Already in `Review`; closes the state-store boundary split.                              | Merge review and lock the write/read/maintenance contract split.       |
 | `P1`     | `RC-B1`  | Removes concrete adapter-internal coupling in lineage worker.                            | Inject lineage outbox dependency directly in composition root.         |

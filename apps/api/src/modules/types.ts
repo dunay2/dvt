@@ -1,15 +1,10 @@
-import type {
-  EngineRunRef,
-  IProviderAdapter,
-  IRunStateStoreMaintenance,
-  IRunStateStoreRead,
-  IRunStateStoreWrite,
-  IWorkflowEngine,
-} from '@dvt/engine';
+import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
 import type { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
+
+import type { StateStoreRoleBindings } from './stateStoreRoles.js';
 
 export interface ProtectedRuntimeModule {
   facade: StartRunAuthorizedFacade;
@@ -17,9 +12,7 @@ export interface ProtectedRuntimeModule {
   authorizer: AuthorizeCommandScopeService;
   engine: IWorkflowEngine;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
-  stateStoreRead: IRunStateStoreRead;
-  stateStoreWrite: IRunStateStoreWrite;
-  stateStoreMaintenance: IRunStateStoreMaintenance;
+  stateStore: StateStoreRoleBindings;
   migrate: () => Promise<void>;
   close: () => Promise<void>;
 }

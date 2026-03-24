@@ -25,7 +25,7 @@ tasks:
     target: Merge review and lock the write/read/maintenance contract split.
   - task_id: S18
     priority: P0
-    status: review
+    status: done
     objective:
       make composition-root state-store role bindings explicit instead of reconstructing the
       aggregate by intersection.

@@ -1,9 +1,11 @@
-﻿import type { FastifyInstance } from 'fastify';
+﻿import type { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
 import { buildProviderAdapters } from '../src/modules/buildProviderAdapters.js';
 import { registerOperationalHooks } from '../src/modules/registerOperationalHooks.js';
+import { bindStateStoreRoles } from '../src/modules/stateStoreRoles.js';
 
 describe('modules', () => {
   it('buildProtectedRuntimeModule fails fast without DATABASE_URL', async () => {
@@ -12,6 +14,15 @@ describe('modules', () => {
     await expect(() =>
       buildProtectedRuntimeModule(fakeApp, {} as never, {} as never)
     ).rejects.toThrow(/DATABASE_URL is required when OIDC-protected runtime routes are enabled/);
+  });
+
+  it('bindStateStoreRoles keeps the role bundle explicit and alias-free', () => {
+    const store = {} as unknown as PostgresStateStoreAdapter;
+    const bindings = bindStateStoreRoles(store);
+
+    expect(bindings.read).toBe(store);
+    expect(bindings.write).toBe(store);
+    expect(bindings.maintenance).toBe(store);
   });
 
   it('registerOperationalHooks wires migrate and close hooks', async () => {
@@ -31,9 +42,11 @@ describe('modules', () => {
       authorizer: {} as never,
       engine: {} as never,
       adapters: new Map(),
-      stateStoreRead: {} as never,
-      stateStoreWrite: {} as never,
-      stateStoreMaintenance: {} as never,
+      stateStore: {
+        read: {} as never,
+        write: {} as never,
+        maintenance: {} as never,
+      },
       async migrate() {
         migrateCalls += 1;
       },

@@ -90,7 +90,7 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 
 - [x] `P0` `RC-A6`: align dead-letter signatures with tenant-scoped concrete APIs.
 - [x] `P0` `S02`: split IRunStateStore into write/read/maintenance roles.
-- [ ] `P0` `S18`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
+- [x] `P0` `S18`: make composition-root state-store role bindings explicit instead of reconstructing the aggregate by intersection.
 - [x] `P1` `S19`: isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated query port.
 - [ ] `P1` `schema-migration-rollback`: make storage changes recoverable after S02.
 - [x] `P1` `S13`: remove duplicate estimateRunRef declaration.
