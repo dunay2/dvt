@@ -164,6 +164,12 @@ module.exports = [
     },
   },
   {
+    files: ['apps/lineage-worker/src/bootstrap.ts'],
+    rules: {
+      'import/order': 'off',
+    },
+  },
+  {
     files: ['apps/web/src/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: { tsconfigRootDir: __dirname },
