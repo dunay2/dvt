@@ -21,6 +21,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
   private readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
   private readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
   private readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
+  private readonly snapshotLastRunSeqByRunId = new Map<string, number>();
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     const meta = this.metadataByRunId.get(runId) ?? null;
@@ -67,6 +68,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
       gatewayDecisions: {},
       steps: {},
     });
+    this.snapshotLastRunSeqByRunId.set(input.metadata.runId, 0);
     return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
   }
 
@@ -120,6 +122,7 @@ export class InMemoryRunStateStore implements IRunStateStore {
       }
       this.snapshotByRunId.set(runId, snap);
     }
+    this.snapshotLastRunSeqByRunId.set(runId, committed.at(-1)?.runSeq ?? 0);
 
     return {
       appended,
@@ -178,6 +181,30 @@ export class InMemoryRunStateStore implements IRunStateStore {
       applyRunEvent(snap, e);
     }
     this.snapshotByRunId.set(runId, snap);
+    this.snapshotLastRunSeqByRunId.set(runId, events.at(-1)?.runSeq ?? 0);
     return snap;
+  }
+
+  async listStaleSnapshotRuns(
+    batchSize: number
+  ): Promise<Array<{ runId: string; tenantId: string }>> {
+    const runs = Array.from(this.metadataByRunId.values())
+      .filter((meta) => {
+        const events = this.eventsByRunId.get(meta.runId) ?? [];
+        const snapshotLastRunSeq = this.snapshotLastRunSeqByRunId.get(meta.runId);
+        if (snapshotLastRunSeq === undefined) return true;
+        const latestRunSeq = events.at(-1)?.runSeq ?? 0;
+        return snapshotLastRunSeq < latestRunSeq;
+      })
+      .sort((left, right) => {
+        const leftCreatedAt = Date.parse(left.createdAt ?? '');
+        const rightCreatedAt = Date.parse(right.createdAt ?? '');
+        return leftCreatedAt - rightCreatedAt || left.runId.localeCompare(right.runId);
+      });
+
+    return runs.slice(0, batchSize).map((meta) => ({
+      runId: meta.runId,
+      tenantId: meta.tenantId,
+    }));
   }
 }

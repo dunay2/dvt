@@ -212,10 +212,8 @@ export interface IRunStateStoreMaintenance {
    * exists at all.
    *
    * Used by the standalone projector worker (G7.2) to drive a catch-up loop.
-   * Optional - implementations that do not support this query may omit it;
-   * the projector worker will skip the tick when the method is absent.
    */
-  listStaleSnapshotRuns?(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
+  listStaleSnapshotRuns(batchSize: number): Promise<Array<{ runId: string; tenantId: string }>>;
 }
 
 export type IRunStateStore = IRunStateStoreWrite & IRunStateStoreRead & IRunStateStoreMaintenance;

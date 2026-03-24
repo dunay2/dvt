@@ -148,11 +148,11 @@ shape:
 ### S19 - Isolate Maintenance Query Ownership
 
 - **Priority:** P1
-- **Status:** blocked until S18 closes
+- **Status:** review
 - **Dependency:** S18
 - **Scope:** maintenance worker and store maintenance port
-- **Target:** decide whether `listStaleSnapshotRuns` becomes a dedicated port
-  or stays intentionally optional with explicit ownership
+- **Target:** make `listStaleSnapshotRuns` mandatory on the maintenance port so
+  the projector worker owns the query explicitly
 
 ### Future Follow-Up
 

@@ -1,0 +1,75 @@
+import { describe, expect, it } from 'vitest';
+
+import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
+import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+
+type InMemoryTxStoreInternals = {
+  snapshotLastRunSeqByRunId: Map<string, number>;
+};
+
+function makeBootstrap(runId: string, createdAt: string): RunBootstrapInput {
+  return {
+    metadata: {
+      tenantId: 't1',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId,
+      planId: 'plan-minimal',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      provider: 'mock',
+      providerWorkflowId: `wf-${runId}`,
+      providerRunId: `pr-${runId}`,
+      createdAt,
+    },
+    firstEvents: [
+      {
+        eventId: `${runId}:queued`,
+        eventType: 'RunQueued',
+        runId,
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'dev',
+        planId: 'plan-minimal',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+        emittedAt: createdAt,
+        idempotencyKey: `${runId}:queued`,
+      },
+    ],
+  };
+}
+
+describe('InMemoryTxStore stale snapshot runs', () => {
+  it('returns missing and stale snapshots in createdAt order', async () => {
+    const store = new InMemoryTxStore();
+
+    await store.saveRunMetadata({
+      tenantId: 't1',
+      projectId: 'p1',
+      environmentId: 'dev',
+      runId: 'run-missing-snapshot',
+      planId: 'plan-minimal',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      provider: 'mock',
+      providerWorkflowId: 'wf-run-missing-snapshot',
+      providerRunId: 'pr-run-missing-snapshot',
+      createdAt: '2026-03-10T00:00:00.000Z',
+    });
+
+    await store.bootstrapRunTx(makeBootstrap('run-stale-snapshot', '2026-03-11T00:00:00.000Z'));
+    (store as unknown as InMemoryTxStoreInternals).snapshotLastRunSeqByRunId.set(
+      'run-stale-snapshot',
+      0
+    );
+
+    await store.bootstrapRunTx(makeBootstrap('run-current-snapshot', '2026-03-12T00:00:00.000Z'));
+
+    await expect(store.listStaleSnapshotRuns(10)).resolves.toEqual([
+      { runId: 'run-missing-snapshot', tenantId: 't1' },
+      { runId: 'run-stale-snapshot', tenantId: 't1' },
+    ]);
+  });
+});
