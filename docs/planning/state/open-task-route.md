@@ -40,7 +40,7 @@ block in the workboard.
 | `P1`     | `S15`    | Already in `Review`; closes snapshot regression under concurrency.         | Merge review and lock monotonic snapshot CAS baseline.                 |
 | `P1`     | `S15-F1` | Follow-up to S15; makes stale snapshot write discards visible.             | Expose stale-write discard outcome to repair/archival callers.         |
 | `P1`     | `S14`    | Correctness drift risk in gateway decisions across workflow segments.      | Preserve `completedStepResults` or fail loudly on missing context.     |
-| `P1`     | `S13`    | Fast contract cleanup with no blockers.                                    | Remove duplicate `estimateRunRef` declaration.                         |
+| `P1`     | `S13`    | Already in Review; closes duplicate provider-adapter contract drift.       | Remove duplicate `estimateRunRef` declaration and lock the cleanup.    |
 | `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                     | Add payload version handling in envelope flow.                         |
 | `P1`     | `S07`    | No blockers; unlocks `S11`.                                                | Normalize lineage job naming + sink shape.                             |
 | `P1`     | `S09`    | No blockers; unlocks `S08`.                                                | Set retry ownership ADR/runtime rule.                                  |
