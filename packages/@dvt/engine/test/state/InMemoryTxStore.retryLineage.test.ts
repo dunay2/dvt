@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
-function makeMetadata(runId: string, overrides: Record<string, unknown> = {}) {
+function makeMetadata(
+  runId: string,
+  overrides: Record<string, unknown> = {}
+): Record<string, unknown> {
   return {
     tenantId: 'tenant-1',
     projectId: 'project-1',
