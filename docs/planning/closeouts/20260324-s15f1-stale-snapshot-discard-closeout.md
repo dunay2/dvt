@@ -158,3 +158,20 @@ bypassed.
 No stubs, placeholders, fake adapters, or TODO/FIXME markers were introduced.
 The work returns a real pin outcome and validates both the stale discard and
 the failure case where the stored sequence cannot be re-read.
+
+## Decision Follow-up
+
+Apply this pattern only where a port currently hides a decision of domain or
+application significance behind a `void` return.
+
+Use the explicit-result shape when:
+
+- the caller needs to distinguish applied vs discarded vs rejected outcomes
+- the adapter is otherwise forcing the caller to infer state from persistence
+  effects
+- the result belongs to the application boundary and not only to telemetry
+
+Do not apply it mechanically to every `void` method. Keep the boundary
+discipline: return structured results when the method represents a domain
+decision, and keep pure side-effect ports as `void` when no decision needs to be
+observed.
