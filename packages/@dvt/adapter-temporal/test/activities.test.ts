@@ -59,7 +59,6 @@ const TEST_ERRORS = {
   missingRunStartedEvent: 'MISSING_RUN_STARTED_EVENT',
   missingFirstEvent: 'MISSING_FIRST_EVENT',
   missingStepId: 'MISSING_STEP_ID',
-  missingRunMetadata: 'MISSING_RUN_METADATA',
 } as const;
 
 const EXPECTED_ERRORS = {
@@ -105,10 +104,6 @@ class TestTxStore {
   private readonly eventsByRun = new Map<string, EventEnvelope[]>();
   private readonly metadataByRun = new Map<string, RunMetadata>();
 
-  async saveRunMetadata(meta: RunMetadata): Promise<void> {
-    this.metadataByRun.set(meta.runId, meta);
-  }
-
   async getRunMetadataByRunId(runId: string): Promise<RunMetadata | null> {
     return this.metadataByRun.get(runId) ?? null;
   }
@@ -136,7 +131,7 @@ class TestTxStore {
     });
   }
 
-  async appendEventsTx(
+  private appendEvents(
     runId: string,
     envelopes: EventInput[]
   ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
@@ -178,16 +173,16 @@ class TestTxStore {
     runId: string,
     envelopes: EventInput[]
   ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
-    return this.appendEventsTx(runId, envelopes);
+    return this.appendEvents(runId, envelopes);
   }
 
   async bootstrapRunTx(input: {
     metadata: RunMetadata;
     firstEvents: EventInput[];
   }): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
-    await this.saveRunMetadata(input.metadata);
+    this.metadataByRun.set(input.metadata.runId, input.metadata);
     if (input.firstEvents.length === 0) return { appended: [], deduped: [], lastSeq: 0 };
-    return this.appendEventsTx(input.metadata.runId, input.firstEvents);
+    return this.appendAndEnqueueTx(input.metadata.runId, input.firstEvents);
   }
 
   async enqueueTx(_runId: string, _events: EventEnvelope[]): Promise<void> {
@@ -198,7 +193,7 @@ class TestTxStore {
 class FailingFirstAppendStateStore extends TestTxStore {
   private first = true;
 
-  override async appendEventsTx(
+  override async appendAndEnqueueTx(
     runId: string,
     envelopes: EventInput[]
   ): Promise<{ appended: EventEnvelope[]; deduped: EventEnvelope[]; lastSeq: number }> {
@@ -206,7 +201,7 @@ class FailingFirstAppendStateStore extends TestTxStore {
       this.first = false;
       throw new Error('TRANSIENT_DB_ERROR');
     }
-    return super.appendEventsTx(runId, envelopes);
+    return super.appendAndEnqueueTx(runId, envelopes);
   }
 }
 
@@ -669,29 +664,5 @@ describe('stepActivities', () => {
         EXPECTED_ERRORS.invalidGatewayDsl
       )
     );
-  });
-
-  describe('saveRunMetadata', () => {
-    it('persists metadata to state store', async () => {
-      const { deps, acts } = setupActivities();
-
-      await acts.saveRunMetadata({
-        tenantId: 'tenant-1',
-        projectId: 'proj-1',
-        environmentId: 'env-1',
-        runId: 'run-1',
-        planId: 'p1',
-        planVersion: 'v1',
-        logicalAttemptId: 1,
-        provider: 'temporal',
-        providerWorkflowId: 'run-1',
-        providerRunId: 'run-1',
-      });
-
-      const meta = await deps.testStore.getRunMetadataByRunId('run-1');
-      expect(meta).not.toBeNull();
-      if (!meta) throw new TypeError(TEST_ERRORS.missingRunMetadata);
-      expect(meta.provider).toBe('temporal');
-    });
   });
 });

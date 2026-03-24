@@ -4,6 +4,7 @@ import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
 type InMemoryTxStoreInternals = {
+  snapshotByRunId: Map<string, unknown>;
   snapshotLastRunSeqByRunId: Map<string, number>;
 };
 
@@ -45,19 +46,11 @@ describe('InMemoryTxStore stale snapshot runs', () => {
   it('returns missing and stale snapshots in createdAt order', async () => {
     const store = new InMemoryTxStore();
 
-    await store.saveRunMetadata({
-      tenantId: 't1',
-      projectId: 'p1',
-      environmentId: 'dev',
-      runId: 'run-missing-snapshot',
-      planId: 'plan-minimal',
-      planVersion: '1.0',
-      logicalAttemptId: 1,
-      provider: 'mock',
-      providerWorkflowId: 'wf-run-missing-snapshot',
-      providerRunId: 'pr-run-missing-snapshot',
-      createdAt: '2026-03-10T00:00:00.000Z',
-    });
+    await store.bootstrapRunTx(makeBootstrap('run-missing-snapshot', '2026-03-10T00:00:00.000Z'));
+    (store as unknown as InMemoryTxStoreInternals).snapshotByRunId.delete('run-missing-snapshot');
+    (store as unknown as InMemoryTxStoreInternals).snapshotLastRunSeqByRunId.delete(
+      'run-missing-snapshot'
+    );
 
     await store.bootstrapRunTx(makeBootstrap('run-stale-snapshot', '2026-03-11T00:00:00.000Z'));
     (store as unknown as InMemoryTxStoreInternals).snapshotLastRunSeqByRunId.set(
