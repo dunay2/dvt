@@ -107,6 +107,8 @@ export interface RunPlanWorkflowInput {
   continuedAsNewCount?: number;
   /** Internal gateway decision map carried across continue-as-new rollovers. */
   gatewayDecisions?: Record<string, boolean>;
+  /** Internal completed step fact map carried across continue-as-new rollovers. */
+  completedStepResults?: Record<string, Record<string, unknown>>;
   /** Internal skipped-step set carried across continue-as-new rollovers. */
   skippedStepIds?: string[];
 }
@@ -168,7 +170,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   const state = createInitialWorkflowState(ctrl.continuedAsNewCount, input.gatewayDecisions);
   registerSignalHandlers(state);
 
-  const completedStepResults: Record<string, Record<string, unknown>> = {};
+  const completedStepResults = cloneStepResults(input.completedStepResults);
   const skippedSteps = new Set<string>(ctrl.skippedStepIds);
 
   try {
@@ -443,6 +445,7 @@ async function processLayer(args: ProcessLayerArgs): Promise<LayerLoopOutcome | 
     layerIndex: args.layerIndex,
     processedLayersInCurrentExecution: args.runtime.processedLayersInCurrentExecution,
     gatewayDecisions: args.state.gatewayDecisions ?? {},
+    completedStepResults: args.runtime.completedStepResults,
     skippedStepIds: args.runtime.skippedSteps,
   });
 }
@@ -455,6 +458,7 @@ function maybeBuildContinueAsNewOutcome(args: {
   layerIndex: number;
   processedLayersInCurrentExecution: number;
   gatewayDecisions: Record<string, boolean>;
+  completedStepResults: Record<string, Record<string, unknown>>;
   skippedStepIds: ReadonlySet<string>;
 }): LayerLoopOutcome | null {
   const nextLayerIndex = args.layerIndex + 1;
@@ -477,6 +481,7 @@ function maybeBuildContinueAsNewOutcome(args: {
       nextLayerIndex,
       continuedAsNewCount: args.continuedAsNewCount,
       gatewayDecisions: args.gatewayDecisions,
+      completedStepResults: args.completedStepResults,
       skippedStepIds: args.skippedStepIds,
     }),
   };
@@ -734,4 +739,15 @@ function countStepsBeforeLayer(
     total += layers[i]?.length ?? 0;
   }
   return total;
+}
+
+function cloneStepResults(
+  value: Record<string, Record<string, unknown>> | undefined
+): Record<string, Record<string, unknown>> {
+  if (!value) return {};
+  const cloned: Record<string, Record<string, unknown>> = {};
+  for (const [stepId, result] of Object.entries(value)) {
+    cloned[stepId] = { ...result };
+  }
+  return cloned;
 }

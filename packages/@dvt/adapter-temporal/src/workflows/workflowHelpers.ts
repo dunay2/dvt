@@ -104,6 +104,7 @@ type ContinueAsNewBase = {
   resumeFromLayerIndex?: number;
   continuedAsNewCount?: number;
   gatewayDecisions?: Record<string, boolean>;
+  completedStepResults?: Record<string, Record<string, unknown>>;
   skippedStepIds?: string[];
 };
 
@@ -112,6 +113,7 @@ type ContinueAsNewState = {
   resumeFromLayerIndex: number;
   continuedAsNewCount: number;
   gatewayDecisions: Record<string, boolean>;
+  completedStepResults: Record<string, Record<string, unknown>>;
   skippedStepIds: string[];
 };
 
@@ -124,6 +126,7 @@ export function buildContinueAsNewInput<T extends ContinueAsNewBase>(args: {
   nextLayerIndex: number;
   continuedAsNewCount: number;
   gatewayDecisions: Record<string, boolean>;
+  completedStepResults: Record<string, Record<string, unknown>>;
   skippedStepIds: ReadonlySet<string>;
 }): ContinueAsNewInput<T> {
   const nextInput: ContinueAsNewInput<T> = {
@@ -132,6 +135,7 @@ export function buildContinueAsNewInput<T extends ContinueAsNewBase>(args: {
     resumeFromLayerIndex: args.nextLayerIndex,
     continuedAsNewCount: args.continuedAsNewCount + 1,
     gatewayDecisions: { ...args.gatewayDecisions },
+    completedStepResults: cloneStepResults(args.completedStepResults),
     skippedStepIds: [...args.skippedStepIds],
   };
   return nextInput;
@@ -208,6 +212,17 @@ function isNonNegativeIntegerString(val: unknown): val is string {
   if (trimmed.length === 0) return false;
   const n = Number(trimmed);
   return Number.isInteger(n) && n >= 0;
+}
+
+function cloneStepResults(
+  value: Record<string, Record<string, unknown>> | undefined
+): Record<string, Record<string, unknown>> {
+  if (!value) return {};
+  const cloned: Record<string, Record<string, unknown>> = {};
+  for (const [stepId, result] of Object.entries(value)) {
+    cloned[stepId] = { ...result };
+  }
+  return cloned;
 }
 
 // ---------------------------------------------------------------------------
