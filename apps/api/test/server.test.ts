@@ -236,4 +236,42 @@ describe('reconciler bootstrap health wiring', () => {
     expect(add).not.toHaveBeenCalled();
     expect(logger.error).not.toHaveBeenCalled();
   });
+
+  it('recovers health after a stale watchdog degradation once a later sweep succeeds', () => {
+    let health: ReconcilerHealthState = { status: 'starting' };
+    const add = vi.fn();
+    const counter = vi.fn(() => ({ add }));
+    const logger = {
+      error: vi.fn(),
+    } as unknown as FastifyBaseLogger;
+
+    const ctx = {
+      getIntentReconcilerHealth: () => health,
+      setIntentReconcilerHealth: (next: ReconcilerHealthState) => {
+        health = next;
+      },
+      observability: {
+        metrics: {
+          counter,
+        },
+      } as unknown as IObservability,
+    };
+    const hooks = buildReconcilerHealthHooks(ctx.setIntentReconcilerHealth);
+
+    expect(evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 1_000, 7_500)).toBe(true);
+    expect(health).toEqual({
+      status: 'degraded',
+      reasonCode: 'runtime_unavailable',
+    });
+    expect(counter).toHaveBeenCalledTimes(1);
+    expect(add).toHaveBeenCalledWith(1);
+
+    hooks.onSweepSuccess?.();
+    expect(health).toEqual({ status: 'healthy' });
+
+    expect(evaluateAndMarkReconcilerHealthStale(ctx, logger, 5_000, 7_400, 7_900)).toBe(false);
+    expect(health).toEqual({ status: 'healthy' });
+    expect(counter).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledTimes(1);
+  });
 });

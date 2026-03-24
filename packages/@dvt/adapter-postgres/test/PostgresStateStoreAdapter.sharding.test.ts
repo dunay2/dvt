@@ -167,4 +167,19 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
       'INVALID_OUTBOX_CLAIM_TIMEOUT_MS'
     );
   });
+
+  it('rejects invalid outbox claim timeout values at adapter construction time', () => {
+    expect(
+      () =>
+        new PostgresStateStoreAdapter({
+          pool: {
+            connect: async () => {
+              throw new Error('connect should not be reached');
+            },
+          } as never,
+          assumeSchemaReady: true,
+          outboxClaimTimeoutMs: 90.5,
+        })
+    ).toThrow('INVALID_OUTBOX_CLAIM_TIMEOUT_MS');
+  });
 });

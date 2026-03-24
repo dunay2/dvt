@@ -63,7 +63,7 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
   if (!content) return;
 
   const fields = extractAdrFields(content);
-  const _name = basename(filePath);
+  const name = basename(filePath);
 
   // H1 heading
   if (!/^#\s+/m.test(content)) {
@@ -96,8 +96,8 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
     report.warn(filePath, 'ADR missing recommended field: Owners');
   }
 
-  // Unused variable placeholder (keeps lint happy)
-  // _name intentionally unused
+  // Unused variable warning suppression
+  void name;
 }
 
 // ── Evidence check ────────────────────────────────────────────────────────────

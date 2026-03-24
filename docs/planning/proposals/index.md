@@ -12,6 +12,7 @@ Draft proposals and candidate changes. Non-normative.
 ## Index
 
 - [CI Workflow Deduplication Plan](ci-workflow-deduplication-plan-20260307.md)
+- [DDD Hexagonal Modularization Plan](ddd-hexagonal-modularization-plan-20260323.md)
 - [Docs Governance Tooling Future Tasks](docs-governance-tooling-future-tasks-20260324.md)
 - [Documentation Restructuring Diagnostic And Roadmap](documentation-restructuring-diagnostic-and-roadmap.md)
 - [Documentation Usability Change Plan](documentation-usability-change-plan-20260308.md)
@@ -40,6 +41,7 @@ Draft proposals and candidate changes. Non-normative.
 - [RC-A1 SimulateError Production Hardening](rc-a1-simulate-error-production-hardening-20260322.md)
 - [RC-A2 Deterministic StartRun Intent ID](rc-a2-deterministic-start-run-intent-id-20260322.md)
 - [RC-B2 Lineage Compiled Code Resolver Rollout](rc-b2-lineage-compiled-code-resolver-rollout-20260322.md)
+- [RC-B2 Lineage Resolver Production Hardening](rc-b2-lineage-resolver-production-hardening-20260323.md)
 - [RC-D1A Health Contract Compatibility And Watchdog Integration](rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md)
 - [RC-D2 Follow-up - Outbox Claim Timeout Contract Explicitness](rc-d2-claim-timeout-contract-20260323.md)
 - [Repository Governance Proposal Set 2026-03-17](repository-governance-proposal-set-20260317.md)

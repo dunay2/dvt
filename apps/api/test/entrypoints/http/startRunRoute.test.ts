@@ -10,34 +10,34 @@ const VALID_PLAN_REF = {
   planVersion: '2.0',
 };
 
-describe('startRunRoute', () => {
-  function createReply(): {
-    statusCode: number;
-    payload: unknown;
-    headers: Record<string, string>;
-    code(status: number): unknown;
-    header(name: string, value: string): unknown;
-    send(payload: unknown): unknown;
-  } {
-    return {
-      statusCode: 200,
-      payload: undefined as unknown,
-      headers: {} as Record<string, string>,
-      code(status: number) {
-        this.statusCode = status;
-        return this;
-      },
-      header(name: string, value: string) {
-        this.headers[name] = value;
-        return this;
-      },
-      send(payload: unknown) {
-        this.payload = payload;
-        return this;
-      },
-    };
-  }
+function createReply(): {
+  statusCode: number;
+  payload: unknown;
+  headers: Record<string, string>;
+  code(status: number): unknown;
+  header(name: string, value: string): unknown;
+  send(payload: unknown): unknown;
+} {
+  return {
+    statusCode: 200,
+    payload: undefined as unknown,
+    headers: {} as Record<string, string>,
+    code(status: number) {
+      this.statusCode = status;
+      return this;
+    },
+    header(name: string, value: string) {
+      this.headers[name] = value;
+      return this;
+    },
+    send(payload: unknown) {
+      this.payload = payload;
+      return this;
+    },
+  };
+}
 
+describe('startRunRoute', () => {
   it('returns 400 on malformed tenantId', async () => {
     const reply = createReply();
 
@@ -117,32 +117,49 @@ describe('startRunRoute', () => {
     expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
   });
 
-  it('returns 400 on empty selection', async () => {
+  it('accepts empty selection', async () => {
     const reply = createReply();
 
+    let received: Record<string, unknown> | undefined;
     const facade = {
-      async execute() {
-        throw new Error('should not be called');
+      async execute(input: Record<string, unknown>) {
+        received = input;
+        return { kind: 'accepted' as const, runId: 'r-empty-selection', accepted: true };
       },
     };
 
     await startRunRoute(
       {
         id: 'req-3b',
-        headers: {},
+        headers: { authorization: 'Bearer token' },
         body: {
           tenantId: 't1',
           projectId: 'p1',
           environmentId: 'e1',
           selection: [],
+          graphSource: {
+            kind: 'normalized-graph-v1',
+            nodes: [],
+          },
+          runId: 'run-empty-selection',
+          targetAdapter: 'mock',
         },
       } as never,
       reply as never,
       facade as never
     );
 
-    expect(reply.statusCode).toBe(400);
-    expect(reply.payload).toEqual({ error: 'BAD_REQUEST', code: 'INVALID_SELECTION' });
+    expect(reply.statusCode).toBe(202);
+    expect(reply.payload).toEqual({ runId: 'r-empty-selection', accepted: true });
+    expect(received?.command).toEqual({
+      graphSource: {
+        kind: 'normalized-graph-v1',
+        nodes: [],
+      },
+      runId: 'run-empty-selection',
+      targetAdapter: 'mock',
+      selection: [],
+    });
   });
 
   it('returns 400 on whitespace-only selection entries', async () => {

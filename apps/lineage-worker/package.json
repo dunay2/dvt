@@ -8,11 +8,13 @@
     "prebuild": "pnpm --filter \"dvt-lineage-worker^...\" build",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "pretest": "pnpm --filter \"dvt-lineage-worker^...\" build",
     "pretypecheck": "pnpm --filter \"dvt-lineage-worker^...\" build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.868.0",
     "@dvt/adapter-postgres": "workspace:*",
     "@dvt/delivery": "workspace:*",
     "@dvt/traceability-service": "workspace:*",

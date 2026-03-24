@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
@@ -13,7 +13,6 @@ import { TextDecoder } from 'node:util';
 import { parsePlanRef, parseRunContext } from '@dvt/contracts';
 import type { PlanRef, RunContext } from '@dvt/contracts';
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
-import type { IObservability } from '@dvt/observability';
 import { ApplicationFailure, Context } from '@temporalio/activity';
 
 import type {
@@ -27,7 +26,6 @@ import type {
   RunStateCommandPort,
   RunMetadata,
 } from '../engine-types.js';
-import { buildTemporalMetricTags, resolveTemporalObservability } from '../temporalObservability.js';
 
 // ---------------------------------------------------------------------------
 // Error codes (3.7 — replace magic strings with named constants)
@@ -39,19 +37,12 @@ const ActivityErrorCode = {
   PLAN_CONTRACT_VERSION_UNKNOWN: 'PLAN_CONTRACT_VERSION_UNKNOWN',
   PLAN_REF_MISMATCH: 'PLAN_REF_MISMATCH',
   INVALID_STEP_SCHEMA: 'INVALID_STEP_SCHEMA',
-  RUNTIME_POLICY_VIOLATION: 'RUNTIME_POLICY_VIOLATION',
   INVALID_GATEWAY_DSL: 'INVALID_GATEWAY_DSL',
   TRANSIENT_STEP_ERROR: 'TRANSIENT_STEP_ERROR',
   PERMANENT_STEP_ERROR: 'PERMANENT_STEP_ERROR',
 } as const;
 
 const PERMANENT_STEP_ERROR_TYPE = 'PermanentStepError';
-export const SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE =
-  'simulateError_rejected_by_runtime_policy' as const;
-export const SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE =
-  'simulateError_not_allowed_in_production' as const;
-export const UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION_ERROR =
-  'TEMPORAL_UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION' as const;
 
 // ---------------------------------------------------------------------------
 // Role-based dependency interfaces (3.3 — ISP: each activity declares its needs)
@@ -74,22 +65,8 @@ export interface RunBootstrapperDeps {
   runStateCommandPort: RunStateCommandPort;
 }
 
-export interface SimulateErrorPolicy {
-  /**
-   * Fail-closed switch for test-only simulateError hooks.
-   * Name kept for compatibility; explicit behavior is caller policy-driven.
-   */
-  rejectInProduction: boolean;
-  /** Runtime mode label used in logs/metrics attributes. */
-  runtimeMode: string;
-}
-
-export interface ActivityDeps extends PlanFetcherDeps, EventEmitterDeps, RunBootstrapperDeps {
-  /** Optional observability sink; defaults to noop when omitted. */
-  observability?: IObservability;
-  /** Optional runtime policy for handling test-only simulateError hooks. */
-  simulateErrorPolicy?: SimulateErrorPolicy;
-}
+/** Full dependency container (union of role interfaces). Injected at Worker creation time. */
+export interface ActivityDeps extends PlanFetcherDeps, EventEmitterDeps, RunBootstrapperDeps {}
 
 // ---------------------------------------------------------------------------
 // Activity input / output types
@@ -185,10 +162,6 @@ export function createActivities(
   emitEvent(input: EmitEventInput): Promise<void>;
   saveRunMetadata(meta: RunMetadata): Promise<void>;
 } {
-  const observability = resolveTemporalObservability(deps.observability);
-  const simulateErrorPolicy = resolveSimulateErrorPolicy(deps.simulateErrorPolicy);
-  assertSafeSimulateErrorPolicyForRuntime(simulateErrorPolicy);
-
   return {
     /**
      * Fetch plan from storage, validate SHA-256 integrity, parse JSON,
@@ -199,12 +172,6 @@ export function createActivities(
       const bytes = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
       const plan = parsePlan(bytes);
       validatePlanAgainstRef(plan, validatedPlanRef);
-      assertSimulateErrorDisallowedInProduction(
-        plan,
-        observability,
-        simulateErrorPolicy,
-        'fetchPlan'
-      );
       return plan;
     },
 
@@ -214,7 +181,7 @@ export function createActivities(
      */
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
-      applySimulateErrorIfPresent(input.step, observability, simulateErrorPolicy);
+      applySimulateErrorIfPresent(input.step);
       return dispatchStep(input.step, { gatewayContext: input.gatewayContext }, stepExecutors);
     },
 
@@ -301,36 +268,6 @@ const ALLOWED_STEP_FIELDS = new Set([
 
 const SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0']);
 
-function resolveSimulateErrorPolicy(policy?: SimulateErrorPolicy): SimulateErrorPolicy {
-  if (policy !== undefined) {
-    return policy;
-  }
-  const runtimeMode = resolveDefaultRuntimeMode();
-  return {
-    // Backward-compatible default: only reject by default when runtime is production.
-    rejectInProduction: runtimeMode === 'production',
-    runtimeMode,
-  };
-}
-
-function resolveDefaultRuntimeMode(): string {
-  return isProductionRuntime() ? 'production' : 'non-production';
-}
-
-function isProductionRuntime(): boolean {
-  return (process.env['NODE_ENV'] ?? '').trim().toLowerCase() === 'production';
-}
-
-function assertSafeSimulateErrorPolicyForRuntime(policy: SimulateErrorPolicy): void {
-  if (!isProductionRuntime()) {
-    return;
-  }
-  if (policy.rejectInProduction) {
-    return;
-  }
-  throw new Error(UNSAFE_SIMULATE_ERROR_POLICY_IN_PRODUCTION_ERROR);
-}
-
 function resolveTemporalAttemptFromContext(): number {
   try {
     const attempt = Context.current().info.attempt;
@@ -408,28 +345,14 @@ function validateStepShape(step: ExecutionPlan['steps'][number]): void {
   }
 }
 
-function applySimulateErrorIfPresent(
-  step: ExecutionPlan['steps'][number],
-  observability: IObservability,
-  policy: SimulateErrorPolicy
-): void {
-  const simulateErrorKind =
-    typeof step['simulateError'] === 'string' ? String(step['simulateError']) : undefined;
-  if (simulateErrorKind === undefined) {
+function applySimulateErrorIfPresent(step: ExecutionPlan['steps'][number]): void {
+  // RC-A1: never execute test-only failure hooks in production runtime.
+  if (process.env['NODE_ENV'] === 'production') {
     return;
   }
 
-  // RC-A1: fail-closed in production for test-only failure hooks.
-  if (policy.rejectInProduction) {
-    emitRejectedSimulateErrorSignal(observability, {
-      operation: 'executeStep',
-      stepId: step.stepId,
-      simulateErrorKind,
-      runtimeMode: policy.runtimeMode,
-    });
-    throw createSimulateErrorRejectedByRuntimePolicyError(step.stepId);
-  }
-
+  const simulateErrorKind =
+    typeof step['simulateError'] === 'string' ? String(step['simulateError']) : undefined;
   if (simulateErrorKind === 'transient') {
     throw new Error(`${ActivityErrorCode.TRANSIENT_STEP_ERROR}:${step.stepId}`);
   }
@@ -440,123 +363,6 @@ function applySimulateErrorIfPresent(
       nonRetryable: true,
     });
   }
-}
-
-function assertSimulateErrorDisallowedInProduction(
-  plan: ExecutionPlan,
-  observability: IObservability,
-  policy: SimulateErrorPolicy,
-  operation: 'fetchPlan'
-): void {
-  if (!policy.rejectInProduction) {
-    return;
-  }
-
-  const offendingStep = plan.steps.find((step) => typeof step['simulateError'] === 'string') as
-    | ExecutionPlan['steps'][number]
-    | undefined;
-  if (!offendingStep) {
-    return;
-  }
-
-  const simulateErrorKind = String(offendingStep['simulateError']);
-  emitRejectedSimulateErrorSignal(observability, {
-    operation,
-    stepId: offendingStep.stepId,
-    simulateErrorKind,
-    runtimeMode: policy.runtimeMode,
-    ...(plan.metadata.planId !== undefined ? { planId: plan.metadata.planId } : {}),
-  });
-  throw createSimulateErrorRejectedByRuntimePolicyError(offendingStep.stepId);
-}
-
-function emitRejectedSimulateErrorSignal(
-  observability: IObservability,
-  options: {
-    operation: 'fetchPlan' | 'executeStep';
-    stepId: string;
-    simulateErrorKind: string;
-    runtimeMode: string;
-    planId?: string;
-  }
-): void {
-  const signalFailures: Array<{ channel: 'metrics' | 'logs'; cause: string }> = [];
-
-  try {
-    observability.metrics
-      .counter(
-        'dvt.temporal.activity.simulate_error_rejected_total',
-        buildTemporalMetricTags(options.operation, 'rejected')
-      )
-      .add(1, { simulateErrorKind: options.simulateErrorKind });
-  } catch (error) {
-    signalFailures.push({
-      channel: 'metrics',
-      cause: error instanceof Error ? error.message : String(error),
-    });
-  }
-
-  try {
-    observability.logs.warn({
-      msg: 'Rejected simulateError hook by runtime activity policy',
-      attributes: {
-        stepId: options.stepId,
-        simulateErrorKind: options.simulateErrorKind,
-        ...(options.planId !== undefined ? { planId: options.planId } : {}),
-        runtimeMode: options.runtimeMode,
-        canonicalCode: SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE,
-        legacyCode: SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE,
-      },
-    });
-  } catch (error) {
-    signalFailures.push({
-      channel: 'logs',
-      cause: error instanceof Error ? error.message : String(error),
-    });
-  }
-
-  if (signalFailures.length > 0) {
-    emitRejectedSignalFallback(signalFailures, options);
-  }
-}
-
-function emitRejectedSignalFallback(
-  failures: Array<{ channel: 'metrics' | 'logs'; cause: string }>,
-  options: {
-    operation: 'fetchPlan' | 'executeStep';
-    stepId: string;
-    simulateErrorKind: string;
-    runtimeMode: string;
-    planId?: string;
-  }
-): void {
-  const payload = {
-    marker: 'dvt.simulate_error_signal_fallback',
-    operation: options.operation,
-    stepId: options.stepId,
-    simulateErrorKind: options.simulateErrorKind,
-    runtimeMode: options.runtimeMode,
-    canonicalCode: SIMULATE_ERROR_REJECTED_BY_RUNTIME_POLICY_CODE,
-    legacyCode: SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE,
-    ...(options.planId !== undefined ? { planId: options.planId } : {}),
-    failures,
-  };
-
-  try {
-    process.stderr.write(`${JSON.stringify(payload)}\n`);
-  } catch {
-    // Final fallback intentionally empty: canonical rejection must still proceed.
-  }
-}
-
-function createSimulateErrorRejectedByRuntimePolicyError(stepId: string): Error {
-  // Preserve legacy suffix for compatibility while exposing a policy-specific primary code.
-  const message = `${ActivityErrorCode.RUNTIME_POLICY_VIOLATION}: ${SIMULATE_ERROR_NOT_ALLOWED_IN_PRODUCTION_LEGACY_CODE}:${stepId}`;
-  return ApplicationFailure.create({
-    type: PERMANENT_STEP_ERROR_TYPE,
-    message,
-    nonRetryable: true,
-  });
 }
 
 async function dispatchStep(

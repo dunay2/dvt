@@ -106,6 +106,12 @@ function makeServiceErrorNotFoundCodeWithSpaces(): Error {
   return err;
 }
 
+function makeServiceErrorNotFoundTextWithSpaces(): Error {
+  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
+  err.name = 'ServiceError';
+  err.code = ' NOT_FOUND ';
+  return err;
+}
 function makeServiceErrorUnknownCode(): Error {
   const err = new Error('Workflow service error with unknown code') as Error & { code: string };
   err.name = 'ServiceError';
@@ -210,6 +216,16 @@ describe('TemporalAdapter.lookupRunRef', () => {
     expect(result).toBeNull();
   });
 
+  it('returns null when workflow does not exist (ServiceError NOT_FOUND with spaces)', async () => {
+    const handle = makeWorkflowHandleMock(async () => {
+      throw makeServiceErrorNotFoundTextWithSpaces();
+    });
+    const { adapter } = makeAdapter(() => handle);
+
+    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
+
+    expect(result).toBeNull();
+  });
   it('propagates ServiceError with unknown code', async () => {
     const unknownCodeError = makeServiceErrorUnknownCode();
     const handle = makeWorkflowHandleMock(async () => {

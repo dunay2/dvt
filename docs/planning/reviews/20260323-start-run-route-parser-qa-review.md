@@ -8,9 +8,9 @@ planning_type: review
 
 # 20260323 StartRun Route Parser QA Review
 
-- Reviewed change: `split-start-run-engine` slice for `startRunRoute` parser hardening and start-run orchestration
+- Reviewed change: `split-start-run-engine` slice for `startRunRoute` parser hardening, boundary alignment, and start-run orchestration
 - Review type: hard QA / contract compliance review
-- Verdict: **Accept with conditions**
+- Verdict: **Accept**
 
 ## 1. Governing sources used
 
@@ -36,28 +36,25 @@ The slice now has the right negative coverage:
 
 The API parser is deterministic and the tests close the regression gaps that were called out in the earlier QA pass.
 
-The only meaningful contract issue left is semantic drift between the public API boundary and the planner contract:
+The parser now aligns the API boundary with the planner contract:
 
-- `startRunRoute` rejects `selection: []`
+- `startRunRoute` accepts `selection: []`
 - `PlannerInputValidator` accepts `selectedNodeIds: []`
 
-That is fine only if the API intentionally owns a stricter rule and documents it explicitly.
+That removes a boundary-specific invariant that did not belong in the HTTP adapter.
 
 ## 3. Findings
 
-### 3.1. `startRunRoute` enforces a stricter selection invariant than the planner contract
+### 3.1. `startRunRoute` now mirrors the planner contract for empty selection
 
-The route parser now treats an empty `selection` as `INVALID_SELECTION`.
+The route parser no longer invents a stricter `selection` rule than the planner boundary.
 
-That is not structurally wrong, but it creates a cross-layer semantic asymmetry:
+That is the right hexagonal outcome:
 
 - planner boundary: empty `selectedNodeIds` is accepted
-- API boundary: empty `selection` is rejected before the planner sees the request
+- API boundary: empty `selection` is also accepted and forwarded unchanged
 
-If this stricter API rule is intentional, it should be documented as an API-level invariant.
-If not, the route should be relaxed so the API and planner share the same contract.
-
-Severity: **Medium**
+Severity: **Resolved in this slice**
 
 ### 3.2. Coverage is now complete for the previously missing parser edges
 
@@ -92,8 +89,23 @@ Severity: **None**
 
 ## 6. QA verdict
 
-**Accept with conditions**
+**Accept**
 
-Condition:
+## 7. Boundary diagram
 
-1. Either document `startRun` as an API-only non-empty selection rule, or align the route with the planner contract and accept empty `selection`.
+```mermaid
+flowchart LR
+  HTTP[Fastify HTTP route] --> P[StartRunRouteParser]
+  P --> A[StartRunAuthorizedFacade]
+  A --> U[BackpressureAwareStartRunUseCase / planner-backed use case]
+  U --> E[WorkflowEngine]
+  U --> S[(State store / adapters)]
+```
+
+The route is now a thin adapter:
+
+- HTTP concern: parse and map the request
+- application concern: decide admission, idempotency, and command execution
+- core concern: run lifecycle and intent consistency
+
+This is the target shape for the current slice.
