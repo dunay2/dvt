@@ -278,7 +278,12 @@ async function markWorkflowFailedIfNeeded(
 ): Promise<void> {
   if (state.status === 'CANCELLED' || state.status === 'FAILED') return;
   try {
-    await activities.emitEvent({ ctx, planRef, eventType: 'RunFailed' });
+    await activities.emitEvent({
+      ctx,
+      planRef,
+      eventType: 'RunFailed',
+      payload: { reason: 'WORKFLOW_FAILURE' },
+    });
   } catch {
     // best-effort; do not mask the original error
   }
@@ -710,7 +715,12 @@ async function applyLayerResults(args: {
       eventType: 'StepFailed',
       stepId,
     });
-    await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunFailed' });
+    await activities.emitEvent({
+      ctx: args.ctx,
+      planRef: args.planRef,
+      eventType: 'RunFailed',
+      payload: { reason: 'STEP_FAILURE' },
+    });
     args.state.status = 'FAILED';
     return {
       runId: args.ctx.runId,

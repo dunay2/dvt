@@ -503,16 +503,18 @@ export class WorkflowEngine implements IWorkflowEngine {
         throw error;
       }
 
-      await this.emitRunEvent(failMeta, 'RunFailed').catch((emitErr: unknown) => {
-        this.observability.logs.error({
-          msg: 'RunFailed emission failed after startRun error',
-          context: traceContext,
-          err: emitErr instanceof Error ? emitErr.message : String(emitErr),
-          attributes: {
-            error: toErrorMessage(emitErr),
-          },
-        });
-      });
+      await this.emitRunEvent(failMeta, 'RunFailed', { reason: 'START_RUN_FAILURE' }).catch(
+        (emitErr: unknown) => {
+          this.observability.logs.error({
+            msg: 'RunFailed emission failed after startRun error',
+            context: traceContext,
+            err: emitErr instanceof Error ? emitErr.message : String(emitErr),
+            attributes: {
+              error: toErrorMessage(emitErr),
+            },
+          });
+        }
+      );
     }
     throw error;
   }
@@ -774,9 +776,13 @@ export class WorkflowEngine implements IWorkflowEngine {
     return m;
   }
 
-  private async emitRunEvent(meta: RunMetadata, eventType: EventType): Promise<void> {
+  private async emitRunEvent(
+    meta: RunMetadata,
+    eventType: EventType,
+    payload?: Record<string, unknown>
+  ): Promise<void> {
     await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
-      this.buildRunEvent(meta, eventType),
+      this.buildRunEvent(meta, eventType, payload),
     ]);
   }
 
@@ -788,6 +794,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const input: RunEventInput = {
       eventId: this.deps.idempotency.eventId(),
       eventType,
+      payloadVersion: 1,
       emittedAt: this.deps.clock.nowIsoUtc(),
       tenantId: meta.tenantId,
       projectId: meta.projectId,
@@ -819,6 +826,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     return {
       eventId: this.deps.idempotency.eventId(),
       eventType,
+      payloadVersion: 1,
       emittedAt: this.deps.clock.nowIsoUtc(),
       tenantId: meta.tenantId,
       projectId: meta.projectId,

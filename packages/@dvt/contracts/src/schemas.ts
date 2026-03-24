@@ -25,6 +25,7 @@ import {
   CURRENT_EXECUTION_PLAN_VERSION,
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
+import { CompiledCodeRefSchema } from './step-registry/StepTypeRegistry.js';
 
 // ─── Primitive schemas ───────────────────────────────────────────────────────
 
@@ -165,8 +166,33 @@ export const StepOutputSchema = z.object({
 // ─── Event schemas (aligned to RunEvents v2.0.1) ─────────────────────────────
 // @see specs/contracts/engine/RunEvents.v2.0.md — Normative event contract
 
-/** Write-side event envelope: what the engine/adapter emits before persistence. */
-export const RunEventWriteSchema = z.object({
+export const RUN_EVENT_PAYLOAD_VERSION = 1 as const;
+
+const EmptyEventPayloadSchema = z.object({}).strict();
+export const RunFailureReasonSchema = z.enum([
+  'QUEUED_TIMEOUT',
+  'CANCELLATION_TIMEOUT',
+  'START_RUN_FAILURE',
+  'STEP_FAILURE',
+  'WORKFLOW_FAILURE',
+]);
+const RunFailedPayloadSchema = z
+  .object({
+    reason: RunFailureReasonSchema,
+  })
+  .strict();
+const StepStartedPayloadSchema = z
+  .object({
+    compiledCodeRef: CompiledCodeRefSchema,
+  })
+  .strict();
+const StepCompletedPayloadSchema = z
+  .object({
+    gatewayDecision: z.boolean(),
+  })
+  .strict();
+
+const RunEventCommonSchema = z.object({
   eventId: z.string().min(1),
   eventType: z.string().min(1),
   emittedAt: z.string().min(1),
@@ -179,15 +205,140 @@ export const RunEventWriteSchema = z.object({
   engineAttemptId: z.number().int().positive(),
   logicalAttemptId: z.number().int().positive(),
   idempotencyKey: z.string().min(1),
-  stepId: z.string().min(1).optional(),
-  payload: z.record(z.string(), z.unknown()).optional(),
+  payloadVersion: z.literal(RUN_EVENT_PAYLOAD_VERSION).default(RUN_EVENT_PAYLOAD_VERSION),
 });
 
+const RunQueuedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunQueued'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const RunStartedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunStarted'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const RunPausedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunPaused'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const RunResumedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunResumed'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const RunCancelRequestedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunCancelRequested'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const RunCancelledEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunCancelled'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const RunCompletedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunCompleted'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const RunFailedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunFailed'),
+  payload: RunFailedPayloadSchema,
+}).strict();
+
+const StepStartedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('StepStarted'),
+  stepId: z.string().min(1),
+  payload: StepStartedPayloadSchema.optional(),
+}).strict();
+
+const StepCompletedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('StepCompleted'),
+  stepId: z.string().min(1),
+  payload: StepCompletedPayloadSchema.optional(),
+}).strict();
+
+const StepFailedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('StepFailed'),
+  stepId: z.string().min(1),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+const StepSkippedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('StepSkipped'),
+  stepId: z.string().min(1),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
+/** Write-side event envelope: what the engine/adapter emits before persistence. */
+export const RunEventWriteSchema = z.discriminatedUnion('eventType', [
+  RunQueuedEventWriteSchema,
+  RunStartedEventWriteSchema,
+  RunPausedEventWriteSchema,
+  RunResumedEventWriteSchema,
+  RunCancelRequestedEventWriteSchema,
+  RunCancelledEventWriteSchema,
+  RunCompletedEventWriteSchema,
+  RunFailedEventWriteSchema,
+  StepStartedEventWriteSchema,
+  StepCompletedEventWriteSchema,
+  StepFailedEventWriteSchema,
+  StepSkippedEventWriteSchema,
+]);
+
 /** Persisted event record: extends RunEventWrite with Append Authority fields. */
-export const RunEventRecordSchema = RunEventWriteSchema.extend({
-  runSeq: z.number().int().positive(),
-  persistedAt: z.string().min(1),
-});
+export const RunEventRecordSchema = z.discriminatedUnion('eventType', [
+  RunQueuedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  RunStartedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  RunPausedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  RunResumedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  RunCancelRequestedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  RunCancelledEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  RunCompletedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  RunFailedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  StepStartedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  StepCompletedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  StepFailedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+  StepSkippedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: z.string().min(1),
+  }),
+]);
 
 export const StepSnapshotSchema = z.object({
   stepId: z.string().min(1),
