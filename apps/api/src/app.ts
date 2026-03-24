@@ -143,13 +143,13 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     };
     const getRunStatusUseCase = new GetRunStatusUseCase(
       protectedModule.engine,
-      protectedModule.stateStore
+      protectedModule.stateStoreRead
     );
-    const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore);
-    const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore);
+    const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStoreRead);
+    const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStoreRead);
     const signalRunUseCase = new SignalRunUseCase(
       protectedModule.engine,
-      protectedModule.stateStore
+      protectedModule.stateStoreRead
     );
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
@@ -171,7 +171,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
 
     if (env.DVT_ADMIN_ROUTES_ENABLED) {
-      registerAdminRoutes(app, protectedModule.stateStore);
+      registerAdminRoutes(app, protectedModule.stateStoreMaintenance);
       app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
     }
 

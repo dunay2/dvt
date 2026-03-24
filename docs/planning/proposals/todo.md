@@ -25,22 +25,23 @@ This slice is about DDD purity at the boundary:
 
 ### Composition Roots
 
-The current runtime roots still bind and pass `stateStore` as a convenience
-aggregate:
+The current runtime roots bind state-store roles explicitly at the app
+boundary, while the engine and maintenance internals still use compact
+constructor shapes where that is the most direct form:
 
 - `apps/api/src/modules/buildProtectedRuntimeModule.ts`
 - `apps/api/src/runtime/intentReconcilerRuntime.ts`
 - `apps/api/src/application/services/WorkflowEngineFactory.ts`
 
-That keeps the wiring compact, but it hides the role names at the boundary and
-rebuilds the aggregate by intersection at the root.
+The remaining gap is the optional maintenance ownership decision, not the root
+role names themselves.
 
 ### Application Services
 
 The application services are already more precise internally:
 
-- `WorkflowEngine` consumes read/write roles for persistence
-- `RunMaintenanceService` consumes read/write roles for persistence
+- `WorkflowEngine` consumes explicit read/write roles for persistence
+- `RunMaintenanceService` consumes explicit read/write roles for persistence
 
 The gap is not inside the services. The gap is in the composition root and the
 public wiring surface that still treats the store as a single convenience value.
@@ -53,7 +54,7 @@ The canonical store roles already exist in the engine port package:
 - `IRunStateStoreWrite`
 - `IRunStateStoreMaintenance`
 
-The current root still exposes `stateStore` monolithically through:
+The current root exposes explicit role bindings through:
 
 - `apps/api/src/modules/types.ts`
 - runtime factory config objects
@@ -137,7 +138,7 @@ shape:
 ### S18 - Explicit Role Bindings At The Composition Root
 
 - **Priority:** P0
-- **Status:** queued
+- **Status:** review
 - **Dependency:** S02
 - **Scope:** API runtime root, engine factory, intent reconciler runtime, test
   helpers

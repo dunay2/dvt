@@ -48,7 +48,8 @@ import { IdempotencyKeyBuilder } from './idempotency.js';
 import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
 
 export interface WorkflowEngineDeps {
-  stateStore: IRunStateStoreRead & IRunStateStoreWrite;
+  stateStoreRead: IRunStateStoreRead;
+  stateStoreWrite: IRunStateStoreWrite;
   projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
@@ -220,7 +221,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         estimatedRef,
         this.deps.clock.nowIsoUtc()
       );
-      await this.deps.stateStore.bootstrapRunTx({
+      await this.deps.stateStoreWrite.bootstrapRunTx({
         metadata: bootMeta,
         firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
       });
@@ -231,10 +232,10 @@ export class WorkflowEngine implements IWorkflowEngine {
         'adapter.startRun'
       );
       if (
-        this.deps.stateStore.saveProviderRef &&
+        this.deps.stateStoreWrite.saveProviderRef &&
         (runRef.runId !== estimatedRef.runId || runRef.workflowId !== estimatedRef.workflowId)
       ) {
-        await this.deps.stateStore
+        await this.deps.stateStoreWrite
           .saveProviderRef(
             validatedContext.tenantId,
             validatedContext.runId,
@@ -334,7 +335,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     traceContext: ReturnType<typeof buildTraceContext>;
   }): Promise<void> {
     try {
-      await this.deps.stateStore.bootstrapRunTx({
+      await this.deps.stateStoreWrite.bootstrapRunTx({
         metadata: bootMeta,
         firstEvents: [this.buildRunEvent(bootMeta, 'RunQueued')],
       });
@@ -482,7 +483,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       throw error;
     }
 
-    const failMeta = await this.deps.stateStore
+    const failMeta = await this.deps.stateStoreRead
       .getRunMetadataByRunId(validatedContext.tenantId, validatedContext.runId)
       .catch(() => null);
     if (failMeta) {
@@ -584,12 +585,15 @@ export class WorkflowEngine implements IWorkflowEngine {
             // Latency must be independent of adapter availability.
             // Snapshot-first (O(1)). Falls back to full replay only when no snapshot exists
             // — e.g. runs predating snapshot support.
-            const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
+            const storedSnap = await this.deps.stateStoreRead.getSnapshot(
+              meta.tenantId,
+              meta.runId
+            );
             const result = storedSnap
               ? snapshotToStatus(storedSnap)
               : this.deps.projector.rebuild(
                   meta.runId,
-                  await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
+                  await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId)
                 );
 
             this.observability.metrics
@@ -631,12 +635,15 @@ export class WorkflowEngine implements IWorkflowEngine {
         },
         async (span) => {
           try {
-            const storedSnap = await this.deps.stateStore.getSnapshot(meta.tenantId, meta.runId);
+            const storedSnap = await this.deps.stateStoreRead.getSnapshot(
+              meta.tenantId,
+              meta.runId
+            );
             const base = storedSnap
               ? snapshotToStatus(storedSnap)
               : this.deps.projector.rebuild(
                   meta.runId,
-                  await this.deps.stateStore.listEvents(meta.tenantId, meta.runId)
+                  await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId)
                 );
 
             const providerView = await this.withTimeout(
@@ -707,7 +714,7 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   async healthCheck(): Promise<HealthStatus> {
     const checks: Array<{ name: string; target: HealthCheckable }> = [
-      { name: 'stateStore', target: this.deps.stateStore as HealthCheckable },
+      { name: 'stateStoreRead', target: this.deps.stateStoreRead as HealthCheckable },
       ...Array.from(this.deps.adapters.values()).map((adapter) => ({
         name: `adapter-${adapter.provider}`,
         target: adapter as IProviderAdapter & HealthCheckable,
@@ -760,7 +767,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   private async resolveMetaOrThrow(runRef: EngineRunRef): Promise<RunMetadata> {
-    const m = await this.deps.stateStore.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
+    const m = await this.deps.stateStoreRead.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
     if (!m) {
       throw new RunMetadataNotFoundError(runRef.runId);
     }
@@ -768,7 +775,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   private async emitRunEvent(meta: RunMetadata, eventType: EventType): Promise<void> {
-    await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [
       this.buildRunEvent(meta, eventType),
     ]);
   }
@@ -801,7 +808,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       ),
     };
 
-    await this.deps.stateStore.appendAndEnqueueTx(meta.runId, [input]);
+    await this.deps.stateStoreWrite.appendAndEnqueueTx(meta.runId, [input]);
   }
 
   private buildRunEvent(
@@ -833,7 +840,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   private async ensureRunDoesNotExist(tenantId: string, runId: string): Promise<void> {
-    const existing = await this.deps.stateStore.getRunMetadataByRunId(tenantId, runId);
+    const existing = await this.deps.stateStoreRead.getRunMetadataByRunId(tenantId, runId);
     if (existing) throw new RunAlreadyExistsError(runId);
   }
 
@@ -858,7 +865,8 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   private validateDependencies(): void {
     const requiredDeps: Array<[name: string, value: unknown]> = [
-      ['stateStore', this.deps.stateStore],
+      ['stateStoreRead', this.deps.stateStoreRead],
+      ['stateStoreWrite', this.deps.stateStoreWrite],
       ['projector', this.deps.projector],
       ['idempotency', this.deps.idempotency],
       ['clock', this.deps.clock],

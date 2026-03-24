@@ -70,6 +70,10 @@ export async function buildProtectedRuntimeModule(
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
   });
+  const stateStoreRead = stateStore;
+  const stateStoreWrite = stateStore;
+  const stateStoreMaintenance = stateStore;
+
   const intentStore = new PostgresStartRunIntentStore({
     connectionString: databaseUrl,
     schema: env.DVT_PG_SCHEMA,
@@ -132,7 +136,7 @@ export async function buildProtectedRuntimeModule(
   });
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
-    stateStore,
+    stateStore: stateStoreRead,
     projector,
     observability,
     planFetcher: executablePlanResolver,
@@ -147,7 +151,11 @@ export async function buildProtectedRuntimeModule(
       authorizer: new AllowAllAuthorizer(),
       planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
     },
-    persistence: { stateStore, intentStore },
+    persistence: {
+      stateStoreRead,
+      stateStoreWrite,
+      intentStore,
+    },
     runtime: { adapters },
     infrastructure: {
       clock: { nowIsoUtc: () => new Date().toISOString() },
@@ -199,7 +207,9 @@ export async function buildProtectedRuntimeModule(
     authorizer: commandAuthorizer,
     engine,
     adapters,
-    stateStore,
+    stateStoreRead,
+    stateStoreWrite,
+    stateStoreMaintenance,
     migrate: async () => {
       await accessRepo.migrate();
       await stateStore.migrate();

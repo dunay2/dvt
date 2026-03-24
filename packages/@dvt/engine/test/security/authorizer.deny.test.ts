@@ -76,7 +76,8 @@ function makeEngine(
 ): { engine: WorkflowEngine; store: InMemoryTxStore } {
   const store = new InMemoryTxStore();
   const engine = new WorkflowEngine({
-    stateStore: store,
+    stateStoreRead: store,
+    stateStoreWrite: store,
     projector: new SnapshotProjector(),
     idempotency: new IdempotencyKeyBuilder(),
     clock: new SequenceClock('2026-02-12T00:00:00.000Z'),

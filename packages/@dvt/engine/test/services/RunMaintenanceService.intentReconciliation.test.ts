@@ -118,7 +118,8 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     ]);
 
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency,
@@ -133,7 +134,8 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     });
 
     const service = new RunMaintenanceService({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
       intentStore,
       adapters,
       authorizer,

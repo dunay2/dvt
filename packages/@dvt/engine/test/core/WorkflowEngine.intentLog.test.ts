@@ -71,7 +71,8 @@ function createEngine(input?: { adapters?: Map<EngineRunRef['provider'], IProvid
   const intentStore = new InMemoryStartRunIntentStore();
 
   const engine = new WorkflowEngine({
-    stateStore: store,
+    stateStoreRead: store,
+    stateStoreWrite: store,
 
     projector: new SnapshotProjector(),
     idempotency: new IdempotencyKeyBuilder(),
@@ -113,7 +114,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
@@ -155,7 +157,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
@@ -205,7 +208,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
@@ -261,7 +265,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     };
 
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
@@ -315,7 +320,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     };
 
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
@@ -352,7 +358,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
@@ -382,7 +389,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
@@ -412,7 +420,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),
@@ -461,7 +470,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const store = new InMemoryTxStore();
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),

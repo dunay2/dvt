@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file packages/@dvt/engine/test/core/WorkflowEngine.test.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0014: Run-Driven Adapter Model
@@ -146,7 +146,8 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
 
     const engine = new WorkflowEngine({
-      stateStore: store,
+      stateStoreRead: store,
+      stateStoreWrite: store,
 
       projector: new SnapshotProjector(),
       idempotency: new IdempotencyKeyBuilder(),

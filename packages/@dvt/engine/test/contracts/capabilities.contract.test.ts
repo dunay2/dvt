@@ -94,7 +94,8 @@ function createEngine(adapter?: IProviderAdapter): { engine: WorkflowEngine; moc
   const effective = adapter ?? mock;
 
   const engine = new WorkflowEngine({
-    stateStore: store,
+    stateStoreRead: store,
+    stateStoreWrite: store,
 
     projector,
     idempotency: new IdempotencyKeyBuilder(),

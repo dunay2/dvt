@@ -85,7 +85,8 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
   });
 
   const engine = new WorkflowEngine({
-    stateStore: store,
+    stateStoreRead: store,
+    stateStoreWrite: store,
     projector,
     idempotency,
     clock,

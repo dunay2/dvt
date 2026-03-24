@@ -8,10 +8,13 @@
  * Never expose these routes behind a public load-balancer without additional
  * network-level access controls.
  */
-import type { IRunStateStore } from '@dvt/contracts';
+import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import type { FastifyInstance } from 'fastify';
 
-export function registerAdminRoutes(app: FastifyInstance, stateStore: IRunStateStore): void {
+export function registerAdminRoutes(
+  app: FastifyInstance,
+  stateStore: IRunStateStoreMaintenance
+): void {
   /**
    * POST /admin/runs/:runId/rebuild-snapshot
    *

@@ -1,4 +1,4 @@
-﻿import type { IRunStateStore, RunMetadata, RunStatus } from '@dvt/contracts';
+import type { IRunStateStoreRead, RunMetadata, RunStatus } from '@dvt/engine';
 
 import type {
   AuthorizedQueryExecutionContext,
@@ -9,7 +9,7 @@ import type {
 } from '../ports/runtime.js';
 
 export class ListRunsUseCase implements IListRunsUseCase {
-  public constructor(private readonly stateStore: IRunStateStore) {}
+  public constructor(private readonly stateStore: IRunStateStoreRead) {}
 
   public async execute(
     query: ListRunsQuery,

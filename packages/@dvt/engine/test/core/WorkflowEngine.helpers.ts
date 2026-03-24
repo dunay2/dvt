@@ -132,15 +132,20 @@ export function createEngine(input?: {
   requiredProviders?: EngineRunRef['provider'][];
   observability?: IObservability;
   stateStore?: InMemoryTxStore;
+  stateStoreRead?: InMemoryTxStore;
+  stateStoreWrite?: InMemoryTxStore;
   intentStore?: InMemoryStartRunIntentStore;
   observabilityFallbackThrottleMs?: number;
   clock?: IClock;
 }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
-  const store = input?.stateStore ?? new InMemoryTxStore();
+  const store = input?.stateStore ?? input?.stateStoreRead ?? new InMemoryTxStore();
+  const stateStoreRead = input?.stateStoreRead ?? store;
+  const stateStoreWrite = input?.stateStoreWrite ?? store;
   const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
 
   const engine = new WorkflowEngine({
-    stateStore: store,
+    stateStoreRead,
+    stateStoreWrite,
 
     projector: new SnapshotProjector(),
     idempotency: new IdempotencyKeyBuilder(),
