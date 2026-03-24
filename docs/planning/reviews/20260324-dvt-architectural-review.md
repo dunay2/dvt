@@ -43,7 +43,7 @@ Read-your-writes guarantee definition — a startRun() call emits events, but ge
 
 Retry ownership specification — S09 open. Does DVT count retries, or does Temporal count retries? engineAttemptId vs logicalAttemptId suggests both are tracked, but the authoritative counter for "has this step exhausted its retry budget" is not specified.
 
-2. Architectural Risk Map
+1. Architectural Risk Map
    Risk Severity Likelihood Why Mitigation
    IRunStateStore god-interface (S02) High Certain — already exists 7 responsibilities behind one interface. Mock in tests tests everything or nothing. Any schema change touches all consumers. Execute S02 now — it is unblocked.
    Unversioned event payloads (S05) High High payload: Record<string,unknown> — shape changes are invisible to lineage worker, projector, outbox worker. Silent deserialization drift across deployments. S05 payloadVersion is the minimum. AJV schema per eventType is the correct target.
@@ -59,7 +59,7 @@ Retry ownership specification — S09 open. Does DVT count retries, or does Temp
    Outbox claim timeout = double-delivery window Medium Medium If outbox worker crashes mid-batch, shard must wait outboxClaimTimeoutMs before another worker claims. During that window, downstream consumers see no events. Double delivery on recovery if consumers aren't idempotent. Document consumer idempotency requirement as a hard contract, not a guideline.
    Conductor adapter as ghost type Low Low EngineRunRef supports conductor provider. No implementation exists. Type complexity without functionality. Remove from union until implementation exists. Dead types mislead.
    CustomPolicyNamespaceRegistry with no consumers Low Low Sophisticated namespace validation with denied-field scanning, size limits, Zod schemas — for zero documented use cases. Do not add more complexity. Remove or mark explicitly experimental.
-3. Engine Abstraction Critique
+1. Engine Abstraction Critique
    Is IWorkflowEngine Minimal and Correct?
    The interface surface (startRun, signal, getRunStatus, cancelRun) is the correct minimal API for an orchestration engine façade. The run-driven model (engine calls adapter, adapter does not call back) is correctly enforced by the absence of callback registration in IProviderAdapter.
 
@@ -84,7 +84,7 @@ shouldAbort() during plan build is checked at application layer. A Planner abort
 
 Temporal's determinism requirements are invisible in IProviderAdapter. The workflow definition in RunPlanWorkflow.ts must obey Temporal's determinism rules (no Date.now(), no Math.random(), no non-deterministic I/O in workflow code). An implementer of a new activity who doesn't know this will break the workflow replay guarantee. This constraint is not surfaced in any contract or interface annotation.
 
-4. Execution Planning Layer Analysis
+1. Execution Planning Layer Analysis
    DAG Analyzer
    GraphBuilder + TopoSort is correctly implemented for the stated problem. Cycle detection is present. Stability in toposort is important — without it, the same logical graph produces different planId values across invocations, breaking plan caching.
 
@@ -125,7 +125,7 @@ Is it under-specified? Yes on retry ownership, partial execution, and cost attri
 
 Does it introduce hidden Snowflake coupling? Partially. DbtStepTypeConfig in @dvt/contracts is dbt-specific. compiledCodeRef stores Snowflake-dialect compiled SQL as a content-addressable artifact. The ExecutionPlan abstraction implies portability — a plan built for Snowflake cannot execute against BigQuery. This portability gap is not documented in the plan contract.
 
-5. State & Metadata Layer Review
+1. State & Metadata Layer Review
    Artifact Immutability
    run_events: immutable by construction (UNIQUE + no DELETE). Correct.
    run_snapshots: NOT immutable — upserted by projector on rebuild. This is correct for a derived read model, but it means a snapshot can silently diverge from the event log if the projector has a bug.
@@ -149,7 +149,7 @@ Full event replay at scale. rebuildSnapshot() replays all events from run_events
 
 Snapshot rebuild race condition. Two projector workers can claim the same stale run_id concurrently. Both will replay the same events and upsert the same snapshot row. The UPSERT is idempotent only if both replays produce identical results — which they will if the event log is immutable. But the double-work is wasted. No distributed lock on snapshot rebuild is visible.
 
-7. What Is Overbuilt?
+1. What Is Overbuilt?
    CustomPolicyNamespaceRegistry: Zod-schema validation, denied-field scanning, per-namespace byte limits — for a feature with zero production consumers. This is framework-building ahead of requirements.
 
 EngineRunRef Conductor provider type: The discriminated union includes conductor with conductorUrl. No Conductor implementation exists. Dead type branches in a discriminated union are a maintenance liability and signal over-planning.
@@ -160,7 +160,7 @@ IExecutionBindingVerifier per-step SHA-256 verification: Verifying that a blob a
 
 Outbox sharding (ADR-0033) complexity: At current scale, outbox sharding with per-shard claim isolation and distributed fencing adds operational complexity before the simpler single-worker model has been shown to be insufficient. Premature.
 
-8. What Is Underbuilt?
+1. What Is Underbuilt?
    Event payload versioning (S05): Critical. Without payloadVersion, any payload shape change is a silent breaking change across the lineage worker, projector, and outbox consumer. Must be resolved before any payload schema change.
 
 Retry ownership model (S09): Without specifying whether DVT or Temporal is authoritative for retry count, cost attribution and compliance reporting are impossible. engineAttemptId vs logicalAttemptId are unresolved semantic duplicates.
@@ -181,7 +181,7 @@ Backpressure from Temporal to API: StartRunAdmissionGuard guards against databas
 
 Cost attribution: Stated as a product requirement in the system context. Not implemented. Not designed into the event schema. Adding it later requires a breaking event schema change — which, without payloadVersion, is undetectable by consumers.
 
-9. Scalability Outlook (3-Year Horizon)
+1. Scalability Outlook (3-Year Horizon)
    1000+ Tenants
    Row-level tenant isolation in a shared PostgreSQL schema is viable at this tenant count only with proper index design. The critical queries:
 
@@ -230,14 +230,12 @@ Operational realism 4/10 No SLO definitions. No automated DLQ replay. No schema 
 Long-term maintainability 5/10 ADR process is exemplary. Contract versioning exists. But S05 (event payloads) and S09 (retry ownership) are fundamental ambiguities that will compound with every feature added. The god IRunStateStore will make every change expensive until S02 ships.
 Aggregate: 40/70 = 57%. Architectural skeleton is sound; operational and structural debt is real and growing.
 
-11. Strategic Recommendations
-    3 Structural Changes to Make Now
+1. Strategic Recommendations
+   3 Structural Changes to Make Now
 1. Execute S02 (IRunStateStore split) — immediately.
    Split into: IRunEventStore, IRunMetadataStore, IRunSnapshotStore, IOutboxStore. The current god interface means a mock for any unit test must implement all seven concerns. Every change to the state layer touches all consumers. This is unblocked and documented. There is no excuse for continued deferral. The longer it waits, the more adapters accumulate against the monolithic interface.
-
 1. Add payloadVersion to EventInput and define per-eventType payload schemas (S05).
    This is not optional. Every consumer of the event log (projector, lineage worker, outbox worker, archive restore) deserves a typed payload. Without this, the first payload schema change after a 12-month backlog of events produces an undetectable deserialization error in every consumer. Implement S05 with AJV validation per eventType at the adapter write boundary.
-
 1. Promote compiledCodeRef to a typed field in ExecutionStepV2.
    Remove it from stepTypeConfig: Record<string,unknown>. The "tech debt, defer" classification for ADR-0032 is wrong — this is a type-safety gap in the critical path between planner and execution. The field is already defined as CompiledCodeRef interface. Putting it in the typed contract costs one field addition and eliminates the silent cast at activity boundary.
 
@@ -245,33 +243,27 @@ Aggregate: 40/70 = 57%. Architectural skeleton is sound; operational and structu
 
 1. Retry ownership boundary — who counts attempts, DVT or Temporal?
    S09 must answer: Is engineAttemptId the Temporal activity attempt counter, or a DVT-managed counter? If DVT tracks attempts by emitting StepStarted per retry, and Temporal also retries without emitting DVT events, the counters diverge. Define the contract and enforce it in the adapter.
-
-2. Snapshot staleness contract — what is the maximum acceptable lag?
+1. Snapshot staleness contract — what is the maximum acceptable lag?
    The API returns snapshot data without indicating age. Define a maximum acceptable staleness bound (e.g., 30 seconds) and surface it in the API response (x-snapshot-age-ms header or snapshotAge in the response body). Without this, callers cannot distinguish stale data from correct idle state.
-
-3. dbt manifest node ordering stability — is it guaranteed?
+1. dbt manifest node ordering stability — is it guaranteed?
    Before the content-addressable plan system can be trusted for large-scale production use, verify that dbt guarantees stable manifest.nodes key ordering across equivalent invocations. If it does not, the planId for the same logical plan may vary — breaking plan deduplication and caching.
 
 3 Things to Freeze Immediately
 
 1. Freeze CustomPolicyNamespaceRegistry feature additions.
    It has no consumers. Every additional capability (new schema validators, additional namespace entries, new denied-field rules) adds complexity for zero delivered value. Freeze until a concrete consumer with documented requirements exists.
-
-2. Freeze EngineRunRef.conductor type branch.
+1. Freeze EngineRunRef.conductor type branch.
    No Conductor implementation. No documented plan. The ghost type pollutes every switch/match on EngineRunRef. Remove it from the union. Re-add when an implementation exists.
-
-3. Freeze IExecutionBindingVerifier per-step invocation.
+1. Freeze IExecutionBindingVerifier per-step invocation.
    Move SHA-256 artifact verification to plan dispatch time, not step execution time. Per-step S3 verification at 1000 nodes per run is 1000 S3 calls per run lifecycle — latency overhead with near-zero detection value for content-addressed storage. Run it once at bootstrapRunTx, not at every activity.
 
 3 Things to Delay
 
 1. Delay outbox worker sharding scale-out.
    The current single-shard model has not been demonstrated insufficient. Sharding adds claim-timeout complexity, per-shard dead-letter management, and worker coordination overhead. Until benchmark data shows single-worker throughput is the bottleneck, sharding is premature optimization.
-
-2. Delay cross-environment diff implementation.
+1. Delay cross-environment diff implementation.
    This requires a bi-temporal data model (plan state at time T in environment E). Nothing in the current event model supports this. Adding it before the core event schema is stable (S05 not complete) would require immediate rework. Defer until event payload versioning is in place.
-
-3. Delay cost dashboard and attribution.
+1. Delay cost dashboard and attribution.
    Not because it's unimportant — because it requires event schema changes (cost data in StepCompleted payloads), which requires S05 first. Building a cost dashboard against unversioned payloads and then changing the payload schema is waste. Block cost work on S05 completion.
 
 Bottom line: The architectural skeleton is principled and the contract governance process is one of the strongest aspects of the system. The immediate threats are operational: an unversioned event payload, a god-interface state store, and a missing retry ownership model. These three gaps will compound with every subsequent feature. Fix them before adding any new capability.
