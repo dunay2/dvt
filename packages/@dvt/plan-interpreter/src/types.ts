@@ -11,7 +11,7 @@
  * Minimal step shape required for plan interpretation.
  *
  * Adapters and the engine may extend this with additional fields
- * (e.g., `kind`, `simulateError`) via intersection types.
+ * (e.g., `kind`) via intersection types.
  * The plan interpreter only reads `stepId` and `dependsOn`.
  */
 export interface PlanStep {

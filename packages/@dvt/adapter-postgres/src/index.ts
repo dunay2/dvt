@@ -27,6 +27,7 @@ export type {
   RunBootstrapInput,
   RunMetadata,
   RunStateCommandPort,
+  TerminalSnapshotPinResult,
   TerminalSnapshotPinStore,
   WorkflowSnapshot,
 } from './types.js';
