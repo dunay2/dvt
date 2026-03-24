@@ -46,7 +46,7 @@ export class FileSystemArchiveObjectStore implements IArchiveObjectStore {
   }
 
   private toAbsolutePath(objectKey: string): string {
-    const normalizedKey = objectKey.trim().replaceAll('\\', '/');
+    const normalizedKey = objectKey.trim().replace(/\\/g, '/');
     if (!normalizedKey) {
       throw new Error('ARCHIVE_OBJECT_KEY_REQUIRED');
     }

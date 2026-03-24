@@ -158,13 +158,13 @@ async function writeEventsToStore(
   objectKey: string
 ): Promise<void> {
   // Use the same NDJSON encoding as the exporter
-  const _exporter = new ObjectStorageRunArchiveExporter({ objectStore, prefix: '' });
+  const exporter = new ObjectStorageRunArchiveExporter({ objectStore, prefix: '' });
   // We can't call exportArchiveUnit directly (it validates the unit key),
   // so we write the NDJSON directly for test purposes:
   const { jcsCanonicalize } = await import('@dvt/crypto');
   const content = events.map((e) => jcsCanonicalize(e)).join('\n') + '\n';
   objectStore.objects.set(objectKey, Buffer.from(content, 'utf8'));
-  // _exporter intentionally unused in this test helper
+  void exporter; // suppress unused warning
 }
 
 // ---------------------------------------------------------------------------
