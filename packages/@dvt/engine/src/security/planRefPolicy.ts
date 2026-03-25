@@ -6,10 +6,12 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import { isIP } from 'node:net';
 import { URL } from 'node:url';
 
 import { PlanUriNotAllowedError } from '../contracts/errors.js';
+
+import { DefaultHostRiskClassifier, type HostRiskClassifier } from './hostRiskClassifier.js';
+import { PlanUri } from './planUri.js';
 
 export interface PlanRefAllowlist {
   allowedSchemes: ReadonlyArray<string>;
@@ -18,128 +20,101 @@ export interface PlanRefAllowlist {
 }
 
 export class PlanRefPolicy {
-  constructor(private readonly allowlist: PlanRefAllowlist) {}
+  constructor(
+    private readonly allowlist: PlanRefAllowlist,
+    private readonly hostRiskClassifier: HostRiskClassifier = new DefaultHostRiskClassifier()
+  ) {}
 
   validateOrThrow(uri: string): void {
-    const lower = uri.toLowerCase();
-    const scheme = readUriScheme(lower);
-    assertSchemeAllowed(uri, scheme);
+    const planUri = PlanUri.from(uri);
+    assertSchemeAllowed(planUri);
 
-    if (isHttpLike(lower)) {
-      this.validateHttpUri(uri);
+    if (planUri.isHttpLike()) {
+      this.validateHttpUri(planUri);
       return;
     }
 
-    this.validateOpaqueUri(uri, scheme);
+    this.validateOpaqueUri(planUri);
   }
 
-  private validateHttpUri(uri: string): void {
-    const parsed = parseHttpUriOrThrow(uri);
+  private validateHttpUri(planUri: PlanUri): void {
+    const parsed = parseHttpUriOrThrow(planUri);
     const parsedScheme = parsed.protocol.replace(':', '');
     if (!this.allowlist.allowedSchemes.includes(parsedScheme)) {
       throw new PlanUriNotAllowedError(
-        uri,
-        `scheme not allowlisted (http/https): ${parsed.protocol}`
+        planUri.raw,
+        `${PLAN_URI_POLICY_REASON.http_scheme_not_allowlisted}:${parsed.protocol}`
       );
     }
     if (this.allowlist.allowedHosts && !this.allowlist.allowedHosts.includes(parsed.hostname)) {
       throw new PlanUriNotAllowedError(
-        uri,
-        `host not allowlisted (http/https): ${parsed.hostname}`
+        planUri.raw,
+        `${PLAN_URI_POLICY_REASON.http_host_not_allowlisted}:${parsed.hostname}`
       );
     }
-    if (isLinkLocalHost(parsed.hostname)) {
+    if (this.hostRiskClassifier.isRiskyHost(parsed.hostname)) {
       throw new PlanUriNotAllowedError(
-        uri,
-        `denied host (link-local/localhost): ${parsed.hostname}`
+        planUri.raw,
+        `${PLAN_URI_POLICY_REASON.risky_host}:${parsed.hostname}`
       );
     }
   }
 
-  private validateOpaqueUri(uri: string, scheme: string): void {
+  private validateOpaqueUri(planUri: PlanUri): void {
+    const scheme = planUri.scheme;
+    if (!scheme) {
+      throw new PlanUriNotAllowedError(planUri.raw, PLAN_URI_POLICY_REASON.missing_scheme);
+    }
     if (!this.allowlist.allowedSchemes.includes(scheme)) {
-      throw new PlanUriNotAllowedError(uri, `scheme not allowlisted (opaque): ${scheme}`);
+      throw new PlanUriNotAllowedError(
+        planUri.raw,
+        `${PLAN_URI_POLICY_REASON.opaque_scheme_not_allowlisted}:${scheme}`
+      );
     }
     if (!this.allowlist.allowedUriPrefixes) return;
 
     const isPrefixAllowed = this.allowlist.allowedUriPrefixes.some((prefix) =>
-      uri.startsWith(prefix)
+      planUri.raw.startsWith(prefix)
     );
     if (!isPrefixAllowed) {
-      throw new PlanUriNotAllowedError(uri, 'uri prefix not allowlisted (opaque)');
+      throw new PlanUriNotAllowedError(
+        planUri.raw,
+        PLAN_URI_POLICY_REASON.opaque_prefix_not_allowlisted
+      );
     }
   }
 }
 
-function isLinkLocalHost(host: string): boolean {
-  const h = host.toLowerCase();
-  if (h === 'localhost' || h.endsWith('.localhost')) return true;
-  if (h.endsWith('.local')) return true;
-  if (isPrivateOrLocalIp(h)) return true;
-  return false;
-}
-
 const DENIED_SCHEMES = new Set(['file', 'ftp', 'gopher', 'data', 'javascript', 'mailto']);
 
-function readUriScheme(uri: string): string | null {
-  const match = uri.match(/^([a-z][a-z0-9+.-]*):/);
-  const scheme = match?.[1];
-  return typeof scheme === 'string' ? scheme : null;
-}
+const PLAN_URI_POLICY_REASON = {
+  missing_scheme: 'missing_scheme',
+  denied_scheme: 'denied_scheme',
+  unparseable_http_uri: 'unparseable_http_uri',
+  http_scheme_not_allowlisted: 'http_scheme_not_allowlisted',
+  http_host_not_allowlisted: 'http_host_not_allowlisted',
+  risky_host: 'risky_host',
+  opaque_scheme_not_allowlisted: 'opaque_scheme_not_allowlisted',
+  opaque_prefix_not_allowlisted: 'opaque_prefix_not_allowlisted',
+} as const;
 
-function isPrivateOrLocalIp(host: string): boolean {
-  const hostNoZone = stripIpv6Brackets(host.split('%', 1)[0] ?? host);
-  const ipVersion = isIP(hostNoZone);
-  if (ipVersion === 4) return isPrivateOrLocalIpv4(hostNoZone);
-  if (ipVersion === 6) return isPrivateOrLocalIpv6(hostNoZone);
-  return false;
-}
-
-function stripIpv6Brackets(host: string): string {
-  if (host.startsWith('[') && host.endsWith(']')) {
-    return host.slice(1, -1);
-  }
-  return host;
-}
-
-function assertSchemeAllowed(uri: string, scheme: string | null): asserts scheme is string {
+function assertSchemeAllowed(planUri: PlanUri): void {
+  const scheme = planUri.scheme;
   if (!scheme) {
-    throw new PlanUriNotAllowedError(uri, 'invalid uri (missing scheme)');
+    throw new PlanUriNotAllowedError(planUri.raw, PLAN_URI_POLICY_REASON.missing_scheme);
   }
   if (DENIED_SCHEMES.has(scheme)) {
-    throw new PlanUriNotAllowedError(uri, `denied scheme (explicit block): ${scheme}:`);
+    throw new PlanUriNotAllowedError(
+      planUri.raw,
+      `${PLAN_URI_POLICY_REASON.denied_scheme}:${scheme}`
+    );
   }
 }
 
-function isHttpLike(uriLower: string): boolean {
-  return uriLower.startsWith('http://') || uriLower.startsWith('https://');
-}
-
-function parseHttpUriOrThrow(uri: string): URL {
+function parseHttpUriOrThrow(planUri: PlanUri): URL {
   try {
-    return new URL(uri);
+    return planUri.toHttpUrl();
   } catch {
-    throw new PlanUriNotAllowedError(uri, 'invalid uri (unparseable)');
+    throw new PlanUriNotAllowedError(planUri.raw, PLAN_URI_POLICY_REASON.unparseable_http_uri);
   }
-}
-
-function isPrivateOrLocalIpv4(host: string): boolean {
-  const octets = host.split('.').map((part) => Number(part));
-  const first = octets[0] ?? -1;
-  const second = octets[1] ?? -1;
-
-  if (first === 127) return true; // full loopback range 127.0.0.0/8
-  if (first === 10) return true; // RFC1918 10.0.0.0/8
-  if (first === 172 && second >= 16 && second <= 31) return true; // RFC1918 172.16.0.0/12
-  if (first === 192 && second === 168) return true; // RFC1918 192.168.0.0/16
-  if (first === 169 && second === 254) return true; // link-local and metadata range
-  return false;
-}
-
-function isPrivateOrLocalIpv6(host: string): boolean {
-  const normalized = host.toLowerCase();
-  if (normalized === '::1') return true; // loopback
-  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true; // ULA fc00::/7
-  if (/^fe[89ab]/.test(normalized)) return true; // link-local fe80::/10
-  return false;
 }

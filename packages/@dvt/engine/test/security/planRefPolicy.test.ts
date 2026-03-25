@@ -43,6 +43,15 @@ describe('PlanRefPolicy', () => {
     expect(() => policy.validateOrThrow('https://[fd12:3456::1]/plan.json')).toThrowError(
       PlanUriNotAllowedError
     );
+    expect(() => policy.validateOrThrow('https://[::ffff:127.0.0.1]/plan.json')).toThrowError(
+      PlanUriNotAllowedError
+    );
+  });
+
+  it('rejects localhost with trailing dot', () => {
+    expect(() => policy.validateOrThrow('https://localhost./plan.json')).toThrowError(
+      PlanUriNotAllowedError
+    );
   });
 
   it('allows public https hostnames', () => {
