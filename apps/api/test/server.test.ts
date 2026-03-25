@@ -112,6 +112,36 @@ describe('reconciler bootstrap health wiring', () => {
     expect(harness.getHealth()).toEqual({ status: 'healthy' });
   });
 
+  it('clears watchdog interval on stop', () => {
+    const intervalHandle = { unref: vi.fn() };
+    const setIntervalSpy = vi.fn((_handler: () => void) => intervalHandle);
+    const clearIntervalSpy = vi.fn();
+    const logger = {
+      error: vi.fn(),
+    } as unknown as FastifyBaseLogger;
+    const ctx = {
+      getIntentReconcilerHealth: () => ({ status: 'starting' as const }),
+      setIntentReconcilerHealth: vi.fn(),
+      observability: {
+        metrics: {
+          counter: vi.fn(() => ({ add: vi.fn() })),
+        },
+      } as unknown as IObservability,
+    };
+
+    const watchdog = startReconcilerHealthWatchdog(ctx, logger, 5_000, 1_000, {
+      now: () => 1_000,
+      setInterval: setIntervalSpy,
+      clearInterval: clearIntervalSpy,
+    });
+
+    watchdog.stop();
+
+    expect(setIntervalSpy).toHaveBeenCalledOnce();
+    expect(intervalHandle.unref).toHaveBeenCalledOnce();
+    expect(clearIntervalSpy).toHaveBeenCalledWith(intervalHandle);
+  });
+
   it('sets disabled health when runtime is not created', async () => {
     const harness = createHarness();
     let capturedHooks: ReconcilerRuntimeHealthHooks | undefined;
