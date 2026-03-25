@@ -83,8 +83,8 @@ jobs:
 
       - name: Workspace type-check (fast-fail)
         if:
-          ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
-          'true' }}
+          github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
+          'true'
         run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
@@ -177,6 +177,7 @@ jobs:
 
       - name: Detect PR changes relevant to Temporal and adapter-postgres
         id: detect_changes
+        if: github.event_name == 'pull_request'
         run: node tools/ci/emit-scope.mjs --mode pr-quality
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -238,7 +239,7 @@ jobs:
             const jobs = ${{ toJSON(needs) }};
             // Consider only explicit failures as blocking; ignore skipped/neutral jobs
             const failedJobs = Object.entries(jobs)
-              .filter(([_, job]) => ['failure', 'cancelled', 'timed_out'].includes(job.result))
+              .filter(([_, job]) => ['failure', 'cancelled'].includes(job.result))
               .map(([name, _]) => name);
 
             if (failedJobs.length > 0) {
