@@ -60,7 +60,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
       sha256: 'deadbeef',
       schemaVersion: 'v1.1',
       planId: 'p',
-      planVersion: '1.0',
+      planVersion: '2.3',
     };
   }
 

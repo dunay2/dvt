@@ -35,7 +35,7 @@ import { InMemoryPlanFetcher, utf8 } from './helpers.js';
 function makePlanMetadata(planId: string): ExecutionPlan['metadata'] {
   return {
     planId,
-    planVersion: '1.0.0',
+    planVersion: '2.3',
     schemaVersion: 'v1.2',
     contractVersion: '1.0.0',
     targetAdapter: 'mock',

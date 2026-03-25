@@ -97,7 +97,7 @@ function makeMinimalPlan(): ExecutionPlan {
   return {
     metadata: {
       planId: 'cp2-minimal',
-      planVersion: '1.0.0',
+      planVersion: '2.3',
       schemaVersion: 'v1.2',
       contractVersion: '1.0.0',
     },
@@ -199,7 +199,7 @@ describe('ExecutionPlan — provenance metadata is inert at runtime', (): void =
     const plan: ExecutionPlan = {
       metadata: {
         planId: 'cp2-full',
-        planVersion: '1.0.0',
+        planVersion: '2.3',
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
         plannerVersion: '3.1.4',

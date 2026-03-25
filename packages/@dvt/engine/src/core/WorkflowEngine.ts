@@ -39,6 +39,7 @@ import {
   SignalNotImplementedError,
 } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1_1_1.js';
+import { assertSupportedPlanVersion } from '../contracts/PlanVersionPolicy.js';
 import type { EventType, RunEventInput, RunMetadata } from '../contracts/runEvents.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
@@ -430,6 +431,7 @@ export class WorkflowEngine implements IWorkflowEngine {
   ): Promise<void> {
     this.deps.policy.validatePlanRef(planRef);
     validateSchemaVersionOrThrow(planRef.schemaVersion);
+    assertSupportedPlanVersion(planRef.planVersion);
     await this.deps.policy.assertTenantAccess(context.tenantId);
     validateRunIdOrThrow(context.runId);
     await this.ensureRunDoesNotExist(context.tenantId, context.runId);

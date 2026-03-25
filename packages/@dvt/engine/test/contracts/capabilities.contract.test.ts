@@ -64,7 +64,7 @@ function makePlanRef(requiresCapabilities?: string[]): PlanRef {
     sha256: sha256Hex(bytes),
     schemaVersion: 'v1.2',
     planId: 'cap-test',
-    planVersion: '1.0.0',
+    planVersion: '2.3',
     sizeBytes: bytes.byteLength,
     ...(requiresCapabilities === undefined ? {} : { requiresCapabilities }),
   };

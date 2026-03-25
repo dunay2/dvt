@@ -14,6 +14,7 @@ import type { IObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -68,7 +69,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       sha256: 'deadbeef',
       schemaVersion: 'v1.1',
       planId: 'p',
-      planVersion: '1.0',
+      planVersion: '2.3',
     };
   }
 
@@ -195,7 +196,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       sha256: 'deadbeef',
       schemaVersion: 'v1.1',
       planId: 'p',
-      planVersion: '1.0',
+      planVersion: '2.3',
     } as any;
 
     const validContext = {
@@ -303,6 +304,15 @@ describe('WorkflowEngine (basic failure modes)', () => {
         await expect(engine.startRun(makePlanRef(), makeContext('dup-1'))).rejects.toThrow(
           /already exists/
         );
+      },
+    },
+    {
+      name: 'unsupported planVersion',
+      run: async (engine: WorkflowEngine): Promise<void> => {
+        const unsupported = { ...makePlanRef(), planVersion: '9.0' };
+        await expect(
+          engine.startRun(unsupported, makeContext('unsupported-ver-1'))
+        ).rejects.toThrow(UnsupportedPlanVersionError);
       },
     },
   ])('startRun rejects $name', async ({ run }) => {
