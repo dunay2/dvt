@@ -58,3 +58,16 @@ forma inmediata.
 - `apps/api/src/runtime/intentReconcilerRuntime.ts`
 - `apps/api/test/app.test.ts`
 - `docs/planning/qa-architecture-findings-and-risks.md`
+
+## Update 2026-03-25
+
+Additional error-governance controls were added in engine to reduce semantic
+drift risk in operational error signaling:
+
+- typed `code -> messageKey -> messageParams` contract in engine errors;
+- removal of hardcoded human-readable text from error constructors;
+- dedicated i18n contract tests (`errorI18n.contract.test.ts`) to prevent
+  silent regressions.
+
+Effect on this risk: improves traceability and consistency of observable error
+signals, but does not change the reconciler runtime residual-risk status.
