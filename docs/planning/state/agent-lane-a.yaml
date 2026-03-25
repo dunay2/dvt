@@ -2,7 +2,7 @@ lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-24
+last_reviewed: 2026-03-25
 goal: Close the state-store boundary and the smallest contract cleanup slice around it.
 expected_outcome:
   - state-store ownership is explicit
@@ -63,6 +63,38 @@ tasks:
     objective: remove duplicate estimateRunRef declaration.
     dependency: none
     target: Remove duplicate provider-adapter contract drift.
+  - task_id: RC-A5
+    priority: P1
+    status: queued
+    objective:
+      replace silent markResolved catch with warning/metric telemetry so intent-resolution failures
+      are observable.
+    dependency: none
+    target: Merge and lock intent-resolution observability.
+  - task_id: RC-E3
+    priority: P1
+    status: queued
+    objective:
+      replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError>
+      return type to eliminate the Divergent Change smell.
+    dependency: none
+    target: Engine Result type + facade catch-block elimination.
+  - task_id: DHM
+    priority: P1
+    status: queued
+    objective:
+      drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization),
+      then WS1, WS3, WS4, WS2, WS6.
+    dependency: none
+    target: WS5 test fixture modularization complete; roadmap for remaining workstreams defined.
+  - task_id: plan-version-reset
+    priority: P1
+    status: queued
+    objective:
+      reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before
+      go-live.
+    dependency: none
+    target: planVersion canonical value is '1.0' everywhere before first production release.
 dependency_notes: |
   - `S02` depends on `RC-A6`.
   - `S18` depends on `S02`.
@@ -70,3 +102,6 @@ dependency_notes: |
   - `S18-F1` depends on `S18`.
   - `Schema migration rollback` depends on `S02`.
   - `S13` is independent and can run in parallel.
+  - `RC-E3` is a prerequisite to S03 or similar; breaking interface change — coordinate with Lane C.
+  - `DHM` starts with WS5; follow WS1, WS3, WS4, WS2, WS6 dependency order.
+  - `plan-version-reset` is independent and can run in parallel.

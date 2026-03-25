@@ -2,7 +2,7 @@
 title: Agent Lane A - Contracts And State-Store Boundary
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-24
+last_reviewed: 2026-03-25
 planning_type: status
 ---
 
@@ -95,6 +95,10 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - [ ] `P2` `S18-F1`: harden the explicit state-store role bundle into a root-owned boundary and prevent convenience rewiring drift.
 - [x] `P1` `schema-migration-rollback`: make storage changes recoverable after S02.
 - [x] `P1` `S13`: remove duplicate estimateRunRef declaration.
+- [ ] `P1` `RC-A5`: replace silent markResolved catch with warning/metric telemetry so intent-resolution failures are observable.
+- [ ] `P1` `RC-E3`: replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError> return type to eliminate the Divergent Change smell.
+- [ ] `P1` `DHM`: drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization), then WS1, WS3, WS4, WS2, WS6.
+- [ ] `P1` `plan-version-reset`: reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before go-live.
 
 ## Dependencies
 
@@ -104,6 +108,9 @@ Close the state-store boundary and the smallest contract cleanup slice around it
 - `S18-F1` depends on `S18`.
 - `Schema migration rollback` depends on `S02`.
 - `S13` is independent and can run in parallel.
+- `RC-E3` is a prerequisite to S03 or similar; breaking interface change — coordinate with Lane C.
+- `DHM` starts with WS5; follow WS1, WS3, WS4, WS2, WS6 dependency order.
+- `plan-version-reset` is independent and can run in parallel.
 
 ## Expected Outcome
 

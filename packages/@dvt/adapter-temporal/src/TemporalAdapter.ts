@@ -26,6 +26,7 @@ import { RUN_PLAN_WORKFLOW, WorkflowSignals } from '@dvt/contracts';
 
 import type { TemporalAdapterConfig } from './config.js';
 import type { TemporalClientManager } from './TemporalClient.js';
+import { isWorkflowNotFound } from './temporalErrorPolicy.js';
 import { withAbortSignalTimeout, withTimeoutMs } from './temporalObservability.js';
 import { toTemporalRunRef, toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
 
@@ -263,35 +264,4 @@ export class TemporalAdapter implements IProviderAdapter {
       'lookupRunRef.describe'
     );
   }
-}
-
-/**
- * Detects "workflow not found" responses from the Temporal server.
- *
- * The Temporal TypeScript SDK throws WorkflowNotFoundError when describe() is
- * called on a non-existent workflow. Older SDK versions may surface a
- * ServiceError with gRPC status NOT_FOUND (code 5). Both are treated as "not
- * found" so the adapter stays robust across SDK patch versions.
- */
-function isWorkflowNotFound(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  if (error.name === 'WorkflowNotFoundError') return true;
-  const asRecord = error as unknown as Record<string, unknown>;
-  if (error.name !== 'ServiceError') return false;
-  const normalizedCode = normalizeTemporalErrorCode(asRecord['code']);
-  return normalizedCode === '5' || normalizedCode === 'NOT_FOUND';
-}
-
-function normalizeTemporalErrorCode(code: unknown): string | undefined {
-  if (typeof code === 'number') {
-    return Number.isFinite(code) ? String(code) : undefined;
-  }
-  if (typeof code !== 'string') {
-    return undefined;
-  }
-  const normalized = code.trim();
-  if (normalized.length === 0) {
-    return undefined;
-  }
-  return /^\d+$/.test(normalized) ? String(Number(normalized)) : normalized.toUpperCase();
 }
