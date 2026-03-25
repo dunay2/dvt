@@ -1,10 +1,26 @@
 import { execFile } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
 const ROOT_CONFIG_PATTERNS = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml'];
+
+function readAdapterPostgresPolicy() {
+  const policyPath = new URL('./policy/adapter-postgres-relevance.json', import.meta.url);
+  const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
+
+  if (!Array.isArray(policy.adapter_postgres_relevant)) {
+    throw new Error(
+      'Invalid adapter-postgres policy: adapter_postgres_relevant must be an array of patterns'
+    );
+  }
+
+  return policy;
+}
+
+const ADAPTER_POSTGRES_POLICY = readAdapterPostgresPolicy();
+export const ADAPTER_POSTGRES_RELEVANT_PATTERNS = ADAPTER_POSTGRES_POLICY.adapter_postgres_relevant;
 
 export const WORKSPACE_ENTRIES = [
   { key: 'api', name: 'api', pkg: 'dvt-api', patterns: ['apps/api/**'] },
@@ -89,6 +105,7 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     '.github/workflows/pr-quality-gate.yml',
     '.github/workflows/test.yml',
   ],
+  adapter_postgres_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
 };
 
 function normalizePath(path) {

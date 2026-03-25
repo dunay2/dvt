@@ -174,48 +174,13 @@ jobs:
               core.setFailed('❌ PR description is too short. Please provide a detailed description (min 50 characters).');
             }
 
-      - name: Detect PR changes relevant to Temporal
+      - name: Detect PR changes relevant to Temporal and adapter-postgres
         id: detect_changes
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            if (!pr) {
-              core.setOutput('temporal_changed', 'true');
-              return;
-            }
-            const files = await github.paginate(
-              github.rest.pulls.listFiles,
-              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number }
-            );
-
-            // Temporal integration can be affected by adapter, engine, contracts,
-            // shared root config, and workflow definitions.
-            const patterns = [
-              'packages/@dvt/adapter-temporal/',
-              'packages/@dvt/engine/',
-              'packages/@dvt/contracts/',
-              'package.json',
-              'pnpm-lock.yaml',
-              'pnpm-workspace.yaml',
-              '.github/workflows/pr-quality-gate.yml',
-              '.github/workflows/test.yml',
-            ];
-            const changed = files.some(f => patterns.some(p => f.filename.startsWith(p)));
-            core.setOutput('temporal_changed', changed ? 'true' : 'false');
-
-            const fs = require('fs');
-            const { execSync } = require('child_process');
-            // Validate policy shape before using it
-            execSync('node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json', { stdio: 'inherit' });
-            const policy = JSON.parse(fs.readFileSync('tools/ci/policy/adapter-postgres-relevance.json','utf8'));
-            const adapterPostgresPatterns = (policy.adapter_postgres_relevant || []).map(p => {
-              return p.endsWith('/**') ? p.slice(0, -3) : p;
-            });
-            const adapterPostgresChanged = files.some(f =>
-              adapterPostgresPatterns.some(p => f.filename.startsWith(p)),
-            );
-            core.setOutput('adapter_postgres_changed', adapterPostgresChanged ? 'true' : 'false');
+        run: node tools/ci/emit-scope.mjs --mode pr-quality
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
 
   temporal-integration:
     name: Temporal adapter integration (time-skipping)
