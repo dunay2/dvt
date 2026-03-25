@@ -19,7 +19,7 @@ Authoritative task source remains:
 - `in_progress`: 0
 - `review`: 6
 - `queued`: 32
-- `blocked`: 3
+- `blocked`: 2
 - `done`: tracked in closeouts and evidence (not listed here)
 
 ## Actionable Now (Strictly Unblocked)
@@ -39,7 +39,7 @@ block in the workboard.
 | `P1`     | `S13`    | Already in Review; closes duplicate provider-adapter contract drift.                     | Remove duplicate `estimateRunRef` declaration and lock the cleanup.    |
 | `P1`     | `S05`    | Explicitly unblocked by `S01` closure.                                                   | Add payload version handling in envelope flow.                         |
 | `P1`     | `S07`    | No blockers; unlocks `S11`.                                                              | Normalize lineage job naming + sink shape.                             |
-| `P1`     | `S09`    | No blockers; unlocks `S08`.                                                              | Set retry ownership ADR/runtime rule.                                  |
+| `P1`     | `S08`    | `S09` is now closed (PR #595); plan storage ownership is unblocked.                      | Start `PostgresPlanStore` ownership slice.                             |
 | `P1`     | `S16`    | `RC-A4` is merged; runtime planVersion validation is now unblocked.                      | Wire policy into `validateStartRunPreconditions`.                      |
 | `P2`     | `RC-B5`  | Lineage retry path currently exhausts too quickly under outage.                          | Add scheduled retry (`next_attempt_at`) with exponential backoff.      |
 | `P2`     | `RC-D1`  | Reconciler startup degradation is not visible to health consumers.                       | Expose reconciler status as `degraded` in API health.                  |
@@ -60,7 +60,6 @@ block in the workboard.
 | `G4-PR5` | Queued  | waits for `G4-PR4`                            |
 | `S03`    | Queued  | depends on `S02` (C1 path)                    |
 | `F1`     | Queued  | C2 final wiring depends on `S03`              |
-| `S08`    | Blocked | waits for `S09`                               |
 | `S11`    | Blocked | waits for `S07`                               |
 | `R4`     | Queued  | waits for `R3`                                |
 | `R5`     | Queued  | waits for `R4`                                |
@@ -113,7 +112,7 @@ If you want maximum parallelism now without violating gates, start these lanes:
 2. `State-store lane`: `RC-A6` then `S02` then `S03` then `F1`.
 3. `Version lane`: `S16`.
 4. `Traceability lane`: `S07` + `RC-B5`.
-5. `Planner lane`: `S09`.
+5. `Planner lane`: `S08` (unblocked after `S09` closure).
 6. `Ops lane`: `RC-D1` + `RC-D1A` + `RC-D2` + `RC-D3`.
 7. `Governance lane`: `S13` + `F4` + `F5` + `A1` + `A2` + `R7`.
 8. `Architecture lane`: `DHM` (start with `WS5`).
