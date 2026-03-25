@@ -45,6 +45,7 @@ export type ExecutabilityRejectionCode =
   | 'MISSING_CAPABILITY'
   | 'POLICY_UNSUPPORTED'
   | 'INVALID_STEP_KIND'
+  | 'UNSUPPORTED_PLAN_VERSION'
   | 'REJECTED';
 
 // ── Result type ────────────────────────────────────────────────────────────────
