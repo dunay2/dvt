@@ -38,6 +38,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate adapter-postgres policy JSON
+        if: github.event_name == 'pull_request'
+        run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
+
       - name: Setup pnpm, cache and dependencies (fast-fail)
         uses: ./.github/actions/setup-node-pnpm
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 function usage() {
   console.error('Usage: generate-paths-filter.js <policy.json> <key>');
