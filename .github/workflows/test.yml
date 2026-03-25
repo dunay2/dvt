@@ -11,11 +11,6 @@ on:
         required: false
         type: boolean
         default: false
-      run_coverage:
-        description: 'Generate and upload coverage (requires full suite)'
-        required: false
-        type: boolean
-        default: false
 
 concurrency:
   group: test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
