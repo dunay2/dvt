@@ -202,49 +202,47 @@ jobs:
           'true'
         run: echo "No determinism-relevant changes detected; skipping determinism checks."
 
-  adapter-postgres-smoke:
-    name: Adapter Postgres Smoke
+  detect-pg-smoke-scope:
+    name: Detect adapter-postgres smoke scope
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    outputs:
+      changed: ${{ steps.changes.outputs.adapter_postgres_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Generate adapter-postgres relevant filters
-        id: adapter_postgres_relevant_filters
-        if: github.event_name == 'pull_request'
+        id: filters
         run: |
           echo "filters<<EOF" >> $GITHUB_OUTPUT
           node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Detect adapter-postgres-relevant changes (PR only)
-        id: pg_changes
-        if: github.event_name == 'pull_request'
+      - name: Detect adapter-postgres-relevant changes
+        id: changes
         uses: dorny/paths-filter@v4
         with:
-          filters: ${{ steps.adapter_postgres_relevant_filters.outputs.filters }}
+          filters: ${{ steps.filters.outputs.filters }}
+
+  adapter-postgres-smoke:
+    name: Adapter Postgres Smoke
+    runs-on: ubuntu-latest
+    needs: [detect-pg-smoke-scope]
+    if: |
+      always() && (
+        github.event_name != 'pull_request' ||
+        (github.event.pull_request.draft == false && needs.detect-pg-smoke-scope.outputs.changed == 'true')
+      )
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
-          == 'true'
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Build adapter-postgres dependency graph
-        if:
-          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
-          == 'true'
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build
 
       - name: Run adapter-postgres full test suite
-        if:
-          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
-          == 'true'
         run: pnpm test:adapter-postgres
-
-      - name: Skip adapter-postgres smoke (PR without relevant changes)
-        if:
-          github.event_name == 'pull_request' && steps.pg_changes.outputs.adapter_postgres_relevant
-          != 'true'
-        run: echo "No adapter-postgres-relevant changes detected; skipping smoke suite."

@@ -31,7 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     outputs:
-      temporal_changed: ${{ steps.detect_changes.outputs.temporal_changed }}
+      temporal_changed:
+        ${{ steps.detect_changes.outputs.temporal_changed || steps.wd_scope.outputs.temporal_changed
+        }}
       adapter_postgres_changed: ${{ steps.detect_changes.outputs.adapter_postgres_changed }}
     steps:
       - name: Checkout
@@ -171,6 +173,13 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
+
+      - name: Set temporal_changed for workflow_dispatch
+        id: wd_scope
+        if:
+          github.event_name == 'workflow_dispatch' && github.event.inputs.run_temporal_integration
+          == 'true'
+        run: echo "temporal_changed=true" >> $GITHUB_OUTPUT
 
   temporal-integration:
     name: Temporal adapter integration (time-skipping)
