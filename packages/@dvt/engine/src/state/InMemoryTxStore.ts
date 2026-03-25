@@ -8,6 +8,7 @@ import type {
   OutboxRecord,
 } from '@dvt/contracts';
 
+import { RunAlreadyExistsError } from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -128,7 +129,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     if (this.metadataByRunId.has(input.metadata.runId)) {
-      throw new Error('RUN_ALREADY_EXISTS');
+      throw new RunAlreadyExistsError(input.metadata.runId);
     }
 
     // Atomic block (no awaits): write metadata + first events together.
