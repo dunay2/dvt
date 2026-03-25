@@ -299,10 +299,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
   }
 
   async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
-    const all = await this.outbox.listDeadLetter(Number.MAX_SAFE_INTEGER, tenantId);
-    return all
-      .filter((r) => this.metadataByRunId.get(r.runId)?.tenantId === tenantId)
-      .slice(0, limit);
+    return this.outbox.listDeadLetter(limit, tenantId);
   }
 
   async replayDeadLetters(options: {
@@ -311,20 +308,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     runId?: string;
     ids?: string[];
   }): Promise<number> {
-    const tenantDeadLetters = await this.listDeadLetter(
-      options.limit ?? Number.MAX_SAFE_INTEGER,
-      options.tenantId
-    );
-    const runFiltered = options.runId
-      ? tenantDeadLetters.filter((r) => r.runId === options.runId)
-      : tenantDeadLetters;
-    const idsSet = options.ids ? new Set(options.ids) : null;
-    const candidates = idsSet ? runFiltered.filter((r) => idsSet.has(r.id)) : runFiltered;
-    if (candidates.length === 0) return 0;
-    return this.outbox.replayDeadLetters({
-      tenantId: options.tenantId,
-      ids: candidates.map((r) => r.id),
-    });
+    return this.outbox.replayDeadLetters(options);
   }
 
   async reserveRetryAttempt(

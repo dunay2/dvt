@@ -99,9 +99,12 @@ export class InMemoryOutboxState implements IOutboxStorage {
 
   private matchesReplaySelection(
     deadLetter: PersistedDeadLetterRecord,
-    options: { runId?: string } | undefined,
+    options: { tenantId?: string; runId?: string } | undefined,
     ids: ReadonlySet<string> | null
   ): boolean {
+    if (options?.tenantId && deadLetter.payload.tenantId !== options.tenantId) {
+      return false;
+    }
     if (options?.runId && deadLetter.runId !== options.runId) {
       return false;
     }
@@ -256,8 +259,11 @@ export class InMemoryOutboxState implements IOutboxStorage {
     );
   }
 
-  async listDeadLetter(limit: number, _tenantId: string): Promise<DeadLetterRecord[]> {
-    return this.deadLetters.slice(0, limit).map(stripPersistedDeadLetterShardId);
+  async listDeadLetter(limit: number, tenantId: string): Promise<DeadLetterRecord[]> {
+    return this.deadLetters
+      .filter((r) => r.payload.tenantId === tenantId)
+      .slice(0, limit)
+      .map(stripPersistedDeadLetterShardId);
   }
 
   async replayDeadLetters(options: ReplayDeadLetterOptions): Promise<number> {
