@@ -19,6 +19,7 @@ type ReconcilerHealthReadContext = Pick<
   AppContext,
   'getIntentReconcilerHealth' | 'setIntentReconcilerHealth' | 'observability'
 >;
+type IntervalHandle = ReturnType<typeof setInterval>;
 
 type CreateIntentReconcilerRuntime = (
   env: AppContext['env'],
@@ -72,6 +73,47 @@ export function evaluateAndMarkReconcilerHealthStale(
   return true;
 }
 
+export type ReconcilerHealthWatchdog = {
+  markSweepSignal: () => void;
+  stop: () => void;
+};
+
+type ReconcilerHealthWatchdogDeps = {
+  now: () => number;
+  setInterval: (handler: () => void, timeout?: number) => IntervalHandle;
+  clearInterval: (handle: IntervalHandle) => void;
+};
+
+const DEFAULT_WATCHDOG_DEPS: ReconcilerHealthWatchdogDeps = {
+  now: () => Date.now(),
+  setInterval: (handler: () => void, timeout?: number): IntervalHandle =>
+    setInterval(handler, timeout),
+  clearInterval: (handle: IntervalHandle): void => clearInterval(handle),
+};
+
+export function startReconcilerHealthWatchdog(
+  ctx: ReconcilerHealthReadContext,
+  logger: FastifyBaseLogger,
+  staleMs: number,
+  pollMs: number,
+  deps: ReconcilerHealthWatchdogDeps = DEFAULT_WATCHDOG_DEPS
+): ReconcilerHealthWatchdog {
+  let lastSweepSignalAtMs = deps.now();
+  const interval = deps.setInterval(() => {
+    evaluateAndMarkReconcilerHealthStale(ctx, logger, staleMs, lastSweepSignalAtMs, deps.now());
+  }, pollMs);
+  interval.unref?.();
+
+  return {
+    markSweepSignal: () => {
+      lastSweepSignalAtMs = deps.now();
+    },
+    stop: () => {
+      deps.clearInterval(interval);
+    },
+  };
+}
+
 export function buildReconcilerHealthHooks(
   setIntentReconcilerHealth: (health: ReconcilerHealthState) => void
 ): ReconcilerRuntimeHealthHooks {
@@ -111,13 +153,12 @@ export async function bootstrapIntentReconciler(
 async function main(): Promise<void> {
   const { app, ctx } = await buildApp();
   let reconcilerRuntimePromise: Promise<IntentReconcilerRuntimeHandle | null> | null = null;
-  let staleHealthCheckInterval: NodeJS.Timeout | null = null;
-  let lastSweepSignalAtMs = Date.now();
+  let watchdog: ReconcilerHealthWatchdog | null = null;
 
   app.addHook('onClose', async () => {
-    if (staleHealthCheckInterval) {
-      clearInterval(staleHealthCheckInterval);
-      staleHealthCheckInterval = null;
+    if (watchdog) {
+      watchdog.stop();
+      watchdog = null;
     }
     if (reconcilerRuntimePromise === null) return;
     try {
@@ -143,11 +184,11 @@ async function main(): Promise<void> {
   ) =>
     createIntentReconcilerRuntime(env, logger, observability, {
       onSweepSuccess: () => {
-        lastSweepSignalAtMs = Date.now();
+        watchdog?.markSweepSignal();
         healthHooks.onSweepSuccess?.();
       },
       onSweepFailure: () => {
-        lastSweepSignalAtMs = Date.now();
+        watchdog?.markSweepSignal();
         healthHooks.onSweepFailure?.();
       },
     });
@@ -158,21 +199,16 @@ async function main(): Promise<void> {
 
   const staleMs = computeReconcilerHealthStaleMs(ctx.env);
   const pollMs = Math.max(1_000, Math.floor(staleMs / 2));
-  staleHealthCheckInterval = setInterval(() => {
-    const nowMs = Date.now();
-    evaluateAndMarkReconcilerHealthStale(
-      {
-        getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
-        setIntentReconcilerHealth: ctx.setIntentReconcilerHealth,
-        observability: ctx.observability,
-      },
-      app.log,
-      staleMs,
-      lastSweepSignalAtMs,
-      nowMs
-    );
-  }, pollMs);
-  staleHealthCheckInterval.unref?.();
+  watchdog = startReconcilerHealthWatchdog(
+    {
+      getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
+      setIntentReconcilerHealth: ctx.setIntentReconcilerHealth,
+      observability: ctx.observability,
+    },
+    app.log,
+    staleMs,
+    pollMs
+  );
 }
 
 function isDirectExecution(): boolean {

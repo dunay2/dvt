@@ -61,111 +61,110 @@ function makeRunEventInput(args: {
     idempotencyKey: args.idempotencyKey,
   };
 }
+function makePlanRef(): PlanRef {
+  return {
+    uri: 'https://example.com/plan',
+    sha256: 'deadbeef',
+    schemaVersion: 'v1.1',
+    planId: 'p',
+    planVersion: '2.3',
+  };
+}
+
+function makeContext(runId = 'r1'): RunContext {
+  return {
+    tenantId: 't',
+    projectId: 'p',
+    environmentId: 'dev',
+    runId,
+    targetAdapter: 'temporal',
+  };
+}
+
+function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
+  return {
+    provider: 'temporal',
+    async startRun(_planRef: PlanRef, ctx) {
+      return {
+        provider: 'temporal',
+        tenantId: ctx.tenantId,
+        namespace: 'default',
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+    async cancelRun() {},
+    async getRunStatus(runRef) {
+      return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
+    },
+    async signal() {},
+    ...overrides,
+  };
+}
+
+function makeAdapters(
+  overrides?: Partial<IProviderAdapter>
+): Map<EngineRunRef['provider'], IProviderAdapter> {
+  return new Map([['temporal', makeTemporalAdapter(overrides)]]);
+}
+
+function makeTrackingObservability(): {
+  obs: IObservability;
+  counters: string[];
+  histograms: string[];
+} {
+  const counters: string[] = [];
+  const histograms: string[] = [];
+  const obs: IObservability = {
+    ...createNoopObservability(),
+    metrics: {
+      counter(name: string) {
+        counters.push(name);
+        return { add: () => {} };
+      },
+      histogram(name: string) {
+        histograms.push(name);
+        return { record: () => {} };
+      },
+      gauge() {
+        return { set: () => {} };
+      },
+    },
+  };
+  return { obs, counters, histograms };
+}
+
+function createEngine(input?: {
+  adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
+  requiredProviders?: EngineRunRef['provider'][];
+  observability?: IObservability;
+  stateStore?: InMemoryTxStore;
+  intentStore?: InMemoryStartRunIntentStore;
+}): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
+  const store = input?.stateStore ?? new InMemoryTxStore();
+  const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
+
+  const engine = new WorkflowEngine({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+
+    projector: new SnapshotProjector(),
+    idempotency: new IdempotencyKeyBuilder(),
+    clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+    policy: new RunAccessPolicy({
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
+    intentStore,
+    observability: input?.observability ?? createNoopObservability(),
+    adapters: input?.adapters ?? new Map(),
+    requiredProviders: input?.requiredProviders,
+  });
+
+  return { engine, store, intentStore };
+}
 
 describe('WorkflowEngine (basic failure modes)', () => {
-  function makePlanRef(): PlanRef {
-    return {
-      uri: 'https://example.com/plan',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.1',
-      planId: 'p',
-      planVersion: '2.3',
-    };
-  }
-
-  function makeContext(runId = 'r1'): RunContext {
-    return {
-      tenantId: 't',
-      projectId: 'p',
-      environmentId: 'dev',
-      runId,
-      targetAdapter: 'temporal',
-    };
-  }
-
-  function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
-    return {
-      provider: 'temporal',
-      async startRun(_planRef: PlanRef, ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-      async cancelRun() {},
-      async getRunStatus(runRef) {
-        return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
-      },
-      async signal() {},
-      ...(overrides ?? {}),
-    };
-  }
-
-  function makeAdapters(
-    overrides?: Partial<IProviderAdapter>
-  ): Map<EngineRunRef['provider'], IProviderAdapter> {
-    return new Map([['temporal', makeTemporalAdapter(overrides)]]);
-  }
-
-  function makeTrackingObservability(): {
-    obs: IObservability;
-    counters: string[];
-    histograms: string[];
-  } {
-    const counters: string[] = [];
-    const histograms: string[] = [];
-    const obs: IObservability = {
-      ...createNoopObservability(),
-      metrics: {
-        counter(name: string) {
-          counters.push(name);
-          return { add: () => {} };
-        },
-        histogram(name: string) {
-          histograms.push(name);
-          return { record: () => {} };
-        },
-        gauge() {
-          return { set: () => {} };
-        },
-      },
-    };
-    return { obs, counters, histograms };
-  }
-
-  function createEngine(input?: {
-    adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
-    requiredProviders?: EngineRunRef['provider'][];
-    observability?: IObservability;
-    stateStore?: InMemoryTxStore;
-    intentStore?: InMemoryStartRunIntentStore;
-  }): { engine: WorkflowEngine; store: InMemoryTxStore; intentStore: InMemoryStartRunIntentStore } {
-    const store = input?.stateStore ?? new InMemoryTxStore();
-    const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
-
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency: new IdempotencyKeyBuilder(),
-      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: input?.observability ?? createNoopObservability(),
-      adapters: input?.adapters ?? new Map(),
-      requiredProviders: input?.requiredProviders,
-    });
-
-    return { engine, store, intentStore };
-  }
-
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
 

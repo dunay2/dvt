@@ -33,7 +33,7 @@ function makeContext(
     environmentId: 'dev',
     runId,
     targetAdapter: 'temporal',
-    ...(overrides ?? {}),
+    ...overrides,
   };
 }
 

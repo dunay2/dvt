@@ -87,52 +87,54 @@ function makeCtx(runId: string): RunContext {
   };
 }
 
+// helpers moved to module scope
+
+function setupEngineWithMock(plan: ExecutionPlan): {
+  engine: WorkflowEngine;
+  planRef: PlanRef;
+  store: InMemoryTxStore;
+} {
+  const uri = `https://plans.example.com/${plan.metadata.planId}.json`;
+  const planRef = makePlanRef(uri, plan);
+  const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+  const store = new InMemoryTxStore();
+  const projector = new SnapshotProjector();
+  const idempotency = new IdempotencyKeyBuilder();
+  const mock = new MockAdapter({
+    stateStore: store,
+    clock,
+    idempotency,
+    projector,
+    planFetcher: { fetch: async () => plan },
+  });
+  const engine = new WorkflowEngine({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+
+    projector,
+    idempotency,
+    clock,
+    policy: new RunAccessPolicy({
+      authorizer: new AllowAllAuthorizer(),
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
+    intentStore: new InMemoryStartRunIntentStore(),
+    observability: createNoopObservability(),
+    adapters: new Map([['mock', mock]]),
+  });
+  return { engine, planRef, store };
+}
+
+async function submitPlanAndGetSnapshot(
+  engine: WorkflowEngine,
+  planRef: PlanRef,
+  runId: string
+): Promise<import('../../src/contracts/engine/index.js').RunStatusSnapshot> {
+  const runRef = await engine.startRun(planRef, makeCtx(runId));
+  return await engine.getRunStatus(runRef);
+}
+
 describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
-  function setupEngineWithMock(plan: ExecutionPlan): {
-    engine: WorkflowEngine;
-    planRef: PlanRef;
-    store: InMemoryTxStore;
-  } {
-    const uri = `https://plans.example.com/${plan.metadata.planId}.json`;
-    const planRef = makePlanRef(uri, plan);
-    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-    const store = new InMemoryTxStore();
-    const projector = new SnapshotProjector();
-    const idempotency = new IdempotencyKeyBuilder();
-    const mock = new MockAdapter({
-      stateStore: store,
-      clock,
-      idempotency,
-      projector,
-      planFetcher: { fetch: async () => plan },
-    });
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector,
-      idempotency,
-      clock,
-      policy: new RunAccessPolicy({
-        authorizer: new AllowAllAuthorizer(),
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore: new InMemoryStartRunIntentStore(),
-      observability: createNoopObservability(),
-      adapters: new Map([['mock', mock]]),
-    });
-    return { engine, planRef, store };
-  }
-
-  async function submitPlanAndGetSnapshot(
-    engine: WorkflowEngine,
-    planRef: PlanRef,
-    runId: string
-  ): Promise<import('../../src/contracts/engine/index.js').RunStatusSnapshot> {
-    const runRef = await engine.startRun(planRef, makeCtx(runId));
-    return await engine.getRunStatus(runRef);
-  }
-
   it('golden path: submit hello-world plan → completes with deterministic hash', async () => {
     const plan = makeHelloWorldPlan();
     const { engine, planRef } = setupEngineWithMock(plan);

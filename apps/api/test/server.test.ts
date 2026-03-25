@@ -13,6 +13,7 @@ import {
   buildReconcilerHealthHooks,
   computeReconcilerHealthStaleMs,
   evaluateAndMarkReconcilerHealthStale,
+  startReconcilerHealthWatchdog,
   shouldMarkReconcilerRuntimeUnavailable,
 } from '../src/server.js';
 
@@ -47,6 +48,56 @@ function createHarness(): {
 }
 
 describe('reconciler bootstrap health wiring', () => {
+  it('integrates timer watchdog with sweep signals for stale degradation and recovery', () => {
+    vi.useFakeTimers();
+    let nowMs = 1_000;
+    vi.setSystemTime(new Date(nowMs));
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => nowMs);
+
+    try {
+      let health: ReconcilerHealthState = { status: 'starting' };
+      const add = vi.fn();
+      const counter = vi.fn(() => ({ add }));
+      const logger = {
+        error: vi.fn(),
+      } as unknown as FastifyBaseLogger;
+      const ctx = {
+        getIntentReconcilerHealth: () => health,
+        setIntentReconcilerHealth: (next: ReconcilerHealthState) => {
+          health = next;
+        },
+        observability: {
+          metrics: {
+            counter,
+          },
+        } as unknown as IObservability,
+      };
+      const hooks = buildReconcilerHealthHooks(ctx.setIntentReconcilerHealth);
+      const watchdog = startReconcilerHealthWatchdog(ctx, logger, 5_000, 1_000);
+
+      nowMs = 7_500;
+      vi.advanceTimersByTime(6_000);
+      expect(health).toEqual({
+        status: 'degraded',
+        reasonCode: 'runtime_unavailable',
+      });
+      expect(add).toHaveBeenCalledWith(1);
+
+      watchdog.markSweepSignal();
+      hooks.onSweepSuccess?.();
+      expect(health).toEqual({ status: 'healthy' });
+
+      nowMs = 11_000;
+      vi.advanceTimersByTime(3_000);
+      expect(health).toEqual({ status: 'healthy' });
+
+      watchdog.stop();
+    } finally {
+      nowSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it('maps runtime hooks to health transitions', () => {
     const harness = createHarness();
     const hooks = buildReconcilerHealthHooks(harness.ctx.setIntentReconcilerHealth);

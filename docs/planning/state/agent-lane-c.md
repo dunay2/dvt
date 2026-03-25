@@ -91,7 +91,7 @@ Harden runtime behavior, admission checks, and caller-visible freshness.
 - [x] `P0` `S09`: decide retry ownership across planner, engine, and adapters.
 - [x] `P0` `RC-D2`: make the outbox claim timeout configurable.
 - [x] `P0` `RC-D3`: normalize Temporal not-found error code comparison.
-- [ ] `P1` `RC-D1`: surface reconciler degradation in API health.
+- [x] `P1` `RC-D1`: surface reconciler degradation in API health.
 - [ ] `P1` `RC-D1A`: add health compatibility and watchdog integration tests.
 - [ ] `P1` `RBAC at operation level`: enforce tenant-aware start/signal/cancel rules.
 - [ ] `P1` `snapshot staleness in API`: expose freshness to callers.
