@@ -120,6 +120,7 @@ export type {
   IRunStateStoreRead,
   IRunStateStoreWrite,
   IRunStateStore,
+  ProviderRefUpdate,
   RetryAttemptReservation,
   RunBootstrapInput,
   RunEventInput,

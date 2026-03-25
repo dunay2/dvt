@@ -9,9 +9,9 @@ export type StateStoreRoleSource = IRunStateStoreRead &
   IRunStateStoreMaintenance;
 
 export interface StateStoreRoleBindings {
-  readonly read: StateStoreRoleSource;
-  readonly write: StateStoreRoleSource;
-  readonly maintenance: StateStoreRoleSource;
+  readonly read: IRunStateStoreRead;
+  readonly write: IRunStateStoreWrite;
+  readonly maintenance: IRunStateStoreMaintenance;
 }
 
 const REQUIRED_METHODS = [
