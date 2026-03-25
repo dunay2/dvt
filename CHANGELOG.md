@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.12.1](https://github.com/dunay2/dvt/compare/v4.12.0...v4.12.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* **docs:** Restore RC-F1 note and PR [#605](https://github.com/dunay2/dvt/issues/605) link lost in cherry-pick ([#608](https://github.com/dunay2/dvt/issues/608)) ([0585bb6](https://github.com/dunay2/dvt/commit/0585bb6979eec822fee00d4ef398d284a0e31b4e))
+
 ## [4.12.0](https://github.com/dunay2/dvt/compare/v4.11.0...v4.12.0) (2026-03-24)
 
 
