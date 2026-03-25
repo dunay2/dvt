@@ -6,6 +6,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
+import { isIP } from 'node:net';
 import { URL } from 'node:url';
 
 import { PlanUriNotAllowedError } from '../contracts/errors.js';
@@ -20,13 +21,13 @@ export class PlanRefPolicy {
   constructor(private readonly allowlist: PlanRefAllowlist) {}
 
   validateOrThrow(uri: string): void {
-    // Reject dangerous schemes explicitly.
     const lower = uri.toLowerCase();
-    const deniedSchemes = ['file://', 'ftp://', 'gopher://'];
-    for (const d of deniedSchemes) {
-      if (lower.startsWith(d)) {
-        throw new PlanUriNotAllowedError(uri, `denied scheme (explicit block): ${d}`);
-      }
+    const scheme = readUriScheme(lower);
+    if (!scheme) {
+      throw new PlanUriNotAllowedError(uri, 'invalid uri (missing scheme)');
+    }
+    if (DENIED_SCHEMES.has(scheme)) {
+      throw new PlanUriNotAllowedError(uri, `denied scheme (explicit block): ${scheme}:`);
     }
 
     // If it looks like an http(s) URL, validate host and scheme.
@@ -51,10 +52,6 @@ export class PlanRefPolicy {
     }
 
     // Opaque URIs (s3://, gs://, azure://, etc.)
-    const scheme = uri.split(':', 1)[0]?.toLowerCase();
-    if (!scheme) {
-      throw new PlanUriNotAllowedError(uri, 'invalid uri (missing scheme)');
-    }
     if (!this.allowlist.allowedSchemes.includes(scheme)) {
       throw new PlanUriNotAllowedError(uri, `scheme not allowlisted (opaque): ${scheme}`);
     }
@@ -70,8 +67,46 @@ export class PlanRefPolicy {
 function isLinkLocalHost(host: string): boolean {
   const h = host.toLowerCase();
   if (h === 'localhost' || h.endsWith('.localhost')) return true;
-  if (h === '127.0.0.1' || h === '::1') return true;
-  if (h === '169.254.169.254') return true; // common cloud metadata IP
   if (h.endsWith('.local')) return true;
+  if (isPrivateOrLocalIp(h)) return true;
   return false;
+}
+
+const DENIED_SCHEMES = new Set(['file', 'ftp', 'gopher', 'data', 'javascript', 'mailto']);
+
+function readUriScheme(uri: string): string | null {
+  const match = uri.match(/^([a-z][a-z0-9+.-]*):/);
+  const scheme = match?.[1];
+  return typeof scheme === 'string' ? scheme : null;
+}
+
+function isPrivateOrLocalIp(host: string): boolean {
+  const hostNoZone = stripIpv6Brackets(host.split('%', 1)[0] ?? host);
+  const ipVersion = isIP(hostNoZone);
+  if (ipVersion === 4) {
+    const octets = hostNoZone.split('.').map((part) => Number(part));
+    const a = octets[0] ?? -1;
+    const b = octets[1] ?? -1;
+    if (a === 127) return true; // full loopback range 127.0.0.0/8
+    if (a === 10) return true; // RFC1918 10.0.0.0/8
+    if (a === 172 && b >= 16 && b <= 31) return true; // RFC1918 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // RFC1918 192.168.0.0/16
+    if (a === 169 && b === 254) return true; // link-local and metadata range
+    return false;
+  }
+  if (ipVersion === 6) {
+    const normalized = hostNoZone.toLowerCase();
+    if (normalized === '::1') return true; // loopback
+    if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true; // ULA fc00::/7
+    if (/^fe[89ab]/.test(normalized)) return true; // link-local fe80::/10
+    return false;
+  }
+  return false;
+}
+
+function stripIpv6Brackets(host: string): string {
+  if (host.startsWith('[') && host.endsWith(']')) {
+    return host.slice(1, -1);
+  }
+  return host;
 }
