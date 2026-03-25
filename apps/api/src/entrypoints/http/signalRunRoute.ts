@@ -1,31 +1,13 @@
-﻿import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
-import type { ISignalRunUseCase, SupportedSignalType } from '../../application/ports/runtime.js';
+import type { ISignalRunUseCase } from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import { TenantId } from '../../domain/auth/types.js';
 
 import { mapRuntimeDomainError } from './authErrorMapper.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
-
-function extractBearerToken(authorizationHeader: string | undefined): string | undefined {
-  const match = authorizationHeader?.match(/^Bearer\s+(.+)$/i);
-  return match?.[1];
-}
-
-function parseSignalType(raw: unknown): SupportedSignalType | null {
-  if (typeof raw !== 'string') return null;
-  const normalized = raw.trim().toUpperCase();
-  return normalized === 'PAUSE' || normalized === 'RESUME' || normalized === 'CANCEL'
-    ? normalized
-    : null;
-}
-
-function signalActionName(
-  signalType: SupportedSignalType
-): 'run:cancel' | 'run:signal' {
-  return signalType === 'CANCEL' ? 'run:cancel' : 'run:signal';
-}
+import { extractBearerToken } from './extractBearerToken.js';
+import { parseSignalRunRequest } from './signalRunRouteParser.js';
 
 export async function signalRunRoute(
   request: FastifyRequest<{ Params: { runId?: string }; Body: unknown }>,
@@ -36,27 +18,12 @@ export async function signalRunRoute(
     useCase: ISignalRunUseCase;
   }
 ): Promise<void> {
-  const runId = request.params.runId?.trim();
-  if (!runId) {
-    reply.code(400).send({ error: 'BAD_REQUEST', code: 'INVALID_RUN_ID' });
-    return;
-  }
-
-  if (request.body === null || typeof request.body !== 'object' || Array.isArray(request.body)) {
-    reply.code(400).send({ error: 'BAD_REQUEST', code: 'INVALID_BODY' });
-    return;
-  }
-
-  const body = request.body as Record<string, unknown>;
-  const tenantId = typeof body.tenantId === 'string' ? body.tenantId.trim() : '';
-  if (!tenantId) {
-    reply.code(403).send({ error: 'FORBIDDEN', code: 'MISSING_TENANT_SCOPE' });
-    return;
-  }
-
-  const signalType = parseSignalType(body.signalType);
-  if (!signalType) {
-    reply.code(400).send({ error: 'BAD_REQUEST', code: 'INVALID_SIGNAL_TYPE' });
+  const parsed = parseSignalRunRequest({
+    runId: request.params.runId,
+    body: request.body,
+  });
+  if (!parsed.ok) {
+    reply.code(parsed.status).send(parsed.body);
     return;
   }
 
@@ -66,8 +33,8 @@ export async function signalRunRoute(
     token: extractBearerToken(request.headers.authorization),
     requestId: request.id,
     requestedScope: {
-      tenantId: TenantId.unsafe(tenantId),
-      action: { kind: 'command', name: signalActionName(signalType) },
+      tenantId: parsed.value.authorization.tenantId,
+      action: { kind: 'command', name: parsed.value.authorization.actionName },
     },
   });
   if (!auth.ok) {
@@ -76,16 +43,7 @@ export async function signalRunRoute(
   }
 
   try {
-    const result = await deps.useCase.execute(
-      {
-        runId,
-        signalType,
-        ...(typeof body.reason === 'string' && body.reason.trim().length > 0
-          ? { reason: body.reason.trim() }
-          : {}),
-      },
-      auth.context
-    );
+    const result = await deps.useCase.execute(parsed.value.command, auth.context);
     reply.code(202).send(result);
   } catch (error) {
     const mapped = mapRuntimeDomainError(error);
