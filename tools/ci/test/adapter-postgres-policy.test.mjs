@@ -18,8 +18,8 @@ function parseGeneratedFilter(output, key) {
   assert.equal(lines[0], `${key}:`);
 
   return lines.slice(1).map((line) => {
-    assert.match(line, /^  - '.*'$/, `unexpected generated line for ${key}: ${line}`);
-    return line.slice(5, -1).replace(/''/g, "'");
+    assert.match(line, /^ {2}- '.*'$/, `unexpected generated line for ${key}: ${line}`);
+    return line.slice(5, -1).replaceAll('\'\'', "'");
   });
 }
 

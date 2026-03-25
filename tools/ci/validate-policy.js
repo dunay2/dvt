@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 // No dirname needed in this script
 
 function usage() {
@@ -31,7 +31,7 @@ const requiredKeys = [
 ];
 let ok = true;
 for (const k of requiredKeys) {
-  if (!Object.prototype.hasOwnProperty.call(policy, k)) {
+  if (!Object.hasOwn(policy, k)) {
     console.error('Missing required key in policy:', k);
     ok = false;
     continue;

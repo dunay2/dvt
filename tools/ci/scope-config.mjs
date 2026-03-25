@@ -11,7 +11,7 @@ function readAdapterPostgresPolicy() {
   const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
 
   if (!Array.isArray(policy.adapter_postgres_relevant)) {
-    throw new Error(
+    throw new TypeError(
       'Invalid adapter-postgres policy: adapter_postgres_relevant must be an array of patterns'
     );
   }

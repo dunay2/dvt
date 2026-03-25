@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 function usage() {
   console.error('Usage: generate-paths-filter.js <policy.json> <key>');
@@ -31,12 +31,14 @@ if (!Array.isArray(patternsRaw) || patternsRaw.some((p) => typeof p !== 'string'
 }
 
 // Normalize and deduplicate patterns, sort for determinism
-let patterns = Array.from(new Set(patternsRaw.map((p) => p.trim()))).sort();
+let patterns = Array.from(new Set(patternsRaw.map((p) => p.trim()))).sort((a, b) =>
+  a.localeCompare(b)
+);
 
 // Emit YAML block for dorny/paths-filter 'filters' input containing only the requested key
 console.log(`${key}:`);
 for (const p of patterns) {
   // YAML single-quote escaping: double the single quotes inside the value
-  const safe = p.replace(/'/g, "''");
+  const safe = p.replaceAll("'", "''");
   console.log(`  - '${safe}'`);
 }
