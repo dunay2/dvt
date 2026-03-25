@@ -14,11 +14,13 @@ code_refs:
   - docs/planning/reviews/20260321-planner-backed-start-run-qa-review.md
   - docs/risk-register/quality/R-20260321-planner-validation-lifecycle-semantics.md
 evidence:
-  - Stored-plan integrity is now enforced on the mock execution lane before parsing.
-  - Stored-plan capability validation now fails closed when adapters omit capability declaration.
-  - storePlan now proves persisted equivalence, rejects collisions, and rejects validated-row reuse.
-  - Temporal runtime now has direct evidence for planner-backed dvt-plan://postgres plan execution.
-  - Duplicate pending admissions are evidenced as single-winner and fail-closed, but not yet normatively specified.
+  tests: []
+  notes:
+    - Stored-plan integrity is now enforced on the mock execution lane before parsing.
+    - Stored-plan capability validation now fails closed when adapters omit capability declaration.
+    - storePlan now proves persisted equivalence, rejects collisions, and rejects validated-row reuse.
+    - Temporal runtime now has direct evidence for planner-backed dvt-plan://postgres plan execution.
+    - Duplicate pending admissions are evidenced as single-winner and fail-closed, but not yet normatively specified.
 ---
 
 # ED-20260321 - Planner-backed startRun QA rationale and discoveries

@@ -14,10 +14,12 @@ code_refs:
   - packages/@dvt/planner/src/domain/Planner.ts
   - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
 evidence:
-  - Built-in DBT step kinds validate through shared registry-backed schemas.
-  - Planner rejects invalid known step configs with INVALID_STEP_CONFIG.
-  - Temporal adapter consumes DBT config through the shared schema path.
-  - Contracts, planner, and adapter-temporal validation lanes passed.
+  tests: []
+  notes:
+    - Built-in DBT step kinds validate through shared registry-backed schemas.
+    - Planner rejects invalid known step configs with INVALID_STEP_CONFIG.
+    - Temporal adapter consumes DBT config through the shared schema path.
+    - Contracts, planner, and adapter-temporal validation lanes passed.
 ---
 
 # ED-20260314 - G9 Step Type Registry Closeout

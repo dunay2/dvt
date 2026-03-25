@@ -20,17 +20,19 @@ code_refs:
   - packages/@dvt/contracts/src/index.ts
   - packages/@dvt/contracts/test/schema-sync.test.ts
 evidence:
-  - G-01.1 closed — IPlanExecutabilityValidator canonized in @dvt/contracts.
-  - G-01.2 closed — IArtifactResolver port defined in @dvt/planner boundary.
-  - G-01.3 closed — ICustomPolicyNamespaceRegistry canonized with validation split note.
-  - G-01.4 closed — schema-sync.test.ts cross-validates Zod vs JSON schema, wired as schema:verify.
-  - G-01.6 closed — IExecutionBindingVerifier and BindingRejectionCode canonized.
-  - G-01.7 closed — AdapterPolicyMappingTable + TEMPORAL_POLICY_MAPPING_TABLE + policyErrorToExecutabilityResult + migration compat note.
-  - G-01.8 closed — PlanBindingRecord and StepBindingEntry canonized.
-  - G-01.9 closed — IPlanValidationLifecycleStore and PlanValidationState canonized.
-  - G-01.10 closed — GRAPH_SOURCE_COMPATIBILITY_POLICY with removal rule; nodes optional in PlannerInputEnvelopeV2.
-  - G-01.11 closed — KnownStepKind, STEP_KIND_BRIDGE_REGISTRY, isKnownStepKind, isBridgeRegisteredStepKind canonized.
-  - Slices 2–4 — planner-local duplicate contract wrappers removed; domain/types.ts converted to re-export barrel.
+  tests: []
+  notes:
+    - G-01.1 closed — IPlanExecutabilityValidator canonized in @dvt/contracts.
+    - G-01.2 closed — IArtifactResolver port defined in @dvt/planner boundary.
+    - G-01.3 closed — ICustomPolicyNamespaceRegistry canonized with validation split note.
+    - G-01.4 closed — schema-sync.test.ts cross-validates Zod vs JSON schema, wired as schema:verify.
+    - G-01.6 closed — IExecutionBindingVerifier and BindingRejectionCode canonized.
+    - G-01.7 closed — AdapterPolicyMappingTable + TEMPORAL_POLICY_MAPPING_TABLE + policyErrorToExecutabilityResult + migration compat note.
+    - G-01.8 closed — PlanBindingRecord and StepBindingEntry canonized.
+    - G-01.9 closed — IPlanValidationLifecycleStore and PlanValidationState canonized.
+    - G-01.10 closed — GRAPH_SOURCE_COMPATIBILITY_POLICY with removal rule; nodes optional in PlannerInputEnvelopeV2.
+    - G-01.11 closed — KnownStepKind, STEP_KIND_BRIDGE_REGISTRY, isKnownStepKind, isBridgeRegisteredStepKind canonized.
+    - Slices 2–4 — planner-local duplicate contract wrappers removed; domain/types.ts converted to re-export barrel.
 ---
 
 # ED-20260318 — Stage 1.1 Planner Canonicalization: Boundary Contract Slices

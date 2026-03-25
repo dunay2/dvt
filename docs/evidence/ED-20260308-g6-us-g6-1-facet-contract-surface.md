@@ -1,7 +1,7 @@
 ---
 title: ED-20260308 - G6 US-G6.1 facet contract surface
 status: Final
-date: 2026-03-08
+date: 2026-03-08T00:00:00.000Z
 owners: Traceability / Core Architecture / QA
 arc_level: ARC-1
 breaking: false

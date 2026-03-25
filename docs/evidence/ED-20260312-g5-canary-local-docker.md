@@ -1,7 +1,7 @@
 ---
 title: ED-20260312 - G5 canary local-docker
 status: Final
-date: 2026-03-12
+date: 2026-03-12T00:00:00.000Z
 owners: Engine / Runtime
 arc_level: ARC-2
 breaking: false

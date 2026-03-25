@@ -11,9 +11,11 @@ code_refs:
   - packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts
   - packages/@dvt/traceability-service/package.json
 evidence:
-  - Golden fixtures are committed for success, fail-open, and no-compiledCodeRef paths.
-  - Offline JSON schema validation runs against repo-local OpenLineage and DVT facet schemas.
-  - Named CI lanes exist for lineage golden and schema validation.
+  tests: []
+  notes:
+    - Golden fixtures are committed for success, fail-open, and no-compiledCodeRef paths.
+    - Offline JSON schema validation runs against repo-local OpenLineage and DVT facet schemas.
+    - Named CI lanes exist for lineage golden and schema validation.
 slices: 'Slice 3 (#404), Slice 4 (#407), Slice 5 (#406)'
 author: Delivery / Engineering
 ---

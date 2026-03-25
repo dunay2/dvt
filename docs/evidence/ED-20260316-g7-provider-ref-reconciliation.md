@@ -15,9 +15,11 @@ code_refs:
   - packages/@dvt/engine/src/state/InMemoryTxStore.ts
   - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
 evidence:
-  - WorkflowEngine reconciles provider run-id after pre-bootstrap start when the returned provider ref differs from the estimate.
-  - The storage primitive is tenant-scoped through saveProviderRef.
-  - Persistence failure in the reconciliation path is fail-soft and logged instead of failing the live run.
+  tests: []
+  notes:
+    - WorkflowEngine reconciles provider run-id after pre-bootstrap start when the returned provider ref differs from the estimate.
+    - The storage primitive is tenant-scoped through saveProviderRef.
+    - Persistence failure in the reconciliation path is fail-soft and logged instead of failing the live run.
 ---
 
 # ED-20260316 - G7.3 provider run-id reconciliation

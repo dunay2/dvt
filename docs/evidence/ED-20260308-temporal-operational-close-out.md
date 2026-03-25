@@ -1,7 +1,7 @@
 ---
 title: ED-20260308 - Temporal adapter operational close-out
 status: Final
-date: 2026-03-08
+date: 2026-03-08T00:00:00.000Z
 owners: Engine / Runtime
 arc_level: ARC-2
 breaking: false

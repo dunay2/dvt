@@ -1,7 +1,7 @@
 ---
 title: ED-20260308 - G6 US-G6.2 lineage contract artifacts
 status: Final
-date: 2026-03-08
+date: 2026-03-08T00:00:00.000Z
 owners: Traceability / Core Architecture / QA
 arc_level: ARC-1
 breaking: false
@@ -50,7 +50,9 @@ rollout:
   notes: Documentation and contract artifact slice only. No runtime rollout action required.
 compatibility:
   required: true
-  matrix: Backward compatible for the emitted payload surface established in US-G6.1; this slice adds normative repo artifacts and doc anchors only.
+  matrix: >-
+    Backward compatible for the emitted payload surface established in US-G6.1; this slice adds normative repo artifacts
+    and doc anchors only.
 ---
 
 # Evidence Doc: G6 US-G6.2 lineage contract artifacts

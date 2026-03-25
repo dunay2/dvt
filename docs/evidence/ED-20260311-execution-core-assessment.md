@@ -1,7 +1,7 @@
 ---
 title: ED-20260311 - Execution core assessment and vertical closure status
 status: Final
-date: 2026-03-11
+date: 2026-03-11T00:00:00.000Z
 owners: Architecture / Engine
 arc_level: ARC-2
 breaking: false
@@ -15,6 +15,7 @@ code_refs:
   - apps/api/src/app.ts
   - apps/api/src/application/services/notImplementedStartRunUseCase.ts
 evidence:
+  tests: []
   docs:
     - docs/architecture/reference-architecture.md
     - docs/planning/execution-model/dvt-execution-model.md

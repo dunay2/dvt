@@ -1,7 +1,7 @@
 ---
 title: ED-20260304 - compiledCodeRef ownership (ADR-0032)
 status: Final
-date: 2026-03-07
+date: 2026-03-07T00:00:00.000Z
 owners: Engine / Planner / Traceability
 arc_level: ARC-2
 breaking: false
@@ -52,7 +52,7 @@ risk_update:
   file: docs/adr/ADR-0032-compiledcoderef-ownership.md (Risk Register section 7)
 rollout:
   required: false
-  notes: 'Optional field - existing consumers remain compatible.'
+  notes: Optional field - existing consumers remain compatible.
 compatibility:
   required: false
   matrix: 'Backward compatible: compiledCodeRef remains optional in StepStarted payload.'

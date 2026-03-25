@@ -16,10 +16,12 @@ code_refs:
   - packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts
   - apps/lineage-worker/src/server.ts
 evidence:
-  - Durable lineage outbox and dead-letter tables ship as migration 005.
-  - Delivery runtime enqueues StepStarted lineage records fail-soft and processes them via a dedicated worker.
-  - OpenLineage publication is provided through HttpOpenLineageSink.
-  - Delivery, adapter-postgres, traceability-service, and lineage-worker validation lanes passed.
+  tests: []
+  notes:
+    - Durable lineage outbox and dead-letter tables ship as migration 005.
+    - Delivery runtime enqueues StepStarted lineage records fail-soft and processes them via a dedicated worker.
+    - OpenLineage publication is provided through HttpOpenLineageSink.
+    - Delivery, adapter-postgres, traceability-service, and lineage-worker validation lanes passed.
 ---
 
 # ED-20260315 - G10 Closeout: outbox_lineage worker + fail-open DLQ

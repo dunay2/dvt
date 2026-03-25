@@ -17,9 +17,11 @@ code_refs:
   - docs/planning/status/planner-current-state-assessment-20260320.md
   - docs/planning/proposals/planner-target-state-roadmap-20260320.md
 evidence:
-  - the planner public contract now has a typed graph-source boundary via graphSource and PlannerGraphSourceV1
-  - manifestRef now resolves typed graph sources through IArtifactResolver.resolveGraphSource
-  - the planner core consumes graphSource or nodes only; raw manifest normalization is isolated to PlannerFacade compatibility handling
+  tests: []
+  notes:
+    - the planner public contract now has a typed graph-source boundary via graphSource and PlannerGraphSourceV1
+    - manifestRef now resolves typed graph sources through IArtifactResolver.resolveGraphSource
+    - the planner core consumes graphSource or nodes only; raw manifest normalization is isolated to PlannerFacade compatibility handling
 ---
 
 # ED-20260320 - Planner R2 typed graph-source boundary
