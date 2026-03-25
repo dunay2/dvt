@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Ensure dirname resolution works in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// No dirname needed in this script
 
 function usage() {
   console.error('Usage: validate-policy.js <policy.json>');
