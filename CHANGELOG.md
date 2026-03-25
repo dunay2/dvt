@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.12.2](https://github.com/dunay2/dvt/compare/v4.12.1...v4.12.2) (2026-03-25)
+
+
+### Bug Fixes
+
+* **ci:** Workflow correctness and efficiency improvements ([#612](https://github.com/dunay2/dvt/issues/612)) ([e2f3b7b](https://github.com/dunay2/dvt/commit/e2f3b7b607249abbc124c1be0d3094fe672e5a66))
+* Wire reconciler watchdog health degradation ([#611](https://github.com/dunay2/dvt/issues/611)) ([3d11bf0](https://github.com/dunay2/dvt/commit/3d11bf0893c289668636c2fa70a065866c7cd802))
+
 ## [4.12.1](https://github.com/dunay2/dvt/compare/v4.12.0...v4.12.1) (2026-03-25)
 
 
