@@ -112,6 +112,82 @@ describe('reconciler bootstrap health wiring', () => {
     expect(harness.getHealth()).toEqual({ status: 'healthy' });
   });
 
+  it('clears watchdog interval on stop', () => {
+    const intervalHandle = setInterval(() => undefined, 60_000);
+    const unrefSpy = vi.spyOn(intervalHandle, 'unref');
+    const setIntervalSpy = vi.fn<(_: () => void) => ReturnType<typeof setInterval>>(
+      (_handler: () => void) => intervalHandle
+    );
+    const clearIntervalSpy = vi.fn((handle: ReturnType<typeof setInterval>) => {
+      clearInterval(handle);
+    });
+    const logger = {
+      error: vi.fn(),
+    } as unknown as FastifyBaseLogger;
+    const ctx = {
+      getIntentReconcilerHealth: () => ({ status: 'starting' as const }),
+      setIntentReconcilerHealth: vi.fn(),
+      observability: {
+        metrics: {
+          counter: vi.fn(() => ({ add: vi.fn() })),
+        },
+      } as unknown as IObservability,
+    };
+
+    const watchdog = startReconcilerHealthWatchdog(ctx, logger, 5_000, 1_000, {
+      now: () => 1_000,
+      setInterval: setIntervalSpy,
+      clearInterval: clearIntervalSpy,
+    });
+
+    watchdog.stop();
+
+    expect(setIntervalSpy).toHaveBeenCalledOnce();
+    expect(unrefSpy).toHaveBeenCalledOnce();
+    expect(clearIntervalSpy).toHaveBeenCalledWith(intervalHandle);
+  });
+
+  it('does not run stale evaluation after watchdog stop', () => {
+    vi.useFakeTimers();
+    let nowMs = 1_000;
+    vi.setSystemTime(new Date(nowMs));
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => nowMs);
+
+    try {
+      let health: ReconcilerHealthState = { status: 'starting' };
+      const add = vi.fn();
+      const counter = vi.fn(() => ({ add }));
+      const logger = {
+        error: vi.fn(),
+      } as unknown as FastifyBaseLogger;
+      const ctx = {
+        getIntentReconcilerHealth: () => health,
+        setIntentReconcilerHealth: (next: ReconcilerHealthState) => {
+          health = next;
+        },
+        observability: {
+          metrics: {
+            counter,
+          },
+        } as unknown as IObservability,
+      };
+
+      const watchdog = startReconcilerHealthWatchdog(ctx, logger, 5_000, 1_000);
+      watchdog.stop();
+
+      nowMs = 9_000;
+      vi.advanceTimersByTime(8_000);
+
+      expect(health).toEqual({ status: 'starting' });
+      expect(counter).not.toHaveBeenCalled();
+      expect(add).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
+    } finally {
+      nowSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it('sets disabled health when runtime is not created', async () => {
     const harness = createHarness();
     let capturedHooks: ReconcilerRuntimeHealthHooks | undefined;
