@@ -113,9 +113,14 @@ describe('reconciler bootstrap health wiring', () => {
   });
 
   it('clears watchdog interval on stop', () => {
-    const intervalHandle = { unref: vi.fn() };
-    const setIntervalSpy = vi.fn((_handler: () => void) => intervalHandle);
-    const clearIntervalSpy = vi.fn();
+    const intervalHandle = setInterval(() => undefined, 60_000);
+    const unrefSpy = vi.spyOn(intervalHandle, 'unref');
+    const setIntervalSpy = vi.fn<(_: () => void) => ReturnType<typeof setInterval>>(
+      (_handler: () => void) => intervalHandle
+    );
+    const clearIntervalSpy = vi.fn((handle: ReturnType<typeof setInterval>) => {
+      clearInterval(handle);
+    });
     const logger = {
       error: vi.fn(),
     } as unknown as FastifyBaseLogger;
@@ -138,7 +143,7 @@ describe('reconciler bootstrap health wiring', () => {
     watchdog.stop();
 
     expect(setIntervalSpy).toHaveBeenCalledOnce();
-    expect(intervalHandle.unref).toHaveBeenCalledOnce();
+    expect(unrefSpy).toHaveBeenCalledOnce();
     expect(clearIntervalSpy).toHaveBeenCalledWith(intervalHandle);
   });
 
