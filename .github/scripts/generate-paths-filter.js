@@ -23,10 +23,20 @@ if (!policy[key]) {
   process.exit(2);
 }
 
+// Simple validation: array of strings
+const patternsRaw = policy[key];
+if (!Array.isArray(patternsRaw) || patternsRaw.some((p) => typeof p !== 'string')) {
+  console.error('Invalid policy format: expected an array of strings for key', key);
+  process.exit(2);
+}
+
+// Normalize and deduplicate patterns, sort for determinism
+let patterns = Array.from(new Set(patternsRaw.map((p) => p.trim()))).sort();
+
 // Emit YAML block for dorny/paths-filter 'filters' input containing only the requested key
-const patterns = policy[key];
 console.log(`${key}:`);
 for (const p of patterns) {
-  console.log(`  - '${p.replace(/'/g, "'\\''")}'
-`);
+  // YAML single-quote escaping: double the single quotes inside the value
+  const safe = p.replace(/'/g, "''");
+  console.log(`  - '${safe}'`);
 }

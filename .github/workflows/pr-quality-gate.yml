@@ -201,6 +201,9 @@ jobs:
             core.setOutput('temporal_changed', changed ? 'true' : 'false');
 
             const fs = require('fs');
+            const { execSync } = require('child_process');
+            // Validate policy shape before using it
+            execSync('node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json', { stdio: 'inherit' });
             const policy = JSON.parse(fs.readFileSync('tools/ci/policy/adapter-postgres-relevance.json','utf8'));
             const adapterPostgresPatterns = (policy.adapter_postgres_relevant || []).map(p => {
               return p.endsWith('/**') ? p.slice(0, -3) : p;

@@ -54,20 +54,21 @@ jobs:
               - 'tsconfig*.json'
               - '.github/workflows/test.yml'
 
-      - name: Load adapter-postgres package filters
+      - name: Generate adapter-postgres filters
+        id: adapter_postgres_filters
         if: github.event_name == 'pull_request'
         run: |
           node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres > adapter-postgres-filters.yml
-          echo "ADAPTER_POSTGRES_FILTERS<<EOF" >> $GITHUB_ENV
-          cat adapter-postgres-filters.yml >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "filters<<EOF" >> $GITHUB_OUTPUT
+          cat adapter-postgres-filters.yml >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Detect adapter-postgres package changes (PR only)
         id: adapter_postgres_changes
         if: github.event_name == 'pull_request'
         uses: dorny/paths-filter@v4
         with:
-          filters: ${{ env.ADAPTER_POSTGRES_FILTERS }}
+          filters: ${{ steps.adapter_postgres_filters.outputs.filters }}
 
       - name: Setup pnpm, cache and dependencies
         if:
@@ -138,17 +139,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Detect adapter-postgres integration changes (PR only)
+      - name: Generate adapter-postgres integration filters
+        id: adapter_postgres_integration_filters
+        if: github.event_name == 'pull_request'
         run: |
           node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration > adapter-postgres-integration-filters.yml
-          echo "ADAPTER_POSTGRES_INTEGRATION_FILTERS<<EOF" >> $GITHUB_ENV
-          cat adapter-postgres-integration-filters.yml >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "filters<<EOF" >> $GITHUB_OUTPUT
+          cat adapter-postgres-integration-filters.yml >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Detect adapter-postgres integration changes (PR only)
         id: changes
         if: github.event_name == 'pull_request'
         uses: dorny/paths-filter@v4
         with:
-          filters: ${{ env.ADAPTER_POSTGRES_INTEGRATION_FILTERS }}
+          filters: ${{ steps.adapter_postgres_integration_filters.outputs.filters }}
 
       - name: Setup pnpm, cache and dependencies
         if:
@@ -228,17 +233,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Detect adapter-postgres-relevant changes (PR only)
+      - name: Generate adapter-postgres relevant filters
+        id: adapter_postgres_relevant_filters
+        if: github.event_name == 'pull_request'
         run: |
           node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant > adapter-postgres-relevant-filters.yml
-          echo "ADAPTER_POSTGRES_RELEVANT_FILTERS<<EOF" >> $GITHUB_ENV
-          cat adapter-postgres-relevant-filters.yml >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "filters<<EOF" >> $GITHUB_OUTPUT
+          cat adapter-postgres-relevant-filters.yml >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Detect adapter-postgres-relevant changes (PR only)
         id: pg_changes
         if: github.event_name == 'pull_request'
         uses: dorny/paths-filter@v4
         with:
-          filters: ${{ env.ADAPTER_POSTGRES_RELEVANT_FILTERS }}
+          filters: ${{ steps.adapter_postgres_relevant_filters.outputs.filters }}
 
       - name: Setup pnpm, cache and dependencies
         if:
