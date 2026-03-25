@@ -1,7 +1,7 @@
 /**
  * @baseline ADR-0003
  */
-import { RunAlreadyExistsError } from '../contracts/errors.js';
+import { RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -47,7 +47,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     }
   ): Promise<void> {
     const current = this.metadataByRunId.get(runId);
-    if (current?.tenantId !== tenantId) throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    if (current?.tenantId !== tenantId) throw new RunNotFoundError(runId);
     this.metadataByRunId.set(runId, {
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,
@@ -171,7 +171,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
   async rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot> {
     const meta = this.metadataByRunId.get(runId);
     if (meta?.tenantId !== tenantId) {
-      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+      throw new RunNotFoundError(runId);
     }
     const events = (this.eventsByRunId.get(runId) ?? [])
       .slice()
@@ -209,7 +209,7 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
   ): Promise<RetryAttemptReservation> {
     const sourceMeta = this.metadataByRunId.get(sourceRunId);
     if (!sourceMeta || sourceMeta.tenantId !== tenantId) {
-      throw new Error(`RUN_NOT_FOUND: ${sourceRunId}`);
+      throw new RunNotFoundError(sourceRunId);
     }
 
     const originRunId = sourceMeta.originRunId ?? sourceMeta.runId;

@@ -8,7 +8,7 @@ import type {
   OutboxRecord,
 } from '@dvt/contracts';
 
-import { RunAlreadyExistsError } from '../contracts/errors.js';
+import { RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
 import type {
   AppendResult,
   RunEventInput,
@@ -67,7 +67,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
       throw new Error('INVALID_RUN_ID');
     }
     if (!this.metadataByRunId.has(runId)) {
-      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+      throw new RunNotFoundError(runId);
     }
   }
 
@@ -109,7 +109,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     }
   ): Promise<void> {
     const current = this.metadataByRunId.get(runId);
-    if (!current) throw new Error(`RUN_NOT_FOUND: ${runId}`);
+    if (!current) throw new RunNotFoundError(runId);
     const updated = {
       ...current,
       providerWorkflowId: runRef.providerWorkflowId,
@@ -247,7 +247,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
   async rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot> {
     const meta = this.metadataByRunId.get(runId);
     if (meta?.tenantId !== tenantId) {
-      throw new Error(`RUN_NOT_FOUND: ${runId}`);
+      throw new RunNotFoundError(runId);
     }
     const events = (this.eventsByRunId.get(runId) ?? [])
       .slice()
@@ -318,7 +318,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
   ): Promise<RetryAttemptReservation> {
     const sourceMeta = this.metadataByRunId.get(sourceRunId);
     if (!sourceMeta || sourceMeta.tenantId !== tenantId) {
-      throw new Error(`RUN_NOT_FOUND: ${sourceRunId}`);
+      throw new RunNotFoundError(sourceRunId);
     }
 
     const originRunId = sourceMeta.originRunId ?? sourceMeta.runId;
