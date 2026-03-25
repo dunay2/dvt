@@ -11,6 +11,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
+import { PlanUriNotAllowedError } from '../../src/contracts/errors.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
 import type {
   EngineRunRef,
@@ -207,7 +208,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
 
   it('PlanRef policy: rejects dangerous schemes (file://)', async () => {
     const policy = new PlanRefPolicy({ allowedSchemes: ['https'] });
-    expect(() => policy.validateOrThrow('file:///etc/passwd')).toThrowError(/PLAN_URI_NOT_ALLOWED/);
+    expect(() => policy.validateOrThrow('file:///etc/passwd')).toThrowError(PlanUriNotAllowedError);
   });
 
   it('Plan integrity validation: sha256 mismatch fails', async () => {
@@ -290,7 +291,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       planId: 'p',
       planVersion: '1',
     };
-    await expect(engine.startRun(badPlanRef1, baseCtx)).rejects.toThrow(/PLAN_URI_NOT_ALLOWED/);
+    await expect(engine.startRun(badPlanRef1, baseCtx)).rejects.toThrow(PlanUriNotAllowedError);
     expect(startRunMock).not.toHaveBeenCalled();
     expect(planFetcher.fetch).not.toHaveBeenCalled();
 
