@@ -1,125 +1,18 @@
 /**
  * @baseline ADR-0003
+ * @note Port boundary retained. Canonical type definitions live in @dvt/contracts (shared kernel).
+ *       Engine-internal consumers MUST import from this file — never directly from @dvt/contracts —
+ *       so that the port boundary remains the sole seam for future divergence.
  */
-import type { TenantId } from '@dvt/contracts';
-
-import type {
+export type {
   AppendResult,
-  RunEventInput,
-  RunEventPersisted,
-  RunMetadata,
-  WorkflowSnapshot,
-} from '../contracts/runEvents.js';
-import type { RunStatus } from '../contracts/types.js';
-
-export interface RunBootstrapInput {
-  metadata: RunMetadata;
-  firstEvents: RunEventInput[];
-}
-
-export interface ListRunsOptions {
-  /** Tenant scope is mandatory to prevent cross-tenant leaks. */
-  tenantId: TenantId;
-  /** Maximum records to return (default: 50). */
-  limit?: number;
-  /**
-   * Filter by snapshot status. Only returns runs whose materialized snapshot
-   * matches this status. Implementations without snapshot access may ignore this field.
-   */
-  status?: RunStatus;
-}
-
-export interface ListEventsOptions {
-  /**
-   * Keyset cursor: return only events with run_seq strictly greater than this value.
-   * Omit to start from the beginning.
-   */
-  afterSeq?: number;
-  /**
-   * Maximum events to return in this page.
-   * Omit for no limit (full scan). Only safe on recovery/rebuild paths where
-   * getSnapshot() returned null. The hot read path MUST use getSnapshot() instead.
-   */
-  limit?: number;
-}
-
-export interface ProviderRefUpdate {
-  providerWorkflowId: string;
-  providerRunId: string;
-  providerNamespace?: string;
-  providerTaskQueue?: string;
-  providerConductorUrl?: string;
-}
-
-export interface RetryAttemptReservation {
-  parentRunId: string;
-  originRunId: string;
-  logicalAttemptId: number;
-}
-
-export interface IRunStateStoreWrite {
-  bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
-  appendAndEnqueueTx(runId: string, events: RunEventInput[]): Promise<AppendResult>;
-  reserveRetryAttempt?(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
-
-  /**
-   * Updates the provider-assigned references on an already-bootstrapped run.
-   *
-   * Called after `adapter.startRun()` returns a `firstExecutionRunId` that differs
-   * from the `estimateRunRef()` value written at bootstrap time. Implementations
-   * MUST enforce tenant isolation.
-   */
-  saveProviderRef?(tenantId: string, runId: string, update: ProviderRefUpdate): Promise<void>;
-}
-
-export interface IRunStateStoreRead {
-  getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
-
-  /**
-   * Returns persisted events ordered by run_seq ASC.
-   * WARNING: Omitting options.limit is a full table scan. Only call from
-   * recovery/rebuild paths (snapshot unavailable). Hot path: use getSnapshot().
-   */
-  listEvents(
-    tenantId: string,
-    runId: string,
-    options?: ListEventsOptions
-  ): Promise<RunEventPersisted[]>;
-
-  /**
-   * Returns run metadata records, most-recently created first.
-   * Useful for dashboard / admin listing - does not include run status.
-   */
-  listRuns(options: ListRunsOptions): Promise<RunMetadata[]>;
-
-  /**
-   * Returns the latest materialized WorkflowSnapshot for the run, or null if
-   * no snapshot exists yet (run predates snapshot support, or store crashed
-   * between event commit and snapshot upsert).
-   *
-   * Callers MUST fall back to full event replay when null is returned.
-   */
-  getSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot | null>;
-}
-
-export interface IRunStateStoreMaintenance {
-  /**
-   * Replays all persisted events for the run from the beginning and overwrites
-   * the materialized snapshot with the result.
-   *
-   * Use for recovery/repair when the snapshot is known to be stale, missing,
-   * or corrupt. This is a write operation - the caller must own the intent to
-   * mutate persisted read-model state.
-   *
-   * ADR-0004 Section 2.2: runSeq is the authority for event ordering; replay MUST
-   * consume events ordered by runSeq ASC.
-   * ADR-0031: tenant isolation enforced - throws an error when the run does
-   * not belong to the given tenantId.
-   *
-   * @throws Error with message `RUN_NOT_FOUND: <runId>` when the run does not
-   *   exist or belongs to a different tenant.
-   */
-  rebuildSnapshot(tenantId: string, runId: string): Promise<WorkflowSnapshot>;
-}
-
-export type IRunStateStore = IRunStateStoreWrite & IRunStateStoreRead & IRunStateStoreMaintenance;
+  IRunStateStore,
+  IRunStateStoreMaintenance,
+  IRunStateStoreRead,
+  IRunStateStoreWrite,
+  ListEventsOptions,
+  ListRunsOptions,
+  ProviderRefUpdate,
+  RetryAttemptReservation,
+  RunBootstrapInput,
+} from '@dvt/contracts';
