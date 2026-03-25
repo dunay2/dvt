@@ -95,10 +95,38 @@ jobs:
           'true'
         run: echo "No affected test packages detected; skipping package test execution."
 
+  detect-pg-integration-scope:
+    name: Detect adapter-postgres integration scope
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    outputs:
+      changed: ${{ steps.changes.outputs.adapter_postgres_integration }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Generate adapter-postgres integration filters
+        id: filters
+        run: |
+          echo "filters<<EOF" >> $GITHUB_OUTPUT
+          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Detect adapter-postgres integration changes
+        id: changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: ${{ steps.filters.outputs.filters }}
+
   adapter-postgres-integration:
     name: Adapter Postgres Integration Smoke
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    needs: [detect-pg-integration-scope]
+    if: |
+      always() && (
+        github.event_name != 'pull_request' ||
+        (github.event.pull_request.draft == false && needs.detect-pg-integration-scope.outputs.changed == 'true')
+      )
     services:
       postgres:
         image: postgres:15
@@ -117,46 +145,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Generate adapter-postgres integration filters
-        id: adapter_postgres_integration_filters
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "filters<<EOF" >> $GITHUB_OUTPUT
-          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Detect adapter-postgres integration changes (PR only)
-        id: changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v4
-        with:
-          filters: ${{ steps.adapter_postgres_integration_filters.outputs.filters }}
-
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.changes.outputs.adapter_postgres_integration
-          == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 20.x
 
       - name: Build adapter-postgres dependency graph (integration)
-        if:
-          github.event_name != 'pull_request' || steps.changes.outputs.adapter_postgres_integration
-          == 'true'
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build
 
       - name: Run adapter-postgres smoke integration
-        if:
-          github.event_name != 'pull_request' || steps.changes.outputs.adapter_postgres_integration
-          == 'true'
         run: pnpm test:adapter-postgres:integration
-
-      - name: Skip adapter-postgres smoke integration (PR without relevant changes)
-        if:
-          github.event_name == 'pull_request' && steps.changes.outputs.adapter_postgres_integration
-          != 'true'
-        run: echo "No adapter-postgres integration changes detected; skipping smoke integration."
 
   test-determinism:
     name: Determinism Tests
@@ -238,12 +236,6 @@ jobs:
           github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
           == 'true'
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build
-
-      - name: Run adapter-postgres smoke suite
-        if:
-          github.event_name != 'pull_request' || steps.pg_changes.outputs.adapter_postgres_relevant
-          == 'true'
-        run: pnpm --filter @dvt/adapter-postgres test -- smoke.test.ts
 
       - name: Run adapter-postgres full test suite
         if:
