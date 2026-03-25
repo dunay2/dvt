@@ -65,7 +65,7 @@ tasks:
     target: Refine operation-level authorization split.
   - task_id: RC-E1
     priority: P1
-    status: queued
+    status: review
     objective:
       harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and
       dangerous schemes (data:, javascript:, mailto:).

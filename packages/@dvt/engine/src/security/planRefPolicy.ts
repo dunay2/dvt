@@ -9,6 +9,14 @@
 import { URL } from 'node:url';
 
 import { PlanUriNotAllowedError } from '../contracts/errors.js';
+import {
+  PLAN_URI_POLICY_REASON,
+  type PlanUriPolicyReason,
+} from '../contracts/planUriPolicyViolation.js';
+
+import { DefaultHostRiskClassifier, type HostRiskClassifier } from './hostRiskClassifier.js';
+import { isDeniedUriScheme } from './planRefPolicyRules.js';
+import { PlanUri } from './planUri.js';
 
 export interface PlanRefAllowlist {
   allowedSchemes: ReadonlyArray<string>;
@@ -17,61 +25,90 @@ export interface PlanRefAllowlist {
 }
 
 export class PlanRefPolicy {
-  constructor(private readonly allowlist: PlanRefAllowlist) {}
+  constructor(
+    private readonly allowlist: PlanRefAllowlist,
+    private readonly hostRiskClassifier: HostRiskClassifier = new DefaultHostRiskClassifier()
+  ) {}
 
   validateOrThrow(uri: string): void {
-    // Reject dangerous schemes explicitly.
-    const lower = uri.toLowerCase();
-    const deniedSchemes = ['file://', 'ftp://', 'gopher://'];
-    for (const d of deniedSchemes) {
-      if (lower.startsWith(d)) {
-        throw new PlanUriNotAllowedError(uri, `denied scheme (explicit block): ${d}`);
-      }
-    }
+    const planUri = PlanUri.from(uri);
+    assertSchemeAllowed(planUri);
 
-    // If it looks like an http(s) URL, validate host and scheme.
-    if (lower.startsWith('http://') || lower.startsWith('https://')) {
-      let u: URL;
-      try {
-        u = new URL(uri);
-      } catch {
-        throw new PlanUriNotAllowedError(uri, 'invalid uri (unparseable)');
-      }
-      if (!this.allowlist.allowedSchemes.includes(u.protocol.replace(':', ''))) {
-        throw new PlanUriNotAllowedError(uri, `scheme not allowlisted (http/https): ${u.protocol}`);
-      }
-      if (this.allowlist.allowedHosts && !this.allowlist.allowedHosts.includes(u.hostname)) {
-        throw new PlanUriNotAllowedError(uri, `host not allowlisted (http/https): ${u.hostname}`);
-      }
-      // Block link-local and metadata endpoints (basic).
-      if (isLinkLocalHost(u.hostname)) {
-        throw new PlanUriNotAllowedError(uri, `denied host (link-local/localhost): ${u.hostname}`);
-      }
+    if (planUri.isHttpLike()) {
+      this.validateHttpUri(planUri);
       return;
     }
 
-    // Opaque URIs (s3://, gs://, azure://, etc.)
-    const scheme = uri.split(':', 1)[0]?.toLowerCase();
+    this.validateOpaqueUri(planUri);
+  }
+
+  private validateHttpUri(planUri: PlanUri): void {
+    const parsed = parseHttpUriOrThrow(planUri);
+    const parsedScheme = parsed.protocol.replace(':', '');
+    if (!this.allowlist.allowedSchemes.includes(parsedScheme)) {
+      throw planUriPolicyError(
+        planUri.raw,
+        PLAN_URI_POLICY_REASON.HTTP_SCHEME_NOT_ALLOWLISTED,
+        parsed.protocol
+      );
+    }
+    if (this.allowlist.allowedHosts && !this.allowlist.allowedHosts.includes(parsed.hostname)) {
+      throw planUriPolicyError(
+        planUri.raw,
+        PLAN_URI_POLICY_REASON.HTTP_HOST_NOT_ALLOWLISTED,
+        parsed.hostname
+      );
+    }
+    if (this.hostRiskClassifier.isRiskyHost(parsed.hostname)) {
+      throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.RISKY_HOST, parsed.hostname);
+    }
+  }
+
+  private validateOpaqueUri(planUri: PlanUri): void {
+    const scheme = planUri.scheme;
     if (!scheme) {
-      throw new PlanUriNotAllowedError(uri, 'invalid uri (missing scheme)');
+      throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.MISSING_SCHEME);
     }
     if (!this.allowlist.allowedSchemes.includes(scheme)) {
-      throw new PlanUriNotAllowedError(uri, `scheme not allowlisted (opaque): ${scheme}`);
+      throw planUriPolicyError(
+        planUri.raw,
+        PLAN_URI_POLICY_REASON.OPAQUE_SCHEME_NOT_ALLOWLISTED,
+        scheme
+      );
     }
-    if (this.allowlist.allowedUriPrefixes) {
-      const ok = this.allowlist.allowedUriPrefixes.some((p) => uri.startsWith(p));
-      if (!ok) {
-        throw new PlanUriNotAllowedError(uri, 'uri prefix not allowlisted (opaque)');
-      }
+    if (!this.allowlist.allowedUriPrefixes) return;
+
+    const isPrefixAllowed = this.allowlist.allowedUriPrefixes.some((prefix) =>
+      planUri.raw.startsWith(prefix)
+    );
+    if (!isPrefixAllowed) {
+      throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.OPAQUE_PREFIX_NOT_ALLOWLISTED);
     }
   }
 }
 
-function isLinkLocalHost(host: string): boolean {
-  const h = host.toLowerCase();
-  if (h === 'localhost' || h.endsWith('.localhost')) return true;
-  if (h === '127.0.0.1' || h === '::1') return true;
-  if (h === '169.254.169.254') return true; // common cloud metadata IP
-  if (h.endsWith('.local')) return true;
-  return false;
+function assertSchemeAllowed(planUri: PlanUri): void {
+  const scheme = planUri.scheme;
+  if (!scheme) {
+    throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.MISSING_SCHEME);
+  }
+  if (isDeniedUriScheme(scheme)) {
+    throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.DENIED_SCHEME, scheme);
+  }
+}
+
+function parseHttpUriOrThrow(planUri: PlanUri): URL {
+  try {
+    return planUri.toHttpUrl();
+  } catch {
+    throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.UNPARSEABLE_HTTP_URI);
+  }
+}
+
+function planUriPolicyError(
+  uri: string,
+  reason: PlanUriPolicyReason,
+  subject?: string
+): PlanUriNotAllowedError {
+  return new PlanUriNotAllowedError(uri, { reason, ...(subject === undefined ? {} : { subject }) });
 }

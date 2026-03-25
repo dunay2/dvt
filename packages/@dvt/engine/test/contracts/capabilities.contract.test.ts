@@ -23,6 +23,7 @@ import { createNoopObservability } from '../../../observability/src/noopObservab
 import { ConductorAdapterStub } from '../../src/adapters/conductor/ConductorAdapterStub.js';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
+import { ENGINE_ERROR_MESSAGE_KEY } from '../../src/contracts/errors.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -146,14 +147,19 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
     ).rejects.toMatchObject({ code: 'CAPABILITIES_NOT_SUPPORTED' });
   });
 
-  it('error message names the unsupported capability and adapter', async () => {
+  it('exposes i18n key and params for unsupported capability errors', async () => {
     const { engine } = createEngine();
     const err = await engine
       .startRun(makePlanRef(['query.workflow.state']), makeCtx('cap-bad-2'))
       .catch((e: unknown) => e);
     expect(err).toMatchObject({ code: 'CAPABILITIES_NOT_SUPPORTED' });
-    expect((err as Error).message).toContain('query.workflow.state');
-    expect((err as Error).message).toContain("adapter 'mock'");
+    expect((err as { messageKey?: string }).messageKey).toBe(
+      ENGINE_ERROR_MESSAGE_KEY.CAPABILITIES_NOT_SUPPORTED
+    );
+    expect((err as { messageParams?: Record<string, unknown> }).messageParams).toMatchObject({
+      capabilities: ['query.workflow.state'],
+      provider: 'mock',
+    });
   });
 
   it('skips validation when adapter omits capabilities() (graceful degradation)', async () => {

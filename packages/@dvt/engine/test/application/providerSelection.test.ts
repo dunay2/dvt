@@ -73,7 +73,7 @@ describe('providerSelection', () => {
   it('still throws when ENGINE_PROVIDER override targets an unregistered adapter', () => {
     const adapters = buildAdapterRegistry([mkAdapter('mock')]);
     expect(() => pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'temporal' })).toThrow(
-      /No adapter registered for provider: temporal/
+      /engine\.error\.adapter_not_registered/
     );
   });
 
