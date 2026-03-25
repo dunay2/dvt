@@ -6,7 +6,7 @@
  * @version 1.0.0
  * @date 2026-03-03
  */
-import type { EngineRunRef, PlanRef, RunContext, RunStatusSnapshot } from '@dvt/contracts';
+import type { EngineRunRef } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -21,73 +21,12 @@ import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunInt
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
-function makePlanRef(): PlanRef {
-  return {
-    uri: 'https://example.com/plan',
-    sha256: 'deadbeef',
-    schemaVersion: 'v1.1',
-    planId: 'p',
-    planVersion: '2.3',
-  };
-}
-
-function makeContext(runId = 'r1'): RunContext {
-  return {
-    tenantId: 't',
-    projectId: 'p',
-    environmentId: 'dev',
-    runId,
-    targetAdapter: 'temporal',
-  };
-}
-
-function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
-  return {
-    provider: 'temporal',
-    async startRun(_planRef: PlanRef, ctx) {
-      return {
-        provider: 'temporal',
-        tenantId: ctx.tenantId,
-        namespace: 'default',
-        workflowId: `wf-${ctx.runId}`,
-        runId: ctx.runId,
-      } as EngineRunRef;
-    },
-    async cancelRun() {},
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as RunStatusSnapshot;
-    },
-    async signal() {},
-    ...overrides,
-  };
-}
-
-function createEngine(input?: { adapters?: Map<EngineRunRef['provider'], IProviderAdapter> }): {
-  engine: WorkflowEngine;
-  store: InMemoryTxStore;
-  intentStore: InMemoryStartRunIntentStore;
-} {
-  const store = new InMemoryTxStore();
-  const intentStore = new InMemoryStartRunIntentStore();
-
-  const engine = new WorkflowEngine({
-    stateStoreRead: store,
-    stateStoreWrite: store,
-
-    projector: new SnapshotProjector(),
-    idempotency: new IdempotencyKeyBuilder(),
-    clock: new SequenceClock('2026-03-01T00:00:00.000Z'),
-    policy: new RunAccessPolicy({
-      authorizer: new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-    }),
-    intentStore,
-    observability: createNoopObservability(),
-    adapters: input?.adapters ?? new Map(),
-  });
-
-  return { engine, store, intentStore };
-}
+import {
+  makePlanRef,
+  makeContext,
+  makeTemporalAdapter,
+  createEngine,
+} from './WorkflowEngine.helpers';
 
 describe('WorkflowEngine intent log (startRun crash consistency)', () => {
   it('happy path: intent transitions PENDING → DISPATCHED → RESOLVED', async () => {

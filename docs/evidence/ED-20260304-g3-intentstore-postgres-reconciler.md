@@ -1,7 +1,7 @@
 ---
 title: ED-20260304 - G3 IntentStore Postgres + Reconciler Worker
 status: Final
-date: 2026-03-06
+date: 2026-03-06T00:00:00.000Z
 owners: Engine / Data Platform
 arc_level: ARC-3
 breaking: false

@@ -14,9 +14,11 @@ code_refs:
   - docs/guides/testing-and-ci-capabilities.md
   - docs/risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md
 evidence:
-  - apps/api now exposes a dedicated integration command for the protected runtime surface
-  - the integration lane boots real JWKS-backed OIDC verification plus PostgreSQL authorization data
-  - active status, risk, and planning docs no longer claim the query side is missing
+  tests: []
+  notes:
+    - apps/api now exposes a dedicated integration command for the protected runtime surface
+    - the integration lane boots real JWKS-backed OIDC verification plus PostgreSQL authorization data
+    - active status, risk, and planning docs no longer claim the query side is missing
 ---
 
 # ED-20260320 - API runtime query integration

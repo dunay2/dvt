@@ -15,12 +15,14 @@ code_refs:
   - apps/api/test/modules.test.ts
   - apps/api/test/plugins/env.test.ts
 evidence:
-  - app.ts delegates protected runtime wiring to dedicated modules
-  - buildProtectedRuntimeModule remains the composition boundary for DB, auth, engine, and facade wiring
-  - buildProviderAdapters always registers mock and conditionally registers Temporal
-  - registerOperationalHooks owns onReady/onClose lifecycle registration
-  - API boolean env flags now enable only on explicit true
-  - module and env tests now cover real behavior instead of stale Not implemented expectations
+  tests: []
+  notes:
+    - app.ts delegates protected runtime wiring to dedicated modules
+    - buildProtectedRuntimeModule remains the composition boundary for DB, auth, engine, and facade wiring
+    - buildProviderAdapters always registers mock and conditionally registers Temporal
+    - registerOperationalHooks owns onReady/onClose lifecycle registration
+    - API boolean env flags now enable only on explicit true
+    - module and env tests now cover real behavior instead of stale Not implemented expectations
 ---
 
 # ED-20260315 - API Protected Runtime Module extraction

@@ -37,9 +37,12 @@ forma inmediata.
 - `/healthz` expone estado por componente (`intentReconciler`);
 - degradacion de bootstrap reportada con `reasonCode: bootstrap_failed`;
 - degradacion runtime reportada con `reasonCode: runtime_unavailable`;
+- watchdog de estancamiento runtime integrado con polling de salud y marca de sweep;
 - payload publico sanitizado (sin `err.message`);
 - tests de contrato cubren `disabled`, `starting`, `degraded`,
   no-exposicion de `reason`, y fallback de `reasonCode`.
+- test de integracion cubre degradacion por estancamiento y recuperacion via
+  `markSweepSignal` (`apps/api/test/server.test.ts`).
 
 ## Subsanacion adicional recomendada
 

@@ -14,10 +14,12 @@ code_refs:
   - packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts
   - apps/projector-worker/src/server.ts
 evidence:
-  - G7.1 delivered numbered migration 004 plus rebuildSnapshot support.
-  - G7.2 delivered standalone projector runtime support in delivery and apps/projector-worker.
-  - G7.3 delivered provider run-id reconciliation after pre-bootstrap start.
-  - Active status docs were synchronized to mark G7 as closed.
+  tests: []
+  notes:
+    - G7.1 delivered numbered migration 004 plus rebuildSnapshot support.
+    - G7.2 delivered standalone projector runtime support in delivery and apps/projector-worker.
+    - G7.3 delivered provider run-id reconciliation after pre-bootstrap start.
+    - Active status docs were synchronized to mark G7 as closed.
 ---
 
 # ED-20260316 - G7 closeout

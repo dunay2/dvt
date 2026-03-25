@@ -16,12 +16,14 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/index.ts
   - packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts
 evidence:
-  - createIntent now rejects a different active intent for the same tenantId and runId with IntentActiveConflictError
-  - markDispatched is idempotent for the same engineRunRef and conflicts on a different engineRunRef
-  - listOrphaned uses createdAt for PENDING and updatedAt for DISPATCHED
-  - 21/21 InMemoryStartRunIntentStore tests passed
-  - '@dvt/contracts build passed'
-  - '@dvt/adapter-postgres typecheck passed'
+  tests: []
+  notes:
+    - createIntent now rejects a different active intent for the same tenantId and runId with IntentActiveConflictError
+    - markDispatched is idempotent for the same engineRunRef and conflicts on a different engineRunRef
+    - listOrphaned uses createdAt for PENDING and updatedAt for DISPATCHED
+    - 21/21 InMemoryStartRunIntentStore tests passed
+    - '@dvt/contracts build passed'
+    - '@dvt/adapter-postgres typecheck passed'
 ---
 
 # ED-20260315 - Intent store bug fixes

@@ -15,10 +15,12 @@ code_refs:
   - apps/api/src/entrypoints/http/startRunRoute.ts
   - apps/api/test/app.test.ts
 evidence:
-  - dependency-cruiser architectural rules are installed and enforced for apps/api.
-  - EngineStartRunUseCase replaced the stubbed start-run path.
-  - app.ts wires WorkflowEngine with real adapters behind the protected runtime path.
-  - dvt-api test and typecheck lanes passed at closeout time.
+  tests: []
+  notes:
+    - dependency-cruiser architectural rules are installed and enforced for apps/api.
+    - EngineStartRunUseCase replaced the stubbed start-run path.
+    - app.ts wires WorkflowEngine with real adapters behind the protected runtime path.
+    - dvt-api test and typecheck lanes passed at closeout time.
 ---
 
 # ED-20260312 — G8 Arch Tests and Engine Wiring Closeout

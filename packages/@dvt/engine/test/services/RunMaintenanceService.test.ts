@@ -14,95 +14,298 @@ import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunInt
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
-describe('RunMaintenanceService', () => {
-  function makePlanRef(): PlanRef {
-    return {
-      uri: 'https://example.com/plan',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.1',
-      planId: 'p',
-      planVersion: '2.3',
-    };
-  }
+// helpers moved to module scope
 
-  function makeContext(runId = 'r1'): RunContext {
-    return {
-      tenantId: 't',
+function makePlanRef(): PlanRef {
+  return {
+    uri: 'https://example.com/plan',
+    sha256: 'deadbeef',
+    schemaVersion: 'v1.1',
+    planId: 'p',
+    planVersion: '2.3',
+  };
+}
+
+function makeContext(runId = 'r1'): RunContext {
+  return {
+    tenantId: 't',
+    projectId: 'p',
+    environmentId: 'dev',
+    runId,
+    targetAdapter: 'temporal',
+  };
+}
+
+function makeTemporalAdapter(): IProviderAdapter {
+  return {
+    provider: 'temporal',
+    async startRun(_planRef: PlanRef, ctx) {
+      return {
+        provider: 'temporal',
+        tenantId: ctx.tenantId,
+        namespace: 'default',
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+    async cancelRun() {},
+    async getRunStatus(runRef) {
+      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    },
+    async signal() {},
+  };
+}
+
+function createFixture(): {
+  engine: WorkflowEngine;
+  service: RunMaintenanceService;
+  store: InMemoryTxStore;
+  intentStore: InMemoryStartRunIntentStore;
+  clock: SequenceClock;
+  idempotency: IdempotencyKeyBuilder;
+} {
+  const store = new InMemoryTxStore();
+  const intentStore = new InMemoryStartRunIntentStore();
+  const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+  const authorizer = new AllowAllAuthorizer();
+  const idempotency = new IdempotencyKeyBuilder();
+
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+    ['temporal', makeTemporalAdapter()],
+  ]);
+
+  const engine = new WorkflowEngine({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+
+    projector: new SnapshotProjector(),
+    idempotency,
+    clock,
+    policy: new RunAccessPolicy({
+      authorizer,
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
+    intentStore,
+    observability: createNoopObservability(),
+    adapters,
+  });
+
+  const service = new RunMaintenanceService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    intentStore,
+    adapters,
+    authorizer,
+    clock,
+    idempotency,
+    observability: createNoopObservability(),
+  });
+
+  return { engine, service, store, intentStore, clock, idempotency };
+}
+
+/** Adapter with lookupRunRef that reports a known set of running workflows. */
+function makeAdapterWithLookup(knownRunIds: Set<string>, cancelLog?: string[]): IProviderAdapter {
+  return {
+    provider: 'temporal',
+    async startRun(_planRef: PlanRef, ctx) {
+      return {
+        provider: 'temporal',
+        tenantId: ctx.tenantId,
+        namespace: 'default',
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+    async cancelRun(runRef) {
+      cancelLog?.push(runRef.runId);
+    },
+    async getRunStatus(runRef) {
+      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    },
+    async signal() {},
+    async lookupRunRef(runId, tenantId) {
+      if (!knownRunIds.has(runId)) return null;
+      return {
+        provider: 'temporal',
+        tenantId,
+        namespace: 'default',
+        workflowId: `wf-${runId}`,
+        runId,
+      } as EngineRunRef;
+    },
+  };
+}
+
+function makeAdapterWithFailingCancel(knownRunIds: Set<string>): IProviderAdapter {
+  const base = makeAdapterWithLookup(knownRunIds);
+  return {
+    ...base,
+    async cancelRun() {
+      throw new Error('adapter unavailable');
+    },
+  };
+}
+
+// Module-scoped helpers to keep tests small and satisfy CodeScene rules
+function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
+  return {
+    provider: 'temporal',
+    async startRun(_planRef, ctx) {
+      return {
+        provider: 'temporal',
+        tenantId: ctx.tenantId,
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+    async cancelRun(runRef) {
+      cancelLog.push(runRef.runId);
+    },
+    async getRunStatus(runRef) {
+      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    },
+    async signal() {},
+    async lookupRunRef(runId, tenantId) {
+      return { provider: 'temporal', tenantId, workflowId: `wf-${runId}`, runId } as EngineRunRef;
+    },
+  };
+}
+
+function makeMockAdapterWithLog(cancelLog: string[]): IProviderAdapter {
+  return {
+    provider: 'mock',
+    async startRun(_planRef, ctx) {
+      return {
+        provider: 'mock',
+        tenantId: ctx.tenantId,
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+    async cancelRun(runRef) {
+      cancelLog.push(runRef.runId);
+    },
+    async getRunStatus(runRef) {
+      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    },
+    async signal() {},
+    async lookupRunRef(runId, tenantId) {
+      return { provider: 'mock', tenantId, workflowId: `wf-${runId}`, runId } as EngineRunRef;
+    },
+  };
+}
+
+function createServiceWithAdapters(adapters: Map<EngineRunRef['provider'], IProviderAdapter>): {
+  service: RunMaintenanceService;
+  store: InMemoryTxStore;
+  intentStore: InMemoryStartRunIntentStore;
+} {
+  const store = new InMemoryTxStore();
+  const intentStore = new InMemoryStartRunIntentStore();
+  const service = new RunMaintenanceService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    intentStore,
+    adapters,
+    authorizer: new AllowAllAuthorizer(),
+    clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+    idempotency: new IdempotencyKeyBuilder(),
+    observability: createNoopObservability(),
+  });
+  return { service, store, intentStore };
+}
+
+function createFixtureWith(adapter: IProviderAdapter): {
+  service: RunMaintenanceService;
+  store: InMemoryTxStore;
+  intentStore: InMemoryStartRunIntentStore;
+  clock: SequenceClock;
+  idempotency: IdempotencyKeyBuilder;
+} {
+  const store = new InMemoryTxStore();
+  const intentStore = new InMemoryStartRunIntentStore();
+  const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+  const authorizer = new AllowAllAuthorizer();
+  const idempotency = new IdempotencyKeyBuilder();
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+    [adapter.provider, adapter],
+  ]);
+
+  const service = new RunMaintenanceService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    intentStore,
+    adapters,
+    authorizer,
+    clock,
+    idempotency,
+    observability: createNoopObservability(),
+  });
+
+  return { service, store, intentStore, clock, idempotency };
+}
+
+function makePendingIntent(
+  intentStore: InMemoryStartRunIntentStore,
+  runId: string,
+  intentId: string,
+  provider: EngineRunRef['provider'] = 'temporal'
+): ReturnType<InMemoryStartRunIntentStore['createIntent']> {
+  return intentStore.createIntent({
+    intentId,
+    tenantId: 't',
+    runId,
+    provider,
+    createdAt: '1970-01-01T00:00:00.000Z',
+  });
+}
+
+// Helper: creates a run in CANCELLING state (RUNNING + cancelling = true).
+// Steps:
+//   1. engine.startRun() — PENDING with RunQueued
+//   2. Manually append RunStarted — transitions to RUNNING
+//   3. engine.cancelRun() — emits RunCancelRequested, sets cancelling = true
+async function makeCancellingRun(
+  fixture: ReturnType<typeof createFixture>,
+  runId: string,
+  tenantId = 't'
+): Promise<EngineRunRef> {
+  const ctx = makeContext(runId);
+  ctx.tenantId = tenantId;
+  const runRef = await fixture.engine.startRun(makePlanRef(), ctx);
+
+  // Transition to RUNNING
+  await fixture.store.appendAndEnqueueTx(runId, [
+    {
+      eventId: fixture.idempotency.eventId(),
+      eventType: 'RunStarted' as const,
+      emittedAt: fixture.clock.nowIsoUtc(),
+      tenantId,
       projectId: 'p',
       environmentId: 'dev',
       runId,
-      targetAdapter: 'temporal',
-    };
-  }
-
-  function makeTemporalAdapter(): IProviderAdapter {
-    return {
-      provider: 'temporal',
-      async startRun(_planRef: PlanRef, ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-      async cancelRun() {},
-      async getRunStatus(runRef) {
-        return { runId: runRef.runId, status: 'RUNNING' } as any;
-      },
-      async signal() {},
-    };
-  }
-
-  function createFixture(): {
-    engine: WorkflowEngine;
-    service: RunMaintenanceService;
-    store: InMemoryTxStore;
-    intentStore: InMemoryStartRunIntentStore;
-    clock: SequenceClock;
-    idempotency: IdempotencyKeyBuilder;
-  } {
-    const store = new InMemoryTxStore();
-    const intentStore = new InMemoryStartRunIntentStore();
-    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-    const authorizer = new AllowAllAuthorizer();
-    const idempotency = new IdempotencyKeyBuilder();
-
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter()],
-    ]);
-
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-
-      projector: new SnapshotProjector(),
-      idempotency,
-      clock,
-      policy: new RunAccessPolicy({
-        authorizer,
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+      planId: 'p',
+      planVersion: '1.0',
+      engineAttemptId: 1,
+      logicalAttemptId: 1,
+      idempotencyKey: fixture.idempotency.runEventKey({
+        eventType: 'RunStarted',
+        runId,
+        logicalAttemptId: 1,
+        planId: 'p',
+        planVersion: '1.0',
       }),
-      intentStore,
-      observability: createNoopObservability(),
-      adapters,
-    });
+    },
+  ]);
 
-    const service = new RunMaintenanceService({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-      intentStore,
-      adapters,
-      authorizer,
-      clock,
-      idempotency,
-      observability: createNoopObservability(),
-    });
+  // Cancel — emits RunCancelRequested, sets cancelling = true
+  await fixture.engine.cancelRun(runRef);
 
-    return { engine, service, store, intentStore, clock, idempotency };
-  }
+  return runRef;
+}
 
+describe('RunMaintenanceService', () => {
   describe('detectStuckRuns', () => {
     it('returns empty transitioned when no runs are PENDING', async () => {
       const { service } = createFixture();
@@ -152,7 +355,11 @@ describe('RunMaintenanceService', () => {
       await engine.startRun(makePlanRef(), makeContext('pending-only-2'));
 
       const result = await service.detectStuckRuns({ thresholdMs: 0, tenantId: 't' });
-      expect(result.transitioned.sort()).toEqual(['pending-only-1', 'pending-only-2'].sort());
+      const transitionedSorted = result.transitioned.slice().sort((a, b) => a.localeCompare(b));
+      const expectedSorted = ['pending-only-1', 'pending-only-2']
+        .slice()
+        .sort((a, b) => a.localeCompare(b));
+      expect(transitionedSorted).toEqual(expectedSorted);
     });
 
     it('respects tenantId filter — does not mark other tenants runs', async () => {
@@ -260,96 +467,7 @@ describe('RunMaintenanceService', () => {
   });
 
   describe('reconcileOrphanedIntents', () => {
-    /** Adapter with lookupRunRef that reports a known set of running workflows. */
-    function makeAdapterWithLookup(
-      knownRunIds: Set<string>,
-      cancelLog?: string[]
-    ): IProviderAdapter {
-      return {
-        provider: 'temporal',
-        async startRun(_planRef: PlanRef, ctx) {
-          return {
-            provider: 'temporal',
-            tenantId: ctx.tenantId,
-            namespace: 'default',
-            workflowId: `wf-${ctx.runId}`,
-            runId: ctx.runId,
-          } as EngineRunRef;
-        },
-        async cancelRun(runRef) {
-          cancelLog?.push(runRef.runId);
-        },
-        async getRunStatus(runRef) {
-          return { runId: runRef.runId, status: 'RUNNING' } as any;
-        },
-        async signal() {},
-        async lookupRunRef(runId, tenantId) {
-          if (!knownRunIds.has(runId)) return null;
-          return {
-            provider: 'temporal',
-            tenantId,
-            namespace: 'default',
-            workflowId: `wf-${runId}`,
-            runId,
-          } as EngineRunRef;
-        },
-      };
-    }
-
-    function makeAdapterWithFailingCancel(knownRunIds: Set<string>): IProviderAdapter {
-      const base = makeAdapterWithLookup(knownRunIds);
-      return {
-        ...base,
-        async cancelRun() {
-          throw new Error('adapter unavailable');
-        },
-      };
-    }
-
-    function createFixtureWith(adapter: IProviderAdapter): {
-      service: RunMaintenanceService;
-      store: InMemoryTxStore;
-      intentStore: InMemoryStartRunIntentStore;
-      clock: SequenceClock;
-      idempotency: IdempotencyKeyBuilder;
-    } {
-      const store = new InMemoryTxStore();
-      const intentStore = new InMemoryStartRunIntentStore();
-      const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-      const authorizer = new AllowAllAuthorizer();
-      const idempotency = new IdempotencyKeyBuilder();
-      const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-        [adapter.provider, adapter],
-      ]);
-
-      const service = new RunMaintenanceService({
-        stateStoreRead: store,
-        stateStoreWrite: store,
-        intentStore,
-        adapters,
-        authorizer,
-        clock,
-        idempotency,
-        observability: createNoopObservability(),
-      });
-
-      return { service, store, intentStore, clock, idempotency };
-    }
-
-    function makePendingIntent(
-      intentStore: InMemoryStartRunIntentStore,
-      runId: string,
-      intentId: string,
-      provider: EngineRunRef['provider'] = 'temporal'
-    ): ReturnType<InMemoryStartRunIntentStore['createIntent']> {
-      return intentStore.createIntent({
-        intentId,
-        tenantId: 't',
-        runId,
-        provider,
-        createdAt: '1970-01-01T00:00:00.000Z',
-      });
-    }
+    // helpers moved to module scope
 
     it('returns empty result when no orphaned intents exist', async () => {
       const { service } = createFixture();
@@ -529,70 +647,15 @@ describe('RunMaintenanceService', () => {
       const cancelLogTemporal: string[] = [];
       const cancelLogMock: string[] = [];
 
-      const temporalAdapter: IProviderAdapter = {
-        provider: 'temporal',
-        async startRun(_planRef, ctx) {
-          return {
-            provider: 'temporal',
-            tenantId: ctx.tenantId,
-            workflowId: `wf-${ctx.runId}`,
-            runId: ctx.runId,
-          } as EngineRunRef;
-        },
-        async cancelRun(runRef) {
-          cancelLogTemporal.push(runRef.runId);
-        },
-        async getRunStatus(runRef) {
-          return { runId: runRef.runId, status: 'RUNNING' } as any;
-        },
-        async signal() {},
-        async lookupRunRef(runId, tenantId) {
-          return {
-            provider: 'temporal',
-            tenantId,
-            workflowId: `wf-${runId}`,
-            runId,
-          } as EngineRunRef;
-        },
-      };
+      const temporalAdapter = makeTemporalAdapterWithLog(cancelLogTemporal);
+      const mockAdapter = makeMockAdapterWithLog(cancelLogMock);
 
-      const mockAdapter: IProviderAdapter = {
-        provider: 'mock',
-        async startRun(_planRef, ctx) {
-          return {
-            provider: 'mock',
-            tenantId: ctx.tenantId,
-            workflowId: `wf-${ctx.runId}`,
-            runId: ctx.runId,
-          } as EngineRunRef;
-        },
-        async cancelRun(runRef) {
-          cancelLogMock.push(runRef.runId);
-        },
-        async getRunStatus(runRef) {
-          return { runId: runRef.runId, status: 'RUNNING' } as any;
-        },
-        async signal() {},
-        async lookupRunRef(runId, tenantId) {
-          return { provider: 'mock', tenantId, workflowId: `wf-${runId}`, runId } as EngineRunRef;
-        },
-      };
-
-      const store = new InMemoryTxStore();
-      const intentStore = new InMemoryStartRunIntentStore();
-      const service = new RunMaintenanceService({
-        stateStoreRead: store,
-        stateStoreWrite: store,
-        intentStore,
-        adapters: new Map<EngineRunRef['provider'], IProviderAdapter>([
+      const { service, intentStore } = createServiceWithAdapters(
+        new Map<EngineRunRef['provider'], IProviderAdapter>([
           ['temporal', temporalAdapter],
           ['mock', mockAdapter],
-        ]),
-        authorizer: new AllowAllAuthorizer(),
-        clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
-        idempotency: new IdempotencyKeyBuilder(),
-        observability: createNoopObservability(),
-      });
+        ])
+      );
 
       await makePendingIntent(intentStore, 'run-temporal-mp', 'i-mp-temporal', 'temporal');
       await makePendingIntent(intentStore, 'run-mock-mp', 'i-mp-mock', 'mock');
@@ -631,53 +694,6 @@ describe('RunMaintenanceService', () => {
   });
 
   describe('detectStuckCancellingRuns', () => {
-    /**
-     * Helper: creates a run in CANCELLING state (RUNNING + cancelling = true).
-     *
-     * Steps:
-     *   1. engine.startRun() — PENDING with RunQueued
-     *   2. Manually append RunStarted — transitions to RUNNING
-     *   3. engine.cancelRun() — emits RunCancelRequested, sets cancelling = true
-     */
-    async function makeCancellingRun(
-      fixture: ReturnType<typeof createFixture>,
-      runId: string,
-      tenantId = 't'
-    ): Promise<EngineRunRef> {
-      const ctx = makeContext(runId);
-      ctx.tenantId = tenantId;
-      const runRef = await fixture.engine.startRun(makePlanRef(), ctx);
-
-      // Transition to RUNNING
-      await fixture.store.appendAndEnqueueTx(runId, [
-        {
-          eventId: fixture.idempotency.eventId(),
-          eventType: 'RunStarted' as const,
-          emittedAt: fixture.clock.nowIsoUtc(),
-          tenantId,
-          projectId: 'p',
-          environmentId: 'dev',
-          runId,
-          planId: 'p',
-          planVersion: '1.0',
-          engineAttemptId: 1,
-          logicalAttemptId: 1,
-          idempotencyKey: fixture.idempotency.runEventKey({
-            eventType: 'RunStarted',
-            runId,
-            logicalAttemptId: 1,
-            planId: 'p',
-            planVersion: '1.0',
-          }),
-        },
-      ]);
-
-      // Cancel — emits RunCancelRequested, sets cancelling = true
-      await fixture.engine.cancelRun(runRef);
-
-      return runRef;
-    }
-
     it('returns empty when no RUNNING runs exist', async () => {
       const fixture = createFixture();
       const result = await fixture.service.detectStuckCancellingRuns({

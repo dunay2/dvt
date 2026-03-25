@@ -1,7 +1,7 @@
 ---
 title: ED-20260304 — TemporalAdapter.lookupRunRef implementation
 status: Final
-date: 2026-03-04
+date: 2026-03-04T00:00:00.000Z
 owners: Engine Domain
 arc_level: ARC-2
 breaking: false
@@ -13,7 +13,9 @@ evidence:
   tests:
     - packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts
   code:
-    - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts (lookupRunRef, isWorkflowNotFound, WorkflowHandleLike.describe)
+    - >-
+      packages/@dvt/adapter-temporal/src/TemporalAdapter.ts (lookupRunRef, isWorkflowNotFound,
+      WorkflowHandleLike.describe)
 ---
 
 ## What changed (bullets)

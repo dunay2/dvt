@@ -13,11 +13,13 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
   - packages/@dvt/adapter-postgres/src/index.ts
 evidence:
-  - PostgresRunMetadataRepository extracted (322 lines) - owns run_metadata table operations
-  - PostgresRunEventStore extracted (274 lines) - owns run_events table operations
-  - PostgresRunSnapshotStore extracted (198 lines) - owns run_snapshots table operations
-  - PostgresStateStoreAdapter reduced from ~955 to 405 lines - facade plus transactional coordinator
-  - Typecheck clean (`pnpm --filter @dvt/adapter-postgres typecheck`)
+  tests: []
+  notes:
+    - PostgresRunMetadataRepository extracted (322 lines) - owns run_metadata table operations
+    - PostgresRunEventStore extracted (274 lines) - owns run_events table operations
+    - PostgresRunSnapshotStore extracted (198 lines) - owns run_snapshots table operations
+    - PostgresStateStoreAdapter reduced from ~955 to 405 lines - facade plus transactional coordinator
+    - Typecheck clean (`pnpm --filter @dvt/adapter-postgres typecheck`)
 ---
 
 # ED-20260315 - PostgresStateStoreAdapter Phase 1 Items 5-7

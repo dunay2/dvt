@@ -23,130 +23,131 @@ import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunInt
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
 
-describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
-  function makeRunQueuedEventInput(runId: string): {
-    eventId: string;
-    eventType: 'RunQueued';
-    runId: string;
-    tenantId: string;
-    projectId: string;
-    environmentId: string;
-    planId: string;
-    planVersion: string;
-    logicalAttemptId: number;
-    engineAttemptId: number;
-    emittedAt: string;
-    idempotencyKey: string;
-  } {
-    return {
-      eventId: `evt-${runId}`,
-      eventType: 'RunQueued' as const,
-      runId,
-      tenantId: 't',
-      projectId: 'p',
-      environmentId: 'dev',
-      planId: 'p',
-      planVersion: '1.0',
-      logicalAttemptId: 1,
-      engineAttemptId: 1,
-      emittedAt: '2026-02-12T00:00:00.000Z',
-      idempotencyKey: `queued-${runId}`,
-    };
-  }
+// helpers moved to module scope
 
-  function makePlanRef(): PlanRef {
-    return {
-      uri: 'https://example.com/plan',
-      sha256: 'deadbeef',
-      schemaVersion: 'v1.1',
-      planId: 'p',
-      planVersion: '2.3',
-    };
-  }
+function makeRunQueuedEventInput(runId: string): {
+  eventId: string;
+  eventType: 'RunQueued';
+  runId: string;
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+  planId: string;
+  planVersion: string;
+  logicalAttemptId: number;
+  engineAttemptId: number;
+  emittedAt: string;
+  idempotencyKey: string;
+} {
+  return {
+    eventId: `evt-${runId}`,
+    eventType: 'RunQueued' as const,
+    runId,
+    tenantId: 't',
+    projectId: 'p',
+    environmentId: 'dev',
+    planId: 'p',
+    planVersion: '1.0',
+    logicalAttemptId: 1,
+    engineAttemptId: 1,
+    emittedAt: '2026-02-12T00:00:00.000Z',
+    idempotencyKey: `queued-${runId}`,
+  };
+}
+function makePlanRef(): PlanRef {
+  return {
+    uri: 'https://example.com/plan',
+    sha256: 'deadbeef',
+    schemaVersion: 'v1.1',
+    planId: 'p',
+    planVersion: '2.3',
+  };
+}
 
-  function makeContext(runId = 'r1'): RunContext {
-    return {
-      tenantId: 't',
-      projectId: 'p',
-      environmentId: 'dev',
-      runId,
-      targetAdapter: 'temporal',
-    };
-  }
+function makeContext(runId = 'r1'): RunContext {
+  return {
+    tenantId: 't',
+    projectId: 'p',
+    environmentId: 'dev',
+    runId,
+    targetAdapter: 'temporal',
+  };
+}
 
-  function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
-    return {
-      provider: 'temporal',
-      async startRun(_planRef: PlanRef, ctx) {
-        return {
-          provider: 'temporal',
-          tenantId: ctx.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${ctx.runId}`,
-          runId: ctx.runId,
-        } as EngineRunRef;
-      },
-      async lookupRunRef() {
-        return null;
-      },
-      async cancelRun() {},
-      async getRunStatus(runRef) {
-        return { runId: runRef.runId, status: 'RUNNING' } as any;
-      },
-      async signal() {},
-      ...overrides,
-    };
-  }
+function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
+  return {
+    provider: 'temporal',
+    async startRun(_planRef: PlanRef, ctx) {
+      return {
+        provider: 'temporal',
+        tenantId: ctx.tenantId,
+        namespace: 'default',
+        workflowId: `wf-${ctx.runId}`,
+        runId: ctx.runId,
+      } as EngineRunRef;
+    },
+    async lookupRunRef() {
+      return null;
+    },
+    async cancelRun() {},
+    async getRunStatus(runRef) {
+      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    },
+    async signal() {},
+    ...overrides,
+  };
+}
 
-  function createFixture(adapterOverrides?: Partial<IProviderAdapter>): {
-    engine: WorkflowEngine;
-    service: RunMaintenanceService;
-    store: InMemoryTxStore;
-    intentStore: InMemoryStartRunIntentStore;
-    clock: SequenceClock;
-    idempotency: IdempotencyKeyBuilder;
-    adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
-  } {
-    const store = new InMemoryTxStore();
-    const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
-    const intentStore = new InMemoryStartRunIntentStore(clock);
-    const authorizer = new AllowAllAuthorizer();
-    const idempotency = new IdempotencyKeyBuilder();
+function createFixture(adapterOverrides?: Partial<IProviderAdapter>): {
+  engine: WorkflowEngine;
+  service: RunMaintenanceService;
+  store: InMemoryTxStore;
+  intentStore: InMemoryStartRunIntentStore;
+  clock: SequenceClock;
+  idempotency: IdempotencyKeyBuilder;
+  adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
+} {
+  const store = new InMemoryTxStore();
+  const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
+  const intentStore = new InMemoryStartRunIntentStore(clock);
+  const authorizer = new AllowAllAuthorizer();
+  const idempotency = new IdempotencyKeyBuilder();
 
-    const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
-      ['temporal', makeTemporalAdapter(adapterOverrides)],
-    ]);
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+    ['temporal', makeTemporalAdapter(adapterOverrides)],
+  ]);
 
-    const engine = new WorkflowEngine({
-      stateStoreRead: store,
-      stateStoreWrite: store,
+  const engine = new WorkflowEngine({
+    stateStoreRead: store,
+    stateStoreWrite: store,
 
-      projector: new SnapshotProjector(),
-      idempotency,
-      clock,
-      policy: new RunAccessPolicy({
-        authorizer,
-        planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
-      }),
-      intentStore,
-      observability: createNoopObservability(),
-      adapters,
-    });
-
-    const service = new RunMaintenanceService({
-      stateStoreRead: store,
-      stateStoreWrite: store,
-      intentStore,
-      adapters,
+    projector: new SnapshotProjector(),
+    idempotency,
+    clock,
+    policy: new RunAccessPolicy({
       authorizer,
-      clock,
-      idempotency,
-      observability: createNoopObservability(),
-    });
+      planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+    }),
+    intentStore,
+    observability: createNoopObservability(),
+    adapters,
+  });
 
-    return { engine, service, store, intentStore, clock, idempotency, adapters };
-  }
+  const service = new RunMaintenanceService({
+    stateStoreRead: store,
+    stateStoreWrite: store,
+    intentStore,
+    adapters,
+    authorizer,
+    clock,
+    idempotency,
+    observability: createNoopObservability(),
+  });
 
+  return { engine, service, store, intentStore, clock, idempotency, adapters };
+}
+
+describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
   it('returns empty result when no orphaned intents exist', async () => {
     const { service } = createFixture();
     const result = await service.reconcileOrphanedIntents({
@@ -314,7 +315,7 @@ describe('RunMaintenanceService - reconcileOrphanedIntents', () => {
     expect(result.expired).toEqual([]);
     expect(result.cancelFailed).toEqual([]);
     expect(cancelledRefs).toHaveLength(1);
-    expect(cancelledRefs[0]!.runId).toBe('orphan-dispatched-1');
+    expect(cancelledRefs[0].runId).toBe('orphan-dispatched-1');
 
     const intent = await intentStore.getIntent(intentId);
     expect(intent?.status).toBe('RESOLVED');
