@@ -132,6 +132,7 @@ export interface StartRunPlanRejectedResult {
   readonly code: ExecutabilityRejectionCode;
   readonly reason: string;
   readonly cause?: string;
+  readonly supportedVersions?: readonly string[];
 }
 
 export type StartRunResult =

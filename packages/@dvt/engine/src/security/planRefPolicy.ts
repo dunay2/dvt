@@ -8,6 +8,8 @@
  */
 import { URL } from 'node:url';
 
+import { PlanUriNotAllowedError } from '../contracts/errors.js';
+
 export interface PlanRefAllowlist {
   allowedSchemes: ReadonlyArray<string>;
   allowedHosts?: ReadonlyArray<string>; // applies to http/https
@@ -23,22 +25,27 @@ export class PlanRefPolicy {
     const deniedSchemes = ['file://', 'ftp://', 'gopher://'];
     for (const d of deniedSchemes) {
       if (lower.startsWith(d)) {
-        throw new Error(`PLAN_URI_NOT_ALLOWED: denied scheme (explicit block): ${d}`);
+        throw new PlanUriNotAllowedError(uri, `denied scheme (explicit block): ${d}`);
       }
     }
 
     // If it looks like an http(s) URL, validate host and scheme.
     if (lower.startsWith('http://') || lower.startsWith('https://')) {
-      const u = new URL(uri);
+      let u: URL;
+      try {
+        u = new URL(uri);
+      } catch {
+        throw new PlanUriNotAllowedError(uri, 'invalid uri (unparseable)');
+      }
       if (!this.allowlist.allowedSchemes.includes(u.protocol.replace(':', ''))) {
-        throw new Error(`PLAN_URI_NOT_ALLOWED: scheme not allowlisted (http/https): ${u.protocol}`);
+        throw new PlanUriNotAllowedError(uri, `scheme not allowlisted (http/https): ${u.protocol}`);
       }
       if (this.allowlist.allowedHosts && !this.allowlist.allowedHosts.includes(u.hostname)) {
-        throw new Error(`PLAN_URI_NOT_ALLOWED: host not allowlisted (http/https): ${u.hostname}`);
+        throw new PlanUriNotAllowedError(uri, `host not allowlisted (http/https): ${u.hostname}`);
       }
       // Block link-local and metadata endpoints (basic).
       if (isLinkLocalHost(u.hostname)) {
-        throw new Error(`PLAN_URI_NOT_ALLOWED: denied host (link-local/localhost): ${u.hostname}`);
+        throw new PlanUriNotAllowedError(uri, `denied host (link-local/localhost): ${u.hostname}`);
       }
       return;
     }
@@ -46,15 +53,15 @@ export class PlanRefPolicy {
     // Opaque URIs (s3://, gs://, azure://, etc.)
     const scheme = uri.split(':', 1)[0]?.toLowerCase();
     if (!scheme) {
-      throw new Error('PLAN_URI_NOT_ALLOWED: invalid uri (missing scheme)');
+      throw new PlanUriNotAllowedError(uri, 'invalid uri (missing scheme)');
     }
     if (!this.allowlist.allowedSchemes.includes(scheme)) {
-      throw new Error(`PLAN_URI_NOT_ALLOWED: scheme not allowlisted (opaque): ${scheme}`);
+      throw new PlanUriNotAllowedError(uri, `scheme not allowlisted (opaque): ${scheme}`);
     }
     if (this.allowlist.allowedUriPrefixes) {
       const ok = this.allowlist.allowedUriPrefixes.some((p) => uri.startsWith(p));
       if (!ok) {
-        throw new Error('PLAN_URI_NOT_ALLOWED: uri prefix not allowlisted (opaque)');
+        throw new PlanUriNotAllowedError(uri, 'uri prefix not allowlisted (opaque)');
       }
     }
   }

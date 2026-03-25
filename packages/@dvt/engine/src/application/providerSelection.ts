@@ -9,6 +9,7 @@
 import type { EngineRunRef } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
+import { AdapterNotRegisteredError } from '../contracts/errors.js';
 
 type Provider = EngineRunRef['provider'];
 
@@ -57,7 +58,7 @@ function getRegisteredAdapterOrThrow(
 ): IProviderAdapter {
   const adapter = adapters.get(provider);
   if (!adapter) {
-    throw new Error(`No adapter registered for provider: ${provider}`);
+    throw new AdapterNotRegisteredError(provider);
   }
   return adapter;
 }

@@ -1,4 +1,4 @@
-import { AdapterNotRegisteredError } from '@dvt/engine';
+import { AdapterNotRegisteredError, UnsupportedPlanVersionError } from '@dvt/engine';
 
 import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
 import type {
@@ -44,6 +44,16 @@ export class StartRunAuthorizedFacade {
     } catch (error) {
       if (error instanceof AdapterNotRegisteredError) {
         return { kind: 'adapter_not_configured', adapter: input.command.targetAdapter };
+      }
+
+      if (error instanceof UnsupportedPlanVersionError) {
+        return {
+          kind: 'plan_rejected',
+          accepted: false,
+          code: 'UNSUPPORTED_PLAN_VERSION',
+          reason: `Unsupported plan version: ${error.planVersion}`,
+          supportedVersions: error.supportedVersions,
+        };
       }
 
       const duplicate = toDuplicateResult(error, input.command.runId);

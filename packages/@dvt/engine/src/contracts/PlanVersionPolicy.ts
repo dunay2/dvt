@@ -1,14 +1,17 @@
-﻿export const SUPPORTED_PLAN_VERSIONS = ['2.3'] as const;
+import { isSupportedExecutionPlanVersion, SUPPORTED_EXECUTION_PLAN_VERSIONS } from '@dvt/contracts';
 
-export class UnsupportedPlanVersionError extends Error {
-  public readonly code = 'UNSUPPORTED_PLAN_VERSION';
+import { DvtError } from './errors.js';
 
-  public constructor(
+export class UnsupportedPlanVersionError extends DvtError {
+  constructor(
     public readonly planVersion: string,
     public readonly supportedVersions: readonly string[]
   ) {
     super(
-      `Unsupported plan version "${planVersion}". Supported versions: ${supportedVersions.join(', ')}`
+      'UNSUPPORTED_PLAN_VERSION',
+      `Unsupported plan version "${planVersion}". Supported versions: ${supportedVersions.join(', ')}`,
+      undefined,
+      { details: { planVersion, supportedVersions: [...supportedVersions] } }
     );
     this.name = 'UnsupportedPlanVersionError';
   }
@@ -16,7 +19,7 @@ export class UnsupportedPlanVersionError extends Error {
 
 export function assertSupportedPlanVersion(planVersion: string): void {
   const normalized = planVersion.trim();
-  if (normalized.length === 0 || !SUPPORTED_PLAN_VERSIONS.includes(normalized as '2.3')) {
-    throw new UnsupportedPlanVersionError(planVersion, SUPPORTED_PLAN_VERSIONS);
+  if (!normalized || !isSupportedExecutionPlanVersion(normalized)) {
+    throw new UnsupportedPlanVersionError(planVersion, [...SUPPORTED_EXECUTION_PLAN_VERSIONS]);
   }
 }

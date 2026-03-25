@@ -136,6 +136,15 @@ export class OutboxRateLimitExceededError extends DvtError {
   }
 }
 
+export class PlanUriNotAllowedError extends DvtError {
+  constructor(uri: string, reason: string) {
+    super('PLAN_URI_NOT_ALLOWED', `Plan URI not allowed — ${reason}: ${uri}`, undefined, {
+      details: { uri, reason },
+    });
+    this.name = 'PlanUriNotAllowedError';
+  }
+}
+
 export class InvalidStateTransitionError extends DvtError {
   constructor(runId: string, fromStatus: string, eventType: string, stepId?: string) {
     const subject = stepId ? `step ${stepId}` : 'run';

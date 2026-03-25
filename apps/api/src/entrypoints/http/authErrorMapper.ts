@@ -60,9 +60,9 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
     case 'rate_limited':
       return {
         status: 429,
-        ...(result.retryAfterSeconds !== undefined
-          ? { headers: { 'retry-after': String(result.retryAfterSeconds) } }
-          : {}),
+        ...(result.retryAfterSeconds === undefined
+          ? {}
+          : { headers: { 'retry-after': String(result.retryAfterSeconds) } }),
         body: { error: 'TOO_MANY_REQUESTS', code: result.code },
       };
     case 'plan_rejected':
@@ -72,7 +72,10 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           error: 'PLAN_REJECTED',
           code: result.code,
           reason: result.reason,
-          ...(result.cause !== undefined ? { cause: result.cause } : {}),
+          ...(result.cause === undefined ? {} : { cause: result.cause }),
+          ...(result.supportedVersions === undefined
+            ? {}
+            : { supportedVersions: result.supportedVersions }),
         },
       };
   }

@@ -1,7 +1,7 @@
-﻿import { describe, expect, it } from 'vitest';
+import { SUPPORTED_EXECUTION_PLAN_VERSIONS } from '@dvt/contracts';
+import { describe, expect, it } from 'vitest';
 
 import {
-  SUPPORTED_PLAN_VERSIONS,
   UnsupportedPlanVersionError,
   assertSupportedPlanVersion,
 } from '../../src/contracts/PlanVersionPolicy.js';
@@ -19,7 +19,7 @@ describe('PlanVersionPolicy', () => {
     } catch (error) {
       expect(error).toMatchObject({
         code: 'UNSUPPORTED_PLAN_VERSION',
-        supportedVersions: [...SUPPORTED_PLAN_VERSIONS],
+        supportedVersions: [...SUPPORTED_EXECUTION_PLAN_VERSIONS],
       });
     }
   });

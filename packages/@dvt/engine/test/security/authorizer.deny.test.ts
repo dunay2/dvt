@@ -109,7 +109,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       sha256: 'deadbeef',
       schemaVersion: 'v1.2',
       planId: 'p',
-      planVersion: '1',
+      planVersion: '2.3',
     };
 
     const ctx: RunContext = {
@@ -135,7 +135,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       environmentId: 'dev',
       runId: 'run-1',
       planId: 'p',
-      planVersion: '1',
+      planVersion: '2.3',
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -165,7 +165,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       environmentId: 'dev',
       runId: 'run-tenant-locked-1',
       planId: 'p',
-      planVersion: '1',
+      planVersion: '2.3',
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -194,7 +194,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       environmentId: 'dev',
       runId: 'run-tenant-locked-2',
       planId: 'p',
-      planVersion: '1',
+      planVersion: '2.3',
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -222,7 +222,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       environmentId: 'dev',
       runId: 'run-tenant-locked-3',
       planId: 'p',
-      planVersion: '1',
+      planVersion: '2.3',
       logicalAttemptId: 1,
       provider: 'mock',
       providerWorkflowId: 'wf',
@@ -251,7 +251,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       sha256: 'deadbeef',
       schemaVersion: 'v1.2',
       planId: 'p',
-      planVersion: '1',
+      planVersion: '2.3',
     };
 
     const ctx: RunContext = {
