@@ -73,7 +73,9 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           code: result.code,
           reason: result.reason,
           ...(result.cause === undefined ? {} : { cause: result.cause }),
-          ...(result.supportedVersions === undefined ? {} : { supportedVersions: result.supportedVersions }),
+          ...(result.supportedVersions === undefined
+            ? {}
+            : { supportedVersions: result.supportedVersions }),
         },
       };
   }
