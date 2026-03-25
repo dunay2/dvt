@@ -2,7 +2,7 @@
 title: Agent Lane B - Event Contract And Traceability
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-24
+last_reviewed: 2026-03-25
 planning_type: status
 ---
 
@@ -92,13 +92,16 @@ Stabilize event payload versioning and lineage wiring.
 - [x] `P1` `RC-B1`: decouple lineage worker from adapter internals.
 - [x] `P1` `RC-B2`: replace lineage noop resolver with a real resolver.
 - [ ] `P1` `DLQ alerting + automated replay`: surface and reduce lineage backlogs.
+- [ ] `P1` `RC-B5`: add exponential retry scheduling (next_attempt_at) to lineage outbox to pace retries and harden DLQ.
 - [ ] `P2` `manifest S3 fetch cache`: reduce planner egress and build latency.
+- [ ] `P2` `RC-F2`: externalize adapter-postgres CI path patterns to tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and pr-quality-gate.yml; add path-matcher unit tests.
 
 ## Dependencies
 
 - `S05` is the primary contract foundation for this lane.
 - `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
-- DLQ replay and alerting depend on `S05` and the retry pacing follow-up.
+- `RC-B5` is a prerequisite to DLQ alerting + automated replay.
+- `RC-F2` is independent — CI-only change with no runtime risk.
 - Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary even further.
 - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.
 

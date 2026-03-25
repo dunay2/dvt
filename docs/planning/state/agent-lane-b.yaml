@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-24
+last_reviewed: 2026-03-25
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -33,15 +33,33 @@ tasks:
     objective: surface and reduce lineage backlogs.
     dependency: S05
     target: Alerting and replay for lineage failures.
+  - task_id: RC-B5
+    priority: P1
+    status: queued
+    objective:
+      add exponential retry scheduling (next_attempt_at) to lineage outbox to pace retries and
+      harden DLQ.
+    dependency: none
+    target: Retry pacing and DLQ hardening.
   - task_id: manifest S3 fetch cache
     priority: P2
     status: queued
     objective: reduce planner egress and build latency.
     dependency: none
     target: Cache manifest fetches.
+  - task_id: RC-F2
+    priority: P2
+    status: queued
+    objective:
+      externalize adapter-postgres CI path patterns to
+      tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and
+      pr-quality-gate.yml; add path-matcher unit tests.
+    dependency: none
+    target: Single source of truth for adapter scope detection + path-matcher tests.
 dependency_notes: |
   - `S05` is the primary contract foundation for this lane.
   - `RC-B1` and `RC-B2` are closed in mainline; the next traceability slice is DLQ replay and alerting.
-  - DLQ replay and alerting depend on `S05` and the retry pacing follow-up.
+  - `RC-B5` is a prerequisite to DLQ alerting + automated replay.
+  - `RC-F2` is independent — CI-only change with no runtime risk.
   - Improvement: normalize `payloadVersion` explicitly in more test helpers to harden the type boundary even further.
   - Improvement: if failure semantics need to differ per producer, split `RunFailed` into more specific contracts in a later iteration.

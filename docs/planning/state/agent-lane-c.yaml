@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: 2026-03-24
+last_reviewed: 2026-03-25
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -63,7 +63,24 @@ tasks:
     objective: split CANCEL and PAUSE privileges.
     dependency: none
     target: Refine operation-level authorization split.
+  - task_id: RC-E1
+    priority: P1
+    status: queued
+    objective:
+      harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and
+      dangerous schemes (data:, javascript:, mailto:).
+    dependency: S16 merge
+    target: SSRF/CIDR hardening + dedicated unit tests.
+  - task_id: RC-E2
+    priority: P1
+    status: queued
+    objective:
+      move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent
+      plan-URI information leakage to unauthorized callers.
+    dependency: S16 merge
+    target: Precondition order hardening.
 dependency_notes: |
   - `RC-D1A` depends on `RC-D1`.
   - `RBAC at operation level` is unblocked after `S09`.
   - `Read-your-writes contract` depends on `snapshot staleness in API`.
+  - `RC-E1` and `RC-E2` depend on S16 merge.
