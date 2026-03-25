@@ -9,8 +9,13 @@
 import { URL } from 'node:url';
 
 import { PlanUriNotAllowedError } from '../contracts/errors.js';
+import {
+  PLAN_URI_POLICY_REASON,
+  type PlanUriPolicyReason,
+} from '../contracts/planUriPolicyViolation.js';
 
 import { DefaultHostRiskClassifier, type HostRiskClassifier } from './hostRiskClassifier.js';
+import { isDeniedUriScheme } from './planRefPolicyRules.js';
 import { PlanUri } from './planUri.js';
 
 export interface PlanRefAllowlist {
@@ -41,34 +46,34 @@ export class PlanRefPolicy {
     const parsed = parseHttpUriOrThrow(planUri);
     const parsedScheme = parsed.protocol.replace(':', '');
     if (!this.allowlist.allowedSchemes.includes(parsedScheme)) {
-      throw new PlanUriNotAllowedError(
+      throw planUriPolicyError(
         planUri.raw,
-        `${PLAN_URI_POLICY_REASON.http_scheme_not_allowlisted}:${parsed.protocol}`
+        PLAN_URI_POLICY_REASON.HTTP_SCHEME_NOT_ALLOWLISTED,
+        parsed.protocol
       );
     }
     if (this.allowlist.allowedHosts && !this.allowlist.allowedHosts.includes(parsed.hostname)) {
-      throw new PlanUriNotAllowedError(
+      throw planUriPolicyError(
         planUri.raw,
-        `${PLAN_URI_POLICY_REASON.http_host_not_allowlisted}:${parsed.hostname}`
+        PLAN_URI_POLICY_REASON.HTTP_HOST_NOT_ALLOWLISTED,
+        parsed.hostname
       );
     }
     if (this.hostRiskClassifier.isRiskyHost(parsed.hostname)) {
-      throw new PlanUriNotAllowedError(
-        planUri.raw,
-        `${PLAN_URI_POLICY_REASON.risky_host}:${parsed.hostname}`
-      );
+      throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.RISKY_HOST, parsed.hostname);
     }
   }
 
   private validateOpaqueUri(planUri: PlanUri): void {
     const scheme = planUri.scheme;
     if (!scheme) {
-      throw new PlanUriNotAllowedError(planUri.raw, PLAN_URI_POLICY_REASON.missing_scheme);
+      throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.MISSING_SCHEME);
     }
     if (!this.allowlist.allowedSchemes.includes(scheme)) {
-      throw new PlanUriNotAllowedError(
+      throw planUriPolicyError(
         planUri.raw,
-        `${PLAN_URI_POLICY_REASON.opaque_scheme_not_allowlisted}:${scheme}`
+        PLAN_URI_POLICY_REASON.OPAQUE_SCHEME_NOT_ALLOWLISTED,
+        scheme
       );
     }
     if (!this.allowlist.allowedUriPrefixes) return;
@@ -77,37 +82,18 @@ export class PlanRefPolicy {
       planUri.raw.startsWith(prefix)
     );
     if (!isPrefixAllowed) {
-      throw new PlanUriNotAllowedError(
-        planUri.raw,
-        PLAN_URI_POLICY_REASON.opaque_prefix_not_allowlisted
-      );
+      throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.OPAQUE_PREFIX_NOT_ALLOWLISTED);
     }
   }
 }
 
-const DENIED_SCHEMES = new Set(['file', 'ftp', 'gopher', 'data', 'javascript', 'mailto']);
-
-const PLAN_URI_POLICY_REASON = {
-  missing_scheme: 'missing_scheme',
-  denied_scheme: 'denied_scheme',
-  unparseable_http_uri: 'unparseable_http_uri',
-  http_scheme_not_allowlisted: 'http_scheme_not_allowlisted',
-  http_host_not_allowlisted: 'http_host_not_allowlisted',
-  risky_host: 'risky_host',
-  opaque_scheme_not_allowlisted: 'opaque_scheme_not_allowlisted',
-  opaque_prefix_not_allowlisted: 'opaque_prefix_not_allowlisted',
-} as const;
-
 function assertSchemeAllowed(planUri: PlanUri): void {
   const scheme = planUri.scheme;
   if (!scheme) {
-    throw new PlanUriNotAllowedError(planUri.raw, PLAN_URI_POLICY_REASON.missing_scheme);
+    throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.MISSING_SCHEME);
   }
-  if (DENIED_SCHEMES.has(scheme)) {
-    throw new PlanUriNotAllowedError(
-      planUri.raw,
-      `${PLAN_URI_POLICY_REASON.denied_scheme}:${scheme}`
-    );
+  if (isDeniedUriScheme(scheme)) {
+    throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.DENIED_SCHEME, scheme);
   }
 }
 
@@ -115,6 +101,14 @@ function parseHttpUriOrThrow(planUri: PlanUri): URL {
   try {
     return planUri.toHttpUrl();
   } catch {
-    throw new PlanUriNotAllowedError(planUri.raw, PLAN_URI_POLICY_REASON.unparseable_http_uri);
+    throw planUriPolicyError(planUri.raw, PLAN_URI_POLICY_REASON.UNPARSEABLE_HTTP_URI);
   }
+}
+
+function planUriPolicyError(
+  uri: string,
+  reason: PlanUriPolicyReason,
+  subject?: string
+): PlanUriNotAllowedError {
+  return new PlanUriNotAllowedError(uri, { reason, ...(subject === undefined ? {} : { subject }) });
 }

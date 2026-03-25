@@ -13,7 +13,8 @@ export class InvalidStateTransitionError extends Error {
   readonly details: Record<string, unknown>;
   readonly runId: string;
 
-  constructor(runId: string, fromStatus: string, eventType: string, stepId?: string) {
+  constructor(params: { runId: string; fromStatus: string; eventType: string; stepId?: string }) {
+    const { runId, fromStatus, eventType, stepId } = params;
     const subject = stepId === undefined ? 'run' : `step ${stepId}`;
     super(
       `Cannot apply ${eventType} to ${subject} already in terminal status ${fromStatus}: runId=${runId}`
