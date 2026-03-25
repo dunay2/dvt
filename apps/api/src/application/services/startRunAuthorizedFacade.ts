@@ -52,6 +52,7 @@ export class StartRunAuthorizedFacade {
           accepted: false,
           code: 'UNSUPPORTED_PLAN_VERSION',
           reason: `Unsupported plan version: ${error.planVersion}`,
+          supportedVersions: error.supportedVersions,
         };
       }
 

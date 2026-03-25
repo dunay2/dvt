@@ -31,7 +31,12 @@ export class PlanRefPolicy {
 
     // If it looks like an http(s) URL, validate host and scheme.
     if (lower.startsWith('http://') || lower.startsWith('https://')) {
-      const u = new URL(uri);
+      let u: URL;
+      try {
+        u = new URL(uri);
+      } catch {
+        throw new PlanUriNotAllowedError(uri, 'invalid uri (unparseable)');
+      }
       if (!this.allowlist.allowedSchemes.includes(u.protocol.replace(':', ''))) {
         throw new PlanUriNotAllowedError(uri, `scheme not allowlisted (http/https): ${u.protocol}`);
       }
