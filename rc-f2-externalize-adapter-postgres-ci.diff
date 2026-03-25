@@ -1,0 +1,291 @@
+diff --git a/.github/scripts/generate-paths-filter.js b/.github/scripts/generate-paths-filter.js
+new file mode 100644
+index 00000000..a77ed982
+--- /dev/null
++++ b/.github/scripts/generate-paths-filter.js
+@@ -0,0 +1,42 @@
++#!/usr/bin/env node
++const fs = require('fs');
++const path = require('path');
++
++function usage() {
++  console.error('Usage: generate-paths-filter.js <policy.json> <key>');
++  process.exit(2);
++}
++
++if (process.argv.length < 4) usage();
++
++const policyPath = path.resolve(process.cwd(), process.argv[2]);
++const key = process.argv[3];
++
++if (!fs.existsSync(policyPath)) {
++  console.error('Policy file not found:', policyPath);
++  process.exit(2);
++}
++
++const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
++if (!policy[key]) {
++  console.error('Key not found in policy:', key);
++  process.exit(2);
++}
++
++// Simple validation: array of strings
++const patternsRaw = policy[key];
++if (!Array.isArray(patternsRaw) || patternsRaw.some((p) => typeof p !== 'string')) {
++  console.error('Invalid policy format: expected an array of strings for key', key);
++  process.exit(2);
++}
++
++// Normalize and deduplicate patterns, sort for determinism
++let patterns = Array.from(new Set(patternsRaw.map((p) => p.trim()))).sort();
++
++// Emit YAML block for dorny/paths-filter 'filters' input containing only the requested key
++console.log(`${key}:`);
++for (const p of patterns) {
++  // YAML single-quote escaping: double the single quotes inside the value
++  const safe = p.replace(/'/g, "''");
++  console.log(`  - '${safe}'`);
++}
+diff --git a/.github/workflows/pr-quality-gate.yml b/.github/workflows/pr-quality-gate.yml
+index 86c0a43d..4c261313 100644
+--- a/.github/workflows/pr-quality-gate.yml
++++ b/.github/workflows/pr-quality-gate.yml
+@@ -200,19 +200,14 @@ jobs:
+             const changed = files.some(f => patterns.some(p => f.filename.startsWith(p)));
+             core.setOutput('temporal_changed', changed ? 'true' : 'false');
+ 
+-            const adapterPostgresPatterns = [
+-              'packages/@dvt/adapter-postgres/',
+-              'packages/@dvt/engine/',
+-              'packages/@dvt/contracts/',
+-              'package.json',
+-              'pnpm-lock.yaml',
+-              'pnpm-workspace.yaml',
+-              'vitest.config.ts',
+-              'tsconfig.base.json',
+-              'tsconfig.json',
+-              '.github/workflows/test.yml',
+-              '.github/workflows/pr-quality-gate.yml',
+-            ];
++            const fs = require('fs');
++            const { execSync } = require('child_process');
++            // Validate policy shape before using it
++            execSync('node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json', { stdio: 'inherit' });
++            const policy = JSON.parse(fs.readFileSync('tools/ci/policy/adapter-postgres-relevance.json','utf8'));
++            const adapterPostgresPatterns = (policy.adapter_postgres_relevant || []).map(p => {
++              return p.endsWith('/**') ? p.slice(0, -3) : p;
++            });
+             const adapterPostgresChanged = files.some(f =>
+               adapterPostgresPatterns.some(p => f.filename.startsWith(p)),
+             );
+diff --git a/.github/workflows/test.yml b/.github/workflows/test.yml
+index 20a5cea5..200b604b 100644
+--- a/.github/workflows/test.yml
++++ b/.github/workflows/test.yml
+@@ -42,8 +42,6 @@ jobs:
+               - 'packages/@dvt/engine/**'
+             contracts:
+               - 'packages/@dvt/contracts/**'
+-            adapter_postgres:
+-              - 'packages/@dvt/adapter-postgres/**'
+             adapter_temporal:
+               - 'packages/@dvt/adapter-temporal/**'
+             cli:
+@@ -56,12 +54,28 @@ jobs:
+               - 'tsconfig*.json'
+               - '.github/workflows/test.yml'
+ 
++      - name: Generate adapter-postgres filters
++        id: adapter_postgres_filters
++        if: github.event_name == 'pull_request'
++        run: |
++          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres > adapter-postgres-filters.yml
++          echo "filters<<EOF" >> $GITHUB_OUTPUT
++          cat adapter-postgres-filters.yml >> $GITHUB_OUTPUT
++          echo "EOF" >> $GITHUB_OUTPUT
++
++      - name: Detect adapter-postgres package changes (PR only)
++        id: adapter_postgres_changes
++        if: github.event_name == 'pull_request'
++        uses: dorny/paths-filter@v4
++        with:
++          filters: ${{ steps.adapter_postgres_filters.outputs.filters }}
++
+       - name: Setup pnpm, cache and dependencies
+         if:
+           github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
+           steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_temporal ==
+           'true' || steps.changes.outputs.cli == 'true' || steps.changes.outputs.root_config ==
+-          'true'
++          'true' || steps.adapter_postgres_changes.outputs.adapter_postgres == 'true'
+         uses: ./.github/actions/setup-node-pnpm
+         with:
+           node-version: ${{ matrix.node-version }}
+@@ -125,18 +139,21 @@ jobs:
+       - name: Checkout
+         uses: actions/checkout@v6
+ 
++      - name: Generate adapter-postgres integration filters
++        id: adapter_postgres_integration_filters
++        if: github.event_name == 'pull_request'
++        run: |
++          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration > adapter-postgres-integration-filters.yml
++          echo "filters<<EOF" >> $GITHUB_OUTPUT
++          cat adapter-postgres-integration-filters.yml >> $GITHUB_OUTPUT
++          echo "EOF" >> $GITHUB_OUTPUT
++
+       - name: Detect adapter-postgres integration changes (PR only)
+         id: changes
+         if: github.event_name == 'pull_request'
+         uses: dorny/paths-filter@v4
+         with:
+-          filters: |
+-            adapter_postgres_integration:
+-              - 'packages/@dvt/adapter-postgres/**'
+-              - 'package.json'
+-              - 'pnpm-lock.yaml'
+-              - 'pnpm-workspace.yaml'
+-              - '.github/workflows/test.yml'
++          filters: ${{ steps.adapter_postgres_integration_filters.outputs.filters }}
+ 
+       - name: Setup pnpm, cache and dependencies
+         if:
+@@ -216,23 +233,21 @@ jobs:
+       - name: Checkout
+         uses: actions/checkout@v6
+ 
++      - name: Generate adapter-postgres relevant filters
++        id: adapter_postgres_relevant_filters
++        if: github.event_name == 'pull_request'
++        run: |
++          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant > adapter-postgres-relevant-filters.yml
++          echo "filters<<EOF" >> $GITHUB_OUTPUT
++          cat adapter-postgres-relevant-filters.yml >> $GITHUB_OUTPUT
++          echo "EOF" >> $GITHUB_OUTPUT
++
+       - name: Detect adapter-postgres-relevant changes (PR only)
+         id: pg_changes
+         if: github.event_name == 'pull_request'
+         uses: dorny/paths-filter@v4
+         with:
+-          filters: |
+-            adapter_postgres_relevant:
+-              - 'packages/@dvt/adapter-postgres/**'
+-              - 'packages/@dvt/engine/**'
+-              - 'packages/@dvt/contracts/**'
+-              - 'package.json'
+-              - 'pnpm-lock.yaml'
+-              - 'pnpm-workspace.yaml'
+-              - 'vitest.config.ts'
+-              - 'tsconfig*.json'
+-              - '.github/workflows/test.yml'
+-              - '.github/workflows/pr-quality-gate.yml'
++          filters: ${{ steps.adapter_postgres_relevant_filters.outputs.filters }}
+ 
+       - name: Setup pnpm, cache and dependencies
+         if:
+diff --git a/tools/ci/policy/adapter-postgres-relevance.json b/tools/ci/policy/adapter-postgres-relevance.json
+new file mode 100644
+index 00000000..98c03bbd
+--- /dev/null
++++ b/tools/ci/policy/adapter-postgres-relevance.json
+@@ -0,0 +1,22 @@
++{
++  "adapter_postgres": ["packages/@dvt/adapter-postgres/**"],
++  "adapter_postgres_integration": [
++    "packages/@dvt/adapter-postgres/**",
++    "package.json",
++    "pnpm-lock.yaml",
++    "pnpm-workspace.yaml",
++    ".github/workflows/test.yml"
++  ],
++  "adapter_postgres_relevant": [
++    "packages/@dvt/adapter-postgres/**",
++    "packages/@dvt/engine/**",
++    "packages/@dvt/contracts/**",
++    "package.json",
++    "pnpm-lock.yaml",
++    "pnpm-workspace.yaml",
++    "vitest.config.ts",
++    "tsconfig*.json",
++    ".github/workflows/test.yml",
++    ".github/workflows/pr-quality-gate.yml"
++  ]
++}
+diff --git a/tools/ci/test/adapter-postgres-policy.test.mjs b/tools/ci/test/adapter-postgres-policy.test.mjs
+new file mode 100644
+index 00000000..ae741ad0
+--- /dev/null
++++ b/tools/ci/test/adapter-postgres-policy.test.mjs
+@@ -0,0 +1,20 @@
++import { strict as assert } from 'assert';
++import fs from 'fs';
++import { execSync } from 'child_process';
++
++const policyPath = 'tools/ci/policy/adapter-postgres-relevance.json';
++assert.ok(fs.existsSync(policyPath), 'policy file must exist');
++
++// Validate policy structure
++execSync(`node tools/ci/validate-policy.js ${policyPath}`, { stdio: 'inherit' });
++
++// Test generator for all keys
++const keys = ['adapter_postgres', 'adapter_postgres_integration', 'adapter_postgres_relevant'];
++for (const key of keys) {
++	const out = execSync(`node .github/scripts/generate-paths-filter.js ${policyPath} ${key}`, { encoding: 'utf8' });
++	assert.ok(out.includes(`${key}:`), `generated output must contain the key ${key}`);
++	const lines = out.split('\n').filter(Boolean);
++	assert.ok(lines.length > 1, 'generated output must contain at least one pattern line');
++}
++
++console.log('adapter-postgres policy generation smoke tests passed');
+diff --git a/tools/ci/validate-policy.js b/tools/ci/validate-policy.js
+new file mode 100644
+index 00000000..a596edb0
+--- /dev/null
++++ b/tools/ci/validate-policy.js
+@@ -0,0 +1,45 @@
++#!/usr/bin/env node
++const fs = require('fs');
++const path = require('path');
++
++function usage() {
++  console.error('Usage: validate-policy.js <policy.json>');
++  process.exit(2);
++}
++
++if (process.argv.length < 3) usage();
++
++const policyPath = path.resolve(process.cwd(), process.argv[2]);
++if (!fs.existsSync(policyPath)) {
++  console.error('Policy file not found:', policyPath);
++  process.exit(2);
++}
++
++let policy;
++try {
++  policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
++} catch (err) {
++  console.error('Failed to parse JSON:', err.message);
++  process.exit(2);
++}
++
++const requiredKeys = [
++  'adapter_postgres',
++  'adapter_postgres_integration',
++  'adapter_postgres_relevant',
++];
++let ok = true;
++for (const k of requiredKeys) {
++  if (!Object.prototype.hasOwnProperty.call(policy, k)) {
++    console.error('Missing required key in policy:', k);
++    ok = false;
++    continue;
++  }
++  if (!Array.isArray(policy[k]) || policy[k].some((p) => typeof p !== 'string')) {
++    console.error('Invalid value for key (must be array of strings):', k);
++    ok = false;
++  }
++}
++
++if (!ok) process.exit(2);
++console.log('Policy validation passed');

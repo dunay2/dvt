@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-03-20
+last_reviewed: 2026-03-25
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-03-20.
+Generated automatically from repository code on 2026-03-25.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 23    |
-| Total source files           | 359   |
-| Total test files             | 138   |
+| Total source files           | 387   |
+| Total test files             | 168   |
 | Workspaces with build script | 22/23 |
 | Workspaces with test script  | 20/23 |
 
@@ -24,20 +24,20 @@ Generated automatically from repository code on 2026-03-20.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 48        | 29         | yes   | yes  | yes       | -                       |
-| dvt-lineage-worker        | `apps/lineage-worker`                | 2         | 0          | yes   | yes  | yes       | -                       |
-| dvt-outbox-worker         | `apps/outbox-worker`                 | 13        | 16         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 61        | 37         | yes   | yes  | yes       | -                       |
+| dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 4          | yes   | yes  | yes       | -                       |
+| dvt-outbox-worker         | `apps/outbox-worker`                 | 14        | 17         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 78        | 0          | yes   | no   | yes       | -                       |
-| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 14        | 8          | yes   | yes  | yes       | 14                      |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 14        | 14         | yes   | yes  | no        | 17                      |
+| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 18        | 12         | yes   | yes  | yes       | 20                      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 15        | 15         | yes   | yes  | no        | 17                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 9         | 1          | yes   | yes  | no        | 8                       |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 37        | 10         | yes   | yes  | no        | 34                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 33        | 10         | yes   | yes  | no        | 31                      |
 | packages/@dvt/delivery    | `packages/@dvt/delivery`             | 10        | 4          | no    | no   | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 54        | 22         | yes   | yes  | no        | 26                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 54        | 28         | yes   | yes  | no        | 27                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | no        | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | no        | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | no        | 3                       |
@@ -45,7 +45,7 @@ Generated automatically from repository code on 2026-03-20.
 | @dvt/planner              | `packages/@dvt/planner`              | 22        | 16         | yes   | yes  | no        | 15                      |
 | @dvt/planner-contracts    | `packages/@dvt/planner-contracts`    | 0         | 0          | yes   | no   | no        | -                       |
 | @dvt/run-domain           | `packages/@dvt/run-domain`           | 3         | 1          | yes   | yes  | no        | 2                       |
-| @dvt/state-store          | `packages/@dvt/state-store`          | 5         | 3          | yes   | yes  | no        | 7                       |
+| @dvt/state-store          | `packages/@dvt/state-store`          | 15        | 9          | yes   | yes  | no        | 19                      |
 | @dvt/traceability-service | `packages/@dvt/traceability-service` | 24        | 5          | yes   | yes  | yes       | 8                       |
 
 > This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.
