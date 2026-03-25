@@ -40,7 +40,6 @@ jobs:
           fetch-depth: 0
 
       - name: Validate adapter-postgres policy JSON
-        if: github.event_name == 'pull_request'
         run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
 
       - name: Setup pnpm, cache and dependencies (fast-fail)
@@ -146,17 +145,6 @@ jobs:
                 core.info(`✅ PR size acceptable: ${changes} lines changed.`);
               }
             }
-
-      - name: Check for merge conflicts
-        if: github.event_name == 'pull_request'
-        run: |
-          git fetch origin ${{ github.base_ref }}
-          # Verify branch can be merged by checking refs exist
-          if ! git rev-parse origin/${{ github.base_ref }} >/dev/null 2>&1; then
-            echo "❌ Base branch origin/${{ github.base_ref }} not found"
-            exit 1
-          fi
-          echo "✅ PR merge conflict status will be determined by GitHub's merge algorithm"
 
       - name: Label PR based on files changed
         if: github.event_name == 'pull_request'

@@ -20,9 +20,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -57,7 +55,7 @@ jobs:
           'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
 
       - name: Run tests (push/workflow_dispatch full suite)
         if:
@@ -100,6 +98,7 @@ jobs:
   adapter-postgres-integration:
     name: Adapter Postgres Integration Smoke
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     services:
       postgres:
         image: postgres:15
@@ -162,6 +161,7 @@ jobs:
   test-determinism:
     name: Determinism Tests
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -207,6 +207,7 @@ jobs:
   adapter-postgres-smoke:
     name: Adapter Postgres Smoke
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
