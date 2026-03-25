@@ -16,19 +16,19 @@ on:
         default: false
 
 concurrency:
-  group: pr-quality-gate-${{ github.event.number || github.ref }}
+  group: pr-quality-gate-${{ github.event.number || github.run_id }}
   cancel-in-progress: true
 
 permissions:
   contents: read
   checks: read
   pull-requests: write
-  issues: write
 
 jobs:
   pr-checks:
     name: PR Quality Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
       temporal_changed:
@@ -39,13 +39,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
       - name: Validate adapter-postgres policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/adapter-postgres-relevance.json
 
       - name: Setup pnpm, cache and dependencies (fast-fail)
+        if:
+          github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 20.x
 
       - name: ARC policy evaluate
         if: github.event_name == 'pull_request'
@@ -62,30 +67,37 @@ jobs:
           GIT_HEAD: ${{ github.sha }}
 
       - name: Validate docs sync outputs (ADR/index coherence)
+        if: github.event_name == 'pull_request'
         run: pnpm docs:sync:check
 
       - name: Validate docs quality policy (English/no duplicate indexes)
+        if: github.event_name == 'pull_request'
         run: pnpm docs:quality:check
 
       - name: Run docs doctor (duplicates/legacy/staleness)
+        if: github.event_name == 'pull_request'
         run: pnpm docs:doctor
 
       - name: Enforce Markdown location policy
+        if: github.event_name == 'pull_request'
         run: pnpm docs:gov:locations
 
       - name: Enforce canonical docs paths and links
+        if: github.event_name == 'pull_request'
         run: pnpm docs:canonical:check
 
       - name: Validate generated code-state status doc
+        if: github.event_name == 'pull_request'
         run: pnpm docs:status:check
 
       - name: Validate generated capability coverage doc
+        if: github.event_name == 'pull_request'
         run: pnpm docs:capability:check
 
       - name: Workspace type-check (fast-fail)
         if:
-          github.event_name != 'workflow_dispatch' || github.event.inputs.run_typecheck_gate ==
-          'true'
+          github.event_name != 'workflow_dispatch' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm type-check
 
       - name: Check PR title follows Conventional Commits
@@ -119,13 +131,11 @@ jobs:
           script: |
             const title = context.payload.pull_request.title || '';
             const labels = (context.payload.pull_request.labels || []).map(l => l.name.toLowerCase());
-            const forceSkip = (process.env.SKIP_PR_SIZE_CHECK || '').toLowerCase() === 'true';
 
             // Override mechanisms (use one):
             // - add `[skip-size-check]` to the PR title, or
             // - add a PR label named `skip-size-check` or `pr-size-exempt`
             if (
-              forceSkip ||
               /\[skip-size-check\]/i.test(title) ||
               labels.includes('skip-size-check') ||
               labels.includes('pr-size-exempt')
@@ -170,7 +180,6 @@ jobs:
         if: github.event_name == 'pull_request'
         run: node tools/ci/emit-scope.mjs --mode pr-quality
         env:
-          EVENT_NAME: ${{ github.event_name }}
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
 
@@ -184,17 +193,22 @@ jobs:
   temporal-integration:
     name: Temporal adapter integration (time-skipping)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [pr-checks]
     if:
-      needs.pr-checks.outputs.temporal_changed == 'true' && !(github.event_name == 'pull_request' &&
-      github.event.pull_request.draft) && (github.event_name != 'workflow_dispatch' ||
-      github.event.inputs.run_temporal_integration == 'true')
+      needs.pr-checks.outputs.temporal_changed == 'true' && (github.event_name !=
+      'workflow_dispatch' || (github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.run_temporal_integration == 'true'))
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 20.x
 
       - name: Build contracts for integration
         run: pnpm --filter @dvt/contracts build
@@ -205,10 +219,11 @@ jobs:
   adapter-postgres-smoke-guard:
     name: Adapter Postgres Smoke Guard
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [pr-checks]
     if:
       needs.pr-checks.outputs.adapter_postgres_changed == 'true' && github.event_name ==
-      'pull_request' && !github.event.pull_request.draft
+      'pull_request' && github.event.pull_request.draft == false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -218,16 +233,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF_SHA:
-            ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha ||
-            github.sha }}
+          GITHUB_REF_SHA: ${{ github.event.pull_request.head.sha }}
           CHECK_NAME: Adapter Postgres Smoke
           CHECK_RETRIES: '60'
           CHECK_DELAY_MS: '10000'
           CHECK_ACCEPTED_CONCLUSIONS: success
+
   all-checks-passed:
     name: All Checks Required for Merge
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [pr-checks, temporal-integration, adapter-postgres-smoke-guard]
     if: always()
     steps:

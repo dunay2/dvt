@@ -5,22 +5,22 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      run_full_test_suite:
-        description: 'Run full recursive test suite (pnpm test)'
-        required: false
-        type: boolean
-        default: false
+
+permissions:
+  contents: read
 
 concurrency:
-  group: test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group:
+    test-${{ github.workflow }}-${{ github.event_name == 'pull_request' &&
+    github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    timeout-minutes: 20
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -58,9 +58,7 @@ jobs:
           node-version: 20.x
 
       - name: Run tests (push/workflow_dispatch full suite)
-        if:
-          github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' ||
-          github.event.inputs.run_full_test_suite == 'true')
+        if: github.event_name != 'pull_request'
         run: pnpm test
 
       - name: Run engine tests (affected package)
@@ -87,33 +85,37 @@ jobs:
           steps.changes.outputs.root_config == 'true')
         run: pnpm test:cli
 
-      - name: Skip package tests (PR with no affected packages)
-        if:
-          github.event_name == 'pull_request' && steps.changes.outputs.engine != 'true' &&
-          steps.changes.outputs.contracts != 'true' && steps.changes.outputs.adapter_temporal !=
-          'true' && steps.changes.outputs.cli != 'true' && steps.changes.outputs.root_config !=
-          'true'
-        run: echo "No affected test packages detected; skipping package test execution."
-
-  detect-pg-integration-scope:
-    name: Detect adapter-postgres integration scope
+  detect-pg-scope:
+    name: Detect adapter-postgres scope
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    timeout-minutes: 5
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
-      changed: ${{ steps.changes.outputs.adapter_postgres_integration }}
+      integration_changed:
+        ${{ steps.changes.outputs.adapter_postgres_integration || steps.push_all.outputs.changed }}
+      smoke_changed:
+        ${{ steps.changes.outputs.adapter_postgres_relevant || steps.push_all.outputs.changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Generate adapter-postgres integration filters
+      - name: Mark all changed (push/dispatch — no diff available)
+        id: push_all
+        if: github.event_name != 'pull_request'
+        run: echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Generate adapter-postgres filters
         id: filters
+        if: github.event_name == 'pull_request'
         run: |
           echo "filters<<EOF" >> $GITHUB_OUTPUT
           node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration >> $GITHUB_OUTPUT
+          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Detect adapter-postgres integration changes
+      - name: Detect adapter-postgres changes
         id: changes
+        if: github.event_name == 'pull_request'
         uses: dorny/paths-filter@v4
         with:
           filters: ${{ steps.filters.outputs.filters }}
@@ -121,12 +123,11 @@ jobs:
   adapter-postgres-integration:
     name: Adapter Postgres Integration Smoke
     runs-on: ubuntu-latest
-    needs: [detect-pg-integration-scope]
-    if: |
-      always() && (
-        github.event_name != 'pull_request' ||
-        (github.event.pull_request.draft == false && needs.detect-pg-integration-scope.outputs.changed == 'true')
-      )
+    timeout-minutes: 20
+    needs: [detect-pg-scope]
+    if:
+      needs.detect-pg-scope.result == 'success' && needs.detect-pg-scope.outputs.integration_changed
+      == 'true'
     services:
       postgres:
         image: postgres:15
@@ -159,7 +160,8 @@ jobs:
   test-determinism:
     name: Determinism Tests
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    timeout-minutes: 15
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -183,63 +185,37 @@ jobs:
           github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
           'true'
         uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 20.x
 
       - name: Run determinism tests
         if:
-          (github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true') && hashFiles('packages/@dvt/engine/test/determinism/**/*.test.ts') != ''
+          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
+          'true'
         run: pnpm test:determinism
 
       - name: Verify replay consistency
         if:
-          (github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true') && hashFiles('packages/@dvt/engine/test/replay/**/*.test.ts') != ''
-        run: pnpm test:replay
-
-      - name: Skip determinism checks (PR without relevant changes)
-        if:
-          github.event_name == 'pull_request' && steps.det_changes.outputs.determinism_relevant !=
+          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
           'true'
-        run: echo "No determinism-relevant changes detected; skipping determinism checks."
-
-  detect-pg-smoke-scope:
-    name: Detect adapter-postgres smoke scope
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
-    outputs:
-      changed: ${{ steps.changes.outputs.adapter_postgres_relevant }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Generate adapter-postgres relevant filters
-        id: filters
-        run: |
-          echo "filters<<EOF" >> $GITHUB_OUTPUT
-          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Detect adapter-postgres-relevant changes
-        id: changes
-        uses: dorny/paths-filter@v4
-        with:
-          filters: ${{ steps.filters.outputs.filters }}
+        run: pnpm test:replay
 
   adapter-postgres-smoke:
     name: Adapter Postgres Smoke
     runs-on: ubuntu-latest
-    needs: [detect-pg-smoke-scope]
-    if: |
-      always() && (
-        github.event_name != 'pull_request' ||
-        (github.event.pull_request.draft == false && needs.detect-pg-smoke-scope.outputs.changed == 'true')
-      )
+    timeout-minutes: 15
+    needs: [detect-pg-scope]
+    if:
+      needs.detect-pg-scope.result == 'success' && needs.detect-pg-scope.outputs.smoke_changed ==
+      'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 20.x
 
       - name: Build adapter-postgres dependency graph
         run: pnpm --filter @dvt/adapter-postgres... --if-present run build

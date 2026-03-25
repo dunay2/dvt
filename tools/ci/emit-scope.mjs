@@ -30,7 +30,7 @@ function parseMode(argv) {
 
 async function main() {
   const mode = parseMode(process.argv.slice(2));
-  const eventName = process.env.EVENT_NAME ?? process.env.GITHUB_EVENT_NAME ?? '';
+  const eventName = process.env.GITHUB_EVENT_NAME ?? '';
   const scopePatterns = MODES[mode];
 
   if (!isPullRequestEvent(eventName)) {
