@@ -6,10 +6,10 @@ import type { RunEventInput } from '../../src/contracts/runEvents.js';
 import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
-function makeBootstrap(runId: string): RunBootstrapInput {
+function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
   return {
     metadata: {
-      tenantId: 't1',
+      tenantId,
       projectId: 'p1',
       environmentId: 'dev',
       runId,
@@ -25,7 +25,7 @@ function makeBootstrap(runId: string): RunBootstrapInput {
         eventId: `${runId}:queued`,
         eventType: 'RunQueued',
         runId,
-        tenantId: 't1',
+        tenantId,
         projectId: 'p1',
         environmentId: 'dev',
         planId: 'plan-minimal',
@@ -39,12 +39,12 @@ function makeBootstrap(runId: string): RunBootstrapInput {
   };
 }
 
-function makeStarted(runId: string, idempotencyKey: string): RunEventInput {
+function makeStarted(runId: string, idempotencyKey: string, tenantId = 't1'): RunEventInput {
   return {
     eventId: idempotencyKey,
     eventType: 'RunStarted' as const,
     runId,
-    tenantId: 't1',
+    tenantId,
     projectId: 'p1',
     environmentId: 'dev',
     planId: 'plan-minimal',
@@ -182,6 +182,55 @@ describe('InMemoryTxStore outbox semantics', () => {
     const afterHeadDelivered = await store.listPending(10);
     const next = afterHeadDelivered.find((record) => record.payload.runId === 'run-dlq');
     expect(next?.payload.runSeq).toBe(2);
+  });
+
+  it('listDeadLetter scopes results to the requesting tenant', async () => {
+    const store = new InMemoryTxStore();
+
+    await store.bootstrapRunTx(makeBootstrap('run-t1', 't1'));
+    await store.bootstrapRunTx(makeBootstrap('run-t2', 't2'));
+
+    const [t1Head] = await store.listPending(10);
+    const pendingT1Head = requireDefined(t1Head, 'expected t1 head');
+    for (let i = 0; i < 10; i += 1) {
+      await store.markFailed(pendingT1Head.id, `err-${i}`);
+    }
+
+    const t1DeadLetters = await store.listDeadLetter(10, 't1');
+    expect(t1DeadLetters).toHaveLength(1);
+    expect(t1DeadLetters[0]?.runId).toBe('run-t1');
+
+    const t2DeadLetters = await store.listDeadLetter(10, 't2');
+    expect(t2DeadLetters).toHaveLength(0);
+  });
+
+  it('replayDeadLetters only restores dead letters belonging to the requesting tenant', async () => {
+    const store = new InMemoryTxStore();
+
+    await store.bootstrapRunTx(makeBootstrap('run-t1', 't1'));
+    await store.bootstrapRunTx(makeBootstrap('run-t2', 't2'));
+
+    const allPending = await store.listPending(10);
+    const t1Head = allPending.find((r) => r.payload.runId === 'run-t1');
+    const pendingT1Head = requireDefined(t1Head, 'expected t1 head');
+    for (let i = 0; i < 10; i += 1) {
+      await store.markFailed(pendingT1Head.id, `err-${i}`);
+    }
+
+    // t2 requests replay — should not affect t1's dead letter
+    const movedByT2 = await store.replayDeadLetters({ tenantId: 't2' });
+    expect(movedByT2).toBe(0);
+
+    // t1's dead letter is still present
+    const t1DeadLetters = await store.listDeadLetter(10, 't1');
+    expect(t1DeadLetters).toHaveLength(1);
+
+    // t1 replays its own dead letter
+    const movedByT1 = await store.replayDeadLetters({ tenantId: 't1' });
+    expect(movedByT1).toBe(1);
+
+    const t1DeadLettersAfter = await store.listDeadLetter(10, 't1');
+    expect(t1DeadLettersAfter).toHaveLength(0);
   });
 });
 
