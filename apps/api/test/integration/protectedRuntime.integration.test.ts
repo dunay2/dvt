@@ -91,7 +91,14 @@ describeIfPg('protected runtime integration', () => {
       tenantId: TENANT_ID,
       projectId: PROJECT_ID,
       environmentId: ENVIRONMENT_ID,
-      tenantActions: ['run:start', 'run:list', 'run:view', 'run:logs:view', 'run:signal'],
+      tenantActions: [
+        'run:start',
+        'run:list',
+        'run:view',
+        'run:logs:view',
+        'run:signal',
+        'run:cancel',
+      ],
     });
 
     signingKey = jwksServer.privateKey;

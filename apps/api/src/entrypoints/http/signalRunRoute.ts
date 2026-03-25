@@ -21,6 +21,12 @@ function parseSignalType(raw: unknown): SupportedSignalType | null {
     : null;
 }
 
+function signalActionName(
+  signalType: SupportedSignalType
+): 'run:cancel' | 'run:signal' {
+  return signalType === 'CANCEL' ? 'run:cancel' : 'run:signal';
+}
+
 export async function signalRunRoute(
   request: FastifyRequest<{ Params: { runId?: string }; Body: unknown }>,
   reply: FastifyReply,
@@ -61,7 +67,7 @@ export async function signalRunRoute(
     requestId: request.id,
     requestedScope: {
       tenantId: TenantId.unsafe(tenantId),
-      action: { kind: 'command', name: 'run:signal' },
+      action: { kind: 'command', name: signalActionName(signalType) },
     },
   });
   if (!auth.ok) {

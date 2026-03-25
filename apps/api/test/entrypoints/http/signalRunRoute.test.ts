@@ -69,6 +69,38 @@ describe('signalRunRoute', () => {
       { runId: 'run-1', signalType: 'CANCEL', reason: 'operator cancel' },
       expect.anything()
     );
+    expect(deps.authorizer.authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'run:cancel' },
+      }),
+      'req-1'
+    );
+    expect(reply.code).toHaveBeenCalledWith(202);
+  });
+
+  it('authorizes PAUSE using run:signal action', async () => {
+    const deps = createDeps();
+    const reply = createReply();
+
+    await signalRunRoute(
+      {
+        id: 'req-1b',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', signalType: 'PAUSE' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(deps.authorizer.authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'run:signal' },
+      }),
+      'req-1b'
+    );
     expect(reply.code).toHaveBeenCalledWith(202);
   });
 
