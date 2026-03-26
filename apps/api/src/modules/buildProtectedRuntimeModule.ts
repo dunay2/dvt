@@ -219,11 +219,16 @@ export async function buildProtectedRuntimeModule(
       await planStore.migrate();
     },
     close: async () => {
-      await closeAdapters();
-      await planStore.close();
-      await stateStore.close();
-      await intentStore.close();
-      await pool.end();
+      try {
+        await Promise.allSettled([
+          closeAdapters(),
+          planStore.close(),
+          stateStore.close(),
+          intentStore.close(),
+        ]);
+      } finally {
+        await pool.end();
+      }
     },
   };
 }
