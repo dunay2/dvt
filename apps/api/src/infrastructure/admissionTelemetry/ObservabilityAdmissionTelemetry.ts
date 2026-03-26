@@ -13,6 +13,12 @@ import {
 
 type DecisionInput = Parameters<AdmissionTelemetry['recordDecision']>[0];
 
+type RejectionRecord = Extract<AdmissionDecisionRecord, { readonly code: string }>;
+
+function isRejectionRecord(event: AdmissionDecisionRecord): event is RejectionRecord {
+  return REJECTION_DECISIONS.has(event.decision);
+}
+
 export class ObservabilityAdmissionTelemetry implements AdmissionTelemetry {
   public constructor(
     private readonly deps: {
