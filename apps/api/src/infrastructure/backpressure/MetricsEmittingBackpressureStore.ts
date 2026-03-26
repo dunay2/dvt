@@ -17,7 +17,6 @@ export class MetricsEmittingBackpressureStore {
 
     try {
       this.deps.capacityTelemetry.recordSnapshot({
-        tenantId,
         pendingEventsCount: envelope.snapshot.pendingEventsPerTenant,
         outboxOldestAgeMs: envelope.snapshot.outboxOldestAgeMs,
         source: envelope.source,

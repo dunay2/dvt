@@ -47,7 +47,6 @@ function makeObservabilitySpy(): ObservabilitySpy {
 
 describe('ObservabilityBackpressureCapacityTelemetry', () => {
   function setupAndRecordSnapshot(snapshot: {
-    tenantId: string;
     pendingEventsCount: number;
     outboxOldestAgeMs: number;
     source: 'live' | 'cache' | 'fallback';
@@ -60,7 +59,6 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
   it('sets pending_events gauge with value from snapshot', () => {
     const { gaugeCalls } = setupAndRecordSnapshot({
-      tenantId: 'tenant-1',
       pendingEventsCount: 42,
       outboxOldestAgeMs: 5_000,
       source: 'live',
@@ -75,7 +73,6 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
   it('sets outbox_oldest_age gauge with value from snapshot', () => {
     const { gaugeCalls } = setupAndRecordSnapshot({
-      tenantId: 'tenant-1',
       pendingEventsCount: 10,
       outboxOldestAgeMs: 90_000,
       source: 'live',
@@ -90,7 +87,6 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
   it('uses source=cache label when snapshot source is cache', () => {
     const { gaugeCalls } = setupAndRecordSnapshot({
-      tenantId: 'tenant-1',
       pendingEventsCount: 5,
       outboxOldestAgeMs: 1_000,
       source: 'cache',
@@ -101,24 +97,12 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
   it('uses source=fallback label for fallback snapshot', () => {
     const { gaugeCalls } = setupAndRecordSnapshot({
-      tenantId: 'tenant-1',
       pendingEventsCount: 0,
       outboxOldestAgeMs: 0,
       source: 'fallback',
     });
 
     expect(gaugeCalls.every((c) => c.labels?.source === 'fallback')).toBe(true);
-  });
-
-  it('does not include tenantId in gauge labels', () => {
-    const { gaugeCalls } = setupAndRecordSnapshot({
-      tenantId: 'tenant-1',
-      pendingEventsCount: 3,
-      outboxOldestAgeMs: 2_000,
-      source: 'live',
-    });
-
-    expect(gaugeCalls.every((c) => !Object.keys(c.labels ?? {}).includes('tenantId'))).toBe(true);
   });
 
   describe('error resilience', () => {
@@ -142,7 +126,6 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
       expect(() =>
         telemetry.recordSnapshot({
-          tenantId: 't',
           pendingEventsCount: 1,
           outboxOldestAgeMs: 0,
           source: 'live',
@@ -179,7 +162,6 @@ describe('ObservabilityBackpressureCapacityTelemetry', () => {
 
       expect(() =>
         telemetry.recordSnapshot({
-          tenantId: 't',
           pendingEventsCount: 1,
           outboxOldestAgeMs: 0,
           source: 'live',

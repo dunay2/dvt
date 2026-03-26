@@ -51,21 +51,6 @@ describe('MetricsEmittingBackpressureStore', () => {
     );
   });
 
-  it('passes tenantId to recordSnapshot', async () => {
-    const delegate = {
-      getTenantSnapshot: vi.fn(),
-      getTenantSnapshotEnvelope: vi.fn().mockResolvedValue(LIVE_ENVELOPE),
-    };
-    const capacityTelemetry = { recordSnapshot: vi.fn() };
-    const store = new MetricsEmittingBackpressureStore({ delegate, capacityTelemetry });
-
-    await store.getTenantSnapshot('my-tenant');
-
-    expect(capacityTelemetry.recordSnapshot).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: 'my-tenant' })
-    );
-  });
-
   it('passes source field from envelope', async () => {
     const delegate = {
       getTenantSnapshot: vi.fn(),
