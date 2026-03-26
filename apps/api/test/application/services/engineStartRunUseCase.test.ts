@@ -131,7 +131,10 @@ describe('EngineStartRunUseCase', () => {
   it('maps UnsupportedPlanVersionError to typed engine error result', async () => {
     const fakeEngine = {
       async startRun() {
-        throw new UnsupportedPlanVersionError('9.0', ['2.3', '2.4']);
+        throw new UnsupportedPlanVersionError({
+          planVersion: '9.0',
+          supportedVersions: ['2.3', '2.4'],
+        });
       },
     };
 
